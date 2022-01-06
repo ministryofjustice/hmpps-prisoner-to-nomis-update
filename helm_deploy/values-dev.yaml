@@ -5,7 +5,7 @@ generic-service:
   replicaCount: 2
 
   ingress:
-    host: hmpps-prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk
+    host: prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk
     contextColour: green
 
   env:

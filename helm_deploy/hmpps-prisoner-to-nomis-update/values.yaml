@@ -12,7 +12,7 @@ generic-service:
   ingress:
     enabled: true
     host: app-hostname.local    # override per environment
-    tlsSecretName: hmpps-prisoner-to-nomis-update-cert
+    tlsSecretName: prisoner-to-nomis-cert
 
   # Environment variables to load into the deployment
   env:
