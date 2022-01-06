@@ -70,7 +70,7 @@ workflows:
 #          env: "preprod"
 #          context:
 #            - hmpps-common-vars
-#            - hmpps-template-kotlin-preprod
+#            - hmpps-prisoner-to-nomis-update-preprod
 #          requires:
 #            - request-preprod-approval
 #      - request-prod-approval:
@@ -84,14 +84,14 @@ workflows:
 #          slack_channel_name: << pipeline.parameters.releases-slack-channel >>
 #          context:
 #            - hmpps-common-vars
-#            - hmpps-template-kotlin-prod
+#            - hmpps-prisoner-to-nomis-update-prod
 #          requires:
 #            - request-prod-approval
 
   security:
     triggers:
       - schedule:
-          cron: "11 5 * * 1-5"
+          cron: "28 3 * * 1-5"
           filters:
             branches:
               only:
@@ -113,7 +113,7 @@ workflows:
   security-weekly:
     triggers:
       - schedule:
-          cron: "0 5 * * 1"
+          cron: "6 3 * * 1"
           filters:
             branches:
               only:
