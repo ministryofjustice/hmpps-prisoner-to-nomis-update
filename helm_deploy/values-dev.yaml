@@ -1,11 +1,11 @@
 ---
-# Per environment values which override defaults in hmpps-template-kotlin/values.yaml
+# Per environment values which override defaults in hmpps-prisoner-to-nomis-update/values.yaml
 
 generic-service:
   replicaCount: 2
 
   ingress:
-    host: hmpps-template-kotlin-dev.hmpps.service.justice.gov.uk
+    host: hmpps-prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk
     contextColour: green
 
   env:
