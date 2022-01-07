@@ -25,7 +25,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
     .info(
       Info().title("Prisoner to NOMIS update API")
         .version(version)
-        .description("Handles hmpps Domain events for NOMIS updates")
+        .description("Handles HMPPS domain events for NOMIS updates")
         .contact(Contact().name("HMPPS Digital Studio").email("feedback@digital.justice.gov.uk"))
     )
 }
