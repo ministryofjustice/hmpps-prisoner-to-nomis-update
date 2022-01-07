@@ -30,6 +30,8 @@ generic-service:
   namespace_secrets:
     hmpps-prisoner-to-nomis-update:
       APPINSIGHTS_INSTRUMENTATIONKEY: "APPINSIGHTS_INSTRUMENTATIONKEY"
+      SYSTEM_CLIENT_ID: "SYSTEM_CLIENT_ID"
+      SYSTEM_CLIENT_SECRET: "SYSTEM_CLIENT_SECRET"
 
   allowlist:
     office: "217.33.148.210/32"

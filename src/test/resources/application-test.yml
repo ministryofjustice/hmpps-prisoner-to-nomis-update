@@ -4,3 +4,7 @@ server:
 management.endpoint:
   health.cache.time-to-live: 0
   info.cache.time-to-live: 0
+
+api.base.url:
+  nomis: http://localhost:8081
+  oauth: http://localhost:8090/auth

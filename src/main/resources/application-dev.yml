@@ -1,0 +1,14 @@
+server:
+  shutdown: immediate
+
+api.base.url:
+  nomis: http://localhost:8081
+  oauth: http://localhost:8090/auth
+
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          public-key-location: classpath:local-public-key.pub

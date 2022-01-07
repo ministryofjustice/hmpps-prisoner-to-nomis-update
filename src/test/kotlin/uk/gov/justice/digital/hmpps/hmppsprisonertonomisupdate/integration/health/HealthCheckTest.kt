@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.hmppsprisonertonomisupdate.integration.heal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.hmppsprisonertonomisupdate.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppsprisonertonomisupdate.wiremock.HmppsAuthApiExtension
+import uk.gov.justice.digital.hmpps.hmppsprisonertonomisupdate.wiremock.NomisApiExtension
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.function.Consumer
@@ -11,6 +13,8 @@ class HealthCheckTest : IntegrationTestBase() {
 
   @Test
   fun `Health page reports ok`() {
+    stubPingWithResponse(200)
+
     webTestClient.get()
       .uri("/health")
       .exchange()
@@ -21,7 +25,21 @@ class HealthCheckTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Health page reports down`() {
+    stubPingWithResponse(404)
+
+    webTestClient.get()
+      .uri("/health")
+      .exchange()
+      .expectStatus()
+      .is5xxServerError
+      .expectBody()
+      .jsonPath("status").isEqualTo("DOWN")
+  }
+
+  @Test
   fun `Health info reports version`() {
+    stubPingWithResponse(200)
     webTestClient.get().uri("/health")
       .exchange()
       .expectStatus().isOk
@@ -63,5 +81,10 @@ class HealthCheckTest : IntegrationTestBase() {
       .isOk
       .expectBody()
       .jsonPath("status").isEqualTo("UP")
+  }
+
+  private fun stubPingWithResponse(status: Int) {
+    HmppsAuthApiExtension.hmppsAuth.stubHealthPing(status)
+    NomisApiExtension.nomisApi.stubHealthPing(status)
   }
 }
