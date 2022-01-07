@@ -9,9 +9,9 @@ configurations {
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
- // implementation("org.springframework.boot:spring-boot-starter-security")
- // implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
- // implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+  // implementation("org.springframework.boot:spring-boot-starter-security")
+  // implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+  // implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 
   implementation("org.springdoc:springdoc-openapi-ui:1.6.4")
   implementation("org.springdoc:springdoc-openapi-kotlin:1.6.4")
