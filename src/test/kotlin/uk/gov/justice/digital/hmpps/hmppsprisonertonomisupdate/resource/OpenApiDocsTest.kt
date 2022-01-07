@@ -1,3 +1,5 @@
+package uk.gov.justice.digital.hmpps.hmppsprisonertonomisupdate.resource
+
 import io.swagger.v3.parser.OpenAPIV3Parser
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
