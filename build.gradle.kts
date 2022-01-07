@@ -21,13 +21,13 @@ dependencies {
 }
 
 java {
-  toolchain.languageVersion.set(JavaLanguageVersion.of(16))
+  toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
-      jvmTarget = "16"
+      jvmTarget = "17"
     }
   }
 }
