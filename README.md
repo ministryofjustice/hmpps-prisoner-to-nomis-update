@@ -7,4 +7,23 @@
 
 Handles hmpps Domain events for NOMIS updates
 
+## Running locally
 
+For running locally against docker instances of the following services:
+- hmpps-auth
+- hmpps-nomis-prisoner-api
+- run this application independently e.g. in IntelliJ
+
+`docker compose up hmpps-auth hmpps-nomis-prisoner-api`
+
+or 
+
+`docker-compose up hmpps-auth hmpps-nomis-prisoner-api`
+
+Running all services including this service 
+
+`docker compose up`
+
+or
+
+`docker-compose up`

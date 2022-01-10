@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppsprisonertonomisupdate.config
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.config
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean

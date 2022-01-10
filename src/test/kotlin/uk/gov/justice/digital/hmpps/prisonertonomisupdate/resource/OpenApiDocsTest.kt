@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppsprisonertonomisupdate.resource
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.resource
 
 import io.swagger.v3.parser.OpenAPIV3Parser
 import org.assertj.core.api.Assertions.assertThat
@@ -7,7 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
-import uk.gov.justice.digital.hmpps.hmppsprisonertonomisupdate.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
