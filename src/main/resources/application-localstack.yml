@@ -1,0 +1,10 @@
+hmpps.sqs:
+  provider: localstack
+  queues:
+    prisoner:
+      queueName: hmpps_prisoner_to_nomis_queue
+      dlqName: hmpps_prisoner_to_nomis_dlq
+      subscribeTopicId: domainevents
+  topics:
+    domainevents:
+      arn: arn:aws:sns:eu-west-2:000000000000:hmpps_domain_events
