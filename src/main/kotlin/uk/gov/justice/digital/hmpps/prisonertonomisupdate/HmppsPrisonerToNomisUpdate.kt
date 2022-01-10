@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppsprisonertonomisupdate
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

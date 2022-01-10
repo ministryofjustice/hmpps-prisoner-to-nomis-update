@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppsprisonertonomisupdate.config
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.config
 
 import com.microsoft.applicationinsights.web.internal.ThreadContext
 import com.nimbusds.jwt.JWTClaimsSet

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppsprisonertonomisupdate.config
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.config
 
 import org.apache.commons.lang3.RegExUtils
 import org.springframework.security.core.Authentication

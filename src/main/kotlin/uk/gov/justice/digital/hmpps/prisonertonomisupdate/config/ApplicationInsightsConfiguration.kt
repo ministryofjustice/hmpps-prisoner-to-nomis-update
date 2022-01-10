@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppsprisonertonomisupdate.config
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.config
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.LoggerFactory

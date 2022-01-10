@@ -1,10 +1,10 @@
-package uk.gov.justice.digital.hmpps.hmppsprisonertonomisupdate.integration.health
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.health
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.hmppsprisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppsprisonertonomisupdate.wiremock.HmppsAuthApiExtension
-import uk.gov.justice.digital.hmpps.hmppsprisonertonomisupdate.wiremock.NomisApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.function.Consumer
