@@ -32,7 +32,10 @@ spring:
 
   profiles:
     group:
+      dev:
+        - "localstack"
       test:
+        - "localstack"
         - "stdout"
 
 server:
