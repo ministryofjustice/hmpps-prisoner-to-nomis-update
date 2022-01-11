@@ -21,7 +21,9 @@ class HMPPSPrisonerDomainEventsListener(
     log.info("Received message {}", sqsMessage.MessageId)
     val changeEvent: HMPPSDomainEvent = gson.fromJson(sqsMessage.Message, HMPPSDomainEvent::class.java)
     when (changeEvent.eventType) {
-      "COURT_REGISTER_UPDATE" -> log.info("Received COURT_REGISTER_UPDATE")
+      "book-a-prison-visit.visit.created" -> log.info("Received ${changeEvent.eventType} event")
+      "book-a-prison-visit.visit.amended" -> log.info("Received ${changeEvent.eventType} event")
+      "book-a-prison-visit.visit.cancelled" -> log.info("Received ${changeEvent.eventType} event")
       else -> log.info("Received a message I wasn't expecting {}", changeEvent)
     }
   }
