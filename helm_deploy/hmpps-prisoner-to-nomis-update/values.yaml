@@ -11,6 +11,13 @@ generic-service:
 
   ingress:
     enabled: true
+    annotations:
+      nginx.ingress.kubernetes.io/configuration-snippet: |
+        server_tokens off;
+        location /queue-admin/retry-all-dlqs {
+          deny all;
+          return 401;
+        }
     host: app-hostname.local    # override per environment
     tlsSecretName: prisoner-to-nomis-cert
 
