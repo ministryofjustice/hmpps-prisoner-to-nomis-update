@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.0.1-beta"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.0.1"
   kotlin("plugin.spring") version "1.6.10"
 }
 
@@ -23,7 +23,6 @@ dependencies {
   testImplementation("io.swagger.parser.v3:swagger-parser:2.0.29")
   testImplementation("com.github.tomakehurst:wiremock-standalone:2.27.2")
   testImplementation("org.mockito:mockito-inline:4.2.0")
-  testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
   testImplementation("org.testcontainers:localstack:1.16.2")
 }
 
