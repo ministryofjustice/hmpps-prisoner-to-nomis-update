@@ -13,5 +13,4 @@ class PrisonVisitsService {
 
   fun updateVisit() {
   }
-
 }
