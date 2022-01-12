@@ -8,7 +8,9 @@ import org.mockito.kotlin.verify
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.test.mock.mockito.SpyBean
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCreateMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCancelledMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCreatedMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitUpdatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.service.PrisonVisitsService
 
 class PrisonerToNomisTest : SqsIntegrationTestBase() {
@@ -23,12 +25,34 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
   @Test
   fun `will consume a prison visits create message`() {
 
-    val message = prisonVisitCreateMessage()
+    val message = prisonVisitCreatedMessage()
 
     awsSqsClient.sendMessage(queueUrl, message)
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnQueue() } matches { it == 0 }
     verify(prisonVisitsService).createVisit()
+  }
+
+  @Test
+  fun `will consume a prison visits cancel message`() {
+
+    val message = prisonVisitCancelledMessage()
+
+    awsSqsClient.sendMessage(queueUrl, message)
+
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue() } matches { it == 0 }
+    verify(prisonVisitsService).cancelVisit()
+  }
+
+  @Test
+  fun `will consume a prison visits update message`() {
+
+    val message = prisonVisitUpdatedMessage()
+
+    awsSqsClient.sendMessage(queueUrl, message)
+
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue() } matches { it == 0 }
+    verify(prisonVisitsService).updateVisit()
   }
 
   private fun getNumberOfMessagesCurrentlyOnQueue(): Int? {
