@@ -5,7 +5,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.service.PrisonVisitsService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits.PrisonVisitsService
 
 @Service
 class PrisonerDomainEventsListener(

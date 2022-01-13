@@ -21,6 +21,11 @@ spring:
             client-id: ${system.client.id}
             client-secret: ${system.client.secret}
             authorization-grant-type: client_credentials
+          visits-api:
+            provider: hmpps-auth
+            client-id: ${visits.client.id}
+            client-secret: ${visits.client.secret}
+            authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${api.base.url.oauth}/oauth/token
