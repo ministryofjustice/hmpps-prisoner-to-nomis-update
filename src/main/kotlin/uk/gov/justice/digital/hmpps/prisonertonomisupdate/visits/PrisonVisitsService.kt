@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.service
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
 import org.springframework.stereotype.Service
 

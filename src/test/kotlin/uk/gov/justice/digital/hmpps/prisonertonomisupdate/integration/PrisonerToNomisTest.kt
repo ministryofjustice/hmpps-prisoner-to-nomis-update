@@ -11,7 +11,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCancelledMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCreatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitUpdatedMessage
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.service.PrisonVisitsService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits.PrisonVisitsService
 
 class PrisonerToNomisTest : SqsIntegrationTestBase() {
 
