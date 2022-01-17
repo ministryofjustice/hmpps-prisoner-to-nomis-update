@@ -56,6 +56,23 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubVisitCreateWithError(status: Int = 500) {
+    stubFor(
+      post("/visits").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              {
+                "error": "some error"
+              }
+            """.trimIndent()
+          )
+          .withStatus(status)
+      )
+    )
+  }
+
   private val CREATE_RESPONSE = """
     {
       "visitId": "12345"
