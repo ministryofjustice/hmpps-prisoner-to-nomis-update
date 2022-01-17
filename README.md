@@ -50,6 +50,22 @@ The first 2 of the 3 steps is required but instead of step 3
 
 Then run any of the `bash` scripts at the root of this project to send events to the local topic
 
+## Mock services
+
+There a circumstances where you want to run this service end to end but without the publishing service being available, for example the publishing service
+has not be written yet. To emulate the publishing service we may provide a mock, for instance MockVisitsResource which returns canned data. The canned data might have limited ability to be configured per-environment. 
+Details of the configuration follows:
+
+### MockVisitsResource
+
+Environment overrides for the MockVisitsResource are:
+`MOCK_VISITS_PRISON_ID` - The prison where the visit is scheduled
+`MOCK_VISITS_VISITORS`- the person ids of the visitors
+
+e.g.
+`MOCK_VISITS_PRISON_ID=WWI`
+`MOCK_VISITS_VISITORS=1838,273723`
+
 ### Runbook
 
 #### Queue Dead letter queue maintenance
