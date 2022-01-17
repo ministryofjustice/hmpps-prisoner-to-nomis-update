@@ -22,6 +22,7 @@ class MockVisitsResource {
 data class VSIPVisit(
   val visitId: String = "101",
   val prisonId: String = "MDI",
+  val prisonerId: String = "A7948DY",
   val visitType: String = "STANDARD_SOCIAL",
   val visitRoom: String = "Room 1",
   val visitDate: LocalDate = LocalDate.now().plusDays(1),

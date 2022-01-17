@@ -29,7 +29,7 @@ class WebClientConfiguration(@Value("\${api.base.url.nomis}") val nomisApiBaseUr
   }
 
   @Bean
-  fun nomsApiWebClient(authorizedClientManager: OAuth2AuthorizedClientManager): WebClient {
+  fun nomisApiWebClient(authorizedClientManager: OAuth2AuthorizedClientManager): WebClient {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
     oauth2Client.setDefaultClientRegistrationId("nomis-api")
 

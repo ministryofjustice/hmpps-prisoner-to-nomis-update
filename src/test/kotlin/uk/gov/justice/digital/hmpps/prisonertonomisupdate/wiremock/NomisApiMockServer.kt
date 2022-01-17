@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
 
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.post
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -42,4 +44,23 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       )
     )
   }
+
+  fun stubVisitCreate(response: String = CREATE_RESPONSE) {
+    stubFor(
+      post("/visits").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(201)
+      )
+    )
+  }
+
+  private val CREATE_RESPONSE = """
+    {
+      "nomisVisitId": "12345"
+     }
+     """
+
+  fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
 }
