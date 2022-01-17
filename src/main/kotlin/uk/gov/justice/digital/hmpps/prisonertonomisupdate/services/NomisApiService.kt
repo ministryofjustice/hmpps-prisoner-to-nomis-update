@@ -13,16 +13,20 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun createVisit(request: CreateVisitDto): String? {
+  fun createVisit(request: CreateVisitDto): CreateVisitResponseDto? {
     return webClient.post()
       .uri("/visits")
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(String::class.java)
+      .bodyToMono(CreateVisitResponseDto::class.java)
       .block()
   }
 }
 
 data class CreateVisitDto(
   val offenderNo: String
+)
+
+data class CreateVisitResponseDto(
+  val visitId: String
 )
