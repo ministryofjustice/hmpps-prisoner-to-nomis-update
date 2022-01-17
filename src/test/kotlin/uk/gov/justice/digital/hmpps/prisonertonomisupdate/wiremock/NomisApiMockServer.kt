@@ -58,7 +58,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   private val CREATE_RESPONSE = """
     {
-      "nomisVisitId": "12345"
+      "visitId": "12345"
      }
      """
 
