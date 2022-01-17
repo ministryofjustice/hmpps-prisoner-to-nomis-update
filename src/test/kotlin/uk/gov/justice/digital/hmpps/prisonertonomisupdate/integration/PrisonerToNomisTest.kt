@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration
 
+import com.github.tomakehurst.wiremock.client.WireMock
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
@@ -12,6 +13,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCan
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCreatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitUpdatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits.PrisonVisitsService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension.Companion.visitsApi
 
 class PrisonerToNomisTest : SqsIntegrationTestBase() {
 
@@ -24,13 +27,21 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
 
   @Test
   fun `will consume a prison visits create message`() {
+    visitsApi.stubVisitGet("12", buildVisitApiDtoJsonResponse(prisonerId = "A32323Y"))
+    nomisApi.stubVisitCreate()
 
     val message = prisonVisitCreatedMessage()
 
     awsSqsClient.sendMessage(queueUrl, message)
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnQueue() } matches { it == 0 }
-    verify(prisonVisitsService).createVisit()
+    await untilCallTo { visitsApi.getCountFor("/visits/12") } matches { it == 1 }
+    await untilCallTo { nomisApi.postCountFor("/visits") } matches { it == 1 }
+
+    nomisApi.verify(
+      WireMock.postRequestedFor(WireMock.urlEqualTo("/visits"))
+        .withRequestBody(WireMock.matchingJsonPath("offenderNo", WireMock.equalTo("A32323Y")))
+    )
   }
 
   @Test
@@ -53,6 +64,33 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnQueue() } matches { it == 0 }
     verify(prisonVisitsService).updateVisit()
+  }
+
+  fun buildVisitApiDtoJsonResponse(visitId: String = "1", prisonerId: String = "A32323Y"): String {
+    return """
+    {
+      "visitId": "$visitId",
+      "prisonId": "MDI",
+      "prisonerId": "$prisonerId",
+      "visitType": "STANDARD_SOCIAL",
+      "visitRoom": "Room 1",
+      "visitDate": "2019-12-02",
+      "startTime": "09:00:00",
+      "endTime": "10:00:00",
+      "currentStatus": "BOOKED",
+      "visitors": [
+        {
+          "nomisPersonId": 543524
+        },
+        {
+          "nomisPersonId": 344444
+        },
+        {
+          "nomisPersonId": 655656
+        }
+      ]
+    }
+    """.trimIndent()
   }
 
   private fun getNumberOfMessagesCurrentlyOnQueue(): Int? {

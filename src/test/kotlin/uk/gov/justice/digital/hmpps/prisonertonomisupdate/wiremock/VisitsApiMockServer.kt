@@ -1,12 +1,14 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
 
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
 
 class VisitsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
   companion object {
@@ -32,6 +34,8 @@ class VisitsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     private const val WIREMOCK_PORT = 8082
   }
 
+  private val mapper = ObjectMapper()
+
   fun stubHealthPing(status: Int) {
     stubFor(
       get("/health/ping").willReturn(
@@ -42,4 +46,17 @@ class VisitsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       )
     )
   }
+
+  fun stubVisitGet(visitId: String, response: String) {
+    stubFor(
+      get("/visits/$visitId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(200)
+      )
+    )
+  }
+
+  fun getCountFor(url: String) = this.findAll(WireMock.getRequestedFor(WireMock.urlEqualTo(url))).count()
 }
