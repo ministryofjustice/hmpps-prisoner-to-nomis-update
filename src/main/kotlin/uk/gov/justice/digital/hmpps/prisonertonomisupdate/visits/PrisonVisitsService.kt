@@ -25,7 +25,7 @@ class PrisonVisitsService(
           visitRoomId = this.visitRoom
         )
       ).run {
-        visitsApiService.updateVisitMapping(visitId, this.visitId)
+        visitsApiService.addVisitMapping(visitId, this.visitId)
       }
     }
   }

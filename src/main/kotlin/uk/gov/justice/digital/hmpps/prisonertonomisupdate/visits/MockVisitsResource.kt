@@ -25,7 +25,7 @@ class MockVisitsResource(private val mockVisitsData: MockVisitsData) {
   @PreAuthorize("hasRole('ROLE_VISIT_SCHEDULER')")
   @PostMapping("/visits/{visitId}/nomis-mapping")
   @Operation(hidden = true)
-  fun postVisitMapping(
+  fun addVisitMapping(
     @PathVariable visitId: String,
     @RequestBody nomisData: VSISPNomisVisitData
   ) {

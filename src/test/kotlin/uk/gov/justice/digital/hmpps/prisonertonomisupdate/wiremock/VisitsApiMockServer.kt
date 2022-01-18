@@ -4,7 +4,7 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
-import com.github.tomakehurst.wiremock.client.WireMock.put
+import com.github.tomakehurst.wiremock.client.WireMock.post
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -56,9 +56,9 @@ class VisitsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubVisitMappingPut(visitId: String) {
+  fun stubVisitMappingPost(visitId: String) {
     stubFor(
-      put("/visits/$visitId/nomis-mapping").willReturn(
+      post("/visits/$visitId/nomis-mapping").willReturn(
         aResponse()
           .withStatus(200)
       )
@@ -66,7 +66,7 @@ class VisitsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun getCountFor(url: String) = this.findAll(WireMock.getRequestedFor(WireMock.urlEqualTo(url))).count()
-  fun putCountFor(url: String) = this.findAll(WireMock.putRequestedFor(WireMock.urlEqualTo(url))).count()
+  fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
 
   fun stubVisitGetWithError(visitId: String, status: Int = 500) {
     stubFor(

@@ -17,8 +17,8 @@ class VisitsApiService(@Qualifier("visitsApiWebClient") private val webClient: W
       .block()!!
   }
 
-  fun updateVisitMapping(visitId: String, nomisVisitId: String) {
-    webClient.put()
+  fun addVisitMapping(visitId: String, nomisVisitId: String) {
+    webClient.post()
       .uri("/visits/$visitId/nomis-mapping")
       .bodyValue(VSIPVisitMapping(nomisVisitId = nomisVisitId))
       .retrieve()
