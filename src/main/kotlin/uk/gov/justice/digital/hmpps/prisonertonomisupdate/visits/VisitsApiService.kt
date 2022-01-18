@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -11,16 +9,12 @@ import java.time.LocalTime
 @Service
 class VisitsApiService(@Qualifier("visitsApiWebClient") private val webClient: WebClient) {
 
-  companion object {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
-  }
-
-  fun getVisit(visitId: String): VisitDto? {
+  fun getVisit(visitId: String): VisitDto {
     return webClient.get()
       .uri("/visits/$visitId")
       .retrieve()
       .bodyToMono(VisitDto::class.java)
-      .block()
+      .block()!!
   }
 }
 
