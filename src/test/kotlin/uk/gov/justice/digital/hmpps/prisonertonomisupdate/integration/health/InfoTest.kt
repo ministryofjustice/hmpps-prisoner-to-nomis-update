@@ -2,10 +2,15 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.health
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.test.context.TestPropertySource
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+@TestPropertySource(
+  properties =
+  ["spring.autoconfigure.exclude=uk.gov.justice.hmpps.sqs.HmppsSqsConfiguration"]
+)
 class InfoTest : IntegrationTestBase() {
 
   @Test

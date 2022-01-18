@@ -74,7 +74,7 @@ internal class VisitsApiServiceTest : ApiIntegrationTestBase() {
       assertThat(visit.startTime).isEqualTo(LocalTime.parse("09:00:00"))
       assertThat(visit.endTime).isEqualTo(LocalTime.parse("10:00:00"))
       assertThat(visit.prisonId).isEqualTo("MDI")
-      assertThat(visit.visitors).containsExactly(Visitor("543524"), Visitor("344444"), Visitor("655656"))
+      assertThat(visit.visitors).containsExactly(Visitor(543524), Visitor(344444), Visitor(655656))
     }
 
     @Test

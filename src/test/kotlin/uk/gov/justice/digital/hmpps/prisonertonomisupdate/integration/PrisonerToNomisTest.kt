@@ -29,6 +29,7 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
   fun `will consume a prison visits create message`() {
     visitsApi.stubVisitGet("12", buildVisitApiDtoJsonResponse(prisonerId = "A32323Y"))
     nomisApi.stubVisitCreate()
+    visitsApi.stubVisitMappingPut("12")
 
     val message = prisonVisitCreatedMessage()
 
@@ -37,10 +38,20 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
     await untilCallTo { getNumberOfMessagesCurrentlyOnQueue() } matches { it == 0 }
     await untilCallTo { visitsApi.getCountFor("/visits/12") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/visits") } matches { it == 1 }
+    await untilCallTo { visitsApi.putCountFor("/visits/12/nomis-mapping") } matches { it == 1 }
 
     nomisApi.verify(
       WireMock.postRequestedFor(WireMock.urlEqualTo("/visits"))
         .withRequestBody(WireMock.matchingJsonPath("offenderNo", WireMock.equalTo("A32323Y")))
+        .withRequestBody(WireMock.matchingJsonPath("prisonId", WireMock.equalTo("MDI")))
+        .withRequestBody(WireMock.matchingJsonPath("visitType", WireMock.equalTo("SCON")))
+        .withRequestBody(WireMock.matchingJsonPath("visitRoomId", WireMock.equalTo("Room 1")))
+        .withRequestBody(WireMock.matchingJsonPath("startTime", WireMock.equalTo("2019-12-02T09:00:00")))
+        .withRequestBody(WireMock.matchingJsonPath("issueDate", WireMock.equalTo("2021-03-05")))
+    )
+    visitsApi.verify(
+      WireMock.putRequestedFor(WireMock.urlEqualTo("/visits/12/nomis-mapping"))
+        .withRequestBody(WireMock.matchingJsonPath("nomisVisitId", WireMock.equalTo("12345")))
     )
   }
 
