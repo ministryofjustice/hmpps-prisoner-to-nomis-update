@@ -14,9 +14,10 @@ import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.ApiIntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits.CreateVisitDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Import(NomisApiService::class)
 internal class NomisApiServiceTest : ApiIntegrationTestBase() {
@@ -86,4 +87,13 @@ internal class NomisApiServiceTest : ApiIntegrationTestBase() {
   }
 }
 
-fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(offenderNo)
+fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(
+  offenderNo = offenderNo,
+  prisonId = "MDI",
+  startTime = LocalDateTime.now(),
+  endTime = LocalTime.MIDNIGHT,
+  visitorPersonIds = listOf(),
+  visitType = "SCON",
+  visitRoomId = "1",
+  issueDate = LocalDate.now()
+)

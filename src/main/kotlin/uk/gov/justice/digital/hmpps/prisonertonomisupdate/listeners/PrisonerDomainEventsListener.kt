@@ -1,16 +1,17 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners
 
-import com.google.gson.Gson
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits.PrisonVisitsService
+import java.time.OffsetDateTime
 
 @Service
 class PrisonerDomainEventsListener(
   private val prisonVisitsService: PrisonVisitsService,
-  private val gson: Gson,
+  private val objectMapper: ObjectMapper
 ) {
 
   private companion object {
@@ -19,12 +20,15 @@ class PrisonerDomainEventsListener(
 
   @JmsListener(destination = "prisoner", containerFactory = "hmppsQueueContainerFactoryProxy")
   fun onPrisonerChange(message: String) {
-    val sqsMessage: SQSMessage = gson.fromJson(message, SQSMessage::class.java)
+    val sqsMessage: SQSMessage = objectMapper.readValue(message, SQSMessage::class.java)
     log.debug("Received message {}", sqsMessage.MessageId)
-    val changeEvent: HMPPSDomainEvent = gson.fromJson(sqsMessage.Message, HMPPSDomainEvent::class.java)
+    val changeEvent: HMPPSDomainEvent = objectMapper.readValue(sqsMessage.Message, HMPPSDomainEvent::class.java)
     log.info("Received ${changeEvent.eventType} event")
     when (changeEvent.eventType) {
-      "prison-visit.booked" -> prisonVisitsService.createVisit(changeEvent.additionalInformation.visitId!!)
+      "prison-visit.booked" -> prisonVisitsService.createVisit(
+        visitId = changeEvent.additionalInformation!!.visitId!!,
+        bookingDate = changeEvent.occurredAt.toLocalDateTime()
+      )
       "prison-visit.revised" -> prisonVisitsService.updateVisit()
       "prison-visit.cancelled" -> prisonVisitsService.cancelVisit()
       else -> log.info("Received a message I wasn't expecting {}", changeEvent)
@@ -33,7 +37,8 @@ class PrisonerDomainEventsListener(
 
   data class HMPPSDomainEvent(
     val eventType: String,
-    val additionalInformation: AdditionalInformation,
+    val additionalInformation: AdditionalInformation?,
+    val occurredAt: OffsetDateTime
   )
 
   data class AdditionalInformation(

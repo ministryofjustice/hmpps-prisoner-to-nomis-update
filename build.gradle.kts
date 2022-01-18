@@ -14,8 +14,6 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:1.0.3")
 
-  implementation("com.google.code.gson:gson:2.8.9")
-
   implementation("org.springdoc:springdoc-openapi-ui:1.6.4")
   implementation("org.springdoc:springdoc-openapi-kotlin:1.6.4")
   implementation("org.springdoc:springdoc-openapi-data-rest:1.6.4")

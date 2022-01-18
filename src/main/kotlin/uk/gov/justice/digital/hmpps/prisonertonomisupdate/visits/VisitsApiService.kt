@@ -16,6 +16,15 @@ class VisitsApiService(@Qualifier("visitsApiWebClient") private val webClient: W
       .bodyToMono(VisitDto::class.java)
       .block()!!
   }
+
+  fun updateVisitMapping(visitId: String, nomisVisitId: String) {
+    webClient.put()
+      .uri("/visits/$visitId/nomis-mapping")
+      .bodyValue(VSIPVisitMapping(nomisVisitId = nomisVisitId))
+      .retrieve()
+      .bodyToMono(Unit::class.java)
+      .block()
+  }
 }
 
 data class VisitDto(
@@ -30,5 +39,7 @@ data class VisitDto(
   val endTime: LocalTime = LocalTime.now().plusHours(1),
   val currentStatus: String,
 ) {
-  data class Visitor(val nomisPersonId: String)
+  data class Visitor(val nomisPersonId: Long)
 }
+
+data class VSIPVisitMapping(val nomisVisitId: String)

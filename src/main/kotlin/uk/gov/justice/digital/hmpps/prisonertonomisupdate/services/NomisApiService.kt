@@ -1,8 +1,12 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Service
 class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
@@ -18,7 +22,17 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 }
 
 data class CreateVisitDto(
-  val offenderNo: String
+  val offenderNo: String,
+  val prisonId: String,
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+  val startTime: LocalDateTime,
+  val endTime: LocalTime,
+  val visitorPersonIds: List<Long>,
+  val decrementBalance: Boolean = true,
+  val visitType: String,
+  val visitRoomId: String,
+  @JsonFormat(pattern = "yyyy-MM-dd")
+  val issueDate: LocalDate
 )
 
 data class CreateVisitResponseDto(
