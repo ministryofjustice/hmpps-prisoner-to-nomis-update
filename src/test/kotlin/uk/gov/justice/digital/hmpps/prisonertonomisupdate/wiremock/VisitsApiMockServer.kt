@@ -84,4 +84,22 @@ class VisitsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       )
     )
   }
+
+  fun stubVisitMappingPostWithError(visitId: String, status: Int = 500) {
+    stubFor(
+      post("/visits/$visitId/nomis-mapping")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+              {
+                "error": "some error"
+              }
+              """.trimIndent()
+            )
+            .withStatus(status)
+        )
+    )
+  }
 }

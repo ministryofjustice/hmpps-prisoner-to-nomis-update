@@ -13,7 +13,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   fun createVisit(request: CreateVisitDto): CreateVisitResponseDto {
     return webClient.post()
-      .uri("/visits")
+      .uri("/prisoners/${request.offenderNo}/visits")
       .bodyValue(request)
       .retrieve()
       .bodyToMono(CreateVisitResponseDto::class.java)

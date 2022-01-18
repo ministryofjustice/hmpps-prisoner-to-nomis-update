@@ -29,7 +29,7 @@ internal class NomisApiServiceTest : ApiIntegrationTestBase() {
   inner class CreateVisit {
     @BeforeEach
     internal fun setUp() {
-      NomisApiExtension.nomisApi.stubVisitCreate()
+      NomisApiExtension.nomisApi.stubVisitCreate("AB123D")
     }
 
     @Test
@@ -37,7 +37,7 @@ internal class NomisApiServiceTest : ApiIntegrationTestBase() {
       nomisApiService.createVisit(newVisit())
 
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/visits"))
+        postRequestedFor(urlEqualTo("/prisoners/AB123D/visits"))
           .withHeader("Authorization", equalTo("Bearer ABCDE"))
       )
     }
@@ -47,7 +47,7 @@ internal class NomisApiServiceTest : ApiIntegrationTestBase() {
       nomisApiService.createVisit(newVisit(offenderNo = "AB123D"))
 
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/visits"))
+        postRequestedFor(urlEqualTo("/prisoners/AB123D/visits"))
           .withRequestBody(matchingJsonPath("$.offenderNo", equalTo("AB123D")))
       )
     }
@@ -69,7 +69,7 @@ internal class NomisApiServiceTest : ApiIntegrationTestBase() {
 
     @Test
     internal fun `when offender is not found an exception is thrown`() {
-      NomisApiExtension.nomisApi.stubVisitCreateWithError(404)
+      NomisApiExtension.nomisApi.stubVisitCreateWithError("AB123D", 404)
 
       assertThatThrownBy {
         nomisApiService.createVisit(newVisit())
@@ -78,7 +78,7 @@ internal class NomisApiServiceTest : ApiIntegrationTestBase() {
 
     @Test
     internal fun `when any bad response is received an exception is thrown`() {
-      NomisApiExtension.nomisApi.stubVisitCreateWithError(503)
+      NomisApiExtension.nomisApi.stubVisitCreateWithError("AB123D", 503)
 
       assertThatThrownBy {
         nomisApiService.createVisit(newVisit())
