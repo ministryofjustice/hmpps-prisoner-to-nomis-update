@@ -95,4 +95,42 @@ internal class VisitsApiServiceTest : ApiIntegrationTestBase() {
       }.isInstanceOf(ServiceUnavailable::class.java)
     }
   }
+
+  @Nested
+  inner class AddVisitMapping {
+    @BeforeEach
+    internal fun setUp() {
+      VisitsApiExtension.visitsApi.stubVisitMappingPost(
+        "1234"
+      )
+    }
+
+    @Test
+    fun `should call visit api with OAuth2 token`() {
+      visitsApiService.addVisitMapping("1234", "5432")
+
+      VisitsApiExtension.visitsApi.verify(
+        WireMock.postRequestedFor(WireMock.urlEqualTo("/visits/1234/nomis-mapping"))
+          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE"))
+      )
+    }
+
+    @Test
+    internal fun `when visit is not found an exception is thrown`() {
+      VisitsApiExtension.visitsApi.stubVisitMappingPostWithError(visitId = "1234", status = 404)
+
+      Assertions.assertThatThrownBy {
+        visitsApiService.addVisitMapping("1234", "5432")
+      }.isInstanceOf(NotFound::class.java)
+    }
+
+    @Test
+    internal fun `when any bad response is received an exception is thrown`() {
+      VisitsApiExtension.visitsApi.stubVisitMappingPostWithError(visitId = "1234", status = 503)
+
+      Assertions.assertThatThrownBy {
+        visitsApiService.addVisitMapping("1234", "5432")
+      }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+  }
 }

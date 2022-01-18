@@ -45,9 +45,9 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubVisitCreate(response: String = CREATE_RESPONSE) {
+  fun stubVisitCreate(prisonerId: String, response: String = CREATE_RESPONSE) {
     stubFor(
-      post("/visits").willReturn(
+      post("/prisoners/$prisonerId/visits").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
@@ -56,9 +56,9 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubVisitCreateWithError(status: Int = 500) {
+  fun stubVisitCreateWithError(prisonerId: String, status: Int = 500) {
     stubFor(
-      post("/visits").willReturn(
+      post("/prisoners/$prisonerId/visits").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
