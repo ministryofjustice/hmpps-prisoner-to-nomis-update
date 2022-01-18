@@ -31,4 +31,4 @@ import kotlin.annotation.AnnotationTarget.CLASS
 @ActiveProfiles("test")
 @SpringBootTest(classes = [WebClientConfiguration::class, WebClientAutoConfiguration::class, OAuth2ClientAutoConfiguration::class, SecurityAutoConfiguration::class])
 @BootstrapWith(SpringBootTestContextBootstrapper::class)
-annotation class APITest
+annotation class SpringAPIServiceTest
