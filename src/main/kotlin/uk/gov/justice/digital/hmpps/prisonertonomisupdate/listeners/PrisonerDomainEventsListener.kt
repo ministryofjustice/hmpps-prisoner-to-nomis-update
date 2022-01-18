@@ -10,7 +10,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits.PrisonVisitsSer
 @Service
 class PrisonerDomainEventsListener(
   private val prisonVisitsService: PrisonVisitsService,
-  private val objectMapper: ObjectMapper
+  private val objectMapper: ObjectMapper,
+  private val eventFeatureSwitch: EventFeatureSwitch,
 ) {
 
   private companion object {
@@ -21,13 +22,15 @@ class PrisonerDomainEventsListener(
   fun onPrisonerChange(message: String) {
     val sqsMessage: SQSMessage = objectMapper.readValue(message, SQSMessage::class.java)
     log.debug("Received message {}", sqsMessage.MessageId)
-    val changeEvent: HMPPSDomainEvent = objectMapper.readValue(sqsMessage.Message, HMPPSDomainEvent::class.java)
-    log.info("Received ${changeEvent.eventType} event")
-    when (changeEvent.eventType) {
+    val (eventType) = objectMapper.readValue(sqsMessage.Message, HMPPSDomainEvent::class.java)
+    log.info("Received {} event", eventType)
+    if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
       "prison-visit.booked" -> prisonVisitsService.createVisit(sqsMessage.Message.fromJson())
       "prison-visit.revised" -> prisonVisitsService.updateVisit()
       "prison-visit.cancelled" -> prisonVisitsService.cancelVisit()
-      else -> log.info("Received a message I wasn't expecting {}", changeEvent)
+      else -> log.info("Received a message I wasn't expecting {}", eventType)
+    } else {
+      log.warn("Feature switch is disabled for {}", eventType)
     }
   }
 
