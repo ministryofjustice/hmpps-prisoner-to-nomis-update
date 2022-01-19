@@ -91,7 +91,7 @@ internal class NomisApiServiceTest {
 fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(
   offenderNo = offenderNo,
   prisonId = "MDI",
-  startTime = LocalDateTime.now(),
+  startDateTime = LocalDateTime.now(),
   endTime = LocalTime.MIDNIGHT,
   visitorPersonIds = listOf(),
   visitType = "SCON",
