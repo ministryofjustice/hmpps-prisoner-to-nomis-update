@@ -10,14 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.ApiIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits.VisitDto.Visitor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension
 import java.time.LocalDate
 import java.time.LocalTime
 
+@SpringAPIServiceTest
 @Import(VisitsApiService::class, VisitsConfiguration::class)
-internal class VisitsApiServiceTest : ApiIntegrationTestBase() {
+internal class VisitsApiServiceTest {
 
   @Autowired
   private lateinit var visitsApiService: VisitsApiService

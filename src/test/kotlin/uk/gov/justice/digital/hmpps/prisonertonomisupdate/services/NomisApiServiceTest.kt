@@ -13,14 +13,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.ApiIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
+@SpringAPIServiceTest
 @Import(NomisApiService::class)
-internal class NomisApiServiceTest : ApiIntegrationTestBase() {
+internal class NomisApiServiceTest {
 
   @Autowired
   private lateinit var nomisApiService: NomisApiService
