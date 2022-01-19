@@ -35,9 +35,10 @@ class MockVisitsResource(private val mockVisitsData: MockVisitsData) {
 data class VSIPVisit(
   val visitId: String,
   val prisonId: String,
+  val prisonerId: String,
   val visitors: List<VSIPVisitor>,
   val visitType: String = "STANDARD_SOCIAL",
-  val visitRoom: String = "Room 1",
+  val visitRoom: String,
   val visitDate: LocalDate = LocalDate.now().plusDays(1),
   val startTime: LocalTime = LocalTime.now(),
   val endTime: LocalTime = LocalTime.now().plusHours(1),
@@ -47,7 +48,9 @@ data class VSIPVisit(
   constructor(visitId: String, visitsData: MockVisitsData) : this(
     visitId = visitId,
     prisonId = visitsData.prisonId,
+    prisonerId = visitsData.prisonerId,
     visitors = visitsData.visitors.map { VSIPVisitor(it) },
+    visitRoom = visitsData.visitRoom,
   )
 
   data class VSIPVisitor(val nomisPersonId: String)
@@ -59,5 +62,7 @@ data class VSISPNomisVisitData(val nomisVisitId: Long)
 @ConfigurationProperties(prefix = "mock.visits")
 data class MockVisitsData(
   var prisonId: String = "MDI",
-  var visitors: List<String> = listOf("4729570", "4729550")
+  var visitors: List<String> = listOf("4729570", "4729550"),
+  var visitRoom: String = "SOC_VIS",
+  var prisonerId: String = "A7948DY"
 )
