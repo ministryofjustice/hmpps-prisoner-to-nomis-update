@@ -19,7 +19,7 @@ class PrisonVisitsService(
         CreateVisitDto(
           offenderNo = this.prisonerId,
           prisonId = this.prisonId,
-          startTime = LocalDateTime.of(this.visitDate, this.startTime),
+          startDateTime = LocalDateTime.of(this.visitDate, this.startTime),
           endTime = this.endTime,
           visitorPersonIds = this.visitors.map { it -> it.nomisPersonId },
           issueDate = visitBookedEvent.bookingDate,

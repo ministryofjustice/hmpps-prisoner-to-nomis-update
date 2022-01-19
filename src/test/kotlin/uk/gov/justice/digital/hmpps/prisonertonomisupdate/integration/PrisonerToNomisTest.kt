@@ -46,7 +46,7 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
         .withRequestBody(WireMock.matchingJsonPath("prisonId", WireMock.equalTo("MDI")))
         .withRequestBody(WireMock.matchingJsonPath("visitType", WireMock.equalTo("SCON")))
         .withRequestBody(WireMock.matchingJsonPath("visitRoomId", WireMock.equalTo("Room 1")))
-        .withRequestBody(WireMock.matchingJsonPath("startTime", WireMock.equalTo("2019-12-02T09:00:00")))
+        .withRequestBody(WireMock.matchingJsonPath("startDateTime", WireMock.equalTo("2019-12-02T09:00:00")))
         .withRequestBody(WireMock.matchingJsonPath("issueDate", WireMock.equalTo("2021-03-05")))
     )
     visitsApi.verify(
