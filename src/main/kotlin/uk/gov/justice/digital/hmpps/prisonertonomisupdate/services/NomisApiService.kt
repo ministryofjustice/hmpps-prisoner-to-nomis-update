@@ -25,7 +25,7 @@ data class CreateVisitDto(
   val offenderNo: String,
   val prisonId: String,
   @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-  val startTime: LocalDateTime,
+  val startDateTime: LocalDateTime,
   val endTime: LocalTime,
   val visitorPersonIds: List<Long>,
   val decrementBalance: Boolean = true,
