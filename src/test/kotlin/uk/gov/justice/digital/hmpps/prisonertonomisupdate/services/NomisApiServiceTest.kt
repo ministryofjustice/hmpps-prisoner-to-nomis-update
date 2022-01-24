@@ -56,6 +56,7 @@ internal class NomisApiServiceTest {
     @Test
     internal fun `expect the visit id to be returned for created visit`() {
       NomisApiExtension.nomisApi.stubVisitCreate(
+        "AB123D",
         """
                   {
                     "visitId": 12345
@@ -83,6 +84,51 @@ internal class NomisApiServiceTest {
 
       assertThatThrownBy {
         nomisApiService.createVisit(newVisit())
+      }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+  }
+
+  @Nested
+  inner class CancelVisit {
+    @BeforeEach
+    internal fun setUp() {
+      NomisApiExtension.nomisApi.stubVisitCancel(prisonerId = "AB123D", nomisVisitId = "12")
+    }
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() {
+      nomisApiService.cancelVisit(CancelVisitDto(offenderNo = "AB123D", nomisVisitId = "12"))
+
+      NomisApiExtension.nomisApi.verify(
+        postRequestedFor(urlEqualTo("/prisoners/AB123D/visits/12/cancel"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+      )
+    }
+
+    @Test
+    fun `will post cancel request to nomis api`() {
+      nomisApiService.cancelVisit(CancelVisitDto(offenderNo = "AB123D", nomisVisitId = "12"))
+
+      NomisApiExtension.nomisApi.verify(
+        postRequestedFor(urlEqualTo("/prisoners/AB123D/visits/12/cancel"))
+      )
+    }
+
+    @Test
+    internal fun `when offender is not found an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubVisitCancelWithError("AB123D", "12", 404)
+
+      assertThatThrownBy {
+        nomisApiService.cancelVisit(CancelVisitDto(offenderNo = "AB123D", nomisVisitId = "12"))
+      }.isInstanceOf(NotFound::class.java)
+    }
+
+    @Test
+    internal fun `when any bad response is received an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubVisitCancelWithError("AB123D", "12", 503)
+
+      assertThatThrownBy {
+        nomisApiService.cancelVisit(CancelVisitDto(offenderNo = "AB123D", nomisVisitId = "12"))
       }.isInstanceOf(ServiceUnavailable::class.java)
     }
   }

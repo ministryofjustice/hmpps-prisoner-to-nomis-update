@@ -1,17 +1,16 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration
 
 import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.matching.UrlPattern
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.verify
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.test.mock.mockito.SpyBean
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCancelledMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCreatedMessage
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitUpdatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits.PrisonVisitsService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension.Companion.visitsApi
@@ -58,23 +57,27 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
   @Test
   fun `will consume a prison visits cancel message`() {
 
-    val message = prisonVisitCancelledMessage()
+    nomisApi.stubVisitCancel(prisonerId = "AB12345", nomisVisitId = "12")
+
+    val message = prisonVisitCancelledMessage(prisonerId = "AB12345")
 
     awsSqsClient.sendMessage(queueUrl, message)
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnQueue() } matches { it == 0 }
-    verify(prisonVisitsService).cancelVisit()
-  }
+    await untilCallTo { nomisApi.postCountFor("/prisoners/AB12345/visits/12/cancel") } matches { it == 1 }
 
-  @Test
-  fun `will consume a prison visits update message`() {
+   /*
+     Cancellation reason to be added
+     nomisApi.verify(
+      WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/A32323Y/visits/21/cancel"))
+        .withRequestBody(WireMock.matchingJsonPath("cancellationReason", WireMock.equalTo("A32323Y")))
+    )
+    */
 
-    val message = prisonVisitUpdatedMessage()
-
-    awsSqsClient.sendMessage(queueUrl, message)
-
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue() } matches { it == 0 }
-    verify(prisonVisitsService).updateVisit()
+    visitsApi.verify(
+      0,
+      WireMock.getRequestedFor(UrlPattern.ANY)
+    )
   }
 
   fun buildVisitApiDtoJsonResponse(visitId: String = "1", prisonerId: String = "A32323Y"): String {
