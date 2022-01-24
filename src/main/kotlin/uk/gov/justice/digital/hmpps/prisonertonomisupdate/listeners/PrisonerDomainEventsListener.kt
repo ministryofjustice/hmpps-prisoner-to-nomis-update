@@ -26,8 +26,7 @@ class PrisonerDomainEventsListener(
     log.info("Received {} event", eventType)
     if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
       "prison-visit.booked" -> prisonVisitsService.createVisit(sqsMessage.Message.fromJson())
-      "prison-visit.revised" -> prisonVisitsService.updateVisit()
-      "prison-visit.cancelled" -> prisonVisitsService.cancelVisit()
+      "prison-visit.cancelled" -> prisonVisitsService.cancelVisit(sqsMessage.Message.fromJson())
       else -> log.info("Received a message I wasn't expecting {}", eventType)
     } else {
       log.warn("Feature switch is disabled for {}", eventType)

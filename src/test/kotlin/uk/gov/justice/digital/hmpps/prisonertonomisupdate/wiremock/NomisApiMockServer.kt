@@ -73,6 +73,33 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubVisitCancel(prisonerId: String, nomisVisitId: String = "AB12345") {
+    stubFor(
+      post("/prisoners/$prisonerId/visits/$nomisVisitId/cancel").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200)
+      )
+    )
+  }
+
+  fun stubVisitCancelWithError(prisonerId: String, visitId: String, status: Int = 500) {
+    stubFor(
+      post("/prisoners/$prisonerId/visits/$visitId/cancel").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              {
+                "error": "some error"
+              }
+            """.trimIndent()
+          )
+          .withStatus(status)
+      )
+    )
+  }
+
   private val CREATE_RESPONSE = """
     {
       "visitId": "12345"

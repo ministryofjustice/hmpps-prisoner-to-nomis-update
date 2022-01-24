@@ -70,3 +70,4 @@ ecr.repo
 #Helm
 **/Chart.lock
 /send-visit-create-message-sns.bash
+/send-visit-cancel-message-sns.bash

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CancelVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
@@ -32,10 +33,13 @@ class PrisonVisitsService(
     }
   }
 
-  fun cancelVisit() {
-  }
-
-  fun updateVisit() {
+  fun cancelVisit(visitCancelledEvent: VisitCancelledEvent) {
+    nomisApiService.cancelVisit(
+      CancelVisitDto(
+        offenderNo = visitCancelledEvent.prisonerId,
+        nomisVisitId = visitCancelledEvent.visitId
+      )
+    )
   }
 }
 
@@ -48,8 +52,23 @@ data class VisitBookedEvent(
 
   val visitId: String
     get() = additionalInformation.visitId
+
+  data class VisitInformation(
+    val visitId: String
+  )
 }
 
-data class VisitInformation(
-  val visitId: String,
-)
+data class VisitCancelledEvent(
+  val additionalInformation: VisitInformation,
+  val occurredAt: OffsetDateTime,
+  val prisonerId: String,
+) {
+
+  val visitId: String
+    get() = additionalInformation.NOMISvisitId
+
+  data class VisitInformation(
+    val NOMISvisitId: String,
+    val visitType: String?
+  )
+}
