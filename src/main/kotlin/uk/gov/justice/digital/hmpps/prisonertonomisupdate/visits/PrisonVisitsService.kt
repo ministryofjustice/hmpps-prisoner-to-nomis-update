@@ -25,11 +25,10 @@ class PrisonVisitsService(
           visitorPersonIds = this.visitors.map { it -> it.nomisPersonId },
           issueDate = visitBookedEvent.bookingDate,
           visitType = "SCON", // TODO mapping
-          visitRoomId = this.visitRoom
+          visitRoomId = this.visitRoom,
+          vsipVisitId = this.visitId
         )
-      ).run {
-        visitsApiService.addVisitMapping(visitBookedEvent.visitId, this.visitId)
-      }
+      )
     }
   }
 

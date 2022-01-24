@@ -142,5 +142,6 @@ fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(
   visitorPersonIds = listOf(),
   visitType = "SCON",
   visitRoomId = "1",
-  issueDate = LocalDate.now()
+  issueDate = LocalDate.now(),
+  vsipVisitId = "123"
 )

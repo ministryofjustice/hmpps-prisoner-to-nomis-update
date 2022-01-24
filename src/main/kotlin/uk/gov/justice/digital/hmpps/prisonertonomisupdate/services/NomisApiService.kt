@@ -41,7 +41,8 @@ data class CreateVisitDto(
   val visitType: String,
   val visitRoomId: String,
   @JsonFormat(pattern = "yyyy-MM-dd")
-  val issueDate: LocalDate
+  val issueDate: LocalDate,
+  val vsipVisitId: String
 )
 
 data class CancelVisitDto(
