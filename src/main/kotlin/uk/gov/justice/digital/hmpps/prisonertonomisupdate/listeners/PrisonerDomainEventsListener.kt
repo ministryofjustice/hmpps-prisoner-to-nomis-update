@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.jms.annotation.JmsListener
@@ -12,6 +13,7 @@ class PrisonerDomainEventsListener(
   private val prisonVisitsService: PrisonVisitsService,
   private val objectMapper: ObjectMapper,
   private val eventFeatureSwitch: EventFeatureSwitch,
+  private val telemetryClient: TelemetryClient
 ) {
 
   private companion object {
@@ -22,8 +24,8 @@ class PrisonerDomainEventsListener(
   fun onPrisonerChange(message: String) {
     val sqsMessage: SQSMessage = objectMapper.readValue(message, SQSMessage::class.java)
     log.debug("Received message {}", sqsMessage.MessageId)
-    val (eventType) = objectMapper.readValue(sqsMessage.Message, HMPPSDomainEvent::class.java)
-    log.info("Received {} event", eventType)
+    val (eventType, prisonerId) = objectMapper.readValue(sqsMessage.Message, HMPPSDomainEvent::class.java)
+    telemetryClient.trackEvent("prisoner-domain-event-received", mapOf("eventType" to eventType, "offenderNo" to prisonerId), null)
     if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
       "prison-visit.booked" -> prisonVisitsService.createVisit(sqsMessage.Message.fromJson())
       "prison-visit.cancelled" -> prisonVisitsService.cancelVisit(sqsMessage.Message.fromJson())
@@ -35,6 +37,7 @@ class PrisonerDomainEventsListener(
 
   data class HMPPSDomainEvent(
     val eventType: String,
+    val prisonerId: String
   )
 
   data class SQSMessage(val Message: String, val MessageId: String)

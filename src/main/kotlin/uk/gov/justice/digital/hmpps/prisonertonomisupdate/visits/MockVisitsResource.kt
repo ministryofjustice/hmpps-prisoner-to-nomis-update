@@ -6,8 +6,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
 import java.time.LocalTime
@@ -21,15 +19,6 @@ class MockVisitsResource(private val mockVisitsData: MockVisitsData) {
   fun getVisit(
     @PathVariable visitId: String,
   ): VSIPVisit = VSIPVisit(visitId = visitId, visitsData = mockVisitsData)
-
-  @PreAuthorize("hasRole('ROLE_VISIT_SCHEDULER')")
-  @PostMapping("/visits/{visitId}/nomis-mapping")
-  @Operation(hidden = true)
-  fun addVisitMapping(
-    @PathVariable visitId: String,
-    @RequestBody nomisData: VSISPNomisVisitData
-  ) {
-  }
 }
 
 data class VSIPVisit(
@@ -55,8 +44,6 @@ data class VSIPVisit(
 
   data class VSIPVisitor(val nomisPersonId: String)
 }
-
-data class VSISPNomisVisitData(val nomisVisitId: Long)
 
 @Configuration
 @ConfigurationProperties(prefix = "mock.visits")

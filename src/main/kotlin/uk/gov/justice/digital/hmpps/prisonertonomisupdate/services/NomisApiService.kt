@@ -21,8 +21,8 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
   }
 
   fun cancelVisit(request: CancelVisitDto) {
-    webClient.post()
-      .uri("/prisoners/${request.offenderNo}/visits/${request.nomisVisitId}/cancel")
+    webClient.put()
+      .uri("/prisoners/${request.offenderNo}/visits/vsipVisitId/${request.visitId}/cancel")
       .bodyValue(request)
       .retrieve()
       .bodyToMono(Unit::class.java)
@@ -39,14 +39,16 @@ data class CreateVisitDto(
   val visitorPersonIds: List<Long>,
   val decrementBalance: Boolean = true,
   val visitType: String,
-  val visitRoomId: String,
+  // val visitRoomId: String,
   @JsonFormat(pattern = "yyyy-MM-dd")
-  val issueDate: LocalDate
+  val issueDate: LocalDate,
+  val vsipVisitId: String
 )
 
 data class CancelVisitDto(
   val offenderNo: String,
-  val nomisVisitId: String
+  val visitId: String,
+  val outcome: String
 )
 
 data class CreateVisitResponseDto(

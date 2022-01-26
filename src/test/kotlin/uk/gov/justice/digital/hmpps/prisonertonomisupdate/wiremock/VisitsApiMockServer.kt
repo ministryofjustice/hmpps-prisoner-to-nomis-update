@@ -4,7 +4,6 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
-import com.github.tomakehurst.wiremock.client.WireMock.post
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -56,17 +55,7 @@ class VisitsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubVisitMappingPost(visitId: String) {
-    stubFor(
-      post("/visits/$visitId/nomis-mapping").willReturn(
-        aResponse()
-          .withStatus(200)
-      )
-    )
-  }
-
   fun getCountFor(url: String) = this.findAll(WireMock.getRequestedFor(WireMock.urlEqualTo(url))).count()
-  fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
 
   fun stubVisitGetWithError(visitId: String, status: Int = 500) {
     stubFor(
@@ -82,24 +71,6 @@ class VisitsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           )
           .withStatus(status)
       )
-    )
-  }
-
-  fun stubVisitMappingPostWithError(visitId: String, status: Int = 500) {
-    stubFor(
-      post("/visits/$visitId/nomis-mapping")
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody(
-              """
-              {
-                "error": "some error"
-              }
-              """.trimIndent()
-            )
-            .withStatus(status)
-        )
     )
   }
 }
