@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.put
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -73,9 +74,9 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubVisitCancel(prisonerId: String, nomisVisitId: String = "AB12345") {
+  fun stubVisitCancel(prisonerId: String, visitId: String = "1234") {
     stubFor(
-      post("/prisoners/$prisonerId/visits/$nomisVisitId/cancel").willReturn(
+      put("/prisoners/$prisonerId/visits/vsipVisitId/$visitId/cancel").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
@@ -85,7 +86,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubVisitCancelWithError(prisonerId: String, visitId: String, status: Int = 500) {
     stubFor(
-      post("/prisoners/$prisonerId/visits/$visitId/cancel").willReturn(
+      put("/prisoners/$prisonerId/visits/vsipVisitId/$visitId/cancel").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
@@ -107,4 +108,5 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
      """
 
   fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
+  fun putCountFor(url: String) = this.findAll(WireMock.putRequestedFor(WireMock.urlEqualTo(url))).count()
 }

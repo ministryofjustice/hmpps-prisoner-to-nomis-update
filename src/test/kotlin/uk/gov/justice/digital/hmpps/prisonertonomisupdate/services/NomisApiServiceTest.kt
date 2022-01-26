@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -92,25 +93,25 @@ internal class NomisApiServiceTest {
   inner class CancelVisit {
     @BeforeEach
     internal fun setUp() {
-      NomisApiExtension.nomisApi.stubVisitCancel(prisonerId = "AB123D", nomisVisitId = "12")
+      NomisApiExtension.nomisApi.stubVisitCancel(prisonerId = "AB123D", visitId = "12")
     }
 
     @Test
     fun `should call nomis api with OAuth2 token`() {
-      nomisApiService.cancelVisit(CancelVisitDto(offenderNo = "AB123D", nomisVisitId = "12"))
+      nomisApiService.cancelVisit(cancelVisit())
 
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/prisoners/AB123D/visits/12/cancel"))
+        putRequestedFor(urlEqualTo("/prisoners/AB123D/visits/vsipVisitId/12/cancel"))
           .withHeader("Authorization", equalTo("Bearer ABCDE"))
       )
     }
 
     @Test
     fun `will post cancel request to nomis api`() {
-      nomisApiService.cancelVisit(CancelVisitDto(offenderNo = "AB123D", nomisVisitId = "12"))
+      nomisApiService.cancelVisit(cancelVisit())
 
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/prisoners/AB123D/visits/12/cancel"))
+        putRequestedFor(urlEqualTo("/prisoners/AB123D/visits/vsipVisitId/12/cancel"))
       )
     }
 
@@ -119,7 +120,7 @@ internal class NomisApiServiceTest {
       NomisApiExtension.nomisApi.stubVisitCancelWithError("AB123D", "12", 404)
 
       assertThatThrownBy {
-        nomisApiService.cancelVisit(CancelVisitDto(offenderNo = "AB123D", nomisVisitId = "12"))
+        nomisApiService.cancelVisit(cancelVisit())
       }.isInstanceOf(NotFound::class.java)
     }
 
@@ -128,7 +129,7 @@ internal class NomisApiServiceTest {
       NomisApiExtension.nomisApi.stubVisitCancelWithError("AB123D", "12", 503)
 
       assertThatThrownBy {
-        nomisApiService.cancelVisit(CancelVisitDto(offenderNo = "AB123D", nomisVisitId = "12"))
+        nomisApiService.cancelVisit(cancelVisit())
       }.isInstanceOf(ServiceUnavailable::class.java)
     }
   }
@@ -141,7 +142,9 @@ fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(
   endTime = LocalTime.MIDNIGHT,
   visitorPersonIds = listOf(),
   visitType = "SCON",
-  visitRoomId = "1",
+  // visitRoomId = "1",
   issueDate = LocalDate.now(),
   vsipVisitId = "123"
 )
+
+fun cancelVisit(): CancelVisitDto = CancelVisitDto(offenderNo = "AB123D", visitId = "12", outcome = "VISCANC")

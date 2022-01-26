@@ -45,8 +45,6 @@ data class VSIPVisit(
   data class VSIPVisitor(val nomisPersonId: String)
 }
 
-data class VSISPNomisVisitData(val nomisVisitId: Long)
-
 @Configuration
 @ConfigurationProperties(prefix = "mock.visits")
 data class MockVisitsData(
