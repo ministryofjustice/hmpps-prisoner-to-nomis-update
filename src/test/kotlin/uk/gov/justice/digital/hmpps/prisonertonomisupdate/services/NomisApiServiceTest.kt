@@ -123,7 +123,7 @@ internal class NomisApiServiceTest {
     }
     @Test
     internal fun `when a conflict (409) response is received continue`() {
-      NomisApiExtension.nomisApi.stubVisitCancelWithError("AB123D", "12",409)
+      NomisApiExtension.nomisApi.stubVisitCancelWithError("AB123D", "12", 409)
       nomisApiService.cancelVisit(cancelVisit())
     }
   }
