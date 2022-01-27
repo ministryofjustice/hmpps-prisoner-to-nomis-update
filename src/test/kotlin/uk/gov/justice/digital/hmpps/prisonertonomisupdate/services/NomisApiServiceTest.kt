@@ -5,7 +5,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -55,22 +54,6 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `expect the visit id to be returned for created visit`() {
-      NomisApiExtension.nomisApi.stubVisitCreate(
-        "AB123D",
-        """
-                  {
-                    "visitId": 12345
-                  }
-     """
-      )
-
-      val result = nomisApiService.createVisit(newVisit())
-
-      assertThat(result.visitId).isEqualTo("12345")
-    }
-
-    @Test
     internal fun `when offender is not found an exception is thrown`() {
       NomisApiExtension.nomisApi.stubVisitCreateWithError("AB123D", 404)
 
@@ -86,6 +69,12 @@ internal class NomisApiServiceTest {
       assertThatThrownBy {
         nomisApiService.createVisit(newVisit())
       }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+
+    @Test
+    internal fun `when a conflict (409) response is received continue`() {
+      NomisApiExtension.nomisApi.stubVisitCreateWithError("AB123D", 409)
+      nomisApiService.createVisit(newVisit())
     }
   }
 
@@ -131,6 +120,11 @@ internal class NomisApiServiceTest {
       assertThatThrownBy {
         nomisApiService.cancelVisit(cancelVisit())
       }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+    @Test
+    internal fun `when a conflict (409) response is received continue`() {
+      NomisApiExtension.nomisApi.stubVisitCancelWithError("AB123D", "12", 409)
+      nomisApiService.cancelVisit(cancelVisit())
     }
   }
 }

@@ -1,9 +1,13 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.WebClientResponseException
+import reactor.core.publisher.Mono
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -11,13 +15,21 @@ import java.time.LocalTime
 @Service
 class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
 
-  fun createVisit(request: CreateVisitDto): CreateVisitResponseDto {
-    return webClient.post()
+  private companion object {
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
+
+  fun createVisit(request: CreateVisitDto) {
+    webClient.post()
       .uri("/prisoners/${request.offenderNo}/visits")
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(CreateVisitResponseDto::class.java)
-      .block()!!
+      .bodyToMono(Unit::class.java)
+      .onErrorResume(WebClientResponseException.Conflict::class.java) {
+        log.warn("createVisit failed for offender no ${request.offenderNo} and vsip visit id ${request.vsipVisitId}  with message ${it.message}")
+        Mono.empty()
+      }
+      .block()
   }
 
   fun cancelVisit(request: CancelVisitDto) {
@@ -26,6 +38,10 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyValue(request)
       .retrieve()
       .bodyToMono(Unit::class.java)
+      .onErrorResume(WebClientResponseException.Conflict::class.java) {
+        log.warn("cancelVisit failed for offender no ${request.offenderNo} and vsip visit id ${request.visitId} with message ${it.message}")
+        Mono.empty()
+      }
       .block()
   }
 }
@@ -49,8 +65,4 @@ data class CancelVisitDto(
   val offenderNo: String,
   val visitId: String,
   val outcome: String
-)
-
-data class CreateVisitResponseDto(
-  val visitId: String
 )
