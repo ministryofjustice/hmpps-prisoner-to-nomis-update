@@ -6,7 +6,7 @@ orbs:
 parameters:
   alerts-slack-channel:
     type: string
-    default: dps_alerts_security
+    default: syscon-alerts
   releases-slack-channel:
     type: string
     default: dps-releases
