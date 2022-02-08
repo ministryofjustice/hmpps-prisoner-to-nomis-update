@@ -6,10 +6,15 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
+import java.util.UUID
+import javax.validation.Valid
 
 @RestController
 class MockVisitsResource(private val mockVisitsData: MockVisitsData) {
@@ -19,7 +24,31 @@ class MockVisitsResource(private val mockVisitsData: MockVisitsData) {
   fun getVisit(
     @PathVariable visitId: String,
   ): VSIPVisit = VSIPVisit(visitId = visitId, visitsData = mockVisitsData)
+
+  @PreAuthorize("hasRole('ROLE_VISIT_SCHEDULER')")
+  @PostMapping("/visits")
+  fun createVisit(
+    @RequestBody @Valid createVisitRequest: CreateVisitRequest
+  ): VSIPVisit = VSIPVisit(visitId = UUID.randomUUID().toString(), visitsData = mockVisitsData)
 }
+
+data class CreateVisitRequest(
+  val prisonerId: String,
+  val prisonId: String,
+  val startTimestamp: LocalDateTime,
+  val endTimestamp: LocalDateTime,
+  val visitType: String,
+  val visitStatus: String,
+  val visitRoom: String,
+  val reasonableAdjustments: String? = null,
+  val contactList: List<CreateVisitorOnVisit>? = listOf(),
+  val sessionId: Long? = null,
+)
+
+data class CreateVisitorOnVisit(
+  val nomisPersonId: Long,
+  val leadVisitor: Boolean = false
+)
 
 data class VSIPVisit(
   val visitId: String,
