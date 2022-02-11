@@ -30,7 +30,7 @@ class WebClientConfiguration(
   @Bean
   fun nomisApiWebClient(authorizedClientManager: OAuth2AuthorizedClientManager): WebClient {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
-    oauth2Client.setDefaultClientRegistrationId("system-api")
+    oauth2Client.setDefaultClientRegistrationId("nomis-api")
 
     return WebClient.builder()
       .baseUrl(nomisApiBaseUri)
@@ -41,7 +41,7 @@ class WebClientConfiguration(
   @Bean
   fun mappingWebClient(authorizedClientManager: OAuth2AuthorizedClientManager): WebClient {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
-    oauth2Client.setDefaultClientRegistrationId("system-api")
+    oauth2Client.setDefaultClientRegistrationId("mapping-api")
 
     return WebClient.builder()
       .baseUrl(mappingBaseUri)
