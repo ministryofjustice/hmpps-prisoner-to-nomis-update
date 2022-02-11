@@ -89,12 +89,14 @@ internal class PrisonVisitsServiceTest {
       whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(null)
       whenever(nomisApiService.createVisit(any())).thenThrow(RuntimeException("test"))
 
-      prisonVisitsService.createVisit(
-        VisitBookedEvent(
-          prisonerId = "AB123D",
-          additionalInformation = VisitBookedEvent.VisitInformation("123"), occurredAt = OffsetDateTime.now()
+      assertThatThrownBy {
+        prisonVisitsService.createVisit(
+          VisitBookedEvent(
+            prisonerId = "AB123D",
+            additionalInformation = VisitBookedEvent.VisitInformation("123"), occurredAt = OffsetDateTime.now()
+          )
         )
-      )
+      }.isInstanceOf(RuntimeException::class.java)
 
       verify(telemetryClient).trackEvent(
         eq("visit-booked-create-failed"),

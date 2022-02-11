@@ -19,13 +19,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun createVisit(request: CreateVisitDto): String? =
+  fun createVisit(request: CreateVisitDto): String =
     webClient.post()
       .uri("/prisoners/${request.offenderNo}/visits")
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(String::class.java)
-      .block()
+      .bodyToMono(CreateVisitResponseDto::class.java)
+      .block()!!.visitId
 
   fun cancelVisit(request: CancelVisitDto) {
     webClient.put()
@@ -57,5 +57,9 @@ data class CreateVisitDto(
 data class CancelVisitDto(
   val offenderNo: String,
   val nomisVisitId: String,
-  val outcome: String
+  val outcome: String,
+)
+
+data class CreateVisitResponseDto(
+  val visitId: String,
 )

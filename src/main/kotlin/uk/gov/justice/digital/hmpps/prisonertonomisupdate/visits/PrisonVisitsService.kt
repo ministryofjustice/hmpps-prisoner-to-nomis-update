@@ -59,11 +59,11 @@ class PrisonVisitsService(
         )
       } catch (e: Exception) {
         telemetryClient.trackEvent("visit-booked-create-failed", telemetryMap)
-        log.warn("Unexpected exception", e)
-        return
+        log.error("Unexpected exception", e)
+        throw e
       }
 
-      val mapWithNomisId = telemetryMap.plus(Pair("nomisVisitId", nomisId!!))
+      val mapWithNomisId = telemetryMap.plus(Pair("nomisVisitId", nomisId))
 
       try {
         mappingService.createMapping(
@@ -71,7 +71,7 @@ class PrisonVisitsService(
         )
       } catch (e: Exception) {
         telemetryClient.trackEvent("visit-booked-create-map-failed", mapWithNomisId)
-        log.warn("Unexpected exception", e)
+        log.error("Unexpected exception", e)
         return
       }
 
