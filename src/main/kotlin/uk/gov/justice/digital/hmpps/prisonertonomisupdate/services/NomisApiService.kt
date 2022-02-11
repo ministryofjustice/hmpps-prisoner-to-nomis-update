@@ -19,27 +19,22 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun createVisit(request: CreateVisitDto) {
+  fun createVisit(request: CreateVisitDto): String =
     webClient.post()
       .uri("/prisoners/${request.offenderNo}/visits")
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(Unit::class.java)
-      .onErrorResume(WebClientResponseException.Conflict::class.java) {
-        log.warn("createVisit failed for offender no ${request.offenderNo} and vsip visit id ${request.vsipVisitId}  with message ${it.message}")
-        Mono.empty()
-      }
-      .block()
-  }
+      .bodyToMono(CreateVisitResponseDto::class.java)
+      .block()!!.visitId
 
   fun cancelVisit(request: CancelVisitDto) {
     webClient.put()
-      .uri("/prisoners/${request.offenderNo}/visits/vsipVisitId/${request.visitId}/cancel")
+      .uri("/prisoners/${request.offenderNo}/visits/${request.nomisVisitId}/cancel")
       .bodyValue(request)
       .retrieve()
       .bodyToMono(Unit::class.java)
       .onErrorResume(WebClientResponseException.Conflict::class.java) {
-        log.warn("cancelVisit failed for offender no ${request.offenderNo} and vsip visit id ${request.visitId} with message ${it.message}")
+        log.warn("cancelVisit failed for offender no ${request.offenderNo} and Nomis visit id ${request.nomisVisitId} with message ${it.message}")
         Mono.empty()
       }
       .block()
@@ -55,14 +50,16 @@ data class CreateVisitDto(
   val visitorPersonIds: List<Long>,
   val decrementBalance: Boolean = true,
   val visitType: String,
-  // val visitRoomId: String,
   @JsonFormat(pattern = "yyyy-MM-dd")
   val issueDate: LocalDate,
-  val vsipVisitId: String
 )
 
 data class CancelVisitDto(
   val offenderNo: String,
+  val nomisVisitId: String,
+  val outcome: String,
+)
+
+data class CreateVisitResponseDto(
   val visitId: String,
-  val outcome: String
 )

@@ -10,6 +10,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCancelledMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCreatedMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension.Companion.visitsApi
 
@@ -22,6 +23,8 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
   @Test
   fun `will consume a prison visits create message`() {
     visitsApi.stubVisitGet("12", buildVisitApiDtoJsonResponse(visitId = "12", prisonerId = "A32323Y"))
+    mappingServer.stubGetVsipWithError("12", 404)
+    mappingServer.stubCreate()
     nomisApi.stubVisitCreate(prisonerId = "A32323Y")
 
     val message = prisonVisitCreatedMessage(prisonerId = "A32323Y")
@@ -35,7 +38,6 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
     nomisApi.verify(
       WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/A32323Y/visits"))
         .withRequestBody(WireMock.matchingJsonPath("offenderNo", WireMock.equalTo("A32323Y")))
-        .withRequestBody(WireMock.matchingJsonPath("vsipVisitId", WireMock.equalTo("12")))
         .withRequestBody(WireMock.matchingJsonPath("prisonId", WireMock.equalTo("MDI")))
         .withRequestBody(WireMock.matchingJsonPath("visitType", WireMock.equalTo("SCON")))
         // .withRequestBody(WireMock.matchingJsonPath("visitRoomId", WireMock.equalTo("Room 1")))
@@ -47,17 +49,26 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
   @Test
   fun `will consume a prison visits cancel message`() {
 
-    nomisApi.stubVisitCancel(prisonerId = "AB12345", visitId = "12")
+    mappingServer.stubGetVsip(
+      "12",
+      response = """{ 
+          "nomisId": "456",
+          "vsipId": "12",
+          "mappingType": "ONLINE"
+        }
+      """.trimIndent()
+    )
+    nomisApi.stubVisitCancel(prisonerId = "AB12345", visitId = "456")
 
     val message = prisonVisitCancelledMessage(prisonerId = "AB12345")
 
     awsSqsClient.sendMessage(queueUrl, message)
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnQueue() } matches { it == 0 }
-    await untilCallTo { nomisApi.putCountFor("/prisoners/AB12345/visits/vsipVisitId/12/cancel") } matches { it == 1 }
+    await untilCallTo { nomisApi.putCountFor("/prisoners/AB12345/visits/456/cancel") } matches { it == 1 }
 
     nomisApi.verify(
-      WireMock.putRequestedFor(WireMock.urlEqualTo("/prisoners/AB12345/visits/vsipVisitId/12/cancel"))
+      WireMock.putRequestedFor(WireMock.urlEqualTo("/prisoners/AB12345/visits/456/cancel"))
         .withRequestBody(WireMock.matchingJsonPath("outcome", WireMock.equalTo("VISCANC")))
     )
 

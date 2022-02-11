@@ -28,13 +28,11 @@ internal class NomisApiServiceTest {
 
   @Nested
   inner class CreateVisit {
-    @BeforeEach
-    internal fun setUp() {
-      NomisApiExtension.nomisApi.stubVisitCreate("AB123D")
-    }
 
     @Test
     fun `should call nomis api with OAuth2 token`() {
+      NomisApiExtension.nomisApi.stubVisitCreate("AB123D")
+
       nomisApiService.createVisit(newVisit())
 
       NomisApiExtension.nomisApi.verify(
@@ -45,6 +43,8 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `will post visit data to nomis api`() {
+      NomisApiExtension.nomisApi.stubVisitCreate("AB123D")
+
       nomisApiService.createVisit(newVisit(offenderNo = "AB123D"))
 
       NomisApiExtension.nomisApi.verify(
@@ -70,12 +70,6 @@ internal class NomisApiServiceTest {
         nomisApiService.createVisit(newVisit())
       }.isInstanceOf(ServiceUnavailable::class.java)
     }
-
-    @Test
-    internal fun `when a conflict (409) response is received continue`() {
-      NomisApiExtension.nomisApi.stubVisitCreateWithError("AB123D", 409)
-      nomisApiService.createVisit(newVisit())
-    }
   }
 
   @Nested
@@ -90,7 +84,7 @@ internal class NomisApiServiceTest {
       nomisApiService.cancelVisit(cancelVisit())
 
       NomisApiExtension.nomisApi.verify(
-        putRequestedFor(urlEqualTo("/prisoners/AB123D/visits/vsipVisitId/12/cancel"))
+        putRequestedFor(urlEqualTo("/prisoners/AB123D/visits/12/cancel"))
           .withHeader("Authorization", equalTo("Bearer ABCDE"))
       )
     }
@@ -100,7 +94,7 @@ internal class NomisApiServiceTest {
       nomisApiService.cancelVisit(cancelVisit())
 
       NomisApiExtension.nomisApi.verify(
-        putRequestedFor(urlEqualTo("/prisoners/AB123D/visits/vsipVisitId/12/cancel"))
+        putRequestedFor(urlEqualTo("/prisoners/AB123D/visits/12/cancel"))
       )
     }
 
@@ -121,11 +115,6 @@ internal class NomisApiServiceTest {
         nomisApiService.cancelVisit(cancelVisit())
       }.isInstanceOf(ServiceUnavailable::class.java)
     }
-    @Test
-    internal fun `when a conflict (409) response is received continue`() {
-      NomisApiExtension.nomisApi.stubVisitCancelWithError("AB123D", "12", 409)
-      nomisApiService.cancelVisit(cancelVisit())
-    }
   }
 }
 
@@ -136,9 +125,7 @@ fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(
   endTime = LocalTime.MIDNIGHT,
   visitorPersonIds = listOf(),
   visitType = "SCON",
-  // visitRoomId = "1",
   issueDate = LocalDate.now(),
-  vsipVisitId = "123"
 )
 
-fun cancelVisit(): CancelVisitDto = CancelVisitDto(offenderNo = "AB123D", visitId = "12", outcome = "VISCANC")
+fun cancelVisit(): CancelVisitDto = CancelVisitDto(offenderNo = "AB123D", nomisVisitId = "12", outcome = "VISCANC")

@@ -1,61 +1,107 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
 import com.microsoft.applicationinsights.TelemetryClient
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CancelVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateVisitDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import javax.validation.ValidationException
 
 @Service
 class PrisonVisitsService(
   private val visitsApiService: VisitsApiService,
   private val nomisApiService: NomisApiService,
+  private val mappingService: MappingService,
   private val telemetryClient: TelemetryClient
 ) {
 
+  private companion object {
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
+
   fun createVisit(visitBookedEvent: VisitBookedEvent) {
     visitsApiService.getVisit(visitBookedEvent.visitId).run {
-      nomisApiService.createVisit(
-        CreateVisitDto(
-          offenderNo = this.prisonerId,
-          prisonId = this.prisonId,
-          startDateTime = LocalDateTime.of(this.visitDate, this.startTime),
-          endTime = this.endTime,
-          visitorPersonIds = this.visitors.map { it -> it.nomisPersonId },
-          issueDate = visitBookedEvent.bookingDate,
-          visitType = "SCON", // TODO mapping
-          // visitRoomId = this.visitRoom,
-          vsipVisitId = this.visitId
+
+      val telemetryMap = mutableMapOf(
+        "offenderNo" to prisonerId,
+        "prisonId" to prisonId,
+        "visitId" to visitId,
+        "startDateTime" to LocalDateTime.of(visitDate, startTime).format(DateTimeFormatter.ISO_DATE_TIME),
+        "endTime" to endTime.format(DateTimeFormatter.ISO_TIME),
+      )
+
+      if (mappingService.getMappingGivenVsipId(visitBookedEvent.visitId) != null) {
+        telemetryClient.trackEvent("visit-booked-get-map-failed", telemetryMap)
+        log.warn("Mapping already exists for VSIP id $visitId")
+        return
+      }
+
+      val nomisId = try {
+        nomisApiService.createVisit(
+          CreateVisitDto(
+            offenderNo = this.prisonerId,
+            prisonId = this.prisonId,
+            startDateTime = LocalDateTime.of(this.visitDate, this.startTime),
+            endTime = this.endTime,
+            visitorPersonIds = this.visitors.map { it -> it.nomisPersonId },
+            issueDate = visitBookedEvent.bookingDate,
+            visitType = "SCON", // TODO mapping
+          )
         )
-      )
-      val telemetryProperties = mapOf(
-        "offenderNo" to this.prisonerId,
-        "prisonId" to this.prisonId,
-        "visitId" to this.visitId,
-        "startDateTime" to LocalDateTime.of(this.visitDate, this.startTime).format(DateTimeFormatter.ISO_DATE_TIME),
-        "endTime" to this.endTime.format(DateTimeFormatter.ISO_TIME),
-      )
-      telemetryClient.trackEvent("visit-booked-event", telemetryProperties, null)
+      } catch (e: Exception) {
+        telemetryClient.trackEvent("visit-booked-create-failed", telemetryMap)
+        log.error("Unexpected exception", e)
+        throw e
+      }
+
+      val mapWithNomisId = telemetryMap.plus(Pair("nomisVisitId", nomisId))
+
+      try {
+        mappingService.createMapping(
+          MappingDto(nomisId = nomisId, vsipId = visitBookedEvent.visitId, mappingType = "ONLINE")
+        )
+      } catch (e: Exception) {
+        telemetryClient.trackEvent("visit-booked-create-map-failed", mapWithNomisId)
+        log.error("Unexpected exception", e)
+        return
+      }
+
+      telemetryClient.trackEvent("visit-booked-event", mapWithNomisId)
     }
   }
 
   fun cancelVisit(visitCancelledEvent: VisitCancelledEvent) {
+    val telemetryProperties = mutableMapOf(
+      "offenderNo" to visitCancelledEvent.prisonerId,
+      "visitId" to visitCancelledEvent.visitId,
+    )
+
+    val mappingDto =
+      mappingService.getMappingGivenVsipId(visitCancelledEvent.visitId)
+        ?: throw ValidationException("No mapping exists for VSIP id ${visitCancelledEvent.visitId}")
+          .also { telemetryClient.trackEvent("visit-cancelled-failed", telemetryProperties) }
+
     nomisApiService.cancelVisit(
       CancelVisitDto(
         offenderNo = visitCancelledEvent.prisonerId,
-        visitId = visitCancelledEvent.visitId,
+        nomisVisitId = mappingDto.nomisId,
         outcome = "VISCANC" // TODO mapping
       )
     )
-    val telemetryProperties = mapOf(
-      "offenderNo" to visitCancelledEvent.prisonerId,
-      "visitId" to visitCancelledEvent.visitId
+
+    telemetryClient.trackEvent(
+      "visit-cancelled-event",
+      telemetryProperties.plus(Pair("nomisVisitId", mappingDto.nomisId))
     )
-    telemetryClient.trackEvent("visit-cancelled-event", telemetryProperties, null)
   }
 }
 

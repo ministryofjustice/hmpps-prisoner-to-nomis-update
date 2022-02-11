@@ -21,6 +21,11 @@ spring:
             client-id: ${system.client.id}
             client-secret: ${system.client.secret}
             authorization-grant-type: client_credentials
+          mapping-api:
+            provider: hmpps-auth
+            client-id: ${mapping.client.id}
+            client-secret: ${mapping.client.secret}
+            authorization-grant-type: client_credentials
           visits-api:
             provider: hmpps-auth
             client-id: ${visits.client.id}

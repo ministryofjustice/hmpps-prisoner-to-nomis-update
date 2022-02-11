@@ -12,21 +12,20 @@ import org.springframework.security.oauth2.client.web.reactive.function.client.S
 import org.springframework.web.reactive.function.client.WebClient
 
 @Configuration
-class WebClientConfiguration(@Value("\${api.base.url.nomis}") val nomisApiBaseUri: String, @Value("\${api.base.url.oauth}") val oauthApiBaseUri: String) {
+class WebClientConfiguration(
+  @Value("\${api.base.url.nomis}") val nomisApiBaseUri: String,
+  @Value("\${api.base.url.mapping}") val mappingBaseUri: String,
+  @Value("\${api.base.url.oauth}") val oauthApiBaseUri: String
+) {
 
   @Bean
-  fun nomisApiHealthWebClient(): WebClient {
-    return WebClient.builder()
-      .baseUrl(nomisApiBaseUri)
-      .build()
-  }
+  fun nomisApiHealthWebClient(): WebClient = WebClient.builder().baseUrl(nomisApiBaseUri).build()
 
   @Bean
-  fun oauthApiHealthWebClient(): WebClient {
-    return WebClient.builder()
-      .baseUrl(oauthApiBaseUri)
-      .build()
-  }
+  fun mappingHealthWebClient(): WebClient = WebClient.builder().baseUrl(mappingBaseUri).build()
+
+  @Bean
+  fun oauthApiHealthWebClient(): WebClient = WebClient.builder().baseUrl(oauthApiBaseUri).build()
 
   @Bean
   fun nomisApiWebClient(authorizedClientManager: OAuth2AuthorizedClientManager): WebClient {
@@ -35,6 +34,17 @@ class WebClientConfiguration(@Value("\${api.base.url.nomis}") val nomisApiBaseUr
 
     return WebClient.builder()
       .baseUrl(nomisApiBaseUri)
+      .apply(oauth2Client.oauth2Configuration())
+      .build()
+  }
+
+  @Bean
+  fun mappingWebClient(authorizedClientManager: OAuth2AuthorizedClientManager): WebClient {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
+    oauth2Client.setDefaultClientRegistrationId("mapping-api")
+
+    return WebClient.builder()
+      .baseUrl(mappingBaseUri)
       .apply(oauth2Client.oauth2Configuration())
       .build()
   }
