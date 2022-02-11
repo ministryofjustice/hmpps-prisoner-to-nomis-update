@@ -12,6 +12,7 @@ generic-service:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
     API_BASE_URL_OAUTH: https://sign-in-preprod.hmpps.service.justice.gov.uk/auth
     API_BASE_URL_NOMIS: https://nomis-prsner-pp.aks-live-1.studio-hosting.service.justice.gov.uk
+    API_BASE_URL_MAPPING: https://nomis-visits-mapping-preprod.hmpps.service.justice.gov.uk
     # Set to ourselves until new service is ready
     API_BASE_URL_VISITS: https://prisoner-to-nomis-update-preprod.hmpps.service.justice.gov.uk
 

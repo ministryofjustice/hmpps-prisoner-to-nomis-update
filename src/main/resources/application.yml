@@ -16,7 +16,7 @@ spring:
 
       client:
         registration:
-          nomis-api:
+          system-api:
             provider: hmpps-auth
             client-id: ${system.client.id}
             client-secret: ${system.client.secret}
