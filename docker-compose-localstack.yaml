@@ -1,7 +1,7 @@
 version: "3"
 services:
   localstack:
-    image: localstack/localstack:0.12.10
+    image: localstack/localstack:0.14.0
     networks:
       - hmpps
     container_name: localstack
@@ -9,7 +9,6 @@ services:
       - "4566-4597:4566-4597"
     environment:
       - SERVICES=sqs,sns
-      - DATA_DIR=/tmp/localstack/data
       - DOCKER_HOST=unix:///var/run/docker.sock
       - DEFAULT_REGION=eu-west-2
       - PORT_WEB_UI=${PORT_WEB_UI- }
