@@ -3,7 +3,8 @@ services:
   hmpps-prisoner-to-nomis-update:
     build:
       context: .
-    network_mode: "host"
+    networks:
+      - hmpps
     container_name: hmpps-prisoner-to-nomis-update
     ports:
       - "8081:8080"
@@ -12,6 +13,11 @@ services:
     environment:
       - SERVER_PORT=8080
       - SPRING_PROFILES_ACTIVE=dev
+      - HMPPS_SQS_LOCALSTACK_URL=http://localstack:4566
+      - API_BASE_URL_OAUTH=http://hmpps-auth:8080/auth
+      - API_BASE_URL_NOMIS=http://hmpps-nomis-prisoner-api:8080
+      - API_BASE_URL_VISITS=http://hmpps-prisoner-to-nomis-update:8080
+      - API_BASE_URL_VISIT_MAPPING=http://hmpps-nomis-visit-mapping-api:8080
 
   hmpps-auth:
     image: quay.io/hmpps/hmpps-auth:latest
@@ -32,30 +38,77 @@ services:
       - hmpps
     container_name: hmpps-nomis-prisoner-api
     ports:
-      - "8081:8080"
+      - "8082:8080"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
     environment:
       - SERVER_PORT=8080
       - SPRING_PROFILES_ACTIVE=dev
+      - API_BASE_URL_OAUTH=http://hmpps-auth:8080/auth
+      - API_BASE_URL_NOMIS=http://hmpps-nomis-prisoner-api:8080
+      - API_BASE_URL_VISITS=http://hmpps-visits-api:8080
+      - API_BASE_URL_MAPPING=http://hmpps-nomis-visit-mapping-api:8080
+
+  hmpps-nomis-visit-mapping-api:
+    image: quay.io/hmpps/hmpps-nomis-visits-mapping-service:latest
+    networks:
+      - hmpps
+    container_name: hmpps-nomis-visit-mapping-api
+    ports:
+      - "8084:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_FLYWAY_URL=jdbc:postgresql://mapping-db:5432/mapping?sslmode=prefer
+      - SPRING_R2DBC_URL=r2dbc:postgresql://mapping-db:5432/mapping?sslmode=prefer
+      - API_BASE_URL_OAUTH=http:/hmpps-auth:8080/auth
 
   localstack:
     image: localstack/localstack:0.14.0
     networks:
       - hmpps
     container_name: localstack
-    ports:
-      - "4566-4597:4566-4597"
-      - 8999:8080
     environment:
       - SERVICES=sqs,sns
       - DEBUG=${DEBUG- }
       - DOCKER_HOST=unix:///var/run/docker.sock
       - DEFAULT_REGION=eu-west-2
+      - HOSTNAME_EXTERNAL=localstack
     volumes:
       - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
 
+
+  localstack-external:
+    image: localstack/localstack:0.14.0
+    networks:
+      - hmpps
+    container_name: localstack-external
+    ports:
+      - "4566-4597:4566-4597"
+    environment:
+      - SERVICES=sqs,sns
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - DEFAULT_REGION=eu-west-2
+      - PORT_WEB_UI=${PORT_WEB_UI- }
+    volumes:
+      - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  mapping-db:
+    image: postgres
+    networks:
+      - hmpps
+    container_name: mapping-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=mapping
+      - POSTGRES_USER=mapping
+      - POSTGRES_DB=mapping
 
 networks:
   hmpps:

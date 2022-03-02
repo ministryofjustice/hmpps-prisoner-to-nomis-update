@@ -6,9 +6,9 @@ management.endpoint:
   info.cache.time-to-live: 0
 
 api.base.url:
-  nomis: http://localhost:8081
+  nomis: http://localhost:8082
   mapping: http://localhost:8084
   oauth: http://localhost:8090/auth
-  visits: http://localhost:8082
+  visits: http://localhost:8083
 
 

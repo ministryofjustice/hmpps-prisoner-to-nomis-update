@@ -29,3 +29,7 @@ constructor(@Qualifier("nomisApiHealthWebClient") webClient: WebClient) : Health
 @Component
 class OAuthApiHealth
 constructor(@Qualifier("oauthApiHealthWebClient") webClient: WebClient) : HealthCheck(webClient)
+
+@Component("visitMappingApi")
+class VisitMappingApiHealth
+constructor(@Qualifier("mappingHealthWebClient") webClient: WebClient) : HealthCheck(webClient)

@@ -32,7 +32,7 @@ class NomisApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallbac
 
 class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   companion object {
-    private const val WIREMOCK_PORT = 8081
+    private const val WIREMOCK_PORT = 8082
   }
 
   fun stubHealthPing(status: Int) {
