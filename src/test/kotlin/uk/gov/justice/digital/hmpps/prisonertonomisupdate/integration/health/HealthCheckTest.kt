@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension
 import java.time.LocalDateTime
@@ -94,5 +95,6 @@ class HealthCheckTest : SqsIntegrationTestBase() {
     HmppsAuthApiExtension.hmppsAuth.stubHealthPing(status)
     NomisApiExtension.nomisApi.stubHealthPing(status)
     VisitsApiExtension.visitsApi.stubHealthPing(status)
+    MappingExtension.mappingServer.stubHealthPing(status)
   }
 }

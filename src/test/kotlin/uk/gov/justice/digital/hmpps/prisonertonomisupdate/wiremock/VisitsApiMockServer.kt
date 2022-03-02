@@ -30,7 +30,7 @@ class VisitsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallba
 
 class VisitsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   companion object {
-    private const val WIREMOCK_PORT = 8082
+    private const val WIREMOCK_PORT = 8083
   }
 
   fun stubHealthPing(status: Int) {
