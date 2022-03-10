@@ -65,6 +65,7 @@ dist
 # AWS DOcker build
 ecr.repo
 /dps-gradle-spring-boot-suppressions.xml
+/sonar-project.properties
 .editorconfig
 
 #Helm
