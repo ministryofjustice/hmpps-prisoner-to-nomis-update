@@ -47,6 +47,39 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
   }
 
   @Test
+  fun `will retry after a mapping failure`() {
+    visitsApi.stubVisitGet("12", buildVisitApiDtoJsonResponse(visitId = "12", prisonerId = "A32323Y"))
+    mappingServer.stubGetVsipWithError("12", 404)
+    nomisApi.stubVisitCreate(prisonerId = "A32323Y")
+    mappingServer.stubCreateWithError()
+
+    val message = prisonVisitCreatedMessage(prisonerId = "A32323Y")
+
+    awsSqsClient.sendMessage(queueUrl, message)
+
+    await untilCallTo { visitsApi.getCountFor("/visits/12") } matches { it == 1 }
+    await untilCallTo { nomisApi.postCountFor("/prisoners/A32323Y/visits") } matches { it == 1 }
+
+    // the mapping call fails resulting in a retry message being queued
+    // the retry message is processed and fails resulting in a message on the DLQ after 5 attempts
+
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(dlqUrl!!) } matches { it == 1 }
+
+    // Next time the retry will succeed
+    mappingServer.stubCreate()
+
+    webTestClient.put()
+      .uri("/queue-admin/retry-all-dlqs")
+      .exchange()
+      .expectStatus()
+      .isOk
+
+    await untilCallTo { mappingServer.postCountFor("/mapping") } matches { it == 7 } // 1 initial call, 5 retries and 1 final successful call
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(queueUrl) } matches { it == 0 }
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(dlqUrl!!) } matches { it == 0 }
+  }
+
+  @Test
   fun `will consume a prison visits cancel message`() {
 
     mappingServer.stubGetVsip(
@@ -104,10 +137,10 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
     """.trimIndent()
   }
 
-  private fun getNumberOfMessagesCurrentlyOnQueue(): Int? {
-    val queueAttributes = awsSqsClient.getQueueAttributes(queueUrl, listOf("ApproximateNumberOfMessages"))
+  private fun getNumberOfMessagesCurrentlyOnQueue(url: String = queueUrl): Int? {
+    val queueAttributes = awsSqsClient.getQueueAttributes(url, listOf("ApproximateNumberOfMessages"))
     val messagesOnQueue = queueAttributes.attributes["ApproximateNumberOfMessages"]?.toInt()
-    log.info("Number of messages on prisoner queue: $messagesOnQueue")
+    log.info("Number of messages on $url: $messagesOnQueue")
     return messagesOnQueue
   }
 }

@@ -18,6 +18,7 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-kotlin:1.6.6")
   implementation("org.springdoc:springdoc-openapi-data-rest:1.6.6")
   implementation("org.springdoc:springdoc-openapi-security:1.6.6")
+  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
 
   testImplementation("io.swagger.parser.v3:swagger-parser:2.0.30")
   testImplementation("com.github.tomakehurst:wiremock-standalone:2.27.2")

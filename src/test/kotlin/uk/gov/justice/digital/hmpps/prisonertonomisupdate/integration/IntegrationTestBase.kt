@@ -11,11 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExten
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension
 
 @ExtendWith(NomisApiExtension::class, HmppsAuthApiExtension::class, VisitsApiExtension::class)
-@SpringBootTest(
-  webEnvironment = RANDOM_PORT,
-  properties =
-  ["spring.autoconfigure.exclude=uk.gov.justice.hmpps.sqs.HmppsSqsConfiguration"]
-)
+@SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
 abstract class IntegrationTestBase {
 

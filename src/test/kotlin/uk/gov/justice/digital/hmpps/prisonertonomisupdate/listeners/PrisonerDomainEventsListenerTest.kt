@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -19,6 +19,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCreatedMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.retryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits.PrisonVisitsService
 import java.time.LocalDate
 
@@ -28,7 +29,8 @@ internal class PrisonerDomainEventsListenerTest {
   private val eventFeatureSwitch: EventFeatureSwitch = mock()
   private val telemetryClient: TelemetryClient = mock()
 
-  private val listener = PrisonerDomainEventsListener(prisonVisitsService, objectMapper, eventFeatureSwitch, telemetryClient)
+  private val listener =
+    PrisonerDomainEventsListener(prisonVisitsService, objectMapper, eventFeatureSwitch, telemetryClient)
 
   @Nested
   inner class Visits {
@@ -57,7 +59,7 @@ internal class PrisonerDomainEventsListenerTest {
 
         verify(telemetryClient).trackEvent(
           eq("prisoner-domain-event-received"),
-          org.mockito.kotlin.check {
+          check {
             assertThat(it["offenderNo"]).isEqualTo("AB12345")
             assertThat(it["eventType"]).isEqualTo("prison-visit.booked")
           },
@@ -85,6 +87,30 @@ internal class PrisonerDomainEventsListenerTest {
         verifyNoInteractions(prisonVisitsService)
       }
     }
+
+    @Nested
+    inner class Retries {
+      @Test
+      internal fun `will call retry service with visit context data`() {
+        listener.onPrisonerChange(message = retryMessage())
+
+        verify(prisonVisitsService).createVisitRetry(
+          check {
+            assertThat(it.vsipId).isEqualTo("12")
+            assertThat(it.nomisId).isEqualTo("12345")
+          }
+        )
+
+        verify(telemetryClient).trackEvent(
+          eq("prisoner-retry-received"),
+          check {
+            assertThat(it["vsipId"]).isEqualTo("12")
+            assertThat(it["nomisId"]).isEqualTo("12345")
+          },
+          isNull()
+        )
+      }
+    }
   }
 }
 
@@ -92,6 +118,6 @@ private fun objectMapper(): ObjectMapper {
   return ObjectMapper()
     .setSerializationInclusion(JsonInclude.Include.NON_NULL)
     .registerModule(JavaTimeModule())
-    .registerModule(KotlinModule.Builder().build())
+    .registerKotlinModule()
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 }

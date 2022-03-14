@@ -19,19 +19,11 @@ For running locally against docker instances of the following services:
 - localstack  
 - run this application independently e.g. in IntelliJ
 
-`docker compose up hmpps-auth hmpps-nomis-prisoner-api localstack`
-
-or 
-
-`docker-compose up hmpps-auth hmpps-nomis-prisoner-api localstack`
+`docker compose up hmpps-auth hmpps-nomis-prisoner-api hmpps-nomis-visit-mapping-api localstack`
 
 Running all services including this service 
 
 `docker compose up`
-
-or
-
-`docker-compose up`
 
 ## Running locally against T3 test services
 
