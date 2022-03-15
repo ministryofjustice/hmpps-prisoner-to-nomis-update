@@ -27,3 +27,11 @@ fun prisonVisitCancelledMessage(visitId: String = "12", prisonerId: String = "AB
         "Signature": "EXAMPLEpH+..", 
         "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-0000000000000000000000.pem"}      
 """.trimIndent()
+
+fun retryMessage() = """
+      {
+        "Type":"RETRY",
+        "Message":"{\"nomisId\":\"12345\",\"vsipId\":\"12\"}",
+        "MessageId":"retry-12"
+      }
+""".trimIndent()

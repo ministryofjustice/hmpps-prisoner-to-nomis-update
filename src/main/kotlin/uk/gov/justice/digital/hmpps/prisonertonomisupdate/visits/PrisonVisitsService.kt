@@ -10,6 +10,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateVisitDt
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateQueueService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.VisitContext
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -21,6 +23,7 @@ class PrisonVisitsService(
   private val visitsApiService: VisitsApiService,
   private val nomisApiService: NomisApiService,
   private val mappingService: MappingService,
+  private val updateQueueService: UpdateQueueService,
   private val telemetryClient: TelemetryClient
 ) {
 
@@ -71,12 +74,19 @@ class PrisonVisitsService(
         )
       } catch (e: Exception) {
         telemetryClient.trackEvent("visit-booked-create-map-failed", mapWithNomisId)
-        log.error("Unexpected exception", e)
+        log.error("Unexpected exception, queueing retry", e)
+        updateQueueService.sendMessage(VisitContext(nomisId = nomisId, vsipId = visitBookedEvent.visitId), 1)
         return
       }
 
       telemetryClient.trackEvent("visit-booked-event", mapWithNomisId)
     }
+  }
+
+  fun createVisitRetry(context: VisitContext) {
+    mappingService.createMapping(
+      MappingDto(nomisId = context.nomisId, vsipId = context.vsipId, mappingType = "ONLINE")
+    )
   }
 
   fun cancelVisit(visitCancelledEvent: VisitCancelledEvent) {
@@ -88,20 +98,25 @@ class PrisonVisitsService(
     val mappingDto =
       mappingService.getMappingGivenVsipId(visitCancelledEvent.visitId)
         ?: throw ValidationException("No mapping exists for VSIP id ${visitCancelledEvent.visitId}")
-          .also { telemetryClient.trackEvent("visit-cancelled-failed", telemetryProperties) }
+          .also { telemetryClient.trackEvent("visit-cancelled-mapping-failed", telemetryProperties) }
 
-    nomisApiService.cancelVisit(
-      CancelVisitDto(
-        offenderNo = visitCancelledEvent.prisonerId,
-        nomisVisitId = mappingDto.nomisId,
-        outcome = "VISCANC" // TODO mapping
+    val mapWithNomisId = telemetryProperties.plus(Pair("nomisVisitId", mappingDto.nomisId))
+
+    try {
+      nomisApiService.cancelVisit(
+        CancelVisitDto(
+          offenderNo = visitCancelledEvent.prisonerId,
+          nomisVisitId = mappingDto.nomisId,
+          outcome = "VISCANC" // TODO mapping
+        )
       )
-    )
+    } catch (e: Exception) {
+      telemetryClient.trackEvent("visit-cancelled-failed", mapWithNomisId)
+      log.error("Unexpected exception", e)
+      throw e
+    }
 
-    telemetryClient.trackEvent(
-      "visit-cancelled-event",
-      telemetryProperties.plus(Pair("nomisVisitId", mappingDto.nomisId))
-    )
+    telemetryClient.trackEvent("visit-cancelled-event", mapWithNomisId)
   }
 }
 

@@ -14,6 +14,8 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateQueueService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.VisitContext
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -24,9 +26,10 @@ internal class PrisonVisitsServiceTest {
   private val visitApiService: VisitsApiService = mock()
   private val nomisApiService: NomisApiService = mock()
   private val mappingService: MappingService = mock()
+  private val updateQueueService: UpdateQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()
   private val prisonVisitsService =
-    PrisonVisitsService(visitApiService, nomisApiService, mappingService, telemetryClient)
+    PrisonVisitsService(visitApiService, nomisApiService, mappingService, updateQueueService, telemetryClient)
 
   @Nested
   inner class CreateVisit {
@@ -141,6 +144,20 @@ internal class PrisonVisitsServiceTest {
   }
 
   @Nested
+  inner class RetryVisit {
+
+    @Test
+    fun `should call mapping service`() {
+
+      prisonVisitsService.createVisitRetry(
+        VisitContext(nomisId = "AB123D", vsipId = "24")
+      )
+
+      verify(mappingService).createMapping(MappingDto("AB123D", "24", mappingType = "ONLINE"))
+    }
+  }
+
+  @Nested
   inner class CancelVisit {
 
     @Test
@@ -161,6 +178,7 @@ internal class PrisonVisitsServiceTest {
         org.mockito.kotlin.check {
           assertThat(it["offenderNo"]).isEqualTo("AB123D")
           assertThat(it["visitId"]).isEqualTo("123")
+          assertThat(it["nomisVisitId"]).isEqualTo("456")
         },
         isNull()
       )
@@ -182,7 +200,7 @@ internal class PrisonVisitsServiceTest {
       }.isInstanceOf(ValidationException::class.java)
 
       verify(telemetryClient).trackEvent(
-        eq("visit-cancelled-failed"),
+        eq("visit-cancelled-mapping-failed"),
         org.mockito.kotlin.check {
           assertThat(it["offenderNo"]).isEqualTo("AB123D")
           assertThat(it["visitId"]).isEqualTo("123")

@@ -2,8 +2,6 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.health
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
@@ -14,10 +12,6 @@ import java.time.format.DateTimeFormatter
 import java.util.function.Consumer
 
 class HealthCheckTest : SqsIntegrationTestBase() {
-
-  @Suppress("SpringJavaInjectionPointsAutowiringInspection")
-  @Autowired
-  lateinit var webTestClient: WebTestClient
 
   @Test
   fun `Health page reports ok`() {

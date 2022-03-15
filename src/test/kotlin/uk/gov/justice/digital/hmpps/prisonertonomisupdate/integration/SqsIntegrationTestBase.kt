@@ -9,6 +9,7 @@ import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.hmppsregisterstonomisupdate.integration.LocalStackContainer
 import uk.gov.justice.digital.hmpps.hmppsregisterstonomisupdate.integration.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiExtension
@@ -22,7 +23,10 @@ import uk.gov.justice.hmpps.sqs.HmppsQueueService
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
-class SqsIntegrationTestBase {
+abstract class SqsIntegrationTestBase {
+  @Autowired
+  lateinit var webTestClient: WebTestClient
+
   @Autowired
   private lateinit var hmppsQueueService: HmppsQueueService
 

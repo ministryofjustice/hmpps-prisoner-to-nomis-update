@@ -3,6 +3,7 @@ hmpps.sqs:
   queues:
     prisoner:
       queueName: hmpps_prisoner_to_nomis_queue
+      queueArn: arn:aws:sns:eu-west-2:000000000000:hmpps_prisoner_to_nomis_queue
       dlqName: hmpps_prisoner_to_nomis_dlq
       subscribeTopicId: domainevents
   topics:
