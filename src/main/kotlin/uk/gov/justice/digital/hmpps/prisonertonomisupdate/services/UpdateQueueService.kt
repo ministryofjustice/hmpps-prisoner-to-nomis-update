@@ -19,20 +19,15 @@ class UpdateQueueService(
   private val prisonerSqsClient by lazy { prisonerQueue.sqsClient }
   private val prisonerQueueUrl by lazy { prisonerQueue.queueUrl }
 
-  fun sendMessage(context: VisitContext, delaySeconds: Int = 0) {
-    val result =
-      prisonerSqsClient.sendMessage(
-        SendMessageRequest(
-          prisonerQueueUrl,
-          objectMapper.writeValueAsString(
-            PrisonerDomainEventsListener.SQSMessage(
-              Type = "RETRY",
-              Message = objectMapper.writeValueAsString(context),
-              MessageId = "retry-${context.vsipId}"
-            )
-          )
-        ).withDelaySeconds(delaySeconds)
-      )
+  fun sendMessage(context: VisitContext) {
+    val sqsMessage = PrisonerDomainEventsListener.SQSMessage(
+      Type = "RETRY",
+      Message = objectMapper.writeValueAsString(context),
+      MessageId = "retry-${context.vsipId}"
+    )
+    val result = prisonerSqsClient.sendMessage(
+      SendMessageRequest(prisonerQueueUrl, objectMapper.writeValueAsString(sqsMessage))
+    )
 
     telemetryClient.trackEvent(
       "visit-booked-create-map-queue-retry",
