@@ -75,7 +75,7 @@ class PrisonVisitsService(
       } catch (e: Exception) {
         telemetryClient.trackEvent("visit-booked-create-map-failed", mapWithNomisId)
         log.error("Unexpected exception, queueing retry", e)
-        updateQueueService.sendMessage(VisitContext(nomisId = nomisId, vsipId = visitBookedEvent.visitId), 1)
+        updateQueueService.sendMessage(VisitContext(nomisId = nomisId, vsipId = visitBookedEvent.visitId))
         return
       }
 
@@ -100,23 +100,18 @@ class PrisonVisitsService(
         ?: throw ValidationException("No mapping exists for VSIP id ${visitCancelledEvent.visitId}")
           .also { telemetryClient.trackEvent("visit-cancelled-mapping-failed", telemetryProperties) }
 
-    val mapWithNomisId = telemetryProperties.plus(Pair("nomisVisitId", mappingDto.nomisId))
-
-    try {
-      nomisApiService.cancelVisit(
-        CancelVisitDto(
-          offenderNo = visitCancelledEvent.prisonerId,
-          nomisVisitId = mappingDto.nomisId,
-          outcome = "VISCANC" // TODO mapping
-        )
+    nomisApiService.cancelVisit(
+      CancelVisitDto(
+        offenderNo = visitCancelledEvent.prisonerId,
+        nomisVisitId = mappingDto.nomisId,
+        outcome = "VISCANC" // TODO mapping
       )
-    } catch (e: Exception) {
-      telemetryClient.trackEvent("visit-cancelled-failed", mapWithNomisId)
-      log.error("Unexpected exception", e)
-      throw e
-    }
+    )
 
-    telemetryClient.trackEvent("visit-cancelled-event", mapWithNomisId)
+    telemetryClient.trackEvent(
+      "visit-cancelled-event",
+      telemetryProperties.plus(Pair("nomisVisitId", mappingDto.nomisId))
+    )
   }
 }
 

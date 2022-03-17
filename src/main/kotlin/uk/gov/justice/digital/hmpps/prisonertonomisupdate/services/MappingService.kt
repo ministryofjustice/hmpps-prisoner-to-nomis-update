@@ -43,7 +43,6 @@ class MappingService(
       .retrieve()
       .bodyToMono(MappingDto::class.java)
       .onErrorResume(WebClientResponseException.NotFound::class.java) {
-        // log.debug("getMappingGivenVsipId not found for VSIP id $vsipId with error response ${it.responseBodyAsString}")
         Mono.empty()
       }
       .block()
