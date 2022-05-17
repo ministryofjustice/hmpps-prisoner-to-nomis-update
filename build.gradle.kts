@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.1.6"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.1.7-beta"
   kotlin("plugin.spring") version "1.6.21"
 }
 
@@ -18,7 +18,7 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-kotlin:1.6.8")
   implementation("org.springdoc:springdoc-openapi-data-rest:1.6.8")
   implementation("org.springdoc:springdoc-openapi-security:1.6.8")
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.2")
+  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.3")
 
   testImplementation("io.swagger.parser.v3:swagger-parser:2.0.32")
   testImplementation("com.github.tomakehurst:wiremock-standalone:2.27.2")
