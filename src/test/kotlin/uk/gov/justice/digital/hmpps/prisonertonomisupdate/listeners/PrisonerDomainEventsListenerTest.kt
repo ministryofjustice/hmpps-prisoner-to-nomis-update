@@ -52,7 +52,7 @@ internal class PrisonerDomainEventsListenerTest {
 
         verify(prisonVisitsService).createVisit(
           check {
-            assertThat(it.visitId).isEqualTo("99")
+            assertThat(it.reference).isEqualTo("99")
             assertThat(it.bookingDate).isEqualTo(LocalDate.parse("2021-03-08"))
           }
         )

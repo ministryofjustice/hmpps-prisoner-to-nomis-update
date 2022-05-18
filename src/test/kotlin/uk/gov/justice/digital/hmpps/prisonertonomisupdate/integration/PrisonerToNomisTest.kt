@@ -114,14 +114,13 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
   fun buildVisitApiDtoJsonResponse(visitId: String = "1", prisonerId: String = "A32323Y"): String {
     return """
     {
-      "visitId": "$visitId",
+      "reference": "$visitId",
       "prisonId": "MDI",
       "prisonerId": "$prisonerId",
-      "visitType": "STANDARD_SOCIAL",
-      "visitDate": "2019-12-02",
-      "startTime": "09:00:00",
-      "endTime": "10:00:00",
-      "currentStatus": "BOOKED",
+      "visitType": "SOCIAL",
+      "startTimestamp": "2019-12-02T09:00:00",
+      "endTimestamp": "2019-12-02T10:00:00",
+      "visitStatus": "BOOKED",
       "visitors": [
         {
           "nomisPersonId": 543524

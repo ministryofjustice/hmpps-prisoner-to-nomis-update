@@ -13,8 +13,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits.VisitDto.Visitor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension
-import java.time.LocalDate
-import java.time.LocalTime
+import java.time.LocalDateTime
 
 @SpringAPIServiceTest
 @Import(VisitsApiService::class, VisitsConfiguration::class)
@@ -31,14 +30,13 @@ internal class VisitsApiServiceTest {
         "1234",
         """
           {
-            "visitId": "1234",
+            "reference": "1234",
             "prisonId": "MDI",
             "prisonerId": "A1234FG",
-            "visitType": "STANDARD_SOCIAL",
-            "visitDate": "2019-12-02",
-            "startTime": "09:00:00",
-            "endTime": "10:00:00",
-            "currentStatus": "BOOKED",
+            "visitType": "SOCIAL",
+            "startTimestamp": "2019-12-02T09:00:00",
+            "endTimestamp": "2019-12-02T10:00:00",
+            "visitStatus": "BOOKED",
             "visitors": [
               {
                 "nomisPersonId": 543524
@@ -69,11 +67,11 @@ internal class VisitsApiServiceTest {
     internal fun `get parse core visit data`() {
       val visit = visitsApiService.getVisit("1234")
 
-      assertThat(visit.visitId).isEqualTo("1234")
-      assertThat(visit.visitDate).isEqualTo(LocalDate.parse("2019-12-02"))
-      assertThat(visit.startTime).isEqualTo(LocalTime.parse("09:00:00"))
-      assertThat(visit.endTime).isEqualTo(LocalTime.parse("10:00:00"))
+      assertThat(visit.reference).isEqualTo("1234")
+      assertThat(visit.startTimestamp).isEqualTo(LocalDateTime.parse("2019-12-02T09:00:00"))
+      assertThat(visit.endTimestamp).isEqualTo(LocalDateTime.parse("2019-12-02T10:00:00"))
       assertThat(visit.prisonId).isEqualTo("MDI")
+      assertThat(visit.visitStatus).isEqualTo("BOOKED")
       assertThat(visit.visitors).containsExactly(Visitor(543524), Visitor(344444), Visitor(655656))
     }
 
