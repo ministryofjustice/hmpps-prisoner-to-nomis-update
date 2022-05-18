@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateQueueService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.VisitContext
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import javax.validation.ValidationException
@@ -37,14 +36,14 @@ class PrisonVisitsService(
       val telemetryMap = mutableMapOf(
         "offenderNo" to prisonerId,
         "prisonId" to prisonId,
-        "visitId" to visitId,
-        "startDateTime" to LocalDateTime.of(visitDate, startTime).format(DateTimeFormatter.ISO_DATE_TIME),
-        "endTime" to endTime.format(DateTimeFormatter.ISO_TIME),
+        "visitId" to reference,
+        "startDateTime" to startTimestamp.format(DateTimeFormatter.ISO_DATE_TIME),
+        "endTime" to endTimestamp.format(DateTimeFormatter.ISO_TIME),
       )
 
       if (mappingService.getMappingGivenVsipId(visitBookedEvent.reference) != null) {
         telemetryClient.trackEvent("visit-booked-get-map-failed", telemetryMap)
-        log.warn("Mapping already exists for VSIP id $visitId")
+        log.warn("Mapping already exists for VSIP id $reference")
         return
       }
 
@@ -53,11 +52,15 @@ class PrisonVisitsService(
           CreateVisitDto(
             offenderNo = this.prisonerId,
             prisonId = this.prisonId,
-            startDateTime = LocalDateTime.of(this.visitDate, this.startTime),
-            endTime = this.endTime,
-            visitorPersonIds = this.visitors.map { it -> it.nomisPersonId },
+            startDateTime = this.startTimestamp,
+            endTime = this.endTimestamp.toLocalTime(),
+            visitorPersonIds = this.visitors.map { it.nomisPersonId },
             issueDate = visitBookedEvent.bookingDate,
-            visitType = "SCON", // TODO mapping
+            visitType = when (this.visitType) {
+              "SOCIAL" -> "SCON"
+              "FAMILY" -> "SCON"
+              else -> throw ValidationException("Invalid visit type ${this.visitType}")
+            }
           )
         )
       } catch (e: Exception) {

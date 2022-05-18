@@ -16,8 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingServic
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateQueueService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.VisitContext
-import java.time.LocalDate
-import java.time.LocalTime
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import javax.validation.ValidationException
 
@@ -214,13 +213,11 @@ internal class PrisonVisitsServiceTest {
 fun newVisit(offenderNo: String = "AB123D"): VisitDto = VisitDto(
   prisonerId = offenderNo,
   prisonId = "MDI",
-  visitDate = LocalDate.parse("2023-09-08"),
-  startTime = LocalTime.parse("08:30"),
-  endTime = LocalTime.parse("09:30"),
-  visitType = "SCON",
-  // visitRoom = "1",
-  currentStatus = "BOOKED",
-  visitId = "123"
+  startTimestamp = LocalDateTime.parse("2023-09-08T08:30"),
+  endTimestamp = LocalDateTime.parse("2023-09-08T09:30"),
+  visitType = "SOCIAL",
+  visitStatus = "BOOKED",
+  reference = "123"
 )
 
 fun newMapping() = MappingDto(nomisId = "456", vsipId = "123", mappingType = "ONLINE")
