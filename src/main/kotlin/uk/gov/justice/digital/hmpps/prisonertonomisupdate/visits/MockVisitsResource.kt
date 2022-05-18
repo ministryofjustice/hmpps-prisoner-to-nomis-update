@@ -25,6 +25,7 @@ class MockVisitsResource(private val mockVisitsData: MockVisitsData) {
 
   @PreAuthorize("hasRole('ROLE_VISIT_SCHEDULER')")
   @PostMapping("/migrate-visits")
+  @Operation(hidden = true)
   fun createVisit(
     @RequestBody @Valid createVisitRequest: CreateVisitRequest
   ): String = UUID.randomUUID().toString()
