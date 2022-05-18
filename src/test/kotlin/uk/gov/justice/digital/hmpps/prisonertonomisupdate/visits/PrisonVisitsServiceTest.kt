@@ -167,7 +167,7 @@ internal class PrisonVisitsServiceTest {
 
       prisonVisitsService.cancelVisit(
         VisitCancelledEvent(
-          additionalInformation = VisitCancelledEvent.VisitInformation(visitId = "123"),
+          additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
           prisonerId = "AB123D",
           occurredAt = OffsetDateTime.now()
         )
@@ -192,7 +192,7 @@ internal class PrisonVisitsServiceTest {
       assertThatThrownBy {
         prisonVisitsService.cancelVisit(
           VisitCancelledEvent(
-            additionalInformation = VisitCancelledEvent.VisitInformation(visitId = "123"),
+            additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
             prisonerId = "AB123D",
             occurredAt = OffsetDateTime.now()
           )
