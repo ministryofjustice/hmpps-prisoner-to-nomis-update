@@ -13,8 +13,7 @@ generic-service:
     API_BASE_URL_OAUTH: https://sign-in-preprod.hmpps.service.justice.gov.uk/auth
     API_BASE_URL_NOMIS: https://nomis-prsner-pp.aks-live-1.studio-hosting.service.justice.gov.uk
     API_BASE_URL_MAPPING: https://nomis-visits-mapping-preprod.hmpps.service.justice.gov.uk
-    # Set to ourselves until new service is ready
-    API_BASE_URL_VISITS: https://prisoner-to-nomis-update-preprod.hmpps.service.justice.gov.uk
+    API_BASE_URL_VISITS: https://visit-scheduler-preprod.prison.service.justice.gov.uk
 
 # CloudPlatform AlertManager receiver to route promethues alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
