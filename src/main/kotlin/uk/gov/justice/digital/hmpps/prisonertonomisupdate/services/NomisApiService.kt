@@ -52,6 +52,8 @@ data class CreateVisitDto(
   val visitType: String,
   @JsonFormat(pattern = "yyyy-MM-dd")
   val issueDate: LocalDate,
+  val visitComment: String,
+  val visitOrderComment: String,
 )
 
 data class CancelVisitDto(

@@ -43,6 +43,18 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
         // .withRequestBody(WireMock.matchingJsonPath("visitRoomId", WireMock.equalTo("Room 1")))
         .withRequestBody(WireMock.matchingJsonPath("startDateTime", WireMock.equalTo("2019-12-02T09:00:00")))
         .withRequestBody(WireMock.matchingJsonPath("issueDate", WireMock.equalTo("2021-03-05")))
+        .withRequestBody(
+          WireMock.matchingJsonPath(
+            "visitComment",
+            WireMock.equalTo("Created by Book A Prison Visit. Reference: 12")
+          )
+        )
+        .withRequestBody(
+          WireMock.matchingJsonPath(
+            "visitOrderComment",
+            WireMock.equalTo("Created by Book A Prison Visit for visit with reference: 12")
+          )
+        )
     )
   }
 

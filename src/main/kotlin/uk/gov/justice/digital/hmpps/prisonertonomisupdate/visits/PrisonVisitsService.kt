@@ -60,7 +60,9 @@ class PrisonVisitsService(
               "SOCIAL" -> "SCON"
               "FAMILY" -> "SCON"
               else -> throw ValidationException("Invalid visit type ${this.visitType}")
-            }
+            },
+            visitComment = "Created by Book A Prison Visit. Reference: ${this.reference}",
+            visitOrderComment = "Created by Book A Prison Visit for visit with reference: ${this.reference}",
           )
         )
       } catch (e: Exception) {
