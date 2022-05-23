@@ -105,19 +105,29 @@ class PrisonVisitsService(
         ?: throw ValidationException("No mapping exists for VSIP id ${visitCancelledEvent.reference}")
           .also { telemetryClient.trackEvent("visit-cancelled-mapping-failed", telemetryProperties) }
 
-    nomisApiService.cancelVisit(
-      CancelVisitDto(
-        offenderNo = visitCancelledEvent.prisonerId,
-        nomisVisitId = mappingDto.nomisId,
-        outcome = "VISCANC" // TODO mapping
-      )
-    )
+    visitsApiService.getVisit(visitCancelledEvent.reference).run {
 
-    telemetryClient.trackEvent(
-      "visit-cancelled-event",
-      telemetryProperties.plus(Pair("nomisVisitId", mappingDto.nomisId))
-    )
+      nomisApiService.cancelVisit(
+        CancelVisitDto(
+          offenderNo = visitCancelledEvent.prisonerId,
+          nomisVisitId = mappingDto.nomisId,
+          outcome = getNomisOutcomeOrDefault(this)
+        )
+      )
+
+      telemetryClient.trackEvent(
+        "visit-cancelled-event",
+        telemetryProperties.plus(Pair("nomisVisitId", mappingDto.nomisId))
+      )
+    }
   }
+
+  private fun getNomisOutcomeOrDefault(vsipVisit: VisitDto): String =
+    vsipVisit.outcomeStatus?.runCatching {
+      VsipOutcomeStatus.valueOf(this)
+    }?.getOrNull()?.let {
+      vsipToNomisOutcomeMap[it]?.name
+    } ?: NomisCancellationOutcome.ADMIN.name
 }
 
 data class VisitBookedEvent(
@@ -149,3 +159,54 @@ data class VisitCancelledEvent(
     val reference: String,
   )
 }
+
+enum class VsipOutcomeStatus {
+  ADMINISTRATIVE_CANCELLATION,
+  ADMINISTRATIVE_ERROR,
+  BATCH_CANCELLATION,
+  CANCELLATION,
+  COMPLETED_NORMALLY,
+  ESTABLISHMENT_CANCELLED,
+  NOT_RECORDED,
+  NO_VISITING_ORDER,
+  PRISONER_CANCELLED,
+  PRISONER_COMPLETED_EARLY,
+  PRISONER_REFUSED_TO_ATTEND,
+  TERMINATED_BY_STAFF,
+  VISITOR_CANCELLED,
+  VISITOR_COMPLETED_EARLY,
+  VISITOR_DECLINED_ENTRY,
+  VISITOR_DID_NOT_ARRIVE,
+  VISITOR_FAILED_SECURITY_CHECKS,
+  VISIT_ORDER_CANCELLED,
+}
+
+enum class NomisCancellationOutcome {
+  ADMIN,
+  HMP,
+  NO_ID,
+  NO_VO,
+  NSHOW,
+  OFFCANC,
+  REFUSED,
+  VISCANC,
+  VO_CANCEL,
+  BATCH_CANC,
+  ADMIN_CANCEL,
+}
+
+private val vsipToNomisOutcomeMap = mutableMapOf(
+  VsipOutcomeStatus.ADMINISTRATIVE_CANCELLATION to NomisCancellationOutcome.ADMIN,
+  VsipOutcomeStatus.ADMINISTRATIVE_ERROR to NomisCancellationOutcome.ADMIN,
+  VsipOutcomeStatus.ESTABLISHMENT_CANCELLED to NomisCancellationOutcome.HMP,
+  VsipOutcomeStatus.VISITOR_FAILED_SECURITY_CHECKS to NomisCancellationOutcome.NO_ID,
+  VsipOutcomeStatus.NO_VISITING_ORDER to NomisCancellationOutcome.NO_VO,
+  VsipOutcomeStatus.VISITOR_DID_NOT_ARRIVE to NomisCancellationOutcome.NSHOW,
+  VsipOutcomeStatus.PRISONER_CANCELLED to NomisCancellationOutcome.OFFCANC,
+  VsipOutcomeStatus.PRISONER_REFUSED_TO_ATTEND to NomisCancellationOutcome.REFUSED,
+  VsipOutcomeStatus.VISITOR_CANCELLED to NomisCancellationOutcome.VISCANC,
+  VsipOutcomeStatus.VISIT_ORDER_CANCELLED to NomisCancellationOutcome.VO_CANCEL,
+  VsipOutcomeStatus.BATCH_CANCELLATION to NomisCancellationOutcome.BATCH_CANC,
+  VsipOutcomeStatus.ADMINISTRATIVE_CANCELLATION to NomisCancellationOutcome.ADMIN_CANCEL,
+  VsipOutcomeStatus.PRISONER_REFUSED_TO_ATTEND to NomisCancellationOutcome.REFUSED,
+)
