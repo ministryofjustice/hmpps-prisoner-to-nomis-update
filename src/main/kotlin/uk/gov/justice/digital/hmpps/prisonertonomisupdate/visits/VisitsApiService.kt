@@ -26,6 +26,7 @@ data class VisitDto(
   val startTimestamp: LocalDateTime,
   val endTimestamp: LocalDateTime = LocalDateTime.now().plusHours(1),
   val visitStatus: String,
+  val outcomeStatus: String? = null,
 ) {
   data class Visitor(val nomisPersonId: Long)
 }

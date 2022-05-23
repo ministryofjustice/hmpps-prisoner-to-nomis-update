@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.matching.UrlPattern
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
@@ -40,7 +39,6 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
         .withRequestBody(WireMock.matchingJsonPath("offenderNo", WireMock.equalTo("A32323Y")))
         .withRequestBody(WireMock.matchingJsonPath("prisonId", WireMock.equalTo("MDI")))
         .withRequestBody(WireMock.matchingJsonPath("visitType", WireMock.equalTo("SCON")))
-        // .withRequestBody(WireMock.matchingJsonPath("visitRoomId", WireMock.equalTo("Room 1")))
         .withRequestBody(WireMock.matchingJsonPath("startDateTime", WireMock.equalTo("2019-12-02T09:00:00")))
         .withRequestBody(WireMock.matchingJsonPath("issueDate", WireMock.equalTo("2021-03-05")))
         .withRequestBody(
@@ -103,6 +101,11 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
         }
       """.trimIndent()
     )
+
+    visitsApi.stubVisitGet(
+      "12",
+      buildVisitApiDtoJsonResponse(visitId = "12", prisonerId = "A32323Y", outcome = "PRISONER_CANCELLED")
+    )
     nomisApi.stubVisitCancel(prisonerId = "AB12345", visitId = "456")
 
     val message = prisonVisitCancelledMessage(prisonerId = "AB12345")
@@ -114,16 +117,17 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
 
     nomisApi.verify(
       WireMock.putRequestedFor(WireMock.urlEqualTo("/prisoners/AB12345/visits/456/cancel"))
-        .withRequestBody(WireMock.matchingJsonPath("outcome", WireMock.equalTo("VISCANC")))
-    )
-
-    visitsApi.verify(
-      0,
-      WireMock.getRequestedFor(UrlPattern.ANY)
+        .withRequestBody(WireMock.matchingJsonPath("outcome", WireMock.equalTo("OFFCANC")))
     )
   }
 
-  fun buildVisitApiDtoJsonResponse(visitId: String = "1", prisonerId: String = "A32323Y"): String {
+  fun buildVisitApiDtoJsonResponse(
+    visitId: String = "1",
+    prisonerId: String = "A32323Y",
+    outcome: String? = null
+  ): String {
+    val outcomeString = outcome?.let { "\"outcomeStatus\": \"$it\"," } ?: ""
+
     return """
     {
       "reference": "$visitId",
@@ -132,6 +136,7 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
       "visitType": "SOCIAL",
       "startTimestamp": "2019-12-02T09:00:00",
       "endTimestamp": "2019-12-02T10:00:00",
+      $outcomeString
       "visitStatus": "BOOKED",
       "visitors": [
         {

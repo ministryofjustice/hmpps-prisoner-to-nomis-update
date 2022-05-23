@@ -11,6 +11,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CancelVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -181,6 +182,53 @@ internal class PrisonVisitsServiceTest {
         },
         isNull()
       )
+
+      verify(visitApiService).getVisit("123")
+    }
+
+    @Test
+    fun `should map a cancellation outcome correctly`() {
+      whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
+      whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(newMapping())
+
+      prisonVisitsService.cancelVisit(
+        VisitCancelledEvent(
+          additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
+          prisonerId = "AB123D",
+          occurredAt = OffsetDateTime.now()
+        )
+      )
+      verify(nomisApiService).cancelVisit(CancelVisitDto("AB123D", "456", "HMP"))
+    }
+
+    @Test
+    fun `should handle a null cancellation outcome correctly (set to default 'ADMIN')`() {
+      whenever(visitApiService.getVisit("123")).thenReturn(newVisit(outcome = null))
+      whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(newMapping())
+
+      prisonVisitsService.cancelVisit(
+        VisitCancelledEvent(
+          additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
+          prisonerId = "AB123D",
+          occurredAt = OffsetDateTime.now()
+        )
+      )
+      verify(nomisApiService).cancelVisit(CancelVisitDto("AB123D", "456", "ADMIN"))
+    }
+
+    @Test
+    fun `should handle an unexpected cancellation outcome correctly (set to default 'ADMIN')`() {
+      whenever(visitApiService.getVisit("123")).thenReturn(newVisit(outcome = "HMMMMMMM"))
+      whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(newMapping())
+
+      prisonVisitsService.cancelVisit(
+        VisitCancelledEvent(
+          additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
+          prisonerId = "AB123D",
+          occurredAt = OffsetDateTime.now()
+        )
+      )
+      verify(nomisApiService).cancelVisit(CancelVisitDto("AB123D", "456", "ADMIN"))
     }
 
     @Test
@@ -210,14 +258,15 @@ internal class PrisonVisitsServiceTest {
   }
 }
 
-fun newVisit(offenderNo: String = "AB123D"): VisitDto = VisitDto(
+fun newVisit(offenderNo: String = "AB123D", outcome: String? = VsipOutcomeStatus.ESTABLISHMENT_CANCELLED.name): VisitDto = VisitDto(
   prisonerId = offenderNo,
   prisonId = "MDI",
   startTimestamp = LocalDateTime.parse("2023-09-08T08:30"),
   endTimestamp = LocalDateTime.parse("2023-09-08T09:30"),
   visitType = "SOCIAL",
   visitStatus = "BOOKED",
-  reference = "123"
+  reference = "123",
+  outcomeStatus = outcome
 )
 
 fun newMapping() = MappingDto(nomisId = "456", vsipId = "123", mappingType = "ONLINE")
