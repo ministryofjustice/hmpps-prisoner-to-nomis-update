@@ -12,6 +12,8 @@ spec:
   successfulJobsHistoryLimit: 5
   jobTemplate:
     spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
       template:
         spec:
           containers:
