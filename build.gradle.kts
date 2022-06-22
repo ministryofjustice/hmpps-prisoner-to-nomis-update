@@ -1,6 +1,6 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.2.3"
-  kotlin("plugin.spring") version "1.6.21"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.3.0-beta"
+  kotlin("plugin.spring") version "1.7.0"
 }
 
 configurations {
@@ -20,7 +20,7 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-security:1.6.9")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.3")
 
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.0.33")
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.1")
   testImplementation("com.github.tomakehurst:wiremock-standalone:2.27.2")
   testImplementation("org.mockito:mockito-inline:4.6.1")
   testImplementation("org.testcontainers:localstack:1.17.2")
@@ -28,13 +28,13 @@ dependencies {
 }
 
 java {
-  toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+  toolchain.languageVersion.set(JavaLanguageVersion.of(18))
 }
 
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
-      jvmTarget = "17"
+      jvmTarget = "18"
     }
   }
 }
