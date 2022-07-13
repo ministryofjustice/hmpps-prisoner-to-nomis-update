@@ -1,6 +1,6 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.4.0-beta"
-  kotlin("plugin.spring") version "1.7.10"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.3.2"
+  kotlin("plugin.spring") version "1.7.0"
 }
 
 configurations {
@@ -12,7 +12,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:1.1.6")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:1.1.5")
 
   implementation("org.springdoc:springdoc-openapi-ui:1.6.9")
   implementation("org.springdoc:springdoc-openapi-kotlin:1.6.9")
