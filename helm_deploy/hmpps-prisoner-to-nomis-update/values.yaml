@@ -11,6 +11,8 @@ generic-service:
 
   ingress:
     enabled: true
+    v1_2_enabled: true
+    v0_47_enabled: true
     annotations:
       nginx.ingress.kubernetes.io/configuration-snippet: |
         server_tokens off;
