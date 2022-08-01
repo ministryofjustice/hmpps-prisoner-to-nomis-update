@@ -266,7 +266,9 @@ fun newVisit(offenderNo: String = "AB123D", outcome: String? = VsipOutcomeStatus
   visitType = "SOCIAL",
   visitStatus = "BOOKED",
   reference = "123",
-  outcomeStatus = outcome
+  outcomeStatus = outcome,
+  visitRoom = "Main visit room",
+  visitRestriction = "OPEN",
 )
 
 fun newMapping() = MappingDto(nomisId = "456", vsipId = "123", mappingType = "ONLINE")

@@ -128,6 +128,8 @@ fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(
   issueDate = LocalDate.now(),
   visitComment = "VSIP ref: 123",
   visitOrderComment = "VO VSIP ref: 123",
+  room = "Main visits room",
+  openClosedStatus = "CLOSED",
 )
 
 fun cancelVisit(): CancelVisitDto = CancelVisitDto(offenderNo = "AB123D", nomisVisitId = "12", outcome = "VISCANC")

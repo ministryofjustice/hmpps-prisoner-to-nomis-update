@@ -54,6 +54,8 @@ data class CreateVisitDto(
   val issueDate: LocalDate,
   val visitComment: String,
   val visitOrderComment: String,
+  val room: String,
+  val openClosedStatus: String,
 )
 
 data class CancelVisitDto(
