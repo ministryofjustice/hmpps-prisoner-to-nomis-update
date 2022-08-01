@@ -63,6 +63,8 @@ class PrisonVisitsService(
             },
             visitComment = "Created by Book A Prison Visit. Reference: ${this.reference}",
             visitOrderComment = "Created by Book A Prison Visit for visit with reference: ${this.reference}",
+            room = this.visitRoom,
+            openClosedStatus = this.visitRestriction,
           )
         )
       } catch (e: Exception) {

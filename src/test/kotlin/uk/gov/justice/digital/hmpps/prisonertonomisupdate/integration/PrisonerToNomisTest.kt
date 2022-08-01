@@ -21,7 +21,15 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
 
   @Test
   fun `will consume a prison visits create message`() {
-    visitsApi.stubVisitGet("12", buildVisitApiDtoJsonResponse(visitId = "12", prisonerId = "A32323Y"))
+    visitsApi.stubVisitGet(
+      "12",
+      buildVisitApiDtoJsonResponse(
+        visitId = "12",
+        prisonerId = "A32323Y",
+        visitRoom = "Main visits room",
+        visitRestriction = "OPEN",
+      )
+    )
     mappingServer.stubGetVsipWithError("12", 404)
     mappingServer.stubCreate()
     nomisApi.stubVisitCreate(prisonerId = "A32323Y")
@@ -39,6 +47,8 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
         .withRequestBody(WireMock.matchingJsonPath("offenderNo", WireMock.equalTo("A32323Y")))
         .withRequestBody(WireMock.matchingJsonPath("prisonId", WireMock.equalTo("MDI")))
         .withRequestBody(WireMock.matchingJsonPath("visitType", WireMock.equalTo("SCON")))
+        .withRequestBody(WireMock.matchingJsonPath("room", WireMock.equalTo("Main visits room")))
+        .withRequestBody(WireMock.matchingJsonPath("openClosedStatus", WireMock.equalTo("OPEN")))
         .withRequestBody(WireMock.matchingJsonPath("startDateTime", WireMock.equalTo("2019-12-02T09:00:00")))
         .withRequestBody(WireMock.matchingJsonPath("issueDate", WireMock.equalTo("2021-03-05")))
         .withRequestBody(
@@ -124,7 +134,9 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
   fun buildVisitApiDtoJsonResponse(
     visitId: String = "1",
     prisonerId: String = "A32323Y",
-    outcome: String? = null
+    outcome: String? = null,
+    visitRoom: String = "Main visits room",
+    visitRestriction: String = "OPEN",
   ): String {
     val outcomeString = outcome?.let { "\"outcomeStatus\": \"$it\"," } ?: ""
 
@@ -136,6 +148,8 @@ class PrisonerToNomisTest : SqsIntegrationTestBase() {
       "visitType": "SOCIAL",
       "startTimestamp": "2019-12-02T09:00:00",
       "endTimestamp": "2019-12-02T10:00:00",
+      "visitRestriction": "$visitRestriction",
+      "visitRoom": "$visitRoom",
       $outcomeString
       "visitStatus": "BOOKED",
       "visitors": [
