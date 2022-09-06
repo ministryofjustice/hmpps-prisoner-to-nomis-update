@@ -7,11 +7,11 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CancelVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateVisitDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.VisitMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateQueueService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.VisitContext
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.VisitMappingDto
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
