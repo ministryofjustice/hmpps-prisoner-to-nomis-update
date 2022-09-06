@@ -107,7 +107,5 @@ class IncentivesService(
   data class IncentiveCreatedEvent(
     // TBD
     val incentiveId: Long,
-  ) {
-
-  }
+  )
 }
