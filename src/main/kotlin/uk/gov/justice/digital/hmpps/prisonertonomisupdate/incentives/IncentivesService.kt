@@ -73,7 +73,7 @@ class IncentivesService(
             nomisBookingId = nomisResponse.nomisBookingId,
             nomisIncentiveSequence = nomisResponse.nomisIncentiveSequence,
             incentiveId = event.incentiveId,
-            mappingType = "ONLINE",
+            mappingType = "INCENTIVE_CREATED",
           )
         )
       } catch (e: Exception) {
@@ -99,7 +99,7 @@ class IncentivesService(
         nomisBookingId = context.nomisBookingId,
         nomisIncentiveSequence = context.nomisIncentiveSequence,
         incentiveId = context.incentiveId,
-        mappingType = "ONLINE",
+        mappingType = "INCENTIVE_CREATED",
       )
     )
   }
