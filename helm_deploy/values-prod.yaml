@@ -13,6 +13,7 @@ generic-service:
     API_BASE_URL_NOMIS: https://nomis-prisoner.aks-live-1.studio-hosting.service.justice.gov.uk
     API_BASE_URL_MAPPING: https://nomis-visits-mapping.hmpps.service.justice.gov.uk
     API_BASE_URL_VISITS: https://visit-scheduler.prison.service.justice.gov.uk
+    API_BASE_URL_INCENTIVES: https://incentives-api.hmpps.service.justice.gov.uk
 
 # CloudPlatform AlertManager receiver to route promethues alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts

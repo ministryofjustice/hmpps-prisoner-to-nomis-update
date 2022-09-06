@@ -11,7 +11,7 @@ class IncentivesApiService(@Qualifier("incentivesApiWebClient") private val webC
 
   fun getIncentive(incentiveId: Long): IepDetail {
     return webClient.get()
-      .uri("/iep/reviews/id/{id}/$incentiveId")
+      .uri("/iep/reviews/id/$incentiveId")
       .retrieve()
       .bodyToMono(IepDetail::class.java)
       .block()!!
