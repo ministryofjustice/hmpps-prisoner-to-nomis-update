@@ -20,17 +20,19 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCreatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.retryMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits.PrisonVisitsService
 import java.time.LocalDate
 
 internal class PrisonerDomainEventsListenerTest {
   private val prisonVisitsService: PrisonVisitsService = mock()
+  private val incentivesService: IncentivesService = mock()
   private val objectMapper: ObjectMapper = objectMapper()
   private val eventFeatureSwitch: EventFeatureSwitch = mock()
   private val telemetryClient: TelemetryClient = mock()
 
   private val listener =
-    PrisonerDomainEventsListener(prisonVisitsService, objectMapper, eventFeatureSwitch, telemetryClient)
+    PrisonerDomainEventsListener(prisonVisitsService, incentivesService, objectMapper, eventFeatureSwitch, telemetryClient)
 
   @Nested
   inner class Visits {

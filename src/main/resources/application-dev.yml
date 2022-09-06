@@ -7,4 +7,4 @@ api.base.url:
   oauth: http://localhost:8090/auth
   # Set to ourselves until new service is ready
   visits: http://localhost:8080
-
+  incentives: http://localhost:8080

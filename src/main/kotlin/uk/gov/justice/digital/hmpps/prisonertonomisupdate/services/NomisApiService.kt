@@ -39,6 +39,14 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       }
       .block()
   }
+
+  fun createIncentive(request: CreateIncentiveDto) =
+    webClient.post()
+      .uri("//incentives/${request.bookingId}/incentives")
+      .bodyValue(request)
+      .retrieve()
+      .bodyToMono(CreateIncentiveResponseDto::class.java)
+      .block()!!
 }
 
 data class CreateVisitDto(
@@ -66,4 +74,22 @@ data class CancelVisitDto(
 
 data class CreateVisitResponseDto(
   val visitId: String,
+)
+
+data class NomisCodeDescription(val code: String, val description: String)
+
+data class CreateIncentiveDto(
+  val bookingId: Long,
+  val incentiveSequence: Long,
+  val commentText: String? = null,
+  val iepDateTime: LocalDateTime,
+  val prisonId: String,
+  val iepLevel: NomisCodeDescription,
+  val userId: String? = null,
+  val currentIep: Boolean,
+)
+
+data class CreateIncentiveResponseDto(
+  val nomisBookingId: Long,
+  val nomisIncentiveSequence: Long,
 )

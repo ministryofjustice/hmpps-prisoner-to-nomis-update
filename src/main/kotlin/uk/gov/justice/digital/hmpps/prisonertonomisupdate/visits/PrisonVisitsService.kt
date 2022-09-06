@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CancelVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateVisitDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.VisitMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateQueueService
@@ -77,7 +77,7 @@ class PrisonVisitsService(
 
       try {
         mappingService.createMapping(
-          MappingDto(nomisId = nomisId, vsipId = visitBookedEvent.reference, mappingType = "ONLINE")
+          VisitMappingDto(nomisId = nomisId, vsipId = visitBookedEvent.reference, mappingType = "ONLINE")
         )
       } catch (e: Exception) {
         telemetryClient.trackEvent("visit-booked-create-map-failed", mapWithNomisId)
@@ -92,7 +92,7 @@ class PrisonVisitsService(
 
   fun createVisitRetry(context: VisitContext) {
     mappingService.createMapping(
-      MappingDto(nomisId = context.nomisId, vsipId = context.vsipId, mappingType = "ONLINE")
+      VisitMappingDto(nomisId = context.nomisId, vsipId = context.vsipId, mappingType = "ONLINE")
     )
   }
 

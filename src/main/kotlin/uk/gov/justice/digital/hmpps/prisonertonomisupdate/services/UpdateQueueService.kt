@@ -34,6 +34,27 @@ class UpdateQueueService(
       mapOf("messageId" to result.messageId!!, "vsipId" to context.vsipId),
     )
   }
+
+  fun sendMessage(context: IncentiveContext) {
+    val sqsMessage = PrisonerDomainEventsListener.SQSMessage(
+      Type = "IncentiveRETRY",
+      Message = objectMapper.writeValueAsString(context),
+      MessageId = "retry-${context.incentiveId}"
+    )
+    val result = prisonerSqsClient.sendMessage(
+      SendMessageRequest(prisonerQueueUrl, objectMapper.writeValueAsString(sqsMessage))
+    )
+
+    telemetryClient.trackEvent(
+      "incentive-create-map-queue-retry",
+      mapOf("messageId" to result.messageId!!, "incentiveId" to context.incentiveId.toString()),
+    )
+  }
 }
 
 data class VisitContext(val nomisId: String, val vsipId: String)
+data class IncentiveContext(
+  val nomisBookingId: Long,
+  val nomisIncentiveSequence: Long,
+  val incentiveId: Long
+)

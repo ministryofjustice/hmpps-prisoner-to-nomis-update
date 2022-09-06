@@ -10,12 +10,15 @@ import org.slf4j.LoggerFactory
 import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.IncentiveContext
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.VisitContext
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits.PrisonVisitsService
 
 @Service
 class PrisonerDomainEventsListener(
   private val prisonVisitsService: PrisonVisitsService,
+  private val incentivesService: IncentivesService,
   private val objectMapper: ObjectMapper,
   private val eventFeatureSwitch: EventFeatureSwitch,
   private val telemetryClient: TelemetryClient
@@ -44,6 +47,7 @@ class PrisonerDomainEventsListener(
           log.warn("Feature switch is disabled for {}", eventType)
         }
       }
+
       "RETRY" -> {
         val context = objectMapper.readValue<VisitContext>(sqsMessage.Message)
         telemetryClient.trackEvent(
@@ -52,12 +56,45 @@ class PrisonerDomainEventsListener(
         )
         prisonVisitsService.createVisitRetry(context)
       }
+
+      "Incentive" -> {
+        val (eventType, id) = objectMapper.readValue<HMPPSIncentiveDomainEvent>(sqsMessage.Message)
+        telemetryClient.trackEvent(
+          "incentive-domain-event-received",
+          mapOf("eventType" to eventType, "id" to id),
+        )
+        if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
+          "incentive.created" -> incentivesService.createIncentive(objectMapper.readValue(sqsMessage.Message))
+          else -> log.info("Received a message I wasn't expecting {}", eventType)
+        } else {
+          log.warn("Feature switch is disabled for {}", eventType)
+        }
+      }
+
+      "IncentiveRETRY" -> {
+        val context = objectMapper.readValue<IncentiveContext>(sqsMessage.Message)
+        telemetryClient.trackEvent(
+          "incentive-retry-received",
+          mapOf(
+            "id" to context.incentiveId.toString(),
+            "nomisBookingId" to context.nomisBookingId.toString(),
+            "nomisIncentiveSequence" to context.nomisIncentiveSequence.toString()
+          ),
+        )
+        incentivesService.createIncentiveRetry(context)
+      }
     }
   }
 
   data class HMPPSDomainEvent(
     val eventType: String,
     val prisonerId: String
+  )
+
+  data class HMPPSIncentiveDomainEvent(
+    // TODO does not yet exist
+    val eventType: String,
+    val id: String
   )
 
   @JsonNaming(value = PropertyNamingStrategies.UpperCamelCaseStrategy::class)

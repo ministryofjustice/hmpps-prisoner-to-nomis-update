@@ -12,11 +12,11 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CancelVisitDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateQueueService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.VisitContext
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.VisitMappingDto
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import javax.validation.ValidationException
@@ -153,7 +153,7 @@ internal class PrisonVisitsServiceTest {
         VisitContext(nomisId = "AB123D", vsipId = "24")
       )
 
-      verify(mappingService).createMapping(MappingDto("AB123D", "24", mappingType = "ONLINE"))
+      verify(mappingService).createMapping(VisitMappingDto("AB123D", "24", mappingType = "ONLINE"))
     }
   }
 
@@ -258,7 +258,10 @@ internal class PrisonVisitsServiceTest {
   }
 }
 
-fun newVisit(offenderNo: String = "AB123D", outcome: String? = VsipOutcomeStatus.ESTABLISHMENT_CANCELLED.name): VisitDto = VisitDto(
+fun newVisit(
+  offenderNo: String = "AB123D",
+  outcome: String? = VsipOutcomeStatus.ESTABLISHMENT_CANCELLED.name
+): VisitDto = VisitDto(
   prisonerId = offenderNo,
   prisonId = "MDI",
   startTimestamp = LocalDateTime.parse("2023-09-08T08:30"),
@@ -271,4 +274,4 @@ fun newVisit(offenderNo: String = "AB123D", outcome: String? = VsipOutcomeStatus
   visitRestriction = "OPEN",
 )
 
-fun newMapping() = MappingDto(nomisId = "456", vsipId = "123", mappingType = "ONLINE")
+fun newMapping() = VisitMappingDto(nomisId = "456", vsipId = "123", mappingType = "ONLINE")
