@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension
@@ -20,8 +21,7 @@ class HealthCheckTest : SqsIntegrationTestBase() {
     webTestClient.get()
       .uri("/health")
       .exchange()
-      .expectStatus()
-      .isOk
+      .expectStatus().isOk
       .expectBody()
       .jsonPath("status").isEqualTo("UP")
   }
@@ -33,8 +33,7 @@ class HealthCheckTest : SqsIntegrationTestBase() {
     webTestClient.get()
       .uri("/health")
       .exchange()
-      .expectStatus()
-      .is5xxServerError
+      .expectStatus().is5xxServerError
       .expectBody()
       .jsonPath("status").isEqualTo("DOWN")
   }
@@ -57,8 +56,7 @@ class HealthCheckTest : SqsIntegrationTestBase() {
     webTestClient.get()
       .uri("/health/ping")
       .exchange()
-      .expectStatus()
-      .isOk
+      .expectStatus().isOk
       .expectBody()
       .jsonPath("status").isEqualTo("UP")
   }
@@ -68,8 +66,7 @@ class HealthCheckTest : SqsIntegrationTestBase() {
     webTestClient.get()
       .uri("/health/readiness")
       .exchange()
-      .expectStatus()
-      .isOk
+      .expectStatus().isOk
       .expectBody()
       .jsonPath("status").isEqualTo("UP")
   }
@@ -79,8 +76,7 @@ class HealthCheckTest : SqsIntegrationTestBase() {
     webTestClient.get()
       .uri("/health/liveness")
       .exchange()
-      .expectStatus()
-      .isOk
+      .expectStatus().isOk
       .expectBody()
       .jsonPath("status").isEqualTo("UP")
   }
@@ -89,6 +85,7 @@ class HealthCheckTest : SqsIntegrationTestBase() {
     HmppsAuthApiExtension.hmppsAuth.stubHealthPing(status)
     NomisApiExtension.nomisApi.stubHealthPing(status)
     VisitsApiExtension.visitsApi.stubHealthPing(status)
+    IncentivesApiExtension.incentivesApi.stubHealthPing(status)
     MappingExtension.mappingServer.stubHealthPing(status)
   }
 }

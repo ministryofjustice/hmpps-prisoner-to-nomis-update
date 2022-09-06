@@ -172,4 +172,4 @@ internal class MappingServiceTest {
   }
 }
 
-private fun newMapping() = MappingDto(nomisId = "456", vsipId = "123", mappingType = "ONLINE")
+private fun newMapping() = VisitMappingDto(nomisId = "456", vsipId = "123", mappingType = "ONLINE")

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
+import java.time.LocalDateTime
 
 @Service
 class MappingService(
@@ -17,7 +18,7 @@ class MappingService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun createMapping(request: MappingDto) {
+  fun createMapping(request: VisitMappingDto) {
     webClient.post()
       .uri("/mapping")
       .bodyValue(request)
@@ -26,31 +27,70 @@ class MappingService(
       .block()
   }
 
-  fun getMappingGivenNomisId(nomisId: Long): MappingDto? =
+  fun getMappingGivenNomisId(nomisId: Long): VisitMappingDto? =
     webClient.get()
       .uri("/mapping/nomisId/$nomisId")
       .retrieve()
-      .bodyToMono(MappingDto::class.java)
+      .bodyToMono(VisitMappingDto::class.java)
       .onErrorResume(WebClientResponseException.NotFound::class.java) {
         log.debug("getMappingGivenNomisId not found for nomisId $nomisId with error response ${it.responseBodyAsString}")
         Mono.empty()
       }
       .block()
 
-  fun getMappingGivenVsipId(vsipId: String): MappingDto? =
+  fun getMappingGivenVsipId(vsipId: String): VisitMappingDto? =
     webClient.get()
       .uri("/mapping/vsipId/$vsipId")
       .retrieve()
-      .bodyToMono(MappingDto::class.java)
+      .bodyToMono(VisitMappingDto::class.java)
+      .onErrorResume(WebClientResponseException.NotFound::class.java) {
+        Mono.empty()
+      }
+      .block()
+
+  fun createIncentiveMapping(request: IncentiveMappingDto) {
+    webClient.post()
+      .uri("/mapping/incentives")
+      .bodyValue(request)
+      .retrieve()
+      .bodyToMono(Unit::class.java)
+      .block()
+  }
+
+  fun getIncentiveMappingGivenBookingAndSequence(bookingId: Long, incentiveSequence: Int): IncentiveMappingDto? =
+    webClient.get()
+      .uri("/mapping/incentives/nomis-booking-id/$bookingId/nomis-incentive-sequence/$incentiveSequence")
+      .retrieve()
+      .bodyToMono(IncentiveMappingDto::class.java)
+      .onErrorResume(WebClientResponseException.NotFound::class.java) {
+        log.debug("getIncentiveMappingGivenBookingAndSequence not found for bookingId=$bookingId, incentiveSequence=$incentiveSequence with error response ${it.responseBodyAsString}")
+        Mono.empty()
+      }
+      .block()
+
+  fun getIncentiveMappingGivenIncentiveId(incentiveId: Long): IncentiveMappingDto? =
+    webClient.get()
+      .uri("/mapping/incentives/incentive-id/$incentiveId")
+      .retrieve()
+      .bodyToMono(IncentiveMappingDto::class.java)
       .onErrorResume(WebClientResponseException.NotFound::class.java) {
         Mono.empty()
       }
       .block()
 }
 
-data class MappingDto(
+data class VisitMappingDto(
   val nomisId: String,
   val vsipId: String,
   val label: String? = null,
   val mappingType: String,
+)
+
+data class IncentiveMappingDto(
+  val nomisBookingId: Long,
+  val nomisIncentiveSequence: Long,
+  val incentiveId: Long,
+  val label: String? = null,
+  val mappingType: String,
+  val whenCreated: LocalDateTime? = null
 )
