@@ -18,6 +18,8 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.incentiveCreatedMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.incentiveRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCreatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.retryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesService
@@ -32,7 +34,13 @@ internal class PrisonerDomainEventsListenerTest {
   private val telemetryClient: TelemetryClient = mock()
 
   private val listener =
-    PrisonerDomainEventsListener(prisonVisitsService, incentivesService, objectMapper, eventFeatureSwitch, telemetryClient)
+    PrisonerDomainEventsListener(
+      prisonVisitsService,
+      incentivesService,
+      objectMapper,
+      eventFeatureSwitch,
+      telemetryClient
+    )
 
   @Nested
   inner class Visits {
@@ -106,8 +114,83 @@ internal class PrisonerDomainEventsListenerTest {
         verify(telemetryClient).trackEvent(
           eq("prisoner-retry-received"),
           check {
-            assertThat(it["vsipId"]).isEqualTo("12")
-            assertThat(it["nomisId"]).isEqualTo("12345")
+            assertThat(it["id"]).isEqualTo("12")
+            assertThat(it["type"]).isEqualTo("VISIT")
+          },
+          isNull()
+        )
+      }
+    }
+  }
+
+  @Nested
+  inner class Incentives {
+    @Nested
+    inner class WhenEnabled {
+      @BeforeEach
+      internal fun setUp() {
+        whenever(eventFeatureSwitch.isEnabled(any())).thenReturn(true)
+      }
+
+      @Test
+      internal fun `will call service with create incentive data`() {
+        listener.onPrisonerChange(
+          message = incentiveCreatedMessage(123L)
+        )
+
+        verify(incentivesService).createIncentive(
+          check {
+            assertThat(it.incentiveId).isEqualTo(123L)
+          }
+        )
+
+        verify(telemetryClient).trackEvent(
+          eq("prisoner-domain-event-received"),
+          check {
+            assertThat(it["id"]).isEqualTo("123")
+            assertThat(it["eventType"]).isEqualTo("incentive.created")
+          },
+          isNull()
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenDisabled {
+      @BeforeEach
+      internal fun setUp() {
+        whenever(eventFeatureSwitch.isEnabled(any())).thenReturn(false)
+      }
+
+      @Test
+      internal fun `will not call service`() {
+        listener.onPrisonerChange(
+          message = incentiveCreatedMessage(123L)
+        )
+
+        verifyNoInteractions(incentivesService)
+      }
+    }
+
+    @Nested
+    inner class Retries {
+      @Test
+      internal fun `will call retry service with visit context data`() {
+        listener.onPrisonerChange(message = incentiveRetryMessage())
+
+        verify(incentivesService).createIncentiveRetry(
+          check {
+            assertThat(it.incentiveId).isEqualTo(15)
+            assertThat(it.nomisBookingId).isEqualTo(12345)
+            assertThat(it.nomisIncentiveSequence).isEqualTo(2)
+          }
+        )
+
+        verify(telemetryClient).trackEvent(
+          eq("prisoner-retry-received"),
+          check {
+            assertThat(it["id"]).isEqualTo("15")
+            assertThat(it["type"]).isEqualTo("INCENTIVE")
           },
           isNull()
         )

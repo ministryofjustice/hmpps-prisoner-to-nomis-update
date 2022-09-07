@@ -7,8 +7,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateIncentiveDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.IncentiveContext
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.IncentiveMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisCodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateQueueService
@@ -18,7 +16,7 @@ import java.time.format.DateTimeFormatter
 class IncentivesService(
   private val incentivesApiService: IncentivesApiService,
   private val nomisApiService: NomisApiService,
-  private val mappingService: MappingService,
+  private val mappingService: IncentivesMappingService,
   private val updateQueueService: UpdateQueueService,
   private val telemetryClient: TelemetryClient
 ) {
@@ -49,7 +47,7 @@ class IncentivesService(
         "iepTime" to iepTime.format(DateTimeFormatter.ISO_TIME),
       )
 
-      if (mappingService.getIncentiveMappingGivenIncentiveId(event.incentiveId) != null) {
+      if (mappingService.getMappingGivenIncentiveId(event.incentiveId) != null) {
         telemetryClient.trackEvent("incentive-get-map-failed", telemetryMap)
         log.warn("Mapping already exists for incentive id $event.id")
         return
@@ -68,7 +66,7 @@ class IncentivesService(
         .plus(Pair("nomisIncentiveSequence", nomisResponse.nomisIncentiveSequence.toString()))
 
       try {
-        mappingService.createIncentiveMapping(
+        mappingService.createMapping(
           IncentiveMappingDto(
             nomisBookingId = nomisResponse.nomisBookingId,
             nomisIncentiveSequence = nomisResponse.nomisIncentiveSequence,
@@ -94,7 +92,7 @@ class IncentivesService(
   }
 
   fun createIncentiveRetry(context: IncentiveContext) {
-    mappingService.createIncentiveMapping(
+    mappingService.createMapping(
       IncentiveMappingDto(
         nomisBookingId = context.nomisBookingId,
         nomisIncentiveSequence = context.nomisIncentiveSequence,

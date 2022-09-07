@@ -31,7 +31,29 @@ fun prisonVisitCancelledMessage(visitId: String = "12", prisonerId: String = "AB
 fun retryMessage() = """
       {
         "Type":"RETRY",
-        "Message":"{\"nomisId\":\"12345\",\"vsipId\":\"12\"}",
+        "Message":"{\"type\":\"VISIT\",\"nomisId\":\"12345\",\"vsipId\":\"12\"}",
         "MessageId":"retry-12"
+      }
+""".trimIndent()
+
+fun incentiveCreatedMessage(incentiveId: Long) = """
+      {
+        "Type": "Notification", 
+        "MessageId": "48e8a79a-0f43-4338-bbd4-b0d745f1f8ec", 
+        "Token": null, 
+        "TopicArn": "arn:aws:sns:eu-west-2:000000000000:hmpps-domain-events", 
+        "Message": "{\"eventType\":\"incentive.created\", \"incentiveId\": \"$incentiveId\"}",
+        "SubscribeURL": null, 
+        "Timestamp": "2021-03-05T11:23:56.031Z", 
+        "SignatureVersion": "1", 
+        "Signature": "EXAMPLEpH+..", 
+        "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-0000000000000000000000.pem"}      
+""".trimIndent()
+
+fun incentiveRetryMessage() = """
+      {
+        "Type":"RETRY",
+        "Message":"{\"type\":\"INCENTIVE\",\"nomisBookingId\":12345,\"nomisIncentiveSequence\":2,\"incentiveId\":15}",
+        "MessageId":"retry-15"
       }
 """.trimIndent()

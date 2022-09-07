@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -18,11 +18,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 
 @SpringAPIServiceTest
-@Import(MappingService::class)
-internal class MappingServiceTest {
+@Import(VisitsMappingService::class)
+internal class VisitsMappingServiceTest {
 
   @Autowired
-  private lateinit var mappingService: MappingService
+  private lateinit var mappingService: VisitsMappingService
 
   @Nested
   inner class CreateMapping {
@@ -170,6 +170,6 @@ internal class MappingServiceTest {
       }.isInstanceOf(ServiceUnavailable::class.java)
     }
   }
-}
 
-private fun newMapping() = VisitMappingDto(nomisId = "456", vsipId = "123", mappingType = "ONLINE")
+  private fun newMapping() = VisitMappingDto(nomisId = "456", vsipId = "123", mappingType = "ONLINE")
+}
