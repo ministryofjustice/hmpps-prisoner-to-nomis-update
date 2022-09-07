@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.amazonaws.services.sqs.model.SendMessageRequest
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
@@ -19,42 +21,48 @@ class UpdateQueueService(
   private val prisonerSqsClient by lazy { prisonerQueue.sqsClient }
   private val prisonerQueueUrl by lazy { prisonerQueue.queueUrl }
 
-  fun sendMessage(context: VisitContext) {
+  fun sendMessage(context: Context) {
     val sqsMessage = PrisonerDomainEventsListener.SQSMessage(
       Type = "RETRY",
       Message = objectMapper.writeValueAsString(context),
-      MessageId = "retry-${context.vsipId}"
+      MessageId = "retry-${context.getId()}"
     )
     val result = prisonerSqsClient.sendMessage(
       SendMessageRequest(prisonerQueueUrl, objectMapper.writeValueAsString(sqsMessage))
     )
 
     telemetryClient.trackEvent(
-      "visit-booked-create-map-queue-retry",
-      mapOf("messageId" to result.messageId!!, "vsipId" to context.vsipId),
-    )
-  }
-
-  fun sendMessage(context: IncentiveContext) {
-    val sqsMessage = PrisonerDomainEventsListener.SQSMessage(
-      Type = "IncentiveRETRY",
-      Message = objectMapper.writeValueAsString(context),
-      MessageId = "retry-${context.incentiveId}"
-    )
-    val result = prisonerSqsClient.sendMessage(
-      SendMessageRequest(prisonerQueueUrl, objectMapper.writeValueAsString(sqsMessage))
-    )
-
-    telemetryClient.trackEvent(
-      "incentive-create-map-queue-retry",
-      mapOf("messageId" to result.messageId!!, "incentiveId" to context.incentiveId.toString()),
+      "create-map-queue-retry",
+      mapOf("messageId" to result.messageId!!, "id" to context.getId()),
     )
   }
 }
 
-data class VisitContext(val nomisId: String, val vsipId: String)
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME,
+  include = JsonTypeInfo.As.PROPERTY,
+  property = "type",
+  defaultImpl = VisitContext::class
+)
+@JsonSubTypes(
+  JsonSubTypes.Type(value = VisitContext::class, name = "VISIT"),
+  JsonSubTypes.Type(value = IncentiveContext::class, name = "INCENTIVE")
+)
+abstract class Context(val type: String) {
+  abstract fun getId(): String
+}
+
+data class VisitContext(
+  val nomisId: String,
+  val vsipId: String
+) : Context("VISIT") {
+  override fun getId() = vsipId
+}
+
 data class IncentiveContext(
   val nomisBookingId: Long,
-  val nomisIncentiveSequence: Long,
+  val nomisIncentiveSequence: Int,
   val incentiveId: Long
-)
+) : Context("INCENTIVE") {
+  override fun getId() = incentiveId.toString()
+}

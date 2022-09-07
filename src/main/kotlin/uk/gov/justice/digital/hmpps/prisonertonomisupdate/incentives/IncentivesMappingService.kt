@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono
 import java.time.LocalDateTime
 
 @Service
-class MappingService(
+class IncentivesMappingService(
   @Qualifier("mappingWebClient") private val webClient: WebClient
 ) {
 
@@ -18,37 +18,7 @@ class MappingService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun createMapping(request: VisitMappingDto) {
-    webClient.post()
-      .uri("/mapping")
-      .bodyValue(request)
-      .retrieve()
-      .bodyToMono(Unit::class.java)
-      .block()
-  }
-
-  fun getMappingGivenNomisId(nomisId: Long): VisitMappingDto? =
-    webClient.get()
-      .uri("/mapping/nomisId/$nomisId")
-      .retrieve()
-      .bodyToMono(VisitMappingDto::class.java)
-      .onErrorResume(WebClientResponseException.NotFound::class.java) {
-        log.debug("getMappingGivenNomisId not found for nomisId $nomisId with error response ${it.responseBodyAsString}")
-        Mono.empty()
-      }
-      .block()
-
-  fun getMappingGivenVsipId(vsipId: String): VisitMappingDto? =
-    webClient.get()
-      .uri("/mapping/vsipId/$vsipId")
-      .retrieve()
-      .bodyToMono(VisitMappingDto::class.java)
-      .onErrorResume(WebClientResponseException.NotFound::class.java) {
-        Mono.empty()
-      }
-      .block()
-
-  fun createIncentiveMapping(request: IncentiveMappingDto) {
+  fun createMapping(request: IncentiveMappingDto) {
     webClient.post()
       .uri("/mapping/incentives")
       .bodyValue(request)
@@ -57,7 +27,7 @@ class MappingService(
       .block()
   }
 
-  fun getIncentiveMappingGivenBookingAndSequence(bookingId: Long, incentiveSequence: Int): IncentiveMappingDto? =
+  fun getMappingGivenBookingAndSequence(bookingId: Long, incentiveSequence: Int): IncentiveMappingDto? =
     webClient.get()
       .uri("/mapping/incentives/nomis-booking-id/$bookingId/nomis-incentive-sequence/$incentiveSequence")
       .retrieve()
@@ -68,7 +38,7 @@ class MappingService(
       }
       .block()
 
-  fun getIncentiveMappingGivenIncentiveId(incentiveId: Long): IncentiveMappingDto? =
+  fun getMappingGivenIncentiveId(incentiveId: Long): IncentiveMappingDto? =
     webClient.get()
       .uri("/mapping/incentives/incentive-id/$incentiveId")
       .retrieve()
@@ -79,16 +49,9 @@ class MappingService(
       .block()
 }
 
-data class VisitMappingDto(
-  val nomisId: String,
-  val vsipId: String,
-  val label: String? = null,
-  val mappingType: String,
-)
-
 data class IncentiveMappingDto(
   val nomisBookingId: Long,
-  val nomisIncentiveSequence: Long,
+  val nomisIncentiveSequence: Int,
   val incentiveId: Long,
   val label: String? = null,
   val mappingType: String,

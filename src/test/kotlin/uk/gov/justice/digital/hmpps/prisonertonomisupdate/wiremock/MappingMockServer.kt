@@ -110,6 +110,71 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubCreateIncentive() {
+    stubFor(
+      post("/mapping/incentives").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201)
+      )
+    )
+  }
+
+  fun stubCreateIncentiveWithError(status: Int = 500) {
+    stubFor(
+      post("/mapping/incentives").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
+          .withStatus(status)
+      )
+    )
+  }
+
+  fun stubGetBookingAndSequence(bookingId: Long, incentiveSequence: Int, response: String) {
+    stubFor(
+      get("/mapping/incentives/nomis-booking-id/$bookingId/nomis-incentive-sequence/$incentiveSequence").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(200)
+      )
+    )
+  }
+
+  fun stubGetBookingAndSequenceWithError(bookingId: Long, incentiveSequence: Int, status: Int = 500) {
+    stubFor(
+      get("/mapping/incentives/nomis-booking-id/$bookingId/nomis-incentive-sequence/$incentiveSequence").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
+          .withStatus(status)
+      )
+    )
+  }
+
+  fun stubGetIncentiveId(incentiveId: Long, response: String) {
+    stubFor(
+      get("/mapping/incentives/incentive-id/$incentiveId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(200)
+      )
+    )
+  }
+
+  fun stubGetIncentiveIdWithError(incentiveId: Long, status: Int = 500) {
+    stubFor(
+      get("/mapping/incentives/incentive-id/$incentiveId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
+          .withStatus(status)
+      )
+    )
+  }
+
   fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
   fun getCountFor(url: String) = this.findAll(WireMock.getRequestedFor(WireMock.urlEqualTo(url))).count()
 }
