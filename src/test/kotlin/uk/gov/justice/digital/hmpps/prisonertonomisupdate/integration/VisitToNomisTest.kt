@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtens
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension.Companion.visitsApi
 
-class PrisonerToNomisTest : SqsIntegrationTestBase() {
+class VisitToNomisTest : SqsIntegrationTestBase() {
 
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
