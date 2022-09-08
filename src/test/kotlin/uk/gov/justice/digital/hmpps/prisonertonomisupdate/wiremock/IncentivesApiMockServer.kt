@@ -44,7 +44,7 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubIncentiveGet(id: String, response: String) {
+  fun stubIncentiveGet(id: Long, response: String) {
     stubFor(
       get("/iep/reviews/id/$id").willReturn(
         aResponse()
@@ -57,7 +57,7 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun getCountFor(url: String) = this.findAll(WireMock.getRequestedFor(WireMock.urlEqualTo(url))).count()
 
-  fun stubIncentiveGetWithError(id: String, status: Int = 500) {
+  fun stubIncentiveGetWithError(id: Long, status: Int = 500) {
     stubFor(
       get("/iep/reviews/id/$id").willReturn(
         aResponse()
