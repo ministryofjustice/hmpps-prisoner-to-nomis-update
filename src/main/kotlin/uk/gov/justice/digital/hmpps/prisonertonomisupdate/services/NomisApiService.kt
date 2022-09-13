@@ -42,7 +42,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   fun createIncentive(bookingId: Long, request: CreateIncentiveDto): CreateIncentiveResponseDto =
     webClient.post()
-      .uri("/prisoners/$bookingId/incentives")
+      .uri("/prisoners/booking-id/$bookingId/incentives")
       .bodyValue(request)
       .retrieve()
       .bodyToMono(CreateIncentiveResponseDto::class.java)
@@ -79,11 +79,9 @@ data class CreateVisitResponseDto(
 
 data class CreateIncentiveDto(
   val comments: String? = null,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val iepDate: LocalDate,
-  @JsonFormat(pattern = "HH:mm:ss")
-  val iepTime: LocalTime,
-  val agencyId: String,
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+  val iepDateTime: LocalDateTime,
+  val prisonId: String,
   val iepLevel: String,
   val userId: String? = null,
 )

@@ -127,7 +127,7 @@ internal class NomisApiServiceTest {
       nomisApiService.createIncentive(456, newIncentive())
 
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/prisoners/456/incentives"))
+        postRequestedFor(urlEqualTo("/prisoners/booking-id/456/incentives"))
           .withHeader("Authorization", equalTo("Bearer ABCDE"))
       )
     }
@@ -139,8 +139,8 @@ internal class NomisApiServiceTest {
       nomisApiService.createIncentive(456, newIncentive())
 
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/prisoners/456/incentives"))
-          .withRequestBody(matchingJsonPath("$.agencyId", equalTo("MDI")))
+        postRequestedFor(urlEqualTo("/prisoners/booking-id/456/incentives"))
+          .withRequestBody(matchingJsonPath("$.prisonId", equalTo("MDI")))
       )
     }
 
@@ -181,8 +181,7 @@ fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(
 fun cancelVisit(): CancelVisitDto = CancelVisitDto(offenderNo = "AB123D", nomisVisitId = "12", outcome = "VISCANC")
 
 fun newIncentive() = CreateIncentiveDto(
-  iepDate = LocalDate.now(),
-  iepTime = LocalTime.now(),
-  agencyId = "MDI",
+  iepDateTime = LocalDateTime.now(),
+  prisonId = "MDI",
   iepLevel = "High"
 )

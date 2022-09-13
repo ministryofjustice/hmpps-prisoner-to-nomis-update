@@ -26,10 +26,9 @@ class IncentivesService(
 
   private fun IepDetail.toNomisIncentive(): CreateIncentiveDto = CreateIncentiveDto(
     comments = comments,
-    iepDate = iepDate,
-    iepTime = iepTime.toLocalTime(),
+    iepDateTime = iepDate.atTime(iepTime.toLocalTime()),
     userId = userId,
-    agencyId = agencyId,
+    prisonId = agencyId,
     iepLevel = iepLevel,
   )
 

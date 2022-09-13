@@ -26,12 +26,11 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, queueUrl) } matches { it == 0 }
     await untilCallTo { incentivesApi.getCountFor("/iep/reviews/id/12") } matches { it == 1 }
-    await untilCallTo { nomisApi.postCountFor("/prisoners/456/incentives") } matches { it == 1 }
+    await untilCallTo { nomisApi.postCountFor("/prisoners/booking-id/456/incentives") } matches { it == 1 }
     nomisApi.verify(
-      WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/456/incentives"))
-        .withRequestBody(WireMock.matchingJsonPath("iepDate", WireMock.equalTo("2022-12-02")))
-        .withRequestBody(WireMock.matchingJsonPath("iepTime", WireMock.equalTo("10:00:00")))
-        .withRequestBody(WireMock.matchingJsonPath("agencyId", WireMock.equalTo("MDI")))
+      WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/booking-id/456/incentives"))
+        .withRequestBody(WireMock.matchingJsonPath("iepDateTime", WireMock.equalTo("2022-12-02T10:00:00")))
+        .withRequestBody(WireMock.matchingJsonPath("prisonId", WireMock.equalTo("MDI")))
         .withRequestBody(WireMock.matchingJsonPath("iepLevel", WireMock.equalTo("Medium")))
     )
   }
@@ -48,7 +47,7 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
     awsSqsClient.sendMessage(queueUrl, message)
 
     await untilCallTo { incentivesApi.getCountFor("/iep/reviews/id/12") } matches { it == 1 }
-    await untilCallTo { nomisApi.postCountFor("/prisoners/456/incentives") } matches { it == 1 }
+    await untilCallTo { nomisApi.postCountFor("/prisoners/booking-id/456/incentives") } matches { it == 1 }
 
     // the mapping call fails resulting in a retry message being queued
     // the retry message is processed and fails resulting in a message on the DLQ after 5 attempts
