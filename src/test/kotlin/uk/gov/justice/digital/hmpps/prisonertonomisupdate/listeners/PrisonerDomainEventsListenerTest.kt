@@ -140,7 +140,7 @@ internal class PrisonerDomainEventsListenerTest {
 
         verify(incentivesService).createIncentive(
           check {
-            assertThat(it.incentiveId).isEqualTo(123L)
+            assertThat(it.additionalInformation.id).isEqualTo(123L)
           }
         )
 
@@ -148,7 +148,7 @@ internal class PrisonerDomainEventsListenerTest {
           eq("prisoner-domain-event-received"),
           check {
             assertThat(it["id"]).isEqualTo("123")
-            assertThat(it["eventType"]).isEqualTo("incentive.created")
+            assertThat(it["eventType"]).isEqualTo("incentives.iep-review.inserted")
           },
           isNull()
         )

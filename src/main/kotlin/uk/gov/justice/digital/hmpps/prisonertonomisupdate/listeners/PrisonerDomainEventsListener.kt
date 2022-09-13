@@ -35,20 +35,20 @@ class PrisonerDomainEventsListener(
     log.debug("Received message {}", sqsMessage.MessageId)
     when (sqsMessage.Type) {
       "Notification" -> {
-        val (eventType, prisonerId, incentiveId) = objectMapper.readValue<HMPPSDomainEvent>(sqsMessage.Message)
+        val (eventType, prisonerId, additionalInformation) = objectMapper.readValue<HMPPSDomainEvent>(sqsMessage.Message)
         telemetryClient.trackEvent(
           "prisoner-domain-event-received",
           mapOf(
             "eventType" to eventType,
             "offenderNo" to (prisonerId ?: ""),
-            "id" to (incentiveId?.toString() ?: "")
+            "id" to (additionalInformation?.id?.toString() ?: "")
           ),
         )
         if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
           "prison-visit.booked" -> prisonVisitsService.createVisit(objectMapper.readValue(sqsMessage.Message))
           "prison-visit.cancelled" -> prisonVisitsService.cancelVisit(objectMapper.readValue(sqsMessage.Message))
-          "incentive.created" -> incentivesService.createIncentive(objectMapper.readValue(sqsMessage.Message))
-          else -> log.info("Received a message I wasn't expecting {}", eventType)
+          "incentives.iep-review.inserted" -> incentivesService.createIncentive(objectMapper.readValue(sqsMessage.Message))
+          else -> log.info("Received a message I wasn't expecting: {}", eventType)
         } else {
           log.warn("Feature switch is disabled for {}", eventType)
         }
@@ -70,8 +70,8 @@ class PrisonerDomainEventsListener(
 
   data class HMPPSDomainEvent(
     val eventType: String,
-    val prisonerId: String?,
-    val incentiveId: Long?,
+    val prisonerId: String? = null,
+    val additionalInformation: IncentivesService.AdditionalInformation? = null,
   )
 
   @JsonNaming(value = PropertyNamingStrategies.UpperCamelCaseStrategy::class)

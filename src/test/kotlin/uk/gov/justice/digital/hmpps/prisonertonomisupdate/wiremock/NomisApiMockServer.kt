@@ -46,7 +46,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubVisitCreate(prisonerId: String, response: String = CREATE_RESPONSE) {
+  fun stubVisitCreate(prisonerId: String, response: String = CREATE_VISIT_RESPONSE) {
     stubFor(
       post("/prisoners/$prisonerId/visits").willReturn(
         aResponse()
@@ -101,9 +101,44 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  private val CREATE_RESPONSE = """
+  fun stubIncentiveCreate(bookingId: Long, response: String = CREATE_INCENTIVE_RESPONSE) {
+    stubFor(
+      post("/prisoners/$bookingId/incentives").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(201)
+      )
+    )
+  }
+
+  fun stubIncentiveCreateWithError(bookingId: Long, status: Int = 500) {
+    stubFor(
+      post("/prisoners/$bookingId/incentives").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              {
+                "error": "some error"
+              }
+            """.trimIndent()
+          )
+          .withStatus(status)
+      )
+    )
+  }
+
+  private val CREATE_VISIT_RESPONSE = """
     {
       "visitId": "12345"
+    }
+    """
+
+  private val CREATE_INCENTIVE_RESPONSE = """
+    {
+      "bookingId": 456,
+      "sequence": 1
     }
     """
 
