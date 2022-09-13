@@ -67,7 +67,7 @@ class PrisonVisitsService(
         )
       } catch (e: Exception) {
         telemetryClient.trackEvent("visit-booked-create-failed", telemetryMap)
-        log.error("Unexpected exception", e)
+        log.error("createVisit() Unexpected exception", e)
         throw e
       }
 

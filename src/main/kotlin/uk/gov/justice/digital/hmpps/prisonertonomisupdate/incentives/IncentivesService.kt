@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateIncentiveDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.IncentiveContext
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisCodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateQueueService
 import java.time.format.DateTimeFormatter
 
@@ -26,18 +25,16 @@ class IncentivesService(
   }
 
   private fun IepDetail.toNomisIncentive(): CreateIncentiveDto = CreateIncentiveDto(
-    bookingId = bookingId,
-    incentiveSequence = sequence,
-    commentText = comments,
-    iepDateTime = iepDate.atTime(iepTime.toLocalTime()),
+    comments = comments,
+    iepDate = iepDate,
+    iepTime = iepTime.toLocalTime(),
     userId = userId,
-    prisonId = agencyId,
-    iepLevel = NomisCodeDescription(code = iepLevel, description = ""),
-    currentIep = true,
+    agencyId = agencyId,
+    iepLevel = iepLevel,
   )
 
   fun createIncentive(event: IncentiveCreatedEvent) {
-    incentivesApiService.getIncentive(event.incentiveId).run {
+    incentivesApiService.getIncentive(event.additionalInformation.id).run {
 
       val telemetryMap = mutableMapOf<String, String>(
         "offenderNo" to prisonerNumber!!,
@@ -47,17 +44,17 @@ class IncentivesService(
         "iepTime" to iepTime.format(DateTimeFormatter.ISO_TIME),
       )
 
-      if (mappingService.getMappingGivenIncentiveId(event.incentiveId) != null) {
+      if (mappingService.getMappingGivenIncentiveId(event.additionalInformation.id) != null) {
         telemetryClient.trackEvent("incentive-get-map-failed", telemetryMap)
         log.warn("Mapping already exists for incentive id $event.id")
         return
       }
 
       val nomisResponse = try {
-        nomisApiService.createIncentive(this.toNomisIncentive())
+        nomisApiService.createIncentive(this.bookingId, this.toNomisIncentive())
       } catch (e: Exception) {
         telemetryClient.trackEvent("incentive-create-failed", telemetryMap)
-        log.error("Unexpected exception", e)
+        log.error("createIncentive() Unexpected exception", e)
         throw e
       }
 
@@ -70,7 +67,7 @@ class IncentivesService(
           IncentiveMappingDto(
             nomisBookingId = nomisResponse.nomisBookingId,
             nomisIncentiveSequence = nomisResponse.nomisIncentiveSequence,
-            incentiveId = event.incentiveId,
+            incentiveId = event.additionalInformation.id,
             mappingType = "INCENTIVE_CREATED",
           )
         )
@@ -81,7 +78,7 @@ class IncentivesService(
           IncentiveContext(
             nomisBookingId = nomisResponse.nomisBookingId,
             nomisIncentiveSequence = nomisResponse.nomisIncentiveSequence,
-            incentiveId = event.incentiveId
+            incentiveId = event.additionalInformation.id
           )
         )
         return
@@ -102,8 +99,13 @@ class IncentivesService(
     )
   }
 
+  data class AdditionalInformation(
+    val id: Long,
+    val nomsNumber: String? = null,
+    val reason: String? = null,
+  )
+
   data class IncentiveCreatedEvent(
-    // TBD
-    val incentiveId: Long,
+    val additionalInformation: AdditionalInformation,
   )
 }

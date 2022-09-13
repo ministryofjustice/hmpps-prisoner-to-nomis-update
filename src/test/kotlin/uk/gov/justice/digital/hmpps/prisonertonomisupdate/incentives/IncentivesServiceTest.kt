@@ -35,7 +35,7 @@ internal class IncentivesServiceTest {
     fun `should log a processed visit booked event`() {
       whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
       whenever(mappingService.getMappingGivenBookingAndSequence(123, 1)).thenReturn(null)
-      whenever(nomisApiService.createIncentive(any())).thenReturn(
+      whenever(nomisApiService.createIncentive(any(), any())).thenReturn(
         CreateIncentiveResponseDto(
           nomisBookingId = 123,
           nomisIncentiveSequence = 1,
@@ -43,7 +43,7 @@ internal class IncentivesServiceTest {
       )
 
       incentivesService.createIncentive(
-        IncentivesService.IncentiveCreatedEvent(incentiveId = 123)
+        IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123))
       )
 
       verify(telemetryClient).trackEvent(
@@ -65,7 +65,7 @@ internal class IncentivesServiceTest {
       whenever(mappingService.getMappingGivenIncentiveId(123)).thenReturn(newMapping())
 
       incentivesService.createIncentive(
-        IncentivesService.IncentiveCreatedEvent(incentiveId = 123)
+        IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123))
       )
 
       verify(telemetryClient).trackEvent(
@@ -85,11 +85,11 @@ internal class IncentivesServiceTest {
     fun `should log a creation failure`() {
       whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
       whenever(mappingService.getMappingGivenBookingAndSequence(123, 1)).thenReturn(null)
-      whenever(nomisApiService.createIncentive(any())).thenThrow(RuntimeException("test"))
+      whenever(nomisApiService.createIncentive(any(), any())).thenThrow(RuntimeException("test"))
 
       assertThatThrownBy {
         incentivesService.createIncentive(
-          IncentivesService.IncentiveCreatedEvent(incentiveId = 123)
+          IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123))
         )
       }.isInstanceOf(RuntimeException::class.java)
 
@@ -110,7 +110,7 @@ internal class IncentivesServiceTest {
     fun `should log a mapping creation failure`() {
       whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
       whenever(mappingService.getMappingGivenBookingAndSequence(123, 1)).thenReturn(null)
-      whenever(nomisApiService.createIncentive(any())).thenReturn(
+      whenever(nomisApiService.createIncentive(any(), any())).thenReturn(
         CreateIncentiveResponseDto(
           nomisBookingId = 123,
           nomisIncentiveSequence = 1,
@@ -119,7 +119,7 @@ internal class IncentivesServiceTest {
       whenever(mappingService.createMapping(any())).thenThrow(RuntimeException("test"))
 
       incentivesService.createIncentive(
-        IncentivesService.IncentiveCreatedEvent(incentiveId = 123)
+        IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123))
       )
 
       verify(telemetryClient).trackEvent(

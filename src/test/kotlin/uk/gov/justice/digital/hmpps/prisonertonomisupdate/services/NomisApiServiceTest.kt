@@ -116,6 +116,52 @@ internal class NomisApiServiceTest {
       }.isInstanceOf(ServiceUnavailable::class.java)
     }
   }
+
+  @Nested
+  inner class CreateIncentive {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() {
+      NomisApiExtension.nomisApi.stubIncentiveCreate(456)
+
+      nomisApiService.createIncentive(456, newIncentive())
+
+      NomisApiExtension.nomisApi.verify(
+        postRequestedFor(urlEqualTo("/prisoners/456/incentives"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+      )
+    }
+
+    @Test
+    fun `will post data to nomis api`() {
+      NomisApiExtension.nomisApi.stubIncentiveCreate(456)
+
+      nomisApiService.createIncentive(456, newIncentive())
+
+      NomisApiExtension.nomisApi.verify(
+        postRequestedFor(urlEqualTo("/prisoners/456/incentives"))
+          .withRequestBody(matchingJsonPath("$.agencyId", equalTo("MDI")))
+      )
+    }
+
+    @Test
+    internal fun `when offender is not found an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubIncentiveCreateWithError(456, 404)
+
+      assertThatThrownBy {
+        nomisApiService.createIncentive(456, newIncentive())
+      }.isInstanceOf(NotFound::class.java)
+    }
+
+    @Test
+    internal fun `when any bad response is received an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubIncentiveCreateWithError(456, 503)
+
+      assertThatThrownBy {
+        nomisApiService.createIncentive(456, newIncentive())
+      }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+  }
 }
 
 fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(
@@ -133,3 +179,10 @@ fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(
 )
 
 fun cancelVisit(): CancelVisitDto = CancelVisitDto(offenderNo = "AB123D", nomisVisitId = "12", outcome = "VISCANC")
+
+fun newIncentive() = CreateIncentiveDto(
+  iepDate = LocalDate.now(),
+  iepTime = LocalTime.now(),
+  agencyId = "MDI",
+  iepLevel = "High"
+)

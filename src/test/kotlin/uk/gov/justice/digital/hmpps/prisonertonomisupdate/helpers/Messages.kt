@@ -1,5 +1,9 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers
 
+import com.amazonaws.services.sqs.AmazonSQS
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 fun prisonVisitCreatedMessage(visitId: String = "12", prisonerId: String = "AB12345", occurredAt: String = "2021-03-05T11:23:56.031Z") = """
       {
         "Type": "Notification", 
@@ -42,7 +46,7 @@ fun incentiveCreatedMessage(incentiveId: Long) = """
         "MessageId": "48e8a79a-0f43-4338-bbd4-b0d745f1f8ec", 
         "Token": null, 
         "TopicArn": "arn:aws:sns:eu-west-2:000000000000:hmpps-domain-events", 
-        "Message": "{\"eventType\":\"incentive.created\", \"incentiveId\": \"$incentiveId\"}",
+        "Message": "{\"eventType\":\"incentives.iep-review.inserted\", \"additionalInformation\": {\"id\":\"$incentiveId\"}}",
         "SubscribeURL": null, 
         "Timestamp": "2021-03-05T11:23:56.031Z", 
         "SignatureVersion": "1", 
@@ -57,3 +61,14 @@ fun incentiveRetryMessage() = """
         "MessageId":"retry-15"
       }
 """.trimIndent()
+
+private object logger {
+  val log: Logger = LoggerFactory.getLogger(this::class.java)
+}
+
+fun getNumberOfMessagesCurrentlyOnQueue(awsSqsClient: AmazonSQS, url: String): Int? {
+  val queueAttributes = awsSqsClient.getQueueAttributes(url, listOf("ApproximateNumberOfMessages"))
+  val messagesOnQueue = queueAttributes.attributes["ApproximateNumberOfMessages"]?.toInt()
+  logger.log.info("Number of messages on $url: $messagesOnQueue")
+  return messagesOnQueue
+}

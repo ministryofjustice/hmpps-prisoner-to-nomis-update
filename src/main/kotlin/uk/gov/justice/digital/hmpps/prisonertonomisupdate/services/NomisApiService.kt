@@ -40,9 +40,9 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .block()
   }
 
-  fun createIncentive(request: CreateIncentiveDto) =
+  fun createIncentive(bookingId: Long, request: CreateIncentiveDto): CreateIncentiveResponseDto =
     webClient.post()
-      .uri("//incentives/${request.bookingId}/incentives")
+      .uri("/prisoners/$bookingId/incentives")
       .bodyValue(request)
       .retrieve()
       .bodyToMono(CreateIncentiveResponseDto::class.java)
@@ -54,6 +54,7 @@ data class CreateVisitDto(
   val prisonId: String,
   @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
   val startDateTime: LocalDateTime,
+  @JsonFormat(pattern = "HH:mm:ss")
   val endTime: LocalTime,
   val visitorPersonIds: List<Long>,
   val decrementBalance: Boolean = true,
@@ -76,17 +77,15 @@ data class CreateVisitResponseDto(
   val visitId: String,
 )
 
-data class NomisCodeDescription(val code: String, val description: String)
-
 data class CreateIncentiveDto(
-  val bookingId: Long,
-  val incentiveSequence: Long,
-  val commentText: String? = null,
-  val iepDateTime: LocalDateTime,
-  val prisonId: String,
-  val iepLevel: NomisCodeDescription,
+  val comments: String? = null,
+  @JsonFormat(pattern = "yyyy-MM-dd")
+  val iepDate: LocalDate,
+  @JsonFormat(pattern = "HH:mm:ss")
+  val iepTime: LocalTime,
+  val agencyId: String,
+  val iepLevel: String,
   val userId: String? = null,
-  val currentIep: Boolean,
 )
 
 data class CreateIncentiveResponseDto(

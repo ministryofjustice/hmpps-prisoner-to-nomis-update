@@ -5,8 +5,7 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.getNumberOfMessagesCurrentlyOnQueue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCancelledMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCreatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
@@ -14,10 +13,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExten
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension.Companion.visitsApi
 
 class VisitToNomisTest : SqsIntegrationTestBase() {
-
-  private companion object {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
-  }
 
   @Test
   fun `will consume a prison visits create message`() {
@@ -38,7 +33,7 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
 
     awsSqsClient.sendMessage(queueUrl, message)
 
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue() } matches { it == 0 }
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, queueUrl) } matches { it == 0 }
     await untilCallTo { visitsApi.getCountFor("/visits/12") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/prisoners/A32323Y/visits") } matches { it == 1 }
 
@@ -83,7 +78,7 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
     // the mapping call fails resulting in a retry message being queued
     // the retry message is processed and fails resulting in a message on the DLQ after 5 attempts
 
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(dlqUrl!!) } matches { it == 1 }
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, dlqUrl!!) } matches { it == 1 }
 
     // Next time the retry will succeed
     mappingServer.stubCreate()
@@ -95,8 +90,8 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
       .isOk
 
     await untilCallTo { mappingServer.postCountFor("/mapping") } matches { it == 7 } // 1 initial call, 5 retries and 1 final successful call
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(queueUrl) } matches { it == 0 }
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(dlqUrl!!) } matches { it == 0 }
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, queueUrl) } matches { it == 0 }
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, dlqUrl!!) } matches { it == 0 }
   }
 
   @Test
@@ -122,7 +117,7 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
 
     awsSqsClient.sendMessage(queueUrl, message)
 
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue() } matches { it == 0 }
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, queueUrl) } matches { it == 0 }
     await untilCallTo { nomisApi.putCountFor("/prisoners/AB12345/visits/456/cancel") } matches { it == 1 }
 
     nomisApi.verify(
@@ -165,12 +160,5 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
       ]
     }
     """.trimIndent()
-  }
-
-  private fun getNumberOfMessagesCurrentlyOnQueue(url: String = queueUrl): Int? {
-    val queueAttributes = awsSqsClient.getQueueAttributes(url, listOf("ApproximateNumberOfMessages"))
-    val messagesOnQueue = queueAttributes.attributes["ApproximateNumberOfMessages"]?.toInt()
-    log.info("Number of messages on $url: $messagesOnQueue")
-    return messagesOnQueue
   }
 }
