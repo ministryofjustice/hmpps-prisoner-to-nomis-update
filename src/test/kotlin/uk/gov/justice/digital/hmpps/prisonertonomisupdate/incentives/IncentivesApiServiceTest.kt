@@ -31,7 +31,8 @@ internal class IncentivesApiServiceTest {
         """
           {
             "id": 1234,
-            "iepLevel": "Medium",
+            "iepCode": "STD",
+            "iepLevel": "Standard",
             "bookingId": 456,
             "sequence": 2,
             "iepDate": "2022-12-02",
@@ -60,7 +61,7 @@ internal class IncentivesApiServiceTest {
       assertThat(incentive.iepDate).isEqualTo(LocalDate.parse("2022-12-02"))
       assertThat(incentive.iepTime).isEqualTo(LocalDateTime.parse("2022-12-02T10:00:00"))
       assertThat(incentive.agencyId).isEqualTo("MDI")
-      assertThat(incentive.iepLevel).isEqualTo("Medium")
+      assertThat(incentive.iepCode).isEqualTo("STD")
       assertThat(incentive.bookingId).isEqualTo(456)
       assertThat(incentive.sequence).isEqualTo(2)
     }

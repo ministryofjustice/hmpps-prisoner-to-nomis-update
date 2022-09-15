@@ -24,6 +24,7 @@ enum class ReviewType {
 
 data class IepDetail(
   val id: Long? = null,
+  val iepCode: String,
   val iepLevel: String,
   val comments: String? = null,
   val prisonerNumber: String? = null,

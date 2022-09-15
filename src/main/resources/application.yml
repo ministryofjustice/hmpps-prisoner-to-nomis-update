@@ -33,8 +33,8 @@ spring:
             authorization-grant-type: client_credentials
           incentives-api:
             provider: hmpps-auth
-            client-id: ${visits.client.id}
-            client-secret: ${visits.client.secret}
+            client-id: ${incentives.client.id}
+            client-secret: ${incentives.client.secret}
             authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
