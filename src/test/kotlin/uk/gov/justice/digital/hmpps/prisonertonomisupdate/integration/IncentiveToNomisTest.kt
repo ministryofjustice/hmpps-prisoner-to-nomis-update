@@ -31,7 +31,7 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
       WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/booking-id/456/incentives"))
         .withRequestBody(WireMock.matchingJsonPath("iepDateTime", WireMock.equalTo("2022-12-02T10:00:00")))
         .withRequestBody(WireMock.matchingJsonPath("prisonId", WireMock.equalTo("MDI")))
-        .withRequestBody(WireMock.matchingJsonPath("iepLevel", WireMock.equalTo("Medium")))
+        .withRequestBody(WireMock.matchingJsonPath("iepLevel", WireMock.equalTo("STD")))
     )
   }
 
@@ -72,7 +72,8 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
     """
     {
       "id": $id,
-      "iepLevel": "Medium",
+      "iepCode": "STD",
+      "iepLevel": "Standard",
       "bookingId": 456,
       "prisonerNumber": "A1234AA",
       "sequence": 2,

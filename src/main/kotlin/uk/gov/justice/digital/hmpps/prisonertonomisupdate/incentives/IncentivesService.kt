@@ -29,7 +29,7 @@ class IncentivesService(
     iepDateTime = iepDate.atTime(iepTime.toLocalTime()),
     userId = userId,
     prisonId = agencyId,
-    iepLevel = iepLevel,
+    iepLevel = iepCode,
   )
 
   fun createIncentive(event: IncentiveCreatedEvent) {
@@ -39,13 +39,14 @@ class IncentivesService(
         "offenderNo" to prisonerNumber!!,
         "prisonId" to agencyId,
         "id" to id.toString(),
+        "iep" to iepCode,
         "iepDate" to iepDate.format(DateTimeFormatter.ISO_DATE),
         "iepTime" to iepTime.format(DateTimeFormatter.ISO_TIME),
       )
 
       if (mappingService.getMappingGivenIncentiveId(event.additionalInformation.id) != null) {
         telemetryClient.trackEvent("incentive-get-map-failed", telemetryMap)
-        log.warn("Mapping already exists for incentive id $event.id")
+        log.warn("Mapping already exists for incentive id $event.additionalInformation.id")
         return
       }
 
