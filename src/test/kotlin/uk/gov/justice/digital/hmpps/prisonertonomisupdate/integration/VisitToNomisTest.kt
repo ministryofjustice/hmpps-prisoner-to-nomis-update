@@ -1,12 +1,17 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration
 
 import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.getNumberOfMessagesCurrentlyOnQueue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCancelledMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitChangedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCreatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -38,24 +43,24 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
     await untilCallTo { nomisApi.postCountFor("/prisoners/A32323Y/visits") } matches { it == 1 }
 
     nomisApi.verify(
-      WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/A32323Y/visits"))
-        .withRequestBody(WireMock.matchingJsonPath("offenderNo", WireMock.equalTo("A32323Y")))
-        .withRequestBody(WireMock.matchingJsonPath("prisonId", WireMock.equalTo("MDI")))
-        .withRequestBody(WireMock.matchingJsonPath("visitType", WireMock.equalTo("SCON")))
-        .withRequestBody(WireMock.matchingJsonPath("room", WireMock.equalTo("Main visits room")))
-        .withRequestBody(WireMock.matchingJsonPath("openClosedStatus", WireMock.equalTo("OPEN")))
-        .withRequestBody(WireMock.matchingJsonPath("startDateTime", WireMock.equalTo("2019-12-02T09:00:00")))
-        .withRequestBody(WireMock.matchingJsonPath("issueDate", WireMock.equalTo("2021-03-05")))
+      WireMock.postRequestedFor(urlEqualTo("/prisoners/A32323Y/visits"))
+        .withRequestBody(matchingJsonPath("offenderNo", equalTo("A32323Y")))
+        .withRequestBody(matchingJsonPath("prisonId", equalTo("MDI")))
+        .withRequestBody(matchingJsonPath("visitType", equalTo("SCON")))
+        .withRequestBody(matchingJsonPath("room", equalTo("Main visits room")))
+        .withRequestBody(matchingJsonPath("openClosedStatus", equalTo("OPEN")))
+        .withRequestBody(matchingJsonPath("startDateTime", equalTo("2019-12-02T09:00:00")))
+        .withRequestBody(matchingJsonPath("issueDate", equalTo("2021-03-05")))
         .withRequestBody(
-          WireMock.matchingJsonPath(
+          matchingJsonPath(
             "visitComment",
-            WireMock.equalTo("Created by Book A Prison Visit. Reference: 12")
+            equalTo("Created by Book A Prison Visit. Reference: 12")
           )
         )
         .withRequestBody(
-          WireMock.matchingJsonPath(
+          matchingJsonPath(
             "visitOrderComment",
-            WireMock.equalTo("Created by Book A Prison Visit for visit with reference: 12")
+            equalTo("Created by Book A Prison Visit for visit with reference: 12")
           )
         )
     )
@@ -121,8 +126,53 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
     await untilCallTo { nomisApi.putCountFor("/prisoners/AB12345/visits/456/cancel") } matches { it == 1 }
 
     nomisApi.verify(
-      WireMock.putRequestedFor(WireMock.urlEqualTo("/prisoners/AB12345/visits/456/cancel"))
-        .withRequestBody(WireMock.matchingJsonPath("outcome", WireMock.equalTo("OFFCANC")))
+      putRequestedFor(urlEqualTo("/prisoners/AB12345/visits/456/cancel"))
+        .withRequestBody(matchingJsonPath("outcome", equalTo("OFFCANC")))
+    )
+  }
+
+  @Test
+  fun `will consume a prison visits changed message`() {
+
+    mappingServer.stubGetVsip(
+      "12",
+      response = """{ 
+          "nomisId": "456",
+          "vsipId": "12",
+          "mappingType": "ONLINE"
+        }
+      """.trimIndent()
+    )
+
+    visitsApi.stubVisitGet(
+      "12",
+      buildVisitApiDtoJsonResponse(
+        visitId = "12",
+        prisonerId = "A32323Y",
+        visitRoom = "Side Room",
+        visitRestriction = "CLOSED",
+        startTimestamp = "2021-03-05T09:00:00",
+        endTimestamp = "2021-03-05T10:00:00",
+        visitors = listOf(99, 88)
+      )
+    )
+    nomisApi.stubVisitUpdate(prisonerId = "AB12345", visitId = "456")
+
+    val message = prisonVisitChangedMessage(prisonerId = "AB12345")
+
+    awsSqsClient.sendMessage(queueUrl, message)
+
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, queueUrl) } matches { it == 0 }
+    await untilCallTo { nomisApi.putCountFor("/prisoners/AB12345/visits/456") } matches { it == 1 }
+
+    nomisApi.verify(
+      putRequestedFor(urlEqualTo("/prisoners/AB12345/visits/456"))
+        .withRequestBody(matchingJsonPath("startDateTime", equalTo("2021-03-05T09:00:00")))
+        .withRequestBody(matchingJsonPath("endTime", equalTo("10:00:00")))
+        .withRequestBody(matchingJsonPath("visitorPersonIds[0]", equalTo("99")))
+        .withRequestBody(matchingJsonPath("visitorPersonIds[1]", equalTo("88")))
+        .withRequestBody(matchingJsonPath("room", equalTo("Side Room")))
+        .withRequestBody(matchingJsonPath("openClosedStatus", equalTo("CLOSED")))
     )
   }
 
@@ -132,6 +182,9 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
     outcome: String? = null,
     visitRoom: String = "Main visits room",
     visitRestriction: String = "OPEN",
+    startTimestamp: String = "2019-12-02T09:00:00",
+    endTimestamp: String = "2019-12-02T10:00:00",
+    visitors: List<Long> = listOf(543524, 344444, 655656)
   ): String {
     val outcomeString = outcome?.let { "\"outcomeStatus\": \"$it\"," } ?: ""
 
@@ -141,23 +194,13 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
       "prisonId": "MDI",
       "prisonerId": "$prisonerId",
       "visitType": "SOCIAL",
-      "startTimestamp": "2019-12-02T09:00:00",
-      "endTimestamp": "2019-12-02T10:00:00",
+      "startTimestamp": "$startTimestamp",
+      "endTimestamp": "$endTimestamp",
       "visitRestriction": "$visitRestriction",
       "visitRoom": "$visitRoom",
       $outcomeString
       "visitStatus": "BOOKED",
-      "visitors": [
-        {
-          "nomisPersonId": 543524
-        },
-        {
-          "nomisPersonId": 344444
-        },
-        {
-          "nomisPersonId": 655656
-        }
-      ]
+      "visitors": [ ${visitors.joinToString(",") { "{\"nomisPersonId\": $it}" }} ]
     }
     """.trimIndent()
   }

@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CancelVisitDt
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateQueueService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.VisitContext
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -122,6 +123,38 @@ class PrisonVisitsService(
     }
   }
 
+  fun updateVisit(visitCancelledEvent: VisitChangedEvent) {
+    val telemetryProperties = mutableMapOf(
+      "offenderNo" to visitCancelledEvent.prisonerId,
+      "visitId" to visitCancelledEvent.reference,
+    )
+
+    val mappingDto =
+      mappingService.getMappingGivenVsipId(visitCancelledEvent.reference)
+        ?: throw ValidationException("No mapping exists for VSIP id ${visitCancelledEvent.reference}")
+          .also { telemetryClient.trackEvent("visit-changed-mapping-failed", telemetryProperties) }
+
+    visitsApiService.getVisit(visitCancelledEvent.reference).run {
+
+      nomisApiService.updateVisit(
+        visitCancelledEvent.prisonerId,
+        mappingDto.nomisId,
+        UpdateVisitDto(
+          startDateTime = this.startTimestamp,
+          endTime = this.endTimestamp.toLocalTime(),
+          visitorPersonIds = this.visitors.map { it.nomisPersonId },
+          room = this.visitRoom,
+          openClosedStatus = this.visitRestriction,
+        )
+      )
+
+      telemetryClient.trackEvent(
+        "visit-changed-event",
+        telemetryProperties.plus(Pair("nomisVisitId", mappingDto.nomisId))
+      )
+    }
+  }
+
   private fun getNomisOutcomeOrDefault(vsipVisit: VisitDto): String =
     vsipVisit.outcomeStatus?.runCatching {
       VsipOutcomeStatus.valueOf(this)
@@ -147,6 +180,20 @@ data class VisitBookedEvent(
 }
 
 data class VisitCancelledEvent(
+  val additionalInformation: VisitInformation,
+  val occurredAt: OffsetDateTime,
+  val prisonerId: String,
+) {
+
+  val reference: String
+    get() = additionalInformation.reference
+
+  data class VisitInformation(
+    val reference: String,
+  )
+}
+
+data class VisitChangedEvent(
   val additionalInformation: VisitInformation,
   val occurredAt: OffsetDateTime,
   val prisonerId: String,

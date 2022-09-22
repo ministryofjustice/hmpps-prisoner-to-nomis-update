@@ -84,9 +84,36 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubVisitUpdate(prisonerId: String, visitId: String = "1234") {
+    stubFor(
+      put("/prisoners/$prisonerId/visits/$visitId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200)
+      )
+    )
+  }
+
   fun stubVisitCancelWithError(prisonerId: String, visitId: String, status: Int = 500) {
     stubFor(
       put("/prisoners/$prisonerId/visits/$visitId/cancel").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              {
+                "error": "some error"
+              }
+            """.trimIndent()
+          )
+          .withStatus(status)
+      )
+    )
+  }
+
+  fun stubVisitUpdateWithError(prisonerId: String, visitId: String, status: Int = 500) {
+    stubFor(
+      put("/prisoners/$prisonerId/visits/$visitId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(

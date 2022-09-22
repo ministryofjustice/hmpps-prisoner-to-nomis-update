@@ -47,6 +47,15 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .bodyToMono(CreateIncentiveResponseDto::class.java)
       .block()!!
+
+  fun updateVisit(offenderNo: String, nomisVisitId: String, updateVisitDto: UpdateVisitDto) {
+    webClient.put()
+      .uri("/prisoners/$offenderNo/visits/$nomisVisitId")
+      .bodyValue(updateVisitDto)
+      .retrieve()
+      .bodyToMono(Unit::class.java)
+      .block()
+  }
 }
 
 data class CreateVisitDto(
@@ -71,6 +80,16 @@ data class CancelVisitDto(
   val offenderNo: String,
   val nomisVisitId: String,
   val outcome: String,
+)
+
+data class UpdateVisitDto(
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+  val startDateTime: LocalDateTime,
+  @JsonFormat(pattern = "HH:mm:ss")
+  val endTime: LocalTime,
+  val visitorPersonIds: List<Long>,
+  val room: String,
+  val openClosedStatus: String,
 )
 
 data class CreateVisitResponseDto(
