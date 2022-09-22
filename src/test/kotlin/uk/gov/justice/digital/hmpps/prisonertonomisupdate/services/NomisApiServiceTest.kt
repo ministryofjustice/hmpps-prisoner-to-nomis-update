@@ -118,6 +118,51 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
+  inner class UpdateVisit {
+    @BeforeEach
+    internal fun setUp() {
+      NomisApiExtension.nomisApi.stubVisitUpdate(prisonerId = "AB123D", visitId = "12")
+    }
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() {
+      nomisApiService.updateVisit("AB123D", "12", updateVisit())
+
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/prisoners/AB123D/visits/12"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+      )
+    }
+
+    @Test
+    fun `will post cancel request to nomis api`() {
+      nomisApiService.updateVisit("AB123D", "12", updateVisit())
+
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/prisoners/AB123D/visits/12"))
+      )
+    }
+
+    @Test
+    internal fun `when offender is not found an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubVisitUpdateWithError("AB123D", "12", 404)
+
+      assertThatThrownBy {
+        nomisApiService.updateVisit("AB123D", "12", updateVisit())
+      }.isInstanceOf(NotFound::class.java)
+    }
+
+    @Test
+    internal fun `when any bad response is received an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubVisitUpdateWithError("AB123D", "12", 503)
+
+      assertThatThrownBy {
+        nomisApiService.updateVisit("AB123D", "12", updateVisit())
+      }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+  }
+
+  @Nested
   inner class CreateIncentive {
 
     @Test
@@ -179,6 +224,13 @@ fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(
 )
 
 fun cancelVisit(): CancelVisitDto = CancelVisitDto(offenderNo = "AB123D", nomisVisitId = "12", outcome = "VISCANC")
+fun updateVisit(): UpdateVisitDto = UpdateVisitDto(
+  startDateTime = LocalDateTime.now(),
+  endTime = LocalTime.MIDNIGHT,
+  visitorPersonIds = listOf(),
+  room = "Main visits room",
+  openClosedStatus = "CLOSED",
+)
 
 fun newIncentive() = CreateIncentiveDto(
   iepDateTime = LocalDateTime.now(),

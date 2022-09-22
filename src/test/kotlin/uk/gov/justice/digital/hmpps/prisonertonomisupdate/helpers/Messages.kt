@@ -4,7 +4,11 @@ import com.amazonaws.services.sqs.AmazonSQS
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-fun prisonVisitCreatedMessage(visitId: String = "12", prisonerId: String = "AB12345", occurredAt: String = "2021-03-05T11:23:56.031Z") = """
+fun prisonVisitCreatedMessage(
+  visitId: String = "12",
+  prisonerId: String = "AB12345",
+  occurredAt: String = "2021-03-05T11:23:56.031Z"
+) = """
       {
         "Type": "Notification", 
         "MessageId": "48e8a79a-0f43-4338-bbd4-b0d745f1f8ec", 
@@ -18,13 +22,35 @@ fun prisonVisitCreatedMessage(visitId: String = "12", prisonerId: String = "AB12
         "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-0000000000000000000000.pem"}      
 """.trimIndent()
 
-fun prisonVisitCancelledMessage(visitId: String = "12", prisonerId: String = "AB12345", occurredAt: String = "2021-03-05T11:23:56.031Z") = """
+fun prisonVisitCancelledMessage(
+  visitId: String = "12",
+  prisonerId: String = "AB12345",
+  occurredAt: String = "2021-03-05T11:23:56.031Z"
+) = """
       {
         "Type": "Notification", 
         "MessageId": "48e8a79a-0f43-4338-bbd4-b0d745f1f8ec", 
         "Token": null, 
         "TopicArn": "arn:aws:sns:eu-west-2:000000000000:hmpps-domain-events", 
         "Message": "{\"eventType\":\"prison-visit.cancelled\", \"prisonerId\": \"$prisonerId\", \"occurredAt\": \"$occurredAt\", \"additionalInformation\": {\"reference\": \"$visitId\",\"visitType\": \"STANDARD_SOCIAL\"}}", 
+        "SubscribeURL": null, 
+        "Timestamp": "2021-03-05T11:23:56.031Z", 
+        "SignatureVersion": "1", 
+        "Signature": "EXAMPLEpH+..", 
+        "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-0000000000000000000000.pem"}      
+""".trimIndent()
+
+fun prisonVisitChangedMessage(
+  visitId: String = "12",
+  prisonerId: String = "AB12345",
+  occurredAt: String = "2021-03-05T11:23:56.031Z"
+) = """
+      {
+        "Type": "Notification", 
+        "MessageId": "48e8a79a-0f43-4338-bbd4-b0d745f1f8ec", 
+        "Token": null, 
+        "TopicArn": "arn:aws:sns:eu-west-2:000000000000:hmpps-domain-events", 
+        "Message": "{\"eventType\":\"prison-visit.changed\", \"prisonerId\": \"$prisonerId\", \"occurredAt\": \"$occurredAt\", \"additionalInformation\": {\"reference\": \"$visitId\"}}", 
         "SubscribeURL": null, 
         "Timestamp": "2021-03-05T11:23:56.031Z", 
         "SignatureVersion": "1", 

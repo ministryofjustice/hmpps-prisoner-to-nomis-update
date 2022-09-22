@@ -47,6 +47,7 @@ class PrisonerDomainEventsListener(
         if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
           "prison-visit.booked" -> prisonVisitsService.createVisit(objectMapper.readValue(sqsMessage.Message))
           "prison-visit.cancelled" -> prisonVisitsService.cancelVisit(objectMapper.readValue(sqsMessage.Message))
+          "prison-visit.changed" -> prisonVisitsService.updateVisit(objectMapper.readValue(sqsMessage.Message))
           "incentives.iep-review.inserted" -> incentivesService.createIncentive(objectMapper.readValue(sqsMessage.Message))
           else -> log.info("Received a message I wasn't expecting: {}", eventType)
         } else {
