@@ -94,7 +94,7 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
       .expectStatus()
       .isOk
 
-    await untilCallTo { mappingServer.postCountFor("/mapping") } matches { it == 7 } // 1 initial call, 5 retries and 1 final successful call
+    await untilCallTo { mappingServer.postCountFor("/mapping/visits") } matches { it == 7 } // 1 initial call, 5 retries and 1 final successful call
     await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, queueUrl) } matches { it == 0 }
     await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, dlqUrl!!) } matches { it == 0 }
   }

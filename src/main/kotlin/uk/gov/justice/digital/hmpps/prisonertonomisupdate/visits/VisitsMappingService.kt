@@ -19,7 +19,7 @@ class VisitsMappingService(
 
   fun createMapping(request: VisitMappingDto) {
     webClient.post()
-      .uri("/mapping")
+      .uri("/mapping/visits")
       .bodyValue(request)
       .retrieve()
       .bodyToMono(Unit::class.java)
@@ -28,7 +28,7 @@ class VisitsMappingService(
 
   fun getMappingGivenNomisId(nomisId: Long): VisitMappingDto? =
     webClient.get()
-      .uri("/mapping/nomisId/$nomisId")
+      .uri("/mapping/visits/nomisId/$nomisId")
       .retrieve()
       .bodyToMono(VisitMappingDto::class.java)
       .onErrorResume(WebClientResponseException.NotFound::class.java) {
@@ -39,7 +39,7 @@ class VisitsMappingService(
 
   fun getMappingGivenVsipId(vsipId: String): VisitMappingDto? =
     webClient.get()
-      .uri("/mapping/vsipId/$vsipId")
+      .uri("/mapping/visits/vsipId/$vsipId")
       .retrieve()
       .bodyToMono(VisitMappingDto::class.java)
       .onErrorResume(WebClientResponseException.NotFound::class.java) {

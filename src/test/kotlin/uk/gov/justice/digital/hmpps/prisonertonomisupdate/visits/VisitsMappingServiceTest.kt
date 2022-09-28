@@ -36,7 +36,7 @@ internal class VisitsMappingServiceTest {
       mappingService.createMapping(newMapping())
 
       MappingExtension.mappingServer.verify(
-        postRequestedFor(urlEqualTo("/mapping"))
+        postRequestedFor(urlEqualTo("/mapping/visits"))
           .withHeader("Authorization", equalTo("Bearer ABCDE"))
       )
     }
@@ -46,7 +46,7 @@ internal class VisitsMappingServiceTest {
       mappingService.createMapping(newMapping())
 
       MappingExtension.mappingServer.verify(
-        postRequestedFor(urlEqualTo("/mapping"))
+        postRequestedFor(urlEqualTo("/mapping/visits"))
           .withRequestBody(matchingJsonPath("$.nomisId", equalTo("456")))
       )
     }
@@ -78,7 +78,7 @@ internal class VisitsMappingServiceTest {
       mappingService.getMappingGivenNomisId(456)
 
       MappingExtension.mappingServer.verify(
-        getRequestedFor(urlEqualTo("/mapping/nomisId/456"))
+        getRequestedFor(urlEqualTo("/mapping/visits/nomisId/456"))
           .withHeader("Authorization", equalTo("Bearer ABCDE"))
       )
     }
@@ -133,7 +133,7 @@ internal class VisitsMappingServiceTest {
       mappingService.getMappingGivenVsipId("123")
 
       MappingExtension.mappingServer.verify(
-        getRequestedFor(urlEqualTo("/mapping/vsipId/123"))
+        getRequestedFor(urlEqualTo("/mapping/visits/vsipId/123"))
           .withHeader("Authorization", equalTo("Bearer ABCDE"))
       )
     }
