@@ -47,7 +47,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubCreate() {
     stubFor(
-      post("/mapping").willReturn(
+      post("/mapping/visits").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(201)
@@ -57,7 +57,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubCreateWithError(status: Int = 500) {
     stubFor(
-      post("/mapping").willReturn(
+      post("/mapping/visits").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
@@ -68,7 +68,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetNomis(nomisId: String, response: String) {
     stubFor(
-      get("/mapping/nomisId/$nomisId").willReturn(
+      get("/mapping/visits/nomisId/$nomisId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
@@ -79,7 +79,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetNomisWithError(nomisId: String, status: Int = 500) {
     stubFor(
-      get("/mapping/nomisId/$nomisId").willReturn(
+      get("/mapping/visits/nomisId/$nomisId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
@@ -90,7 +90,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetVsip(vsipId: String, response: String) {
     stubFor(
-      get("/mapping/vsipId/$vsipId").willReturn(
+      get("/mapping/visits/vsipId/$vsipId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
@@ -101,7 +101,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetVsipWithError(vsipId: String, status: Int = 500) {
     stubFor(
-      get("/mapping/vsipId/$vsipId").willReturn(
+      get("/mapping/visits/vsipId/$vsipId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
