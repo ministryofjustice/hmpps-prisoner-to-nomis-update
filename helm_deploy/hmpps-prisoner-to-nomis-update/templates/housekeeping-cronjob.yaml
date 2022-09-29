@@ -22,5 +22,5 @@ spec:
               args:
                 - /bin/sh
                 - -c
-                - curl -XPUT http://hmpps-prisoner-to-nomis-update/queue-admin/retry-all-dlqs
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/queue-admin/retry-all-dlqs
           restartPolicy: Never
