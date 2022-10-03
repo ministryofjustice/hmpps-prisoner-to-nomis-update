@@ -37,8 +37,8 @@ internal class IncentivesServiceTest {
       whenever(mappingService.getMappingGivenBookingAndSequence(123, 1)).thenReturn(null)
       whenever(nomisApiService.createIncentive(any(), any())).thenReturn(
         CreateIncentiveResponseDto(
-          nomisBookingId = 123,
-          nomisIncentiveSequence = 1,
+          bookingId = 123,
+          sequence = 1,
         )
       )
 
@@ -112,8 +112,8 @@ internal class IncentivesServiceTest {
       whenever(mappingService.getMappingGivenBookingAndSequence(123, 1)).thenReturn(null)
       whenever(nomisApiService.createIncentive(any(), any())).thenReturn(
         CreateIncentiveResponseDto(
-          nomisBookingId = 123,
-          nomisIncentiveSequence = 1,
+          bookingId = 123,
+          sequence = 1,
         )
       )
       whenever(mappingService.createMapping(any())).thenThrow(RuntimeException("test"))

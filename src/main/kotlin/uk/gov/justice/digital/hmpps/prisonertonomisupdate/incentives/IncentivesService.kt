@@ -59,14 +59,14 @@ class IncentivesService(
       }
 
       val mapWithNomisId = telemetryMap
-        .plus(Pair("nomisBookingId", nomisResponse.nomisBookingId.toString()))
-        .plus(Pair("nomisIncentiveSequence", nomisResponse.nomisIncentiveSequence.toString()))
+        .plus(Pair("nomisBookingId", nomisResponse.bookingId.toString()))
+        .plus(Pair("nomisIncentiveSequence", nomisResponse.sequence.toString()))
 
       try {
         mappingService.createMapping(
           IncentiveMappingDto(
-            nomisBookingId = nomisResponse.nomisBookingId,
-            nomisIncentiveSequence = nomisResponse.nomisIncentiveSequence,
+            nomisBookingId = nomisResponse.bookingId,
+            nomisIncentiveSequence = nomisResponse.sequence.toInt(),
             incentiveId = event.additionalInformation.id,
             mappingType = "INCENTIVE_CREATED",
           )
@@ -76,8 +76,8 @@ class IncentivesService(
         log.error("Unexpected exception, queueing retry", e)
         updateQueueService.sendMessage(
           IncentiveContext(
-            nomisBookingId = nomisResponse.nomisBookingId,
-            nomisIncentiveSequence = nomisResponse.nomisIncentiveSequence,
+            nomisBookingId = nomisResponse.bookingId,
+            nomisIncentiveSequence = nomisResponse.sequence.toInt(),
             incentiveId = event.additionalInformation.id
           )
         )
