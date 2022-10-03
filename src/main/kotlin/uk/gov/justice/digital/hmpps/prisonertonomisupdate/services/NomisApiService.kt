@@ -106,6 +106,6 @@ data class CreateIncentiveDto(
 )
 
 data class CreateIncentiveResponseDto(
-  val nomisBookingId: Long,
-  val nomisIncentiveSequence: Int,
+  val bookingId: Long,
+  val sequence: Long,
 )

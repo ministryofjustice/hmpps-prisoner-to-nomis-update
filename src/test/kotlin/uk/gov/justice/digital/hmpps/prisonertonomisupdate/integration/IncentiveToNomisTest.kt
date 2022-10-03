@@ -33,6 +33,13 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
         .withRequestBody(WireMock.matchingJsonPath("prisonId", WireMock.equalTo("MDI")))
         .withRequestBody(WireMock.matchingJsonPath("iepLevel", WireMock.equalTo("STD")))
     )
+    mappingServer.verify(
+      WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/incentives"))
+        .withRequestBody(WireMock.matchingJsonPath("nomisBookingId", WireMock.equalTo("456")))
+        .withRequestBody(WireMock.matchingJsonPath("nomisIncentiveSequence", WireMock.equalTo("1")))
+        .withRequestBody(WireMock.matchingJsonPath("incentiveId", WireMock.equalTo("12")))
+        .withRequestBody(WireMock.matchingJsonPath("mappingType", WireMock.equalTo("INCENTIVE_CREATED")))
+    )
   }
 
   @Test
