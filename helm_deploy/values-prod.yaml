@@ -16,7 +16,7 @@ generic-service:
     API_BASE_URL_INCENTIVES: https://incentives-api.hmpps.service.justice.gov.uk
     FEATURE_EVENT_INCENTIVES_IEP_REVIEW_INSERTED: false
 
-# CloudPlatform AlertManager receiver to route promethues alerts to slack
-# See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:
-  alertSeverity: syscon
+  sqsAlertsQueueNames:
+    - "Digital-Prison-Services-prod-hmpps_prisoner_to_nomis_queue"
+    - "Digital-Prison-Services-prod-hmpps_prisoner_to_nomis_dlq"
