@@ -19,3 +19,5 @@ generic-prometheus-alerts:
   sqsAlertsQueueNames:
     - "Digital-Prison-Services-dev-hmpps_prisoner_to_nomis_queue"
     - "Digital-Prison-Services-dev-hmpps_prisoner_to_nomis_dlq"
+  sqsAlertsOldestThreshold: 2
+  sqsAlertsTotalMessagesThreshold: 1

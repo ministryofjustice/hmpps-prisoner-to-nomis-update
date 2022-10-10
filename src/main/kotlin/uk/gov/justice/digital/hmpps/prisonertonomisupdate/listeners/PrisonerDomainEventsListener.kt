@@ -31,19 +31,11 @@ class PrisonerDomainEventsListener(
 
   @JmsListener(destination = "prisoner", containerFactory = "hmppsQueueContainerFactoryProxy")
   fun onPrisonerChange(message: String) {
+    log.debug("Received message {}", message)
     val sqsMessage: SQSMessage = objectMapper.readValue(message)
-    log.debug("Received message {}", sqsMessage.MessageId)
     when (sqsMessage.Type) {
       "Notification" -> {
-        val (eventType, prisonerId, additionalInformation) = objectMapper.readValue<HMPPSDomainEvent>(sqsMessage.Message)
-        telemetryClient.trackEvent(
-          "prisoner-domain-event-received",
-          mapOf(
-            "eventType" to eventType,
-            "offenderNo" to (prisonerId ?: ""),
-            "id" to (additionalInformation?.id?.toString() ?: "")
-          ),
-        )
+        val (eventType) = objectMapper.readValue<HMPPSDomainEvent>(sqsMessage.Message)
         if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
           "prison-visit.booked" -> prisonVisitsService.createVisit(objectMapper.readValue(sqsMessage.Message))
           "prison-visit.cancelled" -> prisonVisitsService.cancelVisit(objectMapper.readValue(sqsMessage.Message))

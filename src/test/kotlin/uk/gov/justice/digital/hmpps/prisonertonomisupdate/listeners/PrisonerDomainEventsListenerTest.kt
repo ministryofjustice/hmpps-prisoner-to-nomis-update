@@ -66,15 +66,6 @@ internal class PrisonerDomainEventsListenerTest {
             assertThat(it.bookingDate).isEqualTo(LocalDate.parse("2021-03-08"))
           }
         )
-
-        verify(telemetryClient).trackEvent(
-          eq("prisoner-domain-event-received"),
-          check {
-            assertThat(it["offenderNo"]).isEqualTo("AB12345")
-            assertThat(it["eventType"]).isEqualTo("prison-visit.booked")
-          },
-          isNull()
-        )
       }
     }
 
@@ -142,15 +133,6 @@ internal class PrisonerDomainEventsListenerTest {
           check {
             assertThat(it.additionalInformation.id).isEqualTo(123L)
           }
-        )
-
-        verify(telemetryClient).trackEvent(
-          eq("prisoner-domain-event-received"),
-          check {
-            assertThat(it["id"]).isEqualTo("123")
-            assertThat(it["eventType"]).isEqualTo("incentives.iep-review.inserted")
-          },
-          isNull()
         )
       }
     }
