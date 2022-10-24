@@ -33,6 +33,7 @@ generic-service:
     FEATURE_EVENT_PRISON_VISIT_BOOKED: true
     FEATURE_EVENT_PRISON_VISIT_REVISED: true
     FEATURE_EVENT_PRISON_VISIT_CANCELLED: true
+    FEATURE_EVENT_INCENTIVES_IEP_REVIEW_INSERTED: true
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:
