@@ -5,6 +5,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
@@ -212,6 +214,37 @@ internal class PrisonVisitsServiceTest {
         )
       )
       verify(nomisApiService).cancelVisit(CancelVisitDto("AB123D", "456", "ADMIN"))
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      value = [
+        "ADMINISTRATIVE_CANCELLATION,ADMIN",
+        "ADMINISTRATIVE_ERROR,ADMIN",
+        "ESTABLISHMENT_CANCELLED,HMP",
+        "VISITOR_FAILED_SECURITY_CHECKS,NO_ID",
+        "NO_VISITING_ORDER,NO_VO",
+        "VISITOR_DID_NOT_ARRIVE,NSHOW",
+        "PRISONER_CANCELLED,OFFCANC",
+        "PRISONER_REFUSED_TO_ATTEND,REFUSED",
+        "VISITOR_CANCELLED,VISCANC",
+        "VISIT_ORDER_CANCELLED,VO_CANCEL",
+        "BATCH_CANCELLATION,ADMIN",
+        "PRISONER_REFUSED_TO_ATTEND,REFUSED",
+      ]
+    )
+    fun `should map all cancellation outcome correctly`(vsipOutcome: String, nomisOutcome: String) {
+      whenever(visitApiService.getVisit("123")).thenReturn(newVisit(outcome = vsipOutcome))
+      whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(newMapping())
+
+      prisonVisitsService.cancelVisit(
+        VisitCancelledEvent(
+          additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
+          prisonerId = "AB123D",
+          occurredAt = OffsetDateTime.now()
+        )
+      )
+      verify(nomisApiService).cancelVisit(CancelVisitDto("AB123D", "456", nomisOutcome))
     }
 
     @Test

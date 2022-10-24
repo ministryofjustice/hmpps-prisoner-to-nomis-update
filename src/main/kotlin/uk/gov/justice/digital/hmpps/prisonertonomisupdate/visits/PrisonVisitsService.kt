@@ -238,8 +238,6 @@ enum class NomisCancellationOutcome {
   REFUSED,
   VISCANC,
   VO_CANCEL,
-  BATCH_CANC,
-  ADMIN_CANCEL,
 }
 
 private val vsipToNomisOutcomeMap = mutableMapOf(
@@ -253,7 +251,6 @@ private val vsipToNomisOutcomeMap = mutableMapOf(
   VsipOutcomeStatus.PRISONER_REFUSED_TO_ATTEND to NomisCancellationOutcome.REFUSED,
   VsipOutcomeStatus.VISITOR_CANCELLED to NomisCancellationOutcome.VISCANC,
   VsipOutcomeStatus.VISIT_ORDER_CANCELLED to NomisCancellationOutcome.VO_CANCEL,
-  VsipOutcomeStatus.BATCH_CANCELLATION to NomisCancellationOutcome.BATCH_CANC,
-  VsipOutcomeStatus.ADMINISTRATIVE_CANCELLATION to NomisCancellationOutcome.ADMIN_CANCEL,
+  VsipOutcomeStatus.BATCH_CANCELLATION to NomisCancellationOutcome.ADMIN,
   VsipOutcomeStatus.PRISONER_REFUSED_TO_ATTEND to NomisCancellationOutcome.REFUSED,
 )
