@@ -14,7 +14,6 @@ generic-service:
     API_BASE_URL_MAPPING: https://nomis-visits-mapping.hmpps.service.justice.gov.uk
     API_BASE_URL_VISITS: https://visit-scheduler.prison.service.justice.gov.uk
     API_BASE_URL_INCENTIVES: https://incentives-api.hmpps.service.justice.gov.uk
-    FEATURE_EVENT_INCENTIVES_IEP_REVIEW_INSERTED: false
 
 generic-prometheus-alerts:
   sqsAlertsQueueNames:
