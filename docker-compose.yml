@@ -49,11 +49,11 @@ services:
       - API_BASE_URL_VISITS=http://hmpps-visits-api:8080
       - API_BASE_URL_MAPPING=http://hmpps-nomis-visit-mapping-api:8080
 
-  hmpps-nomis-visit-mapping-api:
-    image: quay.io/hmpps/hmpps-nomis-visits-mapping-service:latest
+  hmpps-nomis-mapping-api:
+    image: quay.io/hmpps/hmpps-nomis-mapping-service:latest
     networks:
       - hmpps
-    container_name: hmpps-nomis-visit-mapping-api
+    container_name: hmpps-nomis-mapping-api
     ports:
       - "8084:8080"
     healthcheck:
