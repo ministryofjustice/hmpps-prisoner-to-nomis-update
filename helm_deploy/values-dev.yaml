@@ -11,7 +11,7 @@ generic-service:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
     API_BASE_URL_OAUTH: https://sign-in-dev.hmpps.service.justice.gov.uk/auth
     API_BASE_URL_NOMIS: https://nomis-prsner-dev.aks-dev-1.studio-hosting.service.justice.gov.uk
-    API_BASE_URL_MAPPING: https://nomis-visits-mapping-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_MAPPING: https://nomis-sync-prisoner-mapping-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_VISITS: https://visit-scheduler-dev.prison.service.justice.gov.uk
     API_BASE_URL_INCENTIVES: https://incentives-api-dev.hmpps.service.justice.gov.uk
 
