@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.6.0-beta"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.7.0-beta"
   kotlin("plugin.spring") version "1.7.21"
 }
 
@@ -14,16 +14,16 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:1.1.13")
 
-  implementation("org.springdoc:springdoc-openapi-ui:1.6.12")
-  implementation("org.springdoc:springdoc-openapi-kotlin:1.6.12")
-  implementation("org.springdoc:springdoc-openapi-data-rest:1.6.12")
-  implementation("org.springdoc:springdoc-openapi-security:1.6.12")
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.0")
+  implementation("org.springdoc:springdoc-openapi-ui:1.6.13")
+  implementation("org.springdoc:springdoc-openapi-kotlin:1.6.13")
+  implementation("org.springdoc:springdoc-openapi-data-rest:1.6.13")
+  implementation("org.springdoc:springdoc-openapi-security:1.6.13")
+  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.1")
 
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.8")
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.9")
   testImplementation("com.github.tomakehurst:wiremock-standalone:2.27.2")
   testImplementation("org.mockito:mockito-inline:4.9.0")
-  testImplementation("org.testcontainers:localstack:1.17.5")
+  testImplementation("org.testcontainers:localstack:1.17.6")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
 }
 
