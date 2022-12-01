@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateQueueService
 import java.time.format.DateTimeFormatter
 
+private const val incentiveCreatedInNomsByUser = "USER_CREATED_NOMIS"
+
 @Service
 class IncentivesService(
   private val incentivesApiService: IncentivesApiService,
@@ -44,9 +46,8 @@ class IncentivesService(
         "iepTime" to iepTime.format(DateTimeFormatter.ISO_TIME),
       )
 
-      if (mappingService.getMappingGivenIncentiveId(event.additionalInformation.id) != null) {
-        telemetryClient.trackEvent("incentive-get-map-failed", telemetryMap)
-        log.warn("Mapping already exists for incentive id $event.additionalInformation.id")
+      if (event.additionalInformation.reason == incentiveCreatedInNomsByUser) {
+        log.debug("Incentive id $event.additionalInformation.id created in NOMIS so ignoring")
         return
       }
 
@@ -84,7 +85,7 @@ class IncentivesService(
         return
       }
 
-      telemetryClient.trackEvent("incentive-event", mapWithNomisId)
+      telemetryClient.trackEvent("incentive-created-event", mapWithNomisId)
     }
   }
 

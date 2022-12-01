@@ -10,6 +10,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateIncentiveResponseDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.IncentiveContext
@@ -34,7 +35,6 @@ internal class IncentivesServiceTest {
     @Test
     fun `should log a processed visit booked event`() {
       whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
-      whenever(mappingService.getMappingGivenBookingAndSequence(123, 1)).thenReturn(null)
       whenever(nomisApiService.createIncentive(any(), any())).thenReturn(
         CreateIncentiveResponseDto(
           bookingId = 123,
@@ -47,7 +47,7 @@ internal class IncentivesServiceTest {
       )
 
       verify(telemetryClient).trackEvent(
-        eq("incentive-event"),
+        eq("incentive-created-event"),
         org.mockito.kotlin.check {
           assertThat(it["offenderNo"]).isEqualTo("AB123D")
           assertThat(it["prisonId"]).isEqualTo("MDI")
@@ -60,31 +60,24 @@ internal class IncentivesServiceTest {
     }
 
     @Test
-    fun `should log an existing mapping`() {
+    internal fun `should not update NOMIS if incentive was created in NOMIS`() {
       whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
-      whenever(mappingService.getMappingGivenIncentiveId(123)).thenReturn(newMapping())
 
       incentivesService.createIncentive(
-        IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123))
+        IncentivesService.IncentiveCreatedEvent(
+          IncentivesService.AdditionalInformation(
+            id = 123,
+            reason = "USER_CREATED_NOMIS"
+          )
+        )
       )
 
-      verify(telemetryClient).trackEvent(
-        eq("incentive-get-map-failed"),
-        org.mockito.kotlin.check {
-          assertThat(it["offenderNo"]).isEqualTo("AB123D")
-          assertThat(it["prisonId"]).isEqualTo("MDI")
-          assertThat(it["id"]).isEqualTo("456")
-          assertThat(it["iepDate"]).isEqualTo("2023-09-08")
-          assertThat(it["iepTime"]).isEqualTo("09:30:00")
-        },
-        isNull()
-      )
+      verifyNoInteractions(nomisApiService)
     }
 
     @Test
     fun `should log a creation failure`() {
       whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
-      whenever(mappingService.getMappingGivenBookingAndSequence(123, 1)).thenReturn(null)
       whenever(nomisApiService.createIncentive(any(), any())).thenThrow(RuntimeException("test"))
 
       assertThatThrownBy {
@@ -109,7 +102,6 @@ internal class IncentivesServiceTest {
     @Test
     fun `should log a mapping creation failure`() {
       whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
-      whenever(mappingService.getMappingGivenBookingAndSequence(123, 1)).thenReturn(null)
       whenever(nomisApiService.createIncentive(any(), any())).thenReturn(
         CreateIncentiveResponseDto(
           bookingId = 123,
@@ -171,11 +163,4 @@ fun newIncentive(
   iepCode = "STD",
   iepLevel = "Standard",
   userId = "me",
-)
-
-fun newMapping() = IncentiveMappingDto(
-  nomisBookingId = 123,
-  nomisIncentiveSequence = 1,
-  incentiveId = 12345,
-  mappingType = "A_TYPE"
 )

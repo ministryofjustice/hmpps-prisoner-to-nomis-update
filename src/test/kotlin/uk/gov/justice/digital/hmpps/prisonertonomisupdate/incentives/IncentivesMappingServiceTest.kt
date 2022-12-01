@@ -62,65 +62,6 @@ internal class IncentivesMappingServiceTest {
   }
 
   @Nested
-  inner class GetMappingGivenBookingAndSequence {
-
-    @Test
-    fun `should call nomis api OAuth2 token`() {
-      MappingExtension.mappingServer.stubGetBookingAndSequence(
-        bookingId = 456,
-        incentiveSequence = 3,
-        response = """{
-          "nomisBookingId": 456,
-          "nomisIncentiveSequence": 3,
-          "incentiveId": 135,
-          "mappingType": "TYPE"
-        }""".trimMargin(),
-      )
-
-      mappingService.getMappingGivenBookingAndSequence(456, 3)
-
-      MappingExtension.mappingServer.verify(
-        getRequestedFor(urlEqualTo("/mapping/incentives/nomis-booking-id/456/nomis-incentive-sequence/3"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
-      )
-    }
-
-    @Test
-    fun `will return data`() {
-      MappingExtension.mappingServer.stubGetBookingAndSequence(
-        bookingId = 456,
-        incentiveSequence = 3,
-        response = """{
-          "nomisBookingId": 456,
-          "nomisIncentiveSequence": 3,
-          "incentiveId": 1234,
-          "mappingType": "A_TYPE"
-        }""".trimMargin(),
-      )
-
-      val data = mappingService.getMappingGivenBookingAndSequence(456, 3)
-
-      assertThat(data).isEqualTo(newMapping())
-    }
-
-    @Test
-    internal fun `when mapping is not found null is returned`() {
-      MappingExtension.mappingServer.stubGetBookingAndSequenceWithError(456, 1, 404)
-
-      assertThat(mappingService.getMappingGivenBookingAndSequence(456, 1)).isNull()
-    }
-
-    @Test
-    internal fun `when any bad response is received an exception is thrown`() {
-      MappingExtension.mappingServer.stubGetBookingAndSequenceWithError(456, 1, 503)
-
-      assertThatThrownBy {
-        mappingService.getMappingGivenBookingAndSequence(456, 1)
-      }.isInstanceOf(ServiceUnavailable::class.java)
-    }
-  }
-
-  @Nested
   inner class GetMappingGivenIncentiveId {
 
     @Test
