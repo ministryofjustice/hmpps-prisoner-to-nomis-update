@@ -76,6 +76,25 @@ internal class IncentivesServiceTest {
     }
 
     @Test
+    internal fun `should not update NOMIS if incentive already mapped (exists in nomis)`() {
+      whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
+      whenever(mappingService.getMappingGivenIncentiveId(123)).thenReturn(
+        IncentiveMappingDto(
+          nomisBookingId = 123,
+          nomisIncentiveSequence = 1,
+          incentiveId = 12345,
+          mappingType = "A_TYPE"
+        )
+      )
+
+      incentivesService.createIncentive(
+        IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123))
+      )
+
+      verifyNoInteractions(nomisApiService)
+    }
+
+    @Test
     fun `should log a creation failure`() {
       whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
       whenever(nomisApiService.createIncentive(any(), any())).thenThrow(RuntimeException("test"))
