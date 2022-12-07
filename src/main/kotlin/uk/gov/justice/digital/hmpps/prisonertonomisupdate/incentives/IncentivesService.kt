@@ -51,6 +51,12 @@ class IncentivesService(
         return
       }
 
+      // to protect against repeated create messages for same incentive
+      if (mappingService.getMappingGivenIncentiveId(event.additionalInformation.id) != null) {
+        log.warn("Mapping already exists for incentive id $event.additionalInformation.id")
+        return
+      }
+
       val nomisResponse = try {
         nomisApiService.createIncentive(this.bookingId, this.toNomisIncentive())
       } catch (e: Exception) {
