@@ -18,10 +18,6 @@ class IncentivesApiService(@Qualifier("incentivesApiWebClient") private val webC
   }
 }
 
-enum class ReviewType {
-  INITIAL, REVIEW, TRANSFER, ADJUSTMENT
-}
-
 data class IepDetail(
   val id: Long? = null,
   val iepCode: String,
@@ -35,6 +31,5 @@ data class IepDetail(
   val agencyId: String,
   val locationId: String? = null,
   val userId: String?,
-  val reviewType: ReviewType? = null,
   val auditModuleName: String? = null,
 )
