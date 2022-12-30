@@ -8,3 +8,4 @@ api.base.url:
   # Set to ourselves until new service is ready
   visits: http://localhost:8080
   incentives: http://localhost:8080
+  activities: http://localhost:8080

@@ -11,3 +11,4 @@ api.base.url:
   oauth: http://localhost:8090/auth
   visits: http://localhost:8083
   incentives: http://localhost:8085
+  activities: http://localhost:8086

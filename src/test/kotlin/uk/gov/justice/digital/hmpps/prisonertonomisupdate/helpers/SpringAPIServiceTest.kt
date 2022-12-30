@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTestContextBootstrapper
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.BootstrapWith
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.WebClientConfiguration
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
@@ -29,7 +30,7 @@ import kotlin.annotation.AnnotationTarget.CLASS
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
 @Inherited
-@ExtendWith(NomisApiExtension::class, MappingExtension::class, HmppsAuthApiExtension::class, VisitsApiExtension::class, IncentivesApiExtension::class)
+@ExtendWith(NomisApiExtension::class, MappingExtension::class, HmppsAuthApiExtension::class, VisitsApiExtension::class, IncentivesApiExtension::class, ActivitiesApiExtension::class)
 @ActiveProfiles("test")
 @SpringBootTest(classes = [WebClientConfiguration::class, WebClientAutoConfiguration::class, OAuth2ClientAutoConfiguration::class, SecurityAutoConfiguration::class])
 @BootstrapWith(SpringBootTestContextBootstrapper::class)

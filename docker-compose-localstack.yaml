@@ -6,7 +6,7 @@ services:
       - hmpps
     container_name: localstack
     ports:
-      - "4566-4597:4566-4597"
+      - "4566:4566"
     environment:
       - SERVICES=sqs,sns
       - DOCKER_HOST=unix:///var/run/docker.sock
