@@ -23,7 +23,7 @@ class IncentivesUpdateQueueService(
     val sqsMessage = SQSMessage(
       Type = "RETRY",
       Message = objectMapper.writeValueAsString(context),
-      MessageId = "retry-${context.incentiveId.toString()}"
+      MessageId = "retry-${context.incentiveId}"
     )
     val result = sqsClient.sendMessage(
       SendMessageRequest(queueUrl, objectMapper.writeValueAsString(sqsMessage))
