@@ -8,9 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CancelVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateQueueService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateVisitDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.VisitContext
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -21,7 +19,7 @@ class PrisonVisitsService(
   private val visitsApiService: VisitsApiService,
   private val nomisApiService: NomisApiService,
   private val mappingService: VisitsMappingService,
-  private val updateQueueService: UpdateQueueService,
+  private val visitsUpdateQueueService: VisitsUpdateQueueService,
   private val telemetryClient: TelemetryClient
 ) {
 
@@ -81,7 +79,7 @@ class PrisonVisitsService(
       } catch (e: Exception) {
         telemetryClient.trackEvent("visit-booked-create-map-failed", mapWithNomisId)
         log.error("Unexpected exception, queueing retry", e)
-        updateQueueService.sendMessage(VisitContext(nomisId = nomisId, vsipId = visitBookedEvent.reference))
+        visitsUpdateQueueService.sendMessage(VisitContext(nomisId = nomisId, vsipId = visitBookedEvent.reference))
         return
       }
 

@@ -6,9 +6,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateIncentiveDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.IncentiveContext
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateQueueService
 import java.time.format.DateTimeFormatter
 
 private const val incentiveCreatedInNomsByUser = "USER_CREATED_NOMIS"
@@ -18,7 +16,7 @@ class IncentivesService(
   private val incentivesApiService: IncentivesApiService,
   private val nomisApiService: NomisApiService,
   private val mappingService: IncentivesMappingService,
-  private val updateQueueService: UpdateQueueService,
+  private val incentivesUpdateQueueService: IncentivesUpdateQueueService,
   private val telemetryClient: TelemetryClient
 ) {
 
@@ -81,7 +79,7 @@ class IncentivesService(
       } catch (e: Exception) {
         telemetryClient.trackEvent("incentive-create-map-failed", mapWithNomisId)
         log.error("Unexpected exception, queueing retry", e)
-        updateQueueService.sendMessage(
+        incentivesUpdateQueueService.sendMessage(
           IncentiveContext(
             nomisBookingId = nomisResponse.bookingId,
             nomisIncentiveSequence = nomisResponse.sequence.toInt(),

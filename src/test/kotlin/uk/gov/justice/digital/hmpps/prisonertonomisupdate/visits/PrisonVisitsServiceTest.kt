@@ -15,8 +15,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CancelVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateQueueService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.VisitContext
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import javax.validation.ValidationException
@@ -26,7 +24,7 @@ internal class PrisonVisitsServiceTest {
   private val visitApiService: VisitsApiService = mock()
   private val nomisApiService: NomisApiService = mock()
   private val mappingService: VisitsMappingService = mock()
-  private val updateQueueService: UpdateQueueService = mock()
+  private val updateQueueService: VisitsUpdateQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()
   private val prisonVisitsService =
     PrisonVisitsService(visitApiService, nomisApiService, mappingService, updateQueueService, telemetryClient)

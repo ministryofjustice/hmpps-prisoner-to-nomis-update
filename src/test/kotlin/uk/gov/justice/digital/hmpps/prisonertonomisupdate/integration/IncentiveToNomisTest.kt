@@ -59,7 +59,7 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
     // the mapping call fails resulting in a retry message being queued
     // the retry message is processed and fails resulting in a message on the DLQ after 5 attempts
 
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, dlqUrl!!) } matches { it == 1 }
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsIncentiveDlqClient!!, incentiveDlqUrl!!) } matches { it == 1 }
 
     // Next time the retry will succeed
     mappingServer.stubCreateIncentive()
@@ -71,8 +71,8 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
       .isOk
 
     await untilCallTo { mappingServer.postCountFor("/mapping/incentives") } matches { it == 7 } // 1 initial call, 5 retries and 1 final successful call
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, queueUrl) } matches { it == 0 }
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, dlqUrl!!) } matches { it == 0 }
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, incentiveQueueUrl) } matches { it == 0 }
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, incentiveDlqUrl!!) } matches { it == 0 }
   }
 
   fun buildIncentiveApiDtoJsonResponse(id: Long = 12): String =

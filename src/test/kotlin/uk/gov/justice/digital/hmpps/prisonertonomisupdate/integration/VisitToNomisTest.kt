@@ -83,7 +83,7 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
     // the mapping call fails resulting in a retry message being queued
     // the retry message is processed and fails resulting in a message on the DLQ after 5 attempts
 
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, dlqUrl!!) } matches { it == 1 }
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, visitDlqUrl!!) } matches { it == 1 }
 
     // Next time the retry will succeed
     mappingServer.stubCreate()
@@ -95,8 +95,8 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
       .isOk
 
     await untilCallTo { mappingServer.postCountFor("/mapping/visits") } matches { it == 7 } // 1 initial call, 5 retries and 1 final successful call
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, queueUrl) } matches { it == 0 }
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, dlqUrl!!) } matches { it == 0 }
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, visitQueueUrl) } matches { it == 0 }
+    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, visitDlqUrl!!) } matches { it == 0 }
   }
 
   @Test

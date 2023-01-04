@@ -1,35 +1,36 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.assertj.core.api.Assertions.assertThat
+import com.microsoft.applicationinsights.TelemetryClient
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
-import org.mockito.kotlin.check
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.incentiveCreatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCreatedMessage
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits.PrisonVisitsService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.retryMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 import java.time.LocalDate
 
-internal class PrisonerDomainEventsListenerTest {
+internal class VisitsDomainEventsListenerTest {
   private val prisonVisitsService: PrisonVisitsService = mock()
-  private val incentivesService: IncentivesService = mock()
   private val objectMapper: ObjectMapper = objectMapper()
   private val eventFeatureSwitch: EventFeatureSwitch = mock()
+  private val telemetryClient: TelemetryClient = mock()
 
   private val listener =
-    PrisonerDomainEventsListener(
+    VisitsDomainEventListener(
       prisonVisitsService,
-      incentivesService,
       objectMapper,
       eventFeatureSwitch,
+      telemetryClient
     )
 
   @Nested
@@ -51,9 +52,9 @@ internal class PrisonerDomainEventsListenerTest {
         )
 
         verify(prisonVisitsService).createVisit(
-          check {
-            assertThat(it.reference).isEqualTo("99")
-            assertThat(it.bookingDate).isEqualTo(LocalDate.parse("2021-03-08"))
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it.reference).isEqualTo("99")
+            Assertions.assertThat(it.bookingDate).isEqualTo(LocalDate.parse("2021-03-08"))
           }
         )
       }
@@ -78,45 +79,27 @@ internal class PrisonerDomainEventsListenerTest {
         verifyNoInteractions(prisonVisitsService)
       }
     }
-  }
 
-  @Nested
-  inner class Incentives {
     @Nested
-    inner class WhenEnabled {
-      @BeforeEach
-      internal fun setUp() {
-        whenever(eventFeatureSwitch.isEnabled(any())).thenReturn(true)
-      }
-
+    inner class Retries {
       @Test
-      internal fun `will call service with create incentive data`() {
-        listener.onPrisonerChange(
-          message = incentiveCreatedMessage(123L)
-        )
+      internal fun `will call retry service with visit context data`() {
+        listener.onPrisonerChange(message = retryMessage())
 
-        verify(incentivesService).createIncentive(
-          check {
-            assertThat(it.additionalInformation.id).isEqualTo(123L)
+        verify(prisonVisitsService).createVisitRetry(
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it.vsipId).isEqualTo("12")
+            Assertions.assertThat(it.nomisId).isEqualTo("12345")
           }
         )
-      }
-    }
 
-    @Nested
-    inner class WhenDisabled {
-      @BeforeEach
-      internal fun setUp() {
-        whenever(eventFeatureSwitch.isEnabled(any())).thenReturn(false)
-      }
-
-      @Test
-      internal fun `will not call service`() {
-        listener.onPrisonerChange(
-          message = incentiveCreatedMessage(123L)
+        verify(telemetryClient).trackEvent(
+          eq("visit-retry-received"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["id"]).isEqualTo("12")
+          },
+          isNull()
         )
-
-        verifyNoInteractions(incentivesService)
       }
     }
   }
