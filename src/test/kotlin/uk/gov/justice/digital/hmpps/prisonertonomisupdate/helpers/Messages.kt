@@ -1,6 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers
 
 import com.amazonaws.services.sqs.AmazonSQS
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -97,4 +102,12 @@ fun getNumberOfMessagesCurrentlyOnQueue(awsSqsClient: AmazonSQS, url: String): I
   val messagesOnQueue = queueAttributes.attributes["ApproximateNumberOfMessages"]?.toInt()
   logger.log.info("Number of messages on $url: $messagesOnQueue")
   return messagesOnQueue
+}
+
+fun objectMapper(): ObjectMapper {
+  return ObjectMapper()
+    .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+    .registerModule(JavaTimeModule())
+    .registerKotlinModule()
+    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 }

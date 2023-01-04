@@ -39,10 +39,30 @@ abstract class SqsIntegrationTestBase {
   internal val queueUrl by lazy { registersQueue.queueUrl }
   internal val dlqUrl by lazy { registersQueue.dlqUrl }
 
+  internal val visitQueue by lazy { hmppsQueueService.findByQueueId("visit") as HmppsQueue }
+
+  internal val awsSqsVisitClient by lazy { visitQueue.sqsClient }
+  internal val awsSqsVisitDlqClient by lazy { visitQueue.sqsDlqClient }
+  internal val visitQueueUrl by lazy { visitQueue.queueUrl }
+  internal val visitDlqUrl by lazy { visitQueue.dlqUrl }
+
+  internal val incentiveQueue by lazy { hmppsQueueService.findByQueueId("incentive") as HmppsQueue }
+
+  internal val awsSqsIncentiveClient by lazy { incentiveQueue.sqsClient }
+  internal val awsSqsIncentiveDlqClient by lazy { incentiveQueue.sqsDlqClient }
+  internal val incentiveQueueUrl by lazy { incentiveQueue.queueUrl }
+  internal val incentiveDlqUrl by lazy { incentiveQueue.dlqUrl }
+
   @BeforeEach
   fun cleanQueue() {
     awsSqsClient.purgeQueue(PurgeQueueRequest(queueUrl))
     awsSqsDlqClient?.purgeQueue(PurgeQueueRequest(dlqUrl))
+
+    awsSqsVisitClient.purgeQueue(PurgeQueueRequest(visitQueueUrl))
+    awsSqsVisitDlqClient?.purgeQueue(PurgeQueueRequest(visitDlqUrl))
+
+    awsSqsIncentiveClient.purgeQueue(PurgeQueueRequest(incentiveQueueUrl))
+    awsSqsIncentiveDlqClient?.purgeQueue(PurgeQueueRequest(incentiveDlqUrl))
   }
 
   companion object {

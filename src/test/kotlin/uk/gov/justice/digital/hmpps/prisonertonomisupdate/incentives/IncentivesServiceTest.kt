@@ -13,9 +13,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateIncentiveResponseDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.IncentiveContext
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateQueueService
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -24,7 +22,7 @@ internal class IncentivesServiceTest {
   private val incentiveApiService: IncentivesApiService = mock()
   private val nomisApiService: NomisApiService = mock()
   private val mappingService: IncentivesMappingService = mock()
-  private val updateQueueService: UpdateQueueService = mock()
+  private val updateQueueService: IncentivesUpdateQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()
   private val incentivesService =
     IncentivesService(incentiveApiService, nomisApiService, mappingService, updateQueueService, telemetryClient)
