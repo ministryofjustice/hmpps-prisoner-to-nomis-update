@@ -16,6 +16,11 @@ hmpps.sqs:
       queueArn: arn:aws:sns:eu-west-2:000000000000:hmpps_prisoner_to_nomis_incentive_queue
       dlqName: hmpps_prisoner_to_nomis_incentive_dlq
       //subscribeTopicId: domainevents
+    activity:
+      queueName: hmpps_prisoner_to_nomis_activity_queue
+      queueArn: arn:aws:sns:eu-west-2:000000000000:hmpps_prisoner_to_nomis_activity_queue
+      dlqName: hmpps_prisoner_to_nomis_activity_dlq
+      subscribeTopicId: domainevents
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:hmpps_domain_events

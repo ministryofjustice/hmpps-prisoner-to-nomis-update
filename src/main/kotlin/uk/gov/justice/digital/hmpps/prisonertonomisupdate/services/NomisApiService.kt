@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -56,6 +57,14 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyToMono(Unit::class.java)
       .block()
   }
+
+  fun createActivity(request: CreateActivityRequest): CreateActivityResponse =
+    webClient.post()
+      .uri("/activities")
+      .bodyValue(request)
+      .retrieve()
+      .bodyToMono(CreateActivityResponse::class.java)
+      .block()!!
 }
 
 data class CreateVisitDto(
@@ -108,4 +117,29 @@ data class CreateIncentiveDto(
 data class CreateIncentiveResponseDto(
   val bookingId: Long,
   val sequence: Long,
+)
+
+data class CreateActivityRequest(
+  val code: String,
+  @JsonFormat(pattern = "HH:mm:ss")
+  val startDate: LocalDate,
+  @JsonFormat(pattern = "HH:mm:ss")
+  val endDate: LocalDate?,
+  val prisonId: String,
+  val internalLocationId: Long,
+  val capacity: Int,
+  val payRates: List<PayRateRequest>,
+  val description: String,
+  val minimumIncentiveLevelCode: String? = null,
+  val programCode: String,
+)
+
+data class PayRateRequest(
+  val incentiveLevel: String,
+  val payBand: String,
+  val rate: BigDecimal,
+)
+
+data class CreateActivityResponse(
+  val courseActivityId: Long,
 )

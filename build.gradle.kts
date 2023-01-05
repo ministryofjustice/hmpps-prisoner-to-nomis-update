@@ -1,6 +1,9 @@
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.7.4"
   kotlin("plugin.spring") version "1.7.22"
+  id("org.openapi.generator") version "6.2.1"
 }
 
 configurations {
@@ -33,8 +36,42 @@ java {
 
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    dependsOn("buildActivityApiModel")
     kotlinOptions {
       jvmTarget = "18"
+    }
+  }
+}
+
+tasks.register("buildActivityApiModel", GenerateTask::class) {
+  generatorName.set("kotlin")
+  inputSpec.set("activities-api-docs.json") // "https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs")
+  outputDir.set("$buildDir/generated")
+  modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model")
+  apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.api")
+  configOptions.set(
+    mapOf(
+      "dateLibrary" to "java8",
+      "serializationLibrary" to "jackson"
+    )
+  )
+  globalProperties.set(
+    mapOf(
+      "models" to ""
+    )
+  )
+}
+
+kotlin {
+  sourceSets["main"].apply {
+    kotlin.srcDir("$buildDir/generated/src/main/kotlin")
+  }
+}
+
+configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+  filter {
+    exclude {
+      it.file.path.contains("build/generated/src/main/")
     }
   }
 }

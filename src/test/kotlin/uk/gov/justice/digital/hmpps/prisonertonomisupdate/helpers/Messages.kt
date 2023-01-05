@@ -66,7 +66,7 @@ fun prisonVisitChangedMessage(
 fun retryMessage() = """
       {
         "Type":"RETRY",
-        "Message":"{\"type\":\"VISIT\",\"nomisId\":\"12345\",\"vsipId\":\"12\"}",
+        "Message":"{\"nomisId\":\"12345\",\"vsipId\":\"12\"}",
         "MessageId":"retry-12"
       }
 """.trimIndent()
@@ -88,7 +88,29 @@ fun incentiveCreatedMessage(incentiveId: Long) = """
 fun incentiveRetryMessage() = """
       {
         "Type":"RETRY",
-        "Message":"{\"type\":\"INCENTIVE\",\"nomisBookingId\":12345,\"nomisIncentiveSequence\":2,\"incentiveId\":15}",
+        "Message":"{\"nomisBookingId\":12345,\"nomisIncentiveSequence\":2,\"incentiveId\":15}",
+        "MessageId":"retry-15"
+      }
+""".trimIndent()
+
+fun activityCreatedMessage(identifier: Long) = """
+      {
+        "Type": "Notification", 
+        "MessageId": "48e8a79a-0f43-4338-bbd4-b0d745f1f8ec", 
+        "Token": null, 
+        "TopicArn": "arn:aws:sns:eu-west-2:000000000000:hmpps-domain-events", 
+        "Message": "{\"eventType\":\"activities.activity.created\", \"identifier\":\"$identifier\", \"version\": \"1.0\", \"description\": \"description\", \"occurredAt\": \"2021-03-05T11:23:56.031Z\"}",
+        "SubscribeURL": null, 
+        "Timestamp": "2021-03-05T11:23:56.031Z", 
+        "SignatureVersion": "1", 
+        "Signature": "EXAMPLEpH+..", 
+        "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-0000000000000000000000.pem"}      
+""".trimIndent()
+
+fun activityRetryMessage() = """
+      {
+        "Type":"RETRY",
+        "Message":"{\"activityScheduleId\":12345,\"nomisCourseActivityId\":15}",
         "MessageId":"retry-15"
       }
 """.trimIndent()

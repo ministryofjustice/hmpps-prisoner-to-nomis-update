@@ -30,7 +30,7 @@ class IncentivesUpdateQueueService(
     )
 
     telemetryClient.trackEvent(
-      "create-map-queue-retry",
+      "create-incentive-map-queue-retry",
       mapOf("messageId" to result.messageId!!, "id" to context.incentiveId.toString()),
     )
   }

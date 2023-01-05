@@ -111,7 +111,7 @@ internal class ActivitiesApiServiceTest {
             "id": 123456,
             "startTime": "9:00",
             "endTime": "11:30",
-            "daysOfWeek": "[Mon,Tue,Wed]"
+            "daysOfWeek": ["Mon","Tue","Wed"]
           }
         ]
       }
@@ -130,7 +130,7 @@ internal class ActivitiesApiServiceTest {
     }
 
     @Test
-    internal fun `get parse core data`() {
+    fun `get parse core data`() {
       val schedule = activitiesApiService.getActivitySchedule(1234)
 
       assertThat(schedule.id).isEqualTo(1234)
@@ -148,7 +148,7 @@ internal class ActivitiesApiServiceTest {
     }
 
     @Test
-    internal fun `when schedule is not found an exception is thrown`() {
+    fun `when schedule is not found an exception is thrown`() {
       ActivitiesApiExtension.activitiesApi.stubGetScheduleWithError(1234, status = 404)
 
       Assertions.assertThatThrownBy {
@@ -157,7 +157,7 @@ internal class ActivitiesApiServiceTest {
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    fun `when any bad response is received an exception is thrown`() {
       ActivitiesApiExtension.activitiesApi.stubGetScheduleWithError(1234, status = 503)
 
       Assertions.assertThatThrownBy {
@@ -188,8 +188,7 @@ internal class ActivitiesApiServiceTest {
         "name": "Leisure and social",
         "description": "Such as association, library time and social clubs, like music or art"
       },
-      "tier": "Tier 1, Tier 2, Foundation",
-      "eligibilityRules": "[FEMALE_ONLY,AGED_18-25]",
+      "eligibilityRules": [],
       "schedules": [
         {
           "id": 123456,
@@ -275,7 +274,7 @@ internal class ActivitiesApiServiceTest {
               "id": 123456,
               "startTime": "9:00",
               "endTime": "11:30",
-              "daysOfWeek": "[Mon,Tue,Wed]"
+              "daysOfWeek": ["Mon","Tue","Wed"]
             }
           ]
         }
@@ -321,7 +320,7 @@ internal class ActivitiesApiServiceTest {
     }
 
     @Test
-    internal fun `get parse core data`() {
+    fun `get parse core data`() {
       val activity = activitiesApiService.getActivity(1234)
 
       assertThat(activity.id).isEqualTo(1234)
@@ -341,7 +340,7 @@ internal class ActivitiesApiServiceTest {
     }
 
     @Test
-    internal fun `when schedule is not found an exception is thrown`() {
+    fun `when schedule is not found an exception is thrown`() {
       ActivitiesApiExtension.activitiesApi.stubGetActivityWithError(1234, status = 404)
 
       Assertions.assertThatThrownBy {
@@ -350,7 +349,7 @@ internal class ActivitiesApiServiceTest {
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    fun `when any bad response is received an exception is thrown`() {
       ActivitiesApiExtension.activitiesApi.stubGetActivityWithError(1234, status = 503)
 
       Assertions.assertThatThrownBy {
