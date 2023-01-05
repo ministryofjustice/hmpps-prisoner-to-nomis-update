@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.amazonaws.services.sqs.model.SendMessageRequest
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -10,30 +10,30 @@ import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 
 @Service
-class VisitsUpdateQueueService(
+class ActivitiesUpdateQueueService(
   private val hmppsQueueService: HmppsQueueService,
   private val telemetryClient: TelemetryClient,
   private val objectMapper: ObjectMapper,
 ) {
-  private val prisonerQueue by lazy { hmppsQueueService.findByQueueId("visit") as HmppsQueue }
-  private val sqsClient by lazy { prisonerQueue.sqsClient }
-  private val queueUrl by lazy { prisonerQueue.queueUrl }
+  private val queue by lazy { hmppsQueueService.findByQueueId("activity") as HmppsQueue }
+  private val sqsClient by lazy { queue.sqsClient }
+  private val queueUrl by lazy { queue.queueUrl }
 
-  fun sendMessage(context: VisitContext) {
+  fun sendMessage(context: ActivityContext) {
     val sqsMessage = SQSMessage(
       Type = "RETRY",
       Message = objectMapper.writeValueAsString(context),
-      MessageId = "retry-${context.vsipId}"
+      MessageId = "retry-${context.activityScheduleId}"
     )
     val result = sqsClient.sendMessage(
       SendMessageRequest(queueUrl, objectMapper.writeValueAsString(sqsMessage))
     )
 
     telemetryClient.trackEvent(
-      "create-visit-map-queue-retry",
-      mapOf("messageId" to result.messageId!!, "id" to context.vsipId),
+      "create-activity-map-queue-retry",
+      mapOf("messageId" to result.messageId!!, "id" to context.activityScheduleId.toString()),
     )
   }
 }
 
-data class VisitContext(val nomisId: String, val vsipId: String)
+data class ActivityContext(val nomisCourseActivityId: Long, val activityScheduleId: Long)

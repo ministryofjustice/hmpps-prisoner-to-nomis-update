@@ -131,28 +131,6 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetBookingAndSequence(bookingId: Long, incentiveSequence: Int, response: String) {
-    stubFor(
-      get("/mapping/incentives/nomis-booking-id/$bookingId/nomis-incentive-sequence/$incentiveSequence").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(response)
-          .withStatus(200)
-      )
-    )
-  }
-
-  fun stubGetBookingAndSequenceWithError(bookingId: Long, incentiveSequence: Int, status: Int = 500) {
-    stubFor(
-      get("/mapping/incentives/nomis-booking-id/$bookingId/nomis-incentive-sequence/$incentiveSequence").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
-          .withStatus(status)
-      )
-    )
-  }
-
   fun stubGetIncentiveId(incentiveId: Long, response: String) {
     stubFor(
       get("/mapping/incentives/incentive-id/$incentiveId").willReturn(
@@ -167,6 +145,49 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetIncentiveIdWithError(incentiveId: Long, status: Int = 500) {
     stubFor(
       get("/mapping/incentives/incentive-id/$incentiveId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
+          .withStatus(status)
+      )
+    )
+  }
+
+  fun stubCreateActivity() {
+    stubFor(
+      post("/mapping/activities").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201)
+      )
+    )
+  }
+
+  fun stubCreateActivityWithError(status: Int = 500) {
+    stubFor(
+      post("/mapping/activities").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
+          .withStatus(status)
+      )
+    )
+  }
+
+  fun stubGetMappingGivenActivityScheduleId(id: Long, response: String) {
+    stubFor(
+      get("/mapping/activities/activity-schedule-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(200)
+      )
+    )
+  }
+
+  fun stubGetMappingGivenActivityScheduleIdWithError(id: Long, status: Int = 500) {
+    stubFor(
+      get("/mapping/activities/activity-schedule-id/$id").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")

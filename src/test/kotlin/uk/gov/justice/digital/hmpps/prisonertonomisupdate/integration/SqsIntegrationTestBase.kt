@@ -21,7 +21,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExte
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 
-@ExtendWith(NomisApiExtension::class, MappingExtension::class, HmppsAuthApiExtension::class, VisitsApiExtension::class, IncentivesApiExtension::class, ActivitiesApiExtension::class)
+@ExtendWith(
+  NomisApiExtension::class,
+  MappingExtension::class,
+  HmppsAuthApiExtension::class,
+  VisitsApiExtension::class,
+  IncentivesApiExtension::class,
+  ActivitiesApiExtension::class
+)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
@@ -53,6 +60,13 @@ abstract class SqsIntegrationTestBase {
   internal val incentiveQueueUrl by lazy { incentiveQueue.queueUrl }
   internal val incentiveDlqUrl by lazy { incentiveQueue.dlqUrl }
 
+  internal val activityQueue by lazy { hmppsQueueService.findByQueueId("activity") as HmppsQueue }
+
+  internal val awsSqsActivityClient by lazy { activityQueue.sqsClient }
+  internal val awsSqsActivityDlqClient by lazy { activityQueue.sqsDlqClient }
+  internal val activityQueueUrl by lazy { activityQueue.queueUrl }
+  internal val activityDlqUrl by lazy { activityQueue.dlqUrl }
+
   @BeforeEach
   fun cleanQueue() {
     awsSqsClient.purgeQueue(PurgeQueueRequest(queueUrl))
@@ -63,6 +77,9 @@ abstract class SqsIntegrationTestBase {
 
     awsSqsIncentiveClient.purgeQueue(PurgeQueueRequest(incentiveQueueUrl))
     awsSqsIncentiveDlqClient?.purgeQueue(PurgeQueueRequest(incentiveDlqUrl))
+
+    awsSqsActivityClient.purgeQueue(PurgeQueueRequest(activityQueueUrl))
+    awsSqsActivityDlqClient?.purgeQueue(PurgeQueueRequest(activityDlqUrl))
   }
 
   companion object {
