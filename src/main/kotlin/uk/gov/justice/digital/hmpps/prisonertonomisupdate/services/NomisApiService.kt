@@ -121,10 +121,10 @@ data class CreateIncentiveResponseDto(
 
 data class CreateActivityRequest(
   val code: String,
-  @JsonFormat(pattern = "HH:mm:ss")
+  @JsonFormat(pattern = "yyyy-MM-dd")
   val startDate: LocalDate,
-  @JsonFormat(pattern = "HH:mm:ss")
-  val endDate: LocalDate?,
+  @JsonFormat(pattern = "yyyy-MM-dd")
+  val endDate: LocalDate? = null,
   val prisonId: String,
   val internalLocationId: Long,
   val capacity: Int,

@@ -95,6 +95,7 @@ internal class ActivitiesApiServiceTest {
           "inCell": false,
           "pieceWork": false,
           "outsideWork": false,
+          "payPerSession": "F",
           "summary": "Maths level 1",
           "description": "A basic maths course suitable for introduction to the subject",
           "category": {
@@ -180,6 +181,7 @@ internal class ActivitiesApiServiceTest {
       "inCell": false,
       "pieceWork": false,
       "outsideWork": false,
+      "payPerSession": "F",
       "summary": "Maths level 1",
       "description": "A basic maths course suitable for introduction to the subject",
       "category": {
@@ -258,6 +260,7 @@ internal class ActivitiesApiServiceTest {
             "inCell": false,
             "pieceWork": false,
             "outsideWork": false,
+            "payPerSession": "F",
             "summary": "Maths level 1",
             "description": "A basic maths course suitable for introduction to the subject",
             "category": {

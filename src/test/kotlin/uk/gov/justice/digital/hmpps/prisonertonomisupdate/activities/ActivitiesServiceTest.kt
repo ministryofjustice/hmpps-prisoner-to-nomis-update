@@ -185,6 +185,7 @@ fun newActivitySchedule(id: Long): ActivitySchedule = ActivitySchedule(
       name = "Category",
       description = "description",
     ),
+    payPerSession = ActivityLite.PayPerSession.h,
   ),
   slots = emptyList(),
 )
@@ -203,6 +204,7 @@ fun newActivity(): Activity = Activity(
     name = "Category",
     description = "description",
   ),
+  payPerSession = Activity.PayPerSession.h,
   eligibilityRules = emptyList(),
   schedules = emptyList(),
   waitingList = emptyList(),

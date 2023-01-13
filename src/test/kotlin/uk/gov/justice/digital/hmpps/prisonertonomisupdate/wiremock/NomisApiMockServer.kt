@@ -156,6 +156,34 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubActivityCreate(response: String = CREATE_ACTIVITY_RESPONSE) {
+    stubFor(
+      post("/activities").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(201)
+      )
+    )
+  }
+
+  fun stubActivityCreateWithError(status: Int = 500) {
+    stubFor(
+      post("/activities").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              {
+                "error": "some error"
+              }
+            """.trimIndent()
+          )
+          .withStatus(status)
+      )
+    )
+  }
+
   private val CREATE_VISIT_RESPONSE = """
     {
       "visitId": "12345"
@@ -166,6 +194,12 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     {
       "bookingId": 456,
       "sequence": 1
+    }
+    """
+
+  private val CREATE_ACTIVITY_RESPONSE = """
+    {
+      "courseActivityId": 456
     }
     """
 
