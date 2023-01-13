@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration
 
-import com.amazonaws.services.sqs.model.PurgeQueueRequest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -10,6 +9,8 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
+import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import uk.gov.justice.digital.hmpps.hmppsregisterstonomisupdate.integration.LocalStackContainer
 import uk.gov.justice.digital.hmpps.hmppsregisterstonomisupdate.integration.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
@@ -71,17 +72,17 @@ abstract class SqsIntegrationTestBase {
 
   @BeforeEach
   fun cleanQueue() {
-    awsSqsClient.purgeQueue(PurgeQueueRequest(queueUrl))
-    awsSqsDlqClient?.purgeQueue(PurgeQueueRequest(dlqUrl))
+    awsSqsClient.purgeQueue(queueUrl).get()
+    awsSqsDlqClient?.purgeQueue(dlqUrl)?.get()
 
-    awsSqsVisitClient.purgeQueue(PurgeQueueRequest(visitQueueUrl))
-    awsSqsVisitDlqClient?.purgeQueue(PurgeQueueRequest(visitDlqUrl))
+    awsSqsVisitClient.purgeQueue(visitQueueUrl).get()
+    awsSqsVisitDlqClient?.purgeQueue(visitDlqUrl)?.get()
 
-    awsSqsIncentiveClient.purgeQueue(PurgeQueueRequest(incentiveQueueUrl))
-    awsSqsIncentiveDlqClient?.purgeQueue(PurgeQueueRequest(incentiveDlqUrl))
+    awsSqsIncentiveClient.purgeQueue(incentiveQueueUrl).get()
+    awsSqsIncentiveDlqClient?.purgeQueue(incentiveDlqUrl)?.get()
 
-    awsSqsActivityClient.purgeQueue(PurgeQueueRequest(activityQueueUrl))
-    awsSqsActivityDlqClient?.purgeQueue(PurgeQueueRequest(activityDlqUrl))
+    awsSqsActivityClient.purgeQueue(activityQueueUrl).get()
+    awsSqsActivityDlqClient?.purgeQueue(activityDlqUrl)?.get()
   }
 
   companion object {
@@ -94,3 +95,5 @@ abstract class SqsIntegrationTestBase {
     }
   }
 }
+
+private fun SqsAsyncClient.purgeQueue(queueUrl: String?) = purgeQueue(PurgeQueueRequest.builder().queueUrl(queueUrl!!).build())

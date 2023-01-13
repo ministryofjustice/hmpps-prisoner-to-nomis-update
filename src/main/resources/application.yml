@@ -60,7 +60,6 @@ spring:
       dev:
         - "localstack"
       test:
-        - "localstack"
         - "stdout"
 
 server:

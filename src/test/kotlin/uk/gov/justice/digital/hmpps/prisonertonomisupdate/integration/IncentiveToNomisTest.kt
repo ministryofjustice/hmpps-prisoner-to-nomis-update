@@ -5,11 +5,13 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.getNumberOfMessagesCurrentlyOnQueue
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.incentiveCreatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
+import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 
 class IncentiveToNomisTest : SqsIntegrationTestBase() {
 
@@ -22,9 +24,11 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
 
     val message = incentiveCreatedMessage(12)
 
-    awsSqsClient.sendMessage(queueUrl, message)
+    awsSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(queueUrl).messageBody(message).build()
+    ).get()
 
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, queueUrl) } matches { it == 0 }
+    await untilCallTo { awsSqsClient.countMessagesOnQueue(queueUrl).get() } matches { it == 0 }
     await untilCallTo { incentivesApi.getCountFor("/iep/reviews/id/12") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/prisoners/booking-id/456/incentives") } matches { it == 1 }
     nomisApi.verify(
@@ -51,15 +55,14 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
 
     val message = incentiveCreatedMessage(12)
 
-    awsSqsClient.sendMessage(queueUrl, message)
+    awsSqsClient.sendMessage(SendMessageRequest.builder().queueUrl(queueUrl).messageBody(message).build()).get()
 
     await untilCallTo { incentivesApi.getCountFor("/iep/reviews/id/12") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/prisoners/booking-id/456/incentives") } matches { it == 1 }
 
     // the mapping call fails resulting in a retry message being queued
-    // the retry message is processed and fails resulting in a message on the DLQ after 5 attempts
-
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsIncentiveDlqClient!!, incentiveDlqUrl!!) } matches { it == 1 }
+    // the retry message is processed and fails resulting in a message on the DLQ after 2 attempts
+    await untilCallTo { awsSqsIncentiveDlqClient!!.countAllMessagesOnQueue(incentiveDlqUrl!!).get() } matches { it == 1 }
 
     // Next time the retry will succeed
     mappingServer.stubCreateIncentive()
@@ -70,9 +73,9 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
       .expectStatus()
       .isOk
 
-    await untilCallTo { mappingServer.postCountFor("/mapping/incentives") } matches { it == 7 } // 1 initial call, 5 retries and 1 final successful call
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, incentiveQueueUrl) } matches { it == 0 }
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, incentiveDlqUrl!!) } matches { it == 0 }
+    await untilCallTo { mappingServer.postCountFor("/mapping/incentives") } matches { it == 4 } // 1 initial call, 2 retries and 1 final successful call
+    await untilCallTo { awsSqsClient.countAllMessagesOnQueue(incentiveQueueUrl).get() } matches { it == 0 }
+    await untilCallTo { awsSqsClient.countAllMessagesOnQueue(incentiveDlqUrl!!).get() } matches { it == 0 }
   }
 
   fun buildIncentiveApiDtoJsonResponse(id: Long = 12): String =

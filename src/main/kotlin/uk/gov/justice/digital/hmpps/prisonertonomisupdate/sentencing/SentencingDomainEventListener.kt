@@ -2,9 +2,9 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.HMPPSDomainEvent
@@ -20,7 +20,7 @@ class SentencingDomainEventListener(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  @JmsListener(destination = "sentencing", containerFactory = "hmppsQueueContainerFactoryProxy")
+  @SqsListener("sentencing", factory = "hmppsQueueContainerFactoryProxy", maxMessagesPerPoll = "1", maxInflightMessagesPerQueue = "1")
   fun onPrisonerChange(message: String) {
     log.debug("Received sentencing message {}", message)
     val sqsMessage: SQSMessage = objectMapper.readValue(message)

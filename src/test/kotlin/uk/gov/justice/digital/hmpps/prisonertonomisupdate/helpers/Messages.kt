@@ -1,13 +1,10 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers
 
-import com.amazonaws.services.sqs.AmazonSQS
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 fun prisonVisitCreatedMessage(
   visitId: String = "12",
@@ -114,17 +111,6 @@ fun activityRetryMessage() = """
         "MessageId":"retry-15"
       }
 """.trimIndent()
-
-private object logger {
-  val log: Logger = LoggerFactory.getLogger(this::class.java)
-}
-
-fun getNumberOfMessagesCurrentlyOnQueue(awsSqsClient: AmazonSQS, url: String): Int? {
-  val queueAttributes = awsSqsClient.getQueueAttributes(url, listOf("ApproximateNumberOfMessages"))
-  val messagesOnQueue = queueAttributes.attributes["ApproximateNumberOfMessages"]?.toInt()
-  logger.log.info("Number of messages on $url: $messagesOnQueue")
-  return messagesOnQueue
-}
 
 fun objectMapper(): ObjectMapper {
   return ObjectMapper()

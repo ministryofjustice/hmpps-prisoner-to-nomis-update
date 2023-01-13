@@ -9,13 +9,15 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.getNumberOfMessagesCurrentlyOnQueue
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCancelledMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitChangedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCreatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension.Companion.visitsApi
+import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
+import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 
 class VisitToNomisTest : SqsIntegrationTestBase() {
 
@@ -36,9 +38,11 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
 
     val message = prisonVisitCreatedMessage(prisonerId = "A32323Y")
 
-    awsSqsClient.sendMessage(queueUrl, message)
+    awsSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(queueUrl).messageBody(message).build()
+    ).get()
 
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, queueUrl) } matches { it == 0 }
+    await untilCallTo { awsSqsClient.countAllMessagesOnQueue(queueUrl).get() } matches { it == 0 }
     await untilCallTo { visitsApi.getCountFor("/visits/12") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/prisoners/A32323Y/visits") } matches { it == 1 }
 
@@ -75,15 +79,16 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
 
     val message = prisonVisitCreatedMessage(prisonerId = "A32323Y")
 
-    awsSqsClient.sendMessage(queueUrl, message)
+    awsSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(queueUrl).messageBody(message).build()
+    ).get()
 
     await untilCallTo { visitsApi.getCountFor("/visits/12") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/prisoners/A32323Y/visits") } matches { it == 1 }
 
     // the mapping call fails resulting in a retry message being queued
-    // the retry message is processed and fails resulting in a message on the DLQ after 5 attempts
-
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, visitDlqUrl!!) } matches { it == 1 }
+    // the retry message is processed and fails resulting in a message on the DLQ after 1 attempt
+    await untilCallTo { awsSqsClient.countMessagesOnQueue(visitDlqUrl!!).get() } matches { it == 1 }
 
     // Next time the retry will succeed
     mappingServer.stubCreate()
@@ -94,9 +99,9 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
       .expectStatus()
       .isOk
 
-    await untilCallTo { mappingServer.postCountFor("/mapping/visits") } matches { it == 7 } // 1 initial call, 5 retries and 1 final successful call
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, visitQueueUrl) } matches { it == 0 }
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, visitDlqUrl!!) } matches { it == 0 }
+    await untilCallTo { mappingServer.postCountFor("/mapping/visits") } matches { it == 3 } // 1 initial call, 1 retries and 1 final successful call
+    await untilCallTo { awsSqsClient.countAllMessagesOnQueue(visitQueueUrl).get() } matches { it == 0 }
+    await untilCallTo { awsSqsClient.countMessagesOnQueue(visitDlqUrl!!).get() } matches { it == 0 }
   }
 
   @Test
@@ -120,9 +125,11 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
 
     val message = prisonVisitCancelledMessage(prisonerId = "AB12345")
 
-    awsSqsClient.sendMessage(queueUrl, message)
+    awsSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(queueUrl).messageBody(message).build()
+    ).get()
 
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, queueUrl) } matches { it == 0 }
+    await untilCallTo { awsSqsClient.countMessagesOnQueue(queueUrl).get() } matches { it == 0 }
     await untilCallTo { nomisApi.putCountFor("/prisoners/AB12345/visits/456/cancel") } matches { it == 1 }
 
     nomisApi.verify(
@@ -160,9 +167,11 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
 
     val message = prisonVisitChangedMessage(prisonerId = "AB12345")
 
-    awsSqsClient.sendMessage(queueUrl, message)
+    awsSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(queueUrl).messageBody(message).build()
+    ).get()
 
-    await untilCallTo { getNumberOfMessagesCurrentlyOnQueue(awsSqsClient, queueUrl) } matches { it == 0 }
+    await untilCallTo { awsSqsClient.countMessagesOnQueue(queueUrl).get() } matches { it == 0 }
     await untilCallTo { nomisApi.putCountFor("/prisoners/AB12345/visits/456") } matches { it == 1 }
 
     nomisApi.verify(

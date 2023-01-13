@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
 import com.microsoft.applicationinsights.TelemetryClient
+import jakarta.validation.ValidationException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -12,7 +13,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateVisitDt
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
-import javax.validation.ValidationException
 
 @Service
 class PrisonVisitsService(
