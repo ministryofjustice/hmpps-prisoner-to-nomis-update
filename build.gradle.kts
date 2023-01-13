@@ -1,7 +1,7 @@
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.8.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "4.8.1"
   kotlin("plugin.spring") version "1.8.0"
   id("org.openapi.generator") version "6.2.1"
 }
@@ -23,7 +23,7 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-security:1.6.14")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.1")
 
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.9")
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.10")
   testImplementation("com.github.tomakehurst:wiremock-standalone:2.27.2")
   testImplementation("org.mockito:mockito-inline:4.11.0")
   testImplementation("org.testcontainers:localstack:1.17.6")
