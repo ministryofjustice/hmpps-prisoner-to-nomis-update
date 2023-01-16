@@ -207,6 +207,43 @@ internal class NomisApiServiceTest {
       }.isInstanceOf(ServiceUnavailable::class.java)
     }
   }
+
+  @Nested
+  inner class CreateActivity {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() {
+      NomisApiExtension.nomisApi.stubActivityCreate()
+
+      nomisApiService.createActivity(newActivity())
+
+      NomisApiExtension.nomisApi.verify(
+        postRequestedFor(urlEqualTo("/activities"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+      )
+    }
+
+    @Test
+    fun `will post data to nomis api`() {
+      NomisApiExtension.nomisApi.stubActivityCreate()
+
+      nomisApiService.createActivity(newActivity())
+
+      NomisApiExtension.nomisApi.verify(
+        postRequestedFor(urlEqualTo("/activities"))
+          .withRequestBody(matchingJsonPath("$.prisonId", equalTo("WWI")))
+      )
+    }
+
+    @Test
+    internal fun `when any error response is received an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubActivityCreateWithError(503)
+
+      assertThatThrownBy {
+        nomisApiService.createActivity(newActivity())
+      }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+  }
 }
 
 fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(
@@ -236,4 +273,15 @@ fun newIncentive() = CreateIncentiveDto(
   iepDateTime = LocalDateTime.now(),
   prisonId = "MDI",
   iepLevel = "High"
+)
+
+fun newActivity() = CreateActivityRequest(
+  code = "code",
+  startDate = LocalDate.now(),
+  prisonId = "WWI",
+  internalLocationId = 703000,
+  capacity = 14,
+  payRates = emptyList(),
+  description = "the description",
+  programCode = "IRS",
 )
