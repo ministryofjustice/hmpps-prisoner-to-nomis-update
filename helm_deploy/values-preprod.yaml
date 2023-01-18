@@ -14,7 +14,7 @@ generic-service:
     API_BASE_URL_MAPPING: https://nomis-sync-prisoner-mapping-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_VISITS: https://visit-scheduler-preprod.prison.service.justice.gov.uk
     API_BASE_URL_INCENTIVES: https://incentives-api-preprod.hmpps.service.justice.gov.uk
-    API_BASE_URL_ACTIVITIES: https://activities-api-preprod.prison.service.justice.gov.uk
+    API_BASE_URL_ACTIVITIES: https://activities-api-dev.prison.service.justice.gov.uk
 
 generic-prometheus-alerts:
   sqsAlertsQueueNames:
