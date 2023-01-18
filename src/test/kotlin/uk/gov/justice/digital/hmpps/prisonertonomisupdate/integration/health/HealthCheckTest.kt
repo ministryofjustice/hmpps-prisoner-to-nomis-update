@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentenceAdjustmentsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -25,6 +26,14 @@ class HealthCheckTest : SqsIntegrationTestBase() {
       .expectStatus().isOk
       .expectBody()
       .jsonPath("status").isEqualTo("UP")
+      .jsonPath("components.visitsApi.status").isEqualTo("UP")
+      .jsonPath("components.activitiesApi.status").isEqualTo("UP")
+      .jsonPath("components.incentivesApi.status").isEqualTo("UP")
+      .jsonPath("components.nomisApi.status").isEqualTo("UP")
+      .jsonPath("components.hmppsAuthApi.status").isEqualTo("UP")
+      .jsonPath("components.visitsApi.status").isEqualTo("UP")
+      .jsonPath("components.mappingApi.status").isEqualTo("UP")
+      .jsonPath("components.sentenceAdjustmentsApi.status").isEqualTo("UP")
   }
 
   @Test
@@ -89,5 +98,6 @@ class HealthCheckTest : SqsIntegrationTestBase() {
     IncentivesApiExtension.incentivesApi.stubHealthPing(status)
     MappingExtension.mappingServer.stubHealthPing(status)
     ActivitiesApiExtension.activitiesApi.stubHealthPing(status)
+    SentenceAdjustmentsApiExtension.sentenceAdjustmentsApi.stubHealthPing(status)
   }
 }

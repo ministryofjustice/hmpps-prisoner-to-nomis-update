@@ -12,3 +12,4 @@ api.base.url:
   visits: http://localhost:8083
   incentives: http://localhost:8085
   activities: http://localhost:8086
+  sentence.adjustments: http://localhost:8087

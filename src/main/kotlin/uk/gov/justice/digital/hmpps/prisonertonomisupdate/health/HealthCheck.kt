@@ -22,14 +22,14 @@ abstract class HealthCheck(private val webClient: WebClient) : HealthIndicator {
   }
 }
 
-@Component
+@Component("nomisApi")
 class NomisApiHealth
 constructor(@Qualifier("nomisApiHealthWebClient") webClient: WebClient) : HealthCheck(webClient)
 
-@Component
+@Component("hmppsAuthApi")
 class OAuthApiHealth
 constructor(@Qualifier("oauthApiHealthWebClient") webClient: WebClient) : HealthCheck(webClient)
 
-@Component("visitMappingApi")
-class VisitMappingApiHealth
+@Component("mappingApi")
+class MappingApiHealth
 constructor(@Qualifier("mappingHealthWebClient") webClient: WebClient) : HealthCheck(webClient)
