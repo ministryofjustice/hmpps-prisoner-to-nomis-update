@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentenceAdjustmentsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension
 import java.lang.annotation.Inherited
 import kotlin.annotation.AnnotationTarget.ANNOTATION_CLASS
@@ -30,7 +31,15 @@ import kotlin.annotation.AnnotationTarget.CLASS
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
 @Inherited
-@ExtendWith(NomisApiExtension::class, MappingExtension::class, HmppsAuthApiExtension::class, VisitsApiExtension::class, IncentivesApiExtension::class, ActivitiesApiExtension::class)
+@ExtendWith(
+  NomisApiExtension::class,
+  MappingExtension::class,
+  HmppsAuthApiExtension::class,
+  VisitsApiExtension::class,
+  IncentivesApiExtension::class,
+  ActivitiesApiExtension::class,
+  SentenceAdjustmentsApiExtension::class
+)
 @ActiveProfiles("test")
 @SpringBootTest(classes = [WebClientConfiguration::class, WebClientAutoConfiguration::class, OAuth2ClientAutoConfiguration::class, SecurityAutoConfiguration::class])
 @BootstrapWith(SpringBootTestContextBootstrapper::class)
