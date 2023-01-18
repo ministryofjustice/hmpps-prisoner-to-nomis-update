@@ -45,7 +45,13 @@ class IncentivesDomainEventListener(
           "incentive-retry-received",
           mapOf("id" to context.incentiveId.toString()),
         )
+
         incentivesService.createIncentiveRetry(context)
+
+        telemetryClient.trackEvent(
+          "incentive-retry-success",
+          mapOf("id" to context.incentiveId.toString()),
+        )
       }
     }
   }

@@ -47,7 +47,13 @@ class VisitsDomainEventListener(
           "visit-retry-received",
           mapOf("id" to context.vsipId),
         )
+
         prisonVisitsService.createVisitRetry(context)
+
+        telemetryClient.trackEvent(
+          "visit-retry-success",
+          mapOf("id" to context.vsipId),
+        )
       }
     }
   }

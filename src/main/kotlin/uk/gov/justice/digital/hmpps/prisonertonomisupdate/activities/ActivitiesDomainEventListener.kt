@@ -45,7 +45,13 @@ class ActivitiesDomainEventListener(
           "activity-retry-received",
           mapOf("activityScheduleId" to context.activityScheduleId.toString()),
         )
+
         activitiesService.createRetry(context)
+
+        telemetryClient.trackEvent(
+          "activity-retry-success",
+          mapOf("activityScheduleId" to context.activityScheduleId.toString()),
+        )
       }
     }
   }
