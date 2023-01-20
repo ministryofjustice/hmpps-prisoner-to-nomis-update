@@ -24,7 +24,7 @@ class IncentivesDomainEventListener(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  @SqsListener("incentive", factory = "hmppsQueueContainerFactoryProxy", maxMessagesPerPoll = "1", maxInflightMessagesPerQueue = "1")
+  @SqsListener("incentive", factory = "hmppsQueueContainerFactoryProxy")
   fun onPrisonerChange(message: String) {
     log.debug("Received incentive message {}", message)
     val sqsMessage: SQSMessage = objectMapper.readValue(message)

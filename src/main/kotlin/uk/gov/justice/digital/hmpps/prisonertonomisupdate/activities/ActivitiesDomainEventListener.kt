@@ -24,7 +24,7 @@ class ActivitiesDomainEventListener(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  @SqsListener("activity", factory = "hmppsQueueContainerFactoryProxy", maxMessagesPerPoll = "1", maxInflightMessagesPerQueue = "1")
+  @SqsListener("activity", factory = "hmppsQueueContainerFactoryProxy")
   fun onChange(message: String) {
     log.debug("Received activity message {}", message)
     val sqsMessage: SQSMessage = objectMapper.readValue(message)

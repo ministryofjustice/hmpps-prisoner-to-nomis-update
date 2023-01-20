@@ -21,7 +21,7 @@ class PrisonerDomainEventsListener(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  @SqsListener("prisoner", factory = "hmppsQueueContainerFactoryProxy", maxMessagesPerPoll = "1", maxInflightMessagesPerQueue = "1")
+  @SqsListener("prisoner", factory = "hmppsQueueContainerFactoryProxy")
   fun onPrisonerChange(message: String) {
     log.debug("Received message {}", message)
     val sqsMessage: SQSMessage = objectMapper.readValue(message)
