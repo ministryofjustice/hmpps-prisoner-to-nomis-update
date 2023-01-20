@@ -5,11 +5,12 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.activityCreatedMessage
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.getNumberOfMessagesCurrentlyOnQueue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension.Companion.activitiesApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
 class ActivityToNomisTest : SqsIntegrationTestBase() {
 
@@ -23,14 +24,11 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
 
     val message = activityCreatedMessage(12)
 
-    awsSqsClient.sendMessage(activityQueueUrl, message)
+    awsSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(activityQueueUrl).messageBody(message).build()
+    ).get()
 
-    await untilCallTo {
-      getNumberOfMessagesCurrentlyOnQueue(
-        awsSqsActivityClient,
-        activityQueueUrl
-      )
-    } matches { it == 0 }
+    await untilCallTo { awsSqsActivityClient.countAllMessagesOnQueue(activityQueueUrl).get() } matches { it == 0 }
     await untilCallTo { activitiesApi.getCountFor("/activities/123456") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
     nomisApi.verify(
@@ -57,20 +55,14 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
 
     val message = activityCreatedMessage(12)
 
-    awsSqsClient.sendMessage(activityQueueUrl, message)
+    awsSqsClient.sendMessage(SendMessageRequest.builder().queueUrl(activityQueueUrl).messageBody(message).build()).get()
 
     await untilCallTo { activitiesApi.getCountFor("/activities/123456") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
 
     // the mapping call fails resulting in a retry message being queued
-    // the retry message is processed and fails resulting in a message on the DLQ after 5 attempts
-
-    await untilCallTo {
-      getNumberOfMessagesCurrentlyOnQueue(
-        awsSqsActivityDlqClient!!,
-        activityDlqUrl!!
-      )
-    } matches { it == 1 }
+    // the retry message is processed and fails resulting in a message on the DLQ after 1 attempt
+    await untilCallTo { awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get() } matches { it == 1 }
 
     // Next time the retry will succeed
     mappingServer.stubCreateActivity()
@@ -81,19 +73,9 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
       .expectStatus()
       .isOk
 
-    await untilCallTo { mappingServer.postCountFor("/mapping/activities") } matches { it == 7 } // 1 initial call, 5 retries and 1 final successful call
-    await untilCallTo {
-      getNumberOfMessagesCurrentlyOnQueue(
-        awsSqsActivityClient,
-        activityQueueUrl
-      )
-    } matches { it == 0 }
-    await untilCallTo {
-      getNumberOfMessagesCurrentlyOnQueue(
-        awsSqsActivityDlqClient!!,
-        activityDlqUrl!!
-      )
-    } matches { it == 0 }
+    await untilCallTo { mappingServer.postCountFor("/mapping/activities") } matches { it == 3 } // 1 initial call, 1 retry and 1 final successful call
+    await untilCallTo { awsSqsActivityClient.countAllMessagesOnQueue(activityQueueUrl).get() } matches { it == 0 }
+    await untilCallTo { awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get() } matches { it == 0 }
   }
 
   fun buildApiActivityScheduleDtoJsonResponse(id: Long = 12): String =

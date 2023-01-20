@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
-import com.amazonaws.services.sqs.model.SendMessageRequest
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
 import uk.gov.justice.hmpps.sqs.HmppsQueue
@@ -26,12 +26,12 @@ class IncentivesUpdateQueueService(
       MessageId = "retry-${context.incentiveId}"
     )
     val result = sqsClient.sendMessage(
-      SendMessageRequest(queueUrl, objectMapper.writeValueAsString(sqsMessage))
-    )
+      SendMessageRequest.builder().queueUrl(queueUrl).messageBody(objectMapper.writeValueAsString(sqsMessage)).build()
+    ).get()
 
     telemetryClient.trackEvent(
       "create-incentive-map-queue-retry",
-      mapOf("messageId" to result.messageId!!, "id" to context.incentiveId.toString()),
+      mapOf("messageId" to result.messageId()!!, "id" to context.incentiveId.toString()),
     )
   }
 }

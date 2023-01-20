@@ -1,30 +1,36 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.config
 
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
+import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.web.SecurityFilterChain
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
-class ResourceServerConfiguration : WebSecurityConfigurerAdapter() {
-  override fun configure(http: HttpSecurity) {
-    http
-      .sessionManagement()
-      .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-      .and().headers().frameOptions().sameOrigin()
-      .and().csrf().disable()
-      .authorizeRequests { auth ->
-        auth.antMatchers(
+@EnableMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
+class ResourceServerConfiguration {
+  @Bean
+  fun filterChain(http: HttpSecurity): SecurityFilterChain {
+    http {
+      headers { frameOptions { sameOrigin = true } }
+      sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
+      // Can't have CSRF protection as requires session
+      csrf { disable() }
+      authorizeHttpRequests {
+        listOf(
           "/webjars/**", "/favicon.ico", "/csrf",
           "/health/**", "/info", "/h2-console/**",
           "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
           "/queue-admin/retry-all-dlqs"
-        )
-          .permitAll().anyRequest().authenticated()
-      }.oauth2ResourceServer().jwt().jwtAuthenticationConverter(AuthAwareTokenConverter())
+        ).forEach { authorize(it, permitAll) }
+        authorize(anyRequest, authenticated)
+      }
+      oauth2ResourceServer { jwt { jwtAuthenticationConverter = AuthAwareTokenConverter() } }
+    }
+    return http.build()
   }
 }

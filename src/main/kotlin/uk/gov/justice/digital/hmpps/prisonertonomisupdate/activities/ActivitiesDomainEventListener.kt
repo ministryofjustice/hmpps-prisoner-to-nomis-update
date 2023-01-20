@@ -3,9 +3,9 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
+import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
@@ -24,7 +24,7 @@ class ActivitiesDomainEventListener(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  @JmsListener(destination = "activity", containerFactory = "hmppsQueueContainerFactoryProxy")
+  @SqsListener("activity", factory = "hmppsQueueContainerFactoryProxy")
   fun onChange(message: String) {
     log.debug("Received activity message {}", message)
     val sqsMessage: SQSMessage = objectMapper.readValue(message)

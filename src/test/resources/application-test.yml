@@ -13,3 +13,37 @@ api.base.url:
   incentives: http://localhost:8085
   activities: http://localhost:8086
   sentence.adjustments: http://localhost:8087
+
+hmpps.sqs:
+  provider: localstack
+  queues:
+    prisoner:
+      queueName: ${random.uuid}
+      dlqName: ${random.uuid}
+      subscribeTopicId: domainevents
+      dlqMaxReceiveCount: 1
+      visibilityTimeout: 1
+    visit:
+      queueName: ${random.uuid}
+      dlqName: ${random.uuid}
+      dlqMaxReceiveCount: 1
+      visibilityTimeout: 1
+    incentive:
+      queueName: ${random.uuid}
+      dlqName: ${random.uuid}
+      subscribeTopicId: domainevents
+      dlqMaxReceiveCount: 2
+      visibilityTimeout: 1
+    activity:
+      queueName: ${random.uuid}
+      dlqName: ${random.uuid}
+      dlqMaxReceiveCount: 1
+      visibilityTimeout: 1
+    sentencing:
+      queueName: ${random.uuid}
+      dlqName: ${random.uuid}
+      dlqMaxReceiveCount: 1
+      visibilityTimeout: 1
+  topics:
+    domainevents:
+      arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}

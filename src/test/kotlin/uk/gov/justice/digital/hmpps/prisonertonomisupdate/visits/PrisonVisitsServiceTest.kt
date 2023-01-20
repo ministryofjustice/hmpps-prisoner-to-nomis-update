@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
 import com.microsoft.applicationinsights.TelemetryClient
+import jakarta.validation.ValidationException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
@@ -17,7 +18,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CancelVisitDt
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import javax.validation.ValidationException
 
 internal class PrisonVisitsServiceTest {
 

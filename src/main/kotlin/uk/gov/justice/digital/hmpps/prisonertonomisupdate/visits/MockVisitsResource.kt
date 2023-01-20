@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
 import io.swagger.v3.oas.annotations.Operation
+import jakarta.validation.Valid
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.access.prepost.PreAuthorize
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.validation.Valid
 
 @RestController
 class MockVisitsResource(private val mockVisitsData: MockVisitsData) {
