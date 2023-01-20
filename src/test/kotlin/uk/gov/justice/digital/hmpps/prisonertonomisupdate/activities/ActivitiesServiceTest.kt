@@ -188,6 +188,7 @@ fun newActivitySchedule(id: Long): ActivitySchedule = ActivitySchedule(
     payPerSession = ActivityLite.PayPerSession.h,
   ),
   slots = emptyList(),
+  startDate = LocalDate.now(),
 )
 
 fun newActivity(): Activity = Activity(

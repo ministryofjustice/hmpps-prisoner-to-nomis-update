@@ -5,8 +5,9 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
-import software.amazon.awssdk.services.sqs.model.SendMessageRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.incentiveCreatedMessage
+import software.amazon.awssdk.services.sns.model.MessageAttributeValue
+import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.incentiveMessagePayload
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -22,13 +23,18 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
     mappingServer.stubCreateIncentive()
     nomisApi.stubIncentiveCreate(bookingId = 456)
 
-    val message = incentiveCreatedMessage(12)
-
-    awsSqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(queueUrl).messageBody(message).build()
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(incentiveMessagePayload(12))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue("incentives.iep-review.inserted").build(),
+          )
+        ).build()
     ).get()
 
-    await untilCallTo { awsSqsClient.countMessagesOnQueue(queueUrl).get() } matches { it == 0 }
+    await untilCallTo { awsSqsIncentiveClient.countMessagesOnQueue(incentiveQueueUrl).get() } matches { it == 0 }
     await untilCallTo { incentivesApi.getCountFor("/iep/reviews/id/12") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/prisoners/booking-id/456/incentives") } matches { it == 1 }
     nomisApi.verify(
@@ -53,9 +59,16 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
     nomisApi.stubIncentiveCreate(bookingId = 456)
     mappingServer.stubCreateIncentiveWithError()
 
-    val message = incentiveCreatedMessage(12)
-
-    awsSqsClient.sendMessage(SendMessageRequest.builder().queueUrl(queueUrl).messageBody(message).build()).get()
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(incentiveMessagePayload(12))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue("incentives.iep-review.inserted").build(),
+          )
+        ).build()
+    ).get()
 
     await untilCallTo { incentivesApi.getCountFor("/iep/reviews/id/12") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/prisoners/booking-id/456/incentives") } matches { it == 1 }
@@ -74,8 +87,8 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
       .isOk
 
     await untilCallTo { mappingServer.postCountFor("/mapping/incentives") } matches { it == 4 } // 1 initial call, 2 retries and 1 final successful call
-    await untilCallTo { awsSqsClient.countAllMessagesOnQueue(incentiveQueueUrl).get() } matches { it == 0 }
-    await untilCallTo { awsSqsClient.countAllMessagesOnQueue(incentiveDlqUrl!!).get() } matches { it == 0 }
+    await untilCallTo { awsSqsIncentiveClient.countAllMessagesOnQueue(incentiveQueueUrl).get() } matches { it == 0 }
+    await untilCallTo { awsSqsIncentiveClient.countAllMessagesOnQueue(incentiveDlqUrl!!).get() } matches { it == 0 }
   }
 
   fun buildIncentiveApiDtoJsonResponse(id: Long = 12): String =

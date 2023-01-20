@@ -17,31 +17,32 @@ api.base.url:
 hmpps.sqs:
   provider: localstack
   queues:
-    prisoner:
-      queueName: ${random.uuid}
-      dlqName: ${random.uuid}
-      subscribeTopicId: domainevents
-      dlqMaxReceiveCount: 1
-      visibilityTimeout: 1
     visit:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
+      subscribeTopicId: domainevents
+      subscribeFilter: "{\"eventType\":[\"prison-visit.booked\", \"prison-visit.changed\", \"prison-visit.cancelled\"]}"
       dlqMaxReceiveCount: 1
       visibilityTimeout: 1
     incentive:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
       subscribeTopicId: domainevents
+      subscribeFilter: "{\"eventType\":[\"incentives.iep-review.inserted\"]}"
       dlqMaxReceiveCount: 2
       visibilityTimeout: 1
     activity:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
+      subscribeTopicId: domainevents
+      subscribeFilter: "{\"eventType\":[\"activities.activity-schedule.created\"]}"
       dlqMaxReceiveCount: 1
       visibilityTimeout: 1
     sentencing:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
+      subscribeTopicId: domainevents
+      subscribeFilter: "{\"eventType\":[\"sentencing.sentence.adjustment.created\", \"sentencing.sentence.adjustment.updated\", \"sentencing.sentence.adjustment.deleted\"]}"
       dlqMaxReceiveCount: 1
       visibilityTimeout: 1
   topics:

@@ -6,6 +6,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 
+fun prisonVisitMessagePayload(
+  eventType: String,
+  visitId: String = "12",
+  prisonerId: String = "AB12345",
+  occurredAt: String = "2021-03-05T11:23:56.031Z"
+) =
+  """{"eventType":"$eventType", "prisonerId": "$prisonerId", "occurredAt": "$occurredAt", "additionalInformation": {"reference": "$visitId","visitType": "STANDARD_SOCIAL"}}"""
+
 fun prisonVisitCreatedMessage(
   visitId: String = "12",
   prisonerId: String = "AB12345",
@@ -24,42 +32,6 @@ fun prisonVisitCreatedMessage(
         "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-0000000000000000000000.pem"}      
 """.trimIndent()
 
-fun prisonVisitCancelledMessage(
-  visitId: String = "12",
-  prisonerId: String = "AB12345",
-  occurredAt: String = "2021-03-05T11:23:56.031Z"
-) = """
-      {
-        "Type": "Notification", 
-        "MessageId": "48e8a79a-0f43-4338-bbd4-b0d745f1f8ec", 
-        "Token": null, 
-        "TopicArn": "arn:aws:sns:eu-west-2:000000000000:hmpps-domain-events", 
-        "Message": "{\"eventType\":\"prison-visit.cancelled\", \"prisonerId\": \"$prisonerId\", \"occurredAt\": \"$occurredAt\", \"additionalInformation\": {\"reference\": \"$visitId\",\"visitType\": \"STANDARD_SOCIAL\"}}", 
-        "SubscribeURL": null, 
-        "Timestamp": "2021-03-05T11:23:56.031Z", 
-        "SignatureVersion": "1", 
-        "Signature": "EXAMPLEpH+..", 
-        "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-0000000000000000000000.pem"}      
-""".trimIndent()
-
-fun prisonVisitChangedMessage(
-  visitId: String = "12",
-  prisonerId: String = "AB12345",
-  occurredAt: String = "2021-03-05T11:23:56.031Z"
-) = """
-      {
-        "Type": "Notification", 
-        "MessageId": "48e8a79a-0f43-4338-bbd4-b0d745f1f8ec", 
-        "Token": null, 
-        "TopicArn": "arn:aws:sns:eu-west-2:000000000000:hmpps-domain-events", 
-        "Message": "{\"eventType\":\"prison-visit.changed\", \"prisonerId\": \"$prisonerId\", \"occurredAt\": \"$occurredAt\", \"additionalInformation\": {\"reference\": \"$visitId\"}}", 
-        "SubscribeURL": null, 
-        "Timestamp": "2021-03-05T11:23:56.031Z", 
-        "SignatureVersion": "1", 
-        "Signature": "EXAMPLEpH+..", 
-        "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-0000000000000000000000.pem"}      
-""".trimIndent()
-
 fun retryMessage() = """
       {
         "Type":"RETRY",
@@ -67,6 +39,9 @@ fun retryMessage() = """
         "MessageId":"retry-12"
       }
 """.trimIndent()
+
+fun incentiveMessagePayload(incentiveId: Long) =
+  """{"eventType":"incentives.iep-review.inserted", "additionalInformation": {"id":"$incentiveId"}}"""
 
 fun incentiveCreatedMessage(incentiveId: Long) = """
       {
@@ -90,13 +65,16 @@ fun incentiveRetryMessage() = """
       }
 """.trimIndent()
 
+fun activityMessagePayload(eventType: String, identifier: Long) =
+  """{"eventType":"$eventType", "identifier":"$identifier", "version": "1.0", "description": "description", "occurredAt": "2021-03-05T11:23:56.031Z"}"""
+
 fun activityCreatedMessage(identifier: Long) = """
       {
         "Type": "Notification", 
         "MessageId": "48e8a79a-0f43-4338-bbd4-b0d745f1f8ec", 
         "Token": null, 
         "TopicArn": "arn:aws:sns:eu-west-2:000000000000:hmpps-domain-events", 
-        "Message": "{\"eventType\":\"activities.activity.created\", \"identifier\":\"$identifier\", \"version\": \"1.0\", \"description\": \"description\", \"occurredAt\": \"2021-03-05T11:23:56.031Z\"}",
+        "Message": "{\"eventType\":\"activities.activity-schedule.created\", \"identifier\":\"$identifier\", \"version\": \"1.0\", \"description\": \"description\", \"occurredAt\": \"2021-03-05T11:23:56.031Z\"}",
         "SubscribeURL": null, 
         "Timestamp": "2021-03-05T11:23:56.031Z", 
         "SignatureVersion": "1", 
