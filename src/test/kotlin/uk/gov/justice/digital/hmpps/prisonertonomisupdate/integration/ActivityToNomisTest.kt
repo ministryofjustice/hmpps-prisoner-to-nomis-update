@@ -5,8 +5,9 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
-import software.amazon.awssdk.services.sqs.model.SendMessageRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.activityCreatedMessage
+import software.amazon.awssdk.services.sns.model.MessageAttributeValue
+import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.activityMessagePayload
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension.Companion.activitiesApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -22,10 +23,15 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
     mappingServer.stubCreateActivity()
     nomisApi.stubActivityCreate()
 
-    val message = activityCreatedMessage(12)
-
-    awsSqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(activityQueueUrl).messageBody(message).build()
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(activityMessagePayload("activities.activity-schedule.created", 12))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue("activities.activity-schedule.created").build(),
+          )
+        ).build()
     ).get()
 
     await untilCallTo { awsSqsActivityClient.countAllMessagesOnQueue(activityQueueUrl).get() } matches { it == 0 }
@@ -53,9 +59,16 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
     nomisApi.stubActivityCreate()
     mappingServer.stubCreateActivityWithError()
 
-    val message = activityCreatedMessage(12)
-
-    awsSqsClient.sendMessage(SendMessageRequest.builder().queueUrl(activityQueueUrl).messageBody(message).build()).get()
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(activityMessagePayload("activities.activity-schedule.created", 12))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue("activities.activity-schedule.created").build(),
+          )
+        ).build()
+    ).get()
 
     await untilCallTo { activitiesApi.getCountFor("/activities/123456") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
@@ -127,7 +140,8 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
     "riskLevel": "High",
     "minimumIncentiveLevel": "Basic"
   },
-  "slots": []
+  "slots": [],
+  "startDate" : "2023-01-20"
 }
     """.trimIndent()
 

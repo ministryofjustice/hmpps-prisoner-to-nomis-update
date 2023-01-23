@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentenceAdjus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
+import uk.gov.justice.hmpps.sqs.HmppsTopic
 
 @ExtendWith(
   NomisApiExtension::class,
@@ -42,12 +43,7 @@ abstract class SqsIntegrationTestBase {
   @Autowired
   private lateinit var hmppsQueueService: HmppsQueueService
 
-  internal val registersQueue by lazy { hmppsQueueService.findByQueueId("prisoner") as HmppsQueue }
-
-  internal val awsSqsClient by lazy { registersQueue.sqsClient }
-  internal val awsSqsDlqClient by lazy { registersQueue.sqsDlqClient }
-  internal val queueUrl by lazy { registersQueue.queueUrl }
-  internal val dlqUrl by lazy { registersQueue.dlqUrl }
+  internal val topic by lazy { hmppsQueueService.findByTopicId("domainevents") as HmppsTopic }
 
   internal val visitQueue by lazy { hmppsQueueService.findByQueueId("visit") as HmppsQueue }
 
@@ -70,11 +66,11 @@ abstract class SqsIntegrationTestBase {
   internal val activityQueueUrl by lazy { activityQueue.queueUrl }
   internal val activityDlqUrl by lazy { activityQueue.dlqUrl }
 
+  internal val awsSnsClient by lazy { topic.snsClient }
+  internal val topicArn by lazy { topic.arn }
+
   @BeforeEach
   fun cleanQueue() {
-    awsSqsClient.purgeQueue(queueUrl).get()
-    awsSqsDlqClient?.purgeQueue(dlqUrl)?.get()
-
     awsSqsVisitClient.purgeQueue(visitQueueUrl).get()
     awsSqsVisitDlqClient?.purgeQueue(visitDlqUrl)?.get()
 

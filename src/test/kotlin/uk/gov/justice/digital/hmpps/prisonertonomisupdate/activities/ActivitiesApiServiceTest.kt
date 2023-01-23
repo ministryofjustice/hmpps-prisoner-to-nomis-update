@@ -114,7 +114,8 @@ internal class ActivitiesApiServiceTest {
             "endTime": "11:30",
             "daysOfWeek": ["Mon","Tue","Wed"]
           }
-        ]
+        ],
+        "startDate" : "2023-01-20"
       }
         """.trimIndent()
       )
@@ -279,7 +280,8 @@ internal class ActivitiesApiServiceTest {
               "endTime": "11:30",
               "daysOfWeek": ["Mon","Tue","Wed"]
             }
-          ]
+          ],
+          "startDate" : "2023-01-20"
         }
       ],
       "waitingList": [

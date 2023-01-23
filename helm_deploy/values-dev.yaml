@@ -20,8 +20,6 @@ generic-service:
 
 generic-prometheus-alerts:
   sqsAlertsQueueNames:
-    - "Digital-Prison-Services-dev-hmpps_prisoner_to_nomis_queue"
-    - "Digital-Prison-Services-dev-hmpps_prisoner_to_nomis_dlq"
     - "Digital-Prison-Services-dev-hmpps_prisoner_to_nomis_visit_queue"
     - "Digital-Prison-Services-dev-hmpps_prisoner_to_nomis_visit_dlq"
     - "Digital-Prison-Services-dev-hmpps_prisoner_to_nomis_incentive_queue"
