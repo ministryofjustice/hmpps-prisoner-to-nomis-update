@@ -101,7 +101,6 @@ class ActivitiesService(
             )
           } catch (e: Exception) {
             telemetryClient.trackEvent("activity-allocation-create-failed", telemetryMap)
-            log.error("createAllocation() Unexpected exception", e)
             throw e
           }
 
