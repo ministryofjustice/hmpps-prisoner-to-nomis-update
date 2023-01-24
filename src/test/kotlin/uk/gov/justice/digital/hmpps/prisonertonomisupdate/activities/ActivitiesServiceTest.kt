@@ -69,7 +69,7 @@ internal class ActivitiesServiceTest {
     fun `should not update NOMIS if activity already mapped (exists in nomis)`() {
       whenever(activitiesApiService.getActivitySchedule(123)).thenReturn(newActivitySchedule(123))
       whenever(activitiesApiService.getActivity(56)).thenReturn(newActivity())
-      whenever(mappingService.getMappingGivenActivityScheduleId(123)).thenReturn(
+      whenever(mappingService.getMappingGivenActivityScheduleIdOrNull(123)).thenReturn(
         ActivityMappingDto(nomisCourseActivityId = 456, activityScheduleId = 12345, mappingType = "A_TYPE")
       )
 

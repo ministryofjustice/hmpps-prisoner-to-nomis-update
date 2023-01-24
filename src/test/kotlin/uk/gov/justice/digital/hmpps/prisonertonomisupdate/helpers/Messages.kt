@@ -90,6 +90,9 @@ fun activityRetryMessage() = """
       }
 """.trimIndent()
 
+fun allocationMessagePayload(eventType: String, scheduleId: Long, allocationId: Long) =
+  """{"eventType":"$eventType", "scheduleId":"$scheduleId", "allocationId": "$allocationId", "version": "1.0", "description": "description", "occurredAt": "2021-03-05T11:23:56.031Z"}"""
+
 fun objectMapper(): ObjectMapper {
   return ObjectMapper()
     .setSerializationInclusion(JsonInclude.Include.NON_NULL)

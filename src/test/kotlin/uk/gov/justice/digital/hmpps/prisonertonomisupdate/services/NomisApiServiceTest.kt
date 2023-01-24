@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -54,7 +55,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `when offender is not found an exception is thrown`() {
+    fun `when offender is not found an exception is thrown`() {
       NomisApiExtension.nomisApi.stubVisitCreateWithError("AB123D", 404)
 
       assertThatThrownBy {
@@ -63,7 +64,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    fun `when any bad response is received an exception is thrown`() {
       NomisApiExtension.nomisApi.stubVisitCreateWithError("AB123D", 503)
 
       assertThatThrownBy {
@@ -99,7 +100,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `when offender is not found an exception is thrown`() {
+    fun `when offender is not found an exception is thrown`() {
       NomisApiExtension.nomisApi.stubVisitCancelWithError("AB123D", "12", 404)
 
       assertThatThrownBy {
@@ -108,7 +109,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    fun `when any bad response is received an exception is thrown`() {
       NomisApiExtension.nomisApi.stubVisitCancelWithError("AB123D", "12", 503)
 
       assertThatThrownBy {
@@ -144,7 +145,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `when offender is not found an exception is thrown`() {
+    fun `when offender is not found an exception is thrown`() {
       NomisApiExtension.nomisApi.stubVisitUpdateWithError("AB123D", "12", 404)
 
       assertThatThrownBy {
@@ -153,7 +154,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    fun `when any bad response is received an exception is thrown`() {
       NomisApiExtension.nomisApi.stubVisitUpdateWithError("AB123D", "12", 503)
 
       assertThatThrownBy {
@@ -190,7 +191,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `when offender is not found an exception is thrown`() {
+    fun `when offender is not found an exception is thrown`() {
       NomisApiExtension.nomisApi.stubIncentiveCreateWithError(456, 404)
 
       assertThatThrownBy {
@@ -199,7 +200,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    fun `when any bad response is received an exception is thrown`() {
       NomisApiExtension.nomisApi.stubIncentiveCreateWithError(456, 503)
 
       assertThatThrownBy {
@@ -213,7 +214,7 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `should call nomis api with OAuth2 token`() {
-      NomisApiExtension.nomisApi.stubActivityCreate()
+      NomisApiExtension.nomisApi.stubActivityCreate("""{ "courseActivityId": 456 }""")
 
       nomisApiService.createActivity(newActivity())
 
@@ -225,7 +226,7 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `will post data to nomis api`() {
-      NomisApiExtension.nomisApi.stubActivityCreate()
+      NomisApiExtension.nomisApi.stubActivityCreate("""{ "courseActivityId": 456 }""")
 
       nomisApiService.createActivity(newActivity())
 
@@ -236,12 +237,49 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `when any error response is received an exception is thrown`() {
+    fun `when any error response is received an exception is thrown`() {
       NomisApiExtension.nomisApi.stubActivityCreateWithError(503)
 
       assertThatThrownBy {
         nomisApiService.createActivity(newActivity())
       }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+  }
+
+  @Nested
+  inner class Allocation {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() {
+      NomisApiExtension.nomisApi.stubAllocationCreate(12)
+
+      nomisApiService.createAllocation(12, newAllocation())
+
+      NomisApiExtension.nomisApi.verify(
+        postRequestedFor(urlEqualTo("/activities/12"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+      )
+    }
+
+    @Test
+    fun `will post data to nomis api`() {
+      NomisApiExtension.nomisApi.stubAllocationCreate(12)
+
+      nomisApiService.createAllocation(12, newAllocation())
+
+      NomisApiExtension.nomisApi.verify(
+        postRequestedFor(urlEqualTo("/activities/12"))
+          .withRequestBody(matchingJsonPath("$.bookingId", equalTo("456")))
+      )
+    }
+
+    @Test
+    fun `when any error response is received an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubAllocationCreateWithError(12, 400)
+
+      assertThatThrownBy {
+        nomisApiService.createAllocation(12, newAllocation())
+      }.isInstanceOf(BadRequest::class.java)
     }
   }
 }
@@ -284,4 +322,10 @@ fun newActivity() = CreateActivityRequest(
   payRates = emptyList(),
   description = "the description",
   programCode = "IRS",
+)
+
+fun newAllocation() = CreateOffenderProgramProfileRequest(
+  bookingId = 456L,
+  startDate = LocalDate.parse("2023-01-20"),
+  endDate = LocalDate.parse("2023-01-21"),
 )

@@ -35,7 +35,7 @@ hmpps.sqs:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"activities.activity-schedule.created\"]}"
+      subscribeFilter: "{\"eventType\":[\"activities.activity-schedule.created\", \"activities.prisoner.allocated\"]}"
       dlqMaxReceiveCount: 1
       visibilityTimeout: 1
     sentencing:

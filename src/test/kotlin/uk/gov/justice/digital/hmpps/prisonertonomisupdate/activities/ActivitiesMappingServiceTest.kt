@@ -103,7 +103,7 @@ internal class ActivitiesMappingServiceTest {
     fun `when mapping is not found null is returned`() {
       MappingExtension.mappingServer.stubGetMappingGivenActivityScheduleIdWithError(123, 404)
 
-      assertThat(mappingService.getMappingGivenActivityScheduleId(123)).isNull()
+      assertThat(mappingService.getMappingGivenActivityScheduleIdOrNull(123)).isNull()
     }
 
     @Test

@@ -62,13 +62,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       post("/prisoners/$prisonerId/visits").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(
-            """
-              {
-                "error": "some error"
-              }
-            """.trimIndent()
-          )
+          .withBody(ERROR_RESPONSE)
           .withStatus(status)
       )
     )
@@ -99,13 +93,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       put("/prisoners/$prisonerId/visits/$visitId/cancel").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(
-            """
-              {
-                "error": "some error"
-              }
-            """.trimIndent()
-          )
+          .withBody(ERROR_RESPONSE)
           .withStatus(status)
       )
     )
@@ -116,13 +104,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       put("/prisoners/$prisonerId/visits/$visitId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(
-            """
-              {
-                "error": "some error"
-              }
-            """.trimIndent()
-          )
+          .withBody(ERROR_RESPONSE)
           .withStatus(status)
       )
     )
@@ -144,19 +126,13 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       post("/prisoners/booking-id/$bookingId/incentives").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(
-            """
-              {
-                "error": "some error"
-              }
-            """.trimIndent()
-          )
+          .withBody(ERROR_RESPONSE)
           .withStatus(status)
       )
     )
   }
 
-  fun stubActivityCreate(response: String = CREATE_ACTIVITY_RESPONSE) {
+  fun stubActivityCreate(response: String) {
     stubFor(
       post("/activities").willReturn(
         aResponse()
@@ -172,17 +148,35 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       post("/activities").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(
-            """
-              {
-                "error": "some error"
-              }
-            """.trimIndent()
-          )
+          .withBody(ERROR_RESPONSE)
           .withStatus(status)
       )
     )
   }
+
+  fun stubAllocationCreate(courseActivityId: Long) {
+    stubFor(
+      post("/activities/$courseActivityId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "offenderProgramReferenceId": 1234 }""")
+          .withStatus(201)
+      )
+    )
+  }
+
+  fun stubAllocationCreateWithError(courseActivityId: Long, status: Int = 500) {
+    stubFor(
+      post("/activities/$courseActivityId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status)
+      )
+    )
+  }
+
+  private val ERROR_RESPONSE = """{ "error": "some error" }"""
 
   private val CREATE_VISIT_RESPONSE = """
     {
@@ -194,12 +188,6 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     {
       "bookingId": 456,
       "sequence": 1
-    }
-    """
-
-  private val CREATE_ACTIVITY_RESPONSE = """
-    {
-      "courseActivityId": 456
     }
     """
 

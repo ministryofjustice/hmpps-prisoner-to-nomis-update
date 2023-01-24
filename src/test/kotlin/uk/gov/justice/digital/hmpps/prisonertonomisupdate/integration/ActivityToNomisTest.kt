@@ -8,24 +8,31 @@ import org.junit.jupiter.api.Test
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.activityMessagePayload
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.allocationMessagePayload
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension.Companion.activitiesApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
+private const val activityScheduleId: Long = 100
+private const val activityId: Long = 200
+private const val courseActivityId: Long = 300
+private const val allocationId: Long = 400
+private const val bookingId: Long = 500
+
 class ActivityToNomisTest : SqsIntegrationTestBase() {
 
   @Test
-  fun `will consume a create message`() {
-    activitiesApi.stubGetSchedule(12, buildApiActivityScheduleDtoJsonResponse())
-    activitiesApi.stubGetActivity(123456, buildApiActivityDtoJsonResponse())
-    mappingServer.stubGetMappingGivenActivityScheduleIdWithError(12, 404)
+  fun `will consume a create activity schedule message`() {
+    activitiesApi.stubGetSchedule(activityScheduleId, buildApiActivityScheduleDtoJsonResponse())
+    activitiesApi.stubGetActivity(activityId, buildApiActivityDtoJsonResponse())
+    mappingServer.stubGetMappingGivenActivityScheduleIdWithError(activityScheduleId, 404)
     mappingServer.stubCreateActivity()
-    nomisApi.stubActivityCreate()
+    nomisApi.stubActivityCreate("""{ "courseActivityId": $courseActivityId }""")
 
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
-        .message(activityMessagePayload("activities.activity-schedule.created", 12))
+        .message(activityMessagePayload("activities.activity-schedule.created", activityScheduleId))
         .messageAttributes(
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
@@ -35,7 +42,7 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
     ).get()
 
     await untilCallTo { awsSqsActivityClient.countAllMessagesOnQueue(activityQueueUrl).get() } matches { it == 0 }
-    await untilCallTo { activitiesApi.getCountFor("/activities/123456") } matches { it == 1 }
+    await untilCallTo { activitiesApi.getCountFor("/activities/$activityId") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
     nomisApi.verify(
       WireMock.postRequestedFor(WireMock.urlEqualTo("/activities"))
@@ -45,23 +52,23 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
     )
     mappingServer.verify(
       WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/activities"))
-        .withRequestBody(WireMock.matchingJsonPath("nomisCourseActivityId", WireMock.equalTo("456")))
-        .withRequestBody(WireMock.matchingJsonPath("activityScheduleId", WireMock.equalTo("12")))
+        .withRequestBody(WireMock.matchingJsonPath("nomisCourseActivityId", WireMock.equalTo("$courseActivityId")))
+        .withRequestBody(WireMock.matchingJsonPath("activityScheduleId", WireMock.equalTo("$activityScheduleId")))
         .withRequestBody(WireMock.matchingJsonPath("mappingType", WireMock.equalTo("ACTIVITY_CREATED")))
     )
   }
 
   @Test
   fun `will retry after a mapping failure`() {
-    activitiesApi.stubGetSchedule(12, buildApiActivityScheduleDtoJsonResponse())
-    activitiesApi.stubGetActivity(123456, buildApiActivityDtoJsonResponse())
-    mappingServer.stubGetMappingGivenActivityScheduleIdWithError(12, 404)
-    nomisApi.stubActivityCreate()
+    activitiesApi.stubGetSchedule(activityScheduleId, buildApiActivityScheduleDtoJsonResponse())
+    activitiesApi.stubGetActivity(activityId, buildApiActivityDtoJsonResponse())
+    mappingServer.stubGetMappingGivenActivityScheduleIdWithError(activityScheduleId, 404)
+    nomisApi.stubActivityCreate("""{ "courseActivityId": $courseActivityId }""")
     mappingServer.stubCreateActivityWithError()
 
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
-        .message(activityMessagePayload("activities.activity-schedule.created", 12))
+        .message(activityMessagePayload("activities.activity-schedule.created", activityScheduleId))
         .messageAttributes(
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
@@ -70,7 +77,7 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
         ).build()
     ).get()
 
-    await untilCallTo { activitiesApi.getCountFor("/activities/123456") } matches { it == 1 }
+    await untilCallTo { activitiesApi.getCountFor("/activities/$activityId") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
 
     // the mapping call fails resulting in a retry message being queued
@@ -91,13 +98,50 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
     await untilCallTo { awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get() } matches { it == 0 }
   }
 
-  fun buildApiActivityScheduleDtoJsonResponse(id: Long = 12): String =
+  @Test
+  fun `will consume an allocation message`() {
+    activitiesApi.stubGetSchedule(activityScheduleId, buildApiActivityScheduleDtoJsonResponse())
+    activitiesApi.stubGetAllocation(allocationId, buildApiAllocationDtoJsonResponse())
+    mappingServer.stubGetMappingGivenActivityScheduleId(
+      activityScheduleId,
+      """{
+          "nomisCourseActivityId": $courseActivityId,
+          "activityScheduleId": $activityScheduleId,
+          "mappingType": "TYPE"
+        }
+      """.trimIndent(),
+    )
+    nomisApi.stubAllocationCreate(courseActivityId)
+
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(allocationMessagePayload("activities.prisoner.allocated", activityScheduleId, allocationId))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue("activities.prisoner.allocated").build(),
+          )
+        ).build()
+    ).get()
+
+    await untilCallTo { awsSqsActivityClient.countAllMessagesOnQueue(activityQueueUrl).get() } matches { it == 0 }
+    await untilCallTo { activitiesApi.getCountFor("/allocations/$allocationId") } matches { it == 1 }
+    await untilCallTo { nomisApi.postCountFor("/activities/$courseActivityId") } matches { it == 1 }
+    nomisApi.verify(
+      WireMock.postRequestedFor(WireMock.urlEqualTo("/activities/$courseActivityId"))
+        .withRequestBody(WireMock.matchingJsonPath("bookingId", WireMock.equalTo("$bookingId")))
+        .withRequestBody(WireMock.matchingJsonPath("startDate", WireMock.equalTo("2023-01-12")))
+        .withRequestBody(WireMock.matchingJsonPath("endDate", WireMock.equalTo("2023-01-13")))
+    )
+  }
+
+  fun buildApiActivityScheduleDtoJsonResponse(id: Long = activityScheduleId): String =
     """
 {
   "id": $id,
   "instances": [
     {
-      "id": 123456,
+      "id": 3456,
       "date": "2023-01-13",
       "startTime": "9:00",
       "endTime": "10:00",
@@ -122,7 +166,7 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
   },
   "capacity": 10,
   "activity": {
-    "id": 123456,
+    "id": $activityId,
     "prisonCode": "PVI",
     "attendanceRequired": false,
     "inCell": false,
@@ -145,7 +189,7 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
 }
     """.trimIndent()
 
-  fun buildApiActivityDtoJsonResponse(id: Long = 123456): String =
+  fun buildApiActivityDtoJsonResponse(id: Long = activityId): String =
     """
     {
   "id": $id,
@@ -168,7 +212,7 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
   "waitingList": [],
   "pay": [
     {
-      "id": 123456,
+      "id": 3579,
       "incentiveLevel": "Basic",
       "payBand": "A",
       "rate": 150,
@@ -183,5 +227,19 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
   "createdTime": "2023-01-12T17:26:18.332Z",
   "createdBy": "Adam Smith"
 }
-    """
+   """
+
+  fun buildApiAllocationDtoJsonResponse(id: Long = allocationId): String {
+    return """
+  {
+    "id": $id,
+    "prisonerNumber": "A1234AA",
+    "bookingId": $bookingId,
+    "startDate": "2023-01-12",
+    "endDate": "2023-01-13",
+    "scheduleDescription" : "description",
+    "activitySummary" : "summary"
+  }
+      """
+  }
 }

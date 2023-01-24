@@ -21,15 +21,21 @@ class ActivitiesMappingService(
       .block()
   }
 
-  fun getMappingGivenActivityScheduleId(id: Long): ActivityMappingDto? =
-    webClient.get()
-      .uri("/mapping/activities/activity-schedule-id/$id")
-      .retrieve()
-      .bodyToMono(ActivityMappingDto::class.java)
+  fun getMappingGivenActivityScheduleIdOrNull(id: Long): ActivityMappingDto? =
+    getMono(id)
       .onErrorResume(WebClientResponseException.NotFound::class.java) {
         Mono.empty()
       }
       .block()
+
+  fun getMappingGivenActivityScheduleId(id: Long): ActivityMappingDto =
+    getMono(id).block()!!
+
+  private fun getMono(id: Long): Mono<ActivityMappingDto> =
+    webClient.get()
+      .uri("/mapping/activities/activity-schedule-id/$id")
+      .retrieve()
+      .bodyToMono(ActivityMappingDto::class.java)
 }
 
 data class ActivityMappingDto(
