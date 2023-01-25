@@ -198,4 +198,64 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
   fun getCountFor(url: String) = this.findAll(WireMock.getRequestedFor(WireMock.urlEqualTo(url))).count()
+  fun stubCreateSentencingAdjustment() {
+    stubFor(
+      post("/mapping/sentencing/adjustments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201)
+      )
+    )
+  }
+
+  fun stubCreateSentencingAdjustmentWithError(status: Int) {
+    stubFor(
+      post("/mapping/sentencing/adjustments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
+          .withStatus(status)
+      )
+    )
+  }
+
+  fun stubGetBySentenceAdjustmentId(
+    sentenceAdjustmentId: String,
+    nomisAdjustmentId: Long = 1234,
+    nomisAdjustmentType: String = "SENTENCE",
+  ) {
+    stubFor(
+      get("/mapping/sentencing/adjustments/sentence-adjustment-id/$sentenceAdjustmentId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            { 
+            "sentenceAdjustmentId": "$sentenceAdjustmentId",  
+            "nomisAdjustmentId": $nomisAdjustmentId,  
+            "nomisAdjustmentType": "$nomisAdjustmentType",  
+            "mappingType": "MIGRATED",  
+            "whenCreated": "2020-01-01T00:00:00"
+              }"""
+          )
+          .withStatus(200)
+      )
+    )
+  }
+
+  fun stubGetBySentenceAdjustmentIdWithError(sentenceAdjustmentId: String, status: Int) {
+    stubFor(
+      get("/mapping/sentencing/adjustments/sentence-adjustment-id/$sentenceAdjustmentId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              { 
+                "userMessage": "some error"
+              }"""
+          )
+          .withStatus(status)
+      )
+    )
+  }
 }

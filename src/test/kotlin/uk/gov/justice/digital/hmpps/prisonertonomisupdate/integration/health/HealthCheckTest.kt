@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentenceAdjustmentsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -98,6 +98,6 @@ class HealthCheckTest : SqsIntegrationTestBase() {
     IncentivesApiExtension.incentivesApi.stubHealthPing(status)
     MappingExtension.mappingServer.stubHealthPing(status)
     ActivitiesApiExtension.activitiesApi.stubHealthPing(status)
-    SentenceAdjustmentsApiExtension.sentenceAdjustmentsApi.stubHealthPing(status)
+    SentencingAdjustmentsApiExtension.sentencingAdjustmentsApi.stubHealthPing(status)
   }
 }

@@ -178,6 +178,63 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   private val ERROR_RESPONSE = """{ "error": "some error" }"""
 
+  fun stubSentenceAdjustmentCreate(bookingId: Long, sentenceSequence: Long, sentenceAdjustmentId: Long = 99L) {
+    stubFor(
+      post("/prisoners/booking-id/$bookingId/sentences/$sentenceSequence/adjustments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{"sentenceAdjustmentId": $sentenceAdjustmentId}""")
+          .withStatus(201)
+      )
+    )
+  }
+
+  fun stubSentenceAdjustmentCreateWithError(bookingId: Long, sentenceSequence: Long, status: Int) {
+    stubFor(
+      post("/prisoners/booking-id/$bookingId/sentences/$sentenceSequence/adjustments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              {
+                "error": "some error"
+              }
+            """.trimIndent()
+          )
+          .withStatus(status)
+      )
+    )
+  }
+
+  fun stubKeyDateAdjustmentCreate(bookingId: Long, sentenceAdjustmentId: Long = 99L) {
+    stubFor(
+      post("/prisoners/booking-id/$bookingId/adjustments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          // TODO: check the value of the sentenceAdjustmentId is correct
+          .withBody("""{"sentenceAdjustmentId": $sentenceAdjustmentId}""")
+          .withStatus(201)
+      )
+    )
+  }
+
+  fun stubKeyDateAdjustmentCreateWithError(bookingId: Long, status: Int) {
+    stubFor(
+      post("/prisoners/booking-id/$bookingId/adjustments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              {
+                "error": "some error"
+              }
+            """.trimIndent()
+          )
+          .withStatus(status)
+      )
+    )
+  }
+
   private val CREATE_VISIT_RESPONSE = """
     {
       "visitId": "12345"

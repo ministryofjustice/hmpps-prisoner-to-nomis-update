@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import kotlinx.coroutines.reactor.awaitSingle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -73,6 +74,29 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .bodyToMono(CreateOffenderProgramProfileResponse::class.java)
       .block()!!
+
+  suspend fun createSentenceAdjustment(
+    bookingId: Long,
+    sentenceSequence: Long,
+    request: CreateSentencingAdjustmentRequest
+  ): CreateSentencingAdjustmentResponse =
+    webClient.post()
+      .uri("/prisoners/booking-id/$bookingId/sentences/$sentenceSequence/adjustments")
+      .bodyValue(request)
+      .retrieve()
+      .bodyToMono(CreateSentencingAdjustmentResponse::class.java)
+      .awaitSingle()
+
+  suspend fun createKeyDateAdjustment(
+    bookingId: Long,
+    request: CreateSentencingAdjustmentRequest
+  ): CreateSentencingAdjustmentResponse =
+    webClient.post()
+      .uri("/prisoners/booking-id/$bookingId/adjustments")
+      .bodyValue(request)
+      .retrieve()
+      .bodyToMono(CreateSentencingAdjustmentResponse::class.java)
+      .awaitSingle()
 }
 
 data class CreateVisitDto(
@@ -163,3 +187,15 @@ data class CreateOffenderProgramProfileRequest(
 data class CreateOffenderProgramProfileResponse(
   val offenderProgramReferenceId: Long,
 )
+
+data class CreateSentencingAdjustmentRequest(
+  val adjustmentTypeCode: String,
+  @JsonFormat(pattern = "yyyy-MM-dd")
+  val adjustmentDate: LocalDate,
+  @JsonFormat(pattern = "yyyy-MM-dd")
+  val adjustmentFomDate: LocalDate?,
+  val adjustmentDays: Long,
+  val comment: String?,
+)
+
+data class CreateSentencingAdjustmentResponse(val id: Long)
