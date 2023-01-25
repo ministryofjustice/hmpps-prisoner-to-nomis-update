@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
@@ -16,12 +17,22 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityCategory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityLite
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.InternalLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateOffenderProgramProfileResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+
+private const val activityScheduleId: Long = 100
+private const val activityId: Long = 200
+private const val nomisCourseActivityId: Long = 300
+private const val allocationId: Long = 400
+private const val offenderProgramReferenceId: Long = 500
+private const val bookingId: Long = 600
+private const val offenderNo = "A1234AA"
 
 internal class ActivitiesServiceTest {
 
@@ -38,16 +49,18 @@ internal class ActivitiesServiceTest {
 
     @Test
     fun `should log an activity created event`() {
-      whenever(activitiesApiService.getActivitySchedule(123)).thenReturn(newActivitySchedule(123))
-      whenever(activitiesApiService.getActivity(56)).thenReturn(newActivity())
+      whenever(activitiesApiService.getActivitySchedule(activityScheduleId)).thenReturn(
+        newActivitySchedule()
+      )
+      whenever(activitiesApiService.getActivity(activityId)).thenReturn(newActivity())
       whenever(nomisApiService.createActivity(any())).thenReturn(
-        CreateActivityResponse(courseActivityId = 456)
+        CreateActivityResponse(courseActivityId = nomisCourseActivityId)
       )
 
       activitiesService.createActivity(
-        ActivitiesService.OutboundHMPPSDomainEvent(
+        OutboundHMPPSDomainEvent(
           eventType = "dummy",
-          identifier = 123,
+          identifier = activityScheduleId,
           version = "1.0",
           description = "description",
           occurredAt = LocalDateTime.now(),
@@ -56,9 +69,9 @@ internal class ActivitiesServiceTest {
 
       verify(telemetryClient).trackEvent(
         eq("activity-created-event"),
-        org.mockito.kotlin.check {
-          assertThat(it["courseActivityId"]).isEqualTo("456")
-          assertThat(it["activityScheduleId"]).isEqualTo("123")
+        check {
+          assertThat(it["courseActivityId"]).isEqualTo("$nomisCourseActivityId")
+          assertThat(it["activityScheduleId"]).isEqualTo("$activityScheduleId")
           assertThat(it["description"]).isEqualTo("description")
         },
         isNull()
@@ -67,16 +80,22 @@ internal class ActivitiesServiceTest {
 
     @Test
     fun `should not update NOMIS if activity already mapped (exists in nomis)`() {
-      whenever(activitiesApiService.getActivitySchedule(123)).thenReturn(newActivitySchedule(123))
-      whenever(activitiesApiService.getActivity(56)).thenReturn(newActivity())
-      whenever(mappingService.getMappingGivenActivityScheduleId(123)).thenReturn(
-        ActivityMappingDto(nomisCourseActivityId = 456, activityScheduleId = 12345, mappingType = "A_TYPE")
+      whenever(activitiesApiService.getActivitySchedule(activityScheduleId)).thenReturn(
+        newActivitySchedule()
+      )
+      whenever(activitiesApiService.getActivity(activityId)).thenReturn(newActivity())
+      whenever(mappingService.getMappingGivenActivityScheduleIdOrNull(activityScheduleId)).thenReturn(
+        ActivityMappingDto(
+          nomisCourseActivityId = nomisCourseActivityId,
+          activityScheduleId = activityScheduleId,
+          mappingType = "A_TYPE"
+        )
       )
 
       activitiesService.createActivity(
-        ActivitiesService.OutboundHMPPSDomainEvent(
+        OutboundHMPPSDomainEvent(
           eventType = "dummy",
-          identifier = 123,
+          identifier = activityScheduleId,
           version = "1.0",
           description = "description",
           occurredAt = LocalDateTime.now(),
@@ -88,15 +107,17 @@ internal class ActivitiesServiceTest {
 
     @Test
     fun `should log a creation failure`() {
-      whenever(activitiesApiService.getActivitySchedule(123)).thenReturn(newActivitySchedule(123))
-      whenever(activitiesApiService.getActivity(56)).thenReturn(newActivity())
+      whenever(activitiesApiService.getActivitySchedule(activityScheduleId)).thenReturn(
+        newActivitySchedule()
+      )
+      whenever(activitiesApiService.getActivity(activityId)).thenReturn(newActivity())
       whenever(nomisApiService.createActivity(any())).thenThrow(RuntimeException("test"))
 
       assertThatThrownBy {
         activitiesService.createActivity(
-          ActivitiesService.OutboundHMPPSDomainEvent(
+          OutboundHMPPSDomainEvent(
             eventType = "dummy",
-            identifier = 123,
+            identifier = activityScheduleId,
             version = "1.0",
             description = "description",
             occurredAt = LocalDateTime.now(),
@@ -106,8 +127,8 @@ internal class ActivitiesServiceTest {
 
       verify(telemetryClient).trackEvent(
         eq("activity-create-failed"),
-        org.mockito.kotlin.check {
-          assertThat(it["activityScheduleId"]).isEqualTo("123")
+        check {
+          assertThat(it["activityScheduleId"]).isEqualTo("$activityScheduleId")
           assertThat(it["description"]).isEqualTo("description")
         },
         isNull()
@@ -116,17 +137,19 @@ internal class ActivitiesServiceTest {
 
     @Test
     fun `should log a mapping creation failure`() {
-      whenever(activitiesApiService.getActivitySchedule(123)).thenReturn(newActivitySchedule(123))
-      whenever(activitiesApiService.getActivity(56)).thenReturn(newActivity())
+      whenever(activitiesApiService.getActivitySchedule(activityScheduleId)).thenReturn(
+        newActivitySchedule()
+      )
+      whenever(activitiesApiService.getActivity(activityId)).thenReturn(newActivity())
       whenever(nomisApiService.createActivity(any())).thenReturn(
-        CreateActivityResponse(courseActivityId = 456)
+        CreateActivityResponse(courseActivityId = nomisCourseActivityId)
       )
       whenever(mappingService.createMapping(any())).thenThrow(RuntimeException("test"))
 
       activitiesService.createActivity(
-        ActivitiesService.OutboundHMPPSDomainEvent(
+        OutboundHMPPSDomainEvent(
           eventType = "dummy",
-          identifier = 123,
+          identifier = activityScheduleId,
           version = "1.0",
           description = "description",
           occurredAt = LocalDateTime.now(),
@@ -135,10 +158,88 @@ internal class ActivitiesServiceTest {
 
       verify(telemetryClient).trackEvent(
         eq("activity-create-map-failed"),
-        org.mockito.kotlin.check {
-          assertThat(it["courseActivityId"]).isEqualTo("456")
-          assertThat(it["activityScheduleId"]).isEqualTo("123")
+        check {
+          assertThat(it["courseActivityId"]).isEqualTo("$nomisCourseActivityId")
+          assertThat(it["activityScheduleId"]).isEqualTo("$activityScheduleId")
           assertThat(it["description"]).isEqualTo("description")
+        },
+        isNull()
+      )
+    }
+  }
+
+  @Nested
+  inner class Allocate {
+
+    @Test
+    fun `should log an allocation event`() {
+
+      whenever(activitiesApiService.getAllocation(allocationId)).thenReturn(newAllocation())
+      whenever(mappingService.getMappingGivenActivityScheduleId(activityScheduleId)).thenReturn(
+        ActivityMappingDto(
+          nomisCourseActivityId = nomisCourseActivityId,
+          activityScheduleId = activityScheduleId,
+          mappingType = "ACTIVITY_CREATED",
+        )
+      )
+      whenever(nomisApiService.createAllocation(eq(nomisCourseActivityId), any())).thenReturn(
+        CreateOffenderProgramProfileResponse(offenderProgramReferenceId = offenderProgramReferenceId)
+      )
+
+      activitiesService.createAllocation(
+        AllocationDomainEvent(
+          eventType = "dummy",
+          scheduleId = activityScheduleId,
+          allocationId = allocationId,
+          version = "1.0",
+          description = "description",
+          occurredAt = LocalDateTime.now(),
+        )
+      )
+
+      verify(telemetryClient).trackEvent(
+        eq("activity-allocation-created-event"),
+        check {
+          assertThat(it["allocationId"]).isEqualTo("$allocationId")
+          assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+          assertThat(it["bookingId"]).isEqualTo("$bookingId")
+          assertThat(it["offenderProgramReferenceId"]).isEqualTo("$offenderProgramReferenceId")
+        },
+        isNull()
+      )
+    }
+
+    @Test
+    fun `should log a creation failure`() {
+      whenever(activitiesApiService.getAllocation(allocationId)).thenReturn(newAllocation())
+      whenever(mappingService.getMappingGivenActivityScheduleId(activityScheduleId)).thenReturn(
+        ActivityMappingDto(
+          nomisCourseActivityId = nomisCourseActivityId,
+          activityScheduleId = activityScheduleId,
+          mappingType = "ACTIVITY_CREATED",
+        )
+      )
+      whenever(nomisApiService.createAllocation(any(), any())).thenThrow(RuntimeException("test"))
+
+      assertThatThrownBy {
+        activitiesService.createAllocation(
+          AllocationDomainEvent(
+            eventType = "dummy",
+            scheduleId = activityScheduleId,
+            allocationId = allocationId,
+            version = "1.0",
+            description = "description",
+            occurredAt = LocalDateTime.now(),
+          )
+        )
+      }.hasMessage("test")
+
+      verify(telemetryClient).trackEvent(
+        eq("activity-allocation-create-failed"),
+        check {
+          assertThat(it["allocationId"]).isEqualTo("$allocationId")
+          assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+          assertThat(it["bookingId"]).isEqualTo("$bookingId")
         },
         isNull()
       )
@@ -150,17 +251,26 @@ internal class ActivitiesServiceTest {
 
     @Test
     fun `should call mapping service`() {
-      activitiesService.createRetry(ActivityContext(nomisCourseActivityId = 456, activityScheduleId = 1234))
+      activitiesService.createRetry(
+        ActivityContext(
+          nomisCourseActivityId = nomisCourseActivityId,
+          activityScheduleId = activityScheduleId
+        )
+      )
 
       verify(mappingService).createMapping(
-        ActivityMappingDto(nomisCourseActivityId = 456, activityScheduleId = 1234, mappingType = "ACTIVITY_CREATED")
+        ActivityMappingDto(
+          nomisCourseActivityId = nomisCourseActivityId,
+          activityScheduleId = activityScheduleId,
+          mappingType = "ACTIVITY_CREATED"
+        )
       )
     }
   }
 }
 
-fun newActivitySchedule(id: Long): ActivitySchedule = ActivitySchedule(
-  id = id,
+private fun newActivitySchedule(): ActivitySchedule = ActivitySchedule(
+  id = activityScheduleId,
   instances = emptyList(),
   allocations = emptyList(),
   description = "description",
@@ -172,7 +282,7 @@ fun newActivitySchedule(id: Long): ActivitySchedule = ActivitySchedule(
     description = "Room description"
   ),
   activity = ActivityLite(
-    id = 56,
+    id = activityId,
     prisonCode = "MDI",
     attendanceRequired = false,
     inCell = false,
@@ -191,8 +301,8 @@ fun newActivitySchedule(id: Long): ActivitySchedule = ActivitySchedule(
   startDate = LocalDate.now(),
 )
 
-fun newActivity(): Activity = Activity(
-  id = 56,
+private fun newActivity(): Activity = Activity(
+  id = activityId,
   prisonCode = "MDI",
   attendanceRequired = false,
   inCell = false,
@@ -214,3 +324,15 @@ fun newActivity(): Activity = Activity(
   createdTime = OffsetDateTime.now(),
   createdBy = "me",
 )
+
+private fun newAllocation(): Allocation {
+  return Allocation(
+    id = allocationId,
+    prisonerNumber = offenderNo,
+    activitySummary = "summary",
+    bookingId = bookingId,
+    startDate = LocalDate.parse("2023-01-12"),
+    endDate = LocalDate.parse("2023-01-13"),
+    scheduleDescription = "description",
+  )
+}

@@ -100,5 +100,16 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetAllocation(id: Long, response: String) {
+    stubFor(
+      get("/allocations/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(200)
+      )
+    )
+  }
+
   fun getCountFor(url: String) = this.findAll(WireMock.getRequestedFor(WireMock.urlEqualTo(url))).count()
 }

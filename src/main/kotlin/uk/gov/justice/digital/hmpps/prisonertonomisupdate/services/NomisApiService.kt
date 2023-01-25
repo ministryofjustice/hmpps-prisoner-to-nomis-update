@@ -65,6 +65,14 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .bodyToMono(CreateActivityResponse::class.java)
       .block()!!
+
+  fun createAllocation(courseActivityId: Long, request: CreateOffenderProgramProfileRequest): CreateOffenderProgramProfileResponse =
+    webClient.post()
+      .uri("/activities/$courseActivityId")
+      .bodyValue(request)
+      .retrieve()
+      .bodyToMono(CreateOffenderProgramProfileResponse::class.java)
+      .block()!!
 }
 
 data class CreateVisitDto(
@@ -142,4 +150,16 @@ data class PayRateRequest(
 
 data class CreateActivityResponse(
   val courseActivityId: Long,
+)
+
+data class CreateOffenderProgramProfileRequest(
+  val bookingId: Long,
+  @JsonFormat(pattern = "yyyy-MM-dd")
+  val startDate: LocalDate,
+  @JsonFormat(pattern = "yyyy-MM-dd")
+  val endDate: LocalDate? = null,
+)
+
+data class CreateOffenderProgramProfileResponse(
+  val offenderProgramReferenceId: Long,
 )

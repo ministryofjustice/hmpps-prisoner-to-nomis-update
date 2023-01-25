@@ -21,7 +21,7 @@ class ActivitiesMappingService(
       .block()
   }
 
-  fun getMappingGivenActivityScheduleId(id: Long): ActivityMappingDto? =
+  fun getMappingGivenActivityScheduleIdOrNull(id: Long): ActivityMappingDto? =
     webClient.get()
       .uri("/mapping/activities/activity-schedule-id/$id")
       .retrieve()
@@ -30,6 +30,12 @@ class ActivitiesMappingService(
         Mono.empty()
       }
       .block()
+
+  fun getMappingGivenActivityScheduleId(id: Long): ActivityMappingDto =
+    webClient.get()
+      .uri("/mapping/activities/activity-schedule-id/$id")
+      .retrieve()
+      .bodyToMono(ActivityMappingDto::class.java).block()!!
 }
 
 data class ActivityMappingDto(
