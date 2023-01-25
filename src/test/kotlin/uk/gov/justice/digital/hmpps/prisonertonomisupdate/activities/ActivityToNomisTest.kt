@@ -101,7 +101,6 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
 
   @Test
   fun `will consume an allocation message`() {
-    activitiesApi.stubGetSchedule(activityScheduleId, buildApiActivityScheduleDtoJsonResponse())
     activitiesApi.stubGetAllocation(allocationId, buildApiAllocationDtoJsonResponse())
     mappingServer.stubGetMappingGivenActivityScheduleId(
       activityScheduleId,
@@ -125,7 +124,6 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
         ).build()
     ).get()
 
-    await untilCallTo { awsSqsActivityClient.countAllMessagesOnQueue(activityQueueUrl).get() } matches { it == 0 }
     await untilCallTo { activitiesApi.getCountFor("/allocations/$allocationId") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/activities/$courseActivityId") } matches { it == 1 }
     nomisApi.verify(

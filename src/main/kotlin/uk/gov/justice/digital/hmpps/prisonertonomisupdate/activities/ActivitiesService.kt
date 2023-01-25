@@ -78,37 +78,33 @@ class ActivitiesService(
   }
 
   fun createAllocation(allocationEvent: AllocationDomainEvent) {
-    activitiesApiService.getActivitySchedule(allocationEvent.scheduleId).let { schedule ->
-      activitiesApiService.getAllocation(allocationEvent.allocationId).let { allocation ->
-        mappingService.getMappingGivenActivityScheduleId(allocationEvent.scheduleId).let { mapping ->
+    activitiesApiService.getAllocation(allocationEvent.allocationId).let { allocation ->
+      mappingService.getMappingGivenActivityScheduleId(allocationEvent.scheduleId).let { mapping ->
 
-          val telemetryMap = mutableMapOf(
-            "activityScheduleId" to schedule.id.toString(),
-            "allocationId" to allocation.id.toString(),
-            "offenderNo" to allocation.prisonerNumber,
-            "bookingId" to allocation.bookingId.toString(),
-            "prisonId" to schedule.activity.prisonCode,
-          )
+        val telemetryMap = mutableMapOf(
+          "allocationId" to allocation.id.toString(),
+          "offenderNo" to allocation.prisonerNumber,
+          "bookingId" to allocation.bookingId.toString(),
+        )
 
-          val nomisResponse = try {
-            nomisApiService.createAllocation(
-              mapping.nomisCourseActivityId,
-              CreateOffenderProgramProfileRequest(
-                bookingId = allocation.bookingId!!,
-                startDate = allocation.startDate,
-                endDate = allocation.endDate
-              )
+        val nomisResponse = try {
+          nomisApiService.createAllocation(
+            mapping.nomisCourseActivityId,
+            CreateOffenderProgramProfileRequest(
+              bookingId = allocation.bookingId!!,
+              startDate = allocation.startDate,
+              endDate = allocation.endDate
             )
-          } catch (e: Exception) {
-            telemetryClient.trackEvent("activity-allocation-create-failed", telemetryMap)
-            throw e
-          }
-
-          val mapWithNomisId = telemetryMap
-            .plus(Pair("offenderProgramReferenceId", nomisResponse.offenderProgramReferenceId.toString()))
-
-          telemetryClient.trackEvent("activity-allocation-created-event", mapWithNomisId)
+          )
+        } catch (e: Exception) {
+          telemetryClient.trackEvent("activity-allocation-create-failed", telemetryMap)
+          throw e
         }
+
+        val mapWithNomisId = telemetryMap
+          .plus(Pair("offenderProgramReferenceId", nomisResponse.offenderProgramReferenceId.toString()))
+
+        telemetryClient.trackEvent("activity-allocation-created-event", mapWithNomisId)
       }
     }
   }
@@ -143,21 +139,21 @@ class ActivitiesService(
       )
     )
   }
-
-  data class OutboundHMPPSDomainEvent(
-    val eventType: String,
-    val identifier: Long,
-    val version: String,
-    val description: String,
-    val occurredAt: LocalDateTime,
-  )
-
-  data class AllocationDomainEvent(
-    val eventType: String,
-    val scheduleId: Long,
-    val allocationId: Long,
-    val version: String,
-    val description: String,
-    val occurredAt: LocalDateTime,
-  )
 }
+
+data class OutboundHMPPSDomainEvent(
+  val eventType: String,
+  val identifier: Long,
+  val version: String,
+  val description: String,
+  val occurredAt: LocalDateTime,
+)
+
+data class AllocationDomainEvent(
+  val eventType: String,
+  val scheduleId: Long,
+  val allocationId: Long,
+  val version: String,
+  val description: String,
+  val occurredAt: LocalDateTime,
+)
