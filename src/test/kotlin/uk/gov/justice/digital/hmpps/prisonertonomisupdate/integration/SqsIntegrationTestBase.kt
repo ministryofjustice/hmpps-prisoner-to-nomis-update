@@ -1,10 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration
 
+import com.microsoft.applicationinsights.TelemetryClient
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.annotation.DirtiesContext
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
@@ -35,8 +36,10 @@ import uk.gov.justice.hmpps.sqs.HmppsTopic
 )
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 abstract class SqsIntegrationTestBase {
+  @SpyBean
+  lateinit var telemetryClient: TelemetryClient
+
   @Autowired
   lateinit var webTestClient: WebTestClient
 

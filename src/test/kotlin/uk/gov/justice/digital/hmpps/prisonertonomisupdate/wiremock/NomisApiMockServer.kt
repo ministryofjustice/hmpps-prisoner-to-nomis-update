@@ -178,12 +178,12 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   private val ERROR_RESPONSE = """{ "error": "some error" }"""
 
-  fun stubSentenceAdjustmentCreate(bookingId: Long, sentenceSequence: Long, sentenceAdjustmentId: Long = 99L) {
+  fun stubSentenceAdjustmentCreate(bookingId: Long, sentenceSequence: Long, adjustmentId: Long = 99L) {
     stubFor(
       post("/prisoners/booking-id/$bookingId/sentences/$sentenceSequence/adjustments").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody("""{"sentenceAdjustmentId": $sentenceAdjustmentId}""")
+          .withBody("""{"id": $adjustmentId}""")
           .withStatus(201)
       )
     )
@@ -206,13 +206,12 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubKeyDateAdjustmentCreate(bookingId: Long, sentenceAdjustmentId: Long = 99L) {
+  fun stubKeyDateAdjustmentCreate(bookingId: Long, adjustmentId: Long = 99L) {
     stubFor(
       post("/prisoners/booking-id/$bookingId/adjustments").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          // TODO: check the value of the sentenceAdjustmentId is correct
-          .withBody("""{"sentenceAdjustmentId": $sentenceAdjustmentId}""")
+          .withBody("""{"id": $adjustmentId}""")
           .withStatus(201)
       )
     )

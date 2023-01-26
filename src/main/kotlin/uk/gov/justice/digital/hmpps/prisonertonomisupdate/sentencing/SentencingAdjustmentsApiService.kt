@@ -25,4 +25,10 @@ data class AdjustmentDetails(
   val sentenceSequence: Long?,
   val adjustmentType: String,
   val comment: String?,
+  val creatingSystem: CreatingSystem,
 )
+
+enum class CreatingSystem {
+  NOMIS,
+  SENTENCE_ADJUSTMENTS,
+}
