@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -96,6 +97,53 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           )
           .withStatus(status)
       )
+    )
+  }
+
+  fun stubAdjustmentGetWithErrorFollowedBySlowSuccess(
+    adjustmentId: String,
+    sentenceSequence: Long,
+    bookingId: Long,
+    adjustmentType: String = "RX",
+    adjustmentDate: String = "2021-01-01",
+    adjustmentDays: Long = 20,
+  ) {
+    stubFor(
+      get("/adjustments/$adjustmentId")
+        .inScenario("Retry Adjustments Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json")
+        )
+        .willSetStateTo("Cause Adjustments Success")
+    )
+
+    stubFor(
+      get("/adjustments/$adjustmentId")
+        .inScenario("Retry Adjustments Scenario")
+        .whenScenarioStateIs("Cause Adjustments Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+            {
+              "adjustmentId": "$adjustmentId",
+              "adjustmentDate": "$adjustmentDate",
+              "adjustmentDays": $adjustmentDays,
+              "bookingId": $bookingId,
+              "sentenceSequence": $sentenceSequence,
+              "adjustmentType": "$adjustmentType",
+              "creatingSystem": "SENTENCE_ADJUSTMENTS"
+            }
+              """.trimIndent()
+            )
+            .withStatus(200)
+            .withFixedDelay(2000)
+
+        ).willSetStateTo(Scenario.STARTED)
     )
   }
 }

@@ -43,8 +43,8 @@ hmpps.sqs:
       dlqName: ${random.uuid}
       subscribeTopicId: domainevents
       subscribeFilter: "{\"eventType\":[\"sentencing.sentence.adjustment.created\", \"sentencing.sentence.adjustment.updated\", \"sentencing.sentence.adjustment.deleted\"]}"
-      dlqMaxReceiveCount: 1
-      visibilityTimeout: 1
+      dlqMaxReceiveCount: 3
+      visibilityTimeout: 120
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}
