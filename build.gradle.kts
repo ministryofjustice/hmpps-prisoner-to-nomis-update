@@ -24,6 +24,8 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
+
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.11")
   testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.0")
   testImplementation("org.mockito:mockito-inline:5.0.0")
