@@ -66,36 +66,30 @@ services:
       - API_BASE_URL_OAUTH=http:/hmpps-auth:8080/auth
 
   localstack:
-    image: localstack/localstack:0.14.2
+    image: localstack/localstack:1.3
     networks:
       - hmpps
     container_name: localstack
     environment:
       - SERVICES=sqs,sns
-      - DEBUG=${DEBUG- }
-      - DOCKER_HOST=unix:///var/run/docker.sock
       - DEFAULT_REGION=eu-west-2
       - HOSTNAME_EXTERNAL=localstack
     volumes:
-      - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
 
 
   localstack-external:
-    image: localstack/localstack:0.14.2
+    image: localstack/localstack:1.3
     networks:
       - hmpps
     container_name: localstack-external
     ports:
-      - "4566-4597:4566-4597"
+      - "4566:4566"
     environment:
       - SERVICES=sqs,sns
-      - DOCKER_HOST=unix:///var/run/docker.sock
       - DEFAULT_REGION=eu-west-2
-      - PORT_WEB_UI=${PORT_WEB_UI- }
     volumes:
-      - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
 
   mapping-db:
     image: postgres
