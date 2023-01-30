@@ -377,6 +377,64 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         }
       }
     }
+
+    @Nested
+    inner class ExceptionHandling {
+      val sentenceSequence = 1L
+
+      @Nested
+      inner class WhenAdjustmentServiceFailsOnce {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetBySentenceAdjustmentIdWithError(ADJUSTMENT_ID, 404)
+          mappingServer.stubCreateSentencingAdjustment()
+          nomisApi.stubSentenceAdjustmentCreate(BOOKING_ID, sentenceSequence)
+          sentencingAdjustmentsApi.stubAdjustmentGetWithErrorFollowedBySlowSuccess(
+            adjustmentId = ADJUSTMENT_ID,
+            sentenceSequence = sentenceSequence,
+            bookingId = BOOKING_ID,
+            adjustmentDays = 99,
+            adjustmentType = "RX",
+            adjustmentDate = "2022-01-01",
+          )
+          publishCreateAdjustmentDomainEvent()
+        }
+
+        @Test
+        fun `will callback back to adjustment service twice to get more details`() {
+          await untilAsserted {
+            sentencingAdjustmentsApi.verify(2, getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
+          }
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("sentencing-adjustment-create-success"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will eventually create a sentence adjustment in NOMIS`() {
+          await untilAsserted {
+            nomisApi.verify(
+              1,
+              postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments"))
+                .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("RX")))
+                .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
+                .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
+            )
+          }
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("sentencing-adjustment-create-success"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+      }
+    }
   }
 
   private fun publishCreateAdjustmentDomainEvent() {

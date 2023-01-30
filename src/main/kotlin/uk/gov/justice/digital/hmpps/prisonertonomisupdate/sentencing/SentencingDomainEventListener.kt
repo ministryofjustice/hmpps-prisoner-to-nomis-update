@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.awspring.cloud.sqs.annotation.SqsListener
+import io.awspring.cloud.sqs.listener.Visibility
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.future
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.HMPPSDomainEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
+import java.util.concurrent.CompletableFuture
 
 @Service
 class SentencingDomainEventListener(
@@ -25,29 +27,35 @@ class SentencingDomainEventListener(
   }
 
   @SqsListener("sentencing", factory = "hmppsQueueContainerFactoryProxy")
-  fun onPrisonerChange(message: String) {
+  fun onPrisonerChange(
+    message: String,
+    visibility: Visibility
+  ): CompletableFuture<Void> {
     log.debug("Received sentencing message {}", message)
     val sqsMessage: SQSMessage = objectMapper.readValue(message)
-    when (sqsMessage.Type) {
-      "Notification" -> {
-        val (eventType) = objectMapper.readValue<HMPPSDomainEvent>(sqsMessage.Message)
-        if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
-          "sentencing.sentence.adjustment.created" -> CoroutineScope(Dispatchers.Default).future {
-            sentencingAdjustmentsService.createAdjustment(
-              objectMapper.readValue(
-                sqsMessage.Message
-              )
-            )
+    return CoroutineScope(Dispatchers.Default).future {
+      kotlin.runCatching {
+        when (sqsMessage.Type) {
+          "Notification" -> {
+            val (eventType) = objectMapper.readValue<HMPPSDomainEvent>(sqsMessage.Message)
+            if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
+              "sentencing.sentence.adjustment.created" ->
+                sentencingAdjustmentsService.createAdjustment(objectMapper.readValue(sqsMessage.Message))
+
+              "sentencing.sentence.adjustment.updated",
+              "sentencing.sentence.adjustment.delete" -> log.info("Received a valid sentencing {}", eventType)
+
+              else -> log.info("Received a message I wasn't expecting: {}", eventType)
+            } else {
+              log.warn("Feature switch is disabled for {}", eventType)
+            }
           }
-
-          "sentencing.sentence.adjustment.updated",
-          "sentencing.sentence.adjustment.delete" -> log.info("Received a valid sentencing {}", eventType)
-
-          else -> log.info("Received a message I wasn't expecting: {}", eventType)
-        } else {
-          log.warn("Feature switch is disabled for {}", eventType)
         }
+      }.onFailure {
+        // temporary fix before SQL library is updated
+        visibility.changeTo(1)
+        throw it
       }
-    }
+    }.thenAccept { }
   }
 }
