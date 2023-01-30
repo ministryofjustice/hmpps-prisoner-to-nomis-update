@@ -10,6 +10,7 @@ class SentencingAdjustmentsService(
   private val sentencingAdjustmentsApiService: SentencingAdjustmentsApiService,
   private val nomisApiService: NomisApiService,
   private val sentencingAdjustmentsMappingService: SentencingAdjustmentsMappingService,
+  private val sentencingUpdateQueueService: SentencingUpdateQueueService,
   private val telemetryClient: TelemetryClient
 ) {
   suspend fun createAdjustment(createEvent: AdjustmentCreatedEvent) {
@@ -45,22 +46,28 @@ class SentencingAdjustmentsService(
               nomisAdjustmentRequest
             )
           }.also { createdNomisAdjustment ->
-            sentencingAdjustmentsMappingService.createMapping(
-              SentencingAdjustmentMappingDto(
-                nomisAdjustmentId = createdNomisAdjustment.id,
-                nomisAdjustmentType = if (adjustment.sentenceSequence == null) "BOOKING" else "SENTENCE",
-                sentenceAdjustmentId = adjustment.adjustmentId
-              )
+            val mapping = SentencingAdjustmentMappingDto(
+              nomisAdjustmentId = createdNomisAdjustment.id,
+              nomisAdjustmentType = if (adjustment.sentenceSequence == null) "BOOKING" else "SENTENCE",
+              sentenceAdjustmentId = adjustment.adjustmentId
             )
-            telemetryClient.trackEvent(
-              "sentencing-adjustment-create-success",
-              mapOf(
-                "sentenceAdjustmentId" to adjustment.adjustmentId,
-                "nomisAdjustmentId" to createdNomisAdjustment.id.toString(),
-                "offenderNo" to createEvent.additionalInformation.nomsNumber,
-              ),
-              null
-            )
+            kotlin.runCatching {
+              sentencingAdjustmentsMappingService.createMapping(mapping)
+            }
+              .onFailure {
+                sentencingUpdateQueueService.sendMessage(createEvent.additionalInformation.nomsNumber, mapping)
+              }
+              .onSuccess {
+                telemetryClient.trackEvent(
+                  "sentencing-adjustment-create-success",
+                  mapOf(
+                    "sentenceAdjustmentId" to adjustment.adjustmentId,
+                    "nomisAdjustmentId" to createdNomisAdjustment.id.toString(),
+                    "offenderNo" to createEvent.additionalInformation.nomsNumber,
+                  ),
+                  null
+                )
+              }
           }
         } else {
           telemetryClient.trackEvent(
@@ -75,6 +82,19 @@ class SentencingAdjustmentsService(
       }
     }
   }
+
+  suspend fun createSentencingAdjustmentMapping(message: SentencingAdjustmentCreateMappingRetryMessage) =
+    sentencingAdjustmentsMappingService.createMapping(message.mapping).also {
+      telemetryClient.trackEvent(
+        "sentencing-adjustment-create-success",
+        mapOf(
+          "sentenceAdjustmentId" to message.mapping.sentenceAdjustmentId,
+          "nomisAdjustmentId" to message.mapping.nomisAdjustmentId.toString(),
+          "offenderNo" to message.offenderNo,
+        ),
+        null
+      )
+    }
 }
 
 data class AdditionalInformation(

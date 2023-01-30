@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -256,6 +257,33 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
           )
           .withStatus(status)
       )
+    )
+  }
+
+  fun stubCreateSentencingAdjustmentWithErrorFollowedBySlowSuccess() {
+    stubFor(
+      post("/mapping/sentencing/adjustments")
+        .inScenario("Retry Mapping Adjustments Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json")
+        )
+        .willSetStateTo("Cause Mapping Adjustments Success")
+    )
+
+    stubFor(
+      post("/mapping/sentencing/adjustments")
+        .inScenario("Retry Mapping Adjustments Scenario")
+        .whenScenarioStateIs("Cause Mapping Adjustments Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201)
+            .withFixedDelay(1500)
+
+        ).willSetStateTo(Scenario.STARTED)
     )
   }
 }
