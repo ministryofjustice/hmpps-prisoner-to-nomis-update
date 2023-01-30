@@ -34,30 +34,24 @@ class SentencingDomainEventListener(
     log.debug("Received sentencing message {}", message)
     val sqsMessage: SQSMessage = message.fromJson()
     return asCompletableFuture {
-      kotlin.runCatching {
-        when (sqsMessage.Type) {
-          "Notification" -> {
-            val (eventType) = objectMapper.readValue<HMPPSDomainEvent>(sqsMessage.Message)
-            if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
-              "sentencing.sentence.adjustment.created" ->
-                sentencingAdjustmentsService.createAdjustment(sqsMessage.Message.fromJson())
+      when (sqsMessage.Type) {
+        "Notification" -> {
+          val (eventType) = objectMapper.readValue<HMPPSDomainEvent>(sqsMessage.Message)
+          if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
+            "sentencing.sentence.adjustment.created" ->
+              sentencingAdjustmentsService.createAdjustment(sqsMessage.Message.fromJson())
 
-              "sentencing.sentence.adjustment.updated",
-              "sentencing.sentence.adjustment.delete" -> log.info("Received a valid sentencing {}", eventType)
+            "sentencing.sentence.adjustment.updated",
+            "sentencing.sentence.adjustment.delete" -> log.info("Received a valid sentencing {}", eventType)
 
-              else -> log.info("Received a message I wasn't expecting: {}", eventType)
-            } else {
-              log.warn("Feature switch is disabled for {}", eventType)
-            }
+            else -> log.info("Received a message I wasn't expecting: {}", eventType)
+          } else {
+            log.warn("Feature switch is disabled for {}", eventType)
           }
-
-          RETRY_CREATE_MAPPING ->
-            sentencingAdjustmentsService.createSentencingAdjustmentMapping(sqsMessage.Message.fromJson())
         }
-      }.onFailure {
-        // temporary fix before SQL library is updated
-        visibility.changeTo(0)
-        throw it
+
+        RETRY_CREATE_MAPPING ->
+          sentencingAdjustmentsService.createSentencingAdjustmentMapping(sqsMessage.Message.fromJson())
       }
     }
   }
