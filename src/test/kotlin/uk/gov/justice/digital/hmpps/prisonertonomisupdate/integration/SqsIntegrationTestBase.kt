@@ -69,6 +69,13 @@ abstract class SqsIntegrationTestBase {
   internal val activityQueueUrl by lazy { activityQueue.queueUrl }
   internal val activityDlqUrl by lazy { activityQueue.dlqUrl }
 
+  internal val sentencingQueue by lazy { hmppsQueueService.findByQueueId("sentencing") as HmppsQueue }
+
+  internal val awsSqsSentencingClient by lazy { sentencingQueue.sqsClient }
+  internal val awsSqsSentencingDlqClient by lazy { sentencingQueue.sqsDlqClient }
+  internal val sentencingQueueUrl by lazy { sentencingQueue.queueUrl }
+  internal val sentencingDlqUrl by lazy { sentencingQueue.dlqUrl }
+
   internal val awsSnsClient by lazy { topic.snsClient }
   internal val topicArn by lazy { topic.arn }
 
@@ -82,6 +89,9 @@ abstract class SqsIntegrationTestBase {
 
     awsSqsActivityClient.purgeQueue(activityQueueUrl).get()
     awsSqsActivityDlqClient?.purgeQueue(activityDlqUrl)?.get()
+
+    awsSqsSentencingClient.purgeQueue(sentencingQueueUrl).get()
+    awsSqsSentencingDlqClient?.purgeQueue(sentencingDlqUrl)?.get()
   }
 
   companion object {

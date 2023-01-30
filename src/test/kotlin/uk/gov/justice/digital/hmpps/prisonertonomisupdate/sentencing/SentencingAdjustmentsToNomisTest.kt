@@ -7,7 +7,9 @@ import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
+import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -21,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegra
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension.Companion.sentencingAdjustmentsApi
+import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
 const val ADJUSTMENT_ID = "1234"
 const val OFFENDER_NUMBER = "A1234TT"
@@ -432,6 +435,131 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
               isNull(),
             )
           }
+        }
+      }
+
+      @Nested
+      inner class WhenAdjustmentServiceKeepsFailing {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetBySentenceAdjustmentIdWithError(ADJUSTMENT_ID, 404)
+          sentencingAdjustmentsApi.stubAdjustmentGetWithError(
+            adjustmentId = ADJUSTMENT_ID,
+            503,
+          )
+          await untilCallTo {
+            awsSqsSentencingDlqClient!!.countAllMessagesOnQueue(sentencingDlqUrl!!).get()
+          } matches { it == 0 }
+
+          publishCreateAdjustmentDomainEvent()
+        }
+
+        @Test
+        fun `will callback back to adjustment service 3 times before given up`() {
+          await untilAsserted {
+            sentencingAdjustmentsApi.verify(3, getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
+          }
+        }
+
+        @Test
+        fun `will add message to dead letter queue`() {
+          await untilCallTo {
+            awsSqsSentencingDlqClient!!.countAllMessagesOnQueue(sentencingDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+      }
+
+      @Nested
+      inner class WhenNomisServiceFailsOnce {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetBySentenceAdjustmentIdWithError(ADJUSTMENT_ID, 404)
+          mappingServer.stubCreateSentencingAdjustment()
+          nomisApi.stubSentenceAdjustmentCreateWithErrorFollowedBySlowSuccess(BOOKING_ID, sentenceSequence)
+          sentencingAdjustmentsApi.stubAdjustmentGet(
+            adjustmentId = ADJUSTMENT_ID,
+            sentenceSequence = sentenceSequence,
+            bookingId = BOOKING_ID,
+            adjustmentDays = 99,
+            adjustmentType = "RX",
+            adjustmentDate = "2022-01-01",
+          )
+          publishCreateAdjustmentDomainEvent()
+        }
+
+        @Test
+        fun `will callback back to adjustment and NOMIS service twice`() {
+          await untilAsserted {
+            sentencingAdjustmentsApi.verify(2, getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
+          }
+          await untilAsserted {
+            nomisApi.verify(
+              2,
+              postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments"))
+            )
+          }
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("sentencing-adjustment-create-success"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will eventually create a mapping after NOMIS adjustment is created`() {
+          await untilAsserted {
+            mappingServer.verify(
+              postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
+            )
+          }
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("sentencing-adjustment-create-success"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenNomisServiceKeepsFailing {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetBySentenceAdjustmentIdWithError(ADJUSTMENT_ID, 404)
+          sentencingAdjustmentsApi.stubAdjustmentGet(
+            adjustmentId = ADJUSTMENT_ID,
+            sentenceSequence = sentenceSequence,
+            bookingId = BOOKING_ID,
+            adjustmentDays = 99,
+            adjustmentType = "RX",
+            adjustmentDate = "2022-01-01",
+          )
+          nomisApi.stubSentenceAdjustmentCreateWithError(BOOKING_ID, sentenceSequence, 503)
+          await untilCallTo {
+            awsSqsSentencingDlqClient!!.countAllMessagesOnQueue(sentencingDlqUrl!!).get()
+          } matches { it == 0 }
+
+          publishCreateAdjustmentDomainEvent()
+        }
+
+        @Test
+        fun `will callback back to adjustment service 3 times before given up`() {
+          await untilAsserted {
+            nomisApi.verify(
+              3,
+              postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments"))
+            )
+          }
+        }
+
+        @Test
+        fun `will add message to dead letter queue`() {
+          await untilCallTo {
+            awsSqsSentencingDlqClient!!.countAllMessagesOnQueue(sentencingDlqUrl!!).get()
+          } matches { it == 1 }
         }
       }
     }
