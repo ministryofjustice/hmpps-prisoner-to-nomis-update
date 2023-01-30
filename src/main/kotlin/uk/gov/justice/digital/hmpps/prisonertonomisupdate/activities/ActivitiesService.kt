@@ -93,7 +93,8 @@ class ActivitiesService(
             CreateOffenderProgramProfileRequest(
               bookingId = allocation.bookingId!!,
               startDate = allocation.startDate,
-              endDate = allocation.endDate
+              endDate = allocation.endDate,
+              payBandCode = allocation.payBand!!, // Nomis appears to always require a payband
             )
           )
         } catch (e: Exception) {

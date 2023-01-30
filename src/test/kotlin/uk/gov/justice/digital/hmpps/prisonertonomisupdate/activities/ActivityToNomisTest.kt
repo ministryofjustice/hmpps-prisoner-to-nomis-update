@@ -131,6 +131,7 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
         .withRequestBody(WireMock.matchingJsonPath("bookingId", WireMock.equalTo("$bookingId")))
         .withRequestBody(WireMock.matchingJsonPath("startDate", WireMock.equalTo("2023-01-12")))
         .withRequestBody(WireMock.matchingJsonPath("endDate", WireMock.equalTo("2023-01-13")))
+        .withRequestBody(WireMock.matchingJsonPath("payBandCode", WireMock.equalTo("7")))
     )
   }
 
@@ -236,6 +237,7 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
     "bookingId": $bookingId,
     "startDate": "2023-01-12",
     "endDate": "2023-01-13",
+    "payBand": "7",
     "scheduleDescription" : "description",
     "activitySummary" : "summary"
   }
