@@ -33,7 +33,7 @@ class SentencingDomainEventListener(
   ): CompletableFuture<Void> {
     log.debug("Received sentencing message {}", message)
     val sqsMessage: SQSMessage = objectMapper.readValue(message)
-    return CoroutineScope(Dispatchers.Default).future {
+    return asCompletableFuture {
       kotlin.runCatching {
         when (sqsMessage.Type) {
           "Notification" -> {
@@ -53,9 +53,17 @@ class SentencingDomainEventListener(
         }
       }.onFailure {
         // temporary fix before SQL library is updated
-        visibility.changeTo(1)
+        visibility.changeTo(0)
         throw it
       }
-    }.thenAccept { }
+    }
   }
+}
+
+private fun asCompletableFuture(
+  process: suspend () -> Unit
+): CompletableFuture<Void> {
+  return CoroutineScope(Dispatchers.Default).future {
+    process()
+  }.thenAccept { }
 }

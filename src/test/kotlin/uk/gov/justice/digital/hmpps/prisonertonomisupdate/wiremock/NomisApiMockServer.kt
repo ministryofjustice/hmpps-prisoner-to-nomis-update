@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
+import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -203,6 +204,42 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
           )
           .withStatus(status)
       )
+    )
+  }
+
+  fun stubSentenceAdjustmentCreateWithErrorFollowedBySlowSuccess(
+    bookingId: Long,
+    sentenceSequence: Long,
+    adjustmentId: Long = 99L
+  ) {
+    stubFor(
+      post("/prisoners/booking-id/$bookingId/sentences/$sentenceSequence/adjustments")
+        .inScenario("Retry NOMIS Adjustments Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json")
+        )
+        .willSetStateTo("Cause NOMIS Adjustments Success")
+    )
+
+    stubFor(
+      post("/prisoners/booking-id/$bookingId/sentences/$sentenceSequence/adjustments")
+        .inScenario("Retry NOMIS Adjustments Scenario")
+        .whenScenarioStateIs("Cause NOMIS Adjustments Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+                { "id": $adjustmentId }
+                """
+            )
+            .withStatus(200)
+            .withFixedDelay(1500)
+
+        ).willSetStateTo(Scenario.STARTED)
     )
   }
 
