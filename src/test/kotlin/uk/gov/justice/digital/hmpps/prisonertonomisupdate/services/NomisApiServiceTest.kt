@@ -457,6 +457,7 @@ fun newAllocation() = CreateOffenderProgramProfileRequest(
   bookingId = 456L,
   startDate = LocalDate.parse("2023-01-20"),
   endDate = LocalDate.parse("2023-01-21"),
+  payBandCode = "PAY",
 )
 
 private fun newSentencingAdjustment(

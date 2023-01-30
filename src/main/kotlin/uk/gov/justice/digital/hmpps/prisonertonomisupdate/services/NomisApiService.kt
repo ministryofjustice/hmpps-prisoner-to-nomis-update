@@ -182,6 +182,7 @@ data class CreateOffenderProgramProfileRequest(
   val startDate: LocalDate,
   @JsonFormat(pattern = "yyyy-MM-dd")
   val endDate: LocalDate? = null,
+  val payBandCode: String,
 )
 
 data class CreateOffenderProgramProfileResponse(

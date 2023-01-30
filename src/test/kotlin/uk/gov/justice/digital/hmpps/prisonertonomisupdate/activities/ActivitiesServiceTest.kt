@@ -333,6 +333,7 @@ private fun newAllocation(): Allocation {
     bookingId = bookingId,
     startDate = LocalDate.parse("2023-01-12"),
     endDate = LocalDate.parse("2023-01-13"),
+    payBand = "PAY1",
     scheduleDescription = "description",
   )
 }
