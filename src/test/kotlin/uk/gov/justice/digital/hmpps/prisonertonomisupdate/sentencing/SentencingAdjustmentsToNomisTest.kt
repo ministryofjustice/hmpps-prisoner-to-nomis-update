@@ -75,6 +75,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           await untilAsserted {
             sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
           }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
         }
 
         @Test
@@ -89,6 +90,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand")))
             )
           }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
         }
 
         @Test
@@ -101,6 +103,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("sentenceAdjustmentId", equalTo(ADJUSTMENT_ID)))
             )
           }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
         }
 
         @Test
@@ -149,6 +152,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           await untilAsserted {
             sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
           }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
         }
 
         @Test
@@ -163,6 +167,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for absence")))
             )
           }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
         }
 
         @Test
@@ -175,6 +180,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("sentenceAdjustmentId", equalTo(ADJUSTMENT_ID)))
             )
           }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
         }
 
         @Test
@@ -551,6 +557,107 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             nomisApi.verify(
               3,
               postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments"))
+            )
+          }
+        }
+
+        @Test
+        fun `will add message to dead letter queue`() {
+          await untilCallTo {
+            awsSqsSentencingDlqClient!!.countAllMessagesOnQueue(sentencingDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+      }
+
+      @Nested
+      inner class WhenMappingServiceFailsOnce {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetBySentenceAdjustmentIdWithError(ADJUSTMENT_ID, 404)
+          mappingServer.stubCreateSentencingAdjustmentWithErrorFollowedBySlowSuccess()
+          nomisApi.stubSentenceAdjustmentCreate(BOOKING_ID, sentenceSequence)
+          sentencingAdjustmentsApi.stubAdjustmentGet(
+            adjustmentId = ADJUSTMENT_ID,
+            sentenceSequence = sentenceSequence,
+            bookingId = BOOKING_ID,
+            adjustmentDays = 99,
+            adjustmentType = "RX",
+            adjustmentDate = "2022-01-01",
+          )
+          publishCreateAdjustmentDomainEvent()
+        }
+
+        @Test
+        fun `should only create the NOMSI adjustment once`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("sentencing-adjustment-create-success"),
+              any(),
+              isNull(),
+            )
+          }
+          nomisApi.verify(
+            1,
+            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments"))
+          )
+        }
+
+        @Test
+        fun `will eventually create a mapping after NOMIS adjustment is created`() {
+          await untilAsserted {
+            mappingServer.verify(
+              2,
+              postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
+            )
+          }
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("sentencing-adjustment-create-success"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenMappingServiceKeepsFailing {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetBySentenceAdjustmentIdWithError(ADJUSTMENT_ID, 404)
+          mappingServer.stubCreateSentencingAdjustmentWithError(status = 503)
+          nomisApi.stubSentenceAdjustmentCreate(BOOKING_ID, sentenceSequence)
+          sentencingAdjustmentsApi.stubAdjustmentGet(
+            adjustmentId = ADJUSTMENT_ID,
+            sentenceSequence = sentenceSequence,
+            bookingId = BOOKING_ID,
+            adjustmentDays = 99,
+            adjustmentType = "RX",
+            adjustmentDate = "2022-01-01",
+          )
+          await untilCallTo {
+            awsSqsSentencingDlqClient!!.countAllMessagesOnQueue(sentencingDlqUrl!!).get()
+          } matches { it == 0 }
+
+          publishCreateAdjustmentDomainEvent()
+        }
+
+        @Test
+        fun `should only create the NOMSI adjustment once`() {
+          await untilAsserted {
+            nomisApi.verify(
+              1,
+              postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments"))
+            )
+          }
+        }
+
+        @Test
+        fun `will try to create mapping 4 times (1 for original attempt and 3 for the retry message) before given up`() {
+          await untilAsserted {
+            mappingServer.verify(
+              4,
+              postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
             )
           }
         }

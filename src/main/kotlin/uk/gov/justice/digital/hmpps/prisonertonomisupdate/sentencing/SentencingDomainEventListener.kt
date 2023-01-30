@@ -32,7 +32,7 @@ class SentencingDomainEventListener(
     visibility: Visibility
   ): CompletableFuture<Void> {
     log.debug("Received sentencing message {}", message)
-    val sqsMessage: SQSMessage = objectMapper.readValue(message)
+    val sqsMessage: SQSMessage = message.fromJson()
     return asCompletableFuture {
       kotlin.runCatching {
         when (sqsMessage.Type) {
@@ -40,7 +40,7 @@ class SentencingDomainEventListener(
             val (eventType) = objectMapper.readValue<HMPPSDomainEvent>(sqsMessage.Message)
             if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
               "sentencing.sentence.adjustment.created" ->
-                sentencingAdjustmentsService.createAdjustment(objectMapper.readValue(sqsMessage.Message))
+                sentencingAdjustmentsService.createAdjustment(sqsMessage.Message.fromJson())
 
               "sentencing.sentence.adjustment.updated",
               "sentencing.sentence.adjustment.delete" -> log.info("Received a valid sentencing {}", eventType)
@@ -50,6 +50,9 @@ class SentencingDomainEventListener(
               log.warn("Feature switch is disabled for {}", eventType)
             }
           }
+
+          RETRY_CREATE_MAPPING ->
+            sentencingAdjustmentsService.createSentencingAdjustmentMapping(sqsMessage.Message.fromJson())
         }
       }.onFailure {
         // temporary fix before SQL library is updated
@@ -58,6 +61,9 @@ class SentencingDomainEventListener(
       }
     }
   }
+
+  private inline fun <reified T> String.fromJson(): T =
+    objectMapper.readValue(this)
 }
 
 private fun asCompletableFuture(

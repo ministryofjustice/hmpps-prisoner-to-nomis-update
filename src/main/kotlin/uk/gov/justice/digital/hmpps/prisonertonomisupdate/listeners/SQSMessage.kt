@@ -5,4 +5,4 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming
 
 @Suppress("PropertyName")
 @JsonNaming(value = PropertyNamingStrategies.UpperCamelCaseStrategy::class)
-data class SQSMessage(val Type: String, val Message: String, val MessageId: String)
+data class SQSMessage(val Type: String, val Message: String, val MessageId: String? = null)
