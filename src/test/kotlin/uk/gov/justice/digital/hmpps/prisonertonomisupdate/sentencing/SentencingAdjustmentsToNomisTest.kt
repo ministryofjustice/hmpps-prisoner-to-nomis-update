@@ -588,7 +588,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         }
 
         @Test
-        fun `should only create the NOMSI adjustment once`() {
+        fun `should only create the NOMIS adjustment once`() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
               eq("sentencing-adjustment-create-success"),
@@ -643,23 +643,17 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         }
 
         @Test
-        fun `should only create the NOMSI adjustment once`() {
-          await untilAsserted {
-            nomisApi.verify(
-              1,
-              postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments"))
-            )
-          }
-        }
-
-        @Test
-        fun `will try to create mapping 4 times (1 for original attempt and 3 for the retry message) before given up`() {
+        fun `will try to create mapping 4 times only create the NOMIS adjustment once`() {
           await untilAsserted {
             mappingServer.verify(
               4,
               postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
             )
           }
+          nomisApi.verify(
+            1,
+            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments"))
+          )
         }
 
         @Test

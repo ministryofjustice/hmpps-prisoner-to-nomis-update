@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.awspring.cloud.sqs.annotation.SqsListener
-import io.awspring.cloud.sqs.listener.Visibility
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.future
@@ -29,7 +28,6 @@ class SentencingDomainEventListener(
   @SqsListener("sentencing", factory = "hmppsQueueContainerFactoryProxy")
   fun onPrisonerChange(
     message: String,
-    visibility: Visibility
   ): CompletableFuture<Void> {
     log.debug("Received sentencing message {}", message)
     val sqsMessage: SQSMessage = message.fromJson()
