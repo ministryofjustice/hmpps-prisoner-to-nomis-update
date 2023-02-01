@@ -19,7 +19,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.0.0-beta-9")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.0.0-beta-10")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.2")
@@ -28,7 +28,7 @@ dependencies {
 
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.11")
   testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.0")
-  testImplementation("org.mockito:mockito-inline:5.1.0")
+  testImplementation("org.mockito:mockito-inline:5.1.1")
   testImplementation("org.testcontainers:localstack:1.17.6")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
