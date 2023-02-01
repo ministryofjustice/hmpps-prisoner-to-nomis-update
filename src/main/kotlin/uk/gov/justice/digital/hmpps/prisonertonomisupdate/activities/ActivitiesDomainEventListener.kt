@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import io.awspring.cloud.sqs.annotation.SqsListener
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -25,6 +27,7 @@ class ActivitiesDomainEventListener(
   }
 
   @SqsListener("activity", factory = "hmppsQueueContainerFactoryProxy")
+  @WithSpan(value = "Digital-Prison-Services-hmpps_prisoner_to_nomis_activity_queue", kind = SpanKind.SERVER)
   fun onChange(message: String) {
     log.debug("Received activity message {}", message)
     val sqsMessage: SQSMessage = objectMapper.readValue(message)
