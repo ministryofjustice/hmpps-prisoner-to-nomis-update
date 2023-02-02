@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.awspring.cloud.sqs.annotation.SqsListener
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.future
@@ -26,6 +28,7 @@ class SentencingDomainEventListener(
   }
 
   @SqsListener("sentencing", factory = "hmppsQueueContainerFactoryProxy")
+  @WithSpan(value = "Digital-Prison-Services-hmpps_prisoner_to_nomis_sentencing_queue", kind = SpanKind.SERVER)
   fun onPrisonerChange(
     message: String,
   ): CompletableFuture<Void> {
