@@ -67,12 +67,20 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyToMono(CreateActivityResponse::class.java)
       .block()!!
 
-  fun createAllocation(courseActivityId: Long, request: CreateOffenderProgramProfileRequest): CreateOffenderProgramProfileResponse =
+  fun createAllocation(courseActivityId: Long, request: CreateOffenderProgramProfileRequest): OffenderProgramProfileResponse =
     webClient.post()
       .uri("/activities/$courseActivityId")
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(CreateOffenderProgramProfileResponse::class.java)
+      .bodyToMono(OffenderProgramProfileResponse::class.java)
+      .block()!!
+
+  fun deallocate(courseActivityId: Long, bookingId: Long, request: EndOffenderProgramProfileRequest): OffenderProgramProfileResponse =
+    webClient.put()
+      .uri("/activities/$courseActivityId/booking-id/$bookingId/end")
+      .bodyValue(request)
+      .retrieve()
+      .bodyToMono(OffenderProgramProfileResponse::class.java)
       .block()!!
 
   suspend fun createSentenceAdjustment(
@@ -185,8 +193,15 @@ data class CreateOffenderProgramProfileRequest(
   val payBandCode: String,
 )
 
-data class CreateOffenderProgramProfileResponse(
+data class OffenderProgramProfileResponse(
   val offenderProgramReferenceId: Long,
+)
+
+data class EndOffenderProgramProfileRequest(
+  @JsonFormat(pattern = "yyyy-MM-dd")
+  val endDate: LocalDate,
+  val endReason: String? = null,
+  val endComment: String? = null,
 )
 
 data class CreateSentencingAdjustmentRequest(

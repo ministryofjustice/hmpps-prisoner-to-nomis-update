@@ -37,6 +37,7 @@ class ActivitiesDomainEventListener(
         if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
           "activities.activity-schedule.created" -> activitiesService.createActivity(objectMapper.readValue(sqsMessage.Message))
           "activities.prisoner.allocated" -> activitiesService.createAllocation(objectMapper.readValue(sqsMessage.Message))
+          "activities.prisoner.deallocated" -> activitiesService.deallocate(objectMapper.readValue(sqsMessage.Message))
           else -> log.info("Received a message I wasn't expecting: {}", eventType)
         } else {
           log.warn("Feature switch is disabled for {}", eventType)

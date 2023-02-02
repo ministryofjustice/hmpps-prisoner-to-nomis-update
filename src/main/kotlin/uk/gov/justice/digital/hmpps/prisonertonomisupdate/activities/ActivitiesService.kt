@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateOffenderProgramProfileRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.EndOffenderProgramProfileRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
 import java.math.BigDecimal
@@ -106,6 +107,39 @@ class ActivitiesService(
           .plus(Pair("offenderProgramReferenceId", nomisResponse.offenderProgramReferenceId.toString()))
 
         telemetryClient.trackEvent("activity-allocation-created-event", mapWithNomisId)
+      }
+    }
+  }
+
+  fun deallocate(allocationEvent: AllocationDomainEvent) {
+    activitiesApiService.getAllocation(allocationEvent.allocationId).let { allocation ->
+      mappingService.getMappingGivenActivityScheduleId(allocationEvent.scheduleId).let { mapping ->
+
+        val telemetryMap = mutableMapOf(
+          "allocationId" to allocation.id.toString(),
+          "offenderNo" to allocation.prisonerNumber,
+          "bookingId" to allocation.bookingId.toString(),
+        )
+
+        val nomisResponse = try {
+          nomisApiService.deallocate(
+            mapping.nomisCourseActivityId,
+            allocation.bookingId!!,
+            EndOffenderProgramProfileRequest(
+              endDate = allocation.endDate!!,
+              endReason = allocation.deallocatedReason, // TODO probably will need a mapping
+              // endComment = allocation.?, // TODO could put something useful in here
+            )
+          )
+        } catch (e: Exception) {
+          telemetryClient.trackEvent("activity-deallocate-failed", telemetryMap)
+          throw e
+        }
+
+        val mapWithNomisId = telemetryMap
+          .plus(Pair("offenderProgramReferenceId", nomisResponse.offenderProgramReferenceId.toString()))
+
+        telemetryClient.trackEvent("activity-deallocate-event", mapWithNomisId)
       }
     }
   }
