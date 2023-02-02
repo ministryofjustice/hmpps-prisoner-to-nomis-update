@@ -51,8 +51,7 @@ class ActivitiesService(
         throw e
       }
 
-      val mapWithNomisId = telemetryMap
-        .plus(Pair("courseActivityId", nomisResponse.courseActivityId.toString()))
+      telemetryMap["courseActivityId"] = nomisResponse.courseActivityId.toString()
 
       try {
         mappingService.createMapping(
@@ -63,7 +62,7 @@ class ActivitiesService(
           )
         )
       } catch (e: Exception) {
-        telemetryClient.trackEvent("activity-create-map-failed", mapWithNomisId)
+        telemetryClient.trackEvent("activity-create-map-failed", telemetryMap)
         log.error("Unexpected exception, queueing retry", e)
         activitiesUpdateQueueService.sendMessage(
           ActivityContext(
@@ -74,13 +73,13 @@ class ActivitiesService(
         return
       }
 
-      telemetryClient.trackEvent("activity-created-event", mapWithNomisId)
+      telemetryClient.trackEvent("activity-created-event", telemetryMap)
     }
   }
 
   fun createAllocation(allocationEvent: AllocationDomainEvent) {
-    activitiesApiService.getAllocation(allocationEvent.allocationId).let { allocation ->
-      mappingService.getMappingGivenActivityScheduleId(allocationEvent.scheduleId).let { mapping ->
+    activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
+      mappingService.getMappingGivenActivityScheduleId(allocationEvent.additionalInformation.scheduleId).let { mapping ->
 
         val telemetryMap = mutableMapOf(
           "allocationId" to allocation.id.toString(),
@@ -103,17 +102,17 @@ class ActivitiesService(
           throw e
         }
 
-        val mapWithNomisId = telemetryMap
-          .plus(Pair("offenderProgramReferenceId", nomisResponse.offenderProgramReferenceId.toString()))
+        telemetryMap["offenderProgramReferenceId"] = nomisResponse.offenderProgramReferenceId.toString()
 
-        telemetryClient.trackEvent("activity-allocation-created-event", mapWithNomisId)
+        telemetryClient.trackEvent("activity-allocation-created-event", telemetryMap)
       }
     }
   }
 
   fun deallocate(allocationEvent: AllocationDomainEvent) {
-    activitiesApiService.getAllocation(allocationEvent.allocationId).let { allocation ->
-      mappingService.getMappingGivenActivityScheduleId(allocationEvent.scheduleId).let { mapping ->
+    activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
+      mappingService.getMappingGivenActivityScheduleId(allocationEvent.additionalInformation.scheduleId)
+        .let { mapping ->
 
         val telemetryMap = mutableMapOf(
           "allocationId" to allocation.id.toString(),
@@ -136,10 +135,9 @@ class ActivitiesService(
           throw e
         }
 
-        val mapWithNomisId = telemetryMap
-          .plus(Pair("offenderProgramReferenceId", nomisResponse.offenderProgramReferenceId.toString()))
+        telemetryMap["offenderProgramReferenceId"] = nomisResponse.offenderProgramReferenceId.toString()
 
-        telemetryClient.trackEvent("activity-deallocate-event", mapWithNomisId)
+        telemetryClient.trackEvent("activity-deallocate-event", telemetryMap)
       }
     }
   }
@@ -186,9 +184,13 @@ data class OutboundHMPPSDomainEvent(
 
 data class AllocationDomainEvent(
   val eventType: String,
-  val scheduleId: Long,
-  val allocationId: Long,
   val version: String,
   val description: String,
   val occurredAt: LocalDateTime,
+  val additionalInformation: AllocationAdditionalInformation,
+)
+
+data class AllocationAdditionalInformation(
+  val scheduleId: Long,
+  val allocationId: Long,
 )

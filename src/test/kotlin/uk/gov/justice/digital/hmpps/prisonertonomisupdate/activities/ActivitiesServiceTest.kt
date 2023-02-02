@@ -189,11 +189,13 @@ internal class ActivitiesServiceTest {
       activitiesService.createAllocation(
         AllocationDomainEvent(
           eventType = "dummy",
-          scheduleId = activityScheduleId,
-          allocationId = allocationId,
           version = "1.0",
           description = "description",
           occurredAt = LocalDateTime.now(),
+          additionalInformation = AllocationAdditionalInformation(
+            scheduleId = activityScheduleId,
+            allocationId = allocationId,
+          ),
         )
       )
 
@@ -225,11 +227,13 @@ internal class ActivitiesServiceTest {
         activitiesService.createAllocation(
           AllocationDomainEvent(
             eventType = "dummy",
-            scheduleId = activityScheduleId,
-            allocationId = allocationId,
             version = "1.0",
             description = "description",
             occurredAt = LocalDateTime.now(),
+            additionalInformation = AllocationAdditionalInformation(
+              scheduleId = activityScheduleId,
+              allocationId = allocationId,
+            ),
           )
         )
       }.hasMessage("test")
@@ -267,11 +271,13 @@ internal class ActivitiesServiceTest {
       activitiesService.deallocate(
         AllocationDomainEvent(
           eventType = "dummy",
-          scheduleId = activityScheduleId,
-          allocationId = allocationId,
           version = "1.0",
           description = "description",
           occurredAt = LocalDateTime.now(),
+          additionalInformation = AllocationAdditionalInformation(
+            scheduleId = activityScheduleId,
+            allocationId = allocationId,
+          ),
         )
       )
 
@@ -303,11 +309,13 @@ internal class ActivitiesServiceTest {
         activitiesService.deallocate(
           AllocationDomainEvent(
             eventType = "dummy",
-            scheduleId = activityScheduleId,
-            allocationId = allocationId,
             version = "1.0",
             description = "description",
             occurredAt = LocalDateTime.now(),
+            additionalInformation = AllocationAdditionalInformation(
+              scheduleId = activityScheduleId,
+              allocationId = allocationId,
+            ),
           )
         )
       }.hasMessage("test")
