@@ -135,6 +135,40 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
     )
   }
 
+  @Test
+  fun `will consume a deallocation message`() {
+    activitiesApi.stubGetAllocation(allocationId, buildApiAllocationDtoJsonResponse())
+    mappingServer.stubGetMappingGivenActivityScheduleId(
+      activityScheduleId,
+      """{
+          "nomisCourseActivityId": $courseActivityId,
+          "activityScheduleId": $activityScheduleId,
+          "mappingType": "TYPE"
+        }
+      """.trimIndent(),
+    )
+    nomisApi.stubDeallocate(courseActivityId, bookingId)
+
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(allocationMessagePayload("activities.prisoner.deallocated", activityScheduleId, allocationId))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue("activities.prisoner.deallocated").build(),
+          )
+        ).build()
+    ).get()
+
+    await untilCallTo { activitiesApi.getCountFor("/allocations/$allocationId") } matches { it == 1 }
+    await untilCallTo { nomisApi.putCountFor("/activities/$courseActivityId/booking-id/$bookingId/end") } matches { it == 1 }
+    nomisApi.verify(
+      WireMock.putRequestedFor(WireMock.urlEqualTo("/activities/$courseActivityId/booking-id/$bookingId/end"))
+        .withRequestBody(WireMock.matchingJsonPath("endDate", WireMock.equalTo("2023-01-13")))
+        .withRequestBody(WireMock.matchingJsonPath("endReason", WireMock.equalTo("END")))
+    )
+  }
+
   fun buildApiActivityScheduleDtoJsonResponse(id: Long = activityScheduleId): String =
     """
 {
@@ -238,6 +272,7 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
     "startDate": "2023-01-12",
     "endDate": "2023-01-13",
     "payBand": "7",
+    "deallocatedReason": "END",
     "scheduleDescription" : "description",
     "activitySummary" : "summary"
   }

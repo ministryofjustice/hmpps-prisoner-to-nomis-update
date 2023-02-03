@@ -20,8 +20,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.InternalLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateOffenderProgramProfileResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.OffenderProgramProfileResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -183,17 +183,19 @@ internal class ActivitiesServiceTest {
         )
       )
       whenever(nomisApiService.createAllocation(eq(nomisCourseActivityId), any())).thenReturn(
-        CreateOffenderProgramProfileResponse(offenderProgramReferenceId = offenderProgramReferenceId)
+        OffenderProgramProfileResponse(offenderProgramReferenceId = offenderProgramReferenceId)
       )
 
       activitiesService.createAllocation(
         AllocationDomainEvent(
           eventType = "dummy",
-          scheduleId = activityScheduleId,
-          allocationId = allocationId,
           version = "1.0",
           description = "description",
           occurredAt = LocalDateTime.now(),
+          additionalInformation = AllocationAdditionalInformation(
+            scheduleId = activityScheduleId,
+            allocationId = allocationId,
+          ),
         )
       )
 
@@ -225,17 +227,101 @@ internal class ActivitiesServiceTest {
         activitiesService.createAllocation(
           AllocationDomainEvent(
             eventType = "dummy",
-            scheduleId = activityScheduleId,
-            allocationId = allocationId,
             version = "1.0",
             description = "description",
             occurredAt = LocalDateTime.now(),
+            additionalInformation = AllocationAdditionalInformation(
+              scheduleId = activityScheduleId,
+              allocationId = allocationId,
+            ),
           )
         )
       }.hasMessage("test")
 
       verify(telemetryClient).trackEvent(
         eq("activity-allocation-create-failed"),
+        check {
+          assertThat(it["allocationId"]).isEqualTo("$allocationId")
+          assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+          assertThat(it["bookingId"]).isEqualTo("$bookingId")
+        },
+        isNull()
+      )
+    }
+  }
+
+  @Nested
+  inner class Deallocate {
+
+    @Test
+    fun `should log an allocation event`() {
+
+      whenever(activitiesApiService.getAllocation(allocationId)).thenReturn(newAllocation())
+      whenever(mappingService.getMappingGivenActivityScheduleId(activityScheduleId)).thenReturn(
+        ActivityMappingDto(
+          nomisCourseActivityId = nomisCourseActivityId,
+          activityScheduleId = activityScheduleId,
+          mappingType = "ACTIVITY_CREATED",
+        )
+      )
+      whenever(nomisApiService.deallocate(eq(nomisCourseActivityId), any(), any())).thenReturn(
+        OffenderProgramProfileResponse(offenderProgramReferenceId = offenderProgramReferenceId)
+      )
+
+      activitiesService.deallocate(
+        AllocationDomainEvent(
+          eventType = "dummy",
+          version = "1.0",
+          description = "description",
+          occurredAt = LocalDateTime.now(),
+          additionalInformation = AllocationAdditionalInformation(
+            scheduleId = activityScheduleId,
+            allocationId = allocationId,
+          ),
+        )
+      )
+
+      verify(telemetryClient).trackEvent(
+        eq("activity-deallocate-event"),
+        check {
+          assertThat(it["allocationId"]).isEqualTo("$allocationId")
+          assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+          assertThat(it["bookingId"]).isEqualTo("$bookingId")
+          assertThat(it["offenderProgramReferenceId"]).isEqualTo("$offenderProgramReferenceId")
+        },
+        isNull()
+      )
+    }
+
+    @Test
+    fun `should log a nomis failure`() {
+      whenever(activitiesApiService.getAllocation(allocationId)).thenReturn(newAllocation())
+      whenever(mappingService.getMappingGivenActivityScheduleId(activityScheduleId)).thenReturn(
+        ActivityMappingDto(
+          nomisCourseActivityId = nomisCourseActivityId,
+          activityScheduleId = activityScheduleId,
+          mappingType = "ACTIVITY_CREATED",
+        )
+      )
+      whenever(nomisApiService.deallocate(any(), any(), any())).thenThrow(RuntimeException("test"))
+
+      assertThatThrownBy {
+        activitiesService.deallocate(
+          AllocationDomainEvent(
+            eventType = "dummy",
+            version = "1.0",
+            description = "description",
+            occurredAt = LocalDateTime.now(),
+            additionalInformation = AllocationAdditionalInformation(
+              scheduleId = activityScheduleId,
+              allocationId = allocationId,
+            ),
+          )
+        )
+      }.hasMessage("test")
+
+      verify(telemetryClient).trackEvent(
+        eq("activity-deallocate-failed"),
         check {
           assertThat(it["allocationId"]).isEqualTo("$allocationId")
           assertThat(it["offenderNo"]).isEqualTo(offenderNo)

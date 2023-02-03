@@ -285,6 +285,44 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
+  inner class Deallocation {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() {
+      NomisApiExtension.nomisApi.stubDeallocate(12, 456)
+
+      nomisApiService.deallocate(12, 456, newDeallocation())
+
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/12/booking-id/456/end"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+      )
+    }
+
+    @Test
+    fun `will post data to nomis api`() {
+      NomisApiExtension.nomisApi.stubDeallocate(12, 456)
+
+      nomisApiService.deallocate(12, 456, newDeallocation())
+
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/12/booking-id/456/end"))
+          .withRequestBody(matchingJsonPath("$.endDate", equalTo("2023-01-21")))
+          .withRequestBody(matchingJsonPath("$.endReason", equalTo("REASON")))
+      )
+    }
+
+    @Test
+    fun `when any error response is received an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubDeallocateWithError(12, 456, 400)
+
+      assertThatThrownBy {
+        nomisApiService.deallocate(12, 456, newDeallocation())
+      }.isInstanceOf(BadRequest::class.java)
+    }
+  }
+
+  @Nested
   inner class CreateSentenceAdjustment {
 
     @Test
@@ -458,6 +496,11 @@ fun newAllocation() = CreateOffenderProgramProfileRequest(
   startDate = LocalDate.parse("2023-01-20"),
   endDate = LocalDate.parse("2023-01-21"),
   payBandCode = "PAY",
+)
+
+fun newDeallocation() = EndOffenderProgramProfileRequest(
+  endDate = LocalDate.parse("2023-01-21"),
+  endReason = "REASON",
 )
 
 private fun newSentencingAdjustment(

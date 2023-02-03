@@ -70,20 +70,20 @@ class PrisonVisitsService(
         throw e
       }
 
-      val mapWithNomisId = telemetryMap.plus(Pair("nomisVisitId", nomisId))
+      telemetryMap["nomisVisitId"] = nomisId
 
       try {
         mappingService.createMapping(
           VisitMappingDto(nomisId = nomisId, vsipId = visitBookedEvent.reference, mappingType = "ONLINE")
         )
       } catch (e: Exception) {
-        telemetryClient.trackEvent("visit-booked-create-map-failed", mapWithNomisId)
+        telemetryClient.trackEvent("visit-booked-create-map-failed", telemetryMap)
         log.error("Unexpected exception, queueing retry", e)
         visitsUpdateQueueService.sendMessage(VisitContext(nomisId = nomisId, vsipId = visitBookedEvent.reference))
         return
       }
 
-      telemetryClient.trackEvent("visit-booked-event", mapWithNomisId)
+      telemetryClient.trackEvent("visit-booked-event", telemetryMap)
     }
   }
 
@@ -114,10 +114,9 @@ class PrisonVisitsService(
         )
       )
 
-      telemetryClient.trackEvent(
-        "visit-cancelled-event",
-        telemetryProperties.plus(Pair("nomisVisitId", mappingDto.nomisId))
-      )
+      telemetryProperties["nomisVisitId"] = mappingDto.nomisId
+
+      telemetryClient.trackEvent("visit-cancelled-event", telemetryProperties)
     }
   }
 
@@ -146,10 +145,9 @@ class PrisonVisitsService(
         )
       )
 
-      telemetryClient.trackEvent(
-        "visit-changed-event",
-        telemetryProperties.plus(Pair("nomisVisitId", mappingDto.nomisId))
-      )
+      telemetryProperties["nomisVisitId"] = mappingDto.nomisId
+
+      telemetryClient.trackEvent("visit-changed-event", telemetryProperties)
     }
   }
 

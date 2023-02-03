@@ -34,6 +34,7 @@ class NomisApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallbac
 class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   companion object {
     private const val WIREMOCK_PORT = 8082
+    private const val ERROR_RESPONSE = """{ "error": "some error" }"""
   }
 
   fun stubHealthPing(status: Int) {
@@ -177,7 +178,27 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  private val ERROR_RESPONSE = """{ "error": "some error" }"""
+  fun stubDeallocate(courseActivityId: Long, bookingId: Long) {
+    stubFor(
+      put("/activities/$courseActivityId/booking-id/$bookingId/end").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "offenderProgramReferenceId": 1234 }""")
+          .withStatus(201)
+      )
+    )
+  }
+
+  fun stubDeallocateWithError(courseActivityId: Long, bookingId: Long, status: Int = 500) {
+    stubFor(
+      put("/activities/$courseActivityId/booking-id/$bookingId/end").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status)
+      )
+    )
+  }
 
   fun stubSentenceAdjustmentCreate(bookingId: Long, sentenceSequence: Long, adjustmentId: Long = 99L) {
     stubFor(
@@ -195,13 +216,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       post("/prisoners/booking-id/$bookingId/sentences/$sentenceSequence/adjustments").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(
-            """
-              {
-                "error": "some error"
-              }
-            """.trimIndent()
-          )
+          .withBody(ERROR_RESPONSE)
           .withStatus(status)
       )
     )
@@ -259,13 +274,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       post("/prisoners/booking-id/$bookingId/adjustments").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(
-            """
-              {
-                "error": "some error"
-              }
-            """.trimIndent()
-          )
+          .withBody(ERROR_RESPONSE)
           .withStatus(status)
       )
     )
