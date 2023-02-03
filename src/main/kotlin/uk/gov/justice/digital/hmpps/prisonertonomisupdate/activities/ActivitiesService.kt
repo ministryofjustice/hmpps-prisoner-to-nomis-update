@@ -114,31 +114,31 @@ class ActivitiesService(
       mappingService.getMappingGivenActivityScheduleId(allocationEvent.additionalInformation.scheduleId)
         .let { mapping ->
 
-        val telemetryMap = mutableMapOf(
-          "allocationId" to allocation.id.toString(),
-          "offenderNo" to allocation.prisonerNumber,
-          "bookingId" to allocation.bookingId.toString(),
-        )
-
-        val nomisResponse = try {
-          nomisApiService.deallocate(
-            mapping.nomisCourseActivityId,
-            allocation.bookingId!!,
-            EndOffenderProgramProfileRequest(
-              endDate = allocation.endDate!!,
-              endReason = allocation.deallocatedReason, // TODO probably will need a mapping
-              // endComment = allocation.?, // TODO could put something useful in here
-            )
+          val telemetryMap = mutableMapOf(
+            "allocationId" to allocation.id.toString(),
+            "offenderNo" to allocation.prisonerNumber,
+            "bookingId" to allocation.bookingId.toString(),
           )
-        } catch (e: Exception) {
-          telemetryClient.trackEvent("activity-deallocate-failed", telemetryMap)
-          throw e
+
+          val nomisResponse = try {
+            nomisApiService.deallocate(
+              mapping.nomisCourseActivityId,
+              allocation.bookingId!!,
+              EndOffenderProgramProfileRequest(
+                endDate = allocation.endDate!!,
+                endReason = allocation.deallocatedReason, // TODO probably will need a mapping
+                // endComment = allocation.?, // TODO could put something useful in here
+              )
+            )
+          } catch (e: Exception) {
+            telemetryClient.trackEvent("activity-deallocate-failed", telemetryMap)
+            throw e
+          }
+
+          telemetryMap["offenderProgramReferenceId"] = nomisResponse.offenderProgramReferenceId.toString()
+
+          telemetryClient.trackEvent("activity-deallocate-event", telemetryMap)
         }
-
-        telemetryMap["offenderProgramReferenceId"] = nomisResponse.offenderProgramReferenceId.toString()
-
-        telemetryClient.trackEvent("activity-deallocate-event", telemetryMap)
-      }
     }
   }
 
