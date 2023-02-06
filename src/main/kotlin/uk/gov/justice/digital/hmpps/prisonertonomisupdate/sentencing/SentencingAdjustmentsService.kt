@@ -4,6 +4,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateSentencingAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateSentencingAdjustmentRequest
 
 @Service
 class SentencingAdjustmentsService(
@@ -83,6 +84,53 @@ class SentencingAdjustmentsService(
     }
   }
 
+  suspend fun updateAdjustment(createEvent: AdjustmentUpdatedEvent) {
+    sentencingAdjustmentsMappingService.getMappingGivenSentenceAdjustmentId(createEvent.additionalInformation.id)
+      ?.also { mapping ->
+        sentencingAdjustmentsApiService.getAdjustment(createEvent.additionalInformation.id).also { adjustment ->
+          if (adjustment.creatingSystem != CreatingSystem.NOMIS) {
+            val nomisAdjustmentRequest = UpdateSentencingAdjustmentRequest(
+              adjustmentTypeCode = adjustment.adjustmentType,
+              adjustmentDate = adjustment.adjustmentDate,
+              adjustmentFomDate = adjustment.adjustmentStartPeriod,
+              adjustmentDays = adjustment.adjustmentDays,
+              comment = adjustment.comment,
+            )
+            if (adjustment.sentenceSequence == null) {
+              nomisApiService.updateKeyDateAdjustment(
+                mapping.nomisAdjustmentId,
+                nomisAdjustmentRequest
+              )
+            } else {
+              nomisApiService.updateSentenceAdjustment(
+                mapping.nomisAdjustmentId,
+                nomisAdjustmentRequest
+              )
+            }.also {
+              telemetryClient.trackEvent(
+                "sentencing-adjustment-updated-success",
+                mapOf(
+                  "sentenceAdjustmentId" to adjustment.adjustmentId,
+                  "nomisAdjustmentId" to mapping.nomisAdjustmentId.toString(),
+                  "offenderNo" to createEvent.additionalInformation.nomsNumber,
+                ),
+                null
+              )
+            }
+          } else {
+            telemetryClient.trackEvent(
+              "sentencing-adjustment-create-ignored",
+              mapOf(
+                "adjustmentId" to adjustment.adjustmentId,
+                "offenderNo" to createEvent.additionalInformation.nomsNumber,
+              ),
+              null
+            )
+          }
+        }
+      }
+  }
+
   suspend fun createSentencingAdjustmentMapping(message: SentencingAdjustmentCreateMappingRetryMessage) =
     sentencingAdjustmentsMappingService.createMapping(message.mapping).also {
       telemetryClient.trackEvent(
@@ -103,5 +151,9 @@ data class AdditionalInformation(
 )
 
 data class AdjustmentCreatedEvent(
+  val additionalInformation: AdditionalInformation,
+)
+
+data class AdjustmentUpdatedEvent(
   val additionalInformation: AdditionalInformation,
 )

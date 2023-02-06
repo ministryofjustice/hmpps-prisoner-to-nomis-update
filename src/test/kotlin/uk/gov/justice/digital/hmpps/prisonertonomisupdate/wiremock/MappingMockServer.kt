@@ -198,7 +198,6 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
-  fun getCountFor(url: String) = this.findAll(WireMock.getRequestedFor(WireMock.urlEqualTo(url))).count()
   fun stubCreateSentencingAdjustment() {
     stubFor(
       post("/mapping/sentencing/adjustments").willReturn(

@@ -389,6 +389,72 @@ internal class NomisApiServiceTest {
       }.isInstanceOf(ServiceUnavailable::class.java)
     }
   }
+
+  @Nested
+  inner class UpdateSentenceAdjustment {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`(): Unit = runBlocking {
+      NomisApiExtension.nomisApi.stubSentenceAdjustmentUpdate(adjustmentId = 98765)
+
+      nomisApiService.updateSentenceAdjustment(98765, updateSentencingAdjustment())
+
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/sentence-adjustments/98765"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+      )
+    }
+
+    @Test
+    fun `will put sentence adjustment data to nomis api`() = runBlocking {
+      NomisApiExtension.nomisApi.stubSentenceAdjustmentUpdate(adjustmentId = 98765)
+
+      nomisApiService.updateSentenceAdjustment(
+        98765,
+        request = updateSentencingAdjustment(
+          adjustmentTypeCode = "RX",
+          adjustmentDate = LocalDate.parse("2022-01-01"),
+          adjustmentDays = 9,
+          adjustmentFomDate = LocalDate.parse("2020-07-19"),
+          comment = "Adjusted for remand"
+        )
+      )
+
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/sentence-adjustments/98765"))
+          .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("RX")))
+          .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
+          .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("9")))
+          .withRequestBody(matchingJsonPath("adjustmentFomDate", equalTo("2020-07-19")))
+          .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand")))
+      )
+    }
+
+    @Test
+    internal fun `when adjustment is not found an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubSentenceAdjustmentUpdateWithError(
+        adjustmentId = 98765,
+        status = 404
+      )
+
+      assertThatThrownBy {
+        runBlocking { nomisApiService.updateSentenceAdjustment(98765, updateSentencingAdjustment()) }
+      }.isInstanceOf(NotFound::class.java)
+    }
+
+    @Test
+    internal fun `when any bad response is received an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubSentenceAdjustmentUpdateWithError(
+        adjustmentId = 98765,
+        status = 503
+      )
+
+      assertThatThrownBy {
+        runBlocking { nomisApiService.updateSentenceAdjustment(98765, updateSentencingAdjustment()) }
+      }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+  }
+
   @Nested
   inner class CreateKeyDateAdjustment {
 
@@ -446,6 +512,71 @@ internal class NomisApiServiceTest {
 
       assertThatThrownBy {
         runBlocking { nomisApiService.createKeyDateAdjustment(12345, newSentencingAdjustment()) }
+      }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+  }
+
+  @Nested
+  inner class UpdateKeyDateAdjustment {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`(): Unit = runBlocking {
+      NomisApiExtension.nomisApi.stubKeyDateAdjustmentUpdate(adjustmentId = 98765)
+
+      nomisApiService.updateKeyDateAdjustment(98765, updateSentencingAdjustment())
+
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/key-date-adjustments/98765"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+      )
+    }
+
+    @Test
+    fun `will put key date adjustment data to nomis api`() = runBlocking {
+      NomisApiExtension.nomisApi.stubKeyDateAdjustmentUpdate(adjustmentId = 98765)
+
+      nomisApiService.updateKeyDateAdjustment(
+        98765,
+        request = updateSentencingAdjustment(
+          adjustmentTypeCode = "RX",
+          adjustmentDate = LocalDate.parse("2022-01-01"),
+          adjustmentDays = 9,
+          adjustmentFomDate = LocalDate.parse("2020-07-19"),
+          comment = "Adjusted for remand"
+        )
+      )
+
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/key-date-adjustments/98765"))
+          .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("RX")))
+          .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
+          .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("9")))
+          .withRequestBody(matchingJsonPath("adjustmentFomDate", equalTo("2020-07-19")))
+          .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand")))
+      )
+    }
+
+    @Test
+    internal fun `when adjustment is not found an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubKeyDateAdjustmentUpdateWithError(
+        adjustmentId = 98765,
+        status = 404
+      )
+
+      assertThatThrownBy {
+        runBlocking { nomisApiService.updateKeyDateAdjustment(98765, updateSentencingAdjustment()) }
+      }.isInstanceOf(NotFound::class.java)
+    }
+
+    @Test
+    internal fun `when any bad response is received an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubKeyDateAdjustmentUpdateWithError(
+        adjustmentId = 98765,
+        status = 503
+      )
+
+      assertThatThrownBy {
+        runBlocking { nomisApiService.updateKeyDateAdjustment(98765, updateSentencingAdjustment()) }
       }.isInstanceOf(ServiceUnavailable::class.java)
     }
   }
@@ -510,6 +641,20 @@ private fun newSentencingAdjustment(
   adjustmentDays: Long = 99,
   comment: String? = "Adjustment comment"
 ) = CreateSentencingAdjustmentRequest(
+  adjustmentTypeCode = adjustmentTypeCode,
+  adjustmentDate = adjustmentDate,
+  adjustmentFomDate = adjustmentFomDate,
+  adjustmentDays = adjustmentDays,
+  comment = comment,
+)
+
+private fun updateSentencingAdjustment(
+  adjustmentTypeCode: String = "RX",
+  adjustmentDate: LocalDate = LocalDate.now(),
+  adjustmentFomDate: LocalDate? = null,
+  adjustmentDays: Long = 99,
+  comment: String? = "Adjustment comment"
+) = UpdateSentencingAdjustmentRequest(
   adjustmentTypeCode = adjustmentTypeCode,
   adjustmentDate = adjustmentDate,
   adjustmentFomDate = adjustmentFomDate,
