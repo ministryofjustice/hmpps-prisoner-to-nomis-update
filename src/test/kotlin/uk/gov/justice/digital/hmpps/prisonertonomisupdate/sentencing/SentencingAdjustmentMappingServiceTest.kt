@@ -49,7 +49,7 @@ internal class SentencingAdjustmentMappingServiceTest {
       mappingService.createMapping(
         newMapping(
           nomisAdjustmentId = 123,
-          nomisAdjustmentType = "BOOKING",
+          nomisAdjustmentCategory = "KEY-DATE",
           sentenceAdjustmentId = "9876"
         )
       )
@@ -57,7 +57,7 @@ internal class SentencingAdjustmentMappingServiceTest {
       mappingServer.verify(
         postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
           .withRequestBody(matchingJsonPath("nomisAdjustmentId", equalTo("123")))
-          .withRequestBody(matchingJsonPath("nomisAdjustmentType", equalTo("BOOKING")))
+          .withRequestBody(matchingJsonPath("nomisAdjustmentCategory", equalTo("KEY-DATE")))
           .withRequestBody(matchingJsonPath("sentenceAdjustmentId", equalTo("9876")))
           .withRequestBody(matchingJsonPath("mappingType", equalTo("SENTENCING_CREATED")))
       )
@@ -95,13 +95,13 @@ internal class SentencingAdjustmentMappingServiceTest {
       mappingServer.stubGetBySentenceAdjustmentId(
         sentenceAdjustmentId = "1234",
         nomisAdjustmentId = 123,
-        nomisAdjustmentType = "BOOKING",
+        nomisAdjustmentCategory = "KEY-DATE",
       )
 
       val mapping = mappingService.getMappingGivenSentenceAdjustmentId("1234")
 
       assertThat(mapping?.nomisAdjustmentId).isEqualTo(123)
-      assertThat(mapping?.nomisAdjustmentType).isEqualTo("BOOKING")
+      assertThat(mapping?.nomisAdjustmentCategory).isEqualTo("KEY-DATE")
     }
 
     @Test
@@ -123,12 +123,12 @@ internal class SentencingAdjustmentMappingServiceTest {
 
   private fun newMapping(
     nomisAdjustmentId: Long = 456L,
-    nomisAdjustmentType: String = "SENTENCE",
+    nomisAdjustmentCategory: String = "SENTENCE",
     sentenceAdjustmentId: String = "1234"
   ) =
     SentencingAdjustmentMappingDto(
       nomisAdjustmentId = nomisAdjustmentId,
-      nomisAdjustmentType = nomisAdjustmentType,
+      nomisAdjustmentCategory = nomisAdjustmentCategory,
       sentenceAdjustmentId = sentenceAdjustmentId,
     )
 }

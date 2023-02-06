@@ -223,7 +223,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetBySentenceAdjustmentId(
     sentenceAdjustmentId: String,
     nomisAdjustmentId: Long = 1234,
-    nomisAdjustmentType: String = "SENTENCE",
+    nomisAdjustmentCategory: String = "SENTENCE",
   ) {
     stubFor(
       get("/mapping/sentencing/adjustments/sentence-adjustment-id/$sentenceAdjustmentId").willReturn(
@@ -234,7 +234,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
             { 
             "sentenceAdjustmentId": "$sentenceAdjustmentId",  
             "nomisAdjustmentId": $nomisAdjustmentId,  
-            "nomisAdjustmentType": "$nomisAdjustmentType",  
+            "nomisAdjustmentCategory": "$nomisAdjustmentCategory",  
             "mappingType": "MIGRATED",  
             "whenCreated": "2020-01-01T00:00:00"
               }"""

@@ -35,7 +35,7 @@ class SentencingAdjustmentsMappingService(
 
 data class SentencingAdjustmentMappingDto(
   val nomisAdjustmentId: Long,
-  val nomisAdjustmentType: String,
+  val nomisAdjustmentCategory: String,
   val sentenceAdjustmentId: String,
   val label: String? = null,
   val mappingType: String = "SENTENCING_CREATED",
