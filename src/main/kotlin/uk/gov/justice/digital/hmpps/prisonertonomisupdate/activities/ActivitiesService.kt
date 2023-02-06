@@ -38,8 +38,8 @@ class ActivitiesService(
       )
 
       // to protect against repeated create messages for same activity
-      if (mappingService.getMappingGivenActivityScheduleIdOrNull(activity.id) != null) {
-        log.warn("Mapping already exists for activity schedule id ${activity.id}")
+      if (mappingService.getMappingGivenActivityScheduleIdOrNull(id) != null) {
+        log.warn("Mapping already exists for activity schedule id ${id}")
         return
       }
 
@@ -57,7 +57,7 @@ class ActivitiesService(
         mappingService.createMapping(
           ActivityMappingDto(
             nomisCourseActivityId = nomisResponse.courseActivityId,
-            activityScheduleId = activity.id,
+            activityScheduleId = id,
             mappingType = "ACTIVITY_CREATED",
           )
         )
@@ -67,7 +67,7 @@ class ActivitiesService(
         activitiesUpdateQueueService.sendMessage(
           ActivityContext(
             nomisCourseActivityId = nomisResponse.courseActivityId,
-            activityScheduleId = activity.id,
+            activityScheduleId = id,
           )
         )
         return
