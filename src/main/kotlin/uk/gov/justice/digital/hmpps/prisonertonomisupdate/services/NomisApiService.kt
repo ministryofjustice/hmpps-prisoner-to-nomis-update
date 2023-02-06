@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import kotlinx.coroutines.reactor.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -95,6 +96,17 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyToMono(CreateSentencingAdjustmentResponse::class.java)
       .awaitSingle()
 
+  suspend fun updateSentenceAdjustment(
+    adjustmentId: Long,
+    request: UpdateSentencingAdjustmentRequest
+  ): Unit? =
+    webClient.put()
+      .uri("/sentence-adjustments/$adjustmentId")
+      .bodyValue(request)
+      .retrieve()
+      .bodyToMono(Unit::class.java)
+      .awaitSingleOrNull()
+
   suspend fun createKeyDateAdjustment(
     bookingId: Long,
     request: CreateSentencingAdjustmentRequest
@@ -105,6 +117,17 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .bodyToMono(CreateSentencingAdjustmentResponse::class.java)
       .awaitSingle()
+
+  suspend fun updateKeyDateAdjustment(
+    adjustmentId: Long,
+    request: UpdateSentencingAdjustmentRequest
+  ): Unit? =
+    webClient.put()
+      .uri("/key-date-adjustments/$adjustmentId")
+      .bodyValue(request)
+      .retrieve()
+      .bodyToMono(Unit::class.java)
+      .awaitSingleOrNull()
 }
 
 data class CreateVisitDto(
@@ -205,6 +228,16 @@ data class EndOffenderProgramProfileRequest(
 )
 
 data class CreateSentencingAdjustmentRequest(
+  val adjustmentTypeCode: String,
+  @JsonFormat(pattern = "yyyy-MM-dd")
+  val adjustmentDate: LocalDate,
+  @JsonFormat(pattern = "yyyy-MM-dd")
+  val adjustmentFomDate: LocalDate?,
+  val adjustmentDays: Long,
+  val comment: String?,
+)
+
+data class UpdateSentencingAdjustmentRequest(
   val adjustmentTypeCode: String,
   @JsonFormat(pattern = "yyyy-MM-dd")
   val adjustmentDate: LocalDate,

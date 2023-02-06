@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -666,8 +667,159 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class UpdateSentencingAdjustment {
+    @Nested
+    inner class WhenAdjustmentHasJustBeenUpdatedByAdjustmentService {
+      val creatingSystem = "SENTENCE_ADJUSTMENTS"
+      private val nomisAdjustmentId = 98765L
+
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetBySentenceAdjustmentId(
+          sentenceAdjustmentId = ADJUSTMENT_ID,
+          nomisAdjustmentId = nomisAdjustmentId
+        )
+      }
+
+      @Nested
+      inner class WhenSentenceSequenceIsProvided {
+        private val sentenceSequence = 1L
+
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubSentenceAdjustmentUpdate(nomisAdjustmentId)
+
+          sentencingAdjustmentsApi.stubAdjustmentGet(
+            adjustmentId = ADJUSTMENT_ID,
+            sentenceSequence = sentenceSequence,
+            creatingSystem = creatingSystem,
+            adjustmentDays = 99,
+            adjustmentDate = "2022-01-01",
+            adjustmentType = "RX",
+            adjustmentStartPeriod = "2020-07-19",
+            comment = "Adjusted for remand",
+            bookingId = BOOKING_ID
+          )
+          publishUpdateAdjustmentDomainEvent()
+        }
+
+        @Test
+        fun `will callback back to adjustment service to get more details`() {
+          await untilAsserted {
+            sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
+          }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        }
+
+        @Test
+        fun `will update a sentence adjustment in NOMIS`() {
+          await untilAsserted {
+            nomisApi.verify(
+              putRequestedFor(urlEqualTo("/sentence-adjustments/$nomisAdjustmentId"))
+                .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("RX")))
+                .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
+                .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
+                .withRequestBody(matchingJsonPath("adjustmentFomDate", equalTo("2020-07-19")))
+                .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand")))
+            )
+          }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        }
+
+        @Test
+        fun `will create success telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("sentencing-adjustment-updated-success"),
+              org.mockito.kotlin.check {
+                assertThat(it["sentenceAdjustmentId"]).isEqualTo(ADJUSTMENT_ID)
+                assertThat(it["nomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NUMBER)
+              },
+              isNull(),
+            )
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenSentenceSequenceIsNotProvided {
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubKeyDateAdjustmentUpdate(nomisAdjustmentId)
+
+          sentencingAdjustmentsApi.stubAdjustmentGet(
+            adjustmentId = ADJUSTMENT_ID,
+            sentenceSequence = null,
+            creatingSystem = creatingSystem,
+            adjustmentDays = 99,
+            adjustmentDate = "2022-01-01",
+            adjustmentType = "ADA",
+            adjustmentStartPeriod = "2020-07-19",
+            comment = "Adjusted for absence",
+            bookingId = BOOKING_ID
+          )
+          publishUpdateAdjustmentDomainEvent()
+        }
+
+        @Test
+        fun `will callback back to adjustment service to get more details`() {
+          await untilAsserted {
+            sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
+          }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        }
+
+        @Test
+        fun `will update a key date adjustment in NOMIS`() {
+          await untilAsserted {
+            nomisApi.verify(
+              putRequestedFor(urlEqualTo("/key-date-adjustments/$nomisAdjustmentId"))
+                .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("ADA")))
+                .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
+                .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
+                .withRequestBody(matchingJsonPath("adjustmentFomDate", equalTo("2020-07-19")))
+                .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for absence")))
+            )
+          }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        }
+
+        @Test
+        fun `will create success telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("sentencing-adjustment-updated-success"),
+              org.mockito.kotlin.check {
+                assertThat(it["sentenceAdjustmentId"]).isEqualTo(ADJUSTMENT_ID)
+                assertThat(it["nomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NUMBER)
+              },
+              isNull(),
+            )
+          }
+        }
+      }
+    }
+  }
+
   private fun publishCreateAdjustmentDomainEvent() {
     val eventType = "sentencing.sentence.adjustment.created"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(sentencingAdjustmentMessagePayload(ADJUSTMENT_ID, OFFENDER_NUMBER, eventType))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          )
+        ).build()
+    ).get()
+  }
+
+  private fun publishUpdateAdjustmentDomainEvent() {
+    val eventType = "sentencing.sentence.adjustment.updated"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(sentencingAdjustmentMessagePayload(ADJUSTMENT_ID, OFFENDER_NUMBER, eventType))

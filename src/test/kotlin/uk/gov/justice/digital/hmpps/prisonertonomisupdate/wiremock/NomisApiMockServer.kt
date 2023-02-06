@@ -222,6 +222,17 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubSentenceAdjustmentUpdateWithError(adjustmentId: Long, status: Int) {
+    stubFor(
+      put("/sentence-adjustments/$adjustmentId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status)
+      )
+    )
+  }
+
   fun stubSentenceAdjustmentCreateWithErrorFollowedBySlowSuccess(
     bookingId: Long,
     sentenceSequence: Long,
@@ -258,6 +269,16 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubSentenceAdjustmentUpdate(adjustmentId: Long) {
+    stubFor(
+      put("/sentence-adjustments/$adjustmentId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200)
+      )
+    )
+  }
+
   fun stubKeyDateAdjustmentCreate(bookingId: Long, adjustmentId: Long = 99L) {
     stubFor(
       post("/prisoners/booking-id/$bookingId/adjustments").willReturn(
@@ -272,6 +293,27 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubKeyDateAdjustmentCreateWithError(bookingId: Long, status: Int) {
     stubFor(
       post("/prisoners/booking-id/$bookingId/adjustments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status)
+      )
+    )
+  }
+
+  fun stubKeyDateAdjustmentUpdate(adjustmentId: Long) {
+    stubFor(
+      put("/key-date-adjustments/$adjustmentId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200)
+      )
+    )
+  }
+
+  fun stubKeyDateAdjustmentUpdateWithError(adjustmentId: Long, status: Int) {
+    stubFor(
+      put("/key-date-adjustments/$adjustmentId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
