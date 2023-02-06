@@ -47,6 +47,15 @@ internal class ActivitiesServiceTest {
   @Nested
   inner class CreateActivity {
 
+    private fun aDomainEvent() =
+      ScheduleDomainEvent(
+        eventType = "dummy",
+        additionalInformation = ScheduleAdditionalInformation(activityScheduleId),
+        version = "1.0",
+        description = "description",
+        occurredAt = LocalDateTime.now(),
+      )
+
     @Test
     fun `should log an activity created event`() {
       whenever(activitiesApiService.getActivitySchedule(activityScheduleId)).thenReturn(
@@ -57,15 +66,7 @@ internal class ActivitiesServiceTest {
         CreateActivityResponse(courseActivityId = nomisCourseActivityId)
       )
 
-      activitiesService.createActivity(
-        OutboundHMPPSDomainEvent(
-          eventType = "dummy",
-          identifier = activityScheduleId,
-          version = "1.0",
-          description = "description",
-          occurredAt = LocalDateTime.now(),
-        )
-      )
+      activitiesService.createActivity(aDomainEvent())
 
       verify(telemetryClient).trackEvent(
         eq("activity-created-event"),
@@ -92,15 +93,7 @@ internal class ActivitiesServiceTest {
         )
       )
 
-      activitiesService.createActivity(
-        OutboundHMPPSDomainEvent(
-          eventType = "dummy",
-          identifier = activityScheduleId,
-          version = "1.0",
-          description = "description",
-          occurredAt = LocalDateTime.now(),
-        )
-      )
+      activitiesService.createActivity(aDomainEvent())
 
       verifyNoInteractions(nomisApiService)
     }
@@ -113,17 +106,8 @@ internal class ActivitiesServiceTest {
       whenever(activitiesApiService.getActivity(activityId)).thenReturn(newActivity())
       whenever(nomisApiService.createActivity(any())).thenThrow(RuntimeException("test"))
 
-      assertThatThrownBy {
-        activitiesService.createActivity(
-          OutboundHMPPSDomainEvent(
-            eventType = "dummy",
-            identifier = activityScheduleId,
-            version = "1.0",
-            description = "description",
-            occurredAt = LocalDateTime.now(),
-          )
-        )
-      }.isInstanceOf(RuntimeException::class.java)
+      assertThatThrownBy { activitiesService.createActivity(aDomainEvent()) }
+        .isInstanceOf(RuntimeException::class.java)
 
       verify(telemetryClient).trackEvent(
         eq("activity-create-failed"),
@@ -146,15 +130,7 @@ internal class ActivitiesServiceTest {
       )
       whenever(mappingService.createMapping(any())).thenThrow(RuntimeException("test"))
 
-      activitiesService.createActivity(
-        OutboundHMPPSDomainEvent(
-          eventType = "dummy",
-          identifier = activityScheduleId,
-          version = "1.0",
-          description = "description",
-          occurredAt = LocalDateTime.now(),
-        )
-      )
+      activitiesService.createActivity(aDomainEvent())
 
       verify(telemetryClient).trackEvent(
         eq("activity-create-map-failed"),

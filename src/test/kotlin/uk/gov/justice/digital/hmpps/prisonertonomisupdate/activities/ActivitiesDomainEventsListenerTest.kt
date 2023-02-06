@@ -48,7 +48,7 @@ internal class ActivitiesDomainEventsListenerTest {
 
         verify(activitiesService).createActivity(
           check {
-            assertThat(it.identifier).isEqualTo(123L)
+            assertThat(it.additionalInformation.activityScheduleId).isEqualTo(123L)
           }
         )
       }
