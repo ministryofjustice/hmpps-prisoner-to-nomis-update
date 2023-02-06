@@ -28,9 +28,9 @@ class ActivitiesService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun createActivity(event: OutboundHMPPSDomainEvent) {
-    activitiesApiService.getActivitySchedule(event.identifier).run {
-      val activity = activitiesApiService.getActivity(this.activity.id)
+  fun createActivity(event: ScheduleDomainEvent) {
+    activitiesApiService.getActivitySchedule(event.additionalInformation.activityScheduleId).run {
+      val activity = activitiesApiService.getActivity(activity.id)
 
       val telemetryMap = mutableMapOf(
         "activityScheduleId" to id.toString(),
@@ -38,8 +38,8 @@ class ActivitiesService(
       )
 
       // to protect against repeated create messages for same activity
-      if (mappingService.getMappingGivenActivityScheduleIdOrNull(event.identifier) != null) {
-        log.warn("Mapping already exists for activity schedule id ${event.identifier}")
+      if (mappingService.getMappingGivenActivityScheduleIdOrNull(activity.id) != null) {
+        log.warn("Mapping already exists for activity schedule id ${activity.id}")
         return
       }
 
@@ -57,7 +57,7 @@ class ActivitiesService(
         mappingService.createMapping(
           ActivityMappingDto(
             nomisCourseActivityId = nomisResponse.courseActivityId,
-            activityScheduleId = event.identifier,
+            activityScheduleId = activity.id,
             mappingType = "ACTIVITY_CREATED",
           )
         )
@@ -67,7 +67,7 @@ class ActivitiesService(
         activitiesUpdateQueueService.sendMessage(
           ActivityContext(
             nomisCourseActivityId = nomisResponse.courseActivityId,
-            activityScheduleId = event.identifier,
+            activityScheduleId = activity.id,
           )
         )
         return
@@ -174,12 +174,16 @@ class ActivitiesService(
   }
 }
 
-data class OutboundHMPPSDomainEvent(
+data class ScheduleDomainEvent(
   val eventType: String,
-  val identifier: Long,
+  val additionalInformation: ScheduleAdditionalInformation,
   val version: String,
   val description: String,
   val occurredAt: LocalDateTime,
+)
+
+data class ScheduleAdditionalInformation(
+  val activityScheduleId: Long,
 )
 
 data class AllocationDomainEvent(
