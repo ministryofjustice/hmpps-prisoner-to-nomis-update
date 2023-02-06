@@ -1,14 +1,13 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import kotlinx.coroutines.reactor.awaitSingle
-import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -93,19 +92,17 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .uri("/prisoners/booking-id/$bookingId/sentences/$sentenceSequence/adjustments")
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(CreateSentencingAdjustmentResponse::class.java)
-      .awaitSingle()
+      .awaitBody()
 
   suspend fun updateSentenceAdjustment(
     adjustmentId: Long,
     request: UpdateSentencingAdjustmentRequest
-  ): Unit? =
+  ): Unit =
     webClient.put()
       .uri("/sentence-adjustments/$adjustmentId")
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(Unit::class.java)
-      .awaitSingleOrNull()
+      .awaitBody()
 
   suspend fun createKeyDateAdjustment(
     bookingId: Long,
@@ -115,19 +112,17 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .uri("/prisoners/booking-id/$bookingId/adjustments")
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(CreateSentencingAdjustmentResponse::class.java)
-      .awaitSingle()
+      .awaitBody()
 
   suspend fun updateKeyDateAdjustment(
     adjustmentId: Long,
     request: UpdateSentencingAdjustmentRequest
-  ): Unit? =
+  ): Unit =
     webClient.put()
       .uri("/key-date-adjustments/$adjustmentId")
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(Unit::class.java)
-      .awaitSingleOrNull()
+      .awaitBody()
 }
 
 data class CreateVisitDto(
