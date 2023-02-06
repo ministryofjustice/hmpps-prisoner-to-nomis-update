@@ -31,7 +31,7 @@ private const val COURSE_ACTIVITY_ID: Long = 300
 private const val ALLOCATION_ID: Long = 400
 private const val BOOKING_ID: Long = 500
 
-class ActivityToNomisIntTest : SqsIntegrationTestBase() {
+class ActivityToNomisTest : SqsIntegrationTestBase() {
 
   @Nested
   inner class CreateActivitySchedule {
