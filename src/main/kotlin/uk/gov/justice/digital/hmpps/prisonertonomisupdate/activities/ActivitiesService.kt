@@ -39,7 +39,7 @@ class ActivitiesService(
 
       // to protect against repeated create messages for same activity
       if (mappingService.getMappingGivenActivityScheduleIdOrNull(id) != null) {
-        log.warn("Mapping already exists for activity schedule id ${id}")
+        log.warn("Mapping already exists for activity schedule id $id")
         return
       }
 
