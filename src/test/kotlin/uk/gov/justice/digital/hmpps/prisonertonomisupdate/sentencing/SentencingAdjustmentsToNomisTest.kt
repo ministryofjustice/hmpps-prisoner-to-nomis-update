@@ -41,7 +41,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        mappingServer.stubGetBySentenceAdjustmentIdWithError(ADJUSTMENT_ID, 404)
+        mappingServer.stubGetByAdjustmentIdWithError(ADJUSTMENT_ID, 404)
         mappingServer.stubCreateSentencingAdjustment()
       }
 
@@ -102,7 +102,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
               postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
                 .withRequestBody(matchingJsonPath("nomisAdjustmentId", equalTo(nomisAdjustmentId.toString())))
                 .withRequestBody(matchingJsonPath("nomisAdjustmentType", equalTo("SENTENCE")))
-                .withRequestBody(matchingJsonPath("sentenceAdjustmentId", equalTo(ADJUSTMENT_ID)))
+                .withRequestBody(matchingJsonPath("adjustmentId", equalTo(ADJUSTMENT_ID)))
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -114,7 +114,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             verify(telemetryClient).trackEvent(
               eq("sentencing-adjustment-create-success"),
               org.mockito.kotlin.check {
-                assertThat(it["sentenceAdjustmentId"]).isEqualTo(ADJUSTMENT_ID)
+                assertThat(it["adjustmentId"]).isEqualTo(ADJUSTMENT_ID)
                 assertThat(it["nomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
                 assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NUMBER)
               },
@@ -179,7 +179,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
               postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
                 .withRequestBody(matchingJsonPath("nomisAdjustmentId", equalTo(nomisAdjustmentId.toString())))
                 .withRequestBody(matchingJsonPath("nomisAdjustmentType", equalTo("BOOKING")))
-                .withRequestBody(matchingJsonPath("sentenceAdjustmentId", equalTo(ADJUSTMENT_ID)))
+                .withRequestBody(matchingJsonPath("adjustmentId", equalTo(ADJUSTMENT_ID)))
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -191,7 +191,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             verify(telemetryClient).trackEvent(
               eq("sentencing-adjustment-create-success"),
               org.mockito.kotlin.check {
-                assertThat(it["sentenceAdjustmentId"]).isEqualTo(ADJUSTMENT_ID)
+                assertThat(it["adjustmentId"]).isEqualTo(ADJUSTMENT_ID)
                 assertThat(it["nomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
                 assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NUMBER)
               },
@@ -297,7 +297,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        mappingServer.stubGetBySentenceAdjustmentId(ADJUSTMENT_ID)
+        mappingServer.stubGetByAdjustmentId(ADJUSTMENT_ID)
       }
 
       @Nested
@@ -324,7 +324,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         fun `will callback back to mapping service to check message has not already been processed`() {
           await untilAsserted {
             mappingServer.verify(
-              getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/sentence-adjustment-id/$ADJUSTMENT_ID"))
+              getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID"))
             )
           }
         }
@@ -367,7 +367,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         fun `will callback back to mapping service to check message has not already been processed`() {
           await untilAsserted {
             mappingServer.verify(
-              getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/sentence-adjustment-id/$ADJUSTMENT_ID"))
+              getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID"))
             )
           }
         }
@@ -397,7 +397,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
       inner class WhenAdjustmentServiceFailsOnce {
         @BeforeEach
         fun setUp() {
-          mappingServer.stubGetBySentenceAdjustmentIdWithError(ADJUSTMENT_ID, 404)
+          mappingServer.stubGetByAdjustmentIdWithError(ADJUSTMENT_ID, 404)
           mappingServer.stubCreateSentencingAdjustment()
           nomisApi.stubSentenceAdjustmentCreate(BOOKING_ID, sentenceSequence)
           sentencingAdjustmentsApi.stubAdjustmentGetWithErrorFollowedBySlowSuccess(
@@ -450,7 +450,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
       inner class WhenAdjustmentServiceKeepsFailing {
         @BeforeEach
         fun setUp() {
-          mappingServer.stubGetBySentenceAdjustmentIdWithError(ADJUSTMENT_ID, 404)
+          mappingServer.stubGetByAdjustmentIdWithError(ADJUSTMENT_ID, 404)
           sentencingAdjustmentsApi.stubAdjustmentGetWithError(
             adjustmentId = ADJUSTMENT_ID,
             503,
@@ -481,7 +481,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
       inner class WhenNomisServiceFailsOnce {
         @BeforeEach
         fun setUp() {
-          mappingServer.stubGetBySentenceAdjustmentIdWithError(ADJUSTMENT_ID, 404)
+          mappingServer.stubGetByAdjustmentIdWithError(ADJUSTMENT_ID, 404)
           mappingServer.stubCreateSentencingAdjustment()
           nomisApi.stubSentenceAdjustmentCreateWithErrorFollowedBySlowSuccess(BOOKING_ID, sentenceSequence)
           sentencingAdjustmentsApi.stubAdjustmentGet(
@@ -536,7 +536,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
       inner class WhenNomisServiceKeepsFailing {
         @BeforeEach
         fun setUp() {
-          mappingServer.stubGetBySentenceAdjustmentIdWithError(ADJUSTMENT_ID, 404)
+          mappingServer.stubGetByAdjustmentIdWithError(ADJUSTMENT_ID, 404)
           sentencingAdjustmentsApi.stubAdjustmentGet(
             adjustmentId = ADJUSTMENT_ID,
             sentenceSequence = sentenceSequence,
@@ -575,7 +575,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
       inner class WhenMappingServiceFailsOnce {
         @BeforeEach
         fun setUp() {
-          mappingServer.stubGetBySentenceAdjustmentIdWithError(ADJUSTMENT_ID, 404)
+          mappingServer.stubGetByAdjustmentIdWithError(ADJUSTMENT_ID, 404)
           mappingServer.stubCreateSentencingAdjustmentWithErrorFollowedBySlowSuccess()
           nomisApi.stubSentenceAdjustmentCreate(BOOKING_ID, sentenceSequence)
           sentencingAdjustmentsApi.stubAdjustmentGet(
@@ -626,7 +626,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
       inner class WhenMappingServiceKeepsFailing {
         @BeforeEach
         fun setUp() {
-          mappingServer.stubGetBySentenceAdjustmentIdWithError(ADJUSTMENT_ID, 404)
+          mappingServer.stubGetByAdjustmentIdWithError(ADJUSTMENT_ID, 404)
           mappingServer.stubCreateSentencingAdjustmentWithError(status = 503)
           nomisApi.stubSentenceAdjustmentCreate(BOOKING_ID, sentenceSequence)
           sentencingAdjustmentsApi.stubAdjustmentGet(
@@ -677,8 +677,8 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        mappingServer.stubGetBySentenceAdjustmentId(
-          sentenceAdjustmentId = ADJUSTMENT_ID,
+        mappingServer.stubGetByAdjustmentId(
+          adjustmentId = ADJUSTMENT_ID,
           nomisAdjustmentId = nomisAdjustmentId
         )
       }
@@ -734,7 +734,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             verify(telemetryClient).trackEvent(
               eq("sentencing-adjustment-updated-success"),
               org.mockito.kotlin.check {
-                assertThat(it["sentenceAdjustmentId"]).isEqualTo(ADJUSTMENT_ID)
+                assertThat(it["adjustmentId"]).isEqualTo(ADJUSTMENT_ID)
                 assertThat(it["nomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
                 assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NUMBER)
               },
@@ -793,7 +793,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             verify(telemetryClient).trackEvent(
               eq("sentencing-adjustment-updated-success"),
               org.mockito.kotlin.check {
-                assertThat(it["sentenceAdjustmentId"]).isEqualTo(ADJUSTMENT_ID)
+                assertThat(it["adjustmentId"]).isEqualTo(ADJUSTMENT_ID)
                 assertThat(it["nomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
                 assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NUMBER)
               },
@@ -811,8 +811,8 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        mappingServer.stubGetBySentenceAdjustmentId(
-          sentenceAdjustmentId = ADJUSTMENT_ID,
+        mappingServer.stubGetByAdjustmentId(
+          adjustmentId = ADJUSTMENT_ID,
           nomisAdjustmentId = nomisAdjustmentId
         )
         sentencingAdjustmentsApi.stubAdjustmentGet(
@@ -858,8 +858,8 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
     inner class WhenMappingDoesNotExits {
       @BeforeEach
       fun setUp() {
-        mappingServer.stubGetBySentenceAdjustmentIdWithError(
-          sentenceAdjustmentId = ADJUSTMENT_ID,
+        mappingServer.stubGetByAdjustmentIdWithError(
+          adjustmentId = ADJUSTMENT_ID,
           404
         )
 

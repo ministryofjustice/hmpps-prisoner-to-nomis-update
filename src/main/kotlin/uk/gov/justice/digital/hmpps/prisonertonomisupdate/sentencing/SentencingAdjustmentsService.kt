@@ -15,7 +15,7 @@ class SentencingAdjustmentsService(
   private val telemetryClient: TelemetryClient
 ) {
   suspend fun createAdjustment(createEvent: AdjustmentCreatedEvent) {
-    sentencingAdjustmentsMappingService.getMappingGivenSentenceAdjustmentId(createEvent.additionalInformation.id)
+    sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(createEvent.additionalInformation.id)
       ?.let {
         telemetryClient.trackEvent(
           "sentencing-adjustment-create-duplicate",
@@ -50,7 +50,7 @@ class SentencingAdjustmentsService(
             val mapping = SentencingAdjustmentMappingDto(
               nomisAdjustmentId = createdNomisAdjustment.id,
               nomisAdjustmentType = if (adjustment.sentenceSequence == null) "BOOKING" else "SENTENCE",
-              sentenceAdjustmentId = adjustment.adjustmentId
+              adjustmentId = adjustment.adjustmentId
             )
             kotlin.runCatching {
               sentencingAdjustmentsMappingService.createMapping(mapping)
@@ -62,7 +62,7 @@ class SentencingAdjustmentsService(
                 telemetryClient.trackEvent(
                   "sentencing-adjustment-create-success",
                   mapOf(
-                    "sentenceAdjustmentId" to adjustment.adjustmentId,
+                    "adjustmentId" to adjustment.adjustmentId,
                     "nomisAdjustmentId" to createdNomisAdjustment.id.toString(),
                     "offenderNo" to createEvent.additionalInformation.nomsNumber,
                   ),
@@ -85,7 +85,7 @@ class SentencingAdjustmentsService(
   }
 
   suspend fun updateAdjustment(createEvent: AdjustmentUpdatedEvent) {
-    sentencingAdjustmentsMappingService.getMappingGivenSentenceAdjustmentId(createEvent.additionalInformation.id)
+    sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(createEvent.additionalInformation.id)
       ?.also { mapping ->
         sentencingAdjustmentsApiService.getAdjustment(createEvent.additionalInformation.id).also { adjustment ->
           if (adjustment.creatingSystem != CreatingSystem.NOMIS) {
@@ -110,7 +110,7 @@ class SentencingAdjustmentsService(
               telemetryClient.trackEvent(
                 "sentencing-adjustment-updated-success",
                 mapOf(
-                  "sentenceAdjustmentId" to adjustment.adjustmentId,
+                  "adjustmentId" to adjustment.adjustmentId,
                   "nomisAdjustmentId" to mapping.nomisAdjustmentId.toString(),
                   "offenderNo" to createEvent.additionalInformation.nomsNumber,
                 ),
@@ -137,7 +137,7 @@ class SentencingAdjustmentsService(
       telemetryClient.trackEvent(
         "sentencing-adjustment-create-success",
         mapOf(
-          "sentenceAdjustmentId" to message.mapping.sentenceAdjustmentId,
+          "adjustmentId" to message.mapping.adjustmentId,
           "nomisAdjustmentId" to message.mapping.nomisAdjustmentId.toString(),
           "offenderNo" to message.offenderNo,
         ),
