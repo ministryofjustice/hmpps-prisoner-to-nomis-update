@@ -297,7 +297,14 @@ internal class ActivitiesApiServiceTest {
         {
           "id": 3456,
           "incentiveLevel": "Basic",
-          "payBand": "A",
+          "prisonPayBand": {
+             "id": 987,
+             "displaySequence": 1,
+             "alias": "Low",
+             "description": "Pay band 1",
+             "nomisPayBand": 1,
+             "prisonCode": "PVI"
+          },
           "rate": 150,
           "pieceRate": 150,
           "pieceRateItems": 10
@@ -338,7 +345,7 @@ internal class ActivitiesApiServiceTest {
       val pay = activity.pay[0]
       assertThat(pay.id).isEqualTo(3456)
       assertThat(pay.incentiveLevel).isEqualTo("Basic")
-      assertThat(pay.payBand).isEqualTo("A")
+      assertThat(pay.prisonPayBand.nomisPayBand).isEqualTo(1)
       assertThat(pay.rate).isEqualTo(150)
       assertThat(pay.pieceRate).isEqualTo(150)
       assertThat(pay.pieceRateItems).isEqualTo(10)

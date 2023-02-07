@@ -94,7 +94,8 @@ class ActivitiesService(
               bookingId = allocation.bookingId!!,
               startDate = allocation.startDate,
               endDate = allocation.endDate,
-              payBandCode = allocation.payBand!!, // Nomis appears to always require a payband
+              //  TODO SDI-614 We don't know what payBandId means - see JIRA ticket for link to the Slack conv.
+              payBandCode = allocation.payBandId.toString(), // Nomis appears to always require a payband
             )
           )
         } catch (e: Exception) {
@@ -153,7 +154,7 @@ class ActivitiesService(
       payRates = activity.pay.map { p ->
         PayRateRequest(
           incentiveLevel = p.incentiveLevel!!,
-          payBand = p.payBand!!,
+          payBand = p.prisonPayBand.nomisPayBand.toString(),
           rate = BigDecimal(p.rate!!).movePointLeft(2)
         )
       },
