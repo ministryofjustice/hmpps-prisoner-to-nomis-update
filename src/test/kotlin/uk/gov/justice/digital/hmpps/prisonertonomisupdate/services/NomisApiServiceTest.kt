@@ -620,6 +620,7 @@ fun newActivity() = CreateActivityRequest(
   payRates = emptyList(),
   description = "the description",
   programCode = "IRS",
+  payPerSession = "H",
 )
 
 fun newAllocation() = CreateOffenderProgramProfileRequest(
