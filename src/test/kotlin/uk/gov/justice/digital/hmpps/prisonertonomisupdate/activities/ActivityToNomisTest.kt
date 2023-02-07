@@ -313,7 +313,14 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
     {
       "id": 3579,
       "incentiveLevel": "BAS",
-      "payBand": "1",
+      "prisonPayBand": {
+         "id": 987,
+         "displaySequence": 1,
+         "alias": "Low",
+         "description": "Pay band 1",
+         "nomisPayBand": 1,
+         "prisonCode": "PVI"
+      },
       "rate": 1.50,
       "pieceRate": 150,
       "pieceRateItems": 10
@@ -344,7 +351,7 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
     "bookingId": $BOOKING_ID,
     "startDate": "2023-01-12",
     "endDate": "2023-01-13",
-    "payBand": "7",
+    "payBandId": 7,
     "deallocatedReason": "END",
     "scheduleDescription" : "description",
     "activitySummary" : "summary"
