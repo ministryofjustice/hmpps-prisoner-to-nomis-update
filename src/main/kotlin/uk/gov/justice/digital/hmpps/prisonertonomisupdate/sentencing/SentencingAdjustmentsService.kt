@@ -119,7 +119,7 @@ class SentencingAdjustmentsService(
             }
           } else {
             telemetryClient.trackEvent(
-              "sentencing-adjustment-create-ignored",
+              "sentencing-adjustment-updated-ignored",
               mapOf(
                 "adjustmentId" to adjustment.adjustmentId,
                 "offenderNo" to createEvent.additionalInformation.nomsNumber,
@@ -129,6 +129,7 @@ class SentencingAdjustmentsService(
           }
         }
       }
+      ?: throw RuntimeException("No mapping found for adjustment ${createEvent.additionalInformation.id}, maybe we never received a create")
   }
 
   suspend fun createSentencingAdjustmentMapping(message: SentencingAdjustmentCreateMappingRetryMessage) =
