@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
@@ -13,15 +14,20 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityCategory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityLite
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityPay
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.InternalLocation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.PrisonPayBand
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.OffenderProgramProfileResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -138,6 +144,126 @@ internal class ActivitiesServiceTest {
           assertThat(it["courseActivityId"]).isEqualTo("$nomisCourseActivityId")
           assertThat(it["activityScheduleId"]).isEqualTo("$activityScheduleId")
           assertThat(it["description"]).isEqualTo("description")
+        },
+        isNull()
+      )
+    }
+  }
+
+  @Nested
+  inner class UpdateActivitySchedule {
+
+    private fun aDomainEvent() =
+      ScheduleDomainEvent(
+        eventType = "activities.activity-schedule.amended",
+        additionalInformation = ScheduleAdditionalInformation(activityScheduleId),
+        version = "1.0",
+        description = "description",
+        occurredAt = LocalDateTime.now(),
+      )
+
+    @Test
+    fun `should throw and raise telemetry if cannot load Activity Schedule`() {
+      whenever(activitiesApiService.getActivitySchedule(anyLong()))
+        .thenThrow(WebClientResponseException.NotFound::class.java)
+
+      assertThatThrownBy {
+        activitiesService.updateActivity(aDomainEvent())
+      }.isInstanceOf(WebClientResponseException.NotFound::class.java)
+
+      verify(activitiesApiService).getActivitySchedule(activityScheduleId)
+      verify(telemetryClient).trackEvent(
+        eq("activity-amend-failed"),
+        check<Map<String, String>> {
+          assertThat(it).containsAllEntriesOf(mapOf("activityScheduleId" to activityScheduleId.toString()))
+        },
+        isNull()
+      )
+    }
+
+    @Test
+    fun `should throw and raise telemetry if cannot load Activity `() {
+      whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
+      whenever(activitiesApiService.getActivity(anyLong()))
+        .thenThrow(WebClientResponseException.NotFound::class.java)
+
+      assertThatThrownBy {
+        activitiesService.updateActivity(aDomainEvent())
+      }.isInstanceOf(WebClientResponseException.NotFound::class.java)
+
+      verify(activitiesApiService).getActivity(activityId)
+      verify(telemetryClient).trackEvent(
+        eq("activity-amend-failed"),
+        check<Map<String, String>> {
+          assertThat(it).containsAllEntriesOf(mapOf("activityScheduleId" to activityScheduleId.toString()))
+        },
+        isNull()
+      )
+    }
+
+    @Test
+    fun `should throw and raise telemetry if cannot find mappings`() {
+      whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
+      whenever(activitiesApiService.getActivity(anyLong())).thenReturn(newActivity())
+      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong()))
+        .thenThrow(WebClientResponseException.NotFound::class.java)
+
+      assertThatThrownBy {
+        activitiesService.updateActivity(aDomainEvent())
+      }.isInstanceOf(WebClientResponseException.NotFound::class.java)
+
+      verify(mappingService).getMappingGivenActivityScheduleId(activityScheduleId)
+      verify(telemetryClient).trackEvent(
+        eq("activity-amend-failed"),
+        check<Map<String, String>> {
+          assertThat(it).containsAllEntriesOf(mapOf("activityScheduleId" to activityScheduleId.toString()))
+        },
+        isNull()
+      )
+    }
+
+    @Test
+    fun `should throw and raise telemetry if fail to update Nomis`() {
+      whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
+      whenever(activitiesApiService.getActivity(anyLong())).thenReturn(newActivity())
+      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(ActivityMappingDto(nomisCourseActivityId, activityScheduleId, "ACTIVITY_CREATED", LocalDateTime.now()))
+      whenever(nomisApiService.updateActivity(anyLong(), any()))
+        .thenThrow(WebClientResponseException.ServiceUnavailable::class.java)
+
+      assertThatThrownBy {
+        activitiesService.updateActivity(aDomainEvent())
+      }.isInstanceOf(WebClientResponseException.ServiceUnavailable::class.java)
+
+      verify(nomisApiService).updateActivity(eq(nomisCourseActivityId), any())
+      verify(telemetryClient).trackEvent(
+        eq("activity-amend-failed"),
+        check<Map<String, String>> {
+          assertThat(it).containsAllEntriesOf(mapOf("activityScheduleId" to activityScheduleId.toString()))
+        },
+        isNull()
+      )
+    }
+
+    @Test
+    fun `should raise telemetry when update of Nomis successful`() {
+      whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule(endDate = LocalDate.now().plusDays(1)))
+      whenever(activitiesApiService.getActivity(anyLong())).thenReturn(newActivity())
+      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(ActivityMappingDto(nomisCourseActivityId, activityScheduleId, "ACTIVITY_CREATED", LocalDateTime.now()))
+
+      activitiesService.updateActivity(aDomainEvent())
+
+      verify(nomisApiService).updateActivity(
+        eq(nomisCourseActivityId),
+        check {
+          assertThat(it.endDate).isEqualTo(LocalDate.now().plusDays(1))
+          assertThat(it.internalLocationId).isEqualTo(345)
+          assertThat(it.payRates).containsExactlyElementsOf(listOf(PayRateRequest("BAS", "1", BigDecimal.valueOf(1.5).setScale(2))))
+        }
+      )
+      verify(telemetryClient).trackEvent(
+        eq("activity-amend-event"),
+        check<Map<String, String>> {
+          assertThat(it).containsAllEntriesOf(mapOf("activityScheduleId" to activityScheduleId.toString()))
         },
         isNull()
       )
@@ -331,7 +457,7 @@ internal class ActivitiesServiceTest {
   }
 }
 
-private fun newActivitySchedule(): ActivitySchedule = ActivitySchedule(
+private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = ActivitySchedule(
   id = activityScheduleId,
   instances = emptyList(),
   allocations = emptyList(),
@@ -361,6 +487,7 @@ private fun newActivitySchedule(): ActivitySchedule = ActivitySchedule(
   ),
   slots = emptyList(),
   startDate = LocalDate.now(),
+  endDate = endDate,
 )
 
 private fun newActivity(): Activity = Activity(
@@ -381,7 +508,14 @@ private fun newActivity(): Activity = Activity(
   eligibilityRules = emptyList(),
   schedules = emptyList(),
   waitingList = emptyList(),
-  pay = emptyList(),
+  pay = listOf(
+    ActivityPay(
+      id = 1,
+      prisonPayBand = PrisonPayBand(2, 1, "", "", 1, "MDI"),
+      incentiveLevel = "BAS",
+      rate = 150
+    )
+  ),
   startDate = LocalDate.now(),
   createdTime = OffsetDateTime.now(),
   createdBy = "me",

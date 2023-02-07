@@ -5,6 +5,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activity
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityPay
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityRequest
@@ -12,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateOffende
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.EndOffenderProgramProfileRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateActivityRequest
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -76,6 +78,40 @@ class ActivitiesService(
       telemetryClient.trackEvent("activity-created-event", telemetryMap)
     }
   }
+
+  fun updateActivity(event: ScheduleDomainEvent) {
+    val telemetryMap = mutableMapOf("activityScheduleId" to event.additionalInformation.activityScheduleId.toString())
+
+    runCatching {
+      val activitySchedule = activitiesApiService.getActivitySchedule(event.additionalInformation.activityScheduleId)
+
+      val activity = activitiesApiService.getActivity(activitySchedule.activity.id)
+        .also { telemetryMap["activityId"] = it.toString() }
+
+      val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(activitySchedule.id).nomisCourseActivityId
+        .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
+
+      activitySchedule.toUpdateActivityRequest(activity.pay)
+        .also { nomisApiService.updateActivity(nomisCourseActivityId, it) }
+    }.onSuccess {
+      telemetryClient.trackEvent("activity-amend-event", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("activity-amend-failed", telemetryMap, null)
+      throw e
+    }
+  }
+
+  private fun ActivitySchedule.toUpdateActivityRequest(pay: List<ActivityPay>) =
+    UpdateActivityRequest(
+      endDate, internalLocation?.id?.toLong(),
+      pay.map { p ->
+        PayRateRequest(
+          incentiveLevel = p.incentiveLevel!!, // TODO this should be made non-nullable in the Activities API soon
+          payBand = p.prisonPayBand.nomisPayBand.toString(),
+          rate = BigDecimal(p.rate!!).movePointLeft(2)
+        )
+      }
+    )
 
   fun createAllocation(allocationEvent: AllocationDomainEvent) {
     activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
@@ -149,7 +185,7 @@ class ActivitiesService(
       startDate = activity.startDate,
       endDate = activity.endDate,
       prisonId = activity.prisonCode,
-      internalLocationId = schedule.internalLocation!!.id.toLong(),
+      internalLocationId = schedule.internalLocation?.id?.toLong(),
       capacity = schedule.capacity,
       payRates = activity.pay.map { p ->
         PayRateRequest(
