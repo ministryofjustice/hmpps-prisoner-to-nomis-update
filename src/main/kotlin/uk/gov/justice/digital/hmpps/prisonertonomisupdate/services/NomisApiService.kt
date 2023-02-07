@@ -190,6 +190,7 @@ data class CreateActivityRequest(
   val description: String,
   val minimumIncentiveLevelCode: String? = null,
   val programCode: String,
+  val payPerSession: String,
 )
 
 data class PayRateRequest(

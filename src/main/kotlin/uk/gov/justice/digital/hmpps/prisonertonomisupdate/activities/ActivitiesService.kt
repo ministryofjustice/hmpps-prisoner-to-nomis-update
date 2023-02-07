@@ -145,7 +145,7 @@ class ActivitiesService(
 
   private fun toNomisActivity(schedule: ActivitySchedule, activity: Activity): CreateActivityRequest {
     return CreateActivityRequest(
-      code = "$activity.id-$schedule.id",
+      code = "${activity.id}-${schedule.id}",
       startDate = activity.startDate,
       endDate = activity.endDate,
       prisonId = activity.prisonCode,
@@ -161,6 +161,7 @@ class ActivitiesService(
       description = "${activity.description} - ${schedule.description}",
       minimumIncentiveLevelCode = activity.minimumIncentiveLevel,
       programCode = activity.category.code,
+      payPerSession = activity.payPerSession.value,
     )
   }
 
