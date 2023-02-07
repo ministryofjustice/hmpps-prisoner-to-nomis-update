@@ -50,7 +50,7 @@ internal class SentencingAdjustmentMappingServiceTest {
         newMapping(
           nomisAdjustmentId = 123,
           nomisAdjustmentType = "BOOKING",
-          sentenceAdjustmentId = "9876"
+          adjustmentId = "9876"
         )
       )
 
@@ -58,7 +58,7 @@ internal class SentencingAdjustmentMappingServiceTest {
         postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
           .withRequestBody(matchingJsonPath("nomisAdjustmentId", equalTo("123")))
           .withRequestBody(matchingJsonPath("nomisAdjustmentType", equalTo("BOOKING")))
-          .withRequestBody(matchingJsonPath("sentenceAdjustmentId", equalTo("9876")))
+          .withRequestBody(matchingJsonPath("adjustmentId", equalTo("9876")))
           .withRequestBody(matchingJsonPath("mappingType", equalTo("SENTENCING_CREATED")))
       )
     }
@@ -74,31 +74,31 @@ internal class SentencingAdjustmentMappingServiceTest {
   }
 
   @Nested
-  @DisplayName("GET mapping/sentencing/adjustments/sentence-adjustment-id/{sentenceAdjustmentId}")
+  @DisplayName("GET mapping/sentencing/adjustments/adjustment-id/{adjustmentId}")
   inner class GetMappingGivenSentenceAdjustmentId {
     @Test
     fun `should call api with OAuth2 token`() = runBlocking {
-      mappingServer.stubGetBySentenceAdjustmentId(
-        sentenceAdjustmentId = "1234",
+      mappingServer.stubGetByAdjustmentId(
+        adjustmentId = "1234",
       )
 
-      mappingService.getMappingGivenSentenceAdjustmentId("1234")
+      mappingService.getMappingGivenAdjustmentId("1234")
 
       mappingServer.verify(
-        getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/sentence-adjustment-id/1234"))
+        getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/1234"))
           .withHeader("Authorization", equalTo("Bearer ABCDE"))
       )
     }
 
     @Test
     fun `will return mapping data`(): Unit = runBlocking {
-      mappingServer.stubGetBySentenceAdjustmentId(
-        sentenceAdjustmentId = "1234",
+      mappingServer.stubGetByAdjustmentId(
+        adjustmentId = "1234",
         nomisAdjustmentId = 123,
         nomisAdjustmentType = "BOOKING",
       )
 
-      val mapping = mappingService.getMappingGivenSentenceAdjustmentId("1234")
+      val mapping = mappingService.getMappingGivenAdjustmentId("1234")
 
       assertThat(mapping?.nomisAdjustmentId).isEqualTo(123)
       assertThat(mapping?.nomisAdjustmentType).isEqualTo("BOOKING")
@@ -106,17 +106,17 @@ internal class SentencingAdjustmentMappingServiceTest {
 
     @Test
     internal fun `when mapping is not found null is returned`() = runBlocking {
-      mappingServer.stubGetBySentenceAdjustmentIdWithError("1234", 404)
+      mappingServer.stubGetByAdjustmentIdWithError("1234", 404)
 
-      assertThat(mappingService.getMappingGivenSentenceAdjustmentId("1234")).isNull()
+      assertThat(mappingService.getMappingGivenAdjustmentId("1234")).isNull()
     }
 
     @Test
     internal fun `when any bad response is received an exception is thrown`() {
-      mappingServer.stubGetBySentenceAdjustmentIdWithError("1234", 503)
+      mappingServer.stubGetByAdjustmentIdWithError("1234", 503)
 
       assertThatThrownBy {
-        runBlocking { mappingService.getMappingGivenSentenceAdjustmentId("1234") }
+        runBlocking { mappingService.getMappingGivenAdjustmentId("1234") }
       }.isInstanceOf(ServiceUnavailable::class.java)
     }
   }
@@ -124,11 +124,11 @@ internal class SentencingAdjustmentMappingServiceTest {
   private fun newMapping(
     nomisAdjustmentId: Long = 456L,
     nomisAdjustmentType: String = "SENTENCE",
-    sentenceAdjustmentId: String = "1234"
+    adjustmentId: String = "1234"
   ) =
     SentencingAdjustmentMappingDto(
       nomisAdjustmentId = nomisAdjustmentId,
       nomisAdjustmentType = nomisAdjustmentType,
-      sentenceAdjustmentId = sentenceAdjustmentId,
+      adjustmentId = adjustmentId,
     )
 }

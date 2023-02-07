@@ -36,7 +36,7 @@ class SentencingUpdateQueueService(
       mapOf(
         "messageId" to result.messageId()!!,
         "nomisAdjustmentId" to message.nomisAdjustmentId.toString(),
-        "sentenceAdjustmentId" to message.sentenceAdjustmentId,
+        "sentenceAdjustmentId" to message.adjustmentId,
       ),
     )
   }

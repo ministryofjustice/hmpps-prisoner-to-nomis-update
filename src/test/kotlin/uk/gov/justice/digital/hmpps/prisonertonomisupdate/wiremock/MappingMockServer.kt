@@ -219,19 +219,19 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetBySentenceAdjustmentId(
-    sentenceAdjustmentId: String,
+  fun stubGetByAdjustmentId(
+    adjustmentId: String,
     nomisAdjustmentId: Long = 1234,
     nomisAdjustmentType: String = "SENTENCE",
   ) {
     stubFor(
-      get("/mapping/sentencing/adjustments/sentence-adjustment-id/$sentenceAdjustmentId").willReturn(
+      get("/mapping/sentencing/adjustments/adjustment-id/$adjustmentId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             """
             { 
-            "sentenceAdjustmentId": "$sentenceAdjustmentId",  
+            "adjustmentId": "$adjustmentId",  
             "nomisAdjustmentId": $nomisAdjustmentId,  
             "nomisAdjustmentType": "$nomisAdjustmentType",  
             "mappingType": "MIGRATED",  
@@ -243,9 +243,9 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetBySentenceAdjustmentIdWithError(sentenceAdjustmentId: String, status: Int) {
+  fun stubGetByAdjustmentIdWithError(adjustmentId: String, status: Int) {
     stubFor(
-      get("/mapping/sentencing/adjustments/sentence-adjustment-id/$sentenceAdjustmentId").willReturn(
+      get("/mapping/sentencing/adjustments/adjustment-id/$adjustmentId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(

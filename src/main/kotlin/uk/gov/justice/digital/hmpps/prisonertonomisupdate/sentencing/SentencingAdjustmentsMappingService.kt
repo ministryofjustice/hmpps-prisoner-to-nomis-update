@@ -22,9 +22,9 @@ class SentencingAdjustmentsMappingService(
       .awaitSingleOrNull()
   }
 
-  suspend fun getMappingGivenSentenceAdjustmentId(sentenceAdjustmentId: String): SentencingAdjustmentMappingDto? =
+  suspend fun getMappingGivenAdjustmentId(adjustmentId: String): SentencingAdjustmentMappingDto? =
     webClient.get()
-      .uri("/mapping/sentencing/adjustments/sentence-adjustment-id/$sentenceAdjustmentId")
+      .uri("/mapping/sentencing/adjustments/adjustment-id/$adjustmentId")
       .retrieve()
       .bodyToMono(SentencingAdjustmentMappingDto::class.java)
       .onErrorResume(WebClientResponseException.NotFound::class.java) {
@@ -36,7 +36,7 @@ class SentencingAdjustmentsMappingService(
 data class SentencingAdjustmentMappingDto(
   val nomisAdjustmentId: Long,
   val nomisAdjustmentType: String,
-  val sentenceAdjustmentId: String,
+  val adjustmentId: String,
   val label: String? = null,
   val mappingType: String = "SENTENCING_CREATED",
   val whenCreated: LocalDateTime? = null
