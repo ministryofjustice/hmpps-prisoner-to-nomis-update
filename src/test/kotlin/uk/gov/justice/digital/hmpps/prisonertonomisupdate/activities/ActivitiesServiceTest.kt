@@ -195,7 +195,7 @@ internal class ActivitiesServiceTest {
       verify(telemetryClient).trackEvent(
         eq("activity-amend-failed"),
         check<Map<String, String>> {
-          assertThat(it).containsAllEntriesOf(mapOf("activityScheduleId" to activityScheduleId.toString()))
+          assertThat(it).containsExactlyEntriesOf(mutableMapOf("activityScheduleId" to activityScheduleId.toString()))
         },
         isNull()
       )
@@ -216,7 +216,12 @@ internal class ActivitiesServiceTest {
       verify(telemetryClient).trackEvent(
         eq("activity-amend-failed"),
         check<Map<String, String>> {
-          assertThat(it).containsAllEntriesOf(mapOf("activityScheduleId" to activityScheduleId.toString()))
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "activityScheduleId" to activityScheduleId.toString(),
+              "activityId" to activityId.toString()
+            )
+          )
         },
         isNull()
       )
@@ -238,7 +243,13 @@ internal class ActivitiesServiceTest {
       verify(telemetryClient).trackEvent(
         eq("activity-amend-failed"),
         check<Map<String, String>> {
-          assertThat(it).containsAllEntriesOf(mapOf("activityScheduleId" to activityScheduleId.toString()))
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "activityScheduleId" to activityScheduleId.toString(),
+              "activityId" to activityId.toString(),
+              "nomisCourseActivityId" to nomisCourseActivityId.toString()
+            )
+          )
         },
         isNull()
       )
@@ -263,7 +274,13 @@ internal class ActivitiesServiceTest {
       verify(telemetryClient).trackEvent(
         eq("activity-amend-event"),
         check<Map<String, String>> {
-          assertThat(it).containsAllEntriesOf(mapOf("activityScheduleId" to activityScheduleId.toString()))
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "activityScheduleId" to activityScheduleId.toString(),
+              "activityId" to activityId.toString(),
+              "nomisCourseActivityId" to nomisCourseActivityId.toString()
+            )
+          )
         },
         isNull()
       )

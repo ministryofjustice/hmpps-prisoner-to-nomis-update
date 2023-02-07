@@ -163,7 +163,6 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
     }
 
     @Test
-    // @Disabled("Until we implement the update activity schedule service (SDI-613)")
     fun `should put message on DLQ if any external API fails`() {
       activitiesApi.stubGetScheduleWithError(ACTIVITY_SCHEDULE_ID)
 

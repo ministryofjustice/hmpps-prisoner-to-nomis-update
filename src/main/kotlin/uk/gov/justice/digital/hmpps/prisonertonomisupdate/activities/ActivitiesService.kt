@@ -86,7 +86,7 @@ class ActivitiesService(
       val activitySchedule = activitiesApiService.getActivitySchedule(event.additionalInformation.activityScheduleId)
 
       val activity = activitiesApiService.getActivity(activitySchedule.activity.id)
-        .also { telemetryMap["activityId"] = it.toString() }
+        .also { telemetryMap["activityId"] = it.id.toString() }
 
       val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(activitySchedule.id).nomisCourseActivityId
         .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
