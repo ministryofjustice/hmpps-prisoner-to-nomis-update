@@ -12,6 +12,7 @@ import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.eq
@@ -670,7 +671,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
   @Nested
   inner class UpdateSentencingAdjustment {
     @Nested
-    inner class WhenAdjustmentHasJustBeenUpdatedByAdjustmentService {
+    inner class WhenAdjustmentHasBeenUpdatedByAdjustmentService {
       val creatingSystem = "SENTENCE_ADJUSTMENTS"
       private val nomisAdjustmentId = 98765L
 
@@ -800,6 +801,80 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             )
           }
         }
+      }
+    }
+
+    @Nested
+    inner class WhenAdjustmentHasBeenUpdatedByNOMIS {
+      private val creatingSystem = "NOMIS"
+      private val nomisAdjustmentId = 98765L
+
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetBySentenceAdjustmentId(
+          sentenceAdjustmentId = ADJUSTMENT_ID,
+          nomisAdjustmentId = nomisAdjustmentId
+        )
+        sentencingAdjustmentsApi.stubAdjustmentGet(
+          adjustmentId = ADJUSTMENT_ID,
+          sentenceSequence = 1,
+          creatingSystem = creatingSystem,
+          adjustmentDays = 99,
+          adjustmentDate = "2022-01-01",
+          adjustmentType = "RX",
+          adjustmentStartPeriod = "2020-07-19",
+          comment = "Adjusted for remand",
+          bookingId = BOOKING_ID
+        )
+        publishUpdateAdjustmentDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to adjustment service to get more details`() {
+        await untilAsserted {
+          sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
+        }
+        await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+      }
+
+      @Test
+      fun `will not update the sentence adjustment in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("sentencing-adjustment-updated-ignored"),
+            any(),
+            isNull(),
+          )
+        }
+        nomisApi.verify(
+          0,
+          putRequestedFor(urlEqualTo("/sentence-adjustments/$nomisAdjustmentId"))
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("When mapping does not exist - we never received a create domain event")
+    inner class WhenMappingDoesNotExits {
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetBySentenceAdjustmentIdWithError(
+          sentenceAdjustmentId = ADJUSTMENT_ID,
+          404
+        )
+
+        await untilCallTo {
+          awsSqsSentencingDlqClient!!.countAllMessagesOnQueue(sentencingDlqUrl!!).get()
+        } matches { it == 0 }
+
+        publishUpdateAdjustmentDomainEvent()
+      }
+
+      @Test
+      fun `will send message to dead letter queue`() {
+        await untilCallTo {
+          awsSqsSentencingDlqClient!!.countAllMessagesOnQueue(sentencingDlqUrl!!).get()
+        } matches { it == 1 }
       }
     }
   }

@@ -120,21 +120,21 @@ class PrisonVisitsService(
     }
   }
 
-  fun updateVisit(visitCancelledEvent: VisitChangedEvent) {
+  fun updateVisit(visitChangedEvent: VisitChangedEvent) {
     val telemetryProperties = mutableMapOf(
-      "offenderNo" to visitCancelledEvent.prisonerId,
-      "visitId" to visitCancelledEvent.reference,
+      "offenderNo" to visitChangedEvent.prisonerId,
+      "visitId" to visitChangedEvent.reference,
     )
 
     val mappingDto =
-      mappingService.getMappingGivenVsipId(visitCancelledEvent.reference)
-        ?: throw ValidationException("No mapping exists for VSIP id ${visitCancelledEvent.reference}")
+      mappingService.getMappingGivenVsipId(visitChangedEvent.reference)
+        ?: throw ValidationException("No mapping exists for VSIP id ${visitChangedEvent.reference}")
           .also { telemetryClient.trackEvent("visit-changed-mapping-failed", telemetryProperties) }
 
-    visitsApiService.getVisit(visitCancelledEvent.reference).run {
+    visitsApiService.getVisit(visitChangedEvent.reference).run {
 
       nomisApiService.updateVisit(
-        visitCancelledEvent.prisonerId,
+        visitChangedEvent.prisonerId,
         mappingDto.nomisId,
         UpdateVisitDto(
           startDateTime = this.startTimestamp,
