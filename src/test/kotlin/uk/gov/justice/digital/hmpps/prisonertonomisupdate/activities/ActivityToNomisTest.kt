@@ -12,7 +12,6 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
@@ -130,7 +129,6 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
   @Nested
   inner class UpdateActivitySchedule {
     @Test
-    @Disabled("Until we implement the update activity schedule service (SDI-613)")
     fun `should update an activity`() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildApiActivityScheduleDtoJsonResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildApiActivityDtoJsonResponse())
@@ -154,17 +152,17 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
       await untilAsserted {
         nomisApi.verify(
           putRequestedFor(urlEqualTo("/activities/$COURSE_ACTIVITY_ID"))
+            .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-23")))
             .withRequestBody(matchingJsonPath("internalLocationId", equalTo("98877667")))
-            .withRequestBody(matchingJsonPath("pay[0].incentiveLevel", equalTo("BAS")))
-            .withRequestBody(matchingJsonPath("pay[0].payBand", equalTo("1")))
-            .withRequestBody(matchingJsonPath("pay[0].rate", equalTo("1.5")))
+            .withRequestBody(matchingJsonPath("payRates[0].incentiveLevel", equalTo("BAS")))
+            .withRequestBody(matchingJsonPath("payRates[0].payBand", equalTo("1")))
+            .withRequestBody(matchingJsonPath("payRates[0].rate", equalTo("1.5")))
         )
       }
       assertThat(awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get()).isEqualTo(0)
     }
 
     @Test
-    @Disabled("Until we implement the update activity schedule service (SDI-613)")
     fun `should put message on DLQ if any external API fails`() {
       activitiesApi.stubGetScheduleWithError(ACTIVITY_SCHEDULE_ID)
 
@@ -291,10 +289,11 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
       "description": "Such as association, library time and social clubs, like music or art"
     },
     "riskLevel": "High",
-    "minimumIncentiveLevel": "Basic"
+    "minimumIncentiveLevel": "BAS"
   },
   "slots": [],
-  "startDate" : "2023-01-20"
+  "startDate" : "2023-01-20",
+  "endDate" : "2023-01-23"
 }
     """.trimIndent()
 
@@ -332,7 +331,7 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
          "prisonCode": "PVI"
       },
       "rate": 150,
-      "pieceRate": 150,
+      "pieceRate": 250,
       "pieceRateItems": 10
     }
   ],
