@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.stubbing.Scenario
@@ -222,7 +223,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetByAdjustmentId(
     adjustmentId: String,
     nomisAdjustmentId: Long = 1234,
-    nomisAdjustmentType: String = "SENTENCE",
+    nomisAdjustmentCategory: String = "SENTENCE",
   ) {
     stubFor(
       get("/mapping/sentencing/adjustments/adjustment-id/$adjustmentId").willReturn(
@@ -233,12 +234,35 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
             { 
             "adjustmentId": "$adjustmentId",  
             "nomisAdjustmentId": $nomisAdjustmentId,  
-            "nomisAdjustmentType": "$nomisAdjustmentType",  
+            "nomisAdjustmentCategory": "$nomisAdjustmentCategory",  
             "mappingType": "MIGRATED",  
             "whenCreated": "2020-01-01T00:00:00"
               }"""
           )
           .withStatus(200)
+      )
+    )
+  }
+
+  fun stubDeleteByAdjustmentId(
+    adjustmentId: String,
+  ) {
+    stubFor(
+      delete("/mapping/sentencing/adjustments/adjustment-id/$adjustmentId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204)
+      )
+    )
+  }
+
+  fun stubDeleteByAdjustmentIdWithError(adjustmentId: String, status: Int) {
+    stubFor(
+      delete("/mapping/sentencing/adjustments/adjustment-id/$adjustmentId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "not here" }""")
+          .withStatus(status)
       )
     )
   }

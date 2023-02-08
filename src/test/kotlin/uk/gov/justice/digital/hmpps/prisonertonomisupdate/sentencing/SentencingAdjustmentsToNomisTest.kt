@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
@@ -101,7 +102,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             mappingServer.verify(
               postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
                 .withRequestBody(matchingJsonPath("nomisAdjustmentId", equalTo(nomisAdjustmentId.toString())))
-                .withRequestBody(matchingJsonPath("nomisAdjustmentType", equalTo("SENTENCE")))
+                .withRequestBody(matchingJsonPath("nomisAdjustmentCategory", equalTo("SENTENCE")))
                 .withRequestBody(matchingJsonPath("adjustmentId", equalTo(ADJUSTMENT_ID)))
             )
           }
@@ -178,7 +179,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             mappingServer.verify(
               postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
                 .withRequestBody(matchingJsonPath("nomisAdjustmentId", equalTo(nomisAdjustmentId.toString())))
-                .withRequestBody(matchingJsonPath("nomisAdjustmentType", equalTo("BOOKING")))
+                .withRequestBody(matchingJsonPath("nomisAdjustmentCategory", equalTo("BOOKING")))
                 .withRequestBody(matchingJsonPath("adjustmentId", equalTo(ADJUSTMENT_ID)))
             )
           }
@@ -879,6 +880,160 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class DeleteSentencingAdjustment {
+    @Nested
+    inner class WhenMappingForAdjustmentExists {
+      val nomisAdjustmentId = 12345L
+
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubDeleteByAdjustmentId(ADJUSTMENT_ID)
+      }
+
+      @Nested
+      inner class WhenMappingIsForAKeyDateAdjustment {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByAdjustmentId(
+            adjustmentId = ADJUSTMENT_ID,
+            nomisAdjustmentId = nomisAdjustmentId,
+            nomisAdjustmentCategory = "KEY-DATE"
+          )
+
+          nomisApi.stubKeyDateAdjustmentDelete(nomisAdjustmentId)
+
+          publishDeleteAdjustmentDomainEvent()
+        }
+
+        @Test
+        fun `will retrieve mapping do get the nomis details`() {
+          await untilAsserted {
+            mappingServer.verify(
+              getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID"))
+            )
+          }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        }
+
+        @Test
+        fun `will delete the key date adjustment`() {
+          await untilAsserted {
+            nomisApi.verify(
+              deleteRequestedFor(urlEqualTo("/key-date-adjustments/$nomisAdjustmentId"))
+            )
+          }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        }
+
+        @Test
+        fun `will also delete the adjustment mapping`() {
+          await untilAsserted {
+            mappingServer.verify(
+              deleteRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID"))
+            )
+          }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        }
+
+        @Test
+        fun `will track telemetry event for the delete`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("sentencing-adjustment-deleted-success"),
+              org.mockito.kotlin.check {
+                assertThat(it["adjustmentId"]).isEqualTo(ADJUSTMENT_ID)
+                assertThat(it["nomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
+                assertThat(it["nomisAdjustmentCategory"]).isEqualTo("KEY-DATE")
+              },
+              isNull(),
+            )
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenMappingIsForASentenceAdjustment {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByAdjustmentId(
+            adjustmentId = ADJUSTMENT_ID,
+            nomisAdjustmentId = nomisAdjustmentId,
+            nomisAdjustmentCategory = "SENTENCE"
+          )
+
+          nomisApi.stubSentenceAdjustmentDelete(nomisAdjustmentId)
+
+          publishDeleteAdjustmentDomainEvent()
+        }
+
+        @Test
+        fun `will retrieve mapping do get the nomis details`() {
+          await untilAsserted {
+            mappingServer.verify(
+              getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID"))
+            )
+          }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        }
+
+        @Test
+        fun `will delete the sentence adjustment`() {
+          await untilAsserted {
+            nomisApi.verify(
+              deleteRequestedFor(urlEqualTo("/sentence-adjustments/$nomisAdjustmentId"))
+            )
+          }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        }
+
+        @Test
+        fun `will also delete the adjustment mapping`() {
+          await untilAsserted {
+            mappingServer.verify(
+              deleteRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID"))
+            )
+          }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        }
+
+        @Test
+        fun `will track telemetry event for the delete`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("sentencing-adjustment-deleted-success"),
+              org.mockito.kotlin.check {
+                assertThat(it["adjustmentId"]).isEqualTo(ADJUSTMENT_ID)
+                assertThat(it["nomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
+                assertThat(it["nomisAdjustmentCategory"]).isEqualTo("SENTENCE")
+              },
+              isNull(),
+            )
+          }
+        }
+      }
+    }
+
+    @Nested
+    inner class WhenMappingForAdjustmentDoesNotExist {
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetByAdjustmentIdWithError(ADJUSTMENT_ID, 404)
+        await untilCallTo {
+          awsSqsSentencingDlqClient!!.countAllMessagesOnQueue(sentencingDlqUrl!!).get()
+        } matches { it == 0 }
+        publishDeleteAdjustmentDomainEvent()
+      }
+
+      @Test
+      fun `will add message to dead letter queue in case it indicates a system error`() {
+        await untilCallTo {
+          awsSqsSentencingDlqClient!!.countAllMessagesOnQueue(sentencingDlqUrl!!).get()
+        } matches { it == 1 }
+      }
+    }
+  }
+
   private fun publishCreateAdjustmentDomainEvent() {
     val eventType = "sentencing.sentence.adjustment.created"
     awsSnsClient.publish(
@@ -895,6 +1050,20 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
 
   private fun publishUpdateAdjustmentDomainEvent() {
     val eventType = "sentencing.sentence.adjustment.updated"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(sentencingAdjustmentMessagePayload(ADJUSTMENT_ID, OFFENDER_NUMBER, eventType))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          )
+        ).build()
+    ).get()
+  }
+
+  private fun publishDeleteAdjustmentDomainEvent() {
+    val eventType = "sentencing.sentence.adjustment.deleted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(sentencingAdjustmentMessagePayload(ADJUSTMENT_ID, OFFENDER_NUMBER, eventType))

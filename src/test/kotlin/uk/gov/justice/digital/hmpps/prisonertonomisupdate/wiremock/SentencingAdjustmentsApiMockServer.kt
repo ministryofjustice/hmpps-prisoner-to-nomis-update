@@ -141,7 +141,7 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
               """.trimIndent()
             )
             .withStatus(200)
-            .withFixedDelay(2000)
+            .withFixedDelay(500)
 
         ).willSetStateTo(Scenario.STARTED)
     )

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
@@ -456,6 +457,57 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
+  inner class DeleteSentenceAdjustment {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`(): Unit = runBlocking {
+      NomisApiExtension.nomisApi.stubSentenceAdjustmentDelete(adjustmentId = 98765)
+
+      nomisApiService.deleteSentenceAdjustment(98765)
+
+      NomisApiExtension.nomisApi.verify(
+        deleteRequestedFor(urlEqualTo("/sentence-adjustments/98765"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+      )
+    }
+
+    @Test
+    fun `will delete sentence adjustment from nomis`() = runBlocking {
+      NomisApiExtension.nomisApi.stubSentenceAdjustmentDelete(adjustmentId = 98765)
+
+      nomisApiService.deleteSentenceAdjustment(98765)
+
+      NomisApiExtension.nomisApi.verify(
+        deleteRequestedFor(urlEqualTo("/sentence-adjustments/98765"))
+      )
+    }
+
+    @Test
+    internal fun `if 404 - which is not expected - is returned an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubSentenceAdjustmentDeleteWithError(
+        adjustmentId = 98765,
+        status = 404
+      )
+
+      assertThatThrownBy {
+        runBlocking { nomisApiService.deleteSentenceAdjustment(98765) }
+      }.isInstanceOf(NotFound::class.java)
+    }
+
+    @Test
+    internal fun `when any bad response is received an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubSentenceAdjustmentDeleteWithError(
+        adjustmentId = 98765,
+        status = 503
+      )
+
+      assertThatThrownBy {
+        runBlocking { nomisApiService.deleteSentenceAdjustment(98765) }
+      }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+  }
+
+  @Nested
   inner class CreateKeyDateAdjustment {
 
     @Test
@@ -577,6 +629,57 @@ internal class NomisApiServiceTest {
 
       assertThatThrownBy {
         runBlocking { nomisApiService.updateKeyDateAdjustment(98765, updateSentencingAdjustment()) }
+      }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+  }
+
+  @Nested
+  inner class DeleteKeyDateAdjustment {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`(): Unit = runBlocking {
+      NomisApiExtension.nomisApi.stubKeyDateAdjustmentDelete(adjustmentId = 98765)
+
+      nomisApiService.deleteKeyDateAdjustment(98765)
+
+      NomisApiExtension.nomisApi.verify(
+        deleteRequestedFor(urlEqualTo("/key-date-adjustments/98765"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+      )
+    }
+
+    @Test
+    fun `will delete key date adjustment from nomis`() = runBlocking {
+      NomisApiExtension.nomisApi.stubKeyDateAdjustmentDelete(adjustmentId = 98765)
+
+      nomisApiService.deleteKeyDateAdjustment(98765)
+
+      NomisApiExtension.nomisApi.verify(
+        deleteRequestedFor(urlEqualTo("/key-date-adjustments/98765"))
+      )
+    }
+
+    @Test
+    internal fun `if 404 - which is not expected - is returned an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubKeyDateAdjustmentDeleteWithError(
+        adjustmentId = 98765,
+        status = 404
+      )
+
+      assertThatThrownBy {
+        runBlocking { nomisApiService.deleteKeyDateAdjustment(98765) }
+      }.isInstanceOf(NotFound::class.java)
+    }
+
+    @Test
+    internal fun `when any bad response is received an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubKeyDateAdjustmentDeleteWithError(
+        adjustmentId = 98765,
+        status = 503
+      )
+
+      assertThatThrownBy {
+        runBlocking { nomisApiService.deleteKeyDateAdjustment(98765) }
       }.isInstanceOf(ServiceUnavailable::class.java)
     }
   }
