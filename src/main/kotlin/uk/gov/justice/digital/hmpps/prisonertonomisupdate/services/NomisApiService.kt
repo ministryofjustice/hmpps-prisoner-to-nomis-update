@@ -76,7 +76,10 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .block()!!
   }
 
-  fun createAllocation(courseActivityId: Long, request: CreateOffenderProgramProfileRequest): OffenderProgramProfileResponse =
+  fun createAllocation(
+    courseActivityId: Long,
+    request: CreateOffenderProgramProfileRequest
+  ): OffenderProgramProfileResponse =
     webClient.post()
       .uri("/activities/$courseActivityId")
       .bodyValue(request)
@@ -84,7 +87,11 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyToMono(OffenderProgramProfileResponse::class.java)
       .block()!!
 
-  fun deallocate(courseActivityId: Long, bookingId: Long, request: EndOffenderProgramProfileRequest): OffenderProgramProfileResponse =
+  fun deallocate(
+    courseActivityId: Long,
+    bookingId: Long,
+    request: EndOffenderProgramProfileRequest
+  ): OffenderProgramProfileResponse =
     webClient.put()
       .uri("/activities/$courseActivityId/booking-id/$bookingId/end")
       .bodyValue(request)
@@ -130,6 +137,18 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     webClient.put()
       .uri("/key-date-adjustments/$adjustmentId")
       .bodyValue(request)
+      .retrieve()
+      .awaitBody()
+
+  suspend fun deleteSentenceAdjustment(adjustmentId: Long): Unit =
+    webClient.delete()
+      .uri("/sentence-adjustments/$adjustmentId")
+      .retrieve()
+      .awaitBody()
+
+  suspend fun deleteKeyDateAdjustment(adjustmentId: Long): Unit =
+    webClient.delete()
+      .uri("/key-date-adjustments/$adjustmentId")
       .retrieve()
       .awaitBody()
 }

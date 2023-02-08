@@ -49,7 +49,7 @@ class SentencingAdjustmentsService(
           }.also { createdNomisAdjustment ->
             val mapping = SentencingAdjustmentMappingDto(
               nomisAdjustmentId = createdNomisAdjustment.id,
-              nomisAdjustmentType = if (adjustment.sentenceSequence == null) "BOOKING" else "SENTENCE",
+              nomisAdjustmentCategory = if (adjustment.sentenceSequence == null) "KEY-DATE" else "SENTENCE",
               adjustmentId = adjustment.adjustmentId
             )
             kotlin.runCatching {
@@ -132,6 +132,34 @@ class SentencingAdjustmentsService(
       ?: throw RuntimeException("No mapping found for adjustment ${createEvent.additionalInformation.id}, maybe we never received a create")
   }
 
+  suspend fun deleteAdjustment(createEvent: AdjustmentDeletedEvent) {
+    sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(createEvent.additionalInformation.id)
+      ?.also { mapping ->
+        if (mapping.nomisAdjustmentCategory == "SENTENCE") {
+          nomisApiService.deleteSentenceAdjustment(
+            mapping.nomisAdjustmentId,
+          )
+        } else {
+          nomisApiService.deleteKeyDateAdjustment(
+            mapping.nomisAdjustmentId,
+          )
+        }.also {
+          sentencingAdjustmentsMappingService.deleteMappingGivenAdjustmentId(createEvent.additionalInformation.id)
+          telemetryClient.trackEvent(
+            "sentencing-adjustment-deleted-success",
+            mapOf(
+              "adjustmentId" to mapping.adjustmentId,
+              "nomisAdjustmentId" to mapping.nomisAdjustmentId.toString(),
+              "nomisAdjustmentCategory" to mapping.nomisAdjustmentCategory,
+              "offenderNo" to createEvent.additionalInformation.nomsNumber,
+            ),
+            null
+          )
+        }
+      }
+      ?: throw RuntimeException("No mapping found for adjustment ${createEvent.additionalInformation.id}, maybe we never received a create")
+  }
+
   suspend fun createSentencingAdjustmentMapping(message: SentencingAdjustmentCreateMappingRetryMessage) =
     sentencingAdjustmentsMappingService.createMapping(message.mapping).also {
       telemetryClient.trackEvent(
@@ -156,5 +184,9 @@ data class AdjustmentCreatedEvent(
 )
 
 data class AdjustmentUpdatedEvent(
+  val additionalInformation: AdditionalInformation,
+)
+
+data class AdjustmentDeletedEvent(
   val additionalInformation: AdditionalInformation,
 )

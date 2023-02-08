@@ -45,7 +45,8 @@ class SentencingDomainEventListener(
             "sentencing.sentence.adjustment.updated" ->
               sentencingAdjustmentsService.updateAdjustment(sqsMessage.Message.fromJson())
 
-            "sentencing.sentence.adjustment.delete" -> log.info("Received a valid sentencing {}", eventType)
+            "sentencing.sentence.adjustment.deleted" ->
+              sentencingAdjustmentsService.deleteAdjustment(sqsMessage.Message.fromJson())
 
             else -> log.info("Received a message I wasn't expecting: {}", eventType)
           } else {

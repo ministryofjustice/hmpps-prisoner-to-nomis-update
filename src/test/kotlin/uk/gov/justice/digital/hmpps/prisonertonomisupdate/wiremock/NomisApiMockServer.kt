@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
@@ -144,6 +145,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       )
     )
   }
+
   fun stubActivityUpdate(nomisActivityId: Long) {
     stubFor(
       put("/activities/$nomisActivityId").willReturn(
@@ -288,6 +290,27 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubSentenceAdjustmentDelete(adjustmentId: Long) {
+    stubFor(
+      delete("/sentence-adjustments/$adjustmentId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204)
+      )
+    )
+  }
+
+  fun stubSentenceAdjustmentDeleteWithError(adjustmentId: Long, status: Int) {
+    stubFor(
+      delete("/sentence-adjustments/$adjustmentId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status)
+      )
+    )
+  }
+
   fun stubKeyDateAdjustmentCreate(bookingId: Long, adjustmentId: Long = 99L) {
     stubFor(
       post("/prisoners/booking-id/$bookingId/adjustments").willReturn(
@@ -323,6 +346,27 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubKeyDateAdjustmentUpdateWithError(adjustmentId: Long, status: Int) {
     stubFor(
       put("/key-date-adjustments/$adjustmentId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status)
+      )
+    )
+  }
+
+  fun stubKeyDateAdjustmentDelete(adjustmentId: Long) {
+    stubFor(
+      delete("/key-date-adjustments/$adjustmentId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204)
+      )
+    )
+  }
+
+  fun stubKeyDateAdjustmentDeleteWithError(adjustmentId: Long, status: Int) {
+    stubFor(
+      delete("/key-date-adjustments/$adjustmentId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
