@@ -262,7 +262,7 @@ data class CreateSentencingAdjustmentRequest(
   @JsonFormat(pattern = "yyyy-MM-dd")
   val adjustmentDate: LocalDate,
   @JsonFormat(pattern = "yyyy-MM-dd")
-  val adjustmentFomDate: LocalDate?,
+  val adjustmentFromDate: LocalDate?,
   val adjustmentDays: Long,
   val comment: String?,
 )
@@ -272,7 +272,7 @@ data class UpdateSentencingAdjustmentRequest(
   @JsonFormat(pattern = "yyyy-MM-dd")
   val adjustmentDate: LocalDate,
   @JsonFormat(pattern = "yyyy-MM-dd")
-  val adjustmentFomDate: LocalDate?,
+  val adjustmentFromDate: LocalDate?,
   val adjustmentDays: Long,
   val comment: String?,
 )
