@@ -49,7 +49,7 @@ class SentencingAdjustmentsService(
           }.also { createdNomisAdjustment ->
             val mapping = SentencingAdjustmentMappingDto(
               nomisAdjustmentId = createdNomisAdjustment.id,
-              nomisAdjustmentCategory = if (adjustment.sentenceSequence == null) "BOOKING" else "SENTENCE",
+              nomisAdjustmentCategory = if (adjustment.sentenceSequence == null) "KEY-DATE" else "SENTENCE",
               adjustmentId = adjustment.adjustmentId
             )
             kotlin.runCatching {

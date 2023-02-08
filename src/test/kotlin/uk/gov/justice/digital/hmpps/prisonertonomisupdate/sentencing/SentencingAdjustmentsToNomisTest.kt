@@ -179,7 +179,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             mappingServer.verify(
               postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
                 .withRequestBody(matchingJsonPath("nomisAdjustmentId", equalTo(nomisAdjustmentId.toString())))
-                .withRequestBody(matchingJsonPath("nomisAdjustmentCategory", equalTo("BOOKING")))
+                .withRequestBody(matchingJsonPath("nomisAdjustmentCategory", equalTo("KEY-DATE")))
                 .withRequestBody(matchingJsonPath("adjustmentId", equalTo(ADJUSTMENT_ID)))
             )
           }
