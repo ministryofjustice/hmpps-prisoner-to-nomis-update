@@ -43,7 +43,7 @@ class MockSentencingResource(
 @Configuration
 @ConfigurationProperties(prefix = "mock.adjustment.sentence")
 data class MockSentenceAdjustmentData(
-  var bookingId: Long = 328661,
+  var bookingId: Long = 1201725,
   var sentenceSequence: Long = 1,
   var adjustmentType: String = "RX",
   var offenderNo: String = "A5194DY"
@@ -52,7 +52,7 @@ data class MockSentenceAdjustmentData(
 @Configuration
 @ConfigurationProperties(prefix = "mock.adjustment.key.date")
 data class MockKeyDateAdjustmentData(
-  var bookingId: Long = 328661,
+  var bookingId: Long = 1201725,
   var adjustmentType: String = "ADA",
   var offenderNo: String = "A5194DY"
 )
