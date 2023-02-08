@@ -31,7 +31,7 @@ class SentencingAdjustmentsService(
           val nomisAdjustmentRequest = CreateSentencingAdjustmentRequest(
             adjustmentTypeCode = adjustment.adjustmentType,
             adjustmentDate = adjustment.adjustmentDate,
-            adjustmentFomDate = adjustment.adjustmentStartPeriod,
+            adjustmentFromDate = adjustment.adjustmentStartPeriod,
             adjustmentDays = adjustment.adjustmentDays,
             comment = adjustment.comment,
           )
@@ -92,7 +92,7 @@ class SentencingAdjustmentsService(
             val nomisAdjustmentRequest = UpdateSentencingAdjustmentRequest(
               adjustmentTypeCode = adjustment.adjustmentType,
               adjustmentDate = adjustment.adjustmentDate,
-              adjustmentFomDate = adjustment.adjustmentStartPeriod,
+              adjustmentFromDate = adjustment.adjustmentStartPeriod,
               adjustmentDays = adjustment.adjustmentDays,
               comment = adjustment.comment,
             )

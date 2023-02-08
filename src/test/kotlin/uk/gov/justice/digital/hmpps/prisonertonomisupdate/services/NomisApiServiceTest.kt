@@ -386,7 +386,7 @@ internal class NomisApiServiceTest {
           adjustmentTypeCode = "RX",
           adjustmentDate = LocalDate.parse("2022-01-01"),
           adjustmentDays = 9,
-          adjustmentFomDate = LocalDate.parse("2020-07-19"),
+          adjustmentFromDate = LocalDate.parse("2020-07-19"),
           comment = "Adjusted for remand"
         )
       )
@@ -396,7 +396,7 @@ internal class NomisApiServiceTest {
           .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("RX")))
           .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
           .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("9")))
-          .withRequestBody(matchingJsonPath("adjustmentFomDate", equalTo("2020-07-19")))
+          .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
           .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand")))
       )
     }
@@ -453,7 +453,7 @@ internal class NomisApiServiceTest {
           adjustmentTypeCode = "RX",
           adjustmentDate = LocalDate.parse("2022-01-01"),
           adjustmentDays = 9,
-          adjustmentFomDate = LocalDate.parse("2020-07-19"),
+          adjustmentFromDate = LocalDate.parse("2020-07-19"),
           comment = "Adjusted for remand"
         )
       )
@@ -463,7 +463,7 @@ internal class NomisApiServiceTest {
           .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("RX")))
           .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
           .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("9")))
-          .withRequestBody(matchingJsonPath("adjustmentFomDate", equalTo("2020-07-19")))
+          .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
           .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand")))
       )
     }
@@ -630,7 +630,7 @@ internal class NomisApiServiceTest {
           adjustmentTypeCode = "RX",
           adjustmentDate = LocalDate.parse("2022-01-01"),
           adjustmentDays = 9,
-          adjustmentFomDate = LocalDate.parse("2020-07-19"),
+          adjustmentFromDate = LocalDate.parse("2020-07-19"),
           comment = "Adjusted for remand"
         )
       )
@@ -640,7 +640,7 @@ internal class NomisApiServiceTest {
           .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("RX")))
           .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
           .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("9")))
-          .withRequestBody(matchingJsonPath("adjustmentFomDate", equalTo("2020-07-19")))
+          .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
           .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand")))
       )
     }
@@ -784,13 +784,13 @@ fun newDeallocation() = EndOffenderProgramProfileRequest(
 private fun newSentencingAdjustment(
   adjustmentTypeCode: String = "RX",
   adjustmentDate: LocalDate = LocalDate.now(),
-  adjustmentFomDate: LocalDate? = null,
+  adjustmentFromDate: LocalDate? = null,
   adjustmentDays: Long = 99,
   comment: String? = "Adjustment comment"
 ) = CreateSentencingAdjustmentRequest(
   adjustmentTypeCode = adjustmentTypeCode,
   adjustmentDate = adjustmentDate,
-  adjustmentFomDate = adjustmentFomDate,
+  adjustmentFromDate = adjustmentFromDate,
   adjustmentDays = adjustmentDays,
   comment = comment,
 )
@@ -798,13 +798,13 @@ private fun newSentencingAdjustment(
 private fun updateSentencingAdjustment(
   adjustmentTypeCode: String = "RX",
   adjustmentDate: LocalDate = LocalDate.now(),
-  adjustmentFomDate: LocalDate? = null,
+  adjustmentFromDate: LocalDate? = null,
   adjustmentDays: Long = 99,
   comment: String? = "Adjustment comment"
 ) = UpdateSentencingAdjustmentRequest(
   adjustmentTypeCode = adjustmentTypeCode,
   adjustmentDate = adjustmentDate,
-  adjustmentFomDate = adjustmentFomDate,
+  adjustmentFromDate = adjustmentFromDate,
   adjustmentDays = adjustmentDays,
   comment = comment,
 )

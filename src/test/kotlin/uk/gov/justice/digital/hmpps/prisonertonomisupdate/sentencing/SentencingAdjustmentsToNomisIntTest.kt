@@ -89,7 +89,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("RX")))
                 .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
                 .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
-                .withRequestBody(matchingJsonPath("adjustmentFomDate", equalTo("2020-07-19")))
+                .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
                 .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand")))
             )
           }
@@ -166,7 +166,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("ADA")))
                 .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
                 .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
-                .withRequestBody(matchingJsonPath("adjustmentFomDate", equalTo("2020-07-19")))
+                .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
                 .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for absence")))
             )
           }
@@ -722,7 +722,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("RX")))
                 .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
                 .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
-                .withRequestBody(matchingJsonPath("adjustmentFomDate", equalTo("2020-07-19")))
+                .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
                 .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand")))
             )
           }
@@ -781,7 +781,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("ADA")))
                 .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
                 .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
-                .withRequestBody(matchingJsonPath("adjustmentFomDate", equalTo("2020-07-19")))
+                .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
                 .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for absence")))
             )
           }
