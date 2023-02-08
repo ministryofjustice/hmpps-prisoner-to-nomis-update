@@ -106,7 +106,7 @@ class ActivitiesService(
       endDate, internalLocation?.id?.toLong(),
       pay.map { p ->
         PayRateRequest(
-          incentiveLevel = p.incentiveLevel!!, // TODO this should be made non-nullable in the Activities API soon
+          incentiveLevel = p.incentiveLevel!!, // TODO SDI-622 this should be made non-nullable in the Activities API soon
           payBand = p.prisonPayBand.nomisPayBand.toString(),
           rate = BigDecimal(p.rate!!).movePointLeft(2)
         )
@@ -163,8 +163,8 @@ class ActivitiesService(
               allocation.bookingId!!,
               EndOffenderProgramProfileRequest(
                 endDate = allocation.endDate!!,
-                endReason = allocation.deallocatedReason, // TODO probably will need a mapping
-                // endComment = allocation.?, // TODO could put something useful in here
+                endReason = allocation.deallocatedReason, // TODO SDI-615 probably will need a mapping
+                // endComment = allocation.?, // TODO SDI-615 could put something useful in here
               )
             )
           } catch (e: Exception) {
