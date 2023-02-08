@@ -30,7 +30,7 @@ private const val COURSE_ACTIVITY_ID: Long = 300
 private const val ALLOCATION_ID: Long = 400
 private const val BOOKING_ID: Long = 500
 
-class ActivityToNomisTest : SqsIntegrationTestBase() {
+class ActivityToNomisIntTest : SqsIntegrationTestBase() {
 
   @Nested
   inner class CreateActivitySchedule {
@@ -135,16 +135,7 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
       mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildMappingDtoResponse())
       nomisApi.stubActivityUpdate(COURSE_ACTIVITY_ID)
 
-      awsSnsClient.publish(
-        PublishRequest.builder().topicArn(topicArn)
-          .message(activityMessagePayload("activities.activity-schedule.amended", ACTIVITY_SCHEDULE_ID))
-          .messageAttributes(
-            mapOf(
-              "eventType" to MessageAttributeValue.builder().dataType("String")
-                .stringValue("activities.activity-schedule.amended").build(),
-            )
-          ).build()
-      ).get()
+      awsSnsClient.publish(amendActivityEvent()).get()
 
       await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/schedules/$ACTIVITY_SCHEDULE_ID"))) }
       await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/activities/$ACTIVITY_ID"))) }
@@ -166,20 +157,21 @@ class ActivityToNomisTest : SqsIntegrationTestBase() {
     fun `should put message on DLQ if any external API fails`() {
       activitiesApi.stubGetScheduleWithError(ACTIVITY_SCHEDULE_ID)
 
-      awsSnsClient.publish(
-        PublishRequest.builder().topicArn(topicArn)
-          .message(activityMessagePayload("activities.activity-schedule.amended", ACTIVITY_SCHEDULE_ID))
-          .messageAttributes(
-            mapOf(
-              "eventType" to MessageAttributeValue.builder().dataType("String")
-                .stringValue("activities.activity-schedule.amended").build(),
-            )
-          ).build()
-      ).get()
+      awsSnsClient.publish(amendActivityEvent()).get()
 
       await untilAsserted { assertThat(awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get()).isEqualTo(1) }
       nomisApi.verify(exactly(0), putRequestedFor(urlEqualTo("/activities/$COURSE_ACTIVITY_ID")))
     }
+
+    private fun amendActivityEvent(): PublishRequest? =
+      PublishRequest.builder().topicArn(topicArn)
+        .message(activityMessagePayload("activities.activity-schedule.amended", ACTIVITY_SCHEDULE_ID))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue("activities.activity-schedule.amended").build(),
+          )
+        ).build()
   }
 
   @Nested
