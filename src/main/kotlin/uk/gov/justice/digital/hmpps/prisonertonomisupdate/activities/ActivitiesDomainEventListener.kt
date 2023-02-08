@@ -11,11 +11,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.HMPPSDomainEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
-
-data class HmppsDomainEvent(
-  val eventType: String,
-)
 
 @Service
 class ActivitiesDomainEventListener(
@@ -36,7 +33,7 @@ class ActivitiesDomainEventListener(
     val sqsMessage: SQSMessage = objectMapper.readValue(message)
     when (sqsMessage.Type) {
       "Notification" -> {
-        val (eventType) = objectMapper.readValue<HmppsDomainEvent>(sqsMessage.Message)
+        val (eventType) = objectMapper.readValue<HMPPSDomainEvent>(sqsMessage.Message)
         if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
           "activities.activity-schedule.created" -> activitiesService.createActivity(objectMapper.readValue(sqsMessage.Message))
           "activities.activity-schedule.amended" -> activitiesService.updateActivity(objectMapper.readValue(sqsMessage.Message))
