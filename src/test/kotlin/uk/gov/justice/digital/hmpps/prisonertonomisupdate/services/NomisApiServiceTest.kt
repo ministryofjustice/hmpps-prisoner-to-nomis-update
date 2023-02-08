@@ -248,6 +248,43 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
+  inner class UpdateActivity {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() {
+      NomisApiExtension.nomisApi.stubActivityUpdate(1L)
+
+      nomisApiService.updateActivity(1L, updateActivity())
+
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/1"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+      )
+    }
+
+    @Test
+    fun `will put data to nomis api`() {
+      NomisApiExtension.nomisApi.stubActivityUpdate(1L)
+
+      nomisApiService.updateActivity(1L, updateActivity())
+
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/1"))
+          .withRequestBody(matchingJsonPath("$.endDate", equalTo("2023-02-10")))
+      )
+    }
+
+    @Test
+    fun `when any error response is received an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubActivityUpdateWithError(1, 503)
+
+      assertThatThrownBy {
+        nomisApiService.updateActivity(1L, updateActivity())
+      }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+  }
+
+  @Nested
   inner class Allocation {
 
     @Test
@@ -621,6 +658,12 @@ fun newActivity() = CreateActivityRequest(
   description = "the description",
   programCode = "IRS",
   payPerSession = "H",
+)
+
+fun updateActivity() = UpdateActivityRequest(
+  endDate = LocalDate.parse("2023-02-10"),
+  internalLocationId = 703000,
+  payRates = emptyList(),
 )
 
 fun newAllocation() = CreateOffenderProgramProfileRequest(
