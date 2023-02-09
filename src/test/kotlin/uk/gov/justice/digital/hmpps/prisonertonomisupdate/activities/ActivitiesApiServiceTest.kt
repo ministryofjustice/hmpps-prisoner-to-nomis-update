@@ -65,7 +65,14 @@ internal class ActivitiesApiServiceTest {
             "prisonerNumber": "A1234AA",
             "activitySummary": "string",
             "scheduleDescription": "string",
-            "payBand": "A",
+            "prisonPayBand": {
+               "id": 987,
+               "displaySequence": 1,
+               "alias": "Low",
+               "description": "Pay band 1",
+               "nomisPayBand": 1,
+               "prisonCode": "PVI"
+            },
             "startDate": "2022-12-30",
             "endDate": "2022-12-30",
             "allocatedTime": "2022-12-30T14:03:06.365Z",
@@ -231,7 +238,14 @@ internal class ActivitiesApiServiceTest {
               "prisonerNumber": "A1234AA",
               "activitySummary": "string",
               "scheduleDescription": "string",
-              "payBand": "A",
+              "prisonPayBand": {
+                 "id": 987,
+                 "displaySequence": 1,
+                 "alias": "Low",
+                 "description": "Pay band 1",
+                 "nomisPayBand": 1,
+                 "prisonCode": "PVI"
+              },
               "startDate": "2022-12-30",
               "endDate": "2022-12-30",
               "allocatedTime": "2022-12-30T16:09:11.127Z",

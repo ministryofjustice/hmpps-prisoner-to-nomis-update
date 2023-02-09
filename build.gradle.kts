@@ -50,7 +50,8 @@ tasks {
 
 tasks.register("buildActivityApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
-  inputSpec.set("activities-api-docs.json") // "https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs")
+  // TODO trialing using the dev Open API spec to fail fast on breaking API changes - can always switch back to `inputSpec`
+  remoteInputSpec.set("https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs")
   outputDir.set("$buildDir/generated")
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.api")
