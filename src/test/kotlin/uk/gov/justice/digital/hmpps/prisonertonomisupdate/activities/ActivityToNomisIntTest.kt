@@ -352,7 +352,14 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     "bookingId": $BOOKING_ID,
     "startDate": "2023-01-12",
     "endDate": "2023-01-13",
-    "payBandId": 7,
+    "prisonPayBand": {
+      "id": 1,
+      "displaySequence": 1,
+      "alias": "seven",
+      "description": "seven",
+      "nomisPayBand": 7,
+      "prisonCode": "MDI"
+    },
     "deallocatedReason": "END",
     "scheduleDescription" : "description",
     "activitySummary" : "summary"

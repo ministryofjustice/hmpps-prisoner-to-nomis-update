@@ -130,8 +130,7 @@ class ActivitiesService(
               bookingId = allocation.bookingId!!,
               startDate = allocation.startDate,
               endDate = allocation.endDate,
-              //  TODO SDI-614 We don't know what payBandId means - see JIRA ticket for link to the Slack conv.
-              payBandCode = allocation.payBandId.toString(), // Nomis appears to always require a payband
+              payBandCode = allocation.prisonPayBand.nomisPayBand.toString(),
             )
           )
         } catch (e: Exception) {

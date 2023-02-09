@@ -556,7 +556,7 @@ private fun newAllocation(): Allocation {
     bookingId = BOOKING_ID,
     startDate = LocalDate.parse("2023-01-12"),
     endDate = LocalDate.parse("2023-01-13"),
-    payBandId = 1,
+    prisonPayBand = PrisonPayBand(1, 1, "", "", 1, "MDI"),
     scheduleDescription = "description",
   )
 }
