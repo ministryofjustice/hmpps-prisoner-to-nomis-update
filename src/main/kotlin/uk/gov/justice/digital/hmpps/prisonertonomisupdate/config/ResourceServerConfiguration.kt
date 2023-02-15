@@ -23,7 +23,7 @@ class ResourceServerConfiguration {
       authorizeHttpRequests {
         listOf(
           "/webjars/**", "/favicon.ico", "/csrf",
-          "/health/**", "/info", "/h2-console/**",
+          "/health/**", "/info", "/startup", "/h2-console/**",
           "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
           "/queue-admin/retry-all-dlqs"
         ).forEach { authorize(it, permitAll) }
