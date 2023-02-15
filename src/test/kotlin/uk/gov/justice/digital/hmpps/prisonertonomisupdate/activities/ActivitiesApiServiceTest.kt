@@ -154,6 +154,11 @@ internal class ActivitiesApiServiceTest {
       assertThat(activity.description).isEqualTo("A basic maths course suitable for introduction to the subject")
       assertThat(activity.category.code).isEqualTo("LEISURE_SOCIAL")
       assertThat(activity.minimumIncentiveNomisCode).isEqualTo("BAS")
+      with(schedule.instances.first()) {
+        assertThat(date).isEqualTo("2022-12-30")
+        assertThat(startTime).isEqualTo("9:00")
+        assertThat(endTime).isEqualTo("10:00")
+      }
       // TODO: pay, start/end date
     }
 

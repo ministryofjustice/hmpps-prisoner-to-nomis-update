@@ -72,6 +72,12 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("minimumIncentiveLevelCode", equalTo("BAS")))
           .withRequestBody(matchingJsonPath("programCode", equalTo("LEISURE_SOCIAL")))
           .withRequestBody(matchingJsonPath("payPerSession", equalTo("F")))
+          .withRequestBody(matchingJsonPath("schedules[0].date", equalTo("2023-01-13")))
+          .withRequestBody(matchingJsonPath("schedules[0].startTime", equalTo("09:00")))
+          .withRequestBody(matchingJsonPath("schedules[0].endTime", equalTo("10:00")))
+          .withRequestBody(matchingJsonPath("schedules[1].date", equalTo("2023-01-14")))
+          .withRequestBody(matchingJsonPath("schedules[1].startTime", equalTo("09:00")))
+          .withRequestBody(matchingJsonPath("schedules[1].endTime", equalTo("10:30")))
       )
       mappingServer.verify(
         WireMock.postRequestedFor(urlEqualTo("/mapping/activities"))
@@ -244,6 +250,16 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       "date": "2023-01-13",
       "startTime": "9:00",
       "endTime": "10:00",
+      "cancelled": false,
+      "cancelledTime": "2023-01-13T09:38:26.092Z",
+      "cancelledBy": "Adam Smith",
+      "attendances": []
+    },
+    {
+      "id": 3457,
+      "date": "2023-01-14",
+      "startTime": "9:00",
+      "endTime": "10:30",
       "cancelled": false,
       "cancelledTime": "2023-01-13T09:38:26.092Z",
       "cancelledBy": "Adam Smith",
