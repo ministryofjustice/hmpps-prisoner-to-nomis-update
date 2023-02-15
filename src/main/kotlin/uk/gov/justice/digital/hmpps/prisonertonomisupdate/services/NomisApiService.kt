@@ -219,6 +219,7 @@ data class CreateActivityRequest(
   val minimumIncentiveLevelCode: String? = null,
   val programCode: String,
   val payPerSession: String,
+  val schedules: List<ScheduleRequest>
 )
 data class UpdateActivityRequest(
   @JsonFormat(pattern = "yyyy-MM-dd")
@@ -265,6 +266,13 @@ data class CreateSentencingAdjustmentRequest(
   val adjustmentFromDate: LocalDate?,
   val adjustmentDays: Long,
   val comment: String?,
+)
+
+data class ScheduleRequest(
+  @JsonFormat(pattern = "yyyy-MM-dd")
+  val date: LocalDate,
+  val startTime: String,
+  val endTime: String,
 )
 
 data class UpdateSentencingAdjustmentRequest(

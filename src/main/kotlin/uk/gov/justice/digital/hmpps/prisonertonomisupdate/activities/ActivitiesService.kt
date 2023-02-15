@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateOffende
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.EndOffenderProgramProfileRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateActivityRequest
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -197,8 +198,17 @@ class ActivitiesService(
       minimumIncentiveLevelCode = activity.minimumIncentiveNomisCode,
       programCode = activity.category.code,
       payPerSession = activity.payPerSession.value,
+      schedules = schedule.instances.map { i ->
+        ScheduleRequest(
+          date = i.date,
+          startTime = i.startTime.formatTime(),
+          endTime = i.endTime.formatTime(),
+        )
+      },
     )
   }
+
+  private fun String.formatTime() = if (this.length == 5) this else "0$this"
 
   fun createRetry(context: ActivityContext) {
     mappingService.createMapping(
