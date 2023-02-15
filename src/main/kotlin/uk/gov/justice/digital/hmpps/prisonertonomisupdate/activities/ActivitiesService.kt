@@ -14,9 +14,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.EndOffenderPr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRuleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateActivityRequest
 import java.math.BigDecimal
+import java.time.DayOfWeek
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Service
 class ActivitiesService(
@@ -205,10 +208,32 @@ class ActivitiesService(
           endTime = i.endTime.formatTime(),
         )
       },
+      scheduleRules = mapRules(schedule),
     )
   }
 
   private fun String.formatTime() = if (this.length == 5) this else "0$this"
+
+  private fun mapRules(schedule: ActivitySchedule): List<ScheduleRuleRequest> {
+    return schedule.slots.map {
+      ScheduleRuleRequest(
+        daysOfWeek = it.daysOfWeek.map { dow ->
+          when (dow) {
+            "Mon" -> DayOfWeek.MONDAY
+            "Tue" -> DayOfWeek.TUESDAY
+            "Wed" -> DayOfWeek.WEDNESDAY
+            "Thu" -> DayOfWeek.THURSDAY
+            "Fri" -> DayOfWeek.FRIDAY
+            "Sat" -> DayOfWeek.SATURDAY
+            "Sun" -> DayOfWeek.SUNDAY
+            else -> throw RuntimeException("Invalid day of week: '$dow'")
+          }
+        },
+        startTime = LocalTime.parse(it.startTime),
+        endTime = LocalTime.parse(it.endTime)
+      )
+    }
+  }
 
   fun createRetry(context: ActivityContext) {
     mappingService.createMapping(

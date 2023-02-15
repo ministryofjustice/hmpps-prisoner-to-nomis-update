@@ -78,6 +78,14 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("schedules[1].date", equalTo("2023-01-14")))
           .withRequestBody(matchingJsonPath("schedules[1].startTime", equalTo("09:00")))
           .withRequestBody(matchingJsonPath("schedules[1].endTime", equalTo("10:30")))
+          .withRequestBody(matchingJsonPath("scheduleRules[0].startTime", equalTo("07:45")))
+          .withRequestBody(matchingJsonPath("scheduleRules[0].endTime", equalTo("09:25")))
+          .withRequestBody(matchingJsonPath("scheduleRules[0].daysOfWeek[0]", equalTo("SUNDAY")))
+          .withRequestBody(matchingJsonPath("scheduleRules[0].daysOfWeek[1]", equalTo("THURSDAY")))
+          .withRequestBody(matchingJsonPath("scheduleRules[1].startTime", equalTo("13:45")))
+          .withRequestBody(matchingJsonPath("scheduleRules[1].endTime", equalTo("14:25")))
+          .withRequestBody(matchingJsonPath("scheduleRules[1].daysOfWeek[0]", equalTo("TUESDAY")))
+          .withRequestBody(matchingJsonPath("scheduleRules[1].daysOfWeek[1]", equalTo("WEDNESDAY")))
       )
       mappingServer.verify(
         WireMock.postRequestedFor(urlEqualTo("/mapping/activities"))
@@ -300,7 +308,18 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     "minimumIncentiveLevel": "Basic",
     "minimumIncentiveNomisCode": "BAS"
   },
-  "slots": [],
+  "slots": [{
+    "id"        : 555666001,
+    "startTime" : "07:45",
+    "endTime"   : "09:25",
+    "daysOfWeek": ["Sun","Thu"]
+  },
+  {
+    "id"        : 555666002,
+    "startTime" : "13:45",
+    "endTime"   : "14:25",
+    "daysOfWeek": ["Tue","Wed"]
+  }],
   "startDate" : "2023-01-20",
   "endDate" : "2023-01-23"
 }
