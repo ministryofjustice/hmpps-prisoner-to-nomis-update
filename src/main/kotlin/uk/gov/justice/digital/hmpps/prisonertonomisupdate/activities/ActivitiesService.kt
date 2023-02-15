@@ -106,7 +106,7 @@ class ActivitiesService(
       endDate, internalLocation?.id?.toLong(),
       pay.map { p ->
         PayRateRequest(
-          incentiveLevel = p.incentiveLevel!!, // TODO SDI-622 this should be made non-nullable in the Activities API soon
+          incentiveLevel = p.incentiveNomisCode,
           payBand = p.prisonPayBand.nomisPayBand.toString(),
           rate = BigDecimal(p.rate!!).movePointLeft(2)
         )
@@ -188,13 +188,13 @@ class ActivitiesService(
       capacity = schedule.capacity,
       payRates = activity.pay.map { p ->
         PayRateRequest(
-          incentiveLevel = p.incentiveLevel!!,
+          incentiveLevel = p.incentiveNomisCode,
           payBand = p.prisonPayBand.nomisPayBand.toString(),
           rate = BigDecimal(p.rate!!).movePointLeft(2)
         )
       },
       description = "${activity.description} - ${schedule.description}",
-      minimumIncentiveLevelCode = activity.minimumIncentiveLevel,
+      minimumIncentiveLevelCode = activity.minimumIncentiveNomisCode,
       programCode = activity.category.code,
       payPerSession = activity.payPerSession.value,
     )

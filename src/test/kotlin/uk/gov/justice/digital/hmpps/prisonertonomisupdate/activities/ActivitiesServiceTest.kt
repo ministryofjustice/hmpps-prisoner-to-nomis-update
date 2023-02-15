@@ -511,6 +511,8 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
       description = "description",
     ),
     payPerSession = ActivityLite.PayPerSession.h,
+    minimumIncentiveLevel = "Basic",
+    minimumIncentiveNomisCode = "BAS",
   ),
   slots = emptyList(),
   startDate = LocalDate.now(),
@@ -539,13 +541,16 @@ private fun newActivity(): Activity = Activity(
     ActivityPay(
       id = 1,
       prisonPayBand = PrisonPayBand(2, 1, "", "", 1, "MDI"),
-      incentiveLevel = "BAS",
+      incentiveNomisCode = "BAS",
+      incentiveLevel = "Basic",
       rate = 150
     )
   ),
   startDate = LocalDate.now(),
   createdTime = OffsetDateTime.now(),
   createdBy = "me",
+  minimumIncentiveLevel = "Basic",
+  minimumIncentiveNomisCode = "BAS",
 )
 
 private fun newAllocation(): Allocation {

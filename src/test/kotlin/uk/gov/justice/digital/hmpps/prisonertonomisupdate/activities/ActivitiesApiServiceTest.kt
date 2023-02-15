@@ -112,7 +112,8 @@ internal class ActivitiesApiServiceTest {
             "description": "Such as association, library time and social clubs, like music or art"
           },
           "riskLevel": "High",
-          "minimumIncentiveLevel": "Basic"
+          "minimumIncentiveLevel": "Basic",
+          "minimumIncentiveNomisCode": "BAS"
         },
         "slots": [
           {
@@ -152,7 +153,7 @@ internal class ActivitiesApiServiceTest {
       assertThat(activity.prisonCode).isEqualTo("PVI")
       assertThat(activity.description).isEqualTo("A basic maths course suitable for introduction to the subject")
       assertThat(activity.category.code).isEqualTo("LEISURE_SOCIAL")
-      assertThat(activity.minimumIncentiveLevel).isEqualTo("Basic")
+      assertThat(activity.minimumIncentiveNomisCode).isEqualTo("BAS")
       // TODO: pay, start/end date
     }
 
@@ -285,7 +286,8 @@ internal class ActivitiesApiServiceTest {
               "description": "Such as association, library time and social clubs, like music or art"
             },
             "riskLevel": "High",
-            "minimumIncentiveLevel": "Basic"
+            "minimumIncentiveLevel": "Basic",
+            "minimumIncentiveNomisCode": "BAS"
           },
           "slots": [
             {
@@ -311,6 +313,7 @@ internal class ActivitiesApiServiceTest {
         {
           "id": 3456,
           "incentiveLevel": "Basic",
+          "incentiveNomisCode": "BAS",
           "prisonPayBand": {
              "id": 987,
              "displaySequence": 1,
@@ -328,6 +331,7 @@ internal class ActivitiesApiServiceTest {
       "endDate": "2022-12-31",
       "riskLevel": "High",
       "minimumIncentiveLevel": "Basic",
+      "minimumIncentiveNomisCode": "BAS",
       "createdTime": "2022-12-30T16:09:11.127Z",
       "createdBy": "Adam Smith"
     }
@@ -353,12 +357,12 @@ internal class ActivitiesApiServiceTest {
       assertThat(activity.prisonCode).isEqualTo("PVI")
       assertThat(activity.description).isEqualTo("A basic maths course suitable for introduction to the subject")
       assertThat(activity.category.code).isEqualTo("LEISURE_SOCIAL")
-      assertThat(activity.minimumIncentiveLevel).isEqualTo("Basic")
+      assertThat(activity.minimumIncentiveNomisCode).isEqualTo("BAS")
       assertThat(activity.startDate).isEqualTo("2022-12-30")
       assertThat(activity.endDate).isEqualTo("2022-12-31")
       val pay = activity.pay[0]
       assertThat(pay.id).isEqualTo(3456)
-      assertThat(pay.incentiveLevel).isEqualTo("Basic")
+      assertThat(pay.incentiveNomisCode).isEqualTo("BAS")
       assertThat(pay.prisonPayBand.nomisPayBand).isEqualTo(1)
       assertThat(pay.rate).isEqualTo(150)
       assertThat(pay.pieceRate).isEqualTo(150)
