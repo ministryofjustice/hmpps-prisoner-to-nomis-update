@@ -220,7 +220,7 @@ data class CreateActivityRequest(
   val minimumIncentiveLevelCode: String? = null,
   val programCode: String,
   val payPerSession: String,
-  val schedules: List<ScheduleRequest>
+  val schedules: List<ScheduleRequest>,
   val scheduleRules: List<ScheduleRuleRequest>,
 )
 data class UpdateActivityRequest(

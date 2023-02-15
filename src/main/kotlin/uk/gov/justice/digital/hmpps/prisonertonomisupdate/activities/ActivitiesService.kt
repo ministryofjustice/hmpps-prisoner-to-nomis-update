@@ -20,6 +20,8 @@ import java.math.BigDecimal
 import java.time.DayOfWeek
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.TextStyle
+import java.util.Locale
 
 @Service
 class ActivitiesService(
@@ -215,24 +217,22 @@ class ActivitiesService(
   private fun String.formatTime() = if (this.length == 5) this else "0$this"
 
   private fun mapRules(schedule: ActivitySchedule): List<ScheduleRuleRequest> {
-    return schedule.slots.map {
+    return schedule.slots.map { slot ->
       ScheduleRuleRequest(
-        daysOfWeek = it.daysOfWeek.map { dow ->
-          when (dow) {
-            "Mon" -> DayOfWeek.MONDAY
-            "Tue" -> DayOfWeek.TUESDAY
-            "Wed" -> DayOfWeek.WEDNESDAY
-            "Thu" -> DayOfWeek.THURSDAY
-            "Fri" -> DayOfWeek.FRIDAY
-            "Sat" -> DayOfWeek.SATURDAY
-            "Sun" -> DayOfWeek.SUNDAY
-            else -> throw RuntimeException("Invalid day of week: '$dow'")
-          }
-        },
-        startTime = LocalTime.parse(it.startTime),
-        endTime = LocalTime.parse(it.endTime)
+        daysOfWeek = slot.daysOfWeek.map { it.mapDayOfWeek() },
+        startTime = LocalTime.parse(slot.startTime),
+        endTime = LocalTime.parse(slot.endTime)
       )
     }
+  }
+
+  private fun String.mapDayOfWeek() : DayOfWeek {
+    DayOfWeek.values().forEach {
+      if (this == it.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)) {
+        return it
+      }
+    }
+    throw RuntimeException("Invalid day of week: '$this'")
   }
 
   fun createRetry(context: ActivityContext) {
