@@ -69,7 +69,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("payRates[0].payBand", equalTo("1")))
           .withRequestBody(matchingJsonPath("payRates[0].rate", equalTo("1.5")))
           .withRequestBody(matchingJsonPath("description", equalTo("A basic maths course suitable for introduction to the subject - Monday AM Houseblock 3")))
-          .withRequestBody(matchingJsonPath("minimumIncentiveLevelCode", equalTo("Basic")))
+          .withRequestBody(matchingJsonPath("minimumIncentiveLevelCode", equalTo("BAS")))
           .withRequestBody(matchingJsonPath("programCode", equalTo("LEISURE_SOCIAL")))
           .withRequestBody(matchingJsonPath("payPerSession", equalTo("F")))
       )
@@ -281,7 +281,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       "description": "Such as association, library time and social clubs, like music or art"
     },
     "riskLevel": "High",
-    "minimumIncentiveLevel": "BAS"
+    "minimumIncentiveLevel": "Basic",
+    "minimumIncentiveNomisCode": "BAS"
   },
   "slots": [],
   "startDate" : "2023-01-20",
@@ -313,7 +314,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
   "pay": [
     {
       "id": 3579,
-      "incentiveLevel": "BAS",
+      "incentiveLevel": "Basic",
+      "incentiveNomisCode": "BAS",
       "prisonPayBand": {
          "id": 987,
          "displaySequence": 1,
@@ -331,6 +333,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
   "endDate": "2023-01-13",
   "riskLevel": "High",
   "minimumIncentiveLevel": "Basic",
+  "minimumIncentiveNomisCode": "BAS",
   "createdTime": "2023-01-12T17:26:18.332Z",
   "createdBy": "Adam Smith"
 }
