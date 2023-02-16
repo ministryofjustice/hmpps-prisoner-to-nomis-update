@@ -256,7 +256,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     {
       "id": 3456,
       "date": "2023-01-13",
-      "startTime": "9:00",
+      "startTime": "09:00",
       "endTime": "10:00",
       "cancelled": false,
       "cancelledTime": "2023-01-13T09:38:26.092Z",
@@ -266,7 +266,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     {
       "id": 3457,
       "date": "2023-01-14",
-      "startTime": "9:00",
+      "startTime": "09:00",
       "endTime": "10:30",
       "cancelled": false,
       "cancelledTime": "2023-01-13T09:38:26.092Z",

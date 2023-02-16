@@ -20,8 +20,6 @@ import java.math.BigDecimal
 import java.time.DayOfWeek
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.format.TextStyle
-import java.util.Locale
 
 @Service
 class ActivitiesService(
@@ -206,15 +204,13 @@ class ActivitiesService(
       schedules = schedule.instances.map { i ->
         ScheduleRequest(
           date = i.date,
-          startTime = i.startTime.formatTime(),
-          endTime = i.endTime.formatTime(),
+          startTime = LocalTime.parse(i.startTime),
+          endTime = LocalTime.parse(i.endTime),
         )
       },
       scheduleRules = mapRules(schedule),
     )
   }
-
-  private fun String.formatTime() = if (this.length == 5) this else "0$this"
 
   private fun mapRules(schedule: ActivitySchedule): List<ScheduleRuleRequest> {
     return schedule.slots.map { slot ->

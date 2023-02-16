@@ -281,8 +281,10 @@ data class CreateSentencingAdjustmentRequest(
 data class ScheduleRequest(
   @JsonFormat(pattern = "yyyy-MM-dd")
   val date: LocalDate,
-  val startTime: String,
-  val endTime: String,
+  @JsonFormat(pattern = "hh:mm")
+  val startTime: LocalTime,
+  @JsonFormat(pattern = "hh:mm")
+  val endTime: LocalTime,
 )
 
 data class UpdateSentencingAdjustmentRequest(
