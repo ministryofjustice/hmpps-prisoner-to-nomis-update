@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateReques
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
 
 private const val ACTIVITY_SCHEDULE_ID: Long = 100
 private const val ACTIVITY_ID: Long = 200
@@ -547,7 +546,7 @@ private fun newActivity(): Activity = Activity(
     )
   ),
   startDate = LocalDate.now(),
-  createdTime = OffsetDateTime.now(),
+  createdTime = LocalDateTime.now(),
   createdBy = "me",
   minimumIncentiveLevel = "Basic",
   minimumIncentiveNomisCode = "BAS",
