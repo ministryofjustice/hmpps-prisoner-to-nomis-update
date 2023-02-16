@@ -762,6 +762,7 @@ fun newActivity() = CreateActivityRequest(
   programCode = "IRS",
   payPerSession = "H",
   schedules = listOf(),
+  scheduleRules = emptyList(),
 )
 
 fun updateActivity() = UpdateActivityRequest(

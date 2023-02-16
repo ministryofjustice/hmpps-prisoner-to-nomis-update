@@ -14,10 +14,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.EndOffenderPr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRuleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateActivityRequest
 import java.math.BigDecimal
+import java.time.DayOfWeek
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.TextStyle
+import java.util.Locale
 
 @Service
 class ActivitiesService(
@@ -206,8 +210,23 @@ class ActivitiesService(
           endTime = LocalTime.parse(i.endTime),
         )
       },
+      scheduleRules = mapRules(schedule),
     )
   }
+
+  private fun mapRules(schedule: ActivitySchedule): List<ScheduleRuleRequest> {
+    return schedule.slots.map { slot ->
+      ScheduleRuleRequest(
+        daysOfWeek = slot.daysOfWeek.map { it.mapDayOfWeek() },
+        startTime = LocalTime.parse(slot.startTime),
+        endTime = LocalTime.parse(slot.endTime)
+      )
+    }
+  }
+
+  private fun String.mapDayOfWeek(): DayOfWeek =
+    DayOfWeek.values().find { this == it.getDisplayName(TextStyle.SHORT, Locale.ENGLISH) }
+      ?: throw RuntimeException("Invalid day of week: '$this'")
 
   fun createRetry(context: ActivityContext) {
     mappingService.createMapping(

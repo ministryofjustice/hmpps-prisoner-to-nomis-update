@@ -10,6 +10,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import java.math.BigDecimal
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -219,7 +220,8 @@ data class CreateActivityRequest(
   val minimumIncentiveLevelCode: String? = null,
   val programCode: String,
   val payPerSession: String,
-  val schedules: List<ScheduleRequest>
+  val schedules: List<ScheduleRequest>,
+  val scheduleRules: List<ScheduleRuleRequest>,
 )
 data class UpdateActivityRequest(
   @JsonFormat(pattern = "yyyy-MM-dd")
@@ -232,6 +234,14 @@ data class PayRateRequest(
   val incentiveLevel: String,
   val payBand: String,
   val rate: BigDecimal,
+)
+
+data class ScheduleRuleRequest(
+  val daysOfWeek: List<DayOfWeek>,
+  @JsonFormat(pattern = "HH:mm")
+  val startTime: LocalTime,
+  @JsonFormat(pattern = "HH:mm")
+  val endTime: LocalTime,
 )
 
 data class CreateActivityResponse(
