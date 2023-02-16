@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleReque
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateActivityRequest
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Service
 class ActivitiesService(
@@ -201,14 +202,12 @@ class ActivitiesService(
       schedules = schedule.instances.map { i ->
         ScheduleRequest(
           date = i.date,
-          startTime = i.startTime.formatTime(),
-          endTime = i.endTime.formatTime(),
+          startTime = LocalTime.parse(i.startTime),
+          endTime = LocalTime.parse(i.endTime),
         )
       },
     )
   }
-
-  private fun String.formatTime() = if (this.length == 5) this else "0$this"
 
   fun createRetry(context: ActivityContext) {
     mappingService.createMapping(
