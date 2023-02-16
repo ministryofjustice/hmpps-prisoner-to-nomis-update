@@ -57,7 +57,7 @@ tasks.register("buildActivityApiModel", GenerateTask::class) {
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.api")
   configOptions.set(
     mapOf(
-      "dateLibrary" to "java8",
+      "dateLibrary" to "java8-localdatetime",
       "serializationLibrary" to "jackson"
     )
   )

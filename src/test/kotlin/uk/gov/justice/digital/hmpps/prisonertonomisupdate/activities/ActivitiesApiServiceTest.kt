@@ -75,9 +75,9 @@ internal class ActivitiesApiServiceTest {
             },
             "startDate": "2022-12-30",
             "endDate": "2022-12-30",
-            "allocatedTime": "2022-12-30T14:03:06.365Z",
+            "allocatedTime": "2022-12-30T14:03:06",
             "allocatedBy": "Mr Blogs",
-            "deallocatedTime": "2022-12-30T14:03:06.365Z",
+            "deallocatedTime": "2022-12-30T14:03:06",
             "deallocatedBy": "Mrs Blogs",
             "deallocatedReason": "Not attending regularly"
           }
