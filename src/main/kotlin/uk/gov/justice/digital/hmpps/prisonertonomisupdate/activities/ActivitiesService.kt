@@ -20,6 +20,8 @@ import java.math.BigDecimal
 import java.time.DayOfWeek
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.TextStyle
+import java.util.Locale
 
 @Service
 class ActivitiesService(
