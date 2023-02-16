@@ -224,14 +224,9 @@ class ActivitiesService(
     }
   }
 
-  private fun String.mapDayOfWeek() : DayOfWeek {
-    DayOfWeek.values().forEach {
-      if (this == it.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)) {
-        return it
-      }
-    }
-    throw RuntimeException("Invalid day of week: '$this'")
-  }
+  private fun String.mapDayOfWeek(): DayOfWeek =
+    DayOfWeek.values().find { this == it.getDisplayName(TextStyle.SHORT, Locale.ENGLISH) }
+      ?: throw RuntimeException("Invalid day of week: '$this'")
 
   fun createRetry(context: ActivityContext) {
     mappingService.createMapping(
