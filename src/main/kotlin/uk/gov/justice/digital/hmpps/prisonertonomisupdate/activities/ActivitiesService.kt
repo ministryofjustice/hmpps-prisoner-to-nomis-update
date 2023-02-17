@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateReques
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRuleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateActivityRequest
+import java.lang.Integer.min
 import java.math.BigDecimal
 import java.time.DayOfWeek
 import java.time.LocalDateTime
@@ -186,7 +187,7 @@ class ActivitiesService(
 
   private fun toNomisActivity(schedule: ActivitySchedule, activity: Activity): CreateActivityRequest {
     return CreateActivityRequest(
-      code = "${activity.id}-${schedule.id}",
+      code = toNomisActivityCode(activity.summary, schedule.description),
       startDate = activity.startDate,
       endDate = activity.endDate,
       prisonId = activity.prisonCode,
@@ -199,7 +200,7 @@ class ActivitiesService(
           rate = BigDecimal(p.rate!!).movePointLeft(2)
         )
       },
-      description = "${activity.description} - ${schedule.description}",
+      description = toNomisActivityDescription(activity.summary, schedule.description),
       minimumIncentiveLevelCode = activity.minimumIncentiveNomisCode,
       programCode = activity.category.code,
       payPerSession = activity.payPerSession.value,
@@ -212,6 +213,24 @@ class ActivitiesService(
       },
       scheduleRules = mapRules(schedule),
     )
+  }
+
+  private fun toNomisActivityDescription(activityDescription: String, scheduleDescription: String): String {
+    var description = "SAA $activityDescription"
+      .let { it.substring(0, min(it.length, 40)).trim() }
+    if (description.length < 39) {
+      description += " ${scheduleDescription.let { it.substring(0, min(it.length, 39 - description.length)) }}"
+    }
+    return description
+  }
+
+  private fun toNomisActivityCode(activityDescription: String, scheduleDescription: String): String {
+    var code = "SAA-$activityDescription"
+      .let { it.substring(0, min(it.length, 20)).trim() }
+    if (code.length < 19) {
+      code += "-${scheduleDescription.let { it.substring(0, min(it.length, 19 - code.length)) }}"
+    }
+    return code.uppercase()
   }
 
   private fun mapRules(schedule: ActivitySchedule): List<ScheduleRuleRequest> {
