@@ -85,6 +85,28 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
+    fun `should handle very long activity and schedule descriptions`() {
+      whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
+        newActivitySchedule().copy(description = "A schedule description that is very very long")
+      )
+      whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(
+        newActivity().copy(summary = "An activity summary that is very very very long")
+      )
+      whenever(nomisApiService.createActivity(any())).thenReturn(
+        CreateActivityResponse(courseActivityId = NOMIS_COURSE_ACTIVITY_ID)
+      )
+
+      activitiesService.createActivity(aDomainEvent())
+
+      verify(nomisApiService).createActivity(
+        check {
+          assertThat(it.description.length).isLessThanOrEqualTo(40)
+          assertThat(it.code.length).isLessThanOrEqualTo(20)
+        }
+      )
+    }
+
+    @Test
     fun `should not update NOMIS if activity already mapped (exists in nomis)`() {
       whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
         newActivitySchedule()

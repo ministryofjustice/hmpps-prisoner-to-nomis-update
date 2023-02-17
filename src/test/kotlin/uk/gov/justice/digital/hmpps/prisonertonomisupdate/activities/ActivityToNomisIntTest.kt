@@ -59,7 +59,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
       nomisApi.verify(
         WireMock.postRequestedFor(urlEqualTo("/activities"))
-          .withRequestBody(matchingJsonPath("code", equalTo("$ACTIVITY_ID-$ACTIVITY_SCHEDULE_ID")))
+          .withRequestBody(matchingJsonPath("code", equalTo("SAA-MATHS LEVEL 1-MO")))
           .withRequestBody(matchingJsonPath("startDate", equalTo("2023-01-12")))
           .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-13")))
           .withRequestBody(matchingJsonPath("prisonId", equalTo("PVI")))
@@ -68,7 +68,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("payRates[0].incentiveLevel", equalTo("BAS")))
           .withRequestBody(matchingJsonPath("payRates[0].payBand", equalTo("1")))
           .withRequestBody(matchingJsonPath("payRates[0].rate", equalTo("1.5")))
-          .withRequestBody(matchingJsonPath("description", equalTo("A basic maths course suitable for introduction to the subject - Monday AM Houseblock 3")))
+          .withRequestBody(matchingJsonPath("description", equalTo("SAA Maths level 1 Monday AM Houseblock 3")))
           .withRequestBody(matchingJsonPath("minimumIncentiveLevelCode", equalTo("BAS")))
           .withRequestBody(matchingJsonPath("programCode", equalTo("LEISURE_SOCIAL")))
           .withRequestBody(matchingJsonPath("payPerSession", equalTo("F")))
