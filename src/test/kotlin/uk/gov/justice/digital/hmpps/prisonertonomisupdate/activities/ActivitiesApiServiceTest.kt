@@ -120,7 +120,14 @@ internal class ActivitiesApiServiceTest {
             "id": 123456,
             "startTime": "9:00",
             "endTime": "11:30",
-            "daysOfWeek": ["Mon","Tue","Wed"]
+            "daysOfWeek": ["Mon","Tue","Wed"],
+            "mondayFlag": true,
+            "tuesdayFlag": true,
+            "wednesdayFlag": true,
+            "thursdayFlag": false,
+            "fridayFlag": false,
+            "saturdayFlag": false,
+            "sundayFlag": false
           }
         ],
         "startDate" : "2023-01-20"
@@ -299,7 +306,14 @@ internal class ActivitiesApiServiceTest {
               "id": 123456,
               "startTime": "9:00",
               "endTime": "11:30",
-              "daysOfWeek": ["Mon","Tue","Wed"]
+              "daysOfWeek": ["Mon","Tue","Wed"],
+              "mondayFlag": true,
+              "tuesdayFlag": true,
+              "wednesdayFlag": true,
+              "thursdayFlag": false,
+              "fridayFlag": false,
+              "saturdayFlag": false,
+              "sundayFlag": false
             }
           ],
           "startDate" : "2023-01-20"

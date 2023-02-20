@@ -18,11 +18,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRuleR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateActivityRequest
 import java.lang.Integer.min
 import java.math.BigDecimal
-import java.time.DayOfWeek
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.format.TextStyle
-import java.util.Locale
 
 @Service
 class ActivitiesService(
@@ -236,16 +233,18 @@ class ActivitiesService(
   private fun mapRules(schedule: ActivitySchedule): List<ScheduleRuleRequest> {
     return schedule.slots.map { slot ->
       ScheduleRuleRequest(
-        daysOfWeek = slot.daysOfWeek.map { it.mapDayOfWeek() },
         startTime = LocalTime.parse(slot.startTime),
-        endTime = LocalTime.parse(slot.endTime)
+        endTime = LocalTime.parse(slot.endTime),
+        monday = slot.mondayFlag,
+        tuesday = slot.tuesdayFlag,
+        wednesday = slot.wednesdayFlag,
+        thursday = slot.thursdayFlag,
+        friday = slot.fridayFlag,
+        saturday = slot.saturdayFlag,
+        sunday = slot.sundayFlag,
       )
     }
   }
-
-  private fun String.mapDayOfWeek(): DayOfWeek =
-    DayOfWeek.values().find { this == it.getDisplayName(TextStyle.SHORT, Locale.ENGLISH) }
-      ?: throw RuntimeException("Invalid day of week: '$this'")
 
   fun createRetry(context: ActivityContext) {
     mappingService.createMapping(

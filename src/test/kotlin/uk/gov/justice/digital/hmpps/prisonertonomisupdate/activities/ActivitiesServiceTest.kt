@@ -531,6 +531,7 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
       name = "Category",
       description = "description",
     ),
+    riskLevel = "high",
     payPerSession = ActivityLite.PayPerSession.h,
     minimumIncentiveLevel = "Basic",
     minimumIncentiveNomisCode = "BAS",
@@ -572,6 +573,7 @@ private fun newActivity(): Activity = Activity(
   createdBy = "me",
   minimumIncentiveLevel = "Basic",
   minimumIncentiveNomisCode = "BAS",
+  riskLevel = "high",
 )
 
 private fun newAllocation(): Allocation {
@@ -584,5 +586,6 @@ private fun newAllocation(): Allocation {
     endDate = LocalDate.parse("2023-01-13"),
     prisonPayBand = PrisonPayBand(1, 1, "", "", 1, "MDI"),
     scheduleDescription = "description",
+    scheduleId = 123,
   )
 }

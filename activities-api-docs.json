@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-02-15.2818.d8e166b"
+    "version": "2023-02-16.2884.9a74e5f"
   },
   "servers": [
     {
@@ -191,16 +191,6 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "Schedule ID not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "The allocations for an activity schedule",
             "content": {
@@ -210,6 +200,16 @@
                   "items": {
                     "$ref": "#/components/schemas/Allocation"
                   }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Schedule ID not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -265,22 +265,22 @@
           "required": true
         },
         "responses": {
-          "404": {
-            "description": "The activity schedule for this ID was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "204": {
             "description": "The allocation was created and added to the schedule.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The activity schedule for this ID was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -411,8 +411,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "Requested resource not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -421,8 +421,8 @@
               }
             }
           },
-          "404": {
-            "description": "Requested resource not found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -521,8 +521,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "Requested resource not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -531,8 +531,8 @@
               }
             }
           },
-          "404": {
-            "description": "Requested resource not found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -586,6 +586,16 @@
           "required": true
         },
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "The allocations for the prisoners",
             "content": {
@@ -595,16 +605,6 @@
                   "items": {
                     "$ref": "#/components/schemas/PrisonerAllocations"
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -685,22 +685,22 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "201": {
             "description": "The appointment or series of appointment occurrences was created.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Appointment"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -880,8 +880,8 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "404": {
+            "description": "Activity ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -890,8 +890,8 @@
               }
             }
           },
-          "404": {
-            "description": "Activity ID was not found.",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -943,22 +943,22 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Activity found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ActivitySchedule"
-                }
-              }
-            }
-          },
           "404": {
             "description": "The activity for this ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Activity found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivitySchedule"
                 }
               }
             }
@@ -1068,22 +1068,22 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "The scheduled instance was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "Scheduled instance found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ActivityScheduleInstance"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The scheduled instance was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1477,6 +1477,16 @@
           }
         ],
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Prison pay bands found",
             "content": {
@@ -1486,16 +1496,6 @@
                   "items": {
                     "$ref": "#/components/schemas/PrisonPayBand"
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1619,22 +1619,22 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Activity category capacity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CapacityAndAllocated"
-                }
-              }
-            }
-          },
           "404": {
             "description": "Category ID not found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Activity category capacity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapacityAndAllocated"
                 }
               }
             }
@@ -1878,16 +1878,6 @@
           }
         ],
         "responses": {
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "Successful call - zero or more cell locations found",
             "content": {
@@ -1897,6 +1887,16 @@
                   "items": {
                     "$ref": "#/components/schemas/Location"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1911,8 +1911,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "Requested resource not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1921,8 +1921,8 @@
               }
             }
           },
-          "404": {
-            "description": "Requested resource not found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1991,8 +1991,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "Requested resource not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -2001,8 +2001,8 @@
               }
             }
           },
-          "404": {
-            "description": "Requested resource not found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -2033,16 +2033,6 @@
           }
         ],
         "responses": {
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "Successful call - zero or more location groups found",
             "content": {
@@ -2052,6 +2042,16 @@
                   "items": {
                     "$ref": "#/components/schemas/LocationGroup"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2066,8 +2066,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "Requested resource not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -2076,8 +2076,8 @@
               }
             }
           },
-          "404": {
-            "description": "Requested resource not found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -2119,8 +2119,8 @@
               }
             }
           },
-          "404": {
-            "description": "The appointment for this ID was not found.",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -2129,8 +2129,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "The appointment for this ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2314,22 +2314,22 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Activity found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Activity"
-                }
-              }
-            }
-          },
           "404": {
             "description": "The activity for this ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Activity found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Activity"
                 }
               }
             }
@@ -2376,16 +2376,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Activity capacity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CapacityAndAllocated"
-                }
-              }
-            }
-          },
           "404": {
             "description": "Activity ID not found",
             "content": {
@@ -2402,6 +2392,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Activity capacity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapacityAndAllocated"
                 }
               }
             }
@@ -2709,6 +2709,7 @@
           "prisonPayBand",
           "prisonerNumber",
           "scheduleDescription",
+          "scheduleId",
           "startDate"
         ],
         "type": "object",
@@ -2733,6 +2734,10 @@
           "activitySummary": {
             "type": "string"
           },
+          "scheduleId": {
+            "type": "integer",
+            "format": "int64"
+          },
           "scheduleDescription": {
             "type": "string"
           },
@@ -2742,12 +2747,14 @@
           "startDate": {
             "type": "string",
             "description": "The date when the prisoner will start the activity",
-            "format": "date"
+            "format": "date",
+            "example": "2022-09-10"
           },
           "endDate": {
             "type": "string",
             "description": "The date when the prisoner will stop attending the activity",
-            "format": "date"
+            "format": "date",
+            "example": "2023-09-10"
           },
           "allocatedTime": {
             "type": "string",
@@ -3235,6 +3242,7 @@
           "pay",
           "pieceWork",
           "prisonCode",
+          "riskLevel",
           "summary"
         ],
         "type": "object",
@@ -3326,7 +3334,7 @@
             "minLength": 0,
             "type": "string",
             "description": "The most recent risk assessment level for this activity",
-            "example": "High"
+            "example": "high"
           },
           "minimumIncentiveNomisCode": {
             "maxLength": 3,
@@ -3422,6 +3430,7 @@
           "payPerSession",
           "pieceWork",
           "prisonCode",
+          "riskLevel",
           "schedules",
           "startDate",
           "summary",
@@ -3517,17 +3526,19 @@
           "startDate": {
             "type": "string",
             "description": "The date on which this activity will start. From this date, any schedules will be created as real, planned instances",
-            "format": "date"
+            "format": "date",
+            "example": "2022-09-21"
           },
           "endDate": {
             "type": "string",
             "description": "The date on which this activity ends. From this date, there will be no more planned instances of the activity. If null, the activity has no end date and will be scheduled indefinitely.",
-            "format": "date"
+            "format": "date",
+            "example": "2022-12-21"
           },
           "riskLevel": {
             "type": "string",
             "description": "The most recent risk assessment level for this activity",
-            "example": "High"
+            "example": "high"
           },
           "minimumIncentiveNomisCode": {
             "type": "string",
@@ -3616,6 +3627,7 @@
           "payPerSession",
           "pieceWork",
           "prisonCode",
+          "riskLevel",
           "summary"
         ],
         "type": "object",
@@ -3676,7 +3688,7 @@
           "riskLevel": {
             "type": "string",
             "description": "The most recent risk assessment level for this activity",
-            "example": "High"
+            "example": "high"
           },
           "minimumIncentiveNomisCode": {
             "type": "string",
@@ -3808,12 +3820,14 @@
           "startDate": {
             "type": "string",
             "description": "The date on which this schedule will start. From this date, any schedules will be created as real, planned instances",
-            "format": "date"
+            "format": "date",
+            "example": "2022-09-21"
           },
           "endDate": {
             "type": "string",
             "description": "The date on which this schedule will end. From this date, any schedules will be created as real, planned instances",
-            "format": "date"
+            "format": "date",
+            "example": "2022-10-21"
           }
         },
         "description": "\n  Describes the weekly schedule for an activity. There can be several of these defined for one activity.\n  An activity schedule describes when, during the week, an activity will be run and where.\n  e.g. Tuesday PM and Thursday AM - suitable for Houseblock 2 to attend.\n  e.g. Monday AM and Thursday PM - suitable for Houseblock 3 to attend.\n  "
@@ -3822,8 +3836,15 @@
         "required": [
           "daysOfWeek",
           "endTime",
+          "fridayFlag",
           "id",
-          "startTime"
+          "mondayFlag",
+          "saturdayFlag",
+          "startTime",
+          "sundayFlag",
+          "thursdayFlag",
+          "tuesdayFlag",
+          "wednesdayFlag"
         ],
         "type": "object",
         "properties": {
@@ -3854,6 +3875,41 @@
               "description": "The days of the week on which the schedule slot takes place",
               "example": "[Mon,Tue,Wed]"
             }
+          },
+          "mondayFlag": {
+            "type": "boolean",
+            "description": "Indicates whether the schedule slot takes place on a Monday",
+            "example": true
+          },
+          "tuesdayFlag": {
+            "type": "boolean",
+            "description": "Indicates whether the schedule slot takes place on a Tuesday",
+            "example": true
+          },
+          "wednesdayFlag": {
+            "type": "boolean",
+            "description": "Indicates whether the schedule slot takes place on a Wednesday",
+            "example": true
+          },
+          "thursdayFlag": {
+            "type": "boolean",
+            "description": "Indicates whether the schedule slot takes place on a Thursday",
+            "example": false
+          },
+          "fridayFlag": {
+            "type": "boolean",
+            "description": "Indicates whether the schedule slot takes place on a Friday",
+            "example": false
+          },
+          "saturdayFlag": {
+            "type": "boolean",
+            "description": "Indicates whether the schedule slot takes place on a Saturday",
+            "example": false
+          },
+          "sundayFlag": {
+            "type": "boolean",
+            "description": "Indicates whether the schedule slot takes place on a Sunday",
+            "example": false
           }
         },
         "description": "\n  Describes a slot for an activity schedule. There can be several of these defined for one activity schedule.\n  An activity schedule slot describes when, during the week, an activity will be run.\n  e.g. Tuesday PM on a Monday and Thursday.\n  "
@@ -3924,8 +3980,8 @@
           },
           "recordedBy": {
             "type": "string",
-            "description": "The person whom updated the attendance",
-            "example": "10/09/2023"
+            "description": "The person who updated the attendance",
+            "example": "A.JONES"
           },
           "status": {
             "type": "string",
@@ -4093,13 +4149,14 @@
           "date": {
             "type": "string",
             "description": "The specific date for this scheduled instance",
-            "format": "date"
+            "format": "date",
+            "example": "2022-09-30"
           },
           "startTime": {
             "type": "string",
             "description": "The start time for this scheduled instance",
             "format": "partial-time",
-            "example": "9:00"
+            "example": "09:00"
           },
           "endTime": {
             "type": "string",
@@ -4141,12 +4198,14 @@
           "suspendedFrom": {
             "type": "string",
             "description": "The date from which the activity schedule was suspended",
-            "format": "date"
+            "format": "date",
+            "example": "2022-09-02"
           },
           "suspendedUntil": {
             "type": "string",
-            "description": "The date until which the activity schedule was suspended. If null, the schedule is suspended indefinately",
-            "format": "date"
+            "description": "The date until which the activity schedule was suspended. If null, the schedule is suspended indefinitely",
+            "format": "date",
+            "example": "2022-09-02"
           }
         },
         "description": "Describes the period of time an activity schedule has been suspended"
@@ -4286,12 +4345,14 @@
           "startDate": {
             "type": "string",
             "description": "The date on which this schedule will start. From this date, any schedules will be created as real, planned instances",
-            "format": "date"
+            "format": "date",
+            "example": "2022-09-21"
           },
           "endDate": {
             "type": "string",
             "description": "The date on which this schedule will end. From this date, any schedules will be created as real, planned instances",
-            "format": "date"
+            "format": "date",
+            "example": "2022-10-21"
           }
         },
         "description": "\n  Describes the weekly schedule for an activity. There can be several of these defined for one activity.\n  An activity schedule describes when, during the week, an activity will be run and where.\n  e.g. Tuesday PM and Thursday AM - suitable for Houseblock 2 to attend.\n  e.g. Monday AM and Thursday PM - suitable for Houseblock 3 to attend.\n  this 'lite' version of ActivitySchedule does not have allocated or instances.\n  "
@@ -4339,13 +4400,14 @@
           "date": {
             "type": "string",
             "description": "The specific date for this scheduled instance",
-            "format": "date"
+            "format": "date",
+            "example": "2022-09-30"
           },
           "startTime": {
             "type": "string",
             "description": "The start time for this scheduled instance",
             "format": "partial-time",
-            "example": "9:00"
+            "example": "09:00"
           },
           "endTime": {
             "type": "string",
@@ -4414,7 +4476,8 @@
           "rolloutDate": {
             "type": "string",
             "description": "The date rolled out",
-            "format": "date"
+            "format": "date",
+            "example": "2022-09-30"
           }
         },
         "description": "Describes one instance of a prison which may or may not be active (rolled out)"
