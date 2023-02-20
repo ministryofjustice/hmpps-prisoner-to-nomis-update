@@ -80,12 +80,16 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("schedules[1].endTime", equalTo("16:30")))
           .withRequestBody(matchingJsonPath("scheduleRules[0].startTime", equalTo("07:45")))
           .withRequestBody(matchingJsonPath("scheduleRules[0].endTime", equalTo("09:25")))
-          .withRequestBody(matchingJsonPath("scheduleRules[0].daysOfWeek[0]", equalTo("SUNDAY")))
-          .withRequestBody(matchingJsonPath("scheduleRules[0].daysOfWeek[1]", equalTo("THURSDAY")))
+          .withRequestBody(matchingJsonPath("scheduleRules[0].sunday", equalTo("true")))
+          .withRequestBody(matchingJsonPath("scheduleRules[0].tuesday", equalTo("false")))
+          .withRequestBody(matchingJsonPath("scheduleRules[0].wednesday", equalTo("false")))
+          .withRequestBody(matchingJsonPath("scheduleRules[0].thursday", equalTo("true")))
           .withRequestBody(matchingJsonPath("scheduleRules[1].startTime", equalTo("13:45")))
           .withRequestBody(matchingJsonPath("scheduleRules[1].endTime", equalTo("14:25")))
-          .withRequestBody(matchingJsonPath("scheduleRules[1].daysOfWeek[0]", equalTo("TUESDAY")))
-          .withRequestBody(matchingJsonPath("scheduleRules[1].daysOfWeek[1]", equalTo("WEDNESDAY")))
+          .withRequestBody(matchingJsonPath("scheduleRules[1].sunday", equalTo("false")))
+          .withRequestBody(matchingJsonPath("scheduleRules[1].tuesday", equalTo("true")))
+          .withRequestBody(matchingJsonPath("scheduleRules[1].wednesday", equalTo("true")))
+          .withRequestBody(matchingJsonPath("scheduleRules[1].thursday", equalTo("false")))
       )
       mappingServer.verify(
         WireMock.postRequestedFor(urlEqualTo("/mapping/activities"))
@@ -312,13 +316,27 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     "id"        : 555666001,
     "startTime" : "07:45",
     "endTime"   : "09:25",
-    "daysOfWeek": ["Sun","Thu"]
+    "daysOfWeek": ["Sun","Thu"],
+    "mondayFlag": false,
+    "tuesdayFlag": false,
+    "wednesdayFlag": false,
+    "thursdayFlag": true,
+    "fridayFlag": false,
+    "saturdayFlag": false,
+    "sundayFlag": true
   },
   {
     "id"        : 555666002,
     "startTime" : "13:45",
     "endTime"   : "14:25",
-    "daysOfWeek": ["Tue","Wed"]
+    "daysOfWeek": ["Tue","Wed"],
+    "mondayFlag": false,
+    "tuesdayFlag": true,
+    "wednesdayFlag": true,
+    "thursdayFlag": false,
+    "fridayFlag": false,
+    "saturdayFlag": false,
+    "sundayFlag": false
   }],
   "startDate" : "2023-01-20",
   "endDate" : "2023-01-23"

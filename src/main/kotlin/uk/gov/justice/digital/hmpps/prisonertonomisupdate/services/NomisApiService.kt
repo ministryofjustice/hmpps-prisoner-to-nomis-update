@@ -10,7 +10,6 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import java.math.BigDecimal
-import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -237,11 +236,17 @@ data class PayRateRequest(
 )
 
 data class ScheduleRuleRequest(
-  val daysOfWeek: List<DayOfWeek>,
   @JsonFormat(pattern = "HH:mm")
   val startTime: LocalTime,
   @JsonFormat(pattern = "HH:mm")
   val endTime: LocalTime,
+  val monday: Boolean,
+  val tuesday: Boolean,
+  val wednesday: Boolean,
+  val thursday: Boolean,
+  val friday: Boolean,
+  val saturday: Boolean,
+  val sunday: Boolean,
 )
 
 data class CreateActivityResponse(
