@@ -76,8 +76,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("schedules[0].startTime", equalTo("09:00")))
           .withRequestBody(matchingJsonPath("schedules[0].endTime", equalTo("10:00")))
           .withRequestBody(matchingJsonPath("schedules[1].date", equalTo("2023-01-14")))
-          .withRequestBody(matchingJsonPath("schedules[1].startTime", equalTo("09:00")))
-          .withRequestBody(matchingJsonPath("schedules[1].endTime", equalTo("10:30")))
+          .withRequestBody(matchingJsonPath("schedules[1].startTime", equalTo("14:00")))
+          .withRequestBody(matchingJsonPath("schedules[1].endTime", equalTo("16:30")))
           .withRequestBody(matchingJsonPath("scheduleRules[0].startTime", equalTo("07:45")))
           .withRequestBody(matchingJsonPath("scheduleRules[0].endTime", equalTo("09:25")))
           .withRequestBody(matchingJsonPath("scheduleRules[0].daysOfWeek[0]", equalTo("SUNDAY")))
@@ -266,8 +266,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     {
       "id": 3457,
       "date": "2023-01-14",
-      "startTime": "09:00",
-      "endTime": "10:30",
+      "startTime": "14:00",
+      "endTime": "16:30",
       "cancelled": false,
       "cancelledTime": "2023-01-13T09:38:26.092Z",
       "cancelledBy": "Adam Smith",
