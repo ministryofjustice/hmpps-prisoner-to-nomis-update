@@ -222,11 +222,13 @@ data class CreateActivityRequest(
   val schedules: List<ScheduleRequest>,
   val scheduleRules: List<ScheduleRuleRequest>,
 )
+
 data class UpdateActivityRequest(
   @JsonFormat(pattern = "yyyy-MM-dd")
   val endDate: LocalDate? = null,
   val internalLocationId: Long? = null,
   val payRates: List<PayRateRequest>,
+  val scheduleRules: List<ScheduleRuleRequest>,
 )
 
 data class PayRateRequest(

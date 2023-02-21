@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityPay
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateOffenderProgramProfileRequest
@@ -107,14 +108,10 @@ class ActivitiesService(
 
   private fun ActivitySchedule.toUpdateActivityRequest(pay: List<ActivityPay>) =
     UpdateActivityRequest(
-      endDate, internalLocation?.id?.toLong(),
-      pay.map { p ->
-        PayRateRequest(
-          incentiveLevel = p.incentiveNomisCode,
-          payBand = p.prisonPayBand.nomisPayBand.toString(),
-          rate = BigDecimal(p.rate!!).movePointLeft(2)
-        )
-      }
+      endDate = endDate,
+      internalLocationId = internalLocation?.id?.toLong(),
+      payRates = mapRates(pay),
+      scheduleRules = mapRules(this.slots),
     )
 
   fun createAllocation(allocationEvent: AllocationDomainEvent) {
@@ -190,13 +187,7 @@ class ActivitiesService(
       prisonId = activity.prisonCode,
       internalLocationId = schedule.internalLocation?.id?.toLong(),
       capacity = schedule.capacity,
-      payRates = activity.pay.map { p ->
-        PayRateRequest(
-          incentiveLevel = p.incentiveNomisCode,
-          payBand = p.prisonPayBand.nomisPayBand.toString(),
-          rate = BigDecimal(p.rate!!).movePointLeft(2)
-        )
-      },
+      payRates = mapRates(activity.pay),
       description = toNomisActivityDescription(activity.summary, schedule.description),
       minimumIncentiveLevelCode = activity.minimumIncentiveNomisCode,
       programCode = activity.category.code,
@@ -208,7 +199,7 @@ class ActivitiesService(
           endTime = LocalTime.parse(i.endTime),
         )
       },
-      scheduleRules = mapRules(schedule),
+      scheduleRules = mapRules(schedule.slots),
     )
   }
 
@@ -230,8 +221,8 @@ class ActivitiesService(
     return code.uppercase()
   }
 
-  private fun mapRules(schedule: ActivitySchedule): List<ScheduleRuleRequest> {
-    return schedule.slots.map { slot ->
+  private fun mapRules(slots: List<ActivityScheduleSlot>): List<ScheduleRuleRequest> =
+    slots.map { slot ->
       ScheduleRuleRequest(
         startTime = LocalTime.parse(slot.startTime),
         endTime = LocalTime.parse(slot.endTime),
@@ -244,7 +235,15 @@ class ActivitiesService(
         sunday = slot.sundayFlag,
       )
     }
-  }
+
+  private fun mapRates(pay: List<ActivityPay>): List<PayRateRequest> =
+    pay.map { p ->
+      PayRateRequest(
+        incentiveLevel = p.incentiveNomisCode,
+        payBand = p.prisonPayBand.nomisPayBand.toString(),
+        rate = BigDecimal(p.rate!!).movePointLeft(2)
+      )
+    }
 
   fun createRetry(context: ActivityContext) {
     mappingService.createMapping(
