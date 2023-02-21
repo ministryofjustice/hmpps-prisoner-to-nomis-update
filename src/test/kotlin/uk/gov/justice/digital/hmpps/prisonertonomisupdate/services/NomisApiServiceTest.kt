@@ -769,6 +769,7 @@ fun updateActivity() = UpdateActivityRequest(
   endDate = LocalDate.parse("2023-02-10"),
   internalLocationId = 703000,
   payRates = emptyList(),
+  scheduleRules = emptyList(),
 )
 
 fun newAllocation() = CreateOffenderProgramProfileRequest(
