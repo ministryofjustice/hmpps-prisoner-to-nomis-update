@@ -181,7 +181,7 @@ class ActivitiesService(
 
   private fun toNomisActivity(schedule: ActivitySchedule, activity: Activity): CreateActivityRequest {
     return CreateActivityRequest(
-      code = toNomisActivityCode(activity.summary, schedule.description),
+      code = schedule.id.toString(),
       startDate = activity.startDate,
       endDate = activity.endDate,
       prisonId = activity.prisonCode,
@@ -210,15 +210,6 @@ class ActivitiesService(
       description += " ${scheduleDescription.let { it.substring(0, min(it.length, 39 - description.length)) }}"
     }
     return description
-  }
-
-  private fun toNomisActivityCode(activityDescription: String, scheduleDescription: String): String {
-    var code = "SAA-$activityDescription"
-      .let { it.substring(0, min(it.length, 12)).trim() }
-    if (code.length < 11) {
-      code += "-${scheduleDescription.let { it.substring(0, min(it.length, 11 - code.length)) }}"
-    }
-    return code.uppercase()
   }
 
   private fun mapRules(slots: List<ActivityScheduleSlot>): List<ScheduleRuleRequest> =
