@@ -214,9 +214,9 @@ class ActivitiesService(
 
   private fun toNomisActivityCode(activityDescription: String, scheduleDescription: String): String {
     var code = "SAA-$activityDescription"
-      .let { it.substring(0, min(it.length, 20)).trim() }
-    if (code.length < 19) {
-      code += "-${scheduleDescription.let { it.substring(0, min(it.length, 19 - code.length)) }}"
+      .let { it.substring(0, min(it.length, 12)).trim() }
+    if (code.length < 11) {
+      code += "-${scheduleDescription.let { it.substring(0, min(it.length, 11 - code.length)) }}"
     }
     return code.uppercase()
   }

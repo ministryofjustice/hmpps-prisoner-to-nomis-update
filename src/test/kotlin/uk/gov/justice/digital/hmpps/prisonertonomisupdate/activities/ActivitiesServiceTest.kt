@@ -101,7 +101,7 @@ internal class ActivitiesServiceTest {
       verify(nomisApiService).createActivity(
         check {
           assertThat(it.description.length).isLessThanOrEqualTo(40)
-          assertThat(it.code.length).isLessThanOrEqualTo(20)
+          assertThat(it.code.length).isLessThanOrEqualTo(12)
         }
       )
     }
