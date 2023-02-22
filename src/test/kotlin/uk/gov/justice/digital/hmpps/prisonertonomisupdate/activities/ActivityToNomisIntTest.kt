@@ -59,7 +59,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
       nomisApi.verify(
         WireMock.postRequestedFor(urlEqualTo("/activities"))
-          .withRequestBody(matchingJsonPath("code", equalTo("SAA-MATHS LEVEL 1-MO")))
+          .withRequestBody(matchingJsonPath("code", equalTo("SAA-MATHS LE")))
           .withRequestBody(matchingJsonPath("startDate", equalTo("2023-01-12")))
           .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-13")))
           .withRequestBody(matchingJsonPath("prisonId", equalTo("PVI")))
