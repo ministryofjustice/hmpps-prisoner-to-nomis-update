@@ -343,7 +343,6 @@ internal class ActivitiesServiceTest {
           description = "description",
           occurredAt = LocalDateTime.now(),
           additionalInformation = AllocationAdditionalInformation(
-            scheduleId = ACTIVITY_SCHEDULE_ID,
             allocationId = ALLOCATION_ID,
           ),
         )
@@ -381,7 +380,6 @@ internal class ActivitiesServiceTest {
             description = "description",
             occurredAt = LocalDateTime.now(),
             additionalInformation = AllocationAdditionalInformation(
-              scheduleId = ACTIVITY_SCHEDULE_ID,
               allocationId = ALLOCATION_ID,
             ),
           )
@@ -425,7 +423,6 @@ internal class ActivitiesServiceTest {
           description = "description",
           occurredAt = LocalDateTime.now(),
           additionalInformation = AllocationAdditionalInformation(
-            scheduleId = ACTIVITY_SCHEDULE_ID,
             allocationId = ALLOCATION_ID,
           ),
         )
@@ -463,7 +460,6 @@ internal class ActivitiesServiceTest {
             description = "description",
             occurredAt = LocalDateTime.now(),
             additionalInformation = AllocationAdditionalInformation(
-              scheduleId = ACTIVITY_SCHEDULE_ID,
               allocationId = ALLOCATION_ID,
             ),
           )
@@ -586,6 +582,6 @@ private fun newAllocation(): Allocation {
     endDate = LocalDate.parse("2023-01-13"),
     prisonPayBand = PrisonPayBand(1, 1, "", "", 1, "MDI"),
     scheduleDescription = "description",
-    scheduleId = 123,
+    scheduleId = ACTIVITY_SCHEDULE_ID,
   )
 }
