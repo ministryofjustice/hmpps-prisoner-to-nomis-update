@@ -414,6 +414,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     "id": $id,
     "prisonerNumber": "A1234AA",
     "bookingId": $BOOKING_ID,
+    "scheduleId": $ACTIVITY_SCHEDULE_ID,
     "startDate": "2023-01-12",
     "endDate": "2023-01-13",
     "prisonPayBand": {

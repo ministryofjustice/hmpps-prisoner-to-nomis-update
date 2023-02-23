@@ -116,7 +116,7 @@ class ActivitiesService(
 
   fun createAllocation(allocationEvent: AllocationDomainEvent) {
     activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
-      mappingService.getMappingGivenActivityScheduleId(allocationEvent.additionalInformation.scheduleId).let { mapping ->
+      mappingService.getMappingGivenActivityScheduleId(allocation.scheduleId).let { mapping ->
 
         val telemetryMap = mutableMapOf(
           "allocationId" to allocation.id.toString(),
@@ -148,7 +148,7 @@ class ActivitiesService(
 
   fun deallocate(allocationEvent: AllocationDomainEvent) {
     activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
-      mappingService.getMappingGivenActivityScheduleId(allocationEvent.additionalInformation.scheduleId)
+      mappingService.getMappingGivenActivityScheduleId(allocation.scheduleId)
         .let { mapping ->
 
           val telemetryMap = mutableMapOf(
@@ -268,6 +268,5 @@ data class AllocationDomainEvent(
 )
 
 data class AllocationAdditionalInformation(
-  val scheduleId: Long,
   val allocationId: Long,
 )
