@@ -28,7 +28,7 @@ class ActivitiesApiService(@Qualifier("activitiesApiWebClient") private val webC
 
   fun getAllocation(allocationId: Long): Allocation {
     return webClient.get()
-      .uri("/allocations/$allocationId")
+      .uri("/allocations/id/$allocationId")
       .retrieve()
       .bodyToMono(Allocation::class.java)
       .block()!!
