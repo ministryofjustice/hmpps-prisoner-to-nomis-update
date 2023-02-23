@@ -219,7 +219,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           ).build()
       ).get()
 
-      await untilCallTo { activitiesApi.getCountFor("/allocations/$ALLOCATION_ID") } matches { it == 1 }
+      await untilCallTo { activitiesApi.getCountFor("/allocations/id/$ALLOCATION_ID") } matches { it == 1 }
       await untilCallTo { nomisApi.postCountFor("/activities/$COURSE_ACTIVITY_ID") } matches { it == 1 }
       nomisApi.verify(
         WireMock.postRequestedFor(urlEqualTo("/activities/$COURSE_ACTIVITY_ID"))
@@ -250,7 +250,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           ).build()
       ).get()
 
-      await untilCallTo { activitiesApi.getCountFor("/allocations/$ALLOCATION_ID") } matches { it == 1 }
+      await untilCallTo { activitiesApi.getCountFor("/allocations/id/$ALLOCATION_ID") } matches { it == 1 }
       await untilCallTo { nomisApi.putCountFor("/activities/$COURSE_ACTIVITY_ID/booking-id/$BOOKING_ID/end") } matches { it == 1 }
       nomisApi.verify(
         putRequestedFor(urlEqualTo("/activities/$COURSE_ACTIVITY_ID/booking-id/$BOOKING_ID/end"))

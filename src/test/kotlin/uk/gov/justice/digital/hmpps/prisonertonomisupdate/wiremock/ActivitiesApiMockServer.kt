@@ -102,7 +102,7 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetAllocation(id: Long, response: String) {
     stubFor(
-      get("/allocations/$id").willReturn(
+      get("/allocations/id/$id").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
