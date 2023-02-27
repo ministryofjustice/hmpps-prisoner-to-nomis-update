@@ -16,6 +16,11 @@ hmpps.sqs:
       dlqName: hmpps_prisoner_to_nomis_activity_dlq
       subscribeTopicId: domainevents
       subscribeFilter: "{\"eventType\":[\"activities.activity-schedule.created\", \"activities.prisoner.allocated\", \"activities.prisoner.deallocated\"]}"
+    appointment:
+      queueName: hmpps_prisoner_to_nomis_appointment_queue
+      dlqName: hmpps_prisoner_to_nomis_appointment_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: "{\"eventType\":[\"appointments.appointment.created\"]}"
     sentencing:
       queueName: hmpps_prisoner_to_nomis_sentencing_queue
       dlqName: hmpps_prisoner_to_nomis_sentencing_dlq

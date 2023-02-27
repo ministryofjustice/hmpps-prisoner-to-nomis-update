@@ -198,6 +198,76 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubCreateAppointment() {
+    stubFor(
+      post("/mapping/appointments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201)
+      )
+    )
+  }
+
+  fun stubCreateAppointmentWithError(status: Int = 500) {
+    stubFor(
+      post("/mapping/appointments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
+          .withStatus(status)
+      )
+    )
+  }
+
+  fun stubGetMappingGivenAppointmentInstanceId(id: Long, response: String) {
+    stubFor(
+      get("/mapping/appointments/appointment-instance-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(200)
+      )
+    )
+  }
+
+  fun stubGetMappingGivenAppointmentInstanceIdWithError(id: Long, status: Int = 500) {
+    stubFor(
+      get("/mapping/appointments/appointment-instance-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
+          .withStatus(status)
+      )
+    )
+  }
+
+  fun stubCreateAppointmentWithErrorFollowedBySlowSuccess() {
+    stubFor(
+      post("/mapping/appointments")
+        .inScenario("Retry Mapping Appointment Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json")
+        )
+        .willSetStateTo("Cause Mapping Appointment Success")
+    )
+
+    stubFor(
+      post("/mapping/appointments")
+        .inScenario("Retry Mapping Appointment Scenario")
+        .whenScenarioStateIs("Cause Mapping Appointment Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201)
+            .withFixedDelay(1500)
+
+        ).willSetStateTo(Scenario.STARTED)
+    )
+  }
+
   fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
   fun stubCreateSentencingAdjustment() {
     stubFor(

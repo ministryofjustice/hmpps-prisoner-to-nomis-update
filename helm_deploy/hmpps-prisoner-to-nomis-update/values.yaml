@@ -40,6 +40,7 @@ generic-service:
     FEATURE_EVENT_ACTIVITIES_ACTIVITY_AMENDED: true
     FEATURE_EVENT_ACTIVITIES_PRISONER_ALLOCATED: true
     FEATURE_EVENT_ACTIVITIES_PRISONER_DEALLOCATED: true
+    FEATURE_EVENT_APPOINTMENTS_APPOINTMENT_CREATED: true
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:
