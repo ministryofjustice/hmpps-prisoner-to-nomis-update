@@ -7,10 +7,9 @@ import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RETRY_CREATE_MAPPING
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
-
-const val RETRY_CREATE_MAPPING = "RETRY_CREATE_MAPPING"
 
 @Service
 class SentencingUpdateQueueService(
