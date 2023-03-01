@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateSentencingAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.SynchronisationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateSentencingAdjustmentRequest
 
 @Service
@@ -12,8 +14,9 @@ class SentencingAdjustmentsService(
   private val nomisApiService: NomisApiService,
   private val sentencingAdjustmentsMappingService: SentencingAdjustmentsMappingService,
   private val sentencingUpdateQueueService: SentencingUpdateQueueService,
-  private val telemetryClient: TelemetryClient
-) {
+  private val telemetryClient: TelemetryClient,
+  objectMapper: ObjectMapper
+) : SynchronisationService(objectMapper = objectMapper) {
   suspend fun createAdjustment(createEvent: AdjustmentCreatedEvent) {
     sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(createEvent.additionalInformation.id)
       ?.let {
@@ -172,6 +175,8 @@ class SentencingAdjustmentsService(
         null
       )
     }
+
+  override suspend fun retryCreateMapping(message: String) = createSentencingAdjustmentMapping(message.fromJson())
 }
 
 data class AdditionalInformation(
