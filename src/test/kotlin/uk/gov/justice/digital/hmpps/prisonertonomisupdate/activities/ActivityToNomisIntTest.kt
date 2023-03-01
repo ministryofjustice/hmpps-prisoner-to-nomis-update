@@ -50,8 +50,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             mapOf(
               "eventType" to MessageAttributeValue.builder().dataType("String")
                 .stringValue("activities.activity-schedule.created").build(),
-            )
-          ).build()
+            ),
+          ).build(),
       ).get()
 
       await untilCallTo { awsSqsActivityClient.countAllMessagesOnQueue(activityQueueUrl).get() } matches { it == 0 }
@@ -89,13 +89,13 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("scheduleRules[1].sunday", equalTo("false")))
           .withRequestBody(matchingJsonPath("scheduleRules[1].tuesday", equalTo("true")))
           .withRequestBody(matchingJsonPath("scheduleRules[1].wednesday", equalTo("true")))
-          .withRequestBody(matchingJsonPath("scheduleRules[1].thursday", equalTo("false")))
+          .withRequestBody(matchingJsonPath("scheduleRules[1].thursday", equalTo("false"))),
       )
       mappingServer.verify(
         WireMock.postRequestedFor(urlEqualTo("/mapping/activities"))
           .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$COURSE_ACTIVITY_ID")))
           .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
-          .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED")))
+          .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED"))),
       )
     }
 
@@ -114,8 +114,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             mapOf(
               "eventType" to MessageAttributeValue.builder().dataType("String")
                 .stringValue("activities.activity-schedule.created").build(),
-            )
-          ).build()
+            ),
+          ).build(),
       ).get()
 
       await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID") } matches { it == 1 }
@@ -173,7 +173,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("scheduleRules[1].startTime", equalTo("13:45")))
             .withRequestBody(matchingJsonPath("scheduleRules[1].endTime", equalTo("14:25")))
             .withRequestBody(matchingJsonPath("scheduleRules[1].tuesday", equalTo("true")))
-            .withRequestBody(matchingJsonPath("scheduleRules[1].thursday", equalTo("false")))
+            .withRequestBody(matchingJsonPath("scheduleRules[1].thursday", equalTo("false"))),
         )
       }
       assertThat(awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get()).isEqualTo(0)
@@ -196,7 +196,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
               .stringValue("activities.activity-schedule.amended").build(),
-          )
+          ),
         ).build()
   }
 
@@ -215,8 +215,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             mapOf(
               "eventType" to MessageAttributeValue.builder().dataType("String")
                 .stringValue("activities.prisoner.allocated").build(),
-            )
-          ).build()
+            ),
+          ).build(),
       ).get()
 
       await untilCallTo { activitiesApi.getCountFor("/allocations/id/$ALLOCATION_ID") } matches { it == 1 }
@@ -226,7 +226,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("bookingId", equalTo("$BOOKING_ID")))
           .withRequestBody(matchingJsonPath("startDate", equalTo("2023-01-12")))
           .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-13")))
-          .withRequestBody(matchingJsonPath("payBandCode", equalTo("7")))
+          .withRequestBody(matchingJsonPath("payBandCode", equalTo("7"))),
       )
     }
   }
@@ -246,8 +246,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             mapOf(
               "eventType" to MessageAttributeValue.builder().dataType("String")
                 .stringValue("activities.prisoner.deallocated").build(),
-            )
-          ).build()
+            ),
+          ).build(),
       ).get()
 
       await untilCallTo { activitiesApi.getCountFor("/allocations/id/$ALLOCATION_ID") } matches { it == 1 }
@@ -255,7 +255,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       nomisApi.verify(
         putRequestedFor(urlEqualTo("/activities/$COURSE_ACTIVITY_ID/booking-id/$BOOKING_ID/end"))
           .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-13")))
-          .withRequestBody(matchingJsonPath("endReason", equalTo("END")))
+          .withRequestBody(matchingJsonPath("endReason", equalTo("END"))),
       )
     }
   }

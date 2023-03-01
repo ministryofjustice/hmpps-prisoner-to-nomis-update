@@ -28,7 +28,7 @@ class ActivitiesService(
   private val nomisApiService: NomisApiService,
   private val mappingService: ActivitiesMappingService,
   private val activitiesUpdateQueueService: ActivitiesUpdateQueueService,
-  private val telemetryClient: TelemetryClient
+  private val telemetryClient: TelemetryClient,
 ) {
 
   private companion object {
@@ -66,7 +66,7 @@ class ActivitiesService(
             nomisCourseActivityId = nomisResponse.courseActivityId,
             activityScheduleId = id,
             mappingType = "ACTIVITY_CREATED",
-          )
+          ),
         )
       } catch (e: Exception) {
         telemetryClient.trackEvent("activity-create-map-failed", telemetryMap)
@@ -75,7 +75,7 @@ class ActivitiesService(
           ActivityContext(
             nomisCourseActivityId = nomisResponse.courseActivityId,
             activityScheduleId = id,
-          )
+          ),
         )
         return
       }
@@ -132,7 +132,7 @@ class ActivitiesService(
               startDate = allocation.startDate,
               endDate = allocation.endDate,
               payBandCode = allocation.prisonPayBand.nomisPayBand.toString(),
-            )
+            ),
           )
         } catch (e: Exception) {
           telemetryClient.trackEvent("activity-allocation-create-failed", telemetryMap)
@@ -165,7 +165,7 @@ class ActivitiesService(
                 endDate = allocation.endDate!!,
                 endReason = allocation.deallocatedReason, // TODO SDI-615 probably will need a mapping
                 // endComment = allocation.?, // TODO SDI-615 could put something useful in here
-              )
+              ),
             )
           } catch (e: Exception) {
             telemetryClient.trackEvent("activity-deallocate-failed", telemetryMap)
@@ -232,7 +232,7 @@ class ActivitiesService(
       PayRateRequest(
         incentiveLevel = p.incentiveNomisCode,
         payBand = p.prisonPayBand.nomisPayBand.toString(),
-        rate = BigDecimal(p.rate!!).movePointLeft(2)
+        rate = BigDecimal(p.rate!!).movePointLeft(2),
       )
     }
 
@@ -242,7 +242,7 @@ class ActivitiesService(
         nomisCourseActivityId = context.nomisCourseActivityId,
         activityScheduleId = context.activityScheduleId,
         mappingType = "ACTIVITY_CREATED",
-      )
+      ),
     )
   }
 }

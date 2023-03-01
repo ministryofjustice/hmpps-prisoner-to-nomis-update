@@ -51,7 +51,7 @@ internal class VisitsApiServiceTest {
               }
             ]
           }
-        """.trimIndent()
+        """.trimIndent(),
       )
     }
 
@@ -61,7 +61,7 @@ internal class VisitsApiServiceTest {
 
       VisitsApiExtension.visitsApi.verify(
         WireMock.getRequestedFor(WireMock.urlEqualTo("/visits/1234"))
-          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
       )
     }
 

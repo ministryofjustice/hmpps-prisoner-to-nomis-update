@@ -27,7 +27,8 @@ class MockVisitsResource(private val mockVisitsData: MockVisitsData) {
   @PostMapping("/migrate-visits")
   @Operation(hidden = true)
   fun createVisit(
-    @RequestBody @Valid createVisitRequest: CreateVisitRequest
+    @RequestBody @Valid
+    createVisitRequest: CreateVisitRequest,
   ): String = UUID.randomUUID().toString()
 }
 
@@ -49,12 +50,12 @@ data class CreateVisitRequest(
 
 data class CreateVisitorOnVisit(
   val nomisPersonId: Long,
-  val leadVisitor: Boolean = false
+  val leadVisitor: Boolean = false,
 )
 
 data class CreateContactOnVisit(
   val name: String?,
-  val telephone: String?
+  val telephone: String?,
 )
 
 data class CreateLegacyDateOnVisit(
@@ -92,5 +93,5 @@ data class VSIPVisit(
 data class MockVisitsData(
   var prisonId: String = "MDI",
   var visitors: List<String> = listOf("4729570", "4729550"),
-  var prisonerId: String = "A7948DY"
+  var prisonerId: String = "A7948DY",
 )

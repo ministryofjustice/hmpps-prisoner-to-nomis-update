@@ -27,7 +27,7 @@ class SentencingUpdateQueueService(
       Message = SentencingAdjustmentCreateMappingRetryMessage(offenderNo, message).toJson(),
     )
     val result = sqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(queueUrl).messageBody(sqsMessage.toJson()).build()
+      SendMessageRequest.builder().queueUrl(queueUrl).messageBody(sqsMessage.toJson()).build(),
     ).await()
 
     telemetryClient.trackEvent(
@@ -46,5 +46,5 @@ class SentencingUpdateQueueService(
 
 data class SentencingAdjustmentCreateMappingRetryMessage(
   val offenderNo: String,
-  val mapping: SentencingAdjustmentMappingDto
+  val mapping: SentencingAdjustmentMappingDto,
 )

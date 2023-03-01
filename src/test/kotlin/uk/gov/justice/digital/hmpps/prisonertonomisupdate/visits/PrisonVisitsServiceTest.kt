@@ -41,8 +41,9 @@ internal class PrisonVisitsServiceTest {
       prisonVisitsService.createVisit(
         VisitBookedEvent(
           prisonerId = "AB123D",
-          additionalInformation = VisitBookedEvent.VisitInformation("123"), occurredAt = OffsetDateTime.now()
-        )
+          additionalInformation = VisitBookedEvent.VisitInformation("123"),
+          occurredAt = OffsetDateTime.now(),
+        ),
       )
 
       verify(telemetryClient).trackEvent(
@@ -55,7 +56,7 @@ internal class PrisonVisitsServiceTest {
           assertThat(it["startDateTime"]).isEqualTo("2023-09-08T08:30:00")
           assertThat(it["endTime"]).isEqualTo("09:30:00")
         },
-        isNull()
+        isNull(),
       )
     }
 
@@ -67,8 +68,9 @@ internal class PrisonVisitsServiceTest {
       prisonVisitsService.createVisit(
         VisitBookedEvent(
           prisonerId = "AB123D",
-          additionalInformation = VisitBookedEvent.VisitInformation("123"), occurredAt = OffsetDateTime.now()
-        )
+          additionalInformation = VisitBookedEvent.VisitInformation("123"),
+          occurredAt = OffsetDateTime.now(),
+        ),
       )
 
       verify(telemetryClient).trackEvent(
@@ -80,7 +82,7 @@ internal class PrisonVisitsServiceTest {
           assertThat(it["startDateTime"]).isEqualTo("2023-09-08T08:30:00")
           assertThat(it["endTime"]).isEqualTo("09:30:00")
         },
-        isNull()
+        isNull(),
       )
     }
 
@@ -94,8 +96,9 @@ internal class PrisonVisitsServiceTest {
         prisonVisitsService.createVisit(
           VisitBookedEvent(
             prisonerId = "AB123D",
-            additionalInformation = VisitBookedEvent.VisitInformation("123"), occurredAt = OffsetDateTime.now()
-          )
+            additionalInformation = VisitBookedEvent.VisitInformation("123"),
+            occurredAt = OffsetDateTime.now(),
+          ),
         )
       }.isInstanceOf(RuntimeException::class.java)
 
@@ -108,7 +111,7 @@ internal class PrisonVisitsServiceTest {
           assertThat(it["startDateTime"]).isEqualTo("2023-09-08T08:30:00")
           assertThat(it["endTime"]).isEqualTo("09:30:00")
         },
-        isNull()
+        isNull(),
       )
     }
 
@@ -122,8 +125,9 @@ internal class PrisonVisitsServiceTest {
       prisonVisitsService.createVisit(
         VisitBookedEvent(
           prisonerId = "AB123D",
-          additionalInformation = VisitBookedEvent.VisitInformation("123"), occurredAt = OffsetDateTime.now()
-        )
+          additionalInformation = VisitBookedEvent.VisitInformation("123"),
+          occurredAt = OffsetDateTime.now(),
+        ),
       )
 
       verify(telemetryClient).trackEvent(
@@ -136,7 +140,7 @@ internal class PrisonVisitsServiceTest {
           assertThat(it["startDateTime"]).isEqualTo("2023-09-08T08:30:00")
           assertThat(it["endTime"]).isEqualTo("09:30:00")
         },
-        isNull()
+        isNull(),
       )
     }
   }
@@ -146,9 +150,8 @@ internal class PrisonVisitsServiceTest {
 
     @Test
     fun `should call mapping service`() {
-
       prisonVisitsService.createVisitRetry(
-        VisitContext(nomisId = "AB123D", vsipId = "24")
+        VisitContext(nomisId = "AB123D", vsipId = "24"),
       )
 
       verify(mappingService).createMapping(VisitMappingDto("AB123D", "24", mappingType = "ONLINE"))
@@ -167,8 +170,8 @@ internal class PrisonVisitsServiceTest {
         VisitCancelledEvent(
           additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
           prisonerId = "AB123D",
-          occurredAt = OffsetDateTime.now()
-        )
+          occurredAt = OffsetDateTime.now(),
+        ),
       )
 
       verify(telemetryClient).trackEvent(
@@ -178,7 +181,7 @@ internal class PrisonVisitsServiceTest {
           assertThat(it["visitId"]).isEqualTo("123")
           assertThat(it["nomisVisitId"]).isEqualTo("456")
         },
-        isNull()
+        isNull(),
       )
 
       verify(visitApiService).getVisit("123")
@@ -193,8 +196,8 @@ internal class PrisonVisitsServiceTest {
         VisitCancelledEvent(
           additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
           prisonerId = "AB123D",
-          occurredAt = OffsetDateTime.now()
-        )
+          occurredAt = OffsetDateTime.now(),
+        ),
       )
       verify(nomisApiService).cancelVisit(CancelVisitDto("AB123D", "456", "HMP"))
     }
@@ -208,8 +211,8 @@ internal class PrisonVisitsServiceTest {
         VisitCancelledEvent(
           additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
           prisonerId = "AB123D",
-          occurredAt = OffsetDateTime.now()
-        )
+          occurredAt = OffsetDateTime.now(),
+        ),
       )
       verify(nomisApiService).cancelVisit(CancelVisitDto("AB123D", "456", "ADMIN"))
     }
@@ -229,7 +232,7 @@ internal class PrisonVisitsServiceTest {
         "VISIT_ORDER_CANCELLED,VO_CANCEL",
         "BATCH_CANCELLATION,ADMIN",
         "PRISONER_REFUSED_TO_ATTEND,REFUSED",
-      ]
+      ],
     )
     fun `should map all cancellation outcome correctly`(vsipOutcome: String, nomisOutcome: String) {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit(outcome = vsipOutcome))
@@ -239,8 +242,8 @@ internal class PrisonVisitsServiceTest {
         VisitCancelledEvent(
           additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
           prisonerId = "AB123D",
-          occurredAt = OffsetDateTime.now()
-        )
+          occurredAt = OffsetDateTime.now(),
+        ),
       )
       verify(nomisApiService).cancelVisit(CancelVisitDto("AB123D", "456", nomisOutcome))
     }
@@ -254,8 +257,8 @@ internal class PrisonVisitsServiceTest {
         VisitCancelledEvent(
           additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
           prisonerId = "AB123D",
-          occurredAt = OffsetDateTime.now()
-        )
+          occurredAt = OffsetDateTime.now(),
+        ),
       )
       verify(nomisApiService).cancelVisit(CancelVisitDto("AB123D", "456", "ADMIN"))
     }
@@ -270,8 +273,8 @@ internal class PrisonVisitsServiceTest {
           VisitCancelledEvent(
             additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
             prisonerId = "AB123D",
-            occurredAt = OffsetDateTime.now()
-          )
+            occurredAt = OffsetDateTime.now(),
+          ),
         )
       }.isInstanceOf(ValidationException::class.java)
 
@@ -281,7 +284,7 @@ internal class PrisonVisitsServiceTest {
           assertThat(it["offenderNo"]).isEqualTo("AB123D")
           assertThat(it["visitId"]).isEqualTo("123")
         },
-        isNull()
+        isNull(),
       )
     }
   }
@@ -289,7 +292,7 @@ internal class PrisonVisitsServiceTest {
 
 fun newVisit(
   offenderNo: String = "AB123D",
-  outcome: String? = VsipOutcomeStatus.ESTABLISHMENT_CANCELLED.name
+  outcome: String? = VsipOutcomeStatus.ESTABLISHMENT_CANCELLED.name,
 ): VisitDto = VisitDto(
   prisonerId = offenderNo,
   prisonId = "MDI",

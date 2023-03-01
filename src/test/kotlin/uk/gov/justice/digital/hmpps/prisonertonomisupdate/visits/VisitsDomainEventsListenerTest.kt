@@ -30,7 +30,7 @@ internal class VisitsDomainEventsListenerTest {
       prisonVisitsService,
       objectMapper,
       eventFeatureSwitch,
-      telemetryClient
+      telemetryClient,
     )
 
   @Nested
@@ -47,15 +47,15 @@ internal class VisitsDomainEventsListenerTest {
         listener.onPrisonerChange(
           message = prisonVisitCreatedMessage(
             visitId = "99",
-            occurredAt = "2021-03-08T11:23:56.031Z"
-          )
+            occurredAt = "2021-03-08T11:23:56.031Z",
+          ),
         )
 
         verify(prisonVisitsService).createVisit(
           org.mockito.kotlin.check {
             Assertions.assertThat(it.reference).isEqualTo("99")
             Assertions.assertThat(it.bookingDate).isEqualTo(LocalDate.parse("2021-03-08"))
-          }
+          },
         )
       }
     }
@@ -72,8 +72,8 @@ internal class VisitsDomainEventsListenerTest {
         listener.onPrisonerChange(
           message = prisonVisitCreatedMessage(
             visitId = "99",
-            occurredAt = "2021-03-08T11:23:56.031Z"
-          )
+            occurredAt = "2021-03-08T11:23:56.031Z",
+          ),
         )
 
         verifyNoInteractions(prisonVisitsService)
@@ -90,7 +90,7 @@ internal class VisitsDomainEventsListenerTest {
           org.mockito.kotlin.check {
             Assertions.assertThat(it.vsipId).isEqualTo("12")
             Assertions.assertThat(it.nomisId).isEqualTo("12345")
-          }
+          },
         )
 
         verify(telemetryClient).trackEvent(
@@ -98,7 +98,7 @@ internal class VisitsDomainEventsListenerTest {
           org.mockito.kotlin.check {
             Assertions.assertThat(it["id"]).isEqualTo("12")
           },
-          isNull()
+          isNull(),
         )
       }
     }

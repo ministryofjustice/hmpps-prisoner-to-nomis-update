@@ -19,7 +19,7 @@ class SentencingDomainEventListener(
 ) : DomainEventListener(
   service = sentencingAdjustmentsService,
   objectMapper = objectMapper,
-  eventFeatureSwitch = eventFeatureSwitch
+  eventFeatureSwitch = eventFeatureSwitch,
 ) {
 
   private companion object {

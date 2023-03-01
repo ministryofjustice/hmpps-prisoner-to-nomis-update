@@ -132,7 +132,7 @@ internal class ActivitiesApiServiceTest {
         ],
         "startDate" : "2023-01-20"
       }
-        """.trimIndent()
+        """.trimIndent(),
       )
     }
 
@@ -142,7 +142,7 @@ internal class ActivitiesApiServiceTest {
 
       ActivitiesApiExtension.activitiesApi.verify(
         WireMock.getRequestedFor(WireMock.urlEqualTo("/schedules/1234"))
-          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
       )
     }
 
@@ -354,7 +354,7 @@ internal class ActivitiesApiServiceTest {
       "createdTime": "2022-12-30T16:09:11.127Z",
       "createdBy": "Adam Smith"
     }
-        """.trimIndent()
+        """.trimIndent(),
       )
     }
 
@@ -364,7 +364,7 @@ internal class ActivitiesApiServiceTest {
 
       ActivitiesApiExtension.activitiesApi.verify(
         WireMock.getRequestedFor(WireMock.urlEqualTo("/activities/1234"))
-          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
       )
     }
 

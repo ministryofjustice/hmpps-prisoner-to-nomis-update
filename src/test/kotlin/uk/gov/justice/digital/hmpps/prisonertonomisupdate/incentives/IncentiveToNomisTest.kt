@@ -31,8 +31,8 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
               .stringValue("incentives.iep-review.inserted").build(),
-          )
-        ).build()
+          ),
+        ).build(),
     ).get()
 
     await untilCallTo { awsSqsIncentiveClient.countMessagesOnQueue(incentiveQueueUrl).get() } matches { it == 0 }
@@ -42,14 +42,14 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
       WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/booking-id/456/incentives"))
         .withRequestBody(WireMock.matchingJsonPath("iepDateTime", WireMock.equalTo("2022-12-02T10:00:00")))
         .withRequestBody(WireMock.matchingJsonPath("prisonId", WireMock.equalTo("MDI")))
-        .withRequestBody(WireMock.matchingJsonPath("iepLevel", WireMock.equalTo("STD")))
+        .withRequestBody(WireMock.matchingJsonPath("iepLevel", WireMock.equalTo("STD"))),
     )
     mappingServer.verify(
       WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/incentives"))
         .withRequestBody(WireMock.matchingJsonPath("nomisBookingId", WireMock.equalTo("456")))
         .withRequestBody(WireMock.matchingJsonPath("nomisIncentiveSequence", WireMock.equalTo("1")))
         .withRequestBody(WireMock.matchingJsonPath("incentiveId", WireMock.equalTo("12")))
-        .withRequestBody(WireMock.matchingJsonPath("mappingType", WireMock.equalTo("INCENTIVE_CREATED")))
+        .withRequestBody(WireMock.matchingJsonPath("mappingType", WireMock.equalTo("INCENTIVE_CREATED"))),
     )
   }
 
@@ -67,8 +67,8 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
               .stringValue("incentives.iep-review.inserted").build(),
-          )
-        ).build()
+          ),
+        ).build(),
     ).get()
 
     await untilCallTo { incentivesApi.getCountFor("/iep/reviews/id/12") } matches { it == 1 }

@@ -42,7 +42,7 @@ internal class SentencingAdjustmentMappingServiceTest {
 
       mappingServer.verify(
         postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -52,8 +52,8 @@ internal class SentencingAdjustmentMappingServiceTest {
         newMapping(
           nomisAdjustmentId = 123,
           nomisAdjustmentCategory = "KEY-DATE",
-          adjustmentId = "9876"
-        )
+          adjustmentId = "9876",
+        ),
       )
 
       mappingServer.verify(
@@ -61,7 +61,7 @@ internal class SentencingAdjustmentMappingServiceTest {
           .withRequestBody(matchingJsonPath("nomisAdjustmentId", equalTo("123")))
           .withRequestBody(matchingJsonPath("nomisAdjustmentCategory", equalTo("KEY-DATE")))
           .withRequestBody(matchingJsonPath("adjustmentId", equalTo("9876")))
-          .withRequestBody(matchingJsonPath("mappingType", equalTo("SENTENCING_CREATED")))
+          .withRequestBody(matchingJsonPath("mappingType", equalTo("SENTENCING_CREATED"))),
       )
     }
 
@@ -88,7 +88,7 @@ internal class SentencingAdjustmentMappingServiceTest {
 
       mappingServer.verify(
         getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/1234"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -136,7 +136,7 @@ internal class SentencingAdjustmentMappingServiceTest {
 
       mappingServer.verify(
         deleteRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/1234"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -162,7 +162,7 @@ internal class SentencingAdjustmentMappingServiceTest {
   private fun newMapping(
     nomisAdjustmentId: Long = 456L,
     nomisAdjustmentCategory: String = "SENTENCE",
-    adjustmentId: String = "1234"
+    adjustmentId: String = "1234",
   ) =
     SentencingAdjustmentMappingDto(
       nomisAdjustmentId = nomisAdjustmentId,

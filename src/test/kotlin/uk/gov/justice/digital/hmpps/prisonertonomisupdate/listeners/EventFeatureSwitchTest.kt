@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.Integratio
   properties = [
     "feature.event.prison-visit.booked=true",
     "feature.event.prison-visit.revised=false",
-  ]
+  ],
 )
 internal class EventFeatureSwitchTest : IntegrationTestBase() {
 

@@ -15,7 +15,7 @@ import org.springframework.web.reactive.function.client.WebClient
 class WebClientConfiguration(
   @Value("\${api.base.url.nomis}") val nomisApiBaseUri: String,
   @Value("\${api.base.url.mapping}") val mappingBaseUri: String,
-  @Value("\${api.base.url.oauth}") val oauthApiBaseUri: String
+  @Value("\${api.base.url.oauth}") val oauthApiBaseUri: String,
 ) {
 
   @Bean
@@ -52,7 +52,7 @@ class WebClientConfiguration(
   @Bean
   fun authorizedClientManager(
     clientRegistrationRepository: ClientRegistrationRepository?,
-    oAuth2AuthorizedClientService: OAuth2AuthorizedClientService?
+    oAuth2AuthorizedClientService: OAuth2AuthorizedClientService?,
   ): OAuth2AuthorizedClientManager? {
     val authorizedClientProvider = OAuth2AuthorizedClientProviderBuilder.builder().clientCredentials().build()
     val authorizedClientManager =
