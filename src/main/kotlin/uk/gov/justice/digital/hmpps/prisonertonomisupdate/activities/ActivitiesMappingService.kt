@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 
 @Service
 class ActivitiesMappingService(
-  @Qualifier("mappingWebClient") private val webClient: WebClient
+  @Qualifier("mappingWebClient") private val webClient: WebClient,
 ) {
 
   fun createMapping(request: ActivityMappingDto) {
@@ -42,5 +42,5 @@ data class ActivityMappingDto(
   val nomisCourseActivityId: Long,
   val activityScheduleId: Long,
   val mappingType: String,
-  val whenCreated: LocalDateTime? = null
+  val whenCreated: LocalDateTime? = null,
 )

@@ -56,7 +56,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           nomisApi.stubSentenceAdjustmentCreate(
             bookingId = BOOKING_ID,
             sentenceSequence = sentenceSequence,
-            adjustmentId = nomisAdjustmentId
+            adjustmentId = nomisAdjustmentId,
           )
 
           sentencingAdjustmentsApi.stubAdjustmentGet(
@@ -68,7 +68,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             adjustmentType = "RX",
             adjustmentStartPeriod = "2020-07-19",
             comment = "Adjusted for remand",
-            bookingId = BOOKING_ID
+            bookingId = BOOKING_ID,
           )
           publishCreateAdjustmentDomainEvent()
         }
@@ -90,7 +90,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
                 .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
                 .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
-                .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand")))
+                .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand"))),
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -103,7 +103,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
               postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
                 .withRequestBody(matchingJsonPath("nomisAdjustmentId", equalTo(nomisAdjustmentId.toString())))
                 .withRequestBody(matchingJsonPath("nomisAdjustmentCategory", equalTo("SENTENCE")))
-                .withRequestBody(matchingJsonPath("adjustmentId", equalTo(ADJUSTMENT_ID)))
+                .withRequestBody(matchingJsonPath("adjustmentId", equalTo(ADJUSTMENT_ID))),
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -133,7 +133,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         fun setUp() {
           nomisApi.stubKeyDateAdjustmentCreate(
             bookingId = BOOKING_ID,
-            adjustmentId = nomisAdjustmentId
+            adjustmentId = nomisAdjustmentId,
           )
 
           sentencingAdjustmentsApi.stubAdjustmentGet(
@@ -145,7 +145,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             adjustmentType = "ADA",
             adjustmentStartPeriod = "2020-07-19",
             comment = "Adjusted for absence",
-            bookingId = BOOKING_ID
+            bookingId = BOOKING_ID,
           )
           publishCreateAdjustmentDomainEvent()
         }
@@ -167,7 +167,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
                 .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
                 .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
-                .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for absence")))
+                .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for absence"))),
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -180,7 +180,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
               postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
                 .withRequestBody(matchingJsonPath("nomisAdjustmentId", equalTo(nomisAdjustmentId.toString())))
                 .withRequestBody(matchingJsonPath("nomisAdjustmentCategory", equalTo("KEY-DATE")))
-                .withRequestBody(matchingJsonPath("adjustmentId", equalTo(ADJUSTMENT_ID)))
+                .withRequestBody(matchingJsonPath("adjustmentId", equalTo(ADJUSTMENT_ID))),
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -222,7 +222,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             adjustmentType = "RX",
             adjustmentStartPeriod = "2020-07-19",
             comment = "Adjusted for remand",
-            bookingId = BOOKING_ID
+            bookingId = BOOKING_ID,
           )
           publishCreateAdjustmentDomainEvent()
         }
@@ -245,7 +245,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           }
           nomisApi.verify(
             0,
-            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments"))
+            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments")),
           )
         }
       }
@@ -263,7 +263,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             adjustmentType = "ADA",
             adjustmentStartPeriod = "2020-07-19",
             comment = "Adjusted for absence",
-            bookingId = BOOKING_ID
+            bookingId = BOOKING_ID,
           )
           publishCreateAdjustmentDomainEvent()
         }
@@ -286,7 +286,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           }
           nomisApi.verify(
             0,
-            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/adjustments"))
+            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/adjustments")),
           )
         }
       }
@@ -316,7 +316,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             adjustmentType = "RX",
             adjustmentStartPeriod = "2020-07-19",
             comment = "Adjusted for remand",
-            bookingId = BOOKING_ID
+            bookingId = BOOKING_ID,
           )
           publishCreateAdjustmentDomainEvent()
         }
@@ -325,7 +325,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         fun `will callback back to mapping service to check message has not already been processed`() {
           await untilAsserted {
             mappingServer.verify(
-              getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID"))
+              getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID")),
             )
           }
         }
@@ -341,7 +341,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           }
           nomisApi.verify(
             0,
-            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments"))
+            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments")),
           )
         }
       }
@@ -359,7 +359,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             adjustmentType = "ADA",
             adjustmentStartPeriod = "2020-07-19",
             comment = "Adjusted for absence",
-            bookingId = BOOKING_ID
+            bookingId = BOOKING_ID,
           )
           publishCreateAdjustmentDomainEvent()
         }
@@ -368,7 +368,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         fun `will callback back to mapping service to check message has not already been processed`() {
           await untilAsserted {
             mappingServer.verify(
-              getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID"))
+              getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID")),
             )
           }
         }
@@ -384,7 +384,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           }
           nomisApi.verify(
             0,
-            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/adjustments"))
+            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/adjustments")),
           )
         }
       }
@@ -434,7 +434,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
               postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments"))
                 .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("RX")))
                 .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
-                .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
+                .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99"))),
             )
           }
           await untilAsserted {
@@ -504,7 +504,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           await untilAsserted {
             nomisApi.verify(
               2,
-              postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments"))
+              postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments")),
             )
           }
           await untilAsserted {
@@ -520,7 +520,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         fun `will eventually create a mapping after NOMIS adjustment is created`() {
           await untilAsserted {
             mappingServer.verify(
-              postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
+              postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments")),
             )
           }
           await untilAsserted {
@@ -559,7 +559,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           await untilAsserted {
             nomisApi.verify(
               3,
-              postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments"))
+              postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments")),
             )
           }
         }
@@ -601,7 +601,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           }
           nomisApi.verify(
             1,
-            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments"))
+            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments")),
           )
         }
 
@@ -610,7 +610,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           await untilAsserted {
             mappingServer.verify(
               2,
-              postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
+              postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments")),
             )
           }
           await untilAsserted {
@@ -650,12 +650,12 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           await untilAsserted {
             mappingServer.verify(
               4,
-              postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments"))
+              postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments")),
             )
           }
           nomisApi.verify(
             1,
-            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments"))
+            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments")),
           )
         }
 
@@ -680,7 +680,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
       fun setUp() {
         mappingServer.stubGetByAdjustmentId(
           adjustmentId = ADJUSTMENT_ID,
-          nomisAdjustmentId = nomisAdjustmentId
+          nomisAdjustmentId = nomisAdjustmentId,
         )
       }
 
@@ -701,7 +701,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             adjustmentType = "RX",
             adjustmentStartPeriod = "2020-07-19",
             comment = "Adjusted for remand",
-            bookingId = BOOKING_ID
+            bookingId = BOOKING_ID,
           )
           publishUpdateAdjustmentDomainEvent()
         }
@@ -723,7 +723,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
                 .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
                 .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
-                .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand")))
+                .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand"))),
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -760,7 +760,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             adjustmentType = "ADA",
             adjustmentStartPeriod = "2020-07-19",
             comment = "Adjusted for absence",
-            bookingId = BOOKING_ID
+            bookingId = BOOKING_ID,
           )
           publishUpdateAdjustmentDomainEvent()
         }
@@ -782,7 +782,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
                 .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
                 .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
-                .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for absence")))
+                .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for absence"))),
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -814,7 +814,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
       fun setUp() {
         mappingServer.stubGetByAdjustmentId(
           adjustmentId = ADJUSTMENT_ID,
-          nomisAdjustmentId = nomisAdjustmentId
+          nomisAdjustmentId = nomisAdjustmentId,
         )
         sentencingAdjustmentsApi.stubAdjustmentGet(
           adjustmentId = ADJUSTMENT_ID,
@@ -825,7 +825,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           adjustmentType = "RX",
           adjustmentStartPeriod = "2020-07-19",
           comment = "Adjusted for remand",
-          bookingId = BOOKING_ID
+          bookingId = BOOKING_ID,
         )
         publishUpdateAdjustmentDomainEvent()
       }
@@ -849,7 +849,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         }
         nomisApi.verify(
           0,
-          putRequestedFor(urlEqualTo("/sentence-adjustments/$nomisAdjustmentId"))
+          putRequestedFor(urlEqualTo("/sentence-adjustments/$nomisAdjustmentId")),
         )
       }
     }
@@ -861,7 +861,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
       fun setUp() {
         mappingServer.stubGetByAdjustmentIdWithError(
           adjustmentId = ADJUSTMENT_ID,
-          404
+          404,
         )
 
         await untilCallTo {
@@ -898,7 +898,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           mappingServer.stubGetByAdjustmentId(
             adjustmentId = ADJUSTMENT_ID,
             nomisAdjustmentId = nomisAdjustmentId,
-            nomisAdjustmentCategory = "KEY-DATE"
+            nomisAdjustmentCategory = "KEY-DATE",
           )
 
           nomisApi.stubKeyDateAdjustmentDelete(nomisAdjustmentId)
@@ -910,7 +910,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         fun `will retrieve mapping do get the nomis details`() {
           await untilAsserted {
             mappingServer.verify(
-              getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID"))
+              getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID")),
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -920,7 +920,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         fun `will delete the key date adjustment`() {
           await untilAsserted {
             nomisApi.verify(
-              deleteRequestedFor(urlEqualTo("/key-date-adjustments/$nomisAdjustmentId"))
+              deleteRequestedFor(urlEqualTo("/key-date-adjustments/$nomisAdjustmentId")),
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -930,7 +930,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         fun `will also delete the adjustment mapping`() {
           await untilAsserted {
             mappingServer.verify(
-              deleteRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID"))
+              deleteRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID")),
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -959,7 +959,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           mappingServer.stubGetByAdjustmentId(
             adjustmentId = ADJUSTMENT_ID,
             nomisAdjustmentId = nomisAdjustmentId,
-            nomisAdjustmentCategory = "SENTENCE"
+            nomisAdjustmentCategory = "SENTENCE",
           )
 
           nomisApi.stubSentenceAdjustmentDelete(nomisAdjustmentId)
@@ -971,7 +971,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         fun `will retrieve mapping do get the nomis details`() {
           await untilAsserted {
             mappingServer.verify(
-              getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID"))
+              getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID")),
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -981,7 +981,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         fun `will delete the sentence adjustment`() {
           await untilAsserted {
             nomisApi.verify(
-              deleteRequestedFor(urlEqualTo("/sentence-adjustments/$nomisAdjustmentId"))
+              deleteRequestedFor(urlEqualTo("/sentence-adjustments/$nomisAdjustmentId")),
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -991,7 +991,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         fun `will also delete the adjustment mapping`() {
           await untilAsserted {
             mappingServer.verify(
-              deleteRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID"))
+              deleteRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/$ADJUSTMENT_ID")),
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -1043,8 +1043,8 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
               .stringValue(eventType).build(),
-          )
-        ).build()
+          ),
+        ).build(),
     ).get()
   }
 
@@ -1057,8 +1057,8 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
               .stringValue(eventType).build(),
-          )
-        ).build()
+          ),
+        ).build(),
     ).get()
   }
 
@@ -1071,8 +1071,8 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
               .stringValue(eventType).build(),
-          )
-        ).build()
+          ),
+        ).build(),
     ).get()
   }
 

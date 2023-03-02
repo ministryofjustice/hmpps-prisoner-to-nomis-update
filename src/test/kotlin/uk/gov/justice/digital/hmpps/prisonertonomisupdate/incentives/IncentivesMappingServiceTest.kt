@@ -37,7 +37,7 @@ internal class IncentivesMappingServiceTest {
 
       MappingExtension.mappingServer.verify(
         postRequestedFor(urlEqualTo("/mapping/incentives"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -47,7 +47,7 @@ internal class IncentivesMappingServiceTest {
 
       MappingExtension.mappingServer.verify(
         postRequestedFor(urlEqualTo("/mapping/incentives"))
-          .withRequestBody(matchingJsonPath("$.nomisBookingId", equalTo("456")))
+          .withRequestBody(matchingJsonPath("$.nomisBookingId", equalTo("456"))),
       )
     }
 
@@ -73,14 +73,15 @@ internal class IncentivesMappingServiceTest {
           "nomisIncentiveSequence": 3,
           "incentiveId": 1234,
           "mappingType": "TYPE"
-        }""".trimMargin(),
+        }
+        """.trimMargin(),
       )
 
       mappingService.getMappingGivenIncentiveId(1234)
 
       MappingExtension.mappingServer.verify(
         getRequestedFor(urlEqualTo("/mapping/incentives/incentive-id/1234"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -93,7 +94,8 @@ internal class IncentivesMappingServiceTest {
           "nomisIncentiveSequence": 3,
           "incentiveId": 1234,
           "mappingType": "A_TYPE"
-        }""".trimMargin(),
+        }
+        """.trimMargin(),
       )
 
       val data = mappingService.getMappingGivenIncentiveId(1234)

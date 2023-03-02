@@ -37,7 +37,7 @@ internal class VisitsMappingServiceTest {
 
       MappingExtension.mappingServer.verify(
         postRequestedFor(urlEqualTo("/mapping/visits"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -47,7 +47,7 @@ internal class VisitsMappingServiceTest {
 
       MappingExtension.mappingServer.verify(
         postRequestedFor(urlEqualTo("/mapping/visits"))
-          .withRequestBody(matchingJsonPath("$.nomisId", equalTo("456")))
+          .withRequestBody(matchingJsonPath("$.nomisId", equalTo("456"))),
       )
     }
 
@@ -72,14 +72,15 @@ internal class VisitsMappingServiceTest {
           "nomisId": "456",
           "vsipId": "123",
           "mappingType": "ONLINE"
-        }""".trimMargin(),
+        }
+        """.trimMargin(),
       )
 
       mappingService.getMappingGivenNomisId(456)
 
       MappingExtension.mappingServer.verify(
         getRequestedFor(urlEqualTo("/mapping/visits/nomisId/456"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -91,7 +92,8 @@ internal class VisitsMappingServiceTest {
           "nomisId": "456",
           "vsipId": "123",
           "mappingType": "ONLINE"
-        }""".trimMargin(),
+        }
+        """.trimMargin(),
       )
 
       val data = mappingService.getMappingGivenNomisId(456)
@@ -127,14 +129,15 @@ internal class VisitsMappingServiceTest {
           "nomisId": "456",
           "vsipId": "123",
           "mappingType": "ONLINE"
-        }""".trimMargin(),
+        }
+        """.trimMargin(),
       )
 
       mappingService.getMappingGivenVsipId("123")
 
       MappingExtension.mappingServer.verify(
         getRequestedFor(urlEqualTo("/mapping/visits/vsipId/123"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -146,7 +149,8 @@ internal class VisitsMappingServiceTest {
           "nomisId": "456",
           "vsipId": "123",
           "mappingType": "ONLINE"
-        }""".trimMargin(),
+        }
+        """.trimMargin(),
       )
 
       val data = mappingService.getMappingGivenVsipId("123")

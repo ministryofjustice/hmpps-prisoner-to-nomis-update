@@ -20,7 +20,7 @@ class PrisonVisitsService(
   private val nomisApiService: NomisApiService,
   private val mappingService: VisitsMappingService,
   private val visitsUpdateQueueService: VisitsUpdateQueueService,
-  private val telemetryClient: TelemetryClient
+  private val telemetryClient: TelemetryClient,
 ) {
 
   private companion object {
@@ -29,7 +29,6 @@ class PrisonVisitsService(
 
   fun createVisit(visitBookedEvent: VisitBookedEvent) {
     visitsApiService.getVisit(visitBookedEvent.reference).run {
-
       val telemetryMap = mutableMapOf(
         "offenderNo" to prisonerId,
         "prisonId" to prisonId,
@@ -62,7 +61,7 @@ class PrisonVisitsService(
             visitOrderComment = "Created by Book A Prison Visit for visit with reference: ${this.reference}",
             room = this.visitRoom,
             openClosedStatus = this.visitRestriction,
-          )
+          ),
         )
       } catch (e: Exception) {
         telemetryClient.trackEvent("visit-booked-create-failed", telemetryMap)
@@ -74,7 +73,7 @@ class PrisonVisitsService(
 
       try {
         mappingService.createMapping(
-          VisitMappingDto(nomisId = nomisId, vsipId = visitBookedEvent.reference, mappingType = "ONLINE")
+          VisitMappingDto(nomisId = nomisId, vsipId = visitBookedEvent.reference, mappingType = "ONLINE"),
         )
       } catch (e: Exception) {
         telemetryClient.trackEvent("visit-booked-create-map-failed", telemetryMap)
@@ -89,7 +88,7 @@ class PrisonVisitsService(
 
   fun createVisitRetry(context: VisitContext) {
     mappingService.createMapping(
-      VisitMappingDto(nomisId = context.nomisId, vsipId = context.vsipId, mappingType = "ONLINE")
+      VisitMappingDto(nomisId = context.nomisId, vsipId = context.vsipId, mappingType = "ONLINE"),
     )
   }
 
@@ -105,13 +104,12 @@ class PrisonVisitsService(
           .also { telemetryClient.trackEvent("visit-cancelled-mapping-failed", telemetryProperties) }
 
     visitsApiService.getVisit(visitCancelledEvent.reference).run {
-
       nomisApiService.cancelVisit(
         CancelVisitDto(
           offenderNo = visitCancelledEvent.prisonerId,
           nomisVisitId = mappingDto.nomisId,
-          outcome = getNomisOutcomeOrDefault(this)
-        )
+          outcome = getNomisOutcomeOrDefault(this),
+        ),
       )
 
       telemetryProperties["nomisVisitId"] = mappingDto.nomisId
@@ -132,7 +130,6 @@ class PrisonVisitsService(
           .also { telemetryClient.trackEvent("visit-changed-mapping-failed", telemetryProperties) }
 
     visitsApiService.getVisit(visitChangedEvent.reference).run {
-
       nomisApiService.updateVisit(
         visitChangedEvent.prisonerId,
         mappingDto.nomisId,
@@ -142,7 +139,7 @@ class PrisonVisitsService(
           visitorPersonIds = this.visitors.map { it.nomisPersonId },
           room = this.visitRoom,
           openClosedStatus = this.visitRestriction,
-        )
+        ),
       )
 
       telemetryProperties["nomisVisitId"] = mappingDto.nomisId
@@ -171,7 +168,7 @@ data class VisitBookedEvent(
     get() = additionalInformation.reference
 
   data class VisitInformation(
-    val reference: String
+    val reference: String,
   )
 }
 

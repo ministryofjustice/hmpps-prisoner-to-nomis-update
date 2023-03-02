@@ -23,10 +23,10 @@ class ActivitiesUpdateQueueService(
     val sqsMessage = SQSMessage(
       Type = "RETRY",
       Message = objectMapper.writeValueAsString(context),
-      MessageId = "retry-${context.activityScheduleId}"
+      MessageId = "retry-${context.activityScheduleId}",
     )
     val result = sqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(queueUrl).messageBody(objectMapper.writeValueAsString(sqsMessage)).build()
+      SendMessageRequest.builder().queueUrl(queueUrl).messageBody(objectMapper.writeValueAsString(sqsMessage)).build(),
     ).get()
 
     telemetryClient.trackEvent(

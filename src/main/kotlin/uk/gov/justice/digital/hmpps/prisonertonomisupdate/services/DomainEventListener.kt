@@ -17,7 +17,7 @@ const val RETRY_CREATE_MAPPING = "RETRY_CREATE_MAPPING"
 abstract class DomainEventListener(
   internal val service: SynchronisationService,
   internal val objectMapper: ObjectMapper,
-  internal val eventFeatureSwitch: EventFeatureSwitch
+  internal val eventFeatureSwitch: EventFeatureSwitch,
 ) {
 
   private companion object {
@@ -26,7 +26,7 @@ abstract class DomainEventListener(
 
   internal fun onDomainEvent(
     rawMessage: String,
-    processMessage: suspend (eventType: String, message: String) -> Unit
+    processMessage: suspend (eventType: String, message: String) -> Unit,
   ): CompletableFuture<Void> {
     log.debug("Received message {}", rawMessage)
     val sqsMessage: SQSMessage = rawMessage.fromJson()
@@ -51,7 +51,7 @@ abstract class DomainEventListener(
 }
 
 private fun asCompletableFuture(
-  process: suspend () -> Unit
+  process: suspend () -> Unit,
 ): CompletableFuture<Void> {
   return CoroutineScope(Dispatchers.Default).future {
     process()

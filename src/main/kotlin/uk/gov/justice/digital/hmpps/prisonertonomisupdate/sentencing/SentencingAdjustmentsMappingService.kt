@@ -11,7 +11,7 @@ import java.time.LocalDateTime
 
 @Service
 class SentencingAdjustmentsMappingService(
-  @Qualifier("mappingWebClient") private val webClient: WebClient
+  @Qualifier("mappingWebClient") private val webClient: WebClient,
 ) {
 
   suspend fun createMapping(request: SentencingAdjustmentMappingDto) {
@@ -46,5 +46,5 @@ data class SentencingAdjustmentMappingDto(
   val adjustmentId: String,
   val label: String? = null,
   val mappingType: String = "SENTENCING_CREATED",
-  val whenCreated: LocalDateTime? = null
+  val whenCreated: LocalDateTime? = null,
 )

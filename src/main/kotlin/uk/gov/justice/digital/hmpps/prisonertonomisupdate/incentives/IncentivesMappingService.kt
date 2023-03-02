@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 
 @Service
 class IncentivesMappingService(
-  @Qualifier("mappingWebClient") private val webClient: WebClient
+  @Qualifier("mappingWebClient") private val webClient: WebClient,
 ) {
 
   fun createMapping(request: IncentiveMappingDto) {
@@ -38,5 +38,5 @@ data class IncentiveMappingDto(
   val incentiveId: Long,
   val label: String? = null,
   val mappingType: String,
-  val whenCreated: LocalDateTime? = null
+  val whenCreated: LocalDateTime? = null,
 )

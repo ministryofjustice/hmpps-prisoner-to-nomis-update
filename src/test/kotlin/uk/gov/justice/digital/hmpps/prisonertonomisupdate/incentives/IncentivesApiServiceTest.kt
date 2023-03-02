@@ -39,7 +39,7 @@ internal class IncentivesApiServiceTest {
             "iepTime": "2022-12-02T10:00:00",
             "agencyId": "MDI"
           }
-        """.trimIndent()
+        """.trimIndent(),
       )
     }
 
@@ -49,7 +49,7 @@ internal class IncentivesApiServiceTest {
 
       IncentivesApiExtension.incentivesApi.verify(
         WireMock.getRequestedFor(WireMock.urlEqualTo("/iep/reviews/id/1234"))
-          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
       )
     }
 

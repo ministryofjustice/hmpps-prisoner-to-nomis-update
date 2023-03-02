@@ -19,7 +19,7 @@ class ActivitiesDomainEventListener(
   private val activitiesService: ActivitiesService,
   private val objectMapper: ObjectMapper,
   private val eventFeatureSwitch: EventFeatureSwitch,
-  private val telemetryClient: TelemetryClient
+  private val telemetryClient: TelemetryClient,
 ) {
 
   private companion object {
@@ -34,12 +34,14 @@ class ActivitiesDomainEventListener(
     when (sqsMessage.Type) {
       "Notification" -> {
         val (eventType) = objectMapper.readValue<HMPPSDomainEvent>(sqsMessage.Message)
-        if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
-          "activities.activity-schedule.created" -> activitiesService.createActivity(objectMapper.readValue(sqsMessage.Message))
-          "activities.activity-schedule.amended" -> activitiesService.updateActivity(objectMapper.readValue(sqsMessage.Message))
-          "activities.prisoner.allocated" -> activitiesService.createAllocation(objectMapper.readValue(sqsMessage.Message))
-          "activities.prisoner.deallocated" -> activitiesService.deallocate(objectMapper.readValue(sqsMessage.Message))
-          else -> log.info("Received a message I wasn't expecting: {}", eventType)
+        if (eventFeatureSwitch.isEnabled(eventType)) {
+          when (eventType) {
+            "activities.activity-schedule.created" -> activitiesService.createActivity(objectMapper.readValue(sqsMessage.Message))
+            "activities.activity-schedule.amended" -> activitiesService.updateActivity(objectMapper.readValue(sqsMessage.Message))
+            "activities.prisoner.allocated" -> activitiesService.createAllocation(objectMapper.readValue(sqsMessage.Message))
+            "activities.prisoner.deallocated" -> activitiesService.deallocate(objectMapper.readValue(sqsMessage.Message))
+            else -> log.info("Received a message I wasn't expecting: {}", eventType)
+          }
         } else {
           log.warn("Feature switch is disabled for {}", eventType)
         }

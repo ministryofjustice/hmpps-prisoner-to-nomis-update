@@ -39,8 +39,8 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(if (status == 200) "pong" else "some error")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -50,8 +50,8 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
     )
   }
 
@@ -65,10 +65,10 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
               {
                 "error": "some error"
               }
-            """.trimIndent()
+            """.trimIndent(),
           )
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -78,8 +78,8 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
     )
   }
 
@@ -93,10 +93,10 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
               {
                 "error": "some error"
               }
-            """.trimIndent()
+            """.trimIndent(),
           )
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -106,8 +106,8 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
     )
   }
 

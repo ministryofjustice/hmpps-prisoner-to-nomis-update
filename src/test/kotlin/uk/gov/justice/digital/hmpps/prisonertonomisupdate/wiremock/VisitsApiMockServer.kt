@@ -39,8 +39,8 @@ class VisitsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(if (status == 200) "pong" else "some error")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -50,8 +50,8 @@ class VisitsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
     )
   }
 
@@ -67,10 +67,10 @@ class VisitsApiMockServer : WireMockServer(WIREMOCK_PORT) {
               {
                 "error": "some error"
               }
-            """.trimIndent()
+            """.trimIndent(),
           )
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 }

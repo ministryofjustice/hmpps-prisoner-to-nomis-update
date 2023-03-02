@@ -30,7 +30,7 @@ internal class ActivitiesDomainEventsListenerTest {
       activitiesService,
       objectMapper,
       eventFeatureSwitch,
-      telemetryClient
+      telemetryClient,
     )
 
   @Nested
@@ -49,7 +49,7 @@ internal class ActivitiesDomainEventsListenerTest {
         verify(activitiesService).createActivity(
           check {
             assertThat(it.additionalInformation.activityScheduleId).isEqualTo(123L)
-          }
+          },
         )
       }
     }
@@ -79,7 +79,7 @@ internal class ActivitiesDomainEventsListenerTest {
           check {
             assertThat(it.nomisCourseActivityId).isEqualTo(15)
             assertThat(it.activityScheduleId).isEqualTo(12345)
-          }
+          },
         )
 
         verify(telemetryClient).trackEvent(
@@ -87,7 +87,7 @@ internal class ActivitiesDomainEventsListenerTest {
           check {
             assertThat(it["activityScheduleId"]).isEqualTo("12345")
           },
-          isNull()
+          isNull(),
         )
       }
     }

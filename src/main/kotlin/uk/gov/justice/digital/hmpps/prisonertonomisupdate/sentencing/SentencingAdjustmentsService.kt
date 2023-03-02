@@ -15,7 +15,7 @@ class SentencingAdjustmentsService(
   private val sentencingAdjustmentsMappingService: SentencingAdjustmentsMappingService,
   private val sentencingUpdateQueueService: SentencingUpdateQueueService,
   private val telemetryClient: TelemetryClient,
-  objectMapper: ObjectMapper
+  objectMapper: ObjectMapper,
 ) : SynchronisationService(objectMapper = objectMapper) {
   suspend fun createAdjustment(createEvent: AdjustmentCreatedEvent) {
     sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(createEvent.additionalInformation.id)
@@ -26,7 +26,7 @@ class SentencingAdjustmentsService(
             "adjustmentId" to createEvent.additionalInformation.id,
             "offenderNo" to createEvent.additionalInformation.nomsNumber,
           ),
-          null
+          null,
         )
       } ?: let {
       sentencingAdjustmentsApiService.getAdjustment(createEvent.additionalInformation.id).let { adjustment ->
@@ -41,19 +41,19 @@ class SentencingAdjustmentsService(
           if (adjustment.sentenceSequence == null) {
             nomisApiService.createKeyDateAdjustment(
               adjustment.bookingId,
-              nomisAdjustmentRequest
+              nomisAdjustmentRequest,
             )
           } else {
             nomisApiService.createSentenceAdjustment(
               adjustment.bookingId,
               adjustment.sentenceSequence,
-              nomisAdjustmentRequest
+              nomisAdjustmentRequest,
             )
           }.also { createdNomisAdjustment ->
             val mapping = SentencingAdjustmentMappingDto(
               nomisAdjustmentId = createdNomisAdjustment.id,
               nomisAdjustmentCategory = if (adjustment.sentenceSequence == null) "KEY-DATE" else "SENTENCE",
-              adjustmentId = adjustment.adjustmentId
+              adjustmentId = adjustment.adjustmentId,
             )
             kotlin.runCatching {
               sentencingAdjustmentsMappingService.createMapping(mapping)
@@ -69,7 +69,7 @@ class SentencingAdjustmentsService(
                     "nomisAdjustmentId" to createdNomisAdjustment.id.toString(),
                     "offenderNo" to createEvent.additionalInformation.nomsNumber,
                   ),
-                  null
+                  null,
                 )
               }
           }
@@ -80,7 +80,7 @@ class SentencingAdjustmentsService(
               "adjustmentId" to adjustment.adjustmentId,
               "offenderNo" to createEvent.additionalInformation.nomsNumber,
             ),
-            null
+            null,
           )
         }
       }
@@ -102,12 +102,12 @@ class SentencingAdjustmentsService(
             if (adjustment.sentenceSequence == null) {
               nomisApiService.updateKeyDateAdjustment(
                 mapping.nomisAdjustmentId,
-                nomisAdjustmentRequest
+                nomisAdjustmentRequest,
               )
             } else {
               nomisApiService.updateSentenceAdjustment(
                 mapping.nomisAdjustmentId,
-                nomisAdjustmentRequest
+                nomisAdjustmentRequest,
               )
             }.also {
               telemetryClient.trackEvent(
@@ -117,7 +117,7 @@ class SentencingAdjustmentsService(
                   "nomisAdjustmentId" to mapping.nomisAdjustmentId.toString(),
                   "offenderNo" to createEvent.additionalInformation.nomsNumber,
                 ),
-                null
+                null,
               )
             }
           } else {
@@ -127,7 +127,7 @@ class SentencingAdjustmentsService(
                 "adjustmentId" to adjustment.adjustmentId,
                 "offenderNo" to createEvent.additionalInformation.nomsNumber,
               ),
-              null
+              null,
             )
           }
         }
@@ -156,7 +156,7 @@ class SentencingAdjustmentsService(
               "nomisAdjustmentCategory" to mapping.nomisAdjustmentCategory,
               "offenderNo" to createEvent.additionalInformation.nomsNumber,
             ),
-            null
+            null,
           )
         }
       }
@@ -172,7 +172,7 @@ class SentencingAdjustmentsService(
           "nomisAdjustmentId" to message.mapping.nomisAdjustmentId.toString(),
           "offenderNo" to message.offenderNo,
         ),
-        null
+        null,
       )
     }
 

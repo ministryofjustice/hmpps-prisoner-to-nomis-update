@@ -19,7 +19,7 @@ class VisitsDomainEventListener(
   private val prisonVisitsService: PrisonVisitsService,
   private val objectMapper: ObjectMapper,
   private val eventFeatureSwitch: EventFeatureSwitch,
-  private val telemetryClient: TelemetryClient
+  private val telemetryClient: TelemetryClient,
 ) {
 
   private companion object {
@@ -34,11 +34,13 @@ class VisitsDomainEventListener(
     when (sqsMessage.Type) {
       "Notification" -> {
         val (eventType) = objectMapper.readValue<HMPPSDomainEvent>(sqsMessage.Message)
-        if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
-          "prison-visit.booked" -> prisonVisitsService.createVisit(objectMapper.readValue(sqsMessage.Message))
-          "prison-visit.cancelled" -> prisonVisitsService.cancelVisit(objectMapper.readValue(sqsMessage.Message))
-          "prison-visit.changed" -> prisonVisitsService.updateVisit(objectMapper.readValue(sqsMessage.Message))
-          else -> log.info("Received a message I wasn't expecting: {}", eventType)
+        if (eventFeatureSwitch.isEnabled(eventType)) {
+          when (eventType) {
+            "prison-visit.booked" -> prisonVisitsService.createVisit(objectMapper.readValue(sqsMessage.Message))
+            "prison-visit.cancelled" -> prisonVisitsService.cancelVisit(objectMapper.readValue(sqsMessage.Message))
+            "prison-visit.changed" -> prisonVisitsService.updateVisit(objectMapper.readValue(sqsMessage.Message))
+            else -> log.info("Received a message I wasn't expecting: {}", eventType)
+          }
         } else {
           log.warn("Feature switch is disabled for {}", eventType)
         }
