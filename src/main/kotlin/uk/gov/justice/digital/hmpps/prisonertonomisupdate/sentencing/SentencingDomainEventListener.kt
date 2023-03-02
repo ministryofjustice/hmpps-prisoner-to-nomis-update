@@ -8,6 +8,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateSentencingAdjustmentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateSentencingAdjustmentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListener
 import java.util.concurrent.CompletableFuture
 
@@ -16,7 +18,7 @@ class SentencingDomainEventListener(
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
   private val sentencingAdjustmentsService: SentencingAdjustmentsService,
-) : DomainEventListener(
+) : DomainEventListener<String, AdjustmentDetails, NomisCreateId, CreateSentencingAdjustmentRequest, CreateSentencingAdjustmentResponse, SentencingAdjustmentMappingDto>(
   service = sentencingAdjustmentsService,
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch
@@ -33,7 +35,7 @@ class SentencingDomainEventListener(
   ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "sentencing.sentence.adjustment.created" ->
-        sentencingAdjustmentsService.createAdjustment(message.fromJson())
+        sentencingAdjustmentsService.create(message)
 
       "sentencing.sentence.adjustment.updated" ->
         sentencingAdjustmentsService.updateAdjustment(message.fromJson())

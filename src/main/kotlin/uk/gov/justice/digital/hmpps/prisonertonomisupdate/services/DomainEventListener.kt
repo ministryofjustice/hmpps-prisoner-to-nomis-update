@@ -14,8 +14,8 @@ import java.util.concurrent.CompletableFuture
 
 const val RETRY_CREATE_MAPPING = "RETRY_CREATE_MAPPING"
 
-abstract class DomainEventListener(
-  internal val service: SynchronisationService,
+abstract class DomainEventListener<DPSID, DPSENTITY, NOMISCREATEID, NOMISCREATEENTITY, NOMISCREATERESPONSE, MAPPING>(
+  internal val service: SynchronisationService<DPSID, DPSENTITY, NOMISCREATEID, NOMISCREATEENTITY, NOMISCREATERESPONSE, MAPPING>,
   internal val objectMapper: ObjectMapper,
   internal val eventFeatureSwitch: EventFeatureSwitch
 ) {
@@ -41,7 +41,7 @@ abstract class DomainEventListener(
           }
         }
 
-        RETRY_CREATE_MAPPING -> service.retryCreateMapping(sqsMessage.Message)
+        RETRY_CREATE_MAPPING -> service.doRetryCreateMapping(sqsMessage.Message)
       }
     }
   }

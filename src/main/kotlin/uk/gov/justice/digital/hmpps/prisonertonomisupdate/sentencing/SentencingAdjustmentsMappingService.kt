@@ -7,12 +7,13 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingService
 import java.time.LocalDateTime
 
 @Service
 class SentencingAdjustmentsMappingService(
   @Qualifier("mappingWebClient") private val webClient: WebClient
-) {
+) : MappingService<String, SentencingAdjustmentMappingDto>() {
 
   suspend fun createMapping(request: SentencingAdjustmentMappingDto) {
     webClient.post()
@@ -38,6 +39,9 @@ class SentencingAdjustmentsMappingService(
       .uri("/mapping/sentencing/adjustments/adjustment-id/$adjustmentId")
       .retrieve()
       .awaitBody()
+
+  override suspend fun getMappingFromDPSId(dpsId: String): SentencingAdjustmentMappingDto? =
+    getMappingGivenAdjustmentId(dpsId)
 }
 
 data class SentencingAdjustmentMappingDto(
