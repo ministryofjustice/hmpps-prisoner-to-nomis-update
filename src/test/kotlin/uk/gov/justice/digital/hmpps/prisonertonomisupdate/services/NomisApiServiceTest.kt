@@ -286,6 +286,46 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
+  inner class UpdateScheduleInstances {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() {
+      NomisApiExtension.nomisApi.stubScheduleInstancesUpdate(1L)
+
+      nomisApiService.updateScheduleInstances(1L, updateScheduleInstances())
+
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/1/schedules"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will put data to nomis api`() {
+      NomisApiExtension.nomisApi.stubScheduleInstancesUpdate(1L)
+
+      nomisApiService.updateScheduleInstances(1L, updateScheduleInstances())
+
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/1/schedules"))
+          .withRequestBody(matchingJsonPath("$[0].date", equalTo("2023-02-10")))
+          .withRequestBody(matchingJsonPath("$[0].startTime", equalTo("08:00")))
+          .withRequestBody(matchingJsonPath("$[0].endTime", equalTo("11:00")))
+          .withRequestBody(matchingJsonPath("$[1].date", equalTo("2023-02-11"))),
+      )
+    }
+
+    @Test
+    fun `when any error response is received an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubScheduleInstancesUpdateWithError(1, 503)
+
+      assertThatThrownBy {
+        nomisApiService.updateScheduleInstances(1L, updateScheduleInstances())
+      }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+  }
+
+  @Nested
   inner class Allocation {
 
     @Test
@@ -770,6 +810,11 @@ fun updateActivity() = UpdateActivityRequest(
   internalLocationId = 703000,
   payRates = emptyList(),
   scheduleRules = emptyList(),
+)
+
+fun updateScheduleInstances() = listOf(
+  ScheduleRequest(date = LocalDate.parse("2023-02-10"), startTime = LocalTime.parse("08:00"), endTime = LocalTime.parse("11:00")),
+  ScheduleRequest(date = LocalDate.parse("2023-02-11"), startTime = LocalTime.parse("08:00"), endTime = LocalTime.parse("11:00")),
 )
 
 fun newAllocation() = CreateOffenderProgramProfileRequest(
