@@ -114,6 +114,33 @@ class ActivitiesService(
       scheduleRules = mapRules(this.slots),
     )
 
+  fun updateScheduleInstances(amendInstancesEvent: ScheduleDomainEvent) {
+    val telemetryMap = mutableMapOf("activityScheduleId" to amendInstancesEvent.additionalInformation.activityScheduleId.toString())
+
+    runCatching {
+      val activitySchedule = activitiesApiService.getActivitySchedule(amendInstancesEvent.additionalInformation.activityScheduleId)
+
+      val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(activitySchedule.id).nomisCourseActivityId
+        .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
+
+      activitySchedule.toScheduleRequests()
+        .also { nomisApiService.updateScheduleInstances(nomisCourseActivityId, it) }
+    }.onSuccess {
+      telemetryClient.trackEvent("schedule-instances-amend-event", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("schedule-instances-amend-failed", telemetryMap, null)
+      throw e
+    }
+  }
+
+  private fun ActivitySchedule.toScheduleRequests() = instances.map {
+    ScheduleRequest(
+      date = it.date,
+      startTime = LocalTime.parse(it.startTime),
+      endTime = LocalTime.parse(it.endTime),
+    )
+  }
+
   fun createAllocation(allocationEvent: AllocationDomainEvent) {
     activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
       mappingService.getMappingGivenActivityScheduleId(allocation.scheduleId).let { mapping ->
