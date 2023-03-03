@@ -5,6 +5,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateSentencingAdjustmentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingTelemetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.SynchronisationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateSentencingAdjustmentRequest
@@ -14,10 +15,14 @@ class SentencingAdjustmentsService(
   private val sentencingAdjustmentsApiService: SentencingAdjustmentsApiService,
   private val nomisApiService: NomisApiService,
   private val sentencingAdjustmentsMappingService: SentencingAdjustmentsMappingService,
-  private val sentencingRetryQueueService: SentencingRetryQueueService,
-  private val telemetryClient: TelemetryClient,
+  sentencingRetryQueueService: SentencingRetryQueueService,
+  telemetryClient: TelemetryClient,
   objectMapper: ObjectMapper,
-) : SynchronisationService(objectMapper = objectMapper) {
+) : SynchronisationService(
+  objectMapper = objectMapper,
+  telemetryClient = telemetryClient,
+  retryQueueService = sentencingRetryQueueService,
+) {
   suspend fun createAdjustment(createEvent: AdjustmentCreatedEvent) {
     sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(createEvent.additionalInformation.id)
       ?.let {
@@ -56,24 +61,14 @@ class SentencingAdjustmentsService(
               nomisAdjustmentCategory = if (adjustment.sentenceSequence == null) "KEY-DATE" else "SENTENCE",
               adjustmentId = adjustment.adjustmentId,
             )
-            val telemetryAttributes = mapOf<String, String>(
+            val telemetryAttributes = mapOf(
               "adjustmentId" to adjustment.adjustmentId,
               "nomisAdjustmentId" to createdNomisAdjustment.id.toString(),
               "offenderNo" to createEvent.additionalInformation.nomsNumber,
             )
-            kotlin.runCatching {
+            tryCreateMapping(mapping, MappingTelemetry("sentencing-adjustment-create-success", telemetryAttributes)) {
               sentencingAdjustmentsMappingService.createMapping(mapping)
             }
-              .onFailure {
-                sentencingRetryQueueService.sendMessage(mapping, telemetryAttributes)
-              }
-              .onSuccess {
-                telemetryClient.trackEvent(
-                  "sentencing-adjustment-create-success",
-                  telemetryAttributes,
-                  null,
-                )
-              }
           }
         } else {
           telemetryClient.trackEvent(
