@@ -67,7 +67,7 @@ class SentencingAdjustmentsService(
               "offenderNo" to createEvent.additionalInformation.nomsNumber,
             )
             tryCreateMapping(mapping, MappingTelemetry("sentencing-adjustment-create-success", telemetryAttributes)) {
-              sentencingAdjustmentsMappingService.createMapping(mapping)
+              sentencingAdjustmentsMappingService.createMapping(it)
             }
           }
         } else {
