@@ -156,6 +156,16 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubScheduleInstancesUpdate(nomisActivityId: Long) {
+    stubFor(
+      put("/activities/$nomisActivityId/schedules").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200),
+      ),
+    )
+  }
+
   fun stubActivityCreateWithError(status: Int = 500) {
     stubFor(
       post("/activities").willReturn(
@@ -170,6 +180,17 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubActivityUpdateWithError(nomisActivityId: Long, status: Int = 500) {
     stubFor(
       put("/activities/$nomisActivityId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubScheduleInstancesUpdateWithError(nomisActivityId: Long, status: Int = 500) {
+    stubFor(
+      put("/activities/$nomisActivityId/schedules").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)

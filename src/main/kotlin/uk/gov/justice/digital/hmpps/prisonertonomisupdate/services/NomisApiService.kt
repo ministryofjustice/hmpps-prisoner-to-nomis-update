@@ -76,6 +76,15 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .block()!!
   }
 
+  fun updateScheduleInstances(courseActivityId: Long, request: List<ScheduleRequest>) {
+    webClient.put()
+      .uri("/activities/$courseActivityId/schedules")
+      .bodyValue(request)
+      .retrieve()
+      .toBodilessEntity()
+      .block()!!
+  }
+
   fun createAllocation(
     courseActivityId: Long,
     request: CreateOffenderProgramProfileRequest,
