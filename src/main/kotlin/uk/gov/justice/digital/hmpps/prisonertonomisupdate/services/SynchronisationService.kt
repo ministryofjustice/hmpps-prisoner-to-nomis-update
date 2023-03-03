@@ -14,10 +14,10 @@ abstract class SynchronisationService(
   internal inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
 
-  suspend fun tryCreateMapping(
-    mapping: Any,
+  suspend fun <T : Any> tryCreateMapping(
+    mapping: T,
     telemetry: MappingTelemetry,
-    createMapping: suspend (mapping: Any) -> Unit,
+    createMapping: suspend (mapping: T) -> Unit,
   ) {
     kotlin.runCatching {
       createMapping(mapping)
