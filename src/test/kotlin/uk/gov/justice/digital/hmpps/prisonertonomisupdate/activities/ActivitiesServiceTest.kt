@@ -19,6 +19,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityCategory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityLite
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityMinimumEducationLevel
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityPay
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
@@ -682,10 +683,18 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
     payPerSession = ActivityLite.PayPerSession.h,
     minimumIncentiveLevel = "Basic",
     minimumIncentiveNomisCode = "BAS",
+    minimumEducationLevel = listOf(
+      ActivityMinimumEducationLevel(
+        id = 123456,
+        educationLevelCode = "Basic",
+        educationLevelDescription = "Basic",
+      ),
+    ),
   ),
   slots = emptyList(),
   startDate = LocalDate.now(),
   endDate = endDate,
+  runsOnBankHoliday = true,
 )
 
 private fun newActivity(): Activity = Activity(
@@ -721,6 +730,13 @@ private fun newActivity(): Activity = Activity(
   minimumIncentiveLevel = "Basic",
   minimumIncentiveNomisCode = "BAS",
   riskLevel = "high",
+  minimumEducationLevel = listOf(
+    ActivityMinimumEducationLevel(
+      id = 123456,
+      educationLevelCode = "Basic",
+      educationLevelDescription = "Basic",
+    ),
+  ),
 )
 
 private fun newAllocation(): Allocation {
