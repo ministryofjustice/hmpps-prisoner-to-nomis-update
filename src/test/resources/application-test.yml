@@ -35,7 +35,7 @@ hmpps.sqs:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"activities.activity-schedule.created\", \"activities.activity-schedule.amended\", \"activities.prisoner.allocated\", \"activities.prisoner.deallocated\"]}"
+      subscribeFilter: "{\"eventType\":[\"activities.activity-schedule.created\", \"activities.activity-schedule.amended\", \"activities.scheduled-instances.amended\", \"activities.prisoner.allocated\", \"activities.prisoner.deallocated\"]}"
       dlqMaxReceiveCount: 1
       visibilityTimeout: 1
     sentencing:

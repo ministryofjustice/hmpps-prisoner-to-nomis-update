@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityPay
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleSlot
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateOffenderProgramProfileRequest
@@ -110,8 +111,8 @@ class ActivitiesService(
     UpdateActivityRequest(
       endDate = endDate,
       internalLocationId = internalLocation?.id?.toLong(),
-      payRates = mapRates(pay),
-      scheduleRules = mapRules(this.slots),
+      payRates = pay.toPayRateRequests(),
+      scheduleRules = slots.toScheduleRuleRequests(),
     )
 
   fun updateScheduleInstances(amendInstancesEvent: ScheduleDomainEvent) {
@@ -123,7 +124,7 @@ class ActivitiesService(
       val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(activitySchedule.id).nomisCourseActivityId
         .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
 
-      activitySchedule.toScheduleRequests()
+      activitySchedule.instances.toScheduleRequests()
         .also { nomisApiService.updateScheduleInstances(nomisCourseActivityId, it) }
     }.onSuccess {
       telemetryClient.trackEvent("schedule-instances-amend-event", telemetryMap, null)
@@ -133,13 +134,14 @@ class ActivitiesService(
     }
   }
 
-  private fun ActivitySchedule.toScheduleRequests() = instances.map {
-    ScheduleRequest(
-      date = it.date,
-      startTime = LocalTime.parse(it.startTime),
-      endTime = LocalTime.parse(it.endTime),
-    )
-  }
+  private fun List<ScheduledInstance>.toScheduleRequests() =
+    map {
+      ScheduleRequest(
+        date = it.date,
+        startTime = LocalTime.parse(it.startTime),
+        endTime = LocalTime.parse(it.endTime),
+      )
+    }
 
   fun createAllocation(allocationEvent: AllocationDomainEvent) {
     activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
@@ -214,19 +216,13 @@ class ActivitiesService(
       prisonId = activity.prisonCode,
       internalLocationId = schedule.internalLocation?.id?.toLong(),
       capacity = schedule.capacity,
-      payRates = mapRates(activity.pay),
+      payRates = activity.pay.toPayRateRequests(),
       description = toNomisActivityDescription(activity.summary, schedule.description),
       minimumIncentiveLevelCode = activity.minimumIncentiveNomisCode,
       programCode = activity.category.code,
       payPerSession = activity.payPerSession.value,
-      schedules = schedule.instances.map { i ->
-        ScheduleRequest(
-          date = i.date,
-          startTime = LocalTime.parse(i.startTime),
-          endTime = LocalTime.parse(i.endTime),
-        )
-      },
-      scheduleRules = mapRules(schedule.slots),
+      schedules = schedule.instances.toScheduleRequests(),
+      scheduleRules = schedule.slots.toScheduleRuleRequests(),
     )
   }
 
@@ -239,8 +235,8 @@ class ActivitiesService(
     return description
   }
 
-  private fun mapRules(slots: List<ActivityScheduleSlot>): List<ScheduleRuleRequest> =
-    slots.map { slot ->
+  private fun List<ActivityScheduleSlot>.toScheduleRuleRequests(): List<ScheduleRuleRequest> =
+    map { slot ->
       ScheduleRuleRequest(
         startTime = LocalTime.parse(slot.startTime),
         endTime = LocalTime.parse(slot.endTime),
@@ -254,8 +250,8 @@ class ActivitiesService(
       )
     }
 
-  private fun mapRates(pay: List<ActivityPay>): List<PayRateRequest> =
-    pay.map { p ->
+  private fun List<ActivityPay>.toPayRateRequests(): List<PayRateRequest> =
+    map { p ->
       PayRateRequest(
         incentiveLevel = p.incentiveNomisCode,
         payBand = p.prisonPayBand.nomisPayBand.toString(),
