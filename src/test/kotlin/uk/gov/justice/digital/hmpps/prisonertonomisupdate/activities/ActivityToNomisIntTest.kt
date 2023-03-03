@@ -366,7 +366,14 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     },
     "riskLevel": "High",
     "minimumIncentiveLevel": "Basic",
-    "minimumIncentiveNomisCode": "BAS"
+    "minimumIncentiveNomisCode": "BAS",
+    "minimumEducationLevel": [
+      {
+        "id": 123456,
+        "educationLevelCode": "Basic",
+        "educationLevelDescription": "Basic"
+      }
+    ]
   },
   "slots": [{
     "id"        : 555666001,
@@ -395,7 +402,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     "sundayFlag": false
   }],
   "startDate" : "2023-01-20",
-  "endDate" : "2023-01-23"
+  "endDate" : "2023-01-23",
+  "runsOnBankHoliday": true
 }
     """.trimIndent()
 
@@ -444,7 +452,14 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
   "minimumIncentiveLevel": "Basic",
   "minimumIncentiveNomisCode": "BAS",
   "createdTime": "2023-01-12T17:26:18.332Z",
-  "createdBy": "Adam Smith"
+  "createdBy": "Adam Smith",
+  "minimumEducationLevel": [
+    {
+      "id": 123456,
+      "educationLevelCode": "Basic",
+      "educationLevelDescription": "Basic"
+    }
+  ]
 }
    """
 

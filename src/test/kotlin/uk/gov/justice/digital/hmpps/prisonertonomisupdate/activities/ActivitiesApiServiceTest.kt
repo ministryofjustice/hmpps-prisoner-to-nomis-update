@@ -113,7 +113,14 @@ internal class ActivitiesApiServiceTest {
           },
           "riskLevel": "High",
           "minimumIncentiveLevel": "Basic",
-          "minimumIncentiveNomisCode": "BAS"
+        "minimumIncentiveNomisCode": "BAS",
+          "minimumEducationLevel": [
+            {
+              "id": 123456,
+              "educationLevelCode": "Basic",
+              "educationLevelDescription": "Basic"
+            }
+          ]
         },
         "slots": [
           {
@@ -130,7 +137,8 @@ internal class ActivitiesApiServiceTest {
             "sundayFlag": false
           }
         ],
-        "startDate" : "2023-01-20"
+        "startDate" : "2023-01-20",
+        "runsOnBankHoliday": true
       }
         """.trimIndent(),
       )
@@ -299,7 +307,14 @@ internal class ActivitiesApiServiceTest {
             },
             "riskLevel": "High",
             "minimumIncentiveLevel": "Basic",
-            "minimumIncentiveNomisCode": "BAS"
+            "minimumIncentiveNomisCode": "BAS",
+            "minimumEducationLevel": [
+              {
+                "id": 123456,
+                "educationLevelCode": "Basic",
+                "educationLevelDescription": "Basic"
+              }
+            ]
           },
           "slots": [
             {
@@ -316,7 +331,8 @@ internal class ActivitiesApiServiceTest {
               "sundayFlag": false
             }
           ],
-          "startDate" : "2023-01-20"
+          "startDate" : "2023-01-20",
+          "runsOnBankHoliday": true
         }
       ],
       "waitingList": [
@@ -352,7 +368,14 @@ internal class ActivitiesApiServiceTest {
       "minimumIncentiveLevel": "Basic",
       "minimumIncentiveNomisCode": "BAS",
       "createdTime": "2022-12-30T16:09:11.127Z",
-      "createdBy": "Adam Smith"
+      "createdBy": "Adam Smith",
+      "minimumEducationLevel": [
+        {
+          "id": 123456,
+          "educationLevelCode": "Basic",
+          "educationLevelDescription": "Basic"
+        }
+      ]
     }
         """.trimIndent(),
       )
