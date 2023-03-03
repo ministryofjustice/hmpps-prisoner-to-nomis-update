@@ -201,6 +201,54 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  inner class UpdateScheduleInstances {
+    @Test
+    fun `should update scheduled instances`() {
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildApiActivityScheduleDtoJsonResponse())
+      mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildMappingDtoResponse())
+      nomisApi.stubScheduleInstancesUpdate(COURSE_ACTIVITY_ID)
+
+      awsSnsClient.publish(amendScheduledInstancesEvent())
+
+      await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/schedules/$ACTIVITY_SCHEDULE_ID"))) }
+      await untilAsserted { mappingServer.verify(getRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/$ACTIVITY_SCHEDULE_ID"))) }
+      await untilAsserted {
+        nomisApi.verify(
+          putRequestedFor(urlEqualTo("/activities/$COURSE_ACTIVITY_ID/schedules"))
+            .withRequestBody(matchingJsonPath("$[0].date", equalTo("2023-01-13")))
+            .withRequestBody(matchingJsonPath("$[0].startTime", equalTo("09:00")))
+            .withRequestBody(matchingJsonPath("$[0].endTime", equalTo("10:00")))
+            .withRequestBody(matchingJsonPath("$[1].date", equalTo("2023-01-14")))
+            .withRequestBody(matchingJsonPath("$[1].startTime", equalTo("14:00")))
+            .withRequestBody(matchingJsonPath("$[1].endTime", equalTo("16:30"))),
+        )
+      }
+      assertThat(awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get()).isEqualTo(0)
+    }
+
+    @Test
+    fun `should put messages on DLQ if external API call fails`() {
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildApiActivityScheduleDtoJsonResponse())
+      mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildMappingDtoResponse())
+      nomisApi.stubScheduleInstancesUpdateWithError(COURSE_ACTIVITY_ID)
+
+      awsSnsClient.publish(amendScheduledInstancesEvent())
+
+      await untilAsserted { assertThat(awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get()).isEqualTo(1) }
+    }
+
+    private fun amendScheduledInstancesEvent(): PublishRequest? =
+      PublishRequest.builder().topicArn(topicArn)
+        .message(activityMessagePayload("activities.scheduled-instances.amended", ACTIVITY_SCHEDULE_ID))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue("activities.scheduled-instances.amended").build(),
+          ),
+        ).build()
+  }
+
+  @Nested
   inner class AllocatePrisoner {
     @Test
     fun `will consume an allocation message`() {

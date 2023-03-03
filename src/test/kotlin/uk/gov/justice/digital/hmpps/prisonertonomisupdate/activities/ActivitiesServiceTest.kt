@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyList
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
@@ -23,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.InternalLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.PrisonPayBand
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.OffenderProgramProfileResponse
@@ -323,6 +325,136 @@ internal class ActivitiesServiceTest {
   }
 
   @Nested
+  inner class AmendScheduleInstances {
+
+    private fun aDomainEvent() =
+      ScheduleDomainEvent(
+        eventType = "activities.scheduled-instances.amended",
+        additionalInformation = ScheduleAdditionalInformation(ACTIVITY_SCHEDULE_ID),
+        version = "1.0",
+        description = "description",
+        occurredAt = LocalDateTime.now(),
+      )
+
+    @Test
+    fun `should throw and raise telemetry if cannot load Activity Schedule`() {
+      whenever(activitiesApiService.getActivitySchedule(anyLong()))
+        .thenThrow(WebClientResponseException.NotFound::class.java)
+
+      assertThatThrownBy {
+        activitiesService.updateScheduleInstances(aDomainEvent())
+      }.isInstanceOf(WebClientResponseException.NotFound::class.java)
+
+      verify(activitiesApiService).getActivitySchedule(ACTIVITY_SCHEDULE_ID)
+      verify(telemetryClient).trackEvent(
+        eq("schedule-instances-amend-failed"),
+        check<Map<String, String>> {
+          assertThat(it).containsAllEntriesOf(mapOf("activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()))
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should throw and raise telemetry if cannot find mappings`() {
+      whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
+      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong()))
+        .thenThrow(WebClientResponseException.NotFound::class.java)
+
+      assertThatThrownBy {
+        activitiesService.updateScheduleInstances(aDomainEvent())
+      }.isInstanceOf(WebClientResponseException.NotFound::class.java)
+
+      verify(mappingService).getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)
+      verify(telemetryClient).trackEvent(
+        eq("schedule-instances-amend-failed"),
+        check<Map<String, String>> {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf("activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should throw and raise telemetry if fails to update Nomis`() {
+      whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
+      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
+        ActivityMappingDto(
+          NOMIS_COURSE_ACTIVITY_ID,
+          ACTIVITY_SCHEDULE_ID,
+          "ACTIVITY_CREATED",
+          LocalDateTime.now(),
+        ),
+      )
+      whenever(nomisApiService.updateScheduleInstances(anyLong(), anyList()))
+        .thenThrow(WebClientResponseException.ServiceUnavailable::class.java)
+
+      assertThatThrownBy {
+        activitiesService.updateScheduleInstances(aDomainEvent())
+      }.isInstanceOf(WebClientResponseException.ServiceUnavailable::class.java)
+
+      verify(nomisApiService).updateScheduleInstances(eq(NOMIS_COURSE_ACTIVITY_ID), any())
+      verify(telemetryClient).trackEvent(
+        eq("schedule-instances-amend-failed"),
+        check<Map<String, String>> {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
+              "nomisCourseActivityId" to NOMIS_COURSE_ACTIVITY_ID.toString(),
+            ),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should raise telemetry when update of Nomis successful`() {
+      whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule(endDate = LocalDate.now().plusDays(1)))
+      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
+        ActivityMappingDto(
+          NOMIS_COURSE_ACTIVITY_ID,
+          ACTIVITY_SCHEDULE_ID,
+          "ACTIVITY_CREATED",
+          LocalDateTime.now(),
+        ),
+      )
+
+      activitiesService.updateScheduleInstances(aDomainEvent())
+
+      verify(nomisApiService).updateScheduleInstances(
+        eq(NOMIS_COURSE_ACTIVITY_ID),
+        check {
+          with(it[0]) {
+            assertThat(date).isEqualTo("2023-02-10")
+            assertThat(startTime).isEqualTo("08:00")
+            assertThat(endTime).isEqualTo("11:00")
+          }
+          with(it[1]) {
+            assertThat(date).isEqualTo("2023-02-11")
+            assertThat(startTime).isEqualTo("08:00")
+            assertThat(endTime).isEqualTo("11:00")
+          }
+        },
+      )
+      verify(telemetryClient).trackEvent(
+        eq("schedule-instances-amend-event"),
+        check<Map<String, String>> {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
+              "nomisCourseActivityId" to NOMIS_COURSE_ACTIVITY_ID.toString(),
+            ),
+          )
+        },
+        isNull(),
+      )
+    }
+  }
+
+  @Nested
   inner class Allocate {
 
     @Test
@@ -505,7 +637,24 @@ internal class ActivitiesServiceTest {
 
 private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = ActivitySchedule(
   id = ACTIVITY_SCHEDULE_ID,
-  instances = emptyList(),
+  instances = listOf(
+    ScheduledInstance(
+      id = 1,
+      date = LocalDate.parse("2023-02-10"),
+      startTime = "08:00",
+      endTime = "11:00",
+      cancelled = false,
+      attendances = listOf(),
+    ),
+    ScheduledInstance(
+      id = 2,
+      date = LocalDate.parse("2023-02-11"),
+      startTime = "08:00",
+      endTime = "11:00",
+      cancelled = false,
+      attendances = listOf(),
+    ),
+  ),
   allocations = emptyList(),
   description = "description",
   suspensions = emptyList(),
