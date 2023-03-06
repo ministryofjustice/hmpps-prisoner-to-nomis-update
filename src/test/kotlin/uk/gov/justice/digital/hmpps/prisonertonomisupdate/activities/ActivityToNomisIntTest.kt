@@ -14,6 +14,10 @@ import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
+import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.activityMessagePayload
@@ -105,6 +109,44 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildApiActivityDtoJsonResponse())
       mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
       nomisApi.stubActivityCreate("""{ "courseActivityId": $COURSE_ACTIVITY_ID }""")
+      mappingServer.stubCreateActivityWithErrorFollowedBySuccess()
+
+      awsSnsClient.publish(
+        PublishRequest.builder().topicArn(topicArn)
+          .message(activityMessagePayload("activities.activity-schedule.created", ACTIVITY_SCHEDULE_ID))
+          .messageAttributes(
+            mapOf(
+              "eventType" to MessageAttributeValue.builder().dataType("String")
+                .stringValue("activities.activity-schedule.created").build(),
+            ),
+          ).build(),
+      ).get()
+
+      await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID") } matches { it == 1 }
+      await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
+      await untilAsserted { verify(telemetryClient).trackEvent(eq("activity-create-map-failed"), any(), isNull()) }
+      await untilAsserted {
+        mappingServer.verify(
+          exactly(2),
+          WireMock.postRequestedFor(urlEqualTo("/mapping/activities"))
+            .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$COURSE_ACTIVITY_ID")))
+            .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
+            .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED"))),
+        )
+      }
+
+      // no messages sent to DLQ
+      await untilCallTo {
+        awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get()
+      } matches { it == 0 }
+    }
+
+    @Test
+    fun `constant mapping failure will result in DLQ message which can be retried`() {
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildApiActivityScheduleDtoJsonResponse())
+      activitiesApi.stubGetActivity(ACTIVITY_ID, buildApiActivityDtoJsonResponse())
+      mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
+      nomisApi.stubActivityCreate("""{ "courseActivityId": $COURSE_ACTIVITY_ID }""")
       mappingServer.stubCreateActivityWithError()
 
       awsSnsClient.publish(
@@ -185,7 +227,11 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
 
       awsSnsClient.publish(amendActivityEvent()).get()
 
-      await untilAsserted { assertThat(awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get()).isEqualTo(1) }
+      await untilAsserted {
+        assertThat(
+          awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get(),
+        ).isEqualTo(1)
+      }
       nomisApi.verify(exactly(0), putRequestedFor(urlEqualTo("/activities/$COURSE_ACTIVITY_ID")))
     }
 
@@ -234,7 +280,11 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
 
       awsSnsClient.publish(amendScheduledInstancesEvent())
 
-      await untilAsserted { assertThat(awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get()).isEqualTo(1) }
+      await untilAsserted {
+        assertThat(
+          awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get(),
+        ).isEqualTo(1)
+      }
     }
 
     private fun amendScheduledInstancesEvent(): PublishRequest? =
@@ -463,7 +513,10 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
 }
    """
 
-  fun buildMappingDtoResponse(nomisActivityId: Long = COURSE_ACTIVITY_ID, activityScheduleId: Long = ACTIVITY_SCHEDULE_ID) =
+  fun buildMappingDtoResponse(
+    nomisActivityId: Long = COURSE_ACTIVITY_ID,
+    activityScheduleId: Long = ACTIVITY_SCHEDULE_ID,
+  ) =
     """{
           "nomisCourseActivityId": $nomisActivityId,
           "activityScheduleId": $activityScheduleId,
