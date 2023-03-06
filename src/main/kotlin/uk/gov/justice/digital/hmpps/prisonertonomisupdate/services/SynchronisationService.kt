@@ -16,7 +16,7 @@ abstract class SynchronisationService(
 
   suspend fun <T : Any> tryCreateMapping(
     mapping: T,
-    telemetry: MappingTelemetry,
+    telemetry: MappingTelemetry = MappingTelemetry(),
     createMapping: suspend (mapping: T) -> Unit,
   ) {
     kotlin.runCatching {
@@ -24,18 +24,28 @@ abstract class SynchronisationService(
     }
       .onFailure {
         retryQueueService.sendMessage(mapping, telemetry.attributes)
+        telemetry.failureName?.run {
+          telemetryClient.trackEvent(
+            telemetry.failureName,
+            telemetry.attributes,
+            null,
+          )
+        }
       }
       .onSuccess {
-        telemetryClient.trackEvent(
-          telemetry.name,
-          telemetry.attributes,
-          null,
-        )
+        telemetry.name.run {
+          telemetryClient.trackEvent(
+            telemetry.name,
+            telemetry.attributes,
+            null,
+          )
+        }
       }
   }
 }
 
 data class MappingTelemetry(
-  val name: String,
-  val attributes: Map<String, String>,
+  val name: String? = null,
+  val failureName: String? = null,
+  val attributes: Map<String, String> = mapOf(),
 )
