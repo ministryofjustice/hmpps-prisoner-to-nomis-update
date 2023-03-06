@@ -84,8 +84,8 @@ fun activityCreatedMessage(identifier: Long) = """
 
 fun activityRetryMessage() = """
       {
-        "Type":"RETRY",
-        "Message":"{\"activityScheduleId\":12345,\"nomisCourseActivityId\":15}",
+        "Type":"RETRY_CREATE_MAPPING",
+        "Message":"{\"mapping\": {\"activityScheduleId\":12345,\"nomisCourseActivityId\":15}, \"telemetryAttributes\": {}}",
         "MessageId":"retry-15"
       }
 """.trimIndent()

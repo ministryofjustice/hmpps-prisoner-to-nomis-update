@@ -124,7 +124,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
 
       await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID") } matches { it == 1 }
       await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
-      await untilAsserted { verify(telemetryClient).trackEvent(eq("activity-create-map-failed"), any(), isNull()) }
+      await untilAsserted { verify(telemetryClient).trackEvent(eq("activity-create-mapping-retry"), any(), isNull()) }
       await untilAsserted {
         mappingServer.verify(
           exactly(2),

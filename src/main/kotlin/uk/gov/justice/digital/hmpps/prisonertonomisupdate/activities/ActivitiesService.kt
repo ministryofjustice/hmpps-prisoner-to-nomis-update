@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -11,12 +12,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateOffenderProgramProfileRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.EndOffenderProgramProfileRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingTelemetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRuleRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.SynchronisationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateActivityRequest
 import java.lang.Integer.min
 import java.math.BigDecimal
@@ -28,15 +32,20 @@ class ActivitiesService(
   private val activitiesApiService: ActivitiesApiService,
   private val nomisApiService: NomisApiService,
   private val mappingService: ActivitiesMappingService,
-  private val activitiesUpdateQueueService: ActivitiesUpdateQueueService,
-  private val telemetryClient: TelemetryClient,
+  activitiesUpdateQueueService: ActivitiesUpdateQueueService,
+  telemetryClient: TelemetryClient,
+  objectMapper: ObjectMapper,
+) : SynchronisationService(
+  objectMapper = objectMapper,
+  telemetryClient = telemetryClient,
+  retryQueueService = activitiesUpdateQueueService,
 ) {
 
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun createActivity(event: ScheduleDomainEvent) {
+  suspend fun createActivity(event: ScheduleDomainEvent) {
     activitiesApiService.getActivitySchedule(event.additionalInformation.activityScheduleId).run {
       val activity = activitiesApiService.getActivity(activity.id)
 
@@ -61,24 +70,16 @@ class ActivitiesService(
 
       telemetryMap["courseActivityId"] = nomisResponse.courseActivityId.toString()
 
-      try {
-        mappingService.createMapping(
-          ActivityMappingDto(
-            nomisCourseActivityId = nomisResponse.courseActivityId,
-            activityScheduleId = id,
-            mappingType = "ACTIVITY_CREATED",
-          ),
-        )
-      } catch (e: Exception) {
-        telemetryClient.trackEvent("activity-create-map-failed", telemetryMap)
-        log.error("Unexpected exception, queueing retry", e)
-        activitiesUpdateQueueService.sendMessage(
-          ActivityContext(
-            nomisCourseActivityId = nomisResponse.courseActivityId,
-            activityScheduleId = id,
-          ),
-        )
-        return
+      val mapping = ActivityMappingDto(
+        nomisCourseActivityId = nomisResponse.courseActivityId,
+        activityScheduleId = id,
+        mappingType = "ACTIVITY_CREATED",
+      )
+      tryCreateMapping(
+        mapping,
+        MappingTelemetry(failureName = "activity-create-map-failed", attributes = telemetryMap),
+      ) {
+        mappingService.createMapping(mapping)
       }
 
       telemetryClient.trackEvent("activity-created-event", telemetryMap)
@@ -259,15 +260,22 @@ class ActivitiesService(
       )
     }
 
-  fun createRetry(context: ActivityContext) {
+  fun createRetry(context: CreateMappingRetryMessage<ActivityContext>) {
     mappingService.createMapping(
       ActivityMappingDto(
-        nomisCourseActivityId = context.nomisCourseActivityId,
-        activityScheduleId = context.activityScheduleId,
+        nomisCourseActivityId = context.mapping.nomisCourseActivityId,
+        activityScheduleId = context.mapping.activityScheduleId,
         mappingType = "ACTIVITY_CREATED",
       ),
-    )
+    ).also {
+      telemetryClient.trackEvent(
+        "activity-retry-success",
+        mapOf("activityScheduleId" to context.mapping.activityScheduleId.toString()),
+      )
+    }
   }
+
+  override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
 }
 
 data class ScheduleDomainEvent(

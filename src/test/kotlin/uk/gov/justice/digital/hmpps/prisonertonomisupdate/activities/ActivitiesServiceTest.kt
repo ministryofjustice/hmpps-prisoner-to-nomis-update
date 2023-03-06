@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.microsoft.applicationinsights.TelemetryClient
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
@@ -26,7 +27,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Alloc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.InternalLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.PrisonPayBand
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.OffenderProgramProfileResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
@@ -50,7 +53,14 @@ internal class ActivitiesServiceTest {
   private val updateQueueService: ActivitiesUpdateQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()
   private val activitiesService =
-    ActivitiesService(activitiesApiService, nomisApiService, mappingService, updateQueueService, telemetryClient)
+    ActivitiesService(
+      activitiesApiService,
+      nomisApiService,
+      mappingService,
+      updateQueueService,
+      telemetryClient,
+      objectMapper(),
+    )
 
   @Nested
   inner class CreateActivity {
@@ -65,7 +75,7 @@ internal class ActivitiesServiceTest {
       )
 
     @Test
-    fun `should log an activity created event`() {
+    fun `should log an activity created event`() = runBlocking {
       whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
         newActivitySchedule(),
       )
@@ -88,7 +98,7 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should handle very long activity and schedule descriptions`() {
+    fun `should handle very long activity and schedule descriptions`(): Unit = runBlocking {
       whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
         newActivitySchedule().copy(description = "A schedule description that is very very long"),
       )
@@ -110,7 +120,7 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should not update NOMIS if activity already mapped (exists in nomis)`() {
+    fun `should not update NOMIS if activity already mapped (exists in nomis)`() = runBlocking {
       whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
         newActivitySchedule(),
       )
@@ -129,14 +139,14 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should log a creation failure`() {
+    fun `should log a creation failure`() = runBlocking {
       whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
         newActivitySchedule(),
       )
       whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(newActivity())
       whenever(nomisApiService.createActivity(any())).thenThrow(RuntimeException("test"))
 
-      assertThatThrownBy { activitiesService.createActivity(aDomainEvent()) }
+      assertThatThrownBy { runBlocking { activitiesService.createActivity(aDomainEvent()) } }
         .isInstanceOf(RuntimeException::class.java)
 
       verify(telemetryClient).trackEvent(
@@ -150,7 +160,7 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should log a mapping creation failure`() {
+    fun `should log a mapping creation failure`() = runBlocking {
       whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
         newActivitySchedule(),
       )
@@ -619,9 +629,12 @@ internal class ActivitiesServiceTest {
     @Test
     fun `should call mapping service`() {
       activitiesService.createRetry(
-        ActivityContext(
-          nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
-          activityScheduleId = ACTIVITY_SCHEDULE_ID,
+        CreateMappingRetryMessage(
+          mapping = ActivityContext(
+            nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
+            activityScheduleId = ACTIVITY_SCHEDULE_ID,
+          ),
+          telemetryAttributes = mapOf(),
         ),
       )
 

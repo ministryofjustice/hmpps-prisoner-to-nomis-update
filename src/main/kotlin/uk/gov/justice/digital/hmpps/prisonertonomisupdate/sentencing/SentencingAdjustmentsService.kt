@@ -66,7 +66,10 @@ class SentencingAdjustmentsService(
               "nomisAdjustmentId" to createdNomisAdjustment.id.toString(),
               "offenderNo" to createEvent.additionalInformation.nomsNumber,
             )
-            tryCreateMapping(mapping, MappingTelemetry("sentencing-adjustment-create-success", telemetryAttributes)) {
+            tryCreateMapping(
+              mapping,
+              MappingTelemetry("sentencing-adjustment-create-success", attributes = telemetryAttributes),
+            ) {
               sentencingAdjustmentsMappingService.createMapping(it)
             }
           }
