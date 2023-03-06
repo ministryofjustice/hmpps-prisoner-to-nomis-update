@@ -176,6 +176,32 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubCreateActivityWithErrorFollowedBySuccess(status: Int = 500) {
+    stubFor(
+      post("/mapping/activities")
+        .inScenario("Retry Mapping Activities Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
+            .withStatus(status),
+        ).willSetStateTo("Cause Mapping Activities Success"),
+    )
+
+    stubFor(
+      post("/mapping/activities")
+        .inScenario("Retry Mapping Activities Scenario")
+        .whenScenarioStateIs("Cause Mapping Activities Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
   fun stubGetMappingGivenActivityScheduleId(id: Long, response: String) {
     stubFor(
       get("/mapping/activities/activity-schedule-id/$id").willReturn(
