@@ -48,9 +48,9 @@ class HmppsAuthMockServer : WireMockServer(WIREMOCK_PORT) {
                     "token_type": "bearer",
                     "access_token": "ABCDE"
                 }
-              """.trimIndent()
-            )
-        )
+              """.trimIndent(),
+            ),
+        ),
     )
   }
 
@@ -60,8 +60,8 @@ class HmppsAuthMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(if (status == 200) "pong" else "some error")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 }

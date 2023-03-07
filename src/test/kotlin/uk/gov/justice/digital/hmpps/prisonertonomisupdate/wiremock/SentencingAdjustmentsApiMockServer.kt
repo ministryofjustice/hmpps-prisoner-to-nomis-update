@@ -39,8 +39,8 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(if (status == 200) "pong" else "some error")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -76,10 +76,10 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
               "adjustmentType": "$adjustmentType",
               "creatingSystem": "$creatingSystem"
             }
-            """.trimIndent()
+            """.trimIndent(),
           )
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
     )
   }
 
@@ -93,10 +93,10 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
               {
                 "error": "some error"
               }
-            """.trimIndent()
+            """.trimIndent(),
           )
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -115,9 +115,9 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         .willReturn(
           aResponse()
             .withStatus(500) // request unsuccessful with status code 500
-            .withHeader("Content-Type", "application/json")
+            .withHeader("Content-Type", "application/json"),
         )
-        .willSetStateTo("Cause Adjustments Success")
+        .willSetStateTo("Cause Adjustments Success"),
     )
 
     stubFor(
@@ -138,12 +138,12 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
               "adjustmentType": "$adjustmentType",
               "creatingSystem": "SENTENCE_ADJUSTMENTS"
             }
-              """.trimIndent()
+              """.trimIndent(),
             )
             .withStatus(200)
-            .withFixedDelay(500)
+            .withFixedDelay(500),
 
-        ).willSetStateTo(Scenario.STARTED)
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 }

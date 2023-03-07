@@ -25,7 +25,7 @@ class ResourceServerConfiguration {
           "/webjars/**", "/favicon.ico", "/csrf",
           "/health/**", "/info", "/startup", "/h2-console/**",
           "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
-          "/queue-admin/retry-all-dlqs"
+          "/queue-admin/retry-all-dlqs",
         ).forEach { authorize(it, permitAll) }
         authorize(anyRequest, authenticated)
       }

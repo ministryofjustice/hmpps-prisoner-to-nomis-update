@@ -14,6 +14,10 @@ import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
+import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.activityMessagePayload
@@ -50,8 +54,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             mapOf(
               "eventType" to MessageAttributeValue.builder().dataType("String")
                 .stringValue("activities.activity-schedule.created").build(),
-            )
-          ).build()
+            ),
+          ).build(),
       ).get()
 
       await untilCallTo { awsSqsActivityClient.countAllMessagesOnQueue(activityQueueUrl).get() } matches { it == 0 }
@@ -89,18 +93,56 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("scheduleRules[1].sunday", equalTo("false")))
           .withRequestBody(matchingJsonPath("scheduleRules[1].tuesday", equalTo("true")))
           .withRequestBody(matchingJsonPath("scheduleRules[1].wednesday", equalTo("true")))
-          .withRequestBody(matchingJsonPath("scheduleRules[1].thursday", equalTo("false")))
+          .withRequestBody(matchingJsonPath("scheduleRules[1].thursday", equalTo("false"))),
       )
       mappingServer.verify(
         WireMock.postRequestedFor(urlEqualTo("/mapping/activities"))
           .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$COURSE_ACTIVITY_ID")))
           .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
-          .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED")))
+          .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED"))),
       )
     }
 
     @Test
     fun `will retry after a mapping failure`() {
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildApiActivityScheduleDtoJsonResponse())
+      activitiesApi.stubGetActivity(ACTIVITY_ID, buildApiActivityDtoJsonResponse())
+      mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
+      nomisApi.stubActivityCreate("""{ "courseActivityId": $COURSE_ACTIVITY_ID }""")
+      mappingServer.stubCreateActivityWithErrorFollowedBySuccess()
+
+      awsSnsClient.publish(
+        PublishRequest.builder().topicArn(topicArn)
+          .message(activityMessagePayload("activities.activity-schedule.created", ACTIVITY_SCHEDULE_ID))
+          .messageAttributes(
+            mapOf(
+              "eventType" to MessageAttributeValue.builder().dataType("String")
+                .stringValue("activities.activity-schedule.created").build(),
+            ),
+          ).build(),
+      ).get()
+
+      await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID") } matches { it == 1 }
+      await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
+      await untilAsserted { verify(telemetryClient).trackEvent(eq("activity-create-mapping-retry"), any(), isNull()) }
+      await untilAsserted {
+        mappingServer.verify(
+          exactly(2),
+          WireMock.postRequestedFor(urlEqualTo("/mapping/activities"))
+            .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$COURSE_ACTIVITY_ID")))
+            .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
+            .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED"))),
+        )
+      }
+
+      // no messages sent to DLQ
+      await untilCallTo {
+        awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get()
+      } matches { it == 0 }
+    }
+
+    @Test
+    fun `constant mapping failure will result in DLQ message which can be retried`() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildApiActivityScheduleDtoJsonResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildApiActivityDtoJsonResponse())
       mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
@@ -114,8 +156,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             mapOf(
               "eventType" to MessageAttributeValue.builder().dataType("String")
                 .stringValue("activities.activity-schedule.created").build(),
-            )
-          ).build()
+            ),
+          ).build(),
       ).get()
 
       await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID") } matches { it == 1 }
@@ -173,7 +215,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("scheduleRules[1].startTime", equalTo("13:45")))
             .withRequestBody(matchingJsonPath("scheduleRules[1].endTime", equalTo("14:25")))
             .withRequestBody(matchingJsonPath("scheduleRules[1].tuesday", equalTo("true")))
-            .withRequestBody(matchingJsonPath("scheduleRules[1].thursday", equalTo("false")))
+            .withRequestBody(matchingJsonPath("scheduleRules[1].thursday", equalTo("false"))),
         )
       }
       assertThat(awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get()).isEqualTo(0)
@@ -185,7 +227,11 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
 
       awsSnsClient.publish(amendActivityEvent()).get()
 
-      await untilAsserted { assertThat(awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get()).isEqualTo(1) }
+      await untilAsserted {
+        assertThat(
+          awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get(),
+        ).isEqualTo(1)
+      }
       nomisApi.verify(exactly(0), putRequestedFor(urlEqualTo("/activities/$COURSE_ACTIVITY_ID")))
     }
 
@@ -196,7 +242,59 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
               .stringValue("activities.activity-schedule.amended").build(),
-          )
+          ),
+        ).build()
+  }
+
+  @Nested
+  inner class UpdateScheduleInstances {
+    @Test
+    fun `should update scheduled instances`() {
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildApiActivityScheduleDtoJsonResponse())
+      mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildMappingDtoResponse())
+      nomisApi.stubScheduleInstancesUpdate(COURSE_ACTIVITY_ID)
+
+      awsSnsClient.publish(amendScheduledInstancesEvent())
+
+      await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/schedules/$ACTIVITY_SCHEDULE_ID"))) }
+      await untilAsserted { mappingServer.verify(getRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/$ACTIVITY_SCHEDULE_ID"))) }
+      await untilAsserted {
+        nomisApi.verify(
+          putRequestedFor(urlEqualTo("/activities/$COURSE_ACTIVITY_ID/schedules"))
+            .withRequestBody(matchingJsonPath("$[0].date", equalTo("2023-01-13")))
+            .withRequestBody(matchingJsonPath("$[0].startTime", equalTo("09:00")))
+            .withRequestBody(matchingJsonPath("$[0].endTime", equalTo("10:00")))
+            .withRequestBody(matchingJsonPath("$[1].date", equalTo("2023-01-14")))
+            .withRequestBody(matchingJsonPath("$[1].startTime", equalTo("14:00")))
+            .withRequestBody(matchingJsonPath("$[1].endTime", equalTo("16:30"))),
+        )
+      }
+      assertThat(awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get()).isEqualTo(0)
+    }
+
+    @Test
+    fun `should put messages on DLQ if external API call fails`() {
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildApiActivityScheduleDtoJsonResponse())
+      mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildMappingDtoResponse())
+      nomisApi.stubScheduleInstancesUpdateWithError(COURSE_ACTIVITY_ID)
+
+      awsSnsClient.publish(amendScheduledInstancesEvent())
+
+      await untilAsserted {
+        assertThat(
+          awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get(),
+        ).isEqualTo(1)
+      }
+    }
+
+    private fun amendScheduledInstancesEvent(): PublishRequest? =
+      PublishRequest.builder().topicArn(topicArn)
+        .message(activityMessagePayload("activities.scheduled-instances.amended", ACTIVITY_SCHEDULE_ID))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue("activities.scheduled-instances.amended").build(),
+          ),
         ).build()
   }
 
@@ -215,8 +313,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             mapOf(
               "eventType" to MessageAttributeValue.builder().dataType("String")
                 .stringValue("activities.prisoner.allocated").build(),
-            )
-          ).build()
+            ),
+          ).build(),
       ).get()
 
       await untilCallTo { activitiesApi.getCountFor("/allocations/id/$ALLOCATION_ID") } matches { it == 1 }
@@ -226,7 +324,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("bookingId", equalTo("$BOOKING_ID")))
           .withRequestBody(matchingJsonPath("startDate", equalTo("2023-01-12")))
           .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-13")))
-          .withRequestBody(matchingJsonPath("payBandCode", equalTo("7")))
+          .withRequestBody(matchingJsonPath("payBandCode", equalTo("7"))),
       )
     }
   }
@@ -246,8 +344,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             mapOf(
               "eventType" to MessageAttributeValue.builder().dataType("String")
                 .stringValue("activities.prisoner.deallocated").build(),
-            )
-          ).build()
+            ),
+          ).build(),
       ).get()
 
       await untilCallTo { activitiesApi.getCountFor("/allocations/id/$ALLOCATION_ID") } matches { it == 1 }
@@ -255,7 +353,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       nomisApi.verify(
         putRequestedFor(urlEqualTo("/activities/$COURSE_ACTIVITY_ID/booking-id/$BOOKING_ID/end"))
           .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-13")))
-          .withRequestBody(matchingJsonPath("endReason", equalTo("END")))
+          .withRequestBody(matchingJsonPath("endReason", equalTo("END"))),
       )
     }
   }
@@ -318,7 +416,14 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     },
     "riskLevel": "High",
     "minimumIncentiveLevel": "Basic",
-    "minimumIncentiveNomisCode": "BAS"
+    "minimumIncentiveNomisCode": "BAS",
+    "minimumEducationLevel": [
+      {
+        "id": 123456,
+        "educationLevelCode": "Basic",
+        "educationLevelDescription": "Basic"
+      }
+    ]
   },
   "slots": [{
     "id"        : 555666001,
@@ -347,7 +452,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     "sundayFlag": false
   }],
   "startDate" : "2023-01-20",
-  "endDate" : "2023-01-23"
+  "endDate" : "2023-01-23",
+  "runsOnBankHoliday": true
 }
     """.trimIndent()
 
@@ -396,11 +502,21 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
   "minimumIncentiveLevel": "Basic",
   "minimumIncentiveNomisCode": "BAS",
   "createdTime": "2023-01-12T17:26:18.332Z",
-  "createdBy": "Adam Smith"
+  "createdBy": "Adam Smith",
+  "minimumEducationLevel": [
+    {
+      "id": 123456,
+      "educationLevelCode": "Basic",
+      "educationLevelDescription": "Basic"
+    }
+  ]
 }
    """
 
-  fun buildMappingDtoResponse(nomisActivityId: Long = COURSE_ACTIVITY_ID, activityScheduleId: Long = ACTIVITY_SCHEDULE_ID) =
+  fun buildMappingDtoResponse(
+    nomisActivityId: Long = COURSE_ACTIVITY_ID,
+    activityScheduleId: Long = ACTIVITY_SCHEDULE_ID,
+  ) =
     """{
           "nomisCourseActivityId": $nomisActivityId,
           "activityScheduleId": $activityScheduleId,

@@ -42,8 +42,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(if (status == 200) "pong" else "some error")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -52,8 +52,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
       post("/mapping/visits").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(201)
-      )
+          .withStatus(201),
+      ),
     )
   }
 
@@ -63,8 +63,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -74,8 +74,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
     )
   }
 
@@ -85,8 +85,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -96,8 +96,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
     )
   }
 
@@ -107,8 +107,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -117,8 +117,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
       post("/mapping/incentives").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(201)
-      )
+          .withStatus(201),
+      ),
     )
   }
 
@@ -128,8 +128,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -139,8 +139,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
     )
   }
 
@@ -150,8 +150,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -160,8 +160,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
       post("/mapping/activities").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(201)
-      )
+          .withStatus(201),
+      ),
     )
   }
 
@@ -171,8 +171,34 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubCreateActivityWithErrorFollowedBySuccess(status: Int = 500) {
+    stubFor(
+      post("/mapping/activities")
+        .inScenario("Retry Mapping Activities Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
+            .withStatus(status),
+        ).willSetStateTo("Cause Mapping Activities Success"),
+    )
+
+    stubFor(
+      post("/mapping/activities")
+        .inScenario("Retry Mapping Activities Scenario")
+        .whenScenarioStateIs("Cause Mapping Activities Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 
@@ -182,8 +208,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
     )
   }
 
@@ -193,8 +219,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -274,8 +300,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
       post("/mapping/sentencing/adjustments").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(201)
-      )
+          .withStatus(201),
+      ),
     )
   }
 
@@ -285,8 +311,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -307,10 +333,10 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
             "nomisAdjustmentCategory": "$nomisAdjustmentCategory",  
             "mappingType": "MIGRATED",  
             "whenCreated": "2020-01-01T00:00:00"
-              }"""
+              }""",
           )
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
     )
   }
 
@@ -321,8 +347,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
       delete("/mapping/sentencing/adjustments/adjustment-id/$adjustmentId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(204)
-      )
+          .withStatus(204),
+      ),
     )
   }
 
@@ -332,8 +358,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "not here" }""")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -346,10 +372,10 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
             """
               { 
                 "userMessage": "some error"
-              }"""
+              }""",
           )
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -361,9 +387,9 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         .willReturn(
           aResponse()
             .withStatus(500) // request unsuccessful with status code 500
-            .withHeader("Content-Type", "application/json")
+            .withHeader("Content-Type", "application/json"),
         )
-        .willSetStateTo("Cause Mapping Adjustments Success")
+        .willSetStateTo("Cause Mapping Adjustments Success"),
     )
 
     stubFor(
@@ -374,9 +400,9 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(201)
-            .withFixedDelay(1500)
+            .withFixedDelay(1500),
 
-        ).willSetStateTo(Scenario.STARTED)
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 }

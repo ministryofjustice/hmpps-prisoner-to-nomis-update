@@ -17,7 +17,7 @@ class IncentivesService(
   private val nomisApiService: NomisApiService,
   private val mappingService: IncentivesMappingService,
   private val incentivesUpdateQueueService: IncentivesUpdateQueueService,
-  private val telemetryClient: TelemetryClient
+  private val telemetryClient: TelemetryClient,
 ) {
 
   private companion object {
@@ -34,7 +34,6 @@ class IncentivesService(
 
   fun createIncentive(event: IncentiveCreatedEvent) {
     incentivesApiService.getIncentive(event.additionalInformation.id).run {
-
       val telemetryMap = mutableMapOf<String, String>(
         "offenderNo" to prisonerNumber!!,
         "prisonId" to agencyId,
@@ -73,7 +72,7 @@ class IncentivesService(
             nomisIncentiveSequence = nomisResponse.sequence.toInt(),
             incentiveId = event.additionalInformation.id,
             mappingType = "INCENTIVE_CREATED",
-          )
+          ),
         )
       } catch (e: Exception) {
         telemetryClient.trackEvent("incentive-create-map-failed", telemetryMap)
@@ -82,8 +81,8 @@ class IncentivesService(
           IncentiveContext(
             nomisBookingId = nomisResponse.bookingId,
             nomisIncentiveSequence = nomisResponse.sequence.toInt(),
-            incentiveId = event.additionalInformation.id
-          )
+            incentiveId = event.additionalInformation.id,
+          ),
         )
         return
       }
@@ -99,7 +98,7 @@ class IncentivesService(
         nomisIncentiveSequence = context.nomisIncentiveSequence,
         incentiveId = context.incentiveId,
         mappingType = "INCENTIVE_CREATED",
-      )
+      ),
     )
   }
 

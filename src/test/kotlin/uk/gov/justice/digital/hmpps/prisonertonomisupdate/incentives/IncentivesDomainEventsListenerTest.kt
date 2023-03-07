@@ -30,7 +30,7 @@ internal class IncentivesDomainEventsListenerTest {
       incentivesService,
       objectMapper,
       eventFeatureSwitch,
-      telemetryClient
+      telemetryClient,
     )
 
   @Nested
@@ -45,13 +45,13 @@ internal class IncentivesDomainEventsListenerTest {
       @Test
       internal fun `will call service with create incentive data`() {
         listener.onPrisonerChange(
-          message = incentiveCreatedMessage(123L)
+          message = incentiveCreatedMessage(123L),
         )
 
         verify(incentivesService).createIncentive(
           check {
             assertThat(it.additionalInformation.id).isEqualTo(123L)
-          }
+          },
         )
       }
     }
@@ -66,7 +66,7 @@ internal class IncentivesDomainEventsListenerTest {
       @Test
       internal fun `will not call service`() {
         listener.onPrisonerChange(
-          message = incentiveCreatedMessage(123L)
+          message = incentiveCreatedMessage(123L),
         )
 
         verifyNoInteractions(incentivesService)
@@ -84,7 +84,7 @@ internal class IncentivesDomainEventsListenerTest {
             assertThat(it.incentiveId).isEqualTo(15)
             assertThat(it.nomisBookingId).isEqualTo(12345)
             assertThat(it.nomisIncentiveSequence).isEqualTo(2)
-          }
+          },
         )
 
         verify(telemetryClient).trackEvent(
@@ -92,7 +92,7 @@ internal class IncentivesDomainEventsListenerTest {
           check {
             assertThat(it["id"]).isEqualTo("15")
           },
-          isNull()
+          isNull(),
         )
       }
     }

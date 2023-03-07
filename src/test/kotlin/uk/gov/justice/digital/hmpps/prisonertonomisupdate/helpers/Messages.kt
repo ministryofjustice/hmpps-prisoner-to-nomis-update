@@ -10,14 +10,14 @@ fun prisonVisitMessagePayload(
   eventType: String,
   visitId: String = "12",
   prisonerId: String = "AB12345",
-  occurredAt: String = "2021-03-05T11:23:56.031Z"
+  occurredAt: String = "2021-03-05T11:23:56.031Z",
 ) =
   """{"eventType":"$eventType", "prisonerId": "$prisonerId", "occurredAt": "$occurredAt", "additionalInformation": {"reference": "$visitId","visitType": "STANDARD_SOCIAL"}}"""
 
 fun prisonVisitCreatedMessage(
   visitId: String = "12",
   prisonerId: String = "AB12345",
-  occurredAt: String = "2021-03-05T11:23:56.031Z"
+  occurredAt: String = "2021-03-05T11:23:56.031Z",
 ) = """
       {
         "Type": "Notification", 
@@ -84,8 +84,8 @@ fun activityCreatedMessage(identifier: Long) = """
 
 fun activityRetryMessage() = """
       {
-        "Type":"RETRY",
-        "Message":"{\"activityScheduleId\":12345,\"nomisCourseActivityId\":15}",
+        "Type":"RETRY_CREATE_MAPPING",
+        "Message":"{\"mapping\": {\"activityScheduleId\":12345,\"nomisCourseActivityId\":15}, \"telemetryAttributes\": {}}",
         "MessageId":"retry-15"
       }
 """.trimIndent()
@@ -97,7 +97,8 @@ fun allocationMessagePayload(eventType: String, scheduleId: Long, allocationId: 
         "scheduleId"  : "$scheduleId",
         "allocationId": "$allocationId"
       }
-    }""".trimMargin()
+    }
+  """.trimMargin()
 
 fun objectMapper(): ObjectMapper {
   return ObjectMapper()

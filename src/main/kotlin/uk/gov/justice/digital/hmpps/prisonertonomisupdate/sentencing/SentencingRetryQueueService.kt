@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
@@ -7,16 +7,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryQueueSer
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 
 @Service
-class ActivitiesUpdateQueueService(
+class SentencingRetryQueueService(
   hmppsQueueService: HmppsQueueService,
   telemetryClient: TelemetryClient,
   objectMapper: ObjectMapper,
 ) :
   RetryQueueService(
-    queueId = "activity",
+    queueId = "sentencing",
     hmppsQueueService = hmppsQueueService,
     telemetryClient = telemetryClient,
     objectMapper = objectMapper,
   )
-
-data class ActivityContext(val nomisCourseActivityId: Long, val activityScheduleId: Long)

@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.microsoft.applicationinsights.TelemetryClient
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyList
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
@@ -18,12 +20,16 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityCategory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityLite
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityMinimumEducationLevel
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityPay
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.InternalLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.PrisonPayBand
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.OffenderProgramProfileResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
@@ -47,7 +53,14 @@ internal class ActivitiesServiceTest {
   private val updateQueueService: ActivitiesUpdateQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()
   private val activitiesService =
-    ActivitiesService(activitiesApiService, nomisApiService, mappingService, updateQueueService, telemetryClient)
+    ActivitiesService(
+      activitiesApiService,
+      nomisApiService,
+      mappingService,
+      updateQueueService,
+      telemetryClient,
+      objectMapper(),
+    )
 
   @Nested
   inner class CreateActivity {
@@ -62,13 +75,13 @@ internal class ActivitiesServiceTest {
       )
 
     @Test
-    fun `should log an activity created event`() {
+    fun `should log an activity created event`() = runBlocking {
       whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
-        newActivitySchedule()
+        newActivitySchedule(),
       )
       whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(newActivity())
       whenever(nomisApiService.createActivity(any())).thenReturn(
-        CreateActivityResponse(courseActivityId = NOMIS_COURSE_ACTIVITY_ID)
+        CreateActivityResponse(courseActivityId = NOMIS_COURSE_ACTIVITY_ID),
       )
 
       activitiesService.createActivity(aDomainEvent())
@@ -80,20 +93,20 @@ internal class ActivitiesServiceTest {
           assertThat(it["activityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
           assertThat(it["description"]).isEqualTo("description")
         },
-        isNull()
+        isNull(),
       )
     }
 
     @Test
-    fun `should handle very long activity and schedule descriptions`() {
+    fun `should handle very long activity and schedule descriptions`(): Unit = runBlocking {
       whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
-        newActivitySchedule().copy(description = "A schedule description that is very very long")
+        newActivitySchedule().copy(description = "A schedule description that is very very long"),
       )
       whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(
-        newActivity().copy(summary = "An activity summary that is very very very long")
+        newActivity().copy(summary = "An activity summary that is very very very long"),
       )
       whenever(nomisApiService.createActivity(any())).thenReturn(
-        CreateActivityResponse(courseActivityId = NOMIS_COURSE_ACTIVITY_ID)
+        CreateActivityResponse(courseActivityId = NOMIS_COURSE_ACTIVITY_ID),
       )
 
       activitiesService.createActivity(aDomainEvent())
@@ -102,22 +115,22 @@ internal class ActivitiesServiceTest {
         check {
           assertThat(it.description.length).isLessThanOrEqualTo(40)
           assertThat(it.code.length).isLessThanOrEqualTo(12)
-        }
+        },
       )
     }
 
     @Test
-    fun `should not update NOMIS if activity already mapped (exists in nomis)`() {
+    fun `should not update NOMIS if activity already mapped (exists in nomis)`() = runBlocking {
       whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
-        newActivitySchedule()
+        newActivitySchedule(),
       )
       whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(newActivity())
       whenever(mappingService.getMappingGivenActivityScheduleIdOrNull(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
           nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
           activityScheduleId = ACTIVITY_SCHEDULE_ID,
-          mappingType = "A_TYPE"
-        )
+          mappingType = "A_TYPE",
+        ),
       )
 
       activitiesService.createActivity(aDomainEvent())
@@ -126,14 +139,14 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should log a creation failure`() {
+    fun `should log a creation failure`() = runBlocking {
       whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
-        newActivitySchedule()
+        newActivitySchedule(),
       )
       whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(newActivity())
       whenever(nomisApiService.createActivity(any())).thenThrow(RuntimeException("test"))
 
-      assertThatThrownBy { activitiesService.createActivity(aDomainEvent()) }
+      assertThatThrownBy { runBlocking { activitiesService.createActivity(aDomainEvent()) } }
         .isInstanceOf(RuntimeException::class.java)
 
       verify(telemetryClient).trackEvent(
@@ -142,18 +155,18 @@ internal class ActivitiesServiceTest {
           assertThat(it["activityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
           assertThat(it["description"]).isEqualTo("description")
         },
-        isNull()
+        isNull(),
       )
     }
 
     @Test
-    fun `should log a mapping creation failure`() {
+    fun `should log a mapping creation failure`() = runBlocking {
       whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
-        newActivitySchedule()
+        newActivitySchedule(),
       )
       whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(newActivity())
       whenever(nomisApiService.createActivity(any())).thenReturn(
-        CreateActivityResponse(courseActivityId = NOMIS_COURSE_ACTIVITY_ID)
+        CreateActivityResponse(courseActivityId = NOMIS_COURSE_ACTIVITY_ID),
       )
       whenever(mappingService.createMapping(any())).thenThrow(RuntimeException("test"))
 
@@ -166,7 +179,7 @@ internal class ActivitiesServiceTest {
           assertThat(it["activityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
           assertThat(it["description"]).isEqualTo("description")
         },
-        isNull()
+        isNull(),
       )
     }
   }
@@ -198,7 +211,7 @@ internal class ActivitiesServiceTest {
         check<Map<String, String>> {
           assertThat(it).containsAllEntriesOf(mapOf("activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()))
         },
-        isNull()
+        isNull(),
       )
     }
 
@@ -218,7 +231,7 @@ internal class ActivitiesServiceTest {
         check<Map<String, String>> {
           assertThat(it).containsExactlyEntriesOf(mutableMapOf("activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()))
         },
-        isNull()
+        isNull(),
       )
     }
 
@@ -240,11 +253,11 @@ internal class ActivitiesServiceTest {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
-              "activityId" to ACTIVITY_ID.toString()
-            )
+              "activityId" to ACTIVITY_ID.toString(),
+            ),
           )
         },
-        isNull()
+        isNull(),
       )
     }
 
@@ -255,8 +268,10 @@ internal class ActivitiesServiceTest {
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
         ActivityMappingDto(
           NOMIS_COURSE_ACTIVITY_ID,
-          ACTIVITY_SCHEDULE_ID, "ACTIVITY_CREATED", LocalDateTime.now()
-        )
+          ACTIVITY_SCHEDULE_ID,
+          "ACTIVITY_CREATED",
+          LocalDateTime.now(),
+        ),
       )
       whenever(nomisApiService.updateActivity(anyLong(), any()))
         .thenThrow(WebClientResponseException.ServiceUnavailable::class.java)
@@ -273,11 +288,11 @@ internal class ActivitiesServiceTest {
             mapOf(
               "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
               "activityId" to ACTIVITY_ID.toString(),
-              "nomisCourseActivityId" to NOMIS_COURSE_ACTIVITY_ID.toString()
-            )
+              "nomisCourseActivityId" to NOMIS_COURSE_ACTIVITY_ID.toString(),
+            ),
           )
         },
-        isNull()
+        isNull(),
       )
     }
 
@@ -288,8 +303,10 @@ internal class ActivitiesServiceTest {
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
         ActivityMappingDto(
           NOMIS_COURSE_ACTIVITY_ID,
-          ACTIVITY_SCHEDULE_ID, "ACTIVITY_CREATED", LocalDateTime.now()
-        )
+          ACTIVITY_SCHEDULE_ID,
+          "ACTIVITY_CREATED",
+          LocalDateTime.now(),
+        ),
       )
 
       activitiesService.updateActivity(aDomainEvent())
@@ -300,7 +317,7 @@ internal class ActivitiesServiceTest {
           assertThat(it.endDate).isEqualTo(LocalDate.now().plusDays(1))
           assertThat(it.internalLocationId).isEqualTo(345)
           assertThat(it.payRates).containsExactlyElementsOf(listOf(PayRateRequest("BAS", "1", BigDecimal.valueOf(1.5).setScale(2))))
-        }
+        },
       )
       verify(telemetryClient).trackEvent(
         eq("activity-amend-event"),
@@ -309,11 +326,141 @@ internal class ActivitiesServiceTest {
             mapOf(
               "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
               "activityId" to ACTIVITY_ID.toString(),
-              "nomisCourseActivityId" to NOMIS_COURSE_ACTIVITY_ID.toString()
-            )
+              "nomisCourseActivityId" to NOMIS_COURSE_ACTIVITY_ID.toString(),
+            ),
           )
         },
-        isNull()
+        isNull(),
+      )
+    }
+  }
+
+  @Nested
+  inner class AmendScheduleInstances {
+
+    private fun aDomainEvent() =
+      ScheduleDomainEvent(
+        eventType = "activities.scheduled-instances.amended",
+        additionalInformation = ScheduleAdditionalInformation(ACTIVITY_SCHEDULE_ID),
+        version = "1.0",
+        description = "description",
+        occurredAt = LocalDateTime.now(),
+      )
+
+    @Test
+    fun `should throw and raise telemetry if cannot load Activity Schedule`() {
+      whenever(activitiesApiService.getActivitySchedule(anyLong()))
+        .thenThrow(WebClientResponseException.NotFound::class.java)
+
+      assertThatThrownBy {
+        activitiesService.updateScheduleInstances(aDomainEvent())
+      }.isInstanceOf(WebClientResponseException.NotFound::class.java)
+
+      verify(activitiesApiService).getActivitySchedule(ACTIVITY_SCHEDULE_ID)
+      verify(telemetryClient).trackEvent(
+        eq("schedule-instances-amend-failed"),
+        check<Map<String, String>> {
+          assertThat(it).containsAllEntriesOf(mapOf("activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()))
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should throw and raise telemetry if cannot find mappings`() {
+      whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
+      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong()))
+        .thenThrow(WebClientResponseException.NotFound::class.java)
+
+      assertThatThrownBy {
+        activitiesService.updateScheduleInstances(aDomainEvent())
+      }.isInstanceOf(WebClientResponseException.NotFound::class.java)
+
+      verify(mappingService).getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)
+      verify(telemetryClient).trackEvent(
+        eq("schedule-instances-amend-failed"),
+        check<Map<String, String>> {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf("activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should throw and raise telemetry if fails to update Nomis`() {
+      whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
+      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
+        ActivityMappingDto(
+          NOMIS_COURSE_ACTIVITY_ID,
+          ACTIVITY_SCHEDULE_ID,
+          "ACTIVITY_CREATED",
+          LocalDateTime.now(),
+        ),
+      )
+      whenever(nomisApiService.updateScheduleInstances(anyLong(), anyList()))
+        .thenThrow(WebClientResponseException.ServiceUnavailable::class.java)
+
+      assertThatThrownBy {
+        activitiesService.updateScheduleInstances(aDomainEvent())
+      }.isInstanceOf(WebClientResponseException.ServiceUnavailable::class.java)
+
+      verify(nomisApiService).updateScheduleInstances(eq(NOMIS_COURSE_ACTIVITY_ID), any())
+      verify(telemetryClient).trackEvent(
+        eq("schedule-instances-amend-failed"),
+        check<Map<String, String>> {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
+              "nomisCourseActivityId" to NOMIS_COURSE_ACTIVITY_ID.toString(),
+            ),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should raise telemetry when update of Nomis successful`() {
+      whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule(endDate = LocalDate.now().plusDays(1)))
+      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
+        ActivityMappingDto(
+          NOMIS_COURSE_ACTIVITY_ID,
+          ACTIVITY_SCHEDULE_ID,
+          "ACTIVITY_CREATED",
+          LocalDateTime.now(),
+        ),
+      )
+
+      activitiesService.updateScheduleInstances(aDomainEvent())
+
+      verify(nomisApiService).updateScheduleInstances(
+        eq(NOMIS_COURSE_ACTIVITY_ID),
+        check {
+          with(it[0]) {
+            assertThat(date).isEqualTo("2023-02-10")
+            assertThat(startTime).isEqualTo("08:00")
+            assertThat(endTime).isEqualTo("11:00")
+          }
+          with(it[1]) {
+            assertThat(date).isEqualTo("2023-02-11")
+            assertThat(startTime).isEqualTo("08:00")
+            assertThat(endTime).isEqualTo("11:00")
+          }
+        },
+      )
+      verify(telemetryClient).trackEvent(
+        eq("schedule-instances-amend-event"),
+        check<Map<String, String>> {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
+              "nomisCourseActivityId" to NOMIS_COURSE_ACTIVITY_ID.toString(),
+            ),
+          )
+        },
+        isNull(),
       )
     }
   }
@@ -323,17 +470,16 @@ internal class ActivitiesServiceTest {
 
     @Test
     fun `should log an allocation event`() {
-
       whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
       whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
           nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
           activityScheduleId = ACTIVITY_SCHEDULE_ID,
           mappingType = "ACTIVITY_CREATED",
-        )
+        ),
       )
       whenever(nomisApiService.createAllocation(eq(NOMIS_COURSE_ACTIVITY_ID), any())).thenReturn(
-        OffenderProgramProfileResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID)
+        OffenderProgramProfileResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID),
       )
 
       activitiesService.createAllocation(
@@ -345,7 +491,7 @@ internal class ActivitiesServiceTest {
           additionalInformation = AllocationAdditionalInformation(
             allocationId = ALLOCATION_ID,
           ),
-        )
+        ),
       )
 
       verify(telemetryClient).trackEvent(
@@ -356,7 +502,7 @@ internal class ActivitiesServiceTest {
           assertThat(it["bookingId"]).isEqualTo("$BOOKING_ID")
           assertThat(it["offenderProgramReferenceId"]).isEqualTo("$OFFENDER_PROGRAM_REFERENCE_ID")
         },
-        isNull()
+        isNull(),
       )
     }
 
@@ -368,7 +514,7 @@ internal class ActivitiesServiceTest {
           nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
           activityScheduleId = ACTIVITY_SCHEDULE_ID,
           mappingType = "ACTIVITY_CREATED",
-        )
+        ),
       )
       whenever(nomisApiService.createAllocation(any(), any())).thenThrow(RuntimeException("test"))
 
@@ -382,7 +528,7 @@ internal class ActivitiesServiceTest {
             additionalInformation = AllocationAdditionalInformation(
               allocationId = ALLOCATION_ID,
             ),
-          )
+          ),
         )
       }.hasMessage("test")
 
@@ -393,7 +539,7 @@ internal class ActivitiesServiceTest {
           assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
           assertThat(it["bookingId"]).isEqualTo("$BOOKING_ID")
         },
-        isNull()
+        isNull(),
       )
     }
   }
@@ -403,17 +549,16 @@ internal class ActivitiesServiceTest {
 
     @Test
     fun `should log an allocation event`() {
-
       whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
       whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
           nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
           activityScheduleId = ACTIVITY_SCHEDULE_ID,
           mappingType = "ACTIVITY_CREATED",
-        )
+        ),
       )
       whenever(nomisApiService.deallocate(eq(NOMIS_COURSE_ACTIVITY_ID), any(), any())).thenReturn(
-        OffenderProgramProfileResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID)
+        OffenderProgramProfileResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID),
       )
 
       activitiesService.deallocate(
@@ -425,7 +570,7 @@ internal class ActivitiesServiceTest {
           additionalInformation = AllocationAdditionalInformation(
             allocationId = ALLOCATION_ID,
           ),
-        )
+        ),
       )
 
       verify(telemetryClient).trackEvent(
@@ -436,7 +581,7 @@ internal class ActivitiesServiceTest {
           assertThat(it["bookingId"]).isEqualTo("$BOOKING_ID")
           assertThat(it["offenderProgramReferenceId"]).isEqualTo("$OFFENDER_PROGRAM_REFERENCE_ID")
         },
-        isNull()
+        isNull(),
       )
     }
 
@@ -448,7 +593,7 @@ internal class ActivitiesServiceTest {
           nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
           activityScheduleId = ACTIVITY_SCHEDULE_ID,
           mappingType = "ACTIVITY_CREATED",
-        )
+        ),
       )
       whenever(nomisApiService.deallocate(any(), any(), any())).thenThrow(RuntimeException("test"))
 
@@ -462,7 +607,7 @@ internal class ActivitiesServiceTest {
             additionalInformation = AllocationAdditionalInformation(
               allocationId = ALLOCATION_ID,
             ),
-          )
+          ),
         )
       }.hasMessage("test")
 
@@ -473,7 +618,7 @@ internal class ActivitiesServiceTest {
           assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
           assertThat(it["bookingId"]).isEqualTo("$BOOKING_ID")
         },
-        isNull()
+        isNull(),
       )
     }
   }
@@ -484,18 +629,21 @@ internal class ActivitiesServiceTest {
     @Test
     fun `should call mapping service`() {
       activitiesService.createRetry(
-        ActivityContext(
-          nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
-          activityScheduleId = ACTIVITY_SCHEDULE_ID
-        )
+        CreateMappingRetryMessage(
+          mapping = ActivityContext(
+            nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
+            activityScheduleId = ACTIVITY_SCHEDULE_ID,
+          ),
+          telemetryAttributes = mapOf(),
+        ),
       )
 
       verify(mappingService).createMapping(
         ActivityMappingDto(
           nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
           activityScheduleId = ACTIVITY_SCHEDULE_ID,
-          mappingType = "ACTIVITY_CREATED"
-        )
+          mappingType = "ACTIVITY_CREATED",
+        ),
       )
     }
   }
@@ -503,7 +651,24 @@ internal class ActivitiesServiceTest {
 
 private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = ActivitySchedule(
   id = ACTIVITY_SCHEDULE_ID,
-  instances = emptyList(),
+  instances = listOf(
+    ScheduledInstance(
+      id = 1,
+      date = LocalDate.parse("2023-02-10"),
+      startTime = "08:00",
+      endTime = "11:00",
+      cancelled = false,
+      attendances = listOf(),
+    ),
+    ScheduledInstance(
+      id = 2,
+      date = LocalDate.parse("2023-02-11"),
+      startTime = "08:00",
+      endTime = "11:00",
+      cancelled = false,
+      attendances = listOf(),
+    ),
+  ),
   allocations = emptyList(),
   description = "description",
   suspensions = emptyList(),
@@ -511,7 +676,7 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
   internalLocation = InternalLocation(
     id = 345,
     code = "A-ROOM",
-    description = "Room description"
+    description = "Room description",
   ),
   activity = ActivityLite(
     id = ACTIVITY_ID,
@@ -531,10 +696,18 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
     payPerSession = ActivityLite.PayPerSession.h,
     minimumIncentiveLevel = "Basic",
     minimumIncentiveNomisCode = "BAS",
+    minimumEducationLevel = listOf(
+      ActivityMinimumEducationLevel(
+        id = 123456,
+        educationLevelCode = "Basic",
+        educationLevelDescription = "Basic",
+      ),
+    ),
   ),
   slots = emptyList(),
   startDate = LocalDate.now(),
   endDate = endDate,
+  runsOnBankHoliday = true,
 )
 
 private fun newActivity(): Activity = Activity(
@@ -561,8 +734,8 @@ private fun newActivity(): Activity = Activity(
       prisonPayBand = PrisonPayBand(2, 1, "", "", 1, "MDI"),
       incentiveNomisCode = "BAS",
       incentiveLevel = "Basic",
-      rate = 150
-    )
+      rate = 150,
+    ),
   ),
   startDate = LocalDate.now(),
   createdTime = LocalDateTime.now(),
@@ -570,6 +743,13 @@ private fun newActivity(): Activity = Activity(
   minimumIncentiveLevel = "Basic",
   minimumIncentiveNomisCode = "BAS",
   riskLevel = "high",
+  minimumEducationLevel = listOf(
+    ActivityMinimumEducationLevel(
+      id = 123456,
+      educationLevelCode = "Basic",
+      educationLevelDescription = "Basic",
+    ),
+  ),
 )
 
 private fun newAllocation(): Allocation {

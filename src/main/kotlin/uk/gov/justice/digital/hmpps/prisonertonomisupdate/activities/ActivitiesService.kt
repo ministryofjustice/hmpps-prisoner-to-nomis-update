@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -8,14 +9,18 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityPay
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleSlot
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateOffenderProgramProfileRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.EndOffenderProgramProfileRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingTelemetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRuleRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.SynchronisationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateActivityRequest
 import java.lang.Integer.min
 import java.math.BigDecimal
@@ -27,15 +32,20 @@ class ActivitiesService(
   private val activitiesApiService: ActivitiesApiService,
   private val nomisApiService: NomisApiService,
   private val mappingService: ActivitiesMappingService,
-  private val activitiesUpdateQueueService: ActivitiesUpdateQueueService,
-  private val telemetryClient: TelemetryClient
+  activitiesUpdateQueueService: ActivitiesUpdateQueueService,
+  telemetryClient: TelemetryClient,
+  objectMapper: ObjectMapper,
+) : SynchronisationService(
+  objectMapper = objectMapper,
+  telemetryClient = telemetryClient,
+  retryQueueService = activitiesUpdateQueueService,
 ) {
 
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun createActivity(event: ScheduleDomainEvent) {
+  suspend fun createActivity(event: ScheduleDomainEvent) {
     activitiesApiService.getActivitySchedule(event.additionalInformation.activityScheduleId).run {
       val activity = activitiesApiService.getActivity(activity.id)
 
@@ -60,24 +70,16 @@ class ActivitiesService(
 
       telemetryMap["courseActivityId"] = nomisResponse.courseActivityId.toString()
 
-      try {
-        mappingService.createMapping(
-          ActivityMappingDto(
-            nomisCourseActivityId = nomisResponse.courseActivityId,
-            activityScheduleId = id,
-            mappingType = "ACTIVITY_CREATED",
-          )
-        )
-      } catch (e: Exception) {
-        telemetryClient.trackEvent("activity-create-map-failed", telemetryMap)
-        log.error("Unexpected exception, queueing retry", e)
-        activitiesUpdateQueueService.sendMessage(
-          ActivityContext(
-            nomisCourseActivityId = nomisResponse.courseActivityId,
-            activityScheduleId = id,
-          )
-        )
-        return
+      val mapping = ActivityMappingDto(
+        nomisCourseActivityId = nomisResponse.courseActivityId,
+        activityScheduleId = id,
+        mappingType = "ACTIVITY_CREATED",
+      )
+      tryCreateMapping(
+        mapping,
+        MappingTelemetry(failureName = "activity-create-map-failed", attributes = telemetryMap),
+      ) {
+        mappingService.createMapping(mapping)
       }
 
       telemetryClient.trackEvent("activity-created-event", telemetryMap)
@@ -110,9 +112,37 @@ class ActivitiesService(
     UpdateActivityRequest(
       endDate = endDate,
       internalLocationId = internalLocation?.id?.toLong(),
-      payRates = mapRates(pay),
-      scheduleRules = mapRules(this.slots),
+      payRates = pay.toPayRateRequests(),
+      scheduleRules = slots.toScheduleRuleRequests(),
     )
+
+  fun updateScheduleInstances(amendInstancesEvent: ScheduleDomainEvent) {
+    val telemetryMap = mutableMapOf("activityScheduleId" to amendInstancesEvent.additionalInformation.activityScheduleId.toString())
+
+    runCatching {
+      val activitySchedule = activitiesApiService.getActivitySchedule(amendInstancesEvent.additionalInformation.activityScheduleId)
+
+      val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(activitySchedule.id).nomisCourseActivityId
+        .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
+
+      activitySchedule.instances.toScheduleRequests()
+        .also { nomisApiService.updateScheduleInstances(nomisCourseActivityId, it) }
+    }.onSuccess {
+      telemetryClient.trackEvent("schedule-instances-amend-event", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("schedule-instances-amend-failed", telemetryMap, null)
+      throw e
+    }
+  }
+
+  private fun List<ScheduledInstance>.toScheduleRequests() =
+    map {
+      ScheduleRequest(
+        date = it.date,
+        startTime = LocalTime.parse(it.startTime),
+        endTime = LocalTime.parse(it.endTime),
+      )
+    }
 
   fun createAllocation(allocationEvent: AllocationDomainEvent) {
     activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
@@ -132,7 +162,7 @@ class ActivitiesService(
               startDate = allocation.startDate,
               endDate = allocation.endDate,
               payBandCode = allocation.prisonPayBand.nomisPayBand.toString(),
-            )
+            ),
           )
         } catch (e: Exception) {
           telemetryClient.trackEvent("activity-allocation-create-failed", telemetryMap)
@@ -165,7 +195,7 @@ class ActivitiesService(
                 endDate = allocation.endDate!!,
                 endReason = allocation.deallocatedReason, // TODO SDI-615 probably will need a mapping
                 // endComment = allocation.?, // TODO SDI-615 could put something useful in here
-              )
+              ),
             )
           } catch (e: Exception) {
             telemetryClient.trackEvent("activity-deallocate-failed", telemetryMap)
@@ -187,19 +217,13 @@ class ActivitiesService(
       prisonId = activity.prisonCode,
       internalLocationId = schedule.internalLocation?.id?.toLong(),
       capacity = schedule.capacity,
-      payRates = mapRates(activity.pay),
+      payRates = activity.pay.toPayRateRequests(),
       description = toNomisActivityDescription(activity.summary, schedule.description),
       minimumIncentiveLevelCode = activity.minimumIncentiveNomisCode,
       programCode = activity.category.code,
       payPerSession = activity.payPerSession.value,
-      schedules = schedule.instances.map { i ->
-        ScheduleRequest(
-          date = i.date,
-          startTime = LocalTime.parse(i.startTime),
-          endTime = LocalTime.parse(i.endTime),
-        )
-      },
-      scheduleRules = mapRules(schedule.slots),
+      schedules = schedule.instances.toScheduleRequests(),
+      scheduleRules = schedule.slots.toScheduleRuleRequests(),
     )
   }
 
@@ -212,8 +236,8 @@ class ActivitiesService(
     return description
   }
 
-  private fun mapRules(slots: List<ActivityScheduleSlot>): List<ScheduleRuleRequest> =
-    slots.map { slot ->
+  private fun List<ActivityScheduleSlot>.toScheduleRuleRequests(): List<ScheduleRuleRequest> =
+    map { slot ->
       ScheduleRuleRequest(
         startTime = LocalTime.parse(slot.startTime),
         endTime = LocalTime.parse(slot.endTime),
@@ -227,24 +251,31 @@ class ActivitiesService(
       )
     }
 
-  private fun mapRates(pay: List<ActivityPay>): List<PayRateRequest> =
-    pay.map { p ->
+  private fun List<ActivityPay>.toPayRateRequests(): List<PayRateRequest> =
+    map { p ->
       PayRateRequest(
         incentiveLevel = p.incentiveNomisCode,
         payBand = p.prisonPayBand.nomisPayBand.toString(),
-        rate = BigDecimal(p.rate!!).movePointLeft(2)
+        rate = BigDecimal(p.rate!!).movePointLeft(2),
       )
     }
 
-  fun createRetry(context: ActivityContext) {
+  fun createRetry(context: CreateMappingRetryMessage<ActivityContext>) {
     mappingService.createMapping(
       ActivityMappingDto(
-        nomisCourseActivityId = context.nomisCourseActivityId,
-        activityScheduleId = context.activityScheduleId,
+        nomisCourseActivityId = context.mapping.nomisCourseActivityId,
+        activityScheduleId = context.mapping.activityScheduleId,
         mappingType = "ACTIVITY_CREATED",
+      ),
+    ).also {
+      telemetryClient.trackEvent(
+        "activity-retry-success",
+        mapOf("activityScheduleId" to context.mapping.activityScheduleId.toString()),
       )
-    )
+    }
   }
+
+  override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
 }
 
 data class ScheduleDomainEvent(

@@ -37,7 +37,7 @@ internal class ActivitiesMappingServiceTest {
 
       MappingExtension.mappingServer.verify(
         postRequestedFor(urlEqualTo("/mapping/activities"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -47,7 +47,7 @@ internal class ActivitiesMappingServiceTest {
 
       MappingExtension.mappingServer.verify(
         postRequestedFor(urlEqualTo("/mapping/activities"))
-          .withRequestBody(matchingJsonPath("$.nomisCourseActivityId", equalTo("456")))
+          .withRequestBody(matchingJsonPath("$.nomisCourseActivityId", equalTo("456"))),
       )
     }
 
@@ -72,14 +72,15 @@ internal class ActivitiesMappingServiceTest {
           "nomisCourseActivityId": 456,
           "activityScheduleId": 1234,
           "mappingType": "TYPE"
-        }""".trimMargin(),
+        }
+        """.trimMargin(),
       )
 
       mappingService.getMappingGivenActivityScheduleId(1234)
 
       MappingExtension.mappingServer.verify(
         getRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/1234"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -91,7 +92,8 @@ internal class ActivitiesMappingServiceTest {
           "nomisCourseActivityId": 456,
           "activityScheduleId": 1234,
           "mappingType": "A_TYPE"
-        }""".trimMargin(),
+        }
+        """.trimMargin(),
       )
 
       val data = mappingService.getMappingGivenActivityScheduleId(1234)

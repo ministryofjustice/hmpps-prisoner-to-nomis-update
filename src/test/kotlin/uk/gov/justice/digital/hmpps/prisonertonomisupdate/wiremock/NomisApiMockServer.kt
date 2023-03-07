@@ -44,8 +44,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(if (status == 200) "pong" else "some error")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -55,8 +55,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
-          .withStatus(201)
-      )
+          .withStatus(201),
+      ),
     )
   }
 
@@ -66,8 +66,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -76,8 +76,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       put("/prisoners/$prisonerId/visits/$visitId/cancel").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
     )
   }
 
@@ -86,8 +86,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       put("/prisoners/$prisonerId/visits/$visitId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
     )
   }
 
@@ -97,8 +97,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -108,8 +108,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -119,8 +119,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
-          .withStatus(201)
-      )
+          .withStatus(201),
+      ),
     )
   }
 
@@ -130,8 +130,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -141,8 +141,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
-          .withStatus(201)
-      )
+          .withStatus(201),
+      ),
     )
   }
 
@@ -151,8 +151,18 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       put("/activities/$nomisActivityId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubScheduleInstancesUpdate(nomisActivityId: Long) {
+    stubFor(
+      put("/activities/$nomisActivityId/schedules").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200),
+      ),
     )
   }
 
@@ -162,8 +172,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -173,8 +183,19 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubScheduleInstancesUpdateWithError(nomisActivityId: Long, status: Int = 500) {
+    stubFor(
+      put("/activities/$nomisActivityId/schedules").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status),
+      ),
     )
   }
 
@@ -184,8 +205,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "offenderProgramReferenceId": 1234 }""")
-          .withStatus(201)
-      )
+          .withStatus(201),
+      ),
     )
   }
 
@@ -195,8 +216,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -206,8 +227,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "offenderProgramReferenceId": 1234 }""")
-          .withStatus(201)
-      )
+          .withStatus(201),
+      ),
     )
   }
 
@@ -217,8 +238,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -278,8 +299,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{"id": $adjustmentId}""")
-          .withStatus(201)
-      )
+          .withStatus(201),
+      ),
     )
   }
 
@@ -289,8 +310,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -300,15 +321,15 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
   fun stubSentenceAdjustmentCreateWithErrorFollowedBySlowSuccess(
     bookingId: Long,
     sentenceSequence: Long,
-    adjustmentId: Long = 99L
+    adjustmentId: Long = 99L,
   ) {
     stubFor(
       post("/prisoners/booking-id/$bookingId/sentences/$sentenceSequence/adjustments")
@@ -317,9 +338,9 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         .willReturn(
           aResponse()
             .withStatus(500) // request unsuccessful with status code 500
-            .withHeader("Content-Type", "application/json")
+            .withHeader("Content-Type", "application/json"),
         )
-        .willSetStateTo("Cause NOMIS Adjustments Success")
+        .willSetStateTo("Cause NOMIS Adjustments Success"),
     )
 
     stubFor(
@@ -332,12 +353,12 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withBody(
               """
                 { "id": $adjustmentId }
-                """
+                """,
             )
             .withStatus(200)
-            .withFixedDelay(1500)
+            .withFixedDelay(1500),
 
-        ).willSetStateTo(Scenario.STARTED)
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 
@@ -346,8 +367,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       put("/sentence-adjustments/$adjustmentId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
     )
   }
 
@@ -356,8 +377,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       delete("/sentence-adjustments/$adjustmentId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(204)
-      )
+          .withStatus(204),
+      ),
     )
   }
 
@@ -367,8 +388,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -378,8 +399,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{"id": $adjustmentId}""")
-          .withStatus(201)
-      )
+          .withStatus(201),
+      ),
     )
   }
 
@@ -389,8 +410,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -399,8 +420,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       put("/key-date-adjustments/$adjustmentId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
     )
   }
 
@@ -410,8 +431,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -420,8 +441,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       delete("/key-date-adjustments/$adjustmentId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(204)
-      )
+          .withStatus(204),
+      ),
     )
   }
 
@@ -431,8 +452,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 

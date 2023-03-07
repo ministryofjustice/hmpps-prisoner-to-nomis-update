@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono
 
 @Service
 class VisitsMappingService(
-  @Qualifier("mappingWebClient") private val webClient: WebClient
+  @Qualifier("mappingWebClient") private val webClient: WebClient,
 ) {
 
   private companion object {

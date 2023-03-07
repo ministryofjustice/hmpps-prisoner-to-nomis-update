@@ -30,7 +30,7 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
         prisonerId = "A32323Y",
         visitRoom = "Main visits room",
         visitRestriction = "OPEN",
-      )
+      ),
     )
     mappingServer.stubGetVsipWithError("12", 404)
     mappingServer.stubCreate()
@@ -43,8 +43,8 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
               .stringValue("prison-visit.booked").build(),
-          )
-        ).build()
+          ),
+        ).build(),
     ).get()
 
     await untilCallTo { awsSqsVisitClient.countAllMessagesOnQueue(visitQueueUrl).get() } matches { it == 0 }
@@ -63,15 +63,15 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
         .withRequestBody(
           matchingJsonPath(
             "visitComment",
-            equalTo("Created by Book A Prison Visit. Reference: 12")
-          )
+            equalTo("Created by Book A Prison Visit. Reference: 12"),
+          ),
         )
         .withRequestBody(
           matchingJsonPath(
             "visitOrderComment",
-            equalTo("Created by Book A Prison Visit for visit with reference: 12")
-          )
-        )
+            equalTo("Created by Book A Prison Visit for visit with reference: 12"),
+          ),
+        ),
     )
   }
 
@@ -89,8 +89,8 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
               .stringValue("prison-visit.booked").build(),
-          )
-        ).build()
+          ),
+        ).build(),
     ).get()
 
     await untilCallTo { visitsApi.getCountFor("/visits/12") } matches { it == 1 }
@@ -116,7 +116,6 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
 
   @Test
   fun `will consume a prison visits cancel message`() {
-
     mappingServer.stubGetVsip(
       "12",
       response = """{ 
@@ -124,12 +123,12 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
           "vsipId": "12",
           "mappingType": "ONLINE"
         }
-      """.trimIndent()
+      """.trimIndent(),
     )
 
     visitsApi.stubVisitGet(
       "12",
-      buildVisitApiDtoJsonResponse(visitId = "12", prisonerId = "A32323Y", outcome = "PRISONER_CANCELLED")
+      buildVisitApiDtoJsonResponse(visitId = "12", prisonerId = "A32323Y", outcome = "PRISONER_CANCELLED"),
     )
     nomisApi.stubVisitCancel(prisonerId = "AB12345", visitId = "456")
 
@@ -140,8 +139,8 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
               .stringValue("prison-visit.cancelled").build(),
-          )
-        ).build()
+          ),
+        ).build(),
     ).get()
 
     await untilCallTo { awsSqsVisitClient.countMessagesOnQueue(visitQueueUrl).get() } matches { it == 0 }
@@ -149,13 +148,12 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
 
     nomisApi.verify(
       putRequestedFor(urlEqualTo("/prisoners/AB12345/visits/456/cancel"))
-        .withRequestBody(matchingJsonPath("outcome", equalTo("OFFCANC")))
+        .withRequestBody(matchingJsonPath("outcome", equalTo("OFFCANC"))),
     )
   }
 
   @Test
   fun `will consume a prison visits changed message`() {
-
     mappingServer.stubGetVsip(
       "12",
       response = """{ 
@@ -163,7 +161,7 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
           "vsipId": "12",
           "mappingType": "ONLINE"
         }
-      """.trimIndent()
+      """.trimIndent(),
     )
 
     visitsApi.stubVisitGet(
@@ -175,8 +173,8 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
         visitRestriction = "CLOSED",
         startTimestamp = "2021-03-05T09:00:00",
         endTimestamp = "2021-03-05T10:00:00",
-        visitors = listOf(99, 88)
-      )
+        visitors = listOf(99, 88),
+      ),
     )
     nomisApi.stubVisitUpdate(prisonerId = "AB12345", visitId = "456")
 
@@ -187,8 +185,8 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
               .stringValue("prison-visit.changed").build(),
-          )
-        ).build()
+          ),
+        ).build(),
     ).get()
 
     await untilCallTo { awsSqsVisitClient.countMessagesOnQueue(visitQueueUrl).get() } matches { it == 0 }
@@ -201,7 +199,7 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
         .withRequestBody(matchingJsonPath("visitorPersonIds[0]", equalTo("99")))
         .withRequestBody(matchingJsonPath("visitorPersonIds[1]", equalTo("88")))
         .withRequestBody(matchingJsonPath("room", equalTo("Side Room")))
-        .withRequestBody(matchingJsonPath("openClosedStatus", equalTo("CLOSED")))
+        .withRequestBody(matchingJsonPath("openClosedStatus", equalTo("CLOSED"))),
     )
   }
 
@@ -213,7 +211,7 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
     visitRestriction: String = "OPEN",
     startTimestamp: String = "2019-12-02T09:00:00",
     endTimestamp: String = "2019-12-02T10:00:00",
-    visitors: List<Long> = listOf(543524, 344444, 655656)
+    visitors: List<Long> = listOf(543524, 344444, 655656),
   ): String {
     val outcomeString = outcome?.let { "\"outcomeStatus\": \"$it\"," } ?: ""
 

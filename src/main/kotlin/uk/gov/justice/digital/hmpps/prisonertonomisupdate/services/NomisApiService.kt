@@ -76,9 +76,18 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .block()!!
   }
 
+  fun updateScheduleInstances(courseActivityId: Long, request: List<ScheduleRequest>) {
+    webClient.put()
+      .uri("/activities/$courseActivityId/schedules")
+      .bodyValue(request)
+      .retrieve()
+      .toBodilessEntity()
+      .block()!!
+  }
+
   fun createAllocation(
     courseActivityId: Long,
-    request: CreateOffenderProgramProfileRequest
+    request: CreateOffenderProgramProfileRequest,
   ): OffenderProgramProfileResponse =
     webClient.post()
       .uri("/activities/$courseActivityId")
@@ -90,7 +99,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
   fun deallocate(
     courseActivityId: Long,
     bookingId: Long,
-    request: EndOffenderProgramProfileRequest
+    request: EndOffenderProgramProfileRequest,
   ): OffenderProgramProfileResponse =
     webClient.put()
       .uri("/activities/$courseActivityId/booking-id/$bookingId/end")
@@ -109,7 +118,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
   suspend fun createSentenceAdjustment(
     bookingId: Long,
     sentenceSequence: Long,
-    request: CreateSentencingAdjustmentRequest
+    request: CreateSentencingAdjustmentRequest,
   ): CreateSentencingAdjustmentResponse =
     webClient.post()
       .uri("/prisoners/booking-id/$bookingId/sentences/$sentenceSequence/adjustments")
@@ -119,7 +128,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   suspend fun updateSentenceAdjustment(
     adjustmentId: Long,
-    request: UpdateSentencingAdjustmentRequest
+    request: UpdateSentencingAdjustmentRequest,
   ): Unit =
     webClient.put()
       .uri("/sentence-adjustments/$adjustmentId")
@@ -129,7 +138,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   suspend fun createKeyDateAdjustment(
     bookingId: Long,
-    request: CreateSentencingAdjustmentRequest
+    request: CreateSentencingAdjustmentRequest,
   ): CreateSentencingAdjustmentResponse =
     webClient.post()
       .uri("/prisoners/booking-id/$bookingId/adjustments")
@@ -139,7 +148,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   suspend fun updateKeyDateAdjustment(
     adjustmentId: Long,
-    request: UpdateSentencingAdjustmentRequest
+    request: UpdateSentencingAdjustmentRequest,
   ): Unit =
     webClient.put()
       .uri("/key-date-adjustments/$adjustmentId")

@@ -39,7 +39,7 @@ internal class SentencingAdjustmentsApiServiceTest {
 
       sentencingAdjustmentsApi.verify(
         getRequestedFor(urlEqualTo("/adjustments/1234"))
-          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
       )
     }
 

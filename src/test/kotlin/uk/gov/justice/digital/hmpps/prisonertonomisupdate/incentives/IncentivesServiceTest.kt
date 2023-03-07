@@ -37,11 +37,11 @@ internal class IncentivesServiceTest {
         CreateIncentiveResponseDto(
           bookingId = 123,
           sequence = 1,
-        )
+        ),
       )
 
       incentivesService.createIncentive(
-        IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123))
+        IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123)),
       )
 
       verify(telemetryClient).trackEvent(
@@ -53,7 +53,7 @@ internal class IncentivesServiceTest {
           assertThat(it["iepDate"]).isEqualTo("2023-09-08")
           assertThat(it["iepTime"]).isEqualTo("09:30:00")
         },
-        isNull()
+        isNull(),
       )
     }
 
@@ -65,9 +65,9 @@ internal class IncentivesServiceTest {
         IncentivesService.IncentiveCreatedEvent(
           IncentivesService.AdditionalInformation(
             id = 123,
-            reason = "USER_CREATED_NOMIS"
-          )
-        )
+            reason = "USER_CREATED_NOMIS",
+          ),
+        ),
       )
 
       verifyNoInteractions(nomisApiService)
@@ -81,12 +81,12 @@ internal class IncentivesServiceTest {
           nomisBookingId = 123,
           nomisIncentiveSequence = 1,
           incentiveId = 12345,
-          mappingType = "A_TYPE"
-        )
+          mappingType = "A_TYPE",
+        ),
       )
 
       incentivesService.createIncentive(
-        IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123))
+        IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123)),
       )
 
       verifyNoInteractions(nomisApiService)
@@ -99,7 +99,7 @@ internal class IncentivesServiceTest {
 
       assertThatThrownBy {
         incentivesService.createIncentive(
-          IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123))
+          IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123)),
         )
       }.isInstanceOf(RuntimeException::class.java)
 
@@ -112,7 +112,7 @@ internal class IncentivesServiceTest {
           assertThat(it["iepDate"]).isEqualTo("2023-09-08")
           assertThat(it["iepTime"]).isEqualTo("09:30:00")
         },
-        isNull()
+        isNull(),
       )
     }
 
@@ -123,12 +123,12 @@ internal class IncentivesServiceTest {
         CreateIncentiveResponseDto(
           bookingId = 123,
           sequence = 1,
-        )
+        ),
       )
       whenever(mappingService.createMapping(any())).thenThrow(RuntimeException("test"))
 
       incentivesService.createIncentive(
-        IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123))
+        IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123)),
       )
 
       verify(telemetryClient).trackEvent(
@@ -140,7 +140,7 @@ internal class IncentivesServiceTest {
           assertThat(it["iepDate"]).isEqualTo("2023-09-08")
           assertThat(it["iepTime"]).isEqualTo("09:30:00")
         },
-        isNull()
+        isNull(),
       )
     }
   }
@@ -154,14 +154,17 @@ internal class IncentivesServiceTest {
         IncentiveContext(
           nomisBookingId = 456,
           nomisIncentiveSequence = 1,
-          incentiveId = 1234
-        )
+          incentiveId = 1234,
+        ),
       )
 
       verify(mappingService).createMapping(
         IncentiveMappingDto(
-          456, 1, incentiveId = 1234, mappingType = "INCENTIVE_CREATED"
-        )
+          456,
+          1,
+          incentiveId = 1234,
+          mappingType = "INCENTIVE_CREATED",
+        ),
       )
     }
   }

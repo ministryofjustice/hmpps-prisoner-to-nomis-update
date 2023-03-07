@@ -40,7 +40,7 @@ import kotlin.annotation.AnnotationTarget.CLASS
   IncentivesApiExtension::class,
   ActivitiesApiExtension::class,
   AppointmentsApiExtension::class,
-  SentencingAdjustmentsApiExtension::class
+  SentencingAdjustmentsApiExtension::class,
 )
 @ActiveProfiles("test")
 @SpringBootTest(classes = [WebClientConfiguration::class, WebClientAutoConfiguration::class, OAuth2ClientAutoConfiguration::class, SecurityAutoConfiguration::class])

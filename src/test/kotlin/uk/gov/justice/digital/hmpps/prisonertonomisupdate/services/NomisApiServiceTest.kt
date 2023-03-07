@@ -40,7 +40,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/prisoners/AB123D/visits"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -52,7 +52,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/prisoners/AB123D/visits"))
-          .withRequestBody(matchingJsonPath("$.offenderNo", equalTo("AB123D")))
+          .withRequestBody(matchingJsonPath("$.offenderNo", equalTo("AB123D"))),
       )
     }
 
@@ -88,7 +88,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         putRequestedFor(urlEqualTo("/prisoners/AB123D/visits/12/cancel"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -97,7 +97,7 @@ internal class NomisApiServiceTest {
       nomisApiService.cancelVisit(cancelVisit())
 
       NomisApiExtension.nomisApi.verify(
-        putRequestedFor(urlEqualTo("/prisoners/AB123D/visits/12/cancel"))
+        putRequestedFor(urlEqualTo("/prisoners/AB123D/visits/12/cancel")),
       )
     }
 
@@ -133,7 +133,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         putRequestedFor(urlEqualTo("/prisoners/AB123D/visits/12"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -142,7 +142,7 @@ internal class NomisApiServiceTest {
       nomisApiService.updateVisit("AB123D", "12", updateVisit())
 
       NomisApiExtension.nomisApi.verify(
-        putRequestedFor(urlEqualTo("/prisoners/AB123D/visits/12"))
+        putRequestedFor(urlEqualTo("/prisoners/AB123D/visits/12")),
       )
     }
 
@@ -176,7 +176,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/prisoners/booking-id/456/incentives"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -188,7 +188,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/prisoners/booking-id/456/incentives"))
-          .withRequestBody(matchingJsonPath("$.prisonId", equalTo("MDI")))
+          .withRequestBody(matchingJsonPath("$.prisonId", equalTo("MDI"))),
       )
     }
 
@@ -222,7 +222,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/activities"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -234,7 +234,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/activities"))
-          .withRequestBody(matchingJsonPath("$.prisonId", equalTo("WWI")))
+          .withRequestBody(matchingJsonPath("$.prisonId", equalTo("WWI"))),
       )
     }
 
@@ -259,7 +259,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         putRequestedFor(urlEqualTo("/activities/1"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -271,7 +271,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         putRequestedFor(urlEqualTo("/activities/1"))
-          .withRequestBody(matchingJsonPath("$.endDate", equalTo("2023-02-10")))
+          .withRequestBody(matchingJsonPath("$.endDate", equalTo("2023-02-10"))),
       )
     }
 
@@ -281,6 +281,46 @@ internal class NomisApiServiceTest {
 
       assertThatThrownBy {
         nomisApiService.updateActivity(1L, updateActivity())
+      }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+  }
+
+  @Nested
+  inner class UpdateScheduleInstances {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() {
+      NomisApiExtension.nomisApi.stubScheduleInstancesUpdate(1L)
+
+      nomisApiService.updateScheduleInstances(1L, updateScheduleInstances())
+
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/1/schedules"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will put data to nomis api`() {
+      NomisApiExtension.nomisApi.stubScheduleInstancesUpdate(1L)
+
+      nomisApiService.updateScheduleInstances(1L, updateScheduleInstances())
+
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/1/schedules"))
+          .withRequestBody(matchingJsonPath("$[0].date", equalTo("2023-02-10")))
+          .withRequestBody(matchingJsonPath("$[0].startTime", equalTo("08:00")))
+          .withRequestBody(matchingJsonPath("$[0].endTime", equalTo("11:00")))
+          .withRequestBody(matchingJsonPath("$[1].date", equalTo("2023-02-11"))),
+      )
+    }
+
+    @Test
+    fun `when any error response is received an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubScheduleInstancesUpdateWithError(1, 503)
+
+      assertThatThrownBy {
+        nomisApiService.updateScheduleInstances(1L, updateScheduleInstances())
       }.isInstanceOf(ServiceUnavailable::class.java)
     }
   }
@@ -296,7 +336,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/activities/12"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -308,7 +348,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/activities/12"))
-          .withRequestBody(matchingJsonPath("$.bookingId", equalTo("456")))
+          .withRequestBody(matchingJsonPath("$.bookingId", equalTo("456"))),
       )
     }
 
@@ -333,7 +373,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         putRequestedFor(urlEqualTo("/activities/12/booking-id/456/end"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -346,7 +386,7 @@ internal class NomisApiServiceTest {
       NomisApiExtension.nomisApi.verify(
         putRequestedFor(urlEqualTo("/activities/12/booking-id/456/end"))
           .withRequestBody(matchingJsonPath("$.endDate", equalTo("2023-01-21")))
-          .withRequestBody(matchingJsonPath("$.endReason", equalTo("REASON")))
+          .withRequestBody(matchingJsonPath("$.endReason", equalTo("REASON"))),
       )
     }
 
@@ -408,7 +448,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/prisoners/booking-id/12345/sentences/2/adjustments"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -424,8 +464,8 @@ internal class NomisApiServiceTest {
           adjustmentDate = LocalDate.parse("2022-01-01"),
           adjustmentDays = 9,
           adjustmentFromDate = LocalDate.parse("2020-07-19"),
-          comment = "Adjusted for remand"
-        )
+          comment = "Adjusted for remand",
+        ),
       )
 
       NomisApiExtension.nomisApi.verify(
@@ -434,7 +474,7 @@ internal class NomisApiServiceTest {
           .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
           .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("9")))
           .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
-          .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand")))
+          .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand"))),
       )
     }
 
@@ -443,7 +483,7 @@ internal class NomisApiServiceTest {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentCreateWithError(
         bookingId = 12345,
         sentenceSequence = 2,
-        status = 404
+        status = 404,
       )
 
       assertThatThrownBy {
@@ -456,7 +496,7 @@ internal class NomisApiServiceTest {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentCreateWithError(
         bookingId = 12345,
         sentenceSequence = 2,
-        status = 503
+        status = 503,
       )
 
       assertThatThrownBy {
@@ -476,7 +516,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         putRequestedFor(urlEqualTo("/sentence-adjustments/98765"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -491,8 +531,8 @@ internal class NomisApiServiceTest {
           adjustmentDate = LocalDate.parse("2022-01-01"),
           adjustmentDays = 9,
           adjustmentFromDate = LocalDate.parse("2020-07-19"),
-          comment = "Adjusted for remand"
-        )
+          comment = "Adjusted for remand",
+        ),
       )
 
       NomisApiExtension.nomisApi.verify(
@@ -501,7 +541,7 @@ internal class NomisApiServiceTest {
           .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
           .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("9")))
           .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
-          .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand")))
+          .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand"))),
       )
     }
 
@@ -509,7 +549,7 @@ internal class NomisApiServiceTest {
     internal fun `when adjustment is not found an exception is thrown`() {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentUpdateWithError(
         adjustmentId = 98765,
-        status = 404
+        status = 404,
       )
 
       assertThatThrownBy {
@@ -521,7 +561,7 @@ internal class NomisApiServiceTest {
     internal fun `when any bad response is received an exception is thrown`() {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentUpdateWithError(
         adjustmentId = 98765,
-        status = 503
+        status = 503,
       )
 
       assertThatThrownBy {
@@ -541,7 +581,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         deleteRequestedFor(urlEqualTo("/sentence-adjustments/98765"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -552,7 +592,7 @@ internal class NomisApiServiceTest {
       nomisApiService.deleteSentenceAdjustment(98765)
 
       NomisApiExtension.nomisApi.verify(
-        deleteRequestedFor(urlEqualTo("/sentence-adjustments/98765"))
+        deleteRequestedFor(urlEqualTo("/sentence-adjustments/98765")),
       )
     }
 
@@ -560,7 +600,7 @@ internal class NomisApiServiceTest {
     internal fun `if 404 - which is not expected - is returned an exception is thrown`() {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentDeleteWithError(
         adjustmentId = 98765,
-        status = 404
+        status = 404,
       )
 
       assertThatThrownBy {
@@ -572,7 +612,7 @@ internal class NomisApiServiceTest {
     internal fun `when any bad response is received an exception is thrown`() {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentDeleteWithError(
         adjustmentId = 98765,
-        status = 503
+        status = 503,
       )
 
       assertThatThrownBy {
@@ -592,7 +632,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/prisoners/booking-id/12345/adjustments"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -606,14 +646,14 @@ internal class NomisApiServiceTest {
           adjustmentTypeCode = "ADA",
           adjustmentDate = LocalDate.parse("2022-01-01"),
           adjustmentDays = 9,
-        )
+        ),
       )
 
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/prisoners/booking-id/12345/adjustments"))
           .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("ADA")))
           .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
-          .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("9")))
+          .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("9"))),
       )
     }
 
@@ -621,7 +661,7 @@ internal class NomisApiServiceTest {
     internal fun `when booking is not found an exception is thrown`() {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentCreateWithError(
         bookingId = 12345,
-        status = 404
+        status = 404,
       )
 
       assertThatThrownBy {
@@ -633,7 +673,7 @@ internal class NomisApiServiceTest {
     internal fun `when any bad response is received an exception is thrown`() {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentCreateWithError(
         bookingId = 12345,
-        status = 503
+        status = 503,
       )
 
       assertThatThrownBy {
@@ -653,7 +693,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         putRequestedFor(urlEqualTo("/key-date-adjustments/98765"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -668,8 +708,8 @@ internal class NomisApiServiceTest {
           adjustmentDate = LocalDate.parse("2022-01-01"),
           adjustmentDays = 9,
           adjustmentFromDate = LocalDate.parse("2020-07-19"),
-          comment = "Adjusted for remand"
-        )
+          comment = "Adjusted for remand",
+        ),
       )
 
       NomisApiExtension.nomisApi.verify(
@@ -678,7 +718,7 @@ internal class NomisApiServiceTest {
           .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
           .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("9")))
           .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
-          .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand")))
+          .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand"))),
       )
     }
 
@@ -686,7 +726,7 @@ internal class NomisApiServiceTest {
     internal fun `when adjustment is not found an exception is thrown`() {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentUpdateWithError(
         adjustmentId = 98765,
-        status = 404
+        status = 404,
       )
 
       assertThatThrownBy {
@@ -698,7 +738,7 @@ internal class NomisApiServiceTest {
     internal fun `when any bad response is received an exception is thrown`() {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentUpdateWithError(
         adjustmentId = 98765,
-        status = 503
+        status = 503,
       )
 
       assertThatThrownBy {
@@ -718,7 +758,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         deleteRequestedFor(urlEqualTo("/key-date-adjustments/98765"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -729,7 +769,7 @@ internal class NomisApiServiceTest {
       nomisApiService.deleteKeyDateAdjustment(98765)
 
       NomisApiExtension.nomisApi.verify(
-        deleteRequestedFor(urlEqualTo("/key-date-adjustments/98765"))
+        deleteRequestedFor(urlEqualTo("/key-date-adjustments/98765")),
       )
     }
 
@@ -737,7 +777,7 @@ internal class NomisApiServiceTest {
     internal fun `if 404 - which is not expected - is returned an exception is thrown`() {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentDeleteWithError(
         adjustmentId = 98765,
-        status = 404
+        status = 404,
       )
 
       assertThatThrownBy {
@@ -749,7 +789,7 @@ internal class NomisApiServiceTest {
     internal fun `when any bad response is received an exception is thrown`() {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentDeleteWithError(
         adjustmentId = 98765,
-        status = 503
+        status = 503,
       )
 
       assertThatThrownBy {
@@ -785,7 +825,7 @@ fun updateVisit(): UpdateVisitDto = UpdateVisitDto(
 fun newIncentive() = CreateIncentiveDto(
   iepDateTime = LocalDateTime.now(),
   prisonId = "MDI",
-  iepLevel = "High"
+  iepLevel = "High",
 )
 
 fun newActivity() = CreateActivityRequest(
@@ -807,6 +847,11 @@ fun updateActivity() = UpdateActivityRequest(
   internalLocationId = 703000,
   payRates = emptyList(),
   scheduleRules = emptyList(),
+)
+
+fun updateScheduleInstances() = listOf(
+  ScheduleRequest(date = LocalDate.parse("2023-02-10"), startTime = LocalTime.parse("08:00"), endTime = LocalTime.parse("11:00")),
+  ScheduleRequest(date = LocalDate.parse("2023-02-11"), startTime = LocalTime.parse("08:00"), endTime = LocalTime.parse("11:00")),
 )
 
 fun newAllocation() = CreateOffenderProgramProfileRequest(
@@ -835,7 +880,7 @@ private fun newSentencingAdjustment(
   adjustmentDate: LocalDate = LocalDate.now(),
   adjustmentFromDate: LocalDate? = null,
   adjustmentDays: Long = 99,
-  comment: String? = "Adjustment comment"
+  comment: String? = "Adjustment comment",
 ) = CreateSentencingAdjustmentRequest(
   adjustmentTypeCode = adjustmentTypeCode,
   adjustmentDate = adjustmentDate,
@@ -849,7 +894,7 @@ private fun updateSentencingAdjustment(
   adjustmentDate: LocalDate = LocalDate.now(),
   adjustmentFromDate: LocalDate? = null,
   adjustmentDays: Long = 99,
-  comment: String? = "Adjustment comment"
+  comment: String? = "Adjustment comment",
 ) = UpdateSentencingAdjustmentRequest(
   adjustmentTypeCode = adjustmentTypeCode,
   adjustmentDate = adjustmentDate,

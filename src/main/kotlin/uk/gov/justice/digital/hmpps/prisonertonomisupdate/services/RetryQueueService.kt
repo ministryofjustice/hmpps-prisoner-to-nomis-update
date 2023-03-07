@@ -1,43 +1,38 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.future.await
-import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 
-const val RETRY_CREATE_MAPPING = "RETRY_CREATE_MAPPING"
-
-@Service
-class SentencingUpdateQueueService(
+open class RetryQueueService(
+  private val queueId: String,
   private val hmppsQueueService: HmppsQueueService,
   private val telemetryClient: TelemetryClient,
   private val objectMapper: ObjectMapper,
 ) {
-  private val queue by lazy { hmppsQueueService.findByQueueId("sentencing") as HmppsQueue }
+  private val queue by lazy { hmppsQueueService.findByQueueId(queueId) as HmppsQueue }
   private val sqsClient by lazy { queue.sqsClient }
   private val queueUrl by lazy { queue.queueUrl }
 
-  suspend fun sendMessage(offenderNo: String, message: SentencingAdjustmentMappingDto) {
+  suspend fun sendMessage(mapping: Any, telemetryAttributes: Map<String, String>) {
     val sqsMessage = SQSMessage(
       Type = RETRY_CREATE_MAPPING,
-      Message = SentencingAdjustmentCreateMappingRetryMessage(offenderNo, message).toJson(),
+      Message = CreateMappingRetryMessage(mapping, telemetryAttributes).toJson(),
     )
     val result = sqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(queueUrl).messageBody(sqsMessage.toJson()).build()
+      SendMessageRequest.builder().queueUrl(queueUrl).messageBody(sqsMessage.toJson()).build(),
     ).await()
 
     telemetryClient.trackEvent(
-      "sentencing-adjustment-create-mapping-retry",
+      "$queueId-create-mapping-retry",
       mapOf(
         "messageId" to result.messageId()!!,
-        "nomisAdjustmentId" to message.nomisAdjustmentId.toString(),
-        "adjustmentId" to message.adjustmentId,
-      ),
+      ) + telemetryAttributes,
     )
   }
 
@@ -45,7 +40,7 @@ class SentencingUpdateQueueService(
     objectMapper.writeValueAsString(this)
 }
 
-data class SentencingAdjustmentCreateMappingRetryMessage(
-  val offenderNo: String,
-  val mapping: SentencingAdjustmentMappingDto
+data class CreateMappingRetryMessage<T>(
+  val mapping: T,
+  val telemetryAttributes: Map<String, String>,
 )
