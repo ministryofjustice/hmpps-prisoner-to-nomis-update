@@ -249,8 +249,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
-          .withStatus(201)
-      )
+          .withStatus(201),
+      ),
     )
   }
 
@@ -260,8 +260,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -273,9 +273,9 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         .willReturn(
           aResponse()
             .withStatus(500) // request unsuccessful with status code 500
-            .withHeader("Content-Type", "application/json")
+            .withHeader("Content-Type", "application/json"),
         )
-        .willSetStateTo("Cause NOMIS Appointments Success")
+        .willSetStateTo("Cause NOMIS Appointments Success"),
     )
 
     stubFor(
@@ -287,9 +287,9 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withHeader("Content-Type", "application/json")
             .withBody(response)
             .withStatus(200)
-            .withFixedDelay(1500)
+            .withFixedDelay(1500),
 
-        ).willSetStateTo(Scenario.STARTED)
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 
