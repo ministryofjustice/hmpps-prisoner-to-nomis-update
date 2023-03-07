@@ -229,8 +229,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
       post("/mapping/appointments").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(201)
-      )
+          .withStatus(201),
+      ),
     )
   }
 
@@ -240,8 +240,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -251,8 +251,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
     )
   }
 
@@ -262,8 +262,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -275,9 +275,9 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         .willReturn(
           aResponse()
             .withStatus(500) // request unsuccessful with status code 500
-            .withHeader("Content-Type", "application/json")
+            .withHeader("Content-Type", "application/json"),
         )
-        .willSetStateTo("Cause Mapping Appointment Success")
+        .willSetStateTo("Cause Mapping Appointment Success"),
     )
 
     stubFor(
@@ -288,9 +288,9 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(201)
-            .withFixedDelay(1500)
+            .withFixedDelay(1500),
 
-        ).willSetStateTo(Scenario.STARTED)
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 

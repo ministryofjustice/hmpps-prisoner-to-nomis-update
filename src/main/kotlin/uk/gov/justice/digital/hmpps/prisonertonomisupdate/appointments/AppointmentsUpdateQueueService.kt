@@ -23,10 +23,10 @@ class AppointmentsUpdateQueueService(
     val sqsMessage = SQSMessage(
       Type = "RETRY",
       Message = objectMapper.writeValueAsString(context),
-      MessageId = "retry-${context.appointmentInstanceId}"
+      MessageId = "retry-${context.appointmentInstanceId}",
     )
     val result = sqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(queueUrl).messageBody(objectMapper.writeValueAsString(sqsMessage)).build()
+      SendMessageRequest.builder().queueUrl(queueUrl).messageBody(objectMapper.writeValueAsString(sqsMessage)).build(),
     ).get()
 
     telemetryClient.trackEvent(

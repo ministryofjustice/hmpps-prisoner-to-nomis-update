@@ -39,8 +39,8 @@ class AppointmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(if (status == 200) "pong" else "some error")
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -50,8 +50,8 @@ class AppointmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
-          .withStatus(200)
-      )
+          .withStatus(200),
+      ),
     )
   }
 
@@ -65,10 +65,10 @@ class AppointmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
               {
                 "error": "some error"
               }
-            """.trimIndent()
+            """.trimIndent(),
           )
-          .withStatus(status)
-      )
+          .withStatus(status),
+      ),
     )
   }
 
@@ -80,9 +80,9 @@ class AppointmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         .willReturn(
           aResponse()
             .withStatus(500) // request unsuccessful with status code 500
-            .withHeader("Content-Type", "application/json")
+            .withHeader("Content-Type", "application/json"),
         )
-        .willSetStateTo("Cause Appointments Success")
+        .willSetStateTo("Cause Appointments Success"),
     )
 
     stubFor(
@@ -94,8 +94,8 @@ class AppointmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withHeader("Content-Type", "application/json")
             .withBody(response)
             .withStatus(200)
-            .withFixedDelay(500)
-        ).willSetStateTo(Scenario.STARTED)
+            .withFixedDelay(500),
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 }

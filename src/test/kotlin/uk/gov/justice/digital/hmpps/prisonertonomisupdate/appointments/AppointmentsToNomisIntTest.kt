@@ -88,7 +88,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("eventDate", equalTo("2023-03-14")))
                 .withRequestBody(matchingJsonPath("startTime", equalTo("10:15")))
                 .withRequestBody(matchingJsonPath("endTime", equalTo("11:42")))
-                .withRequestBody(matchingJsonPath("eventSubType", equalTo("MEDI")))
+                .withRequestBody(matchingJsonPath("eventSubType", equalTo("MEDI"))),
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -100,7 +100,12 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
             mappingServer.verify(
               postRequestedFor(urlEqualTo("/mapping/appointments"))
                 .withRequestBody(matchingJsonPath("nomisEventId", equalTo(EVENT_ID.toString())))
-                .withRequestBody(matchingJsonPath("appointmentInstanceId", equalTo(APPOINTMENT_INSTANCE_ID.toString())))
+                .withRequestBody(
+                  matchingJsonPath(
+                    "appointmentInstanceId",
+                    equalTo(APPOINTMENT_INSTANCE_ID.toString()),
+                  ),
+                ),
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -148,7 +153,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will callback back to mapping service to check message has not already been processed`() {
           await untilAsserted {
             mappingServer.verify(
-              getRequestedFor(urlEqualTo("/mapping/appointments/appointment-instance-id/$APPOINTMENT_INSTANCE_ID"))
+              getRequestedFor(urlEqualTo("/mapping/appointments/appointment-instance-id/$APPOINTMENT_INSTANCE_ID")),
             )
           }
         }
@@ -179,7 +184,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           nomisApi.stubAppointmentCreate("""{ "eventId": $EVENT_ID }""")
           appointmentsApi.stubGetAppointmentWithErrorFollowedBySlowSuccess(
             id = APPOINTMENT_INSTANCE_ID,
-            response = appointmentResponse
+            response = appointmentResponse,
           )
           publishCreateDomainEvent()
         }
@@ -209,7 +214,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("eventDate", equalTo("2023-03-14")))
                 .withRequestBody(matchingJsonPath("startTime", equalTo("10:15")))
                 .withRequestBody(matchingJsonPath("endTime", equalTo("11:42")))
-                .withRequestBody(matchingJsonPath("eventSubType", equalTo("MEDI")))
+                .withRequestBody(matchingJsonPath("eventSubType", equalTo("MEDI"))),
             )
           }
           await untilAsserted {
@@ -356,7 +361,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           await untilAsserted {
             mappingServer.verify(
               2,
-              postRequestedFor(urlEqualTo("/mapping/appointments"))
+              postRequestedFor(urlEqualTo("/mapping/appointments")),
             )
           }
           await untilAsserted {
@@ -412,8 +417,8 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
               .stringValue(eventType).build(),
-          )
-        ).build()
+          ),
+        ).build(),
     ).get()
   }
 

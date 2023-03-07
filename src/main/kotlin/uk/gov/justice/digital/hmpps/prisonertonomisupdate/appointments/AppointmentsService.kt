@@ -15,7 +15,7 @@ class AppointmentsService(
   private val nomisApiService: NomisApiService,
   private val mappingService: AppointmentMappingService,
   private val appointmentsUpdateQueueService: AppointmentsUpdateQueueService,
-  private val telemetryClient: TelemetryClient
+  private val telemetryClient: TelemetryClient,
 ) {
 
   private companion object {
@@ -24,7 +24,6 @@ class AppointmentsService(
 
   suspend fun createAppointment(event: AppointmentDomainEvent) {
     appointmentsApiService.getAppointment(event.additionalInformation.id).run {
-
       val telemetryMap = mutableMapOf(
         "appointmentInstanceId" to id.toString(),
         "bookingId" to bookingId.toString(),
@@ -43,7 +42,7 @@ class AppointmentsService(
             "locationId" to locationId.toString(),
             "date" to date.toString(),
             "start" to start.toString(),
-          )
+          ),
         )
         return
       }
@@ -60,13 +59,13 @@ class AppointmentsService(
 
       try {
         mappingService.createMapping(
-          AppointmentMappingDto(nomisEventId = nomisResponse.eventId, appointmentInstanceId = id)
+          AppointmentMappingDto(nomisEventId = nomisResponse.eventId, appointmentInstanceId = id),
         )
       } catch (e: Exception) {
         telemetryClient.trackEvent("appointment-create-map-failed", telemetryMap)
         log.error("Unexpected exception, queueing retry", e)
         appointmentsUpdateQueueService.sendMessage(
-          AppointmentContext(nomisEventId = nomisResponse.eventId, appointmentInstanceId = id)
+          AppointmentContext(nomisEventId = nomisResponse.eventId, appointmentInstanceId = id),
         )
         return
       }
@@ -87,7 +86,7 @@ class AppointmentsService(
 
   suspend fun createRetry(context: AppointmentContext) {
     mappingService.createMapping(
-      AppointmentMappingDto(nomisEventId = context.nomisEventId, appointmentInstanceId = context.appointmentInstanceId)
+      AppointmentMappingDto(nomisEventId = context.nomisEventId, appointmentInstanceId = context.appointmentInstanceId),
     )
   }
 }

@@ -23,7 +23,7 @@ class AppointmentsDomainEventListener(
   private val appointmentsService: AppointmentsService,
   private val objectMapper: ObjectMapper,
   private val eventFeatureSwitch: EventFeatureSwitch,
-  private val telemetryClient: TelemetryClient
+  private val telemetryClient: TelemetryClient,
 ) {
 
   private companion object {
@@ -41,14 +41,16 @@ class AppointmentsDomainEventListener(
       when (sqsMessage.Type) {
         "Notification" -> {
           val (eventType) = objectMapper.readValue<HMPPSDomainEvent>(sqsMessage.Message)
-          if (eventFeatureSwitch.isEnabled(eventType)) when (eventType) {
-            "appointments.appointment.created" -> appointmentsService.createAppointment(
-              objectMapper.readValue(
-                sqsMessage.Message
+          if (eventFeatureSwitch.isEnabled(eventType)) {
+            when (eventType) {
+              "appointments.appointment.created" -> appointmentsService.createAppointment(
+                objectMapper.readValue(
+                  sqsMessage.Message,
+                ),
               )
-            )
 
-            else -> log.info("Received a message I wasn't expecting: {}", eventType)
+              else -> log.info("Received a message I wasn't expecting: {}", eventType)
+            }
           } else {
             log.warn("Feature switch is disabled for {}", eventType)
           }
@@ -74,7 +76,7 @@ class AppointmentsDomainEventListener(
 }
 
 private fun asCompletableFuture(
-  process: suspend () -> Unit
+  process: suspend () -> Unit,
 ): CompletableFuture<Void> {
   return CoroutineScope(Dispatchers.Default).future {
     process()

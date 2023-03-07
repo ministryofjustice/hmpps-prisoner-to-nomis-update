@@ -37,7 +37,7 @@ internal class AppointmentApiServiceTest {
           "end":  "11:42",
           "eventSubType": "DUFF"
         }
-        """.trimIndent()
+        """.trimIndent(),
       )
     }
 
@@ -48,7 +48,7 @@ internal class AppointmentApiServiceTest {
 
         AppointmentsApiExtension.appointmentsApi.verify(
           WireMock.getRequestedFor(WireMock.urlEqualTo("/appointments/1234"))
-            .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE"))
+            .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
         )
       }
     }

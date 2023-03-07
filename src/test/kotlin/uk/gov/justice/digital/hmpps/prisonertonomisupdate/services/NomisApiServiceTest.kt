@@ -411,7 +411,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/appointments"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -423,7 +423,7 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/appointments"))
-          .withRequestBody(matchingJsonPath("$.internalLocationId", equalTo("703000")))
+          .withRequestBody(matchingJsonPath("$.internalLocationId", equalTo("703000"))),
       )
     }
 

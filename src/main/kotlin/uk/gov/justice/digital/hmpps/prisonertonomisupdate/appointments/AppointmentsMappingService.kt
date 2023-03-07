@@ -11,7 +11,7 @@ import java.time.LocalDateTime
 
 @Service
 class AppointmentMappingService(
-  @Qualifier("mappingWebClient") private val webClient: WebClient
+  @Qualifier("mappingWebClient") private val webClient: WebClient,
 ) {
   suspend fun createMapping(request: AppointmentMappingDto) {
     webClient.post()
@@ -43,5 +43,5 @@ class AppointmentMappingService(
 data class AppointmentMappingDto(
   val appointmentInstanceId: Long,
   val nomisEventId: Long,
-  val whenCreated: LocalDateTime? = null
+  val whenCreated: LocalDateTime? = null,
 )

@@ -37,7 +37,7 @@ internal class AppointmentsMappingServiceTest {
       runBlocking { mappingService.createMapping(newMapping()) }
       MappingExtension.mappingServer.verify(
         postRequestedFor(urlEqualTo("/mapping/appointments"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -47,7 +47,7 @@ internal class AppointmentsMappingServiceTest {
 
       MappingExtension.mappingServer.verify(
         postRequestedFor(urlEqualTo("/mapping/appointments"))
-          .withRequestBody(matchingJsonPath("$.nomisEventId", equalTo("456")))
+          .withRequestBody(matchingJsonPath("$.nomisEventId", equalTo("456"))),
       )
     }
 
@@ -71,14 +71,15 @@ internal class AppointmentsMappingServiceTest {
         response = """{
           "nomisEventId": 456,
           "appointmentInstanceId": 1234
-        }""".trimMargin(),
+        }
+        """.trimMargin(),
       )
 
       runBlocking { mappingService.getMappingGivenAppointmentInstanceId(1234) }
 
       MappingExtension.mappingServer.verify(
         getRequestedFor(urlEqualTo("/mapping/appointments/appointment-instance-id/1234"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -89,7 +90,8 @@ internal class AppointmentsMappingServiceTest {
         response = """{
           "nomisEventId": 456,
           "appointmentInstanceId": 1234
-        }""".trimMargin(),
+        }
+        """.trimMargin(),
       )
 
       runBlocking {
@@ -106,7 +108,7 @@ internal class AppointmentsMappingServiceTest {
       assertThat(
         runBlocking {
           mappingService.getMappingGivenAppointmentInstanceIdOrNull(123)
-        }
+        },
       ).isNull()
     }
 
