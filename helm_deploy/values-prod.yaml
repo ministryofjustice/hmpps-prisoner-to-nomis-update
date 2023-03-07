@@ -16,6 +16,7 @@ generic-service:
     API_BASE_URL_INCENTIVES: https://incentives-api.hmpps.service.justice.gov.uk
     # point at self until real API exists
     API_BASE_URL_ACTIVITIES: https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk
+    API_BASE_URL_APPOINTMENTS: https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk
     API_BASE_URL_SENTENCE_ADJUSTMENTS: https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk
     FEATURE_EVENT_ACTIVITIES_ACTIVITY_SCHEDULE_CREATED: false
     FEATURE_EVENT_ACTIVITIES_ACTIVITY_SCHEDULE_AMENDED: false
@@ -23,6 +24,7 @@ generic-service:
     FEATURE_EVENT_ACTIVITIES_ACTIVITY_AMENDED: false
     FEATURE_EVENT_ACTIVITIES_PRISONER_ALLOCATED: false
     FEATURE_EVENT_ACTIVITIES_PRISONER_DEALLOCATED: false
+    FEATURE_EVENT_APPOINTMENTS_APPOINTMENT_CREATED: false
 
 generic-prometheus-alerts:
   sqsAlertsQueueNames:

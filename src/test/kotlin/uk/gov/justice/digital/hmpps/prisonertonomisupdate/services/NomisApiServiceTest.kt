@@ -401,6 +401,43 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
+  inner class CreateAppointment {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`(): Unit = runBlocking {
+      NomisApiExtension.nomisApi.stubAppointmentCreate("""{ "id": 12345 }""")
+
+      nomisApiService.createAppointment(newAppointment())
+
+      NomisApiExtension.nomisApi.verify(
+        postRequestedFor(urlEqualTo("/appointments"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will post data to nomis api`(): Unit = runBlocking {
+      NomisApiExtension.nomisApi.stubAppointmentCreate("""{ "id": 12345 }""")
+
+      nomisApiService.createAppointment(newAppointment())
+
+      NomisApiExtension.nomisApi.verify(
+        postRequestedFor(urlEqualTo("/appointments"))
+          .withRequestBody(matchingJsonPath("$.internalLocationId", equalTo("703000"))),
+      )
+    }
+
+    @Test
+    fun `when any error response is received an exception is thrown`() {
+      NomisApiExtension.nomisApi.stubAppointmentCreateWithError()
+
+      assertThatThrownBy {
+        runBlocking { nomisApiService.createActivity(newActivity()) }
+      }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+  }
+
+  @Nested
   inner class CreateSentenceAdjustment {
 
     @Test
@@ -827,6 +864,15 @@ fun newAllocation() = CreateOffenderProgramProfileRequest(
 fun newDeallocation() = EndOffenderProgramProfileRequest(
   endDate = LocalDate.parse("2023-01-21"),
   endReason = "REASON",
+)
+
+private fun newAppointment() = CreateAppointmentRequest(
+  eventDate = LocalDate.now(),
+  internalLocationId = 703000,
+  bookingId = 456,
+  startTime = LocalTime.parse("09:00"),
+  endTime = LocalTime.parse("10:00"),
+  eventSubType = "APPT",
 )
 
 private fun newSentencingAdjustment(

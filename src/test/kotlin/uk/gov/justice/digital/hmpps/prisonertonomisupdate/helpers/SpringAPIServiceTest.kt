@@ -10,6 +10,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.BootstrapWith
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.WebClientConfiguration
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
@@ -38,6 +39,7 @@ import kotlin.annotation.AnnotationTarget.CLASS
   VisitsApiExtension::class,
   IncentivesApiExtension::class,
   ActivitiesApiExtension::class,
+  AppointmentsApiExtension::class,
   SentencingAdjustmentsApiExtension::class,
 )
 @ActiveProfiles("test")

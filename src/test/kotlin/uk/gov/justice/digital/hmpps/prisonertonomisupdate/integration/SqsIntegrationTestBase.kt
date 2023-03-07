@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
@@ -31,6 +32,7 @@ import uk.gov.justice.hmpps.sqs.HmppsTopic
   VisitsApiExtension::class,
   IncentivesApiExtension::class,
   ActivitiesApiExtension::class,
+  AppointmentsApiExtension::class,
   SentencingAdjustmentsApiExtension::class,
 )
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -68,6 +70,13 @@ abstract class SqsIntegrationTestBase {
   internal val activityQueueUrl by lazy { activityQueue.queueUrl }
   internal val activityDlqUrl by lazy { activityQueue.dlqUrl }
 
+  internal val appointmentQueue by lazy { hmppsQueueService.findByQueueId("appointment") as HmppsQueue }
+
+  internal val awsSqsAppointmentClient by lazy { appointmentQueue.sqsClient }
+  internal val awsSqsAppointmentDlqClient by lazy { appointmentQueue.sqsDlqClient }
+  internal val appointmentQueueUrl by lazy { appointmentQueue.queueUrl }
+  internal val appointmentDlqUrl by lazy { appointmentQueue.dlqUrl }
+
   internal val sentencingQueue by lazy { hmppsQueueService.findByQueueId("sentencing") as HmppsQueue }
 
   internal val awsSqsSentencingClient by lazy { sentencingQueue.sqsClient }
@@ -88,6 +97,9 @@ abstract class SqsIntegrationTestBase {
 
     awsSqsActivityClient.purgeQueue(activityQueueUrl).get()
     awsSqsActivityDlqClient?.purgeQueue(activityDlqUrl)?.get()
+
+    awsSqsAppointmentClient.purgeQueue(appointmentQueueUrl).get()
+    awsSqsAppointmentDlqClient?.purgeQueue(appointmentDlqUrl)?.get()
 
     awsSqsSentencingClient.purgeQueue(sentencingQueueUrl).get()
     awsSqsSentencingDlqClient?.purgeQueue(sentencingDlqUrl)?.get()
