@@ -5,10 +5,10 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateSentencingAdjustmentRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingTelemetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.SynchronisationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateSentencingAdjustmentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 
 @Service
 class SentencingAdjustmentsService(
@@ -24,19 +24,22 @@ class SentencingAdjustmentsService(
   retryQueueService = sentencingRetryQueueService,
 ) {
   suspend fun createAdjustment(createEvent: AdjustmentCreatedEvent) {
-    sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(createEvent.additionalInformation.id)
-      ?.let {
-        telemetryClient.trackEvent(
-          "sentencing-adjustment-create-duplicate",
-          mapOf(
-            "adjustmentId" to createEvent.additionalInformation.id,
-            "offenderNo" to createEvent.additionalInformation.nomsNumber,
-          ),
-          null,
-        )
-      } ?: let {
-      sentencingAdjustmentsApiService.getAdjustment(createEvent.additionalInformation.id).let { adjustment ->
-        if (adjustment.creatingSystem != CreatingSystem.NOMIS) {
+    synchronise {
+      name = "sentencing-adjustment"
+      telemetryClient = this@SentencingAdjustmentsService.telemetryClient
+      retryQueueService = this@SentencingAdjustmentsService.retryQueueService
+      eventTelemetry = mapOf(
+        "adjustmentId" to createEvent.additionalInformation.id,
+        "offenderNo" to createEvent.additionalInformation.nomsNumber,
+      )
+
+      checkMappingDoesNotExist {
+        sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(createEvent.additionalInformation.id)
+      }
+      transform {
+        val adjustment = sentencingAdjustmentsApiService.getAdjustment(createEvent.additionalInformation.id)
+
+        proceedWhen(adjustment.creatingSystem != CreatingSystem.NOMIS) {
           val nomisAdjustmentRequest = CreateSentencingAdjustmentRequest(
             adjustmentTypeCode = adjustment.adjustmentType,
             adjustmentDate = adjustment.adjustmentDate,
@@ -44,7 +47,7 @@ class SentencingAdjustmentsService(
             adjustmentDays = adjustment.adjustmentDays,
             comment = adjustment.comment,
           )
-          if (adjustment.sentenceSequence == null) {
+          val createdNomisAdjustment = if (adjustment.sentenceSequence == null) {
             nomisApiService.createKeyDateAdjustment(
               adjustment.bookingId,
               nomisAdjustmentRequest,
@@ -55,35 +58,16 @@ class SentencingAdjustmentsService(
               adjustment.sentenceSequence,
               nomisAdjustmentRequest,
             )
-          }.also { createdNomisAdjustment ->
-            val mapping = SentencingAdjustmentMappingDto(
-              nomisAdjustmentId = createdNomisAdjustment.id,
-              nomisAdjustmentCategory = if (adjustment.sentenceSequence == null) "KEY-DATE" else "SENTENCE",
-              adjustmentId = adjustment.adjustmentId,
-            )
-            val telemetryAttributes = mapOf(
-              "adjustmentId" to adjustment.adjustmentId,
-              "nomisAdjustmentId" to createdNomisAdjustment.id.toString(),
-              "offenderNo" to createEvent.additionalInformation.nomsNumber,
-            )
-            tryCreateMapping(
-              mapping,
-              MappingTelemetry("sentencing-adjustment-create-success", attributes = telemetryAttributes),
-            ) {
-              sentencingAdjustmentsMappingService.createMapping(it)
-            }
           }
-        } else {
-          telemetryClient.trackEvent(
-            "sentencing-adjustment-create-ignored",
-            mapOf(
-              "adjustmentId" to adjustment.adjustmentId,
-              "offenderNo" to createEvent.additionalInformation.nomsNumber,
-            ),
-            null,
+
+          SentencingAdjustmentMappingDto(
+            nomisAdjustmentId = createdNomisAdjustment.id,
+            nomisAdjustmentCategory = if (adjustment.sentenceSequence == null) "KEY-DATE" else "SENTENCE",
+            adjustmentId = adjustment.adjustmentId,
           )
         }
       }
+      saveMapping { sentencingAdjustmentsMappingService.createMapping(it) }
     }
   }
 
