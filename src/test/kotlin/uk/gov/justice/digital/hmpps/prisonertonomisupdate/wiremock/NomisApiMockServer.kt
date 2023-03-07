@@ -243,6 +243,56 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubAppointmentCreate(response: String) {
+    stubFor(
+      post("/appointments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubAppointmentCreateWithError(status: Int = 500) {
+    stubFor(
+      post("/appointments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubAppointmentCreateWithErrorFollowedBySlowSuccess(response: String) {
+    stubFor(
+      post("/appointments")
+        .inScenario("Retry NOMIS Appointments Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause NOMIS Appointments Success"),
+    )
+
+    stubFor(
+      post("/appointments")
+        .inScenario("Retry NOMIS Appointments Scenario")
+        .whenScenarioStateIs("Cause NOMIS Appointments Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(response)
+            .withStatus(200)
+            .withFixedDelay(1500),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
   fun stubSentenceAdjustmentCreate(bookingId: Long, sentenceSequence: Long, adjustmentId: Long = 99L) {
     stubFor(
       post("/prisoners/booking-id/$bookingId/sentences/$sentenceSequence/adjustments").willReturn(

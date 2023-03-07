@@ -108,6 +108,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyToMono(OffenderProgramProfileResponse::class.java)
       .block()!!
 
+  suspend fun createAppointment(request: CreateAppointmentRequest): CreateAppointmentResponse =
+    webClient.post()
+      .uri("/appointments")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBody()
+
   suspend fun createSentenceAdjustment(
     bookingId: Long,
     sentenceSequence: Long,
@@ -282,6 +289,22 @@ data class EndOffenderProgramProfileRequest(
   val endDate: LocalDate,
   val endReason: String? = null,
   val endComment: String? = null,
+)
+
+data class CreateAppointmentRequest(
+  val bookingId: Long,
+  @JsonFormat(pattern = "yyyy-MM-dd")
+  val eventDate: LocalDate,
+  @JsonFormat(pattern = "HH:mm")
+  val startTime: LocalTime,
+  @JsonFormat(pattern = "HH:mm")
+  val endTime: LocalTime,
+  val internalLocationId: Long,
+  val eventSubType: String,
+)
+
+data class CreateAppointmentResponse(
+  val eventId: Long,
 )
 
 data class CreateSentencingAdjustmentRequest(
