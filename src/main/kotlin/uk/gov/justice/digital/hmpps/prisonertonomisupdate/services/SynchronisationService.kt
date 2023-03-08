@@ -5,13 +5,12 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlin.reflect.full.memberProperties
 
+@Deprecated("Use SynchroniseBuilder instead")
 abstract class SynchronisationService(
   internal val objectMapper: ObjectMapper,
   internal val telemetryClient: TelemetryClient,
   internal val retryQueueService: RetryQueueService,
-) {
-  abstract suspend fun retryCreateMapping(message: String)
-
+) : CreateMappingRetryable {
   internal inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
 
@@ -51,10 +50,10 @@ data class MappingTelemetry(
   val attributes: Map<String, String> = mapOf(),
 )
 
-class SynchroniseBuilder<MAPPING>(
-  private var transform: suspend () -> MAPPING? = { null },
+class SynchroniseBuilder<MAPPING_DTO>(
+  private var transform: suspend () -> MAPPING_DTO? = { null },
   private var fetchMapping: suspend () -> Any? = { null },
-  private var postMapping: suspend (MAPPING) -> Unit = {},
+  private var postMapping: suspend (MAPPING_DTO) -> Unit = {},
   var name: String = "unknown",
   var eventTelemetry: Map<String, String> = mapOf(),
   var telemetryClient: TelemetryClient? = null,
@@ -100,21 +99,17 @@ class SynchroniseBuilder<MAPPING>(
     }
   }
 
-  fun checkMappingDoesNotExist(fetchMapping: suspend () -> Any?): SynchroniseBuilder<MAPPING> {
+  fun checkMappingDoesNotExist(fetchMapping: suspend () -> Any?): SynchroniseBuilder<MAPPING_DTO> {
     this.fetchMapping = fetchMapping
     return this
   }
 
-  infix fun transform(transform: suspend () -> MAPPING?): SynchroniseBuilder<MAPPING> {
+  infix fun transform(transform: suspend () -> MAPPING_DTO?): SynchroniseBuilder<MAPPING_DTO> {
     this.transform = transform
     return this
   }
 
-  suspend fun proceedWhen(condition: Boolean, proceed: suspend () -> MAPPING): MAPPING? {
-    return if (condition) proceed() else null
-  }
-
-  infix fun saveMapping(saveMapping: suspend (MAPPING) -> Unit) {
+  infix fun saveMapping(saveMapping: suspend (MAPPING_DTO) -> Unit) {
     postMapping = saveMapping
   }
 }

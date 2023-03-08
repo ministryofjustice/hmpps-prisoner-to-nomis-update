@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture
 const val RETRY_CREATE_MAPPING = "RETRY_CREATE_MAPPING"
 
 abstract class DomainEventListener(
-  internal val service: SynchronisationService,
+  internal val service: CreateMappingRetryable,
   internal val objectMapper: ObjectMapper,
   internal val eventFeatureSwitch: EventFeatureSwitch,
 ) {
@@ -56,4 +56,8 @@ private fun asCompletableFuture(
   return CoroutineScope(Dispatchers.Default).future {
     process()
   }.thenAccept { }
+}
+
+interface CreateMappingRetryable {
+  suspend fun retryCreateMapping(message: String)
 }
