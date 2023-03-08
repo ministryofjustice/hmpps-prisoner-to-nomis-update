@@ -114,8 +114,8 @@ class SynchroniseBuilder<MAPPING_DTO>(
   }
 }
 
-suspend fun <MAPPING> synchronise(init: SynchroniseBuilder<MAPPING>.() -> Unit): SynchroniseBuilder<MAPPING> {
-  val builder = SynchroniseBuilder<MAPPING>()
+suspend fun <MAPPING_DTO> synchronise(init: SynchroniseBuilder<MAPPING_DTO>.() -> Unit): SynchroniseBuilder<MAPPING_DTO> {
+  val builder = SynchroniseBuilder<MAPPING_DTO>()
   builder.init()
   return builder.also { it.process() }
 }
