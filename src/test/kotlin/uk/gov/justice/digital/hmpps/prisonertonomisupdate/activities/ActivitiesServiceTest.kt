@@ -87,9 +87,9 @@ internal class ActivitiesServiceTest {
       activitiesService.createActivity(aDomainEvent())
 
       verify(telemetryClient).trackEvent(
-        eq("activity-created-event"),
+        eq("activity-create-success"),
         check {
-          assertThat(it["courseActivityId"]).isEqualTo("$NOMIS_COURSE_ACTIVITY_ID")
+          assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_COURSE_ACTIVITY_ID")
           assertThat(it["activityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
           assertThat(it["description"]).isEqualTo("description")
         },
@@ -173,9 +173,9 @@ internal class ActivitiesServiceTest {
       activitiesService.createActivity(aDomainEvent())
 
       verify(telemetryClient).trackEvent(
-        eq("activity-create-map-failed"),
+        eq("activity-mapping-create-failed"),
         check {
-          assertThat(it["courseActivityId"]).isEqualTo("$NOMIS_COURSE_ACTIVITY_ID")
+          assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_COURSE_ACTIVITY_ID")
           assertThat(it["activityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
           assertThat(it["description"]).isEqualTo("description")
         },
