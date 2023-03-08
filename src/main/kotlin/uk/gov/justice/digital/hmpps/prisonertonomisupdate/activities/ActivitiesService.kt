@@ -1,9 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityPay
@@ -13,15 +12,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Sched
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateOffenderProgramProfileRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.EndOffenderProgramProfileRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MappingTelemetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRuleRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.SynchronisationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.lang.Integer.min
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -32,59 +31,44 @@ class ActivitiesService(
   private val activitiesApiService: ActivitiesApiService,
   private val nomisApiService: NomisApiService,
   private val mappingService: ActivitiesMappingService,
-  activitiesUpdateQueueService: ActivitiesUpdateQueueService,
-  telemetryClient: TelemetryClient,
-  objectMapper: ObjectMapper,
-) : SynchronisationService(
-  objectMapper = objectMapper,
-  telemetryClient = telemetryClient,
-  retryQueueService = activitiesUpdateQueueService,
-) {
-
-  private companion object {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
-  }
+  private val activitiesUpdateQueueService: ActivitiesUpdateQueueService,
+  private val telemetryClient: TelemetryClient,
+  private val objectMapper: ObjectMapper,
+) : CreateMappingRetryable {
 
   suspend fun createActivity(event: ScheduleDomainEvent) {
-    activitiesApiService.getActivitySchedule(event.additionalInformation.activityScheduleId).run {
-      val activity = activitiesApiService.getActivity(activity.id)
-
-      val telemetryMap = mutableMapOf(
-        "activityScheduleId" to id.toString(),
-        "description" to description,
+    synchronise {
+      name = "activity"
+      telemetryClient = this@ActivitiesService.telemetryClient
+      retryQueueService = activitiesUpdateQueueService
+      eventTelemetry = mapOf(
+        "activityScheduleId" to event.additionalInformation.activityScheduleId.toString(),
       )
 
-      // to protect against repeated create messages for same activity
-      if (mappingService.getMappingGivenActivityScheduleIdOrNull(id) != null) {
-        log.warn("Mapping already exists for activity schedule id $id")
-        return
+      checkMappingDoesNotExist {
+        mappingService.getMappingGivenActivityScheduleIdOrNull(event.additionalInformation.activityScheduleId)
       }
+      transform {
+        activitiesApiService.getActivitySchedule(event.additionalInformation.activityScheduleId).let { activitySchedule ->
+          eventTelemetry += "description" to activitySchedule.description
 
-      val nomisResponse = try {
-        nomisApiService.createActivity(toNomisActivity(this, activity))
-      } catch (e: Exception) {
-        telemetryClient.trackEvent("activity-create-failed", telemetryMap)
-        log.error("createActivity() Unexpected exception", e)
-        throw e
+          createTransformedActivity(activitySchedule).let { nomisResponse ->
+            ActivityMappingDto(
+              nomisCourseActivityId = nomisResponse.courseActivityId,
+              activityScheduleId = event.additionalInformation.activityScheduleId,
+              mappingType = "ACTIVITY_CREATED",
+            )
+          }
+        }
       }
-
-      telemetryMap["courseActivityId"] = nomisResponse.courseActivityId.toString()
-
-      val mapping = ActivityMappingDto(
-        nomisCourseActivityId = nomisResponse.courseActivityId,
-        activityScheduleId = id,
-        mappingType = "ACTIVITY_CREATED",
-      )
-      tryCreateMapping(
-        mapping,
-        MappingTelemetry(failureName = "activity-create-map-failed", attributes = telemetryMap),
-      ) {
-        mappingService.createMapping(mapping)
-      }
-
-      telemetryClient.trackEvent("activity-created-event", telemetryMap)
+      saveMapping { mappingService.createMapping(it) }
     }
   }
+
+  private fun createTransformedActivity(activitySchedule: ActivitySchedule) =
+    activitiesApiService.getActivity(activitySchedule.activity.id).let {
+      nomisApiService.createActivity(toNomisActivity(activitySchedule, it))
+    }
 
   fun updateActivity(event: ScheduleDomainEvent) {
     val telemetryMap = mutableMapOf("activityScheduleId" to event.additionalInformation.activityScheduleId.toString())
@@ -276,6 +260,8 @@ class ActivitiesService(
   }
 
   override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
+  private inline fun <reified T> String.fromJson(): T =
+    objectMapper.readValue(this)
 }
 
 data class ScheduleDomainEvent(
