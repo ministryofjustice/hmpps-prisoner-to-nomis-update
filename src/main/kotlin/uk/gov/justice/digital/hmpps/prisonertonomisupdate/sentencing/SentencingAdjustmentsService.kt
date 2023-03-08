@@ -24,7 +24,7 @@ class SentencingAdjustmentsService(
     synchronise {
       name = "sentencing-adjustment"
       telemetryClient = this@SentencingAdjustmentsService.telemetryClient
-      retryQueueService = this@SentencingAdjustmentsService.sentencingRetryQueueService
+      retryQueueService = sentencingRetryQueueService
       eventTelemetry = mapOf(
         "adjustmentId" to createEvent.additionalInformation.id,
         "offenderNo" to createEvent.additionalInformation.nomsNumber,
@@ -36,11 +36,13 @@ class SentencingAdjustmentsService(
       transform {
         sentencingAdjustmentsApiService.getAdjustment(createEvent.additionalInformation.id)
           .takeIf { it.creatingSystem != CreatingSystem.NOMIS }?.let { adjustment ->
-            SentencingAdjustmentMappingDto(
-              nomisAdjustmentId = createTransformedAdjustment(adjustment).id,
-              nomisAdjustmentCategory = if (adjustment.sentenceSequence == null) "KEY-DATE" else "SENTENCE",
-              adjustmentId = adjustment.adjustmentId,
-            )
+            createTransformedAdjustment(adjustment).let { nomisAdjustment ->
+              SentencingAdjustmentMappingDto(
+                nomisAdjustmentId = nomisAdjustment.id,
+                nomisAdjustmentCategory = if (adjustment.sentenceSequence == null) "KEY-DATE" else "SENTENCE",
+                adjustmentId = adjustment.adjustmentId,
+              )
+            }
           }
       }
       saveMapping { sentencingAdjustmentsMappingService.createMapping(it) }
