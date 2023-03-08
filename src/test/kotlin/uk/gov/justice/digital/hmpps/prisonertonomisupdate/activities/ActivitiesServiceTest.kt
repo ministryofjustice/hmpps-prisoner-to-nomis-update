@@ -139,27 +139,6 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should log a creation failure`() = runBlocking {
-      whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
-        newActivitySchedule(),
-      )
-      whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(newActivity())
-      whenever(nomisApiService.createActivity(any())).thenThrow(RuntimeException("test"))
-
-      assertThatThrownBy { runBlocking { activitiesService.createActivity(aDomainEvent()) } }
-        .isInstanceOf(RuntimeException::class.java)
-
-      verify(telemetryClient).trackEvent(
-        eq("activity-create-failed"),
-        check {
-          assertThat(it["activityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
-          assertThat(it["description"]).isEqualTo("description")
-        },
-        isNull(),
-      )
-    }
-
-    @Test
     fun `should log a mapping creation failure`() = runBlocking {
       whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
         newActivitySchedule(),
