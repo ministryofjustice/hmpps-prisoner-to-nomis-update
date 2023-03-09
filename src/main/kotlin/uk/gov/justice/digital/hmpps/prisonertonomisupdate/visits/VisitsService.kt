@@ -1,96 +1,87 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.validation.ValidationException
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CancelVisitDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateVisitDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
-class PrisonVisitsService(
+class VisitsService(
   private val visitsApiService: VisitsApiService,
   private val nomisApiService: NomisApiService,
   private val mappingService: VisitsMappingService,
   private val visitsUpdateQueueService: VisitsUpdateQueueService,
   private val telemetryClient: TelemetryClient,
-) {
+  private val objectMapper: ObjectMapper,
+) : CreateMappingRetryable {
 
-  private companion object {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
-  }
-
-  fun createVisit(visitBookedEvent: VisitBookedEvent) {
-    visitsApiService.getVisit(visitBookedEvent.reference).run {
-      val telemetryMap = mutableMapOf(
-        "offenderNo" to prisonerId,
-        "prisonId" to prisonId,
-        "visitId" to reference,
-        "startDateTime" to startTimestamp.format(DateTimeFormatter.ISO_DATE_TIME),
-        "endTime" to endTimestamp.format(DateTimeFormatter.ISO_TIME),
+  suspend fun createVisit(visitBookedEvent: VisitBookedEvent) {
+    synchronise {
+      name = "visit"
+      telemetryClient = this@VisitsService.telemetryClient
+      retryQueueService = visitsUpdateQueueService
+      eventTelemetry = mapOf(
+        "visitId" to visitBookedEvent.reference,
+        "offenderNo" to visitBookedEvent.prisonerId,
       )
 
-      if (mappingService.getMappingGivenVsipId(visitBookedEvent.reference) != null) {
-        telemetryClient.trackEvent("visit-booked-get-map-failed", telemetryMap)
-        log.warn("Mapping already exists for VSIP id $reference")
-        return
+      checkMappingDoesNotExist {
+        mappingService.getMappingGivenVsipId(visitBookedEvent.reference)
       }
+      transform {
+        visitsApiService.getVisit(visitBookedEvent.reference).let { visit ->
+          eventTelemetry += mapOf(
+            "prisonId" to visit.prisonId,
+            "startDateTime" to visit.startTimestamp.format(DateTimeFormatter.ISO_DATE_TIME),
+            "endTime" to visit.endTimestamp.format(DateTimeFormatter.ISO_TIME),
+          )
 
-      val nomisId = try {
-        nomisApiService.createVisit(
-          CreateVisitDto(
-            offenderNo = this.prisonerId,
-            prisonId = this.prisonId,
-            startDateTime = this.startTimestamp,
-            endTime = this.endTimestamp.toLocalTime(),
-            visitorPersonIds = this.visitors.map { it.nomisPersonId },
-            issueDate = visitBookedEvent.bookingDate,
-            visitType = when (this.visitType) {
-              "SOCIAL" -> "SCON"
-              "FAMILY" -> "SCON"
-              else -> throw ValidationException("Invalid visit type ${this.visitType}")
-            },
-            visitComment = "Created by Book A Prison Visit. Reference: ${this.reference}",
-            visitOrderComment = "Created by Book A Prison Visit for visit with reference: ${this.reference}",
-            room = this.visitRoom,
-            openClosedStatus = this.visitRestriction,
-          ),
-        )
-      } catch (e: Exception) {
-        telemetryClient.trackEvent("visit-booked-create-failed", telemetryMap)
-        log.error("createVisit() Unexpected exception", e)
-        throw e
+          nomisApiService.createVisit(
+            CreateVisitDto(
+              offenderNo = visit.prisonerId,
+              prisonId = visit.prisonId,
+              startDateTime = visit.startTimestamp,
+              endTime = visit.endTimestamp.toLocalTime(),
+              visitorPersonIds = visit.visitors.map { it.nomisPersonId },
+              issueDate = visitBookedEvent.bookingDate,
+              visitType = when (visit.visitType) {
+                "SOCIAL" -> "SCON"
+                "FAMILY" -> "SCON"
+                else -> throw ValidationException("Invalid visit type ${visit.visitType}")
+              },
+              visitComment = "Created by Book A Prison Visit. Reference: ${visit.reference}",
+              visitOrderComment = "Created by Book A Prison Visit for visit with reference: ${visit.reference}",
+              room = visit.visitRoom,
+              openClosedStatus = visit.visitRestriction,
+            ),
+          ).let { nomisId ->
+            VisitMappingDto(nomisId = nomisId, vsipId = visitBookedEvent.reference, mappingType = "ONLINE")
+          }
+        }
       }
-
-      telemetryMap["nomisVisitId"] = nomisId
-
-      try {
-        mappingService.createMapping(
-          VisitMappingDto(nomisId = nomisId, vsipId = visitBookedEvent.reference, mappingType = "ONLINE"),
-        )
-      } catch (e: Exception) {
-        telemetryClient.trackEvent("visit-booked-create-map-failed", telemetryMap)
-        log.error("Unexpected exception, queueing retry", e)
-        visitsUpdateQueueService.sendMessage(VisitContext(nomisId = nomisId, vsipId = visitBookedEvent.reference))
-        return
-      }
-
-      telemetryClient.trackEvent("visit-booked-event", telemetryMap)
+      saveMapping { mappingService.createMapping(it) }
     }
   }
 
-  fun createVisitRetry(context: VisitContext) {
+  fun retryCreateVisitMapping(context: CreateMappingRetryMessage<VisitMapping>) {
     mappingService.createMapping(
-      VisitMappingDto(nomisId = context.nomisId, vsipId = context.vsipId, mappingType = "ONLINE"),
+      VisitMappingDto(nomisId = context.mapping.nomisId, vsipId = context.mapping.vsipId, mappingType = "ONLINE"),
     )
   }
+
+  override suspend fun retryCreateMapping(message: String) = retryCreateVisitMapping(message.fromJson())
 
   fun cancelVisit(visitCancelledEvent: VisitCancelledEvent) {
     val telemetryProperties = mutableMapOf(
@@ -154,6 +145,9 @@ class PrisonVisitsService(
     }?.getOrNull()?.let {
       vsipToNomisOutcomeMap[it]?.name
     } ?: NomisCancellationOutcome.ADMIN.name
+
+  private inline fun <reified T> String.fromJson(): T =
+    objectMapper.readValue(this)
 }
 
 data class VisitBookedEvent(

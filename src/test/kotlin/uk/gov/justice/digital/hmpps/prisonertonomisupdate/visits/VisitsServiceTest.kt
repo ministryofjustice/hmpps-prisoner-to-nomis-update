@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
 import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.validation.ValidationException
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
@@ -14,31 +15,32 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CancelVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 
-internal class PrisonVisitsServiceTest {
+internal class VisitsServiceTest {
 
   private val visitApiService: VisitsApiService = mock()
   private val nomisApiService: NomisApiService = mock()
   private val mappingService: VisitsMappingService = mock()
   private val updateQueueService: VisitsUpdateQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()
-  private val prisonVisitsService =
-    PrisonVisitsService(visitApiService, nomisApiService, mappingService, updateQueueService, telemetryClient)
+  private val visitsService =
+    VisitsService(visitApiService, nomisApiService, mappingService, updateQueueService, telemetryClient, objectMapper())
 
   @Nested
   inner class CreateVisit {
 
     @Test
-    fun `should log a processed visit booked event`() {
+    fun `should log a processed visit booked event`() = runBlocking {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
       whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(null)
       whenever(nomisApiService.createVisit(any())).thenReturn("456")
 
-      prisonVisitsService.createVisit(
+      visitsService.createVisit(
         VisitBookedEvent(
           prisonerId = "AB123D",
           additionalInformation = VisitBookedEvent.VisitInformation("123"),
@@ -47,11 +49,11 @@ internal class PrisonVisitsServiceTest {
       )
 
       verify(telemetryClient).trackEvent(
-        eq("visit-booked-event"),
+        eq("visit-create-success"),
         org.mockito.kotlin.check {
           assertThat(it["offenderNo"]).isEqualTo("AB123D")
           assertThat(it["visitId"]).isEqualTo("123")
-          assertThat(it["nomisVisitId"]).isEqualTo("456")
+          assertThat(it["nomisId"]).isEqualTo("456")
           assertThat(it["prisonId"]).isEqualTo("MDI")
           assertThat(it["startDateTime"]).isEqualTo("2023-09-08T08:30:00")
           assertThat(it["endTime"]).isEqualTo("09:30:00")
@@ -61,11 +63,11 @@ internal class PrisonVisitsServiceTest {
     }
 
     @Test
-    fun `should log an existing mapping`() {
+    fun `should log an existing mapping`() = runBlocking {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
       whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(newMapping())
 
-      prisonVisitsService.createVisit(
+      visitsService.createVisit(
         VisitBookedEvent(
           prisonerId = "AB123D",
           additionalInformation = VisitBookedEvent.VisitInformation("123"),
@@ -74,55 +76,23 @@ internal class PrisonVisitsServiceTest {
       )
 
       verify(telemetryClient).trackEvent(
-        eq("visit-booked-get-map-failed"),
+        eq("visit-create-duplicate"),
         org.mockito.kotlin.check {
           assertThat(it["offenderNo"]).isEqualTo("AB123D")
           assertThat(it["visitId"]).isEqualTo("123")
-          assertThat(it["prisonId"]).isEqualTo("MDI")
-          assertThat(it["startDateTime"]).isEqualTo("2023-09-08T08:30:00")
-          assertThat(it["endTime"]).isEqualTo("09:30:00")
         },
         isNull(),
       )
     }
 
     @Test
-    fun `should log a creation failure`() {
-      whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
-      whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(null)
-      whenever(nomisApiService.createVisit(any())).thenThrow(RuntimeException("test"))
-
-      assertThatThrownBy {
-        prisonVisitsService.createVisit(
-          VisitBookedEvent(
-            prisonerId = "AB123D",
-            additionalInformation = VisitBookedEvent.VisitInformation("123"),
-            occurredAt = OffsetDateTime.now(),
-          ),
-        )
-      }.isInstanceOf(RuntimeException::class.java)
-
-      verify(telemetryClient).trackEvent(
-        eq("visit-booked-create-failed"),
-        org.mockito.kotlin.check {
-          assertThat(it["offenderNo"]).isEqualTo("AB123D")
-          assertThat(it["visitId"]).isEqualTo("123")
-          assertThat(it["prisonId"]).isEqualTo("MDI")
-          assertThat(it["startDateTime"]).isEqualTo("2023-09-08T08:30:00")
-          assertThat(it["endTime"]).isEqualTo("09:30:00")
-        },
-        isNull(),
-      )
-    }
-
-    @Test
-    fun `should log a mapping creation failure`() {
+    fun `should log a mapping creation failure`() = runBlocking {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
       whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(null)
       whenever(nomisApiService.createVisit(any())).thenReturn("456")
       whenever(mappingService.createMapping(any())).thenThrow(RuntimeException("test"))
 
-      prisonVisitsService.createVisit(
+      visitsService.createVisit(
         VisitBookedEvent(
           prisonerId = "AB123D",
           additionalInformation = VisitBookedEvent.VisitInformation("123"),
@@ -131,11 +101,11 @@ internal class PrisonVisitsServiceTest {
       )
 
       verify(telemetryClient).trackEvent(
-        eq("visit-booked-create-map-failed"),
+        eq("visit-mapping-create-failed"),
         org.mockito.kotlin.check {
           assertThat(it["offenderNo"]).isEqualTo("AB123D")
           assertThat(it["visitId"]).isEqualTo("123")
-          assertThat(it["nomisVisitId"]).isEqualTo("456")
+          assertThat(it["nomisId"]).isEqualTo("456")
           assertThat(it["prisonId"]).isEqualTo("MDI")
           assertThat(it["startDateTime"]).isEqualTo("2023-09-08T08:30:00")
           assertThat(it["endTime"]).isEqualTo("09:30:00")
@@ -149,9 +119,17 @@ internal class PrisonVisitsServiceTest {
   inner class RetryVisit {
 
     @Test
-    fun `should call mapping service`() {
-      prisonVisitsService.createVisitRetry(
-        VisitContext(nomisId = "AB123D", vsipId = "24"),
+    fun `should call mapping service`() = runBlocking {
+      visitsService.retryCreateMapping(
+        """
+          { "mapping" :
+            {
+              "nomisId": "AB123D",
+              "vsipId": "24"
+            }, 
+            "telemetryAttributes": {}
+          }
+        """.trimIndent(),
       )
 
       verify(mappingService).createMapping(VisitMappingDto("AB123D", "24", mappingType = "ONLINE"))
@@ -166,7 +144,7 @@ internal class PrisonVisitsServiceTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
       whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(newMapping())
 
-      prisonVisitsService.cancelVisit(
+      visitsService.cancelVisit(
         VisitCancelledEvent(
           additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
           prisonerId = "AB123D",
@@ -192,7 +170,7 @@ internal class PrisonVisitsServiceTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
       whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(newMapping())
 
-      prisonVisitsService.cancelVisit(
+      visitsService.cancelVisit(
         VisitCancelledEvent(
           additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
           prisonerId = "AB123D",
@@ -207,7 +185,7 @@ internal class PrisonVisitsServiceTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit(outcome = null))
       whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(newMapping())
 
-      prisonVisitsService.cancelVisit(
+      visitsService.cancelVisit(
         VisitCancelledEvent(
           additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
           prisonerId = "AB123D",
@@ -238,7 +216,7 @@ internal class PrisonVisitsServiceTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit(outcome = vsipOutcome))
       whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(newMapping())
 
-      prisonVisitsService.cancelVisit(
+      visitsService.cancelVisit(
         VisitCancelledEvent(
           additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
           prisonerId = "AB123D",
@@ -253,7 +231,7 @@ internal class PrisonVisitsServiceTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit(outcome = "HMMMMMMM"))
       whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(newMapping())
 
-      prisonVisitsService.cancelVisit(
+      visitsService.cancelVisit(
         VisitCancelledEvent(
           additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
           prisonerId = "AB123D",
@@ -269,7 +247,7 @@ internal class PrisonVisitsServiceTest {
       whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(null)
 
       assertThatThrownBy {
-        prisonVisitsService.cancelVisit(
+        visitsService.cancelVisit(
           VisitCancelledEvent(
             additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
             prisonerId = "AB123D",
