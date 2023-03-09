@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
 import com.microsoft.applicationinsights.TelemetryClient
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -12,6 +12,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateIncentiveResponseDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
@@ -25,14 +26,14 @@ internal class IncentivesServiceTest {
   private val updateQueueService: IncentivesUpdateQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()
   private val incentivesService =
-    IncentivesService(incentiveApiService, nomisApiService, mappingService, updateQueueService, telemetryClient)
+    IncentivesService(incentiveApiService, nomisApiService, mappingService, updateQueueService, telemetryClient, objectMapper())
 
   @Nested
   inner class CreateIncentive {
 
     @Test
-    fun `should log a processed visit booked event`() {
-      whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
+    fun `should log a processed visit booked event`() = runBlocking {
+      whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive(id = 123))
       whenever(nomisApiService.createIncentive(any(), any())).thenReturn(
         CreateIncentiveResponseDto(
           bookingId = 123,
@@ -41,15 +42,15 @@ internal class IncentivesServiceTest {
       )
 
       incentivesService.createIncentive(
-        IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123)),
+        IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123, nomsNumber = "AB123D")),
       )
 
       verify(telemetryClient).trackEvent(
-        eq("incentive-created-event"),
+        eq("incentive-create-success"),
         org.mockito.kotlin.check {
           assertThat(it["offenderNo"]).isEqualTo("AB123D")
           assertThat(it["prisonId"]).isEqualTo("MDI")
-          assertThat(it["id"]).isEqualTo("456")
+          assertThat(it["id"]).isEqualTo("123")
           assertThat(it["iepDate"]).isEqualTo("2023-09-08")
           assertThat(it["iepTime"]).isEqualTo("09:30:00")
         },
@@ -58,7 +59,7 @@ internal class IncentivesServiceTest {
     }
 
     @Test
-    internal fun `should not update NOMIS if incentive was created in NOMIS`() {
+    internal fun `should not update NOMIS if incentive was created in NOMIS`() = runBlocking {
       whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
 
       incentivesService.createIncentive(
@@ -74,7 +75,7 @@ internal class IncentivesServiceTest {
     }
 
     @Test
-    internal fun `should not update NOMIS if incentive already mapped (exists in nomis)`() {
+    internal fun `should not update NOMIS if incentive already mapped (exists in nomis)`() = runBlocking {
       whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
       whenever(mappingService.getMappingGivenIncentiveId(123)).thenReturn(
         IncentiveMappingDto(
@@ -93,32 +94,8 @@ internal class IncentivesServiceTest {
     }
 
     @Test
-    fun `should log a creation failure`() {
-      whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
-      whenever(nomisApiService.createIncentive(any(), any())).thenThrow(RuntimeException("test"))
-
-      assertThatThrownBy {
-        incentivesService.createIncentive(
-          IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123)),
-        )
-      }.isInstanceOf(RuntimeException::class.java)
-
-      verify(telemetryClient).trackEvent(
-        eq("incentive-create-failed"),
-        org.mockito.kotlin.check {
-          assertThat(it["offenderNo"]).isEqualTo("AB123D")
-          assertThat(it["prisonId"]).isEqualTo("MDI")
-          assertThat(it["id"]).isEqualTo("456")
-          assertThat(it["iepDate"]).isEqualTo("2023-09-08")
-          assertThat(it["iepTime"]).isEqualTo("09:30:00")
-        },
-        isNull(),
-      )
-    }
-
-    @Test
-    fun `should log a mapping creation failure`() {
-      whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
+    fun `should log a mapping creation failure`() = runBlocking {
+      whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive(id = 123))
       whenever(nomisApiService.createIncentive(any(), any())).thenReturn(
         CreateIncentiveResponseDto(
           bookingId = 123,
@@ -128,15 +105,15 @@ internal class IncentivesServiceTest {
       whenever(mappingService.createMapping(any())).thenThrow(RuntimeException("test"))
 
       incentivesService.createIncentive(
-        IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123)),
+        IncentivesService.IncentiveCreatedEvent(IncentivesService.AdditionalInformation(id = 123, nomsNumber = "AB123D")),
       )
 
       verify(telemetryClient).trackEvent(
-        eq("incentive-create-map-failed"),
+        eq("incentive-mapping-create-failed"),
         org.mockito.kotlin.check {
           assertThat(it["offenderNo"]).isEqualTo("AB123D")
           assertThat(it["prisonId"]).isEqualTo("MDI")
-          assertThat(it["id"]).isEqualTo("456")
+          assertThat(it["id"]).isEqualTo("123")
           assertThat(it["iepDate"]).isEqualTo("2023-09-08")
           assertThat(it["iepTime"]).isEqualTo("09:30:00")
         },
@@ -149,13 +126,18 @@ internal class IncentivesServiceTest {
   inner class RetryIncentive {
 
     @Test
-    fun `should call mapping service`() {
-      incentivesService.createIncentiveRetry(
-        IncentiveContext(
-          nomisBookingId = 456,
-          nomisIncentiveSequence = 1,
-          incentiveId = 1234,
-        ),
+    fun `should call mapping service`() = runBlocking {
+      incentivesService.retryCreateMapping(
+        """
+          { 
+            "mapping" : {
+              "nomisBookingId": 456,
+              "nomisIncentiveSequence": 1,
+              "incentiveId": 1234
+            }, 
+            "telemetryAttributes": {}
+          }
+        """.trimIndent(),
       )
 
       verify(mappingService).createMapping(
@@ -172,8 +154,9 @@ internal class IncentivesServiceTest {
 
 fun newIncentive(
   offenderNo: String = "AB123D",
+  id: Long = 456,
 ): IepDetail = IepDetail(
-  id = 456,
+  id = id,
   prisonerNumber = offenderNo,
   agencyId = "MDI",
   iepDate = LocalDate.parse("2023-09-08"),

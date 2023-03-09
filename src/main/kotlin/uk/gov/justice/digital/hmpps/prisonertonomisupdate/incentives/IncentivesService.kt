@@ -1,12 +1,14 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateIncentiveDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.format.DateTimeFormatter
 
 private const val incentiveCreatedInNomsByUser = "USER_CREATED_NOMIS"
@@ -18,11 +20,8 @@ class IncentivesService(
   private val mappingService: IncentivesMappingService,
   private val incentivesUpdateQueueService: IncentivesUpdateQueueService,
   private val telemetryClient: TelemetryClient,
-) {
-
-  private companion object {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
-  }
+  private val objectMapper: ObjectMapper,
+) : CreateMappingRetryable {
 
   private fun IepDetail.toNomisIncentive(): CreateIncentiveDto = CreateIncentiveDto(
     comments = comments,
@@ -32,75 +31,57 @@ class IncentivesService(
     iepLevel = iepCode,
   )
 
-  fun createIncentive(event: IncentiveCreatedEvent) {
-    incentivesApiService.getIncentive(event.additionalInformation.id).run {
-      val telemetryMap = mutableMapOf<String, String>(
-        "offenderNo" to prisonerNumber!!,
-        "prisonId" to agencyId,
-        "id" to id.toString(),
-        "iep" to iepCode,
-        "iepDate" to iepDate.format(DateTimeFormatter.ISO_DATE),
-        "iepTime" to iepTime.format(DateTimeFormatter.ISO_TIME),
+  suspend fun createIncentive(event: IncentiveCreatedEvent) {
+    synchronise {
+      name = "incentive"
+      telemetryClient = this@IncentivesService.telemetryClient
+      retryQueueService = incentivesUpdateQueueService
+      eventTelemetry = mapOf(
+        "id" to event.additionalInformation.id.toString(),
+        "offenderNo" to (event.additionalInformation.nomsNumber ?: "unknown"),
       )
 
-      if (event.additionalInformation.reason == incentiveCreatedInNomsByUser) {
-        log.debug("Incentive id $event.additionalInformation.id created in NOMIS so ignoring")
-        return
+      checkMappingDoesNotExist {
+        mappingService.getMappingGivenIncentiveId(event.additionalInformation.id)
       }
-
-      // to protect against repeated create messages for same incentive
-      if (mappingService.getMappingGivenIncentiveId(event.additionalInformation.id) != null) {
-        log.warn("Mapping already exists for incentive id $event.additionalInformation.id")
-        return
+      transform {
+        incentivesApiService.getIncentive(event.additionalInformation.id)
+          .takeUnless { event.additionalInformation.reason == incentiveCreatedInNomsByUser }?.let { incentive ->
+            eventTelemetry += mapOf(
+              "prisonId" to incentive.agencyId,
+              "iep" to incentive.iepCode,
+              "iepDate" to incentive.iepDate.format(DateTimeFormatter.ISO_DATE),
+              "iepTime" to incentive.iepTime.format(DateTimeFormatter.ISO_TIME),
+            )
+            nomisApiService.createIncentive(
+              incentive.bookingId,
+              incentive.toNomisIncentive(),
+            ).let { nomisResponse ->
+              IncentiveMappingDto(
+                nomisBookingId = nomisResponse.bookingId,
+                nomisIncentiveSequence = nomisResponse.sequence.toInt(),
+                incentiveId = event.additionalInformation.id,
+                mappingType = "INCENTIVE_CREATED",
+              )
+            }
+          }
       }
-
-      val nomisResponse = try {
-        nomisApiService.createIncentive(this.bookingId, this.toNomisIncentive())
-      } catch (e: Exception) {
-        telemetryClient.trackEvent("incentive-create-failed", telemetryMap)
-        log.error("createIncentive() Unexpected exception", e)
-        throw e
-      }
-
-      telemetryMap["nomisBookingId"] = nomisResponse.bookingId.toString()
-      telemetryMap["nomisIncentiveSequence"] = nomisResponse.sequence.toString()
-
-      try {
-        mappingService.createMapping(
-          IncentiveMappingDto(
-            nomisBookingId = nomisResponse.bookingId,
-            nomisIncentiveSequence = nomisResponse.sequence.toInt(),
-            incentiveId = event.additionalInformation.id,
-            mappingType = "INCENTIVE_CREATED",
-          ),
-        )
-      } catch (e: Exception) {
-        telemetryClient.trackEvent("incentive-create-map-failed", telemetryMap)
-        log.error("Unexpected exception, queueing retry", e)
-        incentivesUpdateQueueService.sendMessage(
-          IncentiveContext(
-            nomisBookingId = nomisResponse.bookingId,
-            nomisIncentiveSequence = nomisResponse.sequence.toInt(),
-            incentiveId = event.additionalInformation.id,
-          ),
-        )
-        return
-      }
-
-      telemetryClient.trackEvent("incentive-created-event", telemetryMap)
+      saveMapping { mappingService.createMapping(it) }
     }
   }
 
-  fun createIncentiveRetry(context: IncentiveContext) {
+  fun retryCreateIncentiveMapping(context: CreateMappingRetryMessage<IncentiveMapping>) {
     mappingService.createMapping(
       IncentiveMappingDto(
-        nomisBookingId = context.nomisBookingId,
-        nomisIncentiveSequence = context.nomisIncentiveSequence,
-        incentiveId = context.incentiveId,
+        nomisBookingId = context.mapping.nomisBookingId,
+        nomisIncentiveSequence = context.mapping.nomisIncentiveSequence,
+        incentiveId = context.mapping.incentiveId,
         mappingType = "INCENTIVE_CREATED",
       ),
     )
   }
+
+  override suspend fun retryCreateMapping(message: String) = retryCreateIncentiveMapping(message.fromJson())
 
   data class AdditionalInformation(
     val id: Long,
@@ -111,4 +92,7 @@ class IncentivesService(
   data class IncentiveCreatedEvent(
     val additionalInformation: AdditionalInformation,
   )
+
+  private inline fun <reified T> String.fromJson(): T =
+    objectMapper.readValue(this)
 }

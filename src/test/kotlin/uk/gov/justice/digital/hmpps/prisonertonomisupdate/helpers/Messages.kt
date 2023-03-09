@@ -58,9 +58,8 @@ fun incentiveCreatedMessage(incentiveId: Long) = """
 
 fun incentiveRetryMessage() = """
       {
-        "Type":"RETRY",
-        "Message":"{\"nomisBookingId\":12345,\"nomisIncentiveSequence\":2,\"incentiveId\":15}",
-        "MessageId":"retry-15"
+        "Type":"RETRY_CREATE_MAPPING",
+        "Message":"{\"mapping\": {\"nomisBookingId\":12345,\"nomisIncentiveSequence\":2,\"incentiveId\":15}}"
       }
 """.trimIndent()
 
