@@ -13,7 +13,7 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCreatedMessage
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.retryMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.retryVisitsCreateMappingMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 import java.time.LocalDate
 
@@ -45,7 +45,7 @@ internal class VisitsDomainEventsListenerTest {
             visitId = "99",
             occurredAt = "2021-03-08T11:23:56.031Z",
           ),
-        )
+        ).join()
 
         verify(visitsService).createVisit(
           org.mockito.kotlin.check {
@@ -70,7 +70,7 @@ internal class VisitsDomainEventsListenerTest {
             visitId = "99",
             occurredAt = "2021-03-08T11:23:56.031Z",
           ),
-        )
+        ).join()
 
         verifyNoInteractions(visitsService)
       }
@@ -80,7 +80,7 @@ internal class VisitsDomainEventsListenerTest {
     inner class Retries {
       @Test
       internal fun `will call retry service with visit context data`() = runBlocking {
-        listener.onMessage(rawMessage = retryMessage())
+        listener.onMessage(rawMessage = retryVisitsCreateMappingMessage()).join()
 
         verify(visitsService).retryCreateMapping(any())
       }
