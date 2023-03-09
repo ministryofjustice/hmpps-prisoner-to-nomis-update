@@ -78,7 +78,13 @@ class IncentivesService(
         incentiveId = context.mapping.incentiveId,
         mappingType = "INCENTIVE_CREATED",
       ),
-    )
+    ).also {
+      telemetryClient.trackEvent(
+        "incentive-retry-success",
+        mapOf("id" to context.mapping.toString()),
+        null,
+      )
+    }
   }
 
   override suspend fun retryCreateMapping(message: String) = retryCreateIncentiveMapping(message.fromJson())
