@@ -1,15 +1,13 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.microsoft.applicationinsights.TelemetryClient
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
@@ -23,14 +21,12 @@ internal class IncentivesDomainEventsListenerTest {
   private val incentivesService: IncentivesService = mock()
   private val objectMapper: ObjectMapper = objectMapper()
   private val eventFeatureSwitch: EventFeatureSwitch = mock()
-  private val telemetryClient: TelemetryClient = mock()
 
   private val listener =
     IncentivesDomainEventListener(
       incentivesService,
       objectMapper,
       eventFeatureSwitch,
-      telemetryClient,
     )
 
   @Nested
@@ -43,10 +39,10 @@ internal class IncentivesDomainEventsListenerTest {
       }
 
       @Test
-      internal fun `will call service with create incentive data`() {
-        listener.onPrisonerChange(
-          message = incentiveCreatedMessage(123L),
-        )
+      internal fun `will call service with create incentive data`() = runBlocking {
+        listener.onMessage(
+          rawMessage = incentiveCreatedMessage(123L),
+        ).join()
 
         verify(incentivesService).createIncentive(
           check {
@@ -65,9 +61,9 @@ internal class IncentivesDomainEventsListenerTest {
 
       @Test
       internal fun `will not call service`() {
-        listener.onPrisonerChange(
-          message = incentiveCreatedMessage(123L),
-        )
+        listener.onMessage(
+          rawMessage = incentiveCreatedMessage(123L),
+        ).join()
 
         verifyNoInteractions(incentivesService)
       }
@@ -76,24 +72,10 @@ internal class IncentivesDomainEventsListenerTest {
     @Nested
     inner class Retries {
       @Test
-      internal fun `will call retry service with visit context data`() {
-        listener.onPrisonerChange(message = incentiveRetryMessage())
+      internal fun `will call retry service with visit context data`() = runBlocking {
+        listener.onMessage(rawMessage = incentiveRetryMessage()).join()
 
-        verify(incentivesService).createIncentiveRetry(
-          check {
-            assertThat(it.incentiveId).isEqualTo(15)
-            assertThat(it.nomisBookingId).isEqualTo(12345)
-            assertThat(it.nomisIncentiveSequence).isEqualTo(2)
-          },
-        )
-
-        verify(telemetryClient).trackEvent(
-          eq("incentive-retry-received"),
-          check {
-            assertThat(it["id"]).isEqualTo("15")
-          },
-          isNull(),
-        )
+        verify(incentivesService).retryCreateMapping(any())
       }
     }
   }
