@@ -35,7 +35,7 @@ fun prisonVisitCreatedMessage(
 fun retryVisitsCreateMappingMessage() = """
       {
         "Type":"RETRY_CREATE_MAPPING",
-        "Message":"{\"mapping\": {\"nomisId\":\"12345\",\"vsipId\":\"12\"}}",        "MessageId":"retry-12"
+        "Message":"{\"mapping\": {\"nomisId\":\"12345\",\"vsipId\":\"12\"}}"
       }
 """.trimIndent()
 

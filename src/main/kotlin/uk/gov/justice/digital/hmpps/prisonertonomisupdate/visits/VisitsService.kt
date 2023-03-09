@@ -78,7 +78,12 @@ class VisitsService(
   fun retryCreateVisitMapping(context: CreateMappingRetryMessage<VisitMapping>) {
     mappingService.createMapping(
       VisitMappingDto(nomisId = context.mapping.nomisId, vsipId = context.mapping.vsipId, mappingType = "ONLINE"),
-    )
+    ).also {
+      telemetryClient.trackEvent(
+        "visit-retry-success",
+        mapOf("id" to context.mapping.vsipId, "nomisId" to context.mapping.nomisId),
+      )
+    }
   }
 
   override suspend fun retryCreateMapping(message: String) = retryCreateVisitMapping(message.fromJson())
