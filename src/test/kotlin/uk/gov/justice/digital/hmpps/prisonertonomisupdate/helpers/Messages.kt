@@ -32,11 +32,10 @@ fun prisonVisitCreatedMessage(
         "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-0000000000000000000000.pem"}      
 """.trimIndent()
 
-fun retryMessage() = """
+fun retryVisitsCreateMappingMessage() = """
       {
-        "Type":"RETRY",
-        "Message":"{\"nomisId\":\"12345\",\"vsipId\":\"12\"}",
-        "MessageId":"retry-12"
+        "Type":"RETRY_CREATE_MAPPING",
+        "Message":"{\"mapping\": {\"nomisId\":\"12345\",\"vsipId\":\"12\"}}"
       }
 """.trimIndent()
 
@@ -85,8 +84,7 @@ fun activityCreatedMessage(identifier: Long) = """
 fun activityRetryMessage() = """
       {
         "Type":"RETRY_CREATE_MAPPING",
-        "Message":"{\"mapping\": {\"activityScheduleId\":12345,\"nomisCourseActivityId\":15}, \"telemetryAttributes\": {}}",
-        "MessageId":"retry-15"
+        "Message":"{\"mapping\": {\"activityScheduleId\":12345,\"nomisCourseActivityId\":15}, \"telemetryAttributes\": {}}"
       }
 """.trimIndent()
 
