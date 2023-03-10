@@ -71,21 +71,22 @@ class ActivitiesService(
     }
 
   fun updateActivity(event: ScheduleDomainEvent) {
-    val telemetryMap = mutableMapOf("activityScheduleId" to event.additionalInformation.activityScheduleId.toString())
+    val activityScheduleId = event.additionalInformation.activityScheduleId
+    val telemetryMap = mutableMapOf("activityScheduleId" to activityScheduleId.toString())
 
     runCatching {
-      val activitySchedule = activitiesApiService.getActivitySchedule(event.additionalInformation.activityScheduleId)
+      val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(activityScheduleId).nomisCourseActivityId
+        .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
+
+      val activitySchedule = activitiesApiService.getActivitySchedule(activityScheduleId)
 
       val activity = activitiesApiService.getActivity(activitySchedule.activity.id)
         .also { telemetryMap["activityId"] = it.id.toString() }
 
-      val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(activitySchedule.id).nomisCourseActivityId
-        .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
-
       activitySchedule.toUpdateActivityRequest(activity.pay)
         .also { nomisApiService.updateActivity(nomisCourseActivityId, it) }
     }.onSuccess {
-      telemetryClient.trackEvent("activity-amend-event", telemetryMap, null)
+      telemetryClient.trackEvent("activity-amend-success", telemetryMap, null)
     }.onFailure { e ->
       telemetryClient.trackEvent("activity-amend-failed", telemetryMap, null)
       throw e
@@ -112,7 +113,7 @@ class ActivitiesService(
       activitySchedule.instances.toScheduleRequests()
         .also { nomisApiService.updateScheduleInstances(nomisCourseActivityId, it) }
     }.onSuccess {
-      telemetryClient.trackEvent("schedule-instances-amend-event", telemetryMap, null)
+      telemetryClient.trackEvent("schedule-instances-amend-success", telemetryMap, null)
     }.onFailure { e ->
       telemetryClient.trackEvent("schedule-instances-amend-failed", telemetryMap, null)
       throw e
@@ -129,16 +130,14 @@ class ActivitiesService(
     }
 
   fun createAllocation(allocationEvent: AllocationDomainEvent) {
-    activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
-      mappingService.getMappingGivenActivityScheduleId(allocation.scheduleId).let { mapping ->
-
-        val telemetryMap = mutableMapOf(
-          "allocationId" to allocation.id.toString(),
-          "offenderNo" to allocation.prisonerNumber,
-          "bookingId" to allocation.bookingId.toString(),
-        )
-
-        val nomisResponse = try {
+    val telemetryMap = mutableMapOf(
+      "allocationId" to allocationEvent.additionalInformation.allocationId.toString(),
+    )
+    runCatching {
+      activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
+        telemetryMap["offenderNo"] = allocation.prisonerNumber
+        telemetryMap["bookingId"] = allocation.bookingId.toString()
+        mappingService.getMappingGivenActivityScheduleId(allocation.scheduleId).let { mapping ->
           nomisApiService.createAllocation(
             mapping.nomisCourseActivityId,
             CreateOffenderProgramProfileRequest(
@@ -147,31 +146,30 @@ class ActivitiesService(
               endDate = allocation.endDate,
               payBandCode = allocation.prisonPayBand.nomisPayBand.toString(),
             ),
-          )
-        } catch (e: Exception) {
-          telemetryClient.trackEvent("activity-allocation-create-failed", telemetryMap)
-          throw e
+          ).also {
+            telemetryMap["offenderProgramReferenceId"] = it.offenderProgramReferenceId.toString()
+          }
         }
-
-        telemetryMap["offenderProgramReferenceId"] = nomisResponse.offenderProgramReferenceId.toString()
-
-        telemetryClient.trackEvent("activity-allocation-created-event", telemetryMap)
       }
+    }.onSuccess {
+      telemetryClient.trackEvent("activity-allocation-create-success", telemetryMap)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("activity-allocation-create-failed", telemetryMap)
+      throw e
     }
   }
 
   fun deallocate(allocationEvent: AllocationDomainEvent) {
-    activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
-      mappingService.getMappingGivenActivityScheduleId(allocation.scheduleId)
-        .let { mapping ->
+    val telemetryMap = mutableMapOf(
+      "allocationId" to allocationEvent.additionalInformation.allocationId.toString(),
+    )
 
-          val telemetryMap = mutableMapOf(
-            "allocationId" to allocation.id.toString(),
-            "offenderNo" to allocation.prisonerNumber,
-            "bookingId" to allocation.bookingId.toString(),
-          )
-
-          val nomisResponse = try {
+    runCatching {
+      activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
+        telemetryMap["offenderNo"] = allocation.prisonerNumber
+        telemetryMap["bookingId"] = allocation.bookingId.toString()
+        mappingService.getMappingGivenActivityScheduleId(allocation.scheduleId)
+          .let { mapping ->
             nomisApiService.deallocate(
               mapping.nomisCourseActivityId,
               allocation.bookingId!!,
@@ -180,16 +178,16 @@ class ActivitiesService(
                 endReason = allocation.deallocatedReason, // TODO SDI-615 probably will need a mapping
                 // endComment = allocation.?, // TODO SDI-615 could put something useful in here
               ),
-            )
-          } catch (e: Exception) {
-            telemetryClient.trackEvent("activity-deallocate-failed", telemetryMap)
-            throw e
+            ).also {
+              telemetryMap["offenderProgramReferenceId"] = it.offenderProgramReferenceId.toString()
+            }
           }
-
-          telemetryMap["offenderProgramReferenceId"] = nomisResponse.offenderProgramReferenceId.toString()
-
-          telemetryClient.trackEvent("activity-deallocate-event", telemetryMap)
-        }
+      }
+    }.onSuccess {
+      telemetryClient.trackEvent("activity-deallocate-success", telemetryMap)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("activity-deallocate-failed", telemetryMap)
+      throw e
     }
   }
 
@@ -253,7 +251,7 @@ class ActivitiesService(
       ),
     ).also {
       telemetryClient.trackEvent(
-        "activity-retry-success",
+        "activity-create-mapping-retry-success",
         mapOf("activityScheduleId" to context.mapping.activityScheduleId.toString()),
       )
     }

@@ -177,6 +177,14 @@ internal class ActivitiesServiceTest {
 
     @Test
     fun `should throw and raise telemetry if cannot load Activity Schedule`() {
+      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
+        ActivityMappingDto(
+          NOMIS_COURSE_ACTIVITY_ID,
+          ACTIVITY_SCHEDULE_ID,
+          "ACTIVITY_CREATED",
+          LocalDateTime.now(),
+        ),
+      )
       whenever(activitiesApiService.getActivitySchedule(anyLong()))
         .thenThrow(WebClientResponseException.NotFound::class.java)
 
@@ -196,6 +204,14 @@ internal class ActivitiesServiceTest {
 
     @Test
     fun `should throw and raise telemetry if cannot load Activity `() {
+      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
+        ActivityMappingDto(
+          NOMIS_COURSE_ACTIVITY_ID,
+          ACTIVITY_SCHEDULE_ID,
+          "ACTIVITY_CREATED",
+          LocalDateTime.now(),
+        ),
+      )
       whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
       whenever(activitiesApiService.getActivity(anyLong()))
         .thenThrow(WebClientResponseException.NotFound::class.java)
@@ -208,7 +224,8 @@ internal class ActivitiesServiceTest {
       verify(telemetryClient).trackEvent(
         eq("activity-amend-failed"),
         check<Map<String, String>> {
-          assertThat(it).containsExactlyEntriesOf(mutableMapOf("activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()))
+          assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_COURSE_ACTIVITY_ID")
+          assertThat(it["activityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
         },
         isNull(),
       )
@@ -232,7 +249,6 @@ internal class ActivitiesServiceTest {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
-              "activityId" to ACTIVITY_ID.toString(),
             ),
           )
         },
@@ -299,7 +315,7 @@ internal class ActivitiesServiceTest {
         },
       )
       verify(telemetryClient).trackEvent(
-        eq("activity-amend-event"),
+        eq("activity-amend-success"),
         check<Map<String, String>> {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
@@ -430,7 +446,7 @@ internal class ActivitiesServiceTest {
         },
       )
       verify(telemetryClient).trackEvent(
-        eq("schedule-instances-amend-event"),
+        eq("schedule-instances-amend-success"),
         check<Map<String, String>> {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
@@ -474,7 +490,7 @@ internal class ActivitiesServiceTest {
       )
 
       verify(telemetryClient).trackEvent(
-        eq("activity-allocation-created-event"),
+        eq("activity-allocation-create-success"),
         check {
           assertThat(it["allocationId"]).isEqualTo("$ALLOCATION_ID")
           assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
@@ -553,7 +569,7 @@ internal class ActivitiesServiceTest {
       )
 
       verify(telemetryClient).trackEvent(
-        eq("activity-deallocate-event"),
+        eq("activity-deallocate-success"),
         check {
           assertThat(it["allocationId"]).isEqualTo("$ALLOCATION_ID")
           assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
