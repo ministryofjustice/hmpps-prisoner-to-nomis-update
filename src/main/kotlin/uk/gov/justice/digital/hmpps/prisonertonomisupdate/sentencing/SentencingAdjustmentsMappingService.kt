@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import java.time.LocalDateTime
@@ -19,11 +20,10 @@ class SentencingAdjustmentsMappingService(
       .uri("/mapping/sentencing/adjustments")
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(Unit::class.java)
-      .awaitSingleOrNull()
+      .awaitBodilessEntity()
   }
 
-  suspend fun getMappingGivenAdjustmentId(adjustmentId: String): SentencingAdjustmentMappingDto? =
+  suspend fun getMappingGivenAdjustmentIdOrNull(adjustmentId: String): SentencingAdjustmentMappingDto? =
     webClient.get()
       .uri("/mapping/sentencing/adjustments/adjustment-id/$adjustmentId")
       .retrieve()
@@ -32,6 +32,12 @@ class SentencingAdjustmentsMappingService(
         Mono.empty()
       }
       .awaitSingleOrNull()
+
+  suspend fun getMappingGivenAdjustmentId(adjustmentId: String): SentencingAdjustmentMappingDto =
+    webClient.get()
+      .uri("/mapping/sentencing/adjustments/adjustment-id/$adjustmentId")
+      .retrieve()
+      .awaitBody()
 
   suspend fun deleteMappingGivenAdjustmentId(adjustmentId: String): Unit =
     webClient.delete()

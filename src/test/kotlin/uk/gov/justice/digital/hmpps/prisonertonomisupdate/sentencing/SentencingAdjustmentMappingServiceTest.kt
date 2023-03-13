@@ -76,8 +76,56 @@ internal class SentencingAdjustmentMappingServiceTest {
   }
 
   @Nested
+  @DisplayName("GET mapping/sentencing/adjustments/adjustment-id/{adjustmentId} - NULLABLE")
+  inner class GetMappingGivenAdjustmentIdOrNull {
+    @Test
+    fun `should call api with OAuth2 token`() = runBlocking {
+      mappingServer.stubGetByAdjustmentId(
+        adjustmentId = "1234",
+      )
+
+      mappingService.getMappingGivenAdjustmentIdOrNull("1234")
+
+      mappingServer.verify(
+        getRequestedFor(urlEqualTo("/mapping/sentencing/adjustments/adjustment-id/1234"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will return mapping data`(): Unit = runBlocking {
+      mappingServer.stubGetByAdjustmentId(
+        adjustmentId = "1234",
+        nomisAdjustmentId = 123,
+        nomisAdjustmentCategory = "KEY-DATE",
+      )
+
+      val mapping = mappingService.getMappingGivenAdjustmentIdOrNull("1234")
+
+      assertThat(mapping?.nomisAdjustmentId).isEqualTo(123)
+      assertThat(mapping?.nomisAdjustmentCategory).isEqualTo("KEY-DATE")
+    }
+
+    @Test
+    internal fun `when mapping is not found null is returned`() = runBlocking {
+      mappingServer.stubGetByAdjustmentIdWithError("1234", 404)
+
+      assertThat(mappingService.getMappingGivenAdjustmentIdOrNull("1234")).isNull()
+    }
+
+    @Test
+    internal fun `when any bad response is received an exception is thrown`() {
+      mappingServer.stubGetByAdjustmentIdWithError("1234", 503)
+
+      assertThatThrownBy {
+        runBlocking { mappingService.getMappingGivenAdjustmentIdOrNull("1234") }
+      }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+  }
+
+  @Nested
   @DisplayName("GET mapping/sentencing/adjustments/adjustment-id/{adjustmentId}")
-  inner class GetMappingGivenSentenceAdjustmentId {
+  inner class GetMappingGivenAdjustmentId {
     @Test
     fun `should call api with OAuth2 token`() = runBlocking {
       mappingServer.stubGetByAdjustmentId(
@@ -102,15 +150,17 @@ internal class SentencingAdjustmentMappingServiceTest {
 
       val mapping = mappingService.getMappingGivenAdjustmentId("1234")
 
-      assertThat(mapping?.nomisAdjustmentId).isEqualTo(123)
-      assertThat(mapping?.nomisAdjustmentCategory).isEqualTo("KEY-DATE")
+      assertThat(mapping.nomisAdjustmentId).isEqualTo(123)
+      assertThat(mapping.nomisAdjustmentCategory).isEqualTo("KEY-DATE")
     }
 
     @Test
-    internal fun `when mapping is not found null is returned`() = runBlocking {
+    internal fun `when mapping is not found throws not found`(): Unit = runBlocking {
       mappingServer.stubGetByAdjustmentIdWithError("1234", 404)
 
-      assertThat(mappingService.getMappingGivenAdjustmentId("1234")).isNull()
+      assertThatThrownBy {
+        runBlocking { mappingService.getMappingGivenAdjustmentId("1234") }
+      }.isInstanceOf(NotFound::class.java)
     }
 
     @Test
