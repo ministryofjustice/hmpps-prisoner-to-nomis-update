@@ -80,7 +80,7 @@ class SentencingAdjustmentsService(
       val nomisAdjustmentId = sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(adjustmentId).nomisAdjustmentId
         .also { telemetryMap["nomisAdjustmentId"] = it.toString() }
 
-      sentencingAdjustmentsApiService.getAdjustment(createEvent.additionalInformation.id).let { adjustment ->
+      sentencingAdjustmentsApiService.getAdjustment(adjustmentId).let { adjustment ->
         if (adjustment.creatingSystem != CreatingSystem.NOMIS) {
           updateTransformedAdjustment(nomisAdjustmentId, adjustment)
           telemetryClient.trackEvent("sentencing-adjustment-updated-success", telemetryMap, null)
@@ -136,7 +136,7 @@ class SentencingAdjustmentsService(
           mapping.nomisAdjustmentId,
         )
       }.also {
-        sentencingAdjustmentsMappingService.deleteMappingGivenAdjustmentId(createEvent.additionalInformation.id)
+        sentencingAdjustmentsMappingService.deleteMappingGivenAdjustmentId(adjustmentId)
       }
     }.onSuccess {
       telemetryClient.trackEvent("sentencing-adjustment-deleted-success", telemetryMap, null)
