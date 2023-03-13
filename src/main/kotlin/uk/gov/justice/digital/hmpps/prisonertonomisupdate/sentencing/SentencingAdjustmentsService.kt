@@ -31,7 +31,7 @@ class SentencingAdjustmentsService(
       )
 
       checkMappingDoesNotExist {
-        sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(createEvent.additionalInformation.id)
+        sentencingAdjustmentsMappingService.getMappingGivenAdjustmentIdOrNull(createEvent.additionalInformation.id)
       }
       transform {
         sentencingAdjustmentsApiService.getAdjustment(createEvent.additionalInformation.id)
@@ -72,79 +72,78 @@ class SentencingAdjustmentsService(
     }
 
   suspend fun updateAdjustment(createEvent: AdjustmentUpdatedEvent) {
-    sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(createEvent.additionalInformation.id)
-      ?.also { mapping ->
-        sentencingAdjustmentsApiService.getAdjustment(createEvent.additionalInformation.id).also { adjustment ->
-          if (adjustment.creatingSystem != CreatingSystem.NOMIS) {
-            val nomisAdjustmentRequest = UpdateSentencingAdjustmentRequest(
-              adjustmentTypeCode = adjustment.adjustmentType,
-              adjustmentDate = adjustment.adjustmentDate,
-              adjustmentFromDate = adjustment.adjustmentStartPeriod,
-              adjustmentDays = adjustment.adjustmentDays,
-              comment = adjustment.comment,
-            )
-            if (adjustment.sentenceSequence == null) {
-              nomisApiService.updateKeyDateAdjustment(
-                mapping.nomisAdjustmentId,
-                nomisAdjustmentRequest,
-              )
-            } else {
-              nomisApiService.updateSentenceAdjustment(
-                mapping.nomisAdjustmentId,
-                nomisAdjustmentRequest,
-              )
-            }.also {
-              telemetryClient.trackEvent(
-                "sentencing-adjustment-updated-success",
-                mapOf(
-                  "adjustmentId" to adjustment.adjustmentId,
-                  "nomisAdjustmentId" to mapping.nomisAdjustmentId.toString(),
-                  "offenderNo" to createEvent.additionalInformation.nomsNumber,
-                ),
-                null,
-              )
-            }
-          } else {
-            telemetryClient.trackEvent(
-              "sentencing-adjustment-updated-ignored",
-              mapOf(
-                "adjustmentId" to adjustment.adjustmentId,
-                "offenderNo" to createEvent.additionalInformation.nomsNumber,
-              ),
-              null,
-            )
-          }
+    val adjustmentId = createEvent.additionalInformation.id
+    val offenderNo = createEvent.additionalInformation.nomsNumber
+    val telemetryMap = mutableMapOf("adjustmentId" to adjustmentId, "offenderNo" to offenderNo)
+
+    runCatching {
+      val nomisAdjustmentId = sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(adjustmentId).nomisAdjustmentId
+        .also { telemetryMap["nomisAdjustmentId"] = it.toString() }
+
+      sentencingAdjustmentsApiService.getAdjustment(createEvent.additionalInformation.id).let { adjustment ->
+        if (adjustment.creatingSystem != CreatingSystem.NOMIS) {
+          updateTransformedAdjustment(nomisAdjustmentId, adjustment)
+          telemetryClient.trackEvent("sentencing-adjustment-updated-success", telemetryMap, null)
+        } else {
+          telemetryClient.trackEvent("sentencing-adjustment-updated-ignored", telemetryMap, null)
         }
       }
-      ?: throw RuntimeException("No mapping found for adjustment ${createEvent.additionalInformation.id}, maybe we never received a create")
+    }.onFailure { e ->
+      telemetryClient.trackEvent("sentencing-adjustment-updated-failed", telemetryMap, null)
+      throw e
+    }
   }
 
-  suspend fun deleteAdjustment(createEvent: AdjustmentDeletedEvent) {
-    sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(createEvent.additionalInformation.id)
-      ?.also { mapping ->
-        if (mapping.nomisAdjustmentCategory == "SENTENCE") {
-          nomisApiService.deleteSentenceAdjustment(
-            mapping.nomisAdjustmentId,
-          )
-        } else {
-          nomisApiService.deleteKeyDateAdjustment(
-            mapping.nomisAdjustmentId,
-          )
-        }.also {
-          sentencingAdjustmentsMappingService.deleteMappingGivenAdjustmentId(createEvent.additionalInformation.id)
-          telemetryClient.trackEvent(
-            "sentencing-adjustment-deleted-success",
-            mapOf(
-              "adjustmentId" to mapping.adjustmentId,
-              "nomisAdjustmentId" to mapping.nomisAdjustmentId.toString(),
-              "nomisAdjustmentCategory" to mapping.nomisAdjustmentCategory,
-              "offenderNo" to createEvent.additionalInformation.nomsNumber,
-            ),
-            null,
-          )
-        }
+  private suspend fun updateTransformedAdjustment(nomisAdjustmentId: Long, adjustment: AdjustmentDetails) =
+    UpdateSentencingAdjustmentRequest(
+      adjustmentTypeCode = adjustment.adjustmentType,
+      adjustmentDate = adjustment.adjustmentDate,
+      adjustmentFromDate = adjustment.adjustmentStartPeriod,
+      adjustmentDays = adjustment.adjustmentDays,
+      comment = adjustment.comment,
+    ).run {
+      if (adjustment.sentenceSequence == null) {
+        nomisApiService.updateKeyDateAdjustment(
+          nomisAdjustmentId,
+          this,
+        )
+      } else {
+        nomisApiService.updateSentenceAdjustment(
+          nomisAdjustmentId,
+          this,
+        )
       }
-      ?: throw RuntimeException("No mapping found for adjustment ${createEvent.additionalInformation.id}, maybe we never received a create")
+    }
+
+  suspend fun deleteAdjustment(createEvent: AdjustmentDeletedEvent) {
+    val adjustmentId = createEvent.additionalInformation.id
+    val offenderNo = createEvent.additionalInformation.nomsNumber
+    val telemetryMap = mutableMapOf("adjustmentId" to adjustmentId, "offenderNo" to offenderNo)
+
+    runCatching {
+      val mapping = sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(adjustmentId)
+        .also {
+          telemetryMap["nomisAdjustmentId"] = it.nomisAdjustmentId.toString()
+          telemetryMap["nomisAdjustmentCategory"] = it.nomisAdjustmentCategory
+        }
+
+      if (mapping.nomisAdjustmentCategory == "SENTENCE") {
+        nomisApiService.deleteSentenceAdjustment(
+          mapping.nomisAdjustmentId,
+        )
+      } else {
+        nomisApiService.deleteKeyDateAdjustment(
+          mapping.nomisAdjustmentId,
+        )
+      }.also {
+        sentencingAdjustmentsMappingService.deleteMappingGivenAdjustmentId(createEvent.additionalInformation.id)
+      }
+    }.onSuccess {
+      telemetryClient.trackEvent("sentencing-adjustment-deleted-success", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("sentencing-adjustment-deleted-failed", telemetryMap, null)
+      throw e
+    }
   }
 
   suspend fun createSentencingAdjustmentMapping(message: CreateMappingRetryMessage<SentencingAdjustmentMappingDto>) =
