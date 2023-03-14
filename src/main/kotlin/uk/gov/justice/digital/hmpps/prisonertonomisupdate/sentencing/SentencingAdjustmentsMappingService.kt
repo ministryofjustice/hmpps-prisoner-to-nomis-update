@@ -1,13 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
-import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
-import reactor.core.publisher.Mono
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
 import java.time.LocalDateTime
 
 @Service
@@ -27,11 +25,7 @@ class SentencingAdjustmentsMappingService(
     webClient.get()
       .uri("/mapping/sentencing/adjustments/adjustment-id/$adjustmentId")
       .retrieve()
-      .bodyToMono(SentencingAdjustmentMappingDto::class.java)
-      .onErrorResume(WebClientResponseException.NotFound::class.java) {
-        Mono.empty()
-      }
-      .awaitSingleOrNull()
+      .awaitBodyOrNotFound()
 
   suspend fun getMappingGivenAdjustmentId(adjustmentId: String): SentencingAdjustmentMappingDto =
     webClient.get()

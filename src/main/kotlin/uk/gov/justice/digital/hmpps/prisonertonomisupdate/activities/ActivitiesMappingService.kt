@@ -1,13 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
-import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
-import reactor.core.publisher.Mono
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
 import java.time.LocalDateTime
 
 @Service
@@ -27,11 +25,7 @@ class ActivitiesMappingService(
     webClient.get()
       .uri("/mapping/activities/activity-schedule-id/$id")
       .retrieve()
-      .bodyToMono(ActivityMappingDto::class.java)
-      .onErrorResume(WebClientResponseException.NotFound::class.java) {
-        Mono.empty()
-      }
-      .awaitSingleOrNull()
+      .awaitBodyOrNotFound()
 
   suspend fun getMappingGivenActivityScheduleId(id: Long): ActivityMappingDto =
     webClient.get()

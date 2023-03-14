@@ -81,7 +81,7 @@ internal class IncentivesMappingServiceTest {
         """.trimMargin(),
       )
 
-      mappingService.getMappingGivenIncentiveId(1234)
+      mappingService.getMappingGivenIncentiveIdOrNull(1234)
 
       MappingExtension.mappingServer.verify(
         getRequestedFor(urlEqualTo("/mapping/incentives/incentive-id/1234"))
@@ -102,7 +102,7 @@ internal class IncentivesMappingServiceTest {
         """.trimMargin(),
       )
 
-      val data = mappingService.getMappingGivenIncentiveId(1234)
+      val data = mappingService.getMappingGivenIncentiveIdOrNull(1234)
 
       assertThat(data).isEqualTo(newMapping())
     }
@@ -111,7 +111,7 @@ internal class IncentivesMappingServiceTest {
     internal fun `when mapping is not found null is returned`() = runTest {
       MappingExtension.mappingServer.stubGetIncentiveIdWithError(123, 404)
 
-      assertThat(mappingService.getMappingGivenIncentiveId(123)).isNull()
+      assertThat(mappingService.getMappingGivenIncentiveIdOrNull(123)).isNull()
     }
 
     @Test
@@ -119,7 +119,7 @@ internal class IncentivesMappingServiceTest {
       MappingExtension.mappingServer.stubGetIncentiveIdWithError(123, 503)
 
       assertThrows<ServiceUnavailable>() {
-        mappingService.getMappingGivenIncentiveId(123)
+        mappingService.getMappingGivenIncentiveIdOrNull(123)
       }
     }
   }
