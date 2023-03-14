@@ -23,7 +23,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun createVisit(request: CreateVisitDto): String =
+  suspend fun createVisit(request: CreateVisitDto): CreateVisitResponseDto =
     webClient.post()
       .uri("/prisoners/${request.offenderNo}/visits")
       .bodyValue(request)
@@ -327,3 +327,7 @@ data class UpdateSentencingAdjustmentRequest(
 )
 
 data class CreateSentencingAdjustmentResponse(val id: Long)
+
+data class CreateVisitResponseDto(
+  val visitId: String,
+)

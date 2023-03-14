@@ -19,6 +19,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CancelVisitDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateVisitResponseDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -40,7 +41,7 @@ internal class VisitsServiceTest {
     fun `should log a processed visit booked event`() = runTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
       whenever(mappingService.getMappingGivenVsipIdOrNull("123")).thenReturn(null)
-      whenever(nomisApiService.createVisit(any())).thenReturn("456")
+      whenever(nomisApiService.createVisit(any())).thenReturn(CreateVisitResponseDto("456"))
 
       visitsService.createVisit(
         VisitBookedEvent(
@@ -91,7 +92,7 @@ internal class VisitsServiceTest {
     fun `should log a mapping creation failure`() = runTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
       whenever(mappingService.getMappingGivenVsipIdOrNull("123")).thenReturn(null)
-      whenever(nomisApiService.createVisit(any())).thenReturn("456")
+      whenever(nomisApiService.createVisit(any())).thenReturn(CreateVisitResponseDto("456"))
       whenever(mappingService.createMapping(any())).thenThrow(RuntimeException("test"))
 
       visitsService.createVisit(
