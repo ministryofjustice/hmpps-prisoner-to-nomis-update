@@ -42,7 +42,7 @@ class IncentivesService(
       )
 
       checkMappingDoesNotExist {
-        mappingService.getMappingGivenIncentiveId(event.additionalInformation.id)
+        mappingService.getMappingGivenIncentiveIdOrNull(event.additionalInformation.id)
       }
       transform {
         incentivesApiService.getIncentive(event.additionalInformation.id)

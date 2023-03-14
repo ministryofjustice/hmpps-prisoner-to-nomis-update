@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
-import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBody
 import java.time.LocalDate
 
 @Service
@@ -11,8 +11,7 @@ class SentencingAdjustmentsApiService(private val sentenceAdjustmentsApiWebClien
     return sentenceAdjustmentsApiWebClient.get()
       .uri("/adjustments/$adjustmentId")
       .retrieve()
-      .bodyToMono(AdjustmentDetails::class.java)
-      .awaitSingle()
+      .awaitBody()
   }
 }
 

@@ -1,12 +1,10 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
-import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
-import reactor.core.publisher.Mono
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
 import java.time.LocalDateTime
 
 @Service
@@ -22,15 +20,11 @@ class IncentivesMappingService(
       .awaitBodilessEntity()
   }
 
-  suspend fun getMappingGivenIncentiveId(incentiveId: Long): IncentiveMappingDto? =
+  suspend fun getMappingGivenIncentiveIdOrNull(incentiveId: Long): IncentiveMappingDto? =
     webClient.get()
       .uri("/mapping/incentives/incentive-id/$incentiveId")
       .retrieve()
-      .bodyToMono(IncentiveMappingDto::class.java)
-      .onErrorResume(WebClientResponseException.NotFound::class.java) {
-        Mono.empty()
-      }
-      .awaitSingleOrNull()
+      .awaitBodyOrNotFound()
 }
 
 data class IncentiveMappingDto(

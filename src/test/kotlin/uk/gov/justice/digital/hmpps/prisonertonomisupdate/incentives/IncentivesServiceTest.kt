@@ -80,7 +80,7 @@ internal class IncentivesServiceTest {
     @Test
     internal fun `should not update NOMIS if incentive already mapped (exists in nomis)`() = runTest {
       whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
-      whenever(mappingService.getMappingGivenIncentiveId(123)).thenReturn(
+      whenever(mappingService.getMappingGivenIncentiveIdOrNull(123)).thenReturn(
         IncentiveMappingDto(
           nomisBookingId = 123,
           nomisIncentiveSequence = 1,
