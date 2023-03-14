@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
 import com.microsoft.applicationinsights.TelemetryClient
-import jakarta.validation.ValidationException
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -37,7 +36,7 @@ internal class VisitsServiceTest {
     @Test
     fun `should log a processed visit booked event`() = runBlocking {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
-      whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(null)
+      whenever(mappingService.getMappingGivenVsipIdOrNull("123")).thenReturn(null)
       whenever(nomisApiService.createVisit(any())).thenReturn("456")
 
       visitsService.createVisit(
@@ -65,7 +64,7 @@ internal class VisitsServiceTest {
     @Test
     fun `should log an existing mapping`() = runBlocking {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
-      whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(newMapping())
+      whenever(mappingService.getMappingGivenVsipIdOrNull("123")).thenReturn(newMapping())
 
       visitsService.createVisit(
         VisitBookedEvent(
@@ -88,7 +87,7 @@ internal class VisitsServiceTest {
     @Test
     fun `should log a mapping creation failure`() = runBlocking {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
-      whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(null)
+      whenever(mappingService.getMappingGivenVsipIdOrNull("123")).thenReturn(null)
       whenever(nomisApiService.createVisit(any())).thenReturn("456")
       whenever(mappingService.createMapping(any())).thenThrow(RuntimeException("test"))
 
@@ -153,7 +152,7 @@ internal class VisitsServiceTest {
       )
 
       verify(telemetryClient).trackEvent(
-        eq("visit-cancelled-event"),
+        eq("visit-cancelled-success"),
         org.mockito.kotlin.check {
           assertThat(it["offenderNo"]).isEqualTo("AB123D")
           assertThat(it["visitId"]).isEqualTo("123")
@@ -244,7 +243,7 @@ internal class VisitsServiceTest {
     @Test
     fun `should log a mapping lookup failure`() {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
-      whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(null)
+      whenever(mappingService.getMappingGivenVsipId("123")).thenThrow(RuntimeException("BOOM"))
 
       assertThatThrownBy {
         visitsService.cancelVisit(
@@ -254,10 +253,10 @@ internal class VisitsServiceTest {
             occurredAt = OffsetDateTime.now(),
           ),
         )
-      }.isInstanceOf(ValidationException::class.java)
+      }.isInstanceOf(RuntimeException::class.java)
 
       verify(telemetryClient).trackEvent(
-        eq("visit-cancelled-mapping-failed"),
+        eq("visit-cancelled-failed"),
         org.mockito.kotlin.check {
           assertThat(it["offenderNo"]).isEqualTo("AB123D")
           assertThat(it["visitId"]).isEqualTo("123")

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
+import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
@@ -119,6 +120,63 @@ internal class VisitsMappingServiceTest {
   }
 
   @Nested
+  inner class GetMappingGivenVsipIdOrNull {
+
+    @Test
+    fun `should call api with OAuth2 token`() {
+      MappingExtension.mappingServer.stubGetVsip(
+        vsipId = "123",
+        response = """{
+          "nomisId": "456",
+          "vsipId": "123",
+          "mappingType": "ONLINE"
+        }
+        """.trimMargin(),
+      )
+
+      mappingService.getMappingGivenVsipIdOrNull("123")
+
+      MappingExtension.mappingServer.verify(
+        getRequestedFor(urlEqualTo("/mapping/visits/vsipId/123"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will return data`() {
+      MappingExtension.mappingServer.stubGetVsip(
+        vsipId = "123",
+        response = """{
+          "nomisId": "456",
+          "vsipId": "123",
+          "mappingType": "ONLINE"
+        }
+        """.trimMargin(),
+      )
+
+      val data = mappingService.getMappingGivenVsipIdOrNull("123")
+
+      assertThat(data).isEqualTo(newMapping())
+    }
+
+    @Test
+    internal fun `when mapping is not found null is returned`() {
+      MappingExtension.mappingServer.stubGetVsipWithError("123", 404)
+
+      assertThat(mappingService.getMappingGivenVsipIdOrNull("123")).isNull()
+    }
+
+    @Test
+    internal fun `when any bad response is received an exception is thrown`() {
+      MappingExtension.mappingServer.stubGetVsipWithError("123", 503)
+
+      assertThatThrownBy {
+        mappingService.getMappingGivenVsipIdOrNull("123")
+      }.isInstanceOf(ServiceUnavailable::class.java)
+    }
+  }
+
+  @Nested
   inner class GetMappingGivenVsipId {
 
     @Test
@@ -159,10 +217,12 @@ internal class VisitsMappingServiceTest {
     }
 
     @Test
-    internal fun `when mapping is not found null is returned`() {
+    internal fun `when mapping is not found exception is thrown`() {
       MappingExtension.mappingServer.stubGetVsipWithError("123", 404)
 
-      assertThat(mappingService.getMappingGivenVsipId("123")).isNull()
+      assertThatThrownBy {
+        mappingService.getMappingGivenVsipId("123")
+      }.isInstanceOf(NotFound::class.java)
     }
 
     @Test

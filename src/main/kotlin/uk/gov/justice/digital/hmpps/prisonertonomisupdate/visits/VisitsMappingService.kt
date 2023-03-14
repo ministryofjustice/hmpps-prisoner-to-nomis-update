@@ -37,7 +37,7 @@ class VisitsMappingService(
       }
       .block()
 
-  fun getMappingGivenVsipId(vsipId: String): VisitMappingDto? =
+  fun getMappingGivenVsipIdOrNull(vsipId: String): VisitMappingDto? =
     webClient.get()
       .uri("/mapping/visits/vsipId/$vsipId")
       .retrieve()
@@ -46,6 +46,13 @@ class VisitsMappingService(
         Mono.empty()
       }
       .block()
+
+  fun getMappingGivenVsipId(vsipId: String): VisitMappingDto =
+    webClient.get()
+      .uri("/mapping/visits/vsipId/$vsipId")
+      .retrieve()
+      .bodyToMono(VisitMappingDto::class.java)
+      .block()!!
 }
 
 data class VisitMappingDto(

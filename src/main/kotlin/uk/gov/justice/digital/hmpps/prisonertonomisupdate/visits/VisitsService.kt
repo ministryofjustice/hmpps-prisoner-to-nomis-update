@@ -38,7 +38,7 @@ class VisitsService(
       )
 
       checkMappingDoesNotExist {
-        mappingService.getMappingGivenVsipId(visitBookedEvent.reference)
+        mappingService.getMappingGivenVsipIdOrNull(visitBookedEvent.reference)
       }
       transform {
         visitsApiService.getVisit(visitBookedEvent.reference).let { visit ->
@@ -89,58 +89,64 @@ class VisitsService(
   override suspend fun retryCreateMapping(message: String) = retryCreateVisitMapping(message.fromJson())
 
   fun cancelVisit(visitCancelledEvent: VisitCancelledEvent) {
+    val vsipVisitId = visitCancelledEvent.reference
+    val offenderNo = visitCancelledEvent.prisonerId
     val telemetryProperties = mutableMapOf(
-      "offenderNo" to visitCancelledEvent.prisonerId,
-      "visitId" to visitCancelledEvent.reference,
+      "offenderNo" to offenderNo,
+      "visitId" to vsipVisitId,
     )
 
-    val mappingDto =
-      mappingService.getMappingGivenVsipId(visitCancelledEvent.reference)
-        ?: throw ValidationException("No mapping exists for VSIP id ${visitCancelledEvent.reference}")
-          .also { telemetryClient.trackEvent("visit-cancelled-mapping-failed", telemetryProperties) }
-
-    visitsApiService.getVisit(visitCancelledEvent.reference).run {
-      nomisApiService.cancelVisit(
-        CancelVisitDto(
-          offenderNo = visitCancelledEvent.prisonerId,
-          nomisVisitId = mappingDto.nomisId,
-          outcome = getNomisOutcomeOrDefault(this),
-        ),
-      )
-
-      telemetryProperties["nomisVisitId"] = mappingDto.nomisId
-
-      telemetryClient.trackEvent("visit-cancelled-event", telemetryProperties)
+    runCatching {
+      val nomisVisitId = mappingService.getMappingGivenVsipId(vsipVisitId).nomisId.also {
+        telemetryProperties["nomisVisitId"] = it
+      }
+      visitsApiService.getVisit(vsipVisitId).run {
+        nomisApiService.cancelVisit(
+          CancelVisitDto(
+            offenderNo = offenderNo,
+            nomisVisitId = nomisVisitId,
+            outcome = getNomisOutcomeOrDefault(this),
+          ),
+        )
+      }
+    }.onSuccess {
+      telemetryClient.trackEvent("visit-cancelled-success", telemetryProperties)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("visit-cancelled-failed", telemetryProperties)
+      throw e
     }
   }
 
   fun updateVisit(visitChangedEvent: VisitChangedEvent) {
+    val vsipVisitId = visitChangedEvent.reference
+    val offenderNo = visitChangedEvent.prisonerId
     val telemetryProperties = mutableMapOf(
-      "offenderNo" to visitChangedEvent.prisonerId,
-      "visitId" to visitChangedEvent.reference,
+      "offenderNo" to offenderNo,
+      "visitId" to vsipVisitId,
     )
 
-    val mappingDto =
-      mappingService.getMappingGivenVsipId(visitChangedEvent.reference)
-        ?: throw ValidationException("No mapping exists for VSIP id ${visitChangedEvent.reference}")
-          .also { telemetryClient.trackEvent("visit-changed-mapping-failed", telemetryProperties) }
-
-    visitsApiService.getVisit(visitChangedEvent.reference).run {
-      nomisApiService.updateVisit(
-        visitChangedEvent.prisonerId,
-        mappingDto.nomisId,
-        UpdateVisitDto(
-          startDateTime = this.startTimestamp,
-          endTime = this.endTimestamp.toLocalTime(),
-          visitorPersonIds = this.visitors.map { it.nomisPersonId },
-          room = this.visitRoom,
-          openClosedStatus = this.visitRestriction,
-        ),
-      )
-
-      telemetryProperties["nomisVisitId"] = mappingDto.nomisId
-
-      telemetryClient.trackEvent("visit-changed-event", telemetryProperties)
+    runCatching {
+      val nomisVisitId = mappingService.getMappingGivenVsipId(vsipVisitId).nomisId.also {
+        telemetryProperties["nomisVisitId"] = it
+      }
+      visitsApiService.getVisit(vsipVisitId).run {
+        nomisApiService.updateVisit(
+          visitChangedEvent.prisonerId,
+          nomisVisitId,
+          UpdateVisitDto(
+            startDateTime = this.startTimestamp,
+            endTime = this.endTimestamp.toLocalTime(),
+            visitorPersonIds = this.visitors.map { it.nomisPersonId },
+            room = this.visitRoom,
+            openClosedStatus = this.visitRestriction,
+          ),
+        )
+      }
+    }.onSuccess {
+      telemetryClient.trackEvent("visit-changed-success", telemetryProperties)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("visit-changed-failed", telemetryProperties)
+      throw e
     }
   }
 
