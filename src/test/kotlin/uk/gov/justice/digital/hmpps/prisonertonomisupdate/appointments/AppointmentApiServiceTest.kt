@@ -1,12 +1,15 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import kotlinx.coroutines.runBlocking
-import org.assertj.core.api.Assertions
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
@@ -43,7 +46,7 @@ internal class AppointmentApiServiceTest {
 
     @Test
     fun `should call api with OAuth2 token`() {
-      runBlocking {
+      runTest {
         appointmentsApiService.getAppointment(1234)
 
         AppointmentsApiExtension.appointmentsApi.verify(
@@ -55,7 +58,7 @@ internal class AppointmentApiServiceTest {
 
     @Test
     fun `get parse core data`() {
-      runBlocking {
+      runTest {
         val activity = appointmentsApiService.getAppointment(1234)
 
         assertThat(activity.id).isEqualTo(1234)
@@ -64,21 +67,21 @@ internal class AppointmentApiServiceTest {
     }
 
     @Test
-    fun `when schedule is not found an exception is thrown`() {
+    fun `when schedule is not found an exception is thrown`() = runTest {
       AppointmentsApiExtension.appointmentsApi.stubGetAppointmentWithError(1234, status = 404)
 
-      Assertions.assertThatThrownBy {
-        runBlocking { appointmentsApiService.getAppointment(1234) }
-      }.isInstanceOf(NotFound::class.java)
+      assertThrows<NotFound> {
+        appointmentsApiService.getAppointment(1234)
+      }
     }
 
     @Test
-    fun `when any bad response is received an exception is thrown`() {
+    fun `when any bad response is received an exception is thrown`() = runTest {
       AppointmentsApiExtension.appointmentsApi.stubGetAppointmentWithError(1234, status = 503)
 
-      Assertions.assertThatThrownBy {
-        runBlocking { appointmentsApiService.getAppointment(1234) }
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      assertThrows<ServiceUnavailable> {
+        appointmentsApiService.getAppointment(1234)
+      }
     }
   }
 }

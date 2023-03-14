@@ -1,11 +1,14 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
 import com.microsoft.applicationinsights.TelemetryClient
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.kotlin.any
@@ -34,7 +37,7 @@ internal class VisitsServiceTest {
   inner class CreateVisit {
 
     @Test
-    fun `should log a processed visit booked event`() = runBlocking {
+    fun `should log a processed visit booked event`() = runTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
       whenever(mappingService.getMappingGivenVsipIdOrNull("123")).thenReturn(null)
       whenever(nomisApiService.createVisit(any())).thenReturn("456")
@@ -62,7 +65,7 @@ internal class VisitsServiceTest {
     }
 
     @Test
-    fun `should log an existing mapping`() = runBlocking {
+    fun `should log an existing mapping`() = runTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
       whenever(mappingService.getMappingGivenVsipIdOrNull("123")).thenReturn(newMapping())
 
@@ -85,7 +88,7 @@ internal class VisitsServiceTest {
     }
 
     @Test
-    fun `should log a mapping creation failure`() = runBlocking {
+    fun `should log a mapping creation failure`() = runTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
       whenever(mappingService.getMappingGivenVsipIdOrNull("123")).thenReturn(null)
       whenever(nomisApiService.createVisit(any())).thenReturn("456")
@@ -118,7 +121,7 @@ internal class VisitsServiceTest {
   inner class RetryVisit {
 
     @Test
-    fun `should call mapping service`() = runBlocking {
+    fun `should call mapping service`() = runTest {
       visitsService.retryCreateMapping(
         """
           { "mapping" :
@@ -139,7 +142,7 @@ internal class VisitsServiceTest {
   inner class CancelVisit {
 
     @Test
-    fun `should log a processed visit cancelled event`() {
+    fun `should log a processed visit cancelled event`() = runTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
       whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(newMapping())
 
@@ -165,7 +168,7 @@ internal class VisitsServiceTest {
     }
 
     @Test
-    fun `should map a cancellation outcome correctly`() {
+    fun `should map a cancellation outcome correctly`() = runTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
       whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(newMapping())
 
@@ -180,7 +183,7 @@ internal class VisitsServiceTest {
     }
 
     @Test
-    fun `should handle a null cancellation outcome correctly (set to default 'ADMIN')`() {
+    fun `should handle a null cancellation outcome correctly (set to default 'ADMIN')`() = runTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit(outcome = null))
       whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(newMapping())
 
@@ -211,7 +214,7 @@ internal class VisitsServiceTest {
         "PRISONER_REFUSED_TO_ATTEND,REFUSED",
       ],
     )
-    fun `should map all cancellation outcome correctly`(vsipOutcome: String, nomisOutcome: String) {
+    fun `should map all cancellation outcome correctly`(vsipOutcome: String, nomisOutcome: String) = runTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit(outcome = vsipOutcome))
       whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(newMapping())
 
@@ -226,7 +229,7 @@ internal class VisitsServiceTest {
     }
 
     @Test
-    fun `should handle an unexpected cancellation outcome correctly (set to default 'ADMIN')`() {
+    fun `should handle an unexpected cancellation outcome correctly (set to default 'ADMIN')`() = runTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit(outcome = "HMMMMMMM"))
       whenever(mappingService.getMappingGivenVsipId("123")).thenReturn(newMapping())
 
@@ -241,11 +244,11 @@ internal class VisitsServiceTest {
     }
 
     @Test
-    fun `should log a mapping lookup failure`() {
+    fun `should log a mapping lookup failure`() = runTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
       whenever(mappingService.getMappingGivenVsipId("123")).thenThrow(RuntimeException("BOOM"))
 
-      assertThatThrownBy {
+      assertThrows<RuntimeException> {
         visitsService.cancelVisit(
           VisitCancelledEvent(
             additionalInformation = VisitCancelledEvent.VisitInformation(reference = "123"),
@@ -253,7 +256,7 @@ internal class VisitsServiceTest {
             occurredAt = OffsetDateTime.now(),
           ),
         )
-      }.isInstanceOf(RuntimeException::class.java)
+      }
 
       verify(telemetryClient).trackEvent(
         eq("visit-cancelled-failed"),

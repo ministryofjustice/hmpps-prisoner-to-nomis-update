@@ -1,11 +1,14 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.microsoft.applicationinsights.TelemetryClient
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentMatchers.anyList
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.kotlin.any
@@ -16,7 +19,8 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
-import org.springframework.web.reactive.function.client.WebClientResponseException
+import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
+import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityCategory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityLite
@@ -75,7 +79,7 @@ internal class ActivitiesServiceTest {
       )
 
     @Test
-    fun `should log an activity created event`() = runBlocking {
+    fun `should log an activity created event`() = runTest {
       whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
         newActivitySchedule(),
       )
@@ -98,7 +102,7 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should handle very long activity and schedule descriptions`(): Unit = runBlocking {
+    fun `should handle very long activity and schedule descriptions`() = runTest {
       whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
         newActivitySchedule().copy(description = "A schedule description that is very very long"),
       )
@@ -120,7 +124,7 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should not update NOMIS if activity already mapped (exists in nomis)`() = runBlocking {
+    fun `should not update NOMIS if activity already mapped (exists in nomis)`() = runTest {
       whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
         newActivitySchedule(),
       )
@@ -139,7 +143,7 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should log a mapping creation failure`() = runBlocking {
+    fun `should log a mapping creation failure`() = runTest {
       whenever(activitiesApiService.getActivitySchedule(ACTIVITY_SCHEDULE_ID)).thenReturn(
         newActivitySchedule(),
       )
@@ -176,7 +180,7 @@ internal class ActivitiesServiceTest {
       )
 
     @Test
-    fun `should throw and raise telemetry if cannot load Activity Schedule`() {
+    fun `should throw and raise telemetry if cannot load Activity Schedule`() = runTest {
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
         ActivityMappingDto(
           NOMIS_COURSE_ACTIVITY_ID,
@@ -186,11 +190,11 @@ internal class ActivitiesServiceTest {
         ),
       )
       whenever(activitiesApiService.getActivitySchedule(anyLong()))
-        .thenThrow(WebClientResponseException.NotFound::class.java)
+        .thenThrow(NotFound::class.java)
 
-      assertThatThrownBy {
+      assertThrows<NotFound> {
         activitiesService.updateActivity(aDomainEvent())
-      }.isInstanceOf(WebClientResponseException.NotFound::class.java)
+      }
 
       verify(activitiesApiService).getActivitySchedule(ACTIVITY_SCHEDULE_ID)
       verify(telemetryClient).trackEvent(
@@ -203,7 +207,7 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should throw and raise telemetry if cannot load Activity `() {
+    fun `should throw and raise telemetry if cannot load Activity `() = runTest {
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
         ActivityMappingDto(
           NOMIS_COURSE_ACTIVITY_ID,
@@ -214,11 +218,11 @@ internal class ActivitiesServiceTest {
       )
       whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
       whenever(activitiesApiService.getActivity(anyLong()))
-        .thenThrow(WebClientResponseException.NotFound::class.java)
+        .thenThrow(NotFound::class.java)
 
-      assertThatThrownBy {
+      assertThrows<NotFound> {
         activitiesService.updateActivity(aDomainEvent())
-      }.isInstanceOf(WebClientResponseException.NotFound::class.java)
+      }
 
       verify(activitiesApiService).getActivity(ACTIVITY_ID)
       verify(telemetryClient).trackEvent(
@@ -232,15 +236,15 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should throw and raise telemetry if cannot find mappings`() {
+    fun `should throw and raise telemetry if cannot find mappings`() = runTest {
       whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
       whenever(activitiesApiService.getActivity(anyLong())).thenReturn(newActivity())
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong()))
-        .thenThrow(WebClientResponseException.NotFound::class.java)
+        .thenThrow(NotFound::class.java)
 
-      assertThatThrownBy {
+      assertThrows<NotFound> {
         activitiesService.updateActivity(aDomainEvent())
-      }.isInstanceOf(WebClientResponseException.NotFound::class.java)
+      }
 
       verify(mappingService).getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)
       verify(telemetryClient).trackEvent(
@@ -257,7 +261,7 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should throw and raise telemetry if fail to update Nomis`() {
+    fun `should throw and raise telemetry if fail to update Nomis`() = runTest {
       whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
       whenever(activitiesApiService.getActivity(anyLong())).thenReturn(newActivity())
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
@@ -269,11 +273,11 @@ internal class ActivitiesServiceTest {
         ),
       )
       whenever(nomisApiService.updateActivity(anyLong(), any()))
-        .thenThrow(WebClientResponseException.ServiceUnavailable::class.java)
+        .thenThrow(ServiceUnavailable::class.java)
 
-      assertThatThrownBy {
+      assertThrows<ServiceUnavailable> {
         activitiesService.updateActivity(aDomainEvent())
-      }.isInstanceOf(WebClientResponseException.ServiceUnavailable::class.java)
+      }
 
       verify(nomisApiService).updateActivity(eq(NOMIS_COURSE_ACTIVITY_ID), any())
       verify(telemetryClient).trackEvent(
@@ -292,7 +296,7 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should raise telemetry when update of Nomis successful`() {
+    fun `should raise telemetry when update of Nomis successful`() = runTest {
       whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule(endDate = LocalDate.now().plusDays(1)))
       whenever(activitiesApiService.getActivity(anyLong())).thenReturn(newActivity())
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
@@ -343,13 +347,13 @@ internal class ActivitiesServiceTest {
       )
 
     @Test
-    fun `should throw and raise telemetry if cannot load Activity Schedule`() {
+    fun `should throw and raise telemetry if cannot load Activity Schedule`() = runTest {
       whenever(activitiesApiService.getActivitySchedule(anyLong()))
-        .thenThrow(WebClientResponseException.NotFound::class.java)
+        .thenThrow(NotFound::class.java)
 
-      assertThatThrownBy {
+      assertThrows<NotFound> {
         activitiesService.updateScheduleInstances(aDomainEvent())
-      }.isInstanceOf(WebClientResponseException.NotFound::class.java)
+      }
 
       verify(activitiesApiService).getActivitySchedule(ACTIVITY_SCHEDULE_ID)
       verify(telemetryClient).trackEvent(
@@ -362,14 +366,14 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should throw and raise telemetry if cannot find mappings`() {
+    fun `should throw and raise telemetry if cannot find mappings`() = runTest {
       whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong()))
-        .thenThrow(WebClientResponseException.NotFound::class.java)
+        .thenThrow(NotFound::class.java)
 
-      assertThatThrownBy {
+      assertThrows<NotFound> {
         activitiesService.updateScheduleInstances(aDomainEvent())
-      }.isInstanceOf(WebClientResponseException.NotFound::class.java)
+      }
 
       verify(mappingService).getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)
       verify(telemetryClient).trackEvent(
@@ -384,7 +388,7 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should throw and raise telemetry if fails to update Nomis`() {
+    fun `should throw and raise telemetry if fails to update Nomis`() = runTest {
       whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
         ActivityMappingDto(
@@ -395,11 +399,11 @@ internal class ActivitiesServiceTest {
         ),
       )
       whenever(nomisApiService.updateScheduleInstances(anyLong(), anyList()))
-        .thenThrow(WebClientResponseException.ServiceUnavailable::class.java)
+        .thenThrow(ServiceUnavailable::class.java)
 
-      assertThatThrownBy {
+      assertThrows<ServiceUnavailable> {
         activitiesService.updateScheduleInstances(aDomainEvent())
-      }.isInstanceOf(WebClientResponseException.ServiceUnavailable::class.java)
+      }
 
       verify(nomisApiService).updateScheduleInstances(eq(NOMIS_COURSE_ACTIVITY_ID), any())
       verify(telemetryClient).trackEvent(
@@ -417,7 +421,7 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should raise telemetry when update of Nomis successful`() {
+    fun `should raise telemetry when update of Nomis successful`() = runTest {
       whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule(endDate = LocalDate.now().plusDays(1)))
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
         ActivityMappingDto(
@@ -464,7 +468,7 @@ internal class ActivitiesServiceTest {
   inner class Allocate {
 
     @Test
-    fun `should log an allocation event`() {
+    fun `should log an allocation event`() = runTest {
       whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
       whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
@@ -502,7 +506,7 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should log a creation failure`() {
+    fun `should log a creation failure`() = runTest {
       whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
       whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
@@ -513,19 +517,21 @@ internal class ActivitiesServiceTest {
       )
       whenever(nomisApiService.createAllocation(any(), any())).thenThrow(RuntimeException("test"))
 
-      assertThatThrownBy {
-        activitiesService.createAllocation(
-          AllocationDomainEvent(
-            eventType = "dummy",
-            version = "1.0",
-            description = "description",
-            occurredAt = LocalDateTime.now(),
-            additionalInformation = AllocationAdditionalInformation(
-              allocationId = ALLOCATION_ID,
+      assertThat(
+        assertThrows<RuntimeException> {
+          activitiesService.createAllocation(
+            AllocationDomainEvent(
+              eventType = "dummy",
+              version = "1.0",
+              description = "description",
+              occurredAt = LocalDateTime.now(),
+              additionalInformation = AllocationAdditionalInformation(
+                allocationId = ALLOCATION_ID,
+              ),
             ),
-          ),
-        )
-      }.hasMessage("test")
+          )
+        }.message,
+      ).isEqualTo("test")
 
       verify(telemetryClient).trackEvent(
         eq("activity-allocation-create-failed"),
@@ -543,7 +549,7 @@ internal class ActivitiesServiceTest {
   inner class Deallocate {
 
     @Test
-    fun `should log an allocation event`() {
+    fun `should log an allocation event`() = runTest {
       whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
       whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
@@ -581,7 +587,7 @@ internal class ActivitiesServiceTest {
     }
 
     @Test
-    fun `should log a nomis failure`() {
+    fun `should log a nomis failure`() = runTest {
       whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
       whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
@@ -592,19 +598,21 @@ internal class ActivitiesServiceTest {
       )
       whenever(nomisApiService.deallocate(any(), any(), any())).thenThrow(RuntimeException("test"))
 
-      assertThatThrownBy {
-        activitiesService.deallocate(
-          AllocationDomainEvent(
-            eventType = "dummy",
-            version = "1.0",
-            description = "description",
-            occurredAt = LocalDateTime.now(),
-            additionalInformation = AllocationAdditionalInformation(
-              allocationId = ALLOCATION_ID,
+      assertThat(
+        assertThrows<RuntimeException> {
+          activitiesService.deallocate(
+            AllocationDomainEvent(
+              eventType = "dummy",
+              version = "1.0",
+              description = "description",
+              occurredAt = LocalDateTime.now(),
+              additionalInformation = AllocationAdditionalInformation(
+                allocationId = ALLOCATION_ID,
+              ),
             ),
-          ),
-        )
-      }.hasMessage("test")
+          )
+        }.message,
+      ).isEqualTo("test")
 
       verify(telemetryClient).trackEvent(
         eq("activity-deallocate-failed"),
@@ -622,7 +630,7 @@ internal class ActivitiesServiceTest {
   inner class Retry {
 
     @Test
-    fun `should call mapping service`() {
+    fun `should call mapping service`() = runTest {
       activitiesService.createRetry(
         CreateMappingRetryMessage(
           mapping = ActivityContext(

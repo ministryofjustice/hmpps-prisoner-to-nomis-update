@@ -3,18 +3,18 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBody
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Service
 class IncentivesApiService(@Qualifier("incentivesApiWebClient") private val webClient: WebClient) {
 
-  fun getIncentive(incentiveId: Long): IepDetail {
+  suspend fun getIncentive(incentiveId: Long): IepDetail {
     return webClient.get()
       .uri("/iep/reviews/id/$incentiveId")
       .retrieve()
-      .bodyToMono(IepDetail::class.java)
-      .block()!!
+      .awaitBody()
   }
 }
 

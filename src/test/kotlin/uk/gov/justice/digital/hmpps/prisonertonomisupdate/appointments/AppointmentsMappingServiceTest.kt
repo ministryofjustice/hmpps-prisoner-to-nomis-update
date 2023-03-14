@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments
 
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
@@ -5,12 +7,13 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
@@ -33,8 +36,8 @@ internal class AppointmentsMappingServiceTest {
     }
 
     @Test
-    fun `should call mapping api with OAuth2 token`() {
-      runBlocking { mappingService.createMapping(newMapping()) }
+    fun `should call mapping api with OAuth2 token`() = runTest {
+      mappingService.createMapping(newMapping())
       MappingExtension.mappingServer.verify(
         postRequestedFor(urlEqualTo("/mapping/appointments"))
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
@@ -42,8 +45,8 @@ internal class AppointmentsMappingServiceTest {
     }
 
     @Test
-    fun `will post data to mapping api`() {
-      runBlocking { mappingService.createMapping(newMapping()) }
+    fun `will post data to mapping api`() = runTest {
+      mappingService.createMapping(newMapping())
 
       MappingExtension.mappingServer.verify(
         postRequestedFor(urlEqualTo("/mapping/appointments"))
@@ -52,12 +55,12 @@ internal class AppointmentsMappingServiceTest {
     }
 
     @Test
-    fun `when a bad response is received an exception is thrown`() {
+    fun `when a bad response is received an exception is thrown`() = runTest {
       MappingExtension.mappingServer.stubCreateAppointmentWithError(400)
 
-      assertThatThrownBy {
-        runBlocking { mappingService.createMapping(newMapping()) }
-      }.isInstanceOf(BadRequest::class.java)
+      assertThrows<BadRequest> {
+        mappingService.createMapping(newMapping())
+      }
     }
   }
 
@@ -65,7 +68,7 @@ internal class AppointmentsMappingServiceTest {
   inner class GetMappingGivenAppointmentInstanceId {
 
     @Test
-    fun `should call api with OAuth2 token`() {
+    fun `should call api with OAuth2 token`() = runTest {
       MappingExtension.mappingServer.stubGetMappingGivenAppointmentInstanceId(
         id = 1234,
         response = """{
@@ -75,7 +78,7 @@ internal class AppointmentsMappingServiceTest {
         """.trimMargin(),
       )
 
-      runBlocking { mappingService.getMappingGivenAppointmentInstanceId(1234) }
+      mappingService.getMappingGivenAppointmentInstanceId(1234)
 
       MappingExtension.mappingServer.verify(
         getRequestedFor(urlEqualTo("/mapping/appointments/appointment-instance-id/1234"))
@@ -84,7 +87,7 @@ internal class AppointmentsMappingServiceTest {
     }
 
     @Test
-    fun `will return data`() {
+    fun `will return data`() = runTest {
       MappingExtension.mappingServer.stubGetMappingGivenAppointmentInstanceId(
         id = 1234,
         response = """{
@@ -94,31 +97,27 @@ internal class AppointmentsMappingServiceTest {
         """.trimMargin(),
       )
 
-      runBlocking {
-        val data = mappingService.getMappingGivenAppointmentInstanceId(1234)
+      val data = mappingService.getMappingGivenAppointmentInstanceId(1234)
 
-        assertThat(data).isEqualTo(newMapping())
-      }
+      assertThat(data).isEqualTo(newMapping())
     }
 
     @Test
-    fun `when mapping is not found null is returned`() {
+    fun `when mapping is not found null is returned`() = runTest {
       MappingExtension.mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(123, 404)
 
       assertThat(
-        runBlocking {
-          mappingService.getMappingGivenAppointmentInstanceIdOrNull(123)
-        },
+        mappingService.getMappingGivenAppointmentInstanceIdOrNull(123),
       ).isNull()
     }
 
     @Test
-    fun `when any bad response is received an exception is thrown`() {
+    fun `when any bad response is received an exception is thrown`() = runTest {
       MappingExtension.mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(123, 503)
 
-      assertThatThrownBy {
-        runBlocking { mappingService.getMappingGivenAppointmentInstanceId(123) }
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      assertThrows<ServiceUnavailable> {
+        mappingService.getMappingGivenAppointmentInstanceId(123)
+      }
     }
   }
 

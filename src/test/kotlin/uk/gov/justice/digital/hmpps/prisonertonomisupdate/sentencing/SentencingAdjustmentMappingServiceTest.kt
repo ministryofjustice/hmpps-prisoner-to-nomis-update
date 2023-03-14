@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
@@ -6,13 +8,14 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
@@ -37,7 +40,7 @@ internal class SentencingAdjustmentMappingServiceTest {
     }
 
     @Test
-    fun `should call mapping api with OAuth2 token`() = runBlocking {
+    fun `should call mapping api with OAuth2 token`() = runTest {
       mappingService.createMapping(newMapping())
 
       mappingServer.verify(
@@ -47,7 +50,7 @@ internal class SentencingAdjustmentMappingServiceTest {
     }
 
     @Test
-    fun `will post data to mapping api`() = runBlocking {
+    fun `will post data to mapping api`() = runTest {
       mappingService.createMapping(
         newMapping(
           nomisAdjustmentId = 123,
@@ -66,12 +69,12 @@ internal class SentencingAdjustmentMappingServiceTest {
     }
 
     @Test
-    internal fun `when a bad response is received an exception is thrown`() {
+    internal fun `when a bad response is received an exception is thrown`() = runTest {
       mappingServer.stubCreateSentencingAdjustmentWithError(400)
 
-      assertThatThrownBy {
-        runBlocking { mappingService.createMapping(newMapping()) }
-      }.isInstanceOf(BadRequest::class.java)
+      assertThrows<BadRequest> {
+        mappingService.createMapping(newMapping())
+      }
     }
   }
 
@@ -79,7 +82,7 @@ internal class SentencingAdjustmentMappingServiceTest {
   @DisplayName("GET mapping/sentencing/adjustments/adjustment-id/{adjustmentId} - NULLABLE")
   inner class GetMappingGivenAdjustmentIdOrNull {
     @Test
-    fun `should call api with OAuth2 token`() = runBlocking {
+    fun `should call api with OAuth2 token`() = runTest {
       mappingServer.stubGetByAdjustmentId(
         adjustmentId = "1234",
       )
@@ -93,7 +96,7 @@ internal class SentencingAdjustmentMappingServiceTest {
     }
 
     @Test
-    fun `will return mapping data`(): Unit = runBlocking {
+    fun `will return mapping data`(): Unit = runTest {
       mappingServer.stubGetByAdjustmentId(
         adjustmentId = "1234",
         nomisAdjustmentId = 123,
@@ -107,19 +110,19 @@ internal class SentencingAdjustmentMappingServiceTest {
     }
 
     @Test
-    internal fun `when mapping is not found null is returned`() = runBlocking {
+    internal fun `when mapping is not found null is returned`() = runTest {
       mappingServer.stubGetByAdjustmentIdWithError("1234", 404)
 
       assertThat(mappingService.getMappingGivenAdjustmentIdOrNull("1234")).isNull()
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
       mappingServer.stubGetByAdjustmentIdWithError("1234", 503)
 
-      assertThatThrownBy {
-        runBlocking { mappingService.getMappingGivenAdjustmentIdOrNull("1234") }
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      assertThrows<ServiceUnavailable> {
+        mappingService.getMappingGivenAdjustmentIdOrNull("1234")
+      }
     }
   }
 
@@ -127,7 +130,7 @@ internal class SentencingAdjustmentMappingServiceTest {
   @DisplayName("GET mapping/sentencing/adjustments/adjustment-id/{adjustmentId}")
   inner class GetMappingGivenAdjustmentId {
     @Test
-    fun `should call api with OAuth2 token`() = runBlocking {
+    fun `should call api with OAuth2 token`() = runTest {
       mappingServer.stubGetByAdjustmentId(
         adjustmentId = "1234",
       )
@@ -141,7 +144,7 @@ internal class SentencingAdjustmentMappingServiceTest {
     }
 
     @Test
-    fun `will return mapping data`(): Unit = runBlocking {
+    fun `will return mapping data`(): Unit = runTest {
       mappingServer.stubGetByAdjustmentId(
         adjustmentId = "1234",
         nomisAdjustmentId = 123,
@@ -155,21 +158,21 @@ internal class SentencingAdjustmentMappingServiceTest {
     }
 
     @Test
-    internal fun `when mapping is not found throws not found`(): Unit = runBlocking {
+    internal fun `when mapping is not found throws not found`() = runTest {
       mappingServer.stubGetByAdjustmentIdWithError("1234", 404)
 
-      assertThatThrownBy {
-        runBlocking { mappingService.getMappingGivenAdjustmentId("1234") }
-      }.isInstanceOf(NotFound::class.java)
+      assertThrows<NotFound> {
+        mappingService.getMappingGivenAdjustmentId("1234")
+      }
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
       mappingServer.stubGetByAdjustmentIdWithError("1234", 503)
 
-      assertThatThrownBy {
-        runBlocking { mappingService.getMappingGivenAdjustmentId("1234") }
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      assertThrows<ServiceUnavailable> {
+        mappingService.getMappingGivenAdjustmentId("1234")
+      }
     }
   }
 
@@ -177,7 +180,7 @@ internal class SentencingAdjustmentMappingServiceTest {
   @DisplayName("DELETE mapping/sentencing/adjustments/adjustment-id/{adjustmentId}")
   inner class DeleteMappingGivenSentenceAdjustmentId {
     @Test
-    fun `should call api with OAuth2 token`() = runBlocking {
+    fun `should call api with OAuth2 token`() = runTest {
       mappingServer.stubDeleteByAdjustmentId(
         adjustmentId = "1234",
       )
@@ -191,21 +194,21 @@ internal class SentencingAdjustmentMappingServiceTest {
     }
 
     @Test
-    internal fun `when mapping is not found exception is thrown`(): Unit = runBlocking {
+    internal fun `when mapping is not found exception is thrown`() = runTest {
       mappingServer.stubDeleteByAdjustmentIdWithError("1234", 404)
 
-      assertThatThrownBy {
-        runBlocking { mappingService.deleteMappingGivenAdjustmentId("1234") }
-      }.isInstanceOf(NotFound::class.java)
+      assertThrows<NotFound> {
+        mappingService.deleteMappingGivenAdjustmentId("1234")
+      }
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
       mappingServer.stubDeleteByAdjustmentIdWithError("1234", 503)
 
-      assertThatThrownBy {
-        runBlocking { mappingService.deleteMappingGivenAdjustmentId("1234") }
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      assertThrows<ServiceUnavailable> {
+        mappingService.deleteMappingGivenAdjustmentId("1234")
+      }
     }
   }
 

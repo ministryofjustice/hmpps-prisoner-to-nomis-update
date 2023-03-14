@@ -1,11 +1,15 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import org.assertj.core.api.Assertions
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
@@ -44,7 +48,7 @@ internal class IncentivesApiServiceTest {
     }
 
     @Test
-    fun `should call api with OAuth2 token`() {
+    fun `should call api with OAuth2 token`() = runTest {
       incentivesApiService.getIncentive(1234)
 
       IncentivesApiExtension.incentivesApi.verify(
@@ -54,7 +58,7 @@ internal class IncentivesApiServiceTest {
     }
 
     @Test
-    internal fun `get parse core data`() {
+    internal fun `get parse core data`() = runTest {
       val incentive = incentivesApiService.getIncentive(1234)
 
       assertThat(incentive.id).isEqualTo(1234)
@@ -67,21 +71,21 @@ internal class IncentivesApiServiceTest {
     }
 
     @Test
-    internal fun `when incentive is not found an exception is thrown`() {
+    internal fun `when incentive is not found an exception is thrown`() = runTest {
       IncentivesApiExtension.incentivesApi.stubIncentiveGetWithError(1234, status = 404)
 
-      Assertions.assertThatThrownBy {
+      assertThrows<NotFound> {
         incentivesApiService.getIncentive(1234)
-      }.isInstanceOf(NotFound::class.java)
+      }
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
       IncentivesApiExtension.incentivesApi.stubIncentiveGetWithError(1234, status = 503)
 
-      Assertions.assertThatThrownBy {
+      assertThrows<ServiceUnavailable> {
         incentivesApiService.getIncentive(1234)
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      }
     }
   }
 }

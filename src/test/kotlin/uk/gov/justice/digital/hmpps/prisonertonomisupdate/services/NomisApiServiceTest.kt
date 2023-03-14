@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
@@ -6,11 +8,12 @@ import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import kotlinx.coroutines.runBlocking
-import org.assertj.core.api.Assertions.assertThatThrownBy
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
@@ -33,7 +36,7 @@ internal class NomisApiServiceTest {
   inner class CreateVisit {
 
     @Test
-    fun `should call nomis api with OAuth2 token`() {
+    fun `should call nomis api with OAuth2 token`() = runTest {
       NomisApiExtension.nomisApi.stubVisitCreate("AB123D")
 
       nomisApiService.createVisit(newVisit())
@@ -45,7 +48,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will post visit data to nomis api`() {
+    fun `will post visit data to nomis api`() = runTest {
       NomisApiExtension.nomisApi.stubVisitCreate("AB123D")
 
       nomisApiService.createVisit(newVisit(offenderNo = "AB123D"))
@@ -57,21 +60,21 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `when offender is not found an exception is thrown`() {
+    fun `when offender is not found an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubVisitCreateWithError("AB123D", 404)
 
-      assertThatThrownBy {
+      assertThrows<NotFound> {
         nomisApiService.createVisit(newVisit())
-      }.isInstanceOf(NotFound::class.java)
+      }
     }
 
     @Test
-    fun `when any bad response is received an exception is thrown`() {
+    fun `when any bad response is received an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubVisitCreateWithError("AB123D", 503)
 
-      assertThatThrownBy {
+      assertThrows<ServiceUnavailable> {
         nomisApiService.createVisit(newVisit())
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      }
     }
   }
 
@@ -83,7 +86,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `should call nomis api with OAuth2 token`() {
+    fun `should call nomis api with OAuth2 token`() = runTest {
       nomisApiService.cancelVisit(cancelVisit())
 
       NomisApiExtension.nomisApi.verify(
@@ -93,7 +96,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will post cancel request to nomis api`() {
+    fun `will post cancel request to nomis api`() = runTest {
       nomisApiService.cancelVisit(cancelVisit())
 
       NomisApiExtension.nomisApi.verify(
@@ -102,21 +105,21 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `when offender is not found an exception is thrown`() {
+    fun `when offender is not found an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubVisitCancelWithError("AB123D", "12", 404)
 
-      assertThatThrownBy {
+      assertThrows<NotFound> {
         nomisApiService.cancelVisit(cancelVisit())
-      }.isInstanceOf(NotFound::class.java)
+      }
     }
 
     @Test
-    fun `when any bad response is received an exception is thrown`() {
+    fun `when any bad response is received an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubVisitCancelWithError("AB123D", "12", 503)
 
-      assertThatThrownBy {
+      assertThrows<ServiceUnavailable> {
         nomisApiService.cancelVisit(cancelVisit())
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      }
     }
   }
 
@@ -128,7 +131,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `should call nomis api with OAuth2 token`() {
+    fun `should call nomis api with OAuth2 token`() = runTest {
       nomisApiService.updateVisit("AB123D", "12", updateVisit())
 
       NomisApiExtension.nomisApi.verify(
@@ -138,7 +141,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will post cancel request to nomis api`() {
+    fun `will post cancel request to nomis api`() = runTest {
       nomisApiService.updateVisit("AB123D", "12", updateVisit())
 
       NomisApiExtension.nomisApi.verify(
@@ -147,21 +150,21 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `when offender is not found an exception is thrown`() {
+    fun `when offender is not found an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubVisitUpdateWithError("AB123D", "12", 404)
 
-      assertThatThrownBy {
+      assertThrows<NotFound> {
         nomisApiService.updateVisit("AB123D", "12", updateVisit())
-      }.isInstanceOf(NotFound::class.java)
+      }
     }
 
     @Test
-    fun `when any bad response is received an exception is thrown`() {
+    fun `when any bad response is received an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubVisitUpdateWithError("AB123D", "12", 503)
 
-      assertThatThrownBy {
+      assertThrows<ServiceUnavailable> {
         nomisApiService.updateVisit("AB123D", "12", updateVisit())
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      }
     }
   }
 
@@ -169,7 +172,7 @@ internal class NomisApiServiceTest {
   inner class CreateIncentive {
 
     @Test
-    fun `should call nomis api with OAuth2 token`() {
+    fun `should call nomis api with OAuth2 token`() = runTest {
       NomisApiExtension.nomisApi.stubIncentiveCreate(456)
 
       nomisApiService.createIncentive(456, newIncentive())
@@ -181,7 +184,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will post data to nomis api`() {
+    fun `will post data to nomis api`() = runTest {
       NomisApiExtension.nomisApi.stubIncentiveCreate(456)
 
       nomisApiService.createIncentive(456, newIncentive())
@@ -193,21 +196,21 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `when offender is not found an exception is thrown`() {
+    fun `when offender is not found an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubIncentiveCreateWithError(456, 404)
 
-      assertThatThrownBy {
+      assertThrows<NotFound> {
         nomisApiService.createIncentive(456, newIncentive())
-      }.isInstanceOf(NotFound::class.java)
+      }
     }
 
     @Test
-    fun `when any bad response is received an exception is thrown`() {
+    fun `when any bad response is received an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubIncentiveCreateWithError(456, 503)
 
-      assertThatThrownBy {
+      assertThrows<ServiceUnavailable> {
         nomisApiService.createIncentive(456, newIncentive())
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      }
     }
   }
 
@@ -215,7 +218,7 @@ internal class NomisApiServiceTest {
   inner class CreateActivity {
 
     @Test
-    fun `should call nomis api with OAuth2 token`() {
+    fun `should call nomis api with OAuth2 token`() = runTest {
       NomisApiExtension.nomisApi.stubActivityCreate("""{ "courseActivityId": 456 }""")
 
       nomisApiService.createActivity(newActivity())
@@ -227,7 +230,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will post data to nomis api`() {
+    fun `will post data to nomis api`() = runTest {
       NomisApiExtension.nomisApi.stubActivityCreate("""{ "courseActivityId": 456 }""")
 
       nomisApiService.createActivity(newActivity())
@@ -239,12 +242,12 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `when any error response is received an exception is thrown`() {
+    fun `when any error response is received an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubActivityCreateWithError(503)
 
-      assertThatThrownBy {
+      assertThrows<ServiceUnavailable> {
         nomisApiService.createActivity(newActivity())
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      }
     }
   }
 
@@ -252,7 +255,7 @@ internal class NomisApiServiceTest {
   inner class UpdateActivity {
 
     @Test
-    fun `should call nomis api with OAuth2 token`() {
+    fun `should call nomis api with OAuth2 token`() = runTest {
       NomisApiExtension.nomisApi.stubActivityUpdate(1L)
 
       nomisApiService.updateActivity(1L, updateActivity())
@@ -264,7 +267,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will put data to nomis api`() {
+    fun `will put data to nomis api`() = runTest {
       NomisApiExtension.nomisApi.stubActivityUpdate(1L)
 
       nomisApiService.updateActivity(1L, updateActivity())
@@ -276,12 +279,12 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `when any error response is received an exception is thrown`() {
+    fun `when any error response is received an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubActivityUpdateWithError(1, 503)
 
-      assertThatThrownBy {
+      assertThrows<ServiceUnavailable> {
         nomisApiService.updateActivity(1L, updateActivity())
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      }
     }
   }
 
@@ -289,7 +292,7 @@ internal class NomisApiServiceTest {
   inner class UpdateScheduleInstances {
 
     @Test
-    fun `should call nomis api with OAuth2 token`() {
+    fun `should call nomis api with OAuth2 token`() = runTest {
       NomisApiExtension.nomisApi.stubScheduleInstancesUpdate(1L)
 
       nomisApiService.updateScheduleInstances(1L, updateScheduleInstances())
@@ -301,7 +304,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will put data to nomis api`() {
+    fun `will put data to nomis api`() = runTest {
       NomisApiExtension.nomisApi.stubScheduleInstancesUpdate(1L)
 
       nomisApiService.updateScheduleInstances(1L, updateScheduleInstances())
@@ -316,12 +319,12 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `when any error response is received an exception is thrown`() {
+    fun `when any error response is received an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubScheduleInstancesUpdateWithError(1, 503)
 
-      assertThatThrownBy {
+      assertThrows<ServiceUnavailable> {
         nomisApiService.updateScheduleInstances(1L, updateScheduleInstances())
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      }
     }
   }
 
@@ -329,7 +332,7 @@ internal class NomisApiServiceTest {
   inner class Allocation {
 
     @Test
-    fun `should call nomis api with OAuth2 token`() {
+    fun `should call nomis api with OAuth2 token`() = runTest {
       NomisApiExtension.nomisApi.stubAllocationCreate(12)
 
       nomisApiService.createAllocation(12, newAllocation())
@@ -341,7 +344,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will post data to nomis api`() {
+    fun `will post data to nomis api`() = runTest {
       NomisApiExtension.nomisApi.stubAllocationCreate(12)
 
       nomisApiService.createAllocation(12, newAllocation())
@@ -353,12 +356,12 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `when any error response is received an exception is thrown`() {
+    fun `when any error response is received an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubAllocationCreateWithError(12, 400)
 
-      assertThatThrownBy {
+      assertThrows<BadRequest> {
         nomisApiService.createAllocation(12, newAllocation())
-      }.isInstanceOf(BadRequest::class.java)
+      }
     }
   }
 
@@ -366,7 +369,7 @@ internal class NomisApiServiceTest {
   inner class Deallocation {
 
     @Test
-    fun `should call nomis api with OAuth2 token`() {
+    fun `should call nomis api with OAuth2 token`() = runTest {
       NomisApiExtension.nomisApi.stubDeallocate(12, 456)
 
       nomisApiService.deallocate(12, 456, newDeallocation())
@@ -378,7 +381,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will post data to nomis api`() {
+    fun `will post data to nomis api`() = runTest {
       NomisApiExtension.nomisApi.stubDeallocate(12, 456)
 
       nomisApiService.deallocate(12, 456, newDeallocation())
@@ -391,12 +394,12 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `when any error response is received an exception is thrown`() {
+    fun `when any error response is received an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubDeallocateWithError(12, 456, 400)
 
-      assertThatThrownBy {
+      assertThrows<BadRequest> {
         nomisApiService.deallocate(12, 456, newDeallocation())
-      }.isInstanceOf(BadRequest::class.java)
+      }
     }
   }
 
@@ -404,7 +407,7 @@ internal class NomisApiServiceTest {
   inner class CreateAppointment {
 
     @Test
-    fun `should call nomis api with OAuth2 token`(): Unit = runBlocking {
+    fun `should call nomis api with OAuth2 token`(): Unit = runTest {
       NomisApiExtension.nomisApi.stubAppointmentCreate("""{ "id": 12345 }""")
 
       nomisApiService.createAppointment(newAppointment())
@@ -416,7 +419,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will post data to nomis api`(): Unit = runBlocking {
+    fun `will post data to nomis api`(): Unit = runTest {
       NomisApiExtension.nomisApi.stubAppointmentCreate("""{ "id": 12345 }""")
 
       nomisApiService.createAppointment(newAppointment())
@@ -428,12 +431,12 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `when any error response is received an exception is thrown`() {
+    fun `when any error response is received an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubAppointmentCreateWithError()
 
-      assertThatThrownBy {
-        runBlocking { nomisApiService.createActivity(newActivity()) }
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      assertThrows<ServiceUnavailable> {
+        nomisApiService.createActivity(newActivity())
+      }
     }
   }
 
@@ -441,7 +444,7 @@ internal class NomisApiServiceTest {
   inner class CreateSentenceAdjustment {
 
     @Test
-    fun `should call nomis api with OAuth2 token`(): Unit = runBlocking {
+    fun `should call nomis api with OAuth2 token`(): Unit = runTest {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentCreate(bookingId = 12345, sentenceSequence = 2)
 
       nomisApiService.createSentenceAdjustment(12345, 2, newSentencingAdjustment())
@@ -453,7 +456,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will post sentence adjustment data to nomis api`() = runBlocking {
+    fun `will post sentence adjustment data to nomis api`() = runTest {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentCreate(bookingId = 12345, sentenceSequence = 2)
 
       nomisApiService.createSentenceAdjustment(
@@ -479,29 +482,29 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `when booking or sentence is not found an exception is thrown`() {
+    internal fun `when booking or sentence is not found an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentCreateWithError(
         bookingId = 12345,
         sentenceSequence = 2,
         status = 404,
       )
 
-      assertThatThrownBy {
-        runBlocking { nomisApiService.createSentenceAdjustment(12345, 2, newSentencingAdjustment()) }
-      }.isInstanceOf(NotFound::class.java)
+      assertThrows<NotFound> {
+        nomisApiService.createSentenceAdjustment(12345, 2, newSentencingAdjustment())
+      }
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentCreateWithError(
         bookingId = 12345,
         sentenceSequence = 2,
         status = 503,
       )
 
-      assertThatThrownBy {
-        runBlocking { nomisApiService.createSentenceAdjustment(12345, 2, newSentencingAdjustment()) }
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      assertThrows<ServiceUnavailable> {
+        nomisApiService.createSentenceAdjustment(12345, 2, newSentencingAdjustment())
+      }
     }
   }
 
@@ -509,7 +512,7 @@ internal class NomisApiServiceTest {
   inner class UpdateSentenceAdjustment {
 
     @Test
-    fun `should call nomis api with OAuth2 token`(): Unit = runBlocking {
+    fun `should call nomis api with OAuth2 token`(): Unit = runTest {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentUpdate(adjustmentId = 98765)
 
       nomisApiService.updateSentenceAdjustment(98765, updateSentencingAdjustment())
@@ -521,7 +524,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will put sentence adjustment data to nomis api`() = runBlocking {
+    fun `will put sentence adjustment data to nomis api`() = runTest {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentUpdate(adjustmentId = 98765)
 
       nomisApiService.updateSentenceAdjustment(
@@ -546,27 +549,27 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `when adjustment is not found an exception is thrown`() {
+    internal fun `when adjustment is not found an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentUpdateWithError(
         adjustmentId = 98765,
         status = 404,
       )
 
-      assertThatThrownBy {
-        runBlocking { nomisApiService.updateSentenceAdjustment(98765, updateSentencingAdjustment()) }
-      }.isInstanceOf(NotFound::class.java)
+      assertThrows<NotFound> {
+        nomisApiService.updateSentenceAdjustment(98765, updateSentencingAdjustment())
+      }
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentUpdateWithError(
         adjustmentId = 98765,
         status = 503,
       )
 
-      assertThatThrownBy {
-        runBlocking { nomisApiService.updateSentenceAdjustment(98765, updateSentencingAdjustment()) }
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      assertThrows<ServiceUnavailable> {
+        nomisApiService.updateSentenceAdjustment(98765, updateSentencingAdjustment())
+      }
     }
   }
 
@@ -574,7 +577,7 @@ internal class NomisApiServiceTest {
   inner class DeleteSentenceAdjustment {
 
     @Test
-    fun `should call nomis api with OAuth2 token`(): Unit = runBlocking {
+    fun `should call nomis api with OAuth2 token`(): Unit = runTest {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentDelete(adjustmentId = 98765)
 
       nomisApiService.deleteSentenceAdjustment(98765)
@@ -586,7 +589,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will delete sentence adjustment from nomis`() = runBlocking {
+    fun `will delete sentence adjustment from nomis`() = runTest {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentDelete(adjustmentId = 98765)
 
       nomisApiService.deleteSentenceAdjustment(98765)
@@ -597,27 +600,27 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `if 404 - which is not expected - is returned an exception is thrown`() {
+    internal fun `if 404 - which is not expected - is returned an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentDeleteWithError(
         adjustmentId = 98765,
         status = 404,
       )
 
-      assertThatThrownBy {
-        runBlocking { nomisApiService.deleteSentenceAdjustment(98765) }
-      }.isInstanceOf(NotFound::class.java)
+      assertThrows<NotFound> {
+        nomisApiService.deleteSentenceAdjustment(98765)
+      }
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubSentenceAdjustmentDeleteWithError(
         adjustmentId = 98765,
         status = 503,
       )
 
-      assertThatThrownBy {
-        runBlocking { nomisApiService.deleteSentenceAdjustment(98765) }
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      assertThrows<ServiceUnavailable> {
+        nomisApiService.deleteSentenceAdjustment(98765)
+      }
     }
   }
 
@@ -625,7 +628,7 @@ internal class NomisApiServiceTest {
   inner class CreateKeyDateAdjustment {
 
     @Test
-    fun `should call nomis api with OAuth2 token`(): Unit = runBlocking {
+    fun `should call nomis api with OAuth2 token`(): Unit = runTest {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentCreate(bookingId = 12345)
 
       nomisApiService.createKeyDateAdjustment(12345, newSentencingAdjustment())
@@ -637,7 +640,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will post key date adjustment data to nomis api`() = runBlocking {
+    fun `will post key date adjustment data to nomis api`() = runTest {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentCreate(bookingId = 12345)
 
       nomisApiService.createKeyDateAdjustment(
@@ -658,27 +661,27 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `when booking is not found an exception is thrown`() {
+    internal fun `when booking is not found an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentCreateWithError(
         bookingId = 12345,
         status = 404,
       )
 
-      assertThatThrownBy {
-        runBlocking { nomisApiService.createKeyDateAdjustment(12345, newSentencingAdjustment()) }
-      }.isInstanceOf(NotFound::class.java)
+      assertThrows<NotFound> {
+        nomisApiService.createKeyDateAdjustment(12345, newSentencingAdjustment())
+      }
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentCreateWithError(
         bookingId = 12345,
         status = 503,
       )
 
-      assertThatThrownBy {
-        runBlocking { nomisApiService.createKeyDateAdjustment(12345, newSentencingAdjustment()) }
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      assertThrows<ServiceUnavailable> {
+        nomisApiService.createKeyDateAdjustment(12345, newSentencingAdjustment())
+      }
     }
   }
 
@@ -686,7 +689,7 @@ internal class NomisApiServiceTest {
   inner class UpdateKeyDateAdjustment {
 
     @Test
-    fun `should call nomis api with OAuth2 token`(): Unit = runBlocking {
+    fun `should call nomis api with OAuth2 token`(): Unit = runTest {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentUpdate(adjustmentId = 98765)
 
       nomisApiService.updateKeyDateAdjustment(98765, updateSentencingAdjustment())
@@ -698,7 +701,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will put key date adjustment data to nomis api`() = runBlocking {
+    fun `will put key date adjustment data to nomis api`() = runTest {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentUpdate(adjustmentId = 98765)
 
       nomisApiService.updateKeyDateAdjustment(
@@ -723,27 +726,27 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `when adjustment is not found an exception is thrown`() {
+    internal fun `when adjustment is not found an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentUpdateWithError(
         adjustmentId = 98765,
         status = 404,
       )
 
-      assertThatThrownBy {
-        runBlocking { nomisApiService.updateKeyDateAdjustment(98765, updateSentencingAdjustment()) }
-      }.isInstanceOf(NotFound::class.java)
+      assertThrows<NotFound> {
+        nomisApiService.updateKeyDateAdjustment(98765, updateSentencingAdjustment())
+      }
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentUpdateWithError(
         adjustmentId = 98765,
         status = 503,
       )
 
-      assertThatThrownBy {
-        runBlocking { nomisApiService.updateKeyDateAdjustment(98765, updateSentencingAdjustment()) }
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      assertThrows<ServiceUnavailable> {
+        nomisApiService.updateKeyDateAdjustment(98765, updateSentencingAdjustment())
+      }
     }
   }
 
@@ -751,7 +754,7 @@ internal class NomisApiServiceTest {
   inner class DeleteKeyDateAdjustment {
 
     @Test
-    fun `should call nomis api with OAuth2 token`(): Unit = runBlocking {
+    fun `should call nomis api with OAuth2 token`(): Unit = runTest {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentDelete(adjustmentId = 98765)
 
       nomisApiService.deleteKeyDateAdjustment(98765)
@@ -763,7 +766,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will delete key date adjustment from nomis`() = runBlocking {
+    fun `will delete key date adjustment from nomis`() = runTest {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentDelete(adjustmentId = 98765)
 
       nomisApiService.deleteKeyDateAdjustment(98765)
@@ -774,27 +777,27 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `if 404 - which is not expected - is returned an exception is thrown`() {
+    internal fun `if 404 - which is not expected - is returned an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentDeleteWithError(
         adjustmentId = 98765,
         status = 404,
       )
 
-      assertThatThrownBy {
-        runBlocking { nomisApiService.deleteKeyDateAdjustment(98765) }
-      }.isInstanceOf(NotFound::class.java)
+      assertThrows<NotFound> {
+        nomisApiService.deleteKeyDateAdjustment(98765)
+      }
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
       NomisApiExtension.nomisApi.stubKeyDateAdjustmentDeleteWithError(
         adjustmentId = 98765,
         status = 503,
       )
 
-      assertThatThrownBy {
-        runBlocking { nomisApiService.deleteKeyDateAdjustment(98765) }
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      assertThrows<ServiceUnavailable> {
+        nomisApiService.deleteKeyDateAdjustment(98765)
+      }
     }
   }
 }

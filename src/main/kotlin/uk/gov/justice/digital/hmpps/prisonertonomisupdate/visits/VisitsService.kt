@@ -75,7 +75,7 @@ class VisitsService(
     }
   }
 
-  fun retryCreateVisitMapping(context: CreateMappingRetryMessage<VisitMapping>) {
+  suspend fun retryCreateVisitMapping(context: CreateMappingRetryMessage<VisitMapping>) {
     mappingService.createMapping(
       VisitMappingDto(nomisId = context.mapping.nomisId, vsipId = context.mapping.vsipId, mappingType = "ONLINE"),
     ).also {
@@ -88,7 +88,7 @@ class VisitsService(
 
   override suspend fun retryCreateMapping(message: String) = retryCreateVisitMapping(message.fromJson())
 
-  fun cancelVisit(visitCancelledEvent: VisitCancelledEvent) {
+  suspend fun cancelVisit(visitCancelledEvent: VisitCancelledEvent) {
     val vsipVisitId = visitCancelledEvent.reference
     val offenderNo = visitCancelledEvent.prisonerId
     val telemetryProperties = mutableMapOf(
@@ -117,7 +117,7 @@ class VisitsService(
     }
   }
 
-  fun updateVisit(visitChangedEvent: VisitChangedEvent) {
+  suspend fun updateVisit(visitChangedEvent: VisitChangedEvent) {
     val vsipVisitId = visitChangedEvent.reference
     val offenderNo = visitChangedEvent.prisonerId
     val telemetryProperties = mutableMapOf(
