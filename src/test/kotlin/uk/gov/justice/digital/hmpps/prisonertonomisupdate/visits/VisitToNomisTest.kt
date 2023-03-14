@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
-import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.awaitility.kotlin.await
@@ -52,7 +52,7 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
     await untilCallTo { nomisApi.postCountFor("/prisoners/A32323Y/visits") } matches { it == 1 }
 
     nomisApi.verify(
-      WireMock.postRequestedFor(urlEqualTo("/prisoners/A32323Y/visits"))
+      postRequestedFor(urlEqualTo("/prisoners/A32323Y/visits"))
         .withRequestBody(matchingJsonPath("offenderNo", equalTo("A32323Y")))
         .withRequestBody(matchingJsonPath("prisonId", equalTo("MDI")))
         .withRequestBody(matchingJsonPath("visitType", equalTo("SCON")))
@@ -72,6 +72,13 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
             equalTo("Created by Book A Prison Visit for visit with reference: 12"),
           ),
         ),
+    )
+
+    mappingServer.verify(
+      postRequestedFor(urlEqualTo("/mapping/visits"))
+        .withRequestBody(matchingJsonPath("nomisId", equalTo("12345")))
+        .withRequestBody(matchingJsonPath("vsipId", equalTo("12")))
+        .withRequestBody(matchingJsonPath("mappingType", equalTo("ONLINE"))),
     )
   }
 

@@ -66,8 +66,8 @@ class VisitsService(
               room = visit.visitRoom,
               openClosedStatus = visit.visitRestriction,
             ),
-          ).let { nomisId ->
-            VisitMappingDto(nomisId = nomisId, vsipId = visitBookedEvent.reference, mappingType = "ONLINE")
+          ).let { nomisResponse ->
+            VisitMappingDto(nomisId = nomisResponse.visitId, vsipId = visitBookedEvent.reference, mappingType = "ONLINE")
           }
         }
       }
