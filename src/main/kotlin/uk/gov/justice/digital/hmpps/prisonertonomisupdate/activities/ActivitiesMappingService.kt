@@ -1,9 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
+import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import java.time.LocalDateTime
 
@@ -12,16 +15,15 @@ class ActivitiesMappingService(
   @Qualifier("mappingWebClient") private val webClient: WebClient,
 ) {
 
-  fun createMapping(request: ActivityMappingDto) {
+  suspend fun createMapping(request: ActivityMappingDto) {
     webClient.post()
       .uri("/mapping/activities")
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(Unit::class.java)
-      .block()
+      .awaitBodilessEntity()
   }
 
-  fun getMappingGivenActivityScheduleIdOrNull(id: Long): ActivityMappingDto? =
+  suspend fun getMappingGivenActivityScheduleIdOrNull(id: Long): ActivityMappingDto? =
     webClient.get()
       .uri("/mapping/activities/activity-schedule-id/$id")
       .retrieve()
@@ -29,13 +31,13 @@ class ActivitiesMappingService(
       .onErrorResume(WebClientResponseException.NotFound::class.java) {
         Mono.empty()
       }
-      .block()
+      .awaitSingleOrNull()
 
-  fun getMappingGivenActivityScheduleId(id: Long): ActivityMappingDto =
+  suspend fun getMappingGivenActivityScheduleId(id: Long): ActivityMappingDto =
     webClient.get()
       .uri("/mapping/activities/activity-schedule-id/$id")
       .retrieve()
-      .bodyToMono(ActivityMappingDto::class.java).block()!!
+      .awaitBody()
 }
 
 data class ActivityMappingDto(

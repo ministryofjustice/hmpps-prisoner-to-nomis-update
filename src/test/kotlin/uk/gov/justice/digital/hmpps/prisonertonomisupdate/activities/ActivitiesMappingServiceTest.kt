@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
@@ -5,11 +7,13 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
@@ -32,7 +36,7 @@ internal class ActivitiesMappingServiceTest {
     }
 
     @Test
-    fun `should call mapping api with OAuth2 token`() {
+    fun `should call mapping api with OAuth2 token`() = runTest {
       mappingService.createMapping(newMapping())
 
       MappingExtension.mappingServer.verify(
@@ -42,7 +46,7 @@ internal class ActivitiesMappingServiceTest {
     }
 
     @Test
-    fun `will post data to mapping api`() {
+    fun `will post data to mapping api`() = runTest {
       mappingService.createMapping(newMapping())
 
       MappingExtension.mappingServer.verify(
@@ -52,12 +56,12 @@ internal class ActivitiesMappingServiceTest {
     }
 
     @Test
-    fun `when a bad response is received an exception is thrown`() {
+    fun `when a bad response is received an exception is thrown`() = runTest {
       MappingExtension.mappingServer.stubCreateActivityWithError(400)
 
-      assertThatThrownBy {
+      assertThrows<BadRequest> {
         mappingService.createMapping(newMapping())
-      }.isInstanceOf(BadRequest::class.java)
+      }
     }
   }
 
@@ -65,7 +69,7 @@ internal class ActivitiesMappingServiceTest {
   inner class GetMappingGivenActivityScheduleId {
 
     @Test
-    fun `should call api with OAuth2 token`() {
+    fun `should call api with OAuth2 token`() = runTest {
       MappingExtension.mappingServer.stubGetMappingGivenActivityScheduleId(
         id = 1234,
         response = """{
@@ -85,7 +89,7 @@ internal class ActivitiesMappingServiceTest {
     }
 
     @Test
-    fun `will return data`() {
+    fun `will return data`() = runTest {
       MappingExtension.mappingServer.stubGetMappingGivenActivityScheduleId(
         id = 1234,
         response = """{
@@ -102,19 +106,19 @@ internal class ActivitiesMappingServiceTest {
     }
 
     @Test
-    fun `when mapping is not found null is returned`() {
+    fun `when mapping is not found null is returned`() = runTest {
       MappingExtension.mappingServer.stubGetMappingGivenActivityScheduleIdWithError(123, 404)
 
       assertThat(mappingService.getMappingGivenActivityScheduleIdOrNull(123)).isNull()
     }
 
     @Test
-    fun `when any bad response is received an exception is thrown`() {
+    fun `when any bad response is received an exception is thrown`() = runTest {
       MappingExtension.mappingServer.stubGetMappingGivenActivityScheduleIdWithError(123, 503)
 
-      assertThatThrownBy {
+      assertThrows<ServiceUnavailable> {
         mappingService.getMappingGivenActivityScheduleId(123)
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      }
     }
   }
 

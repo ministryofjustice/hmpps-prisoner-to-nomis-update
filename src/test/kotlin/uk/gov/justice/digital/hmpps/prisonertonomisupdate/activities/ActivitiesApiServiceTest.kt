@@ -1,11 +1,15 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import org.assertj.core.api.Assertions
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
@@ -145,7 +149,7 @@ internal class ActivitiesApiServiceTest {
     }
 
     @Test
-    fun `should call api with OAuth2 token`() {
+    fun `should call api with OAuth2 token`() = runTest {
       activitiesApiService.getActivitySchedule(1234)
 
       ActivitiesApiExtension.activitiesApi.verify(
@@ -155,7 +159,7 @@ internal class ActivitiesApiServiceTest {
     }
 
     @Test
-    fun `get parse core data`() {
+    fun `get parse core data`() = runTest {
       val schedule = activitiesApiService.getActivitySchedule(1234)
 
       assertThat(schedule.id).isEqualTo(1234)
@@ -178,21 +182,21 @@ internal class ActivitiesApiServiceTest {
     }
 
     @Test
-    fun `when schedule is not found an exception is thrown`() {
+    fun `when schedule is not found an exception is thrown`() = runTest {
       ActivitiesApiExtension.activitiesApi.stubGetScheduleWithError(1234, status = 404)
 
-      Assertions.assertThatThrownBy {
+      assertThrows<NotFound> {
         activitiesApiService.getActivitySchedule(1234)
-      }.isInstanceOf(NotFound::class.java)
+      }
     }
 
     @Test
-    fun `when any bad response is received an exception is thrown`() {
+    fun `when any bad response is received an exception is thrown`() = runTest {
       ActivitiesApiExtension.activitiesApi.stubGetScheduleWithError(1234, status = 503)
 
-      Assertions.assertThatThrownBy {
+      assertThrows<ServiceUnavailable> {
         activitiesApiService.getActivitySchedule(1234)
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      }
     }
   }
 
@@ -382,7 +386,7 @@ internal class ActivitiesApiServiceTest {
     }
 
     @Test
-    fun `should call api with OAuth2 token`() {
+    fun `should call api with OAuth2 token`() = runTest {
       activitiesApiService.getActivity(1234)
 
       ActivitiesApiExtension.activitiesApi.verify(
@@ -392,7 +396,7 @@ internal class ActivitiesApiServiceTest {
     }
 
     @Test
-    fun `get parse core data`() {
+    fun `get parse core data`() = runTest {
       val activity = activitiesApiService.getActivity(1234)
 
       assertThat(activity.id).isEqualTo(1234)
@@ -412,21 +416,21 @@ internal class ActivitiesApiServiceTest {
     }
 
     @Test
-    fun `when schedule is not found an exception is thrown`() {
+    fun `when schedule is not found an exception is thrown`() = runTest {
       ActivitiesApiExtension.activitiesApi.stubGetActivityWithError(1234, status = 404)
 
-      Assertions.assertThatThrownBy {
+      assertThrows<NotFound> {
         activitiesApiService.getActivity(1234)
-      }.isInstanceOf(NotFound::class.java)
+      }
     }
 
     @Test
-    fun `when any bad response is received an exception is thrown`() {
+    fun `when any bad response is received an exception is thrown`() = runTest {
       ActivitiesApiExtension.activitiesApi.stubGetActivityWithError(1234, status = 503)
 
-      Assertions.assertThatThrownBy {
+      assertThrows<ServiceUnavailable> {
         activitiesApiService.getActivity(1234)
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      }
     }
   }
 }

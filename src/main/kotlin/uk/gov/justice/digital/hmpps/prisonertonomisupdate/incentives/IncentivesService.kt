@@ -70,7 +70,7 @@ class IncentivesService(
     }
   }
 
-  fun retryCreateIncentiveMapping(context: CreateMappingRetryMessage<IncentiveMapping>) {
+  suspend fun retryCreateIncentiveMapping(context: CreateMappingRetryMessage<IncentiveMapping>) {
     mappingService.createMapping(
       IncentiveMappingDto(
         nomisBookingId = context.mapping.nomisBookingId,

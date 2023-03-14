@@ -32,6 +32,7 @@ dependencies {
   testImplementation("org.mockito:mockito-inline:5.1.1")
   testImplementation("org.testcontainers:localstack:1.17.6")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
 }
 

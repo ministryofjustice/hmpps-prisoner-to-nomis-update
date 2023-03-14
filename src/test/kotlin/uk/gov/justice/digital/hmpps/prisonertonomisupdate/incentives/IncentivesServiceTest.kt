@@ -1,7 +1,10 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
 import com.microsoft.applicationinsights.TelemetryClient
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -32,7 +35,7 @@ internal class IncentivesServiceTest {
   inner class CreateIncentive {
 
     @Test
-    fun `should log a processed visit booked event`() = runBlocking {
+    fun `should log a processed visit booked event`() = runTest {
       whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive(id = 123))
       whenever(nomisApiService.createIncentive(any(), any())).thenReturn(
         CreateIncentiveResponseDto(
@@ -59,7 +62,7 @@ internal class IncentivesServiceTest {
     }
 
     @Test
-    internal fun `should not update NOMIS if incentive was created in NOMIS`() = runBlocking {
+    internal fun `should not update NOMIS if incentive was created in NOMIS`() = runTest {
       whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
 
       incentivesService.createIncentive(
@@ -75,7 +78,7 @@ internal class IncentivesServiceTest {
     }
 
     @Test
-    internal fun `should not update NOMIS if incentive already mapped (exists in nomis)`() = runBlocking {
+    internal fun `should not update NOMIS if incentive already mapped (exists in nomis)`() = runTest {
       whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive())
       whenever(mappingService.getMappingGivenIncentiveId(123)).thenReturn(
         IncentiveMappingDto(
@@ -94,7 +97,7 @@ internal class IncentivesServiceTest {
     }
 
     @Test
-    fun `should log a mapping creation failure`() = runBlocking {
+    fun `should log a mapping creation failure`() = runTest {
       whenever(incentiveApiService.getIncentive(123)).thenReturn(newIncentive(id = 123))
       whenever(nomisApiService.createIncentive(any(), any())).thenReturn(
         CreateIncentiveResponseDto(
@@ -126,7 +129,7 @@ internal class IncentivesServiceTest {
   inner class RetryIncentive {
 
     @Test
-    fun `should call mapping service`() = runBlocking {
+    fun `should call mapping service`() = runTest {
       incentivesService.retryCreateMapping(
         """
           { 

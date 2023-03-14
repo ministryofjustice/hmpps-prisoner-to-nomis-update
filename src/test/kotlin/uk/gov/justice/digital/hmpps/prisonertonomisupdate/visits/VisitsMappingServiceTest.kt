@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
@@ -5,11 +7,13 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
@@ -33,7 +37,7 @@ internal class VisitsMappingServiceTest {
     }
 
     @Test
-    fun `should call mapping api with OAuth2 token`() {
+    fun `should call mapping api with OAuth2 token`() = runTest {
       mappingService.createMapping(newMapping())
 
       MappingExtension.mappingServer.verify(
@@ -43,7 +47,7 @@ internal class VisitsMappingServiceTest {
     }
 
     @Test
-    fun `will post data to mapping api`() {
+    fun `will post data to mapping api`() = runTest {
       mappingService.createMapping(newMapping())
 
       MappingExtension.mappingServer.verify(
@@ -53,12 +57,12 @@ internal class VisitsMappingServiceTest {
     }
 
     @Test
-    internal fun `when a bad response is received an exception is thrown`() {
+    internal fun `when a bad response is received an exception is thrown`() = runTest {
       MappingExtension.mappingServer.stubCreateWithError(400)
 
-      assertThatThrownBy {
+      assertThrows<BadRequest> {
         mappingService.createMapping(newMapping())
-      }.isInstanceOf(BadRequest::class.java)
+      }
     }
   }
 
@@ -66,7 +70,7 @@ internal class VisitsMappingServiceTest {
   inner class GetMappingGivenNomisId {
 
     @Test
-    fun `should call nomis api OAuth2 token`() {
+    fun `should call nomis api OAuth2 token`() = runTest {
       MappingExtension.mappingServer.stubGetNomis(
         nomisId = "456",
         response = """{
@@ -77,7 +81,7 @@ internal class VisitsMappingServiceTest {
         """.trimMargin(),
       )
 
-      mappingService.getMappingGivenNomisId(456)
+      mappingService.getMappingGivenNomisIdOrNull(456)
 
       MappingExtension.mappingServer.verify(
         getRequestedFor(urlEqualTo("/mapping/visits/nomisId/456"))
@@ -86,7 +90,7 @@ internal class VisitsMappingServiceTest {
     }
 
     @Test
-    fun `will return data`() {
+    fun `will return data`() = runTest {
       MappingExtension.mappingServer.stubGetNomis(
         nomisId = "456",
         response = """{
@@ -97,25 +101,25 @@ internal class VisitsMappingServiceTest {
         """.trimMargin(),
       )
 
-      val data = mappingService.getMappingGivenNomisId(456)
+      val data = mappingService.getMappingGivenNomisIdOrNull(456)
 
       assertThat(data).isEqualTo(newMapping())
     }
 
     @Test
-    internal fun `when mapping is not found null is returned`() {
+    internal fun `when mapping is not found null is returned`() = runTest {
       MappingExtension.mappingServer.stubGetNomisWithError("456", 404)
 
-      assertThat(mappingService.getMappingGivenNomisId(456)).isNull()
+      assertThat(mappingService.getMappingGivenNomisIdOrNull(456)).isNull()
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
       MappingExtension.mappingServer.stubGetNomisWithError("456", 503)
 
-      assertThatThrownBy {
-        mappingService.getMappingGivenNomisId(456)
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      assertThrows<ServiceUnavailable> {
+        mappingService.getMappingGivenNomisIdOrNull(456)
+      }
     }
   }
 
@@ -123,7 +127,7 @@ internal class VisitsMappingServiceTest {
   inner class GetMappingGivenVsipIdOrNull {
 
     @Test
-    fun `should call api with OAuth2 token`() {
+    fun `should call api with OAuth2 token`() = runTest {
       MappingExtension.mappingServer.stubGetVsip(
         vsipId = "123",
         response = """{
@@ -143,7 +147,7 @@ internal class VisitsMappingServiceTest {
     }
 
     @Test
-    fun `will return data`() {
+    fun `will return data`() = runTest {
       MappingExtension.mappingServer.stubGetVsip(
         vsipId = "123",
         response = """{
@@ -160,19 +164,19 @@ internal class VisitsMappingServiceTest {
     }
 
     @Test
-    internal fun `when mapping is not found null is returned`() {
+    internal fun `when mapping is not found null is returned`() = runTest {
       MappingExtension.mappingServer.stubGetVsipWithError("123", 404)
 
       assertThat(mappingService.getMappingGivenVsipIdOrNull("123")).isNull()
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
       MappingExtension.mappingServer.stubGetVsipWithError("123", 503)
 
-      assertThatThrownBy {
+      assertThrows<ServiceUnavailable>() {
         mappingService.getMappingGivenVsipIdOrNull("123")
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      }
     }
   }
 
@@ -180,7 +184,7 @@ internal class VisitsMappingServiceTest {
   inner class GetMappingGivenVsipId {
 
     @Test
-    fun `should call api with OAuth2 token`() {
+    fun `should call api with OAuth2 token`() = runTest {
       MappingExtension.mappingServer.stubGetVsip(
         vsipId = "123",
         response = """{
@@ -200,7 +204,7 @@ internal class VisitsMappingServiceTest {
     }
 
     @Test
-    fun `will return data`() {
+    fun `will return data`() = runTest {
       MappingExtension.mappingServer.stubGetVsip(
         vsipId = "123",
         response = """{
@@ -217,21 +221,21 @@ internal class VisitsMappingServiceTest {
     }
 
     @Test
-    internal fun `when mapping is not found exception is thrown`() {
+    internal fun `when mapping is not found exception is thrown`() = runTest {
       MappingExtension.mappingServer.stubGetVsipWithError("123", 404)
 
-      assertThatThrownBy {
+      assertThrows<NotFound> {
         mappingService.getMappingGivenVsipId("123")
-      }.isInstanceOf(NotFound::class.java)
+      }
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
       MappingExtension.mappingServer.stubGetVsipWithError("123", 503)
 
-      assertThatThrownBy {
+      assertThrows<ServiceUnavailable> {
         mappingService.getMappingGivenVsipId("123")
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      }
     }
   }
 

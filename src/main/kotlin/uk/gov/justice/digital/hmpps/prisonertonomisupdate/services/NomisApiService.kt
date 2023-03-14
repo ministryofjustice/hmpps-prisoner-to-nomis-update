@@ -1,12 +1,14 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import java.math.BigDecimal
@@ -21,15 +23,14 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun createVisit(request: CreateVisitDto): String =
+  suspend fun createVisit(request: CreateVisitDto): String =
     webClient.post()
       .uri("/prisoners/${request.offenderNo}/visits")
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(CreateVisitResponseDto::class.java)
-      .block()!!.visitId
+      .awaitBody()
 
-  fun cancelVisit(request: CancelVisitDto) {
+  suspend fun cancelVisit(request: CancelVisitDto) {
     webClient.put()
       .uri("/prisoners/${request.offenderNo}/visits/${request.nomisVisitId}/cancel")
       .bodyValue(request)
@@ -39,53 +40,48 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
         log.warn("cancelVisit failed for offender no ${request.offenderNo} and Nomis visit id ${request.nomisVisitId} with message ${it.message}")
         Mono.empty()
       }
-      .block()
+      .awaitSingleOrNull()
   }
 
-  fun createIncentive(bookingId: Long, request: CreateIncentiveDto): CreateIncentiveResponseDto =
+  suspend fun createIncentive(bookingId: Long, request: CreateIncentiveDto): CreateIncentiveResponseDto =
     webClient.post()
       .uri("/prisoners/booking-id/$bookingId/incentives")
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(CreateIncentiveResponseDto::class.java)
-      .block()!!
+      .awaitBody()
 
-  fun updateVisit(offenderNo: String, nomisVisitId: String, updateVisitDto: UpdateVisitDto) {
+  suspend fun updateVisit(offenderNo: String, nomisVisitId: String, updateVisitDto: UpdateVisitDto) {
     webClient.put()
       .uri("/prisoners/$offenderNo/visits/$nomisVisitId")
       .bodyValue(updateVisitDto)
       .retrieve()
-      .bodyToMono(Unit::class.java)
-      .block()
+      .awaitBodilessEntity()
   }
 
-  fun createActivity(request: CreateActivityRequest): CreateActivityResponse =
+  suspend fun createActivity(request: CreateActivityRequest): CreateActivityResponse =
     webClient.post()
       .uri("/activities")
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(CreateActivityResponse::class.java)
-      .block()!!
+      .awaitBody()
 
-  fun updateActivity(courseActivityId: Long, request: UpdateActivityRequest) {
+  suspend fun updateActivity(courseActivityId: Long, request: UpdateActivityRequest) {
     webClient.put()
       .uri("/activities/$courseActivityId")
       .bodyValue(request)
       .retrieve()
-      .toBodilessEntity()
-      .block()!!
+      .awaitBodilessEntity()
   }
 
-  fun updateScheduleInstances(courseActivityId: Long, request: List<ScheduleRequest>) {
+  suspend fun updateScheduleInstances(courseActivityId: Long, request: List<ScheduleRequest>) {
     webClient.put()
       .uri("/activities/$courseActivityId/schedules")
       .bodyValue(request)
       .retrieve()
-      .toBodilessEntity()
-      .block()!!
+      .awaitBodilessEntity()
   }
 
-  fun createAllocation(
+  suspend fun createAllocation(
     courseActivityId: Long,
     request: CreateOffenderProgramProfileRequest,
   ): OffenderProgramProfileResponse =
@@ -93,10 +89,9 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .uri("/activities/$courseActivityId")
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(OffenderProgramProfileResponse::class.java)
-      .block()!!
+      .awaitBody()
 
-  fun deallocate(
+  suspend fun deallocate(
     courseActivityId: Long,
     bookingId: Long,
     request: EndOffenderProgramProfileRequest,
@@ -105,8 +100,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .uri("/activities/$courseActivityId/booking-id/$bookingId/end")
       .bodyValue(request)
       .retrieve()
-      .bodyToMono(OffenderProgramProfileResponse::class.java)
-      .block()!!
+      .awaitBody()
 
   suspend fun createAppointment(request: CreateAppointmentRequest): CreateAppointmentResponse =
     webClient.post()
@@ -201,10 +195,6 @@ data class UpdateVisitDto(
   val visitorPersonIds: List<Long>,
   val room: String,
   val openClosedStatus: String,
-)
-
-data class CreateVisitResponseDto(
-  val visitId: String,
 )
 
 data class CreateIncentiveDto(

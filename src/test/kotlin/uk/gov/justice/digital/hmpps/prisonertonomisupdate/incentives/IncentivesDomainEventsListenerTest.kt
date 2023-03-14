@@ -1,7 +1,10 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -39,7 +42,7 @@ internal class IncentivesDomainEventsListenerTest {
       }
 
       @Test
-      internal fun `will call service with create incentive data`() = runBlocking {
+      internal fun `will call service with create incentive data`() = runTest {
         listener.onMessage(
           rawMessage = incentiveCreatedMessage(123L),
         ).join()
@@ -72,7 +75,7 @@ internal class IncentivesDomainEventsListenerTest {
     @Nested
     inner class Retries {
       @Test
-      internal fun `will call retry service with visit context data`() = runBlocking {
+      internal fun `will call retry service with visit context data`() = runTest {
         listener.onMessage(rawMessage = incentiveRetryMessage()).join()
 
         verify(incentivesService).retryCreateMapping(any())

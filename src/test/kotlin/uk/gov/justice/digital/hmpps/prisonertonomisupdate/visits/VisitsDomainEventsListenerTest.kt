@@ -1,7 +1,10 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -39,7 +42,7 @@ internal class VisitsDomainEventsListenerTest {
       }
 
       @Test
-      internal fun `will call service with create visit data`() = runBlocking {
+      internal fun `will call service with create visit data`() = runTest {
         listener.onMessage(
           rawMessage = prisonVisitCreatedMessage(
             visitId = "99",
@@ -79,7 +82,7 @@ internal class VisitsDomainEventsListenerTest {
     @Nested
     inner class Retries {
       @Test
-      internal fun `will call retry service with visit context data`() = runBlocking {
+      internal fun `will call retry service with visit context data`() = runTest {
         listener.onMessage(rawMessage = retryVisitsCreateMappingMessage()).join()
 
         verify(visitsService).retryCreateMapping(any())

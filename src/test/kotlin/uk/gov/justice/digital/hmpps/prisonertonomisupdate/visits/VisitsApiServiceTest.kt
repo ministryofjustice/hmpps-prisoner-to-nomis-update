@@ -1,11 +1,15 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import org.assertj.core.api.Assertions
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
@@ -56,7 +60,7 @@ internal class VisitsApiServiceTest {
     }
 
     @Test
-    fun `should call visit api with OAuth2 token`() {
+    fun `should call visit api with OAuth2 token`() = runTest {
       visitsApiService.getVisit("1234")
 
       VisitsApiExtension.visitsApi.verify(
@@ -66,7 +70,7 @@ internal class VisitsApiServiceTest {
     }
 
     @Test
-    internal fun `get parse core visit data`() {
+    internal fun `get parse core visit data`() = runTest {
       val visit = visitsApiService.getVisit("1234")
 
       assertThat(visit.reference).isEqualTo("1234")
@@ -80,21 +84,21 @@ internal class VisitsApiServiceTest {
     }
 
     @Test
-    internal fun `when visit is not found an exception is thrown`() {
+    internal fun `when visit is not found an exception is thrown`() = runTest {
       VisitsApiExtension.visitsApi.stubVisitGetWithError("1234", status = 404)
 
-      Assertions.assertThatThrownBy {
+      assertThrows<NotFound> {
         visitsApiService.getVisit("1234")
-      }.isInstanceOf(NotFound::class.java)
+      }
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
       VisitsApiExtension.visitsApi.stubVisitGetWithError("1234", status = 503)
 
-      Assertions.assertThatThrownBy {
+      assertThrows<ServiceUnavailable> {
         visitsApiService.getVisit("1234")
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      }
     }
   }
 }

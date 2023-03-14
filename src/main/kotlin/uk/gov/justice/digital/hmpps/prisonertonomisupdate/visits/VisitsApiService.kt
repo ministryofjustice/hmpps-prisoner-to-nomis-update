@@ -3,17 +3,17 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBody
 import java.time.LocalDateTime
 
 @Service
 class VisitsApiService(@Qualifier("visitsApiWebClient") private val webClient: WebClient) {
 
-  fun getVisit(visitId: String): VisitDto {
+  suspend fun getVisit(visitId: String): VisitDto {
     return webClient.get()
       .uri("/visits/$visitId")
       .retrieve()
-      .bodyToMono(VisitDto::class.java)
-      .block()!!
+      .awaitBody()
   }
 }
 

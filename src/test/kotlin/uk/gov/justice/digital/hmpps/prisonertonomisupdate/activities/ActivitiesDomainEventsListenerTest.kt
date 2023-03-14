@@ -1,7 +1,10 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -39,7 +42,7 @@ internal class ActivitiesDomainEventsListenerTest {
       }
 
       @Test
-      fun `will call service with create data`() = runBlocking {
+      fun `will call service with create data`() = runTest {
         listener.onMessage(rawMessage = activityCreatedMessage(123L)).join()
 
         verify(activitiesService).createActivity(
@@ -58,7 +61,7 @@ internal class ActivitiesDomainEventsListenerTest {
       }
 
       @Test
-      fun `will not call service`() = runBlocking {
+      fun `will not call service`() = runTest {
         listener.onMessage(rawMessage = activityCreatedMessage(123L)).join()
 
         verifyNoInteractions(activitiesService)
@@ -68,7 +71,7 @@ internal class ActivitiesDomainEventsListenerTest {
     @Nested
     inner class Retries {
       @Test
-      fun `will call retry service with context data`() = runBlocking {
+      fun `will call retry service with context data`() = runTest {
         listener.onMessage(rawMessage = activityRetryMessage()).join()
 
         verify(activitiesService).retryCreateMapping("""{"mapping": {"activityScheduleId":12345,"nomisCourseActivityId":15}, "telemetryAttributes": {}}""")

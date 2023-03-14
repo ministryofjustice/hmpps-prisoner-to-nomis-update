@@ -1,15 +1,18 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
@@ -34,7 +37,7 @@ internal class SentencingAdjustmentsApiServiceTest {
     }
 
     @Test
-    fun `should call api with OAuth2 token`(): Unit = runBlocking {
+    fun `should call api with OAuth2 token`(): Unit = runTest {
       sentencingAdjustmentsApiService.getAdjustment("1234")
 
       sentencingAdjustmentsApi.verify(
@@ -44,7 +47,7 @@ internal class SentencingAdjustmentsApiServiceTest {
     }
 
     @Test
-    internal fun `will parse data for a sentence adjustment`(): Unit = runBlocking {
+    internal fun `will parse data for a sentence adjustment`(): Unit = runTest {
       sentencingAdjustmentsApi.stubAdjustmentGet(
         adjustmentId = "1234",
         adjustmentType = "RX",
@@ -66,7 +69,7 @@ internal class SentencingAdjustmentsApiServiceTest {
     }
 
     @Test
-    internal fun `will parse data for a key date adjustment`(): Unit = runBlocking {
+    internal fun `will parse data for a key date adjustment`() = runTest {
       sentencingAdjustmentsApi.stubAdjustmentGet(
         adjustmentId = "1234",
         adjustmentType = "ADA",
@@ -85,21 +88,21 @@ internal class SentencingAdjustmentsApiServiceTest {
     }
 
     @Test
-    internal fun `when adjustment is not found an exception is thrown`() {
+    internal fun `when adjustment is not found an exception is thrown`() = runTest {
       sentencingAdjustmentsApi.stubAdjustmentGetWithError("1234", status = 404)
 
-      assertThatThrownBy {
-        runBlocking { sentencingAdjustmentsApiService.getAdjustment("1234") }
-      }.isInstanceOf(NotFound::class.java)
+      assertThrows<NotFound> {
+        sentencingAdjustmentsApiService.getAdjustment("1234")
+      }
     }
 
     @Test
-    internal fun `when any bad response is received an exception is thrown`() {
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
       sentencingAdjustmentsApi.stubAdjustmentGetWithError("1234", status = 503)
 
-      assertThatThrownBy {
-        runBlocking { sentencingAdjustmentsApiService.getAdjustment("1234") }
-      }.isInstanceOf(ServiceUnavailable::class.java)
+      assertThrows<ServiceUnavailable> {
+        sentencingAdjustmentsApiService.getAdjustment("1234")
+      }
     }
   }
 }

@@ -65,12 +65,12 @@ class ActivitiesService(
     }
   }
 
-  private fun createTransformedActivity(activitySchedule: ActivitySchedule) =
+  private suspend fun createTransformedActivity(activitySchedule: ActivitySchedule) =
     activitiesApiService.getActivity(activitySchedule.activity.id).let {
       nomisApiService.createActivity(toNomisActivity(activitySchedule, it))
     }
 
-  fun updateActivity(event: ScheduleDomainEvent) {
+  suspend fun updateActivity(event: ScheduleDomainEvent) {
     val activityScheduleId = event.additionalInformation.activityScheduleId
     val telemetryMap = mutableMapOf("activityScheduleId" to activityScheduleId.toString())
 
@@ -101,7 +101,7 @@ class ActivitiesService(
       scheduleRules = slots.toScheduleRuleRequests(),
     )
 
-  fun updateScheduleInstances(amendInstancesEvent: ScheduleDomainEvent) {
+  suspend fun updateScheduleInstances(amendInstancesEvent: ScheduleDomainEvent) {
     val telemetryMap = mutableMapOf("activityScheduleId" to amendInstancesEvent.additionalInformation.activityScheduleId.toString())
 
     runCatching {
@@ -129,7 +129,7 @@ class ActivitiesService(
       )
     }
 
-  fun createAllocation(allocationEvent: AllocationDomainEvent) {
+  suspend fun createAllocation(allocationEvent: AllocationDomainEvent) {
     val telemetryMap = mutableMapOf(
       "allocationId" to allocationEvent.additionalInformation.allocationId.toString(),
     )
@@ -159,7 +159,7 @@ class ActivitiesService(
     }
   }
 
-  fun deallocate(allocationEvent: AllocationDomainEvent) {
+  suspend fun deallocate(allocationEvent: AllocationDomainEvent) {
     val telemetryMap = mutableMapOf(
       "allocationId" to allocationEvent.additionalInformation.allocationId.toString(),
     )
@@ -242,7 +242,7 @@ class ActivitiesService(
       )
     }
 
-  fun createRetry(context: CreateMappingRetryMessage<ActivityContext>) {
+  suspend fun createRetry(context: CreateMappingRetryMessage<ActivityContext>) {
     mappingService.createMapping(
       ActivityMappingDto(
         nomisCourseActivityId = context.mapping.nomisCourseActivityId,
