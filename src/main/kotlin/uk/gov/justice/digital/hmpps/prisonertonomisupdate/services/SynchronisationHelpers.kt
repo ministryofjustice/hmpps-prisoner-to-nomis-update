@@ -1,6 +1,10 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.microsoft.applicationinsights.TelemetryClient
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.DuplicateErrorContent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.DuplicateMappingException
 import kotlin.reflect.full.memberProperties
 
 class SynchroniseBuilder<MAPPING_DTO>(
@@ -12,6 +16,11 @@ class SynchroniseBuilder<MAPPING_DTO>(
   var telemetryClient: TelemetryClient? = null,
   var retryQueueService: RetryQueueService? = null,
 ) {
+
+  private companion object {
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
+
   suspend fun process() {
     fetchMapping()?.let {
       telemetryClient?.trackEvent(
@@ -26,13 +35,26 @@ class SynchroniseBuilder<MAPPING_DTO>(
           kotlin.runCatching {
             postMapping(mapping)
           }
-            .onFailure {
-              retryQueueService?.sendMessage(mapping, telemetryAttributes)
+            .onFailure { e ->
               telemetryClient?.trackEvent(
                 "$name-mapping-create-failed",
                 telemetryAttributes,
                 null,
               )
+              when (e) {
+                is DuplicateMappingException -> {
+                  telemetryClient?.trackEvent(
+                    "to-nomis-synch-$name-duplicate",
+                    telemetryAttributes + e.error.moreInfo.asTelemetry(),
+                    null,
+                  )
+                }
+
+                else -> {
+                  retryQueueService?.sendMessage(mapping, telemetryAttributes)
+                  log.error("Failed to create $name mapping", e)
+                }
+              }
             }
             .onSuccess {
               telemetryClient?.trackEvent(
@@ -66,6 +88,12 @@ class SynchroniseBuilder<MAPPING_DTO>(
     postMapping = saveMapping
   }
 }
+
+private fun DuplicateErrorContent.asTelemetry(): Map<String, String> =
+  this.duplicate.entries.associate { it.asPrefixTelemetry("duplicate") } +
+    this.existing.entries.associate { it.asPrefixTelemetry("existing") }
+
+private fun Map.Entry<String, *>.asPrefixTelemetry(prefix: String) = "$prefix${key.replaceFirstChar { it.titlecase() }}" to value.toString()
 
 suspend fun <MAPPING_DTO> synchronise(init: SynchroniseBuilder<MAPPING_DTO>.() -> Unit): SynchroniseBuilder<MAPPING_DTO> {
   val builder = SynchroniseBuilder<MAPPING_DTO>()

@@ -10,3 +10,21 @@ suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNotFound(
   this.bodyToMono<T>()
     .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
     .awaitSingleOrNull()
+
+suspend fun WebClient.ResponseSpec.awaitBodilessEntityOrThrowOnConflict() =
+  this.toBodilessEntity()
+    .onErrorResume(WebClientResponseException.Conflict::class.java) {
+      Mono.error(DuplicateMappingException(it.getResponseBodyAs(DuplicateErrorResponse::class.java)!!))
+    }
+    .awaitSingleOrNull()
+
+class DuplicateMappingException(val error: DuplicateErrorResponse) : RuntimeException("message")
+
+class DuplicateErrorResponse(
+  val moreInfo: DuplicateErrorContent,
+)
+
+data class DuplicateErrorContent(
+  val duplicate: Map<String, *>,
+  val existing: Map<String, *>,
+)
