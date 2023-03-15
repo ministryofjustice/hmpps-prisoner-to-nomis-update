@@ -405,4 +405,37 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         ).willSetStateTo(Scenario.STARTED),
     )
   }
+
+  fun stubCreateSentencingAdjustmentWithDuplicateError(adjustmentId: String, nomisAdjustmentId: Long, duplicateNomisAdjustmentId: Long) {
+    stubFor(
+      post("/mapping/sentencing/adjustments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            { 
+              "status": 409,
+              "errorCode": 1409,
+              "userMessage": "Conflict: Sentence adjustment mapping already exist",
+              "moreInfo": {
+                "existing": {
+                  "adjustmentId": "$adjustmentId",
+                  "nomisAdjustmentId": $nomisAdjustmentId,
+                  "nomisAdjustmentCategory": "SENTENCE",
+                  "mappingType": "SENTENCING_CREATED"
+                },
+                "duplicate": {
+                  "adjustmentId": "$adjustmentId",
+                  "nomisAdjustmentId": $duplicateNomisAdjustmentId,
+                  "nomisAdjustmentCategory": "SENTENCE",
+                  "mappingType": "SENTENCING_CREATED"
+                }
+              }
+            }
+            """.trimMargin(),
+          )
+          .withStatus(409),
+      ),
+    )
+  }
 }

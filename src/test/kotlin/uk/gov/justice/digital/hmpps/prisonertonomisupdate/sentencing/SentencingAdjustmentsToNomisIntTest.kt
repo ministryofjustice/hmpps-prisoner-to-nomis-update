@@ -18,6 +18,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.eq
 import org.mockito.kotlin.any
+import org.mockito.kotlin.atLeastOnce
+import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
@@ -114,7 +116,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
               eq("sentencing-adjustment-create-success"),
-              org.mockito.kotlin.check {
+              check {
                 assertThat(it["adjustmentId"]).isEqualTo(ADJUSTMENT_ID)
                 assertThat(it["nomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
                 assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NUMBER)
@@ -191,7 +193,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
               eq("sentencing-adjustment-create-success"),
-              org.mockito.kotlin.check {
+              check {
                 assertThat(it["adjustmentId"]).isEqualTo(ADJUSTMENT_ID)
                 assertThat(it["nomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
                 assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NUMBER)
@@ -666,6 +668,82 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           } matches { it == 1 }
         }
       }
+
+      @Nested
+      inner class WhenMappingServiceDetectsADuplicate {
+        private val nomisAdjustmentId = 98765L
+        private val duplicateNomisAdjustmentId = 56789L
+
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByAdjustmentIdWithError(ADJUSTMENT_ID, 404)
+          mappingServer.stubCreateSentencingAdjustmentWithDuplicateError(
+            adjustmentId = ADJUSTMENT_ID,
+            nomisAdjustmentId = nomisAdjustmentId,
+            duplicateNomisAdjustmentId = duplicateNomisAdjustmentId,
+          )
+          nomisApi.stubSentenceAdjustmentCreate(BOOKING_ID, sentenceSequence)
+          sentencingAdjustmentsApi.stubAdjustmentGet(
+            adjustmentId = ADJUSTMENT_ID,
+            sentenceSequence = sentenceSequence,
+            bookingId = BOOKING_ID,
+            adjustmentDays = 99,
+            adjustmentType = "RX",
+            adjustmentDate = "2022-01-01",
+          )
+          publishCreateAdjustmentDomainEvent()
+        }
+
+        @Test
+        fun `should only create the NOMIS adjustment once`() {
+          await untilAsserted {
+            verify(telemetryClient, atLeastOnce()).trackEvent(
+              any(),
+              any(),
+              isNull(),
+            )
+          }
+          nomisApi.verify(
+            1,
+            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments")),
+          )
+        }
+
+        @Test
+        fun `will only try to create mapping once`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("sentencing-adjustment-mapping-create-failed"),
+              any(),
+              isNull(),
+            )
+          }
+          await untilAsserted {
+            mappingServer.verify(
+              1,
+              postRequestedFor(urlEqualTo("/mapping/sentencing/adjustments")),
+            )
+          }
+        }
+
+        @Test
+        fun `will also log duplicate mapping so that an alert can be raised`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("to-nomis-synch-sentencing-adjustment-duplicate"),
+              check {
+                assertThat(it["existingAdjustmentId"]).isEqualTo(ADJUSTMENT_ID)
+                assertThat(it["existingNomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
+                assertThat(it["existingNomisAdjustmentCategory"]).isEqualTo("SENTENCE")
+                assertThat(it["duplicateAdjustmentId"]).isEqualTo(ADJUSTMENT_ID)
+                assertThat(it["duplicateNomisAdjustmentId"]).isEqualTo(duplicateNomisAdjustmentId.toString())
+                assertThat(it["duplicateNomisAdjustmentCategory"]).isEqualTo("SENTENCE")
+              },
+              isNull(),
+            )
+          }
+        }
+      }
     }
   }
 
@@ -734,7 +812,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
               eq("sentencing-adjustment-updated-success"),
-              org.mockito.kotlin.check {
+              check {
                 assertThat(it["adjustmentId"]).isEqualTo(ADJUSTMENT_ID)
                 assertThat(it["nomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
                 assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NUMBER)
@@ -793,7 +871,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
               eq("sentencing-adjustment-updated-success"),
-              org.mockito.kotlin.check {
+              check {
                 assertThat(it["adjustmentId"]).isEqualTo(ADJUSTMENT_ID)
                 assertThat(it["nomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
                 assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NUMBER)
@@ -941,7 +1019,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
               eq("sentencing-adjustment-deleted-success"),
-              org.mockito.kotlin.check {
+              check {
                 assertThat(it["adjustmentId"]).isEqualTo(ADJUSTMENT_ID)
                 assertThat(it["nomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
                 assertThat(it["nomisAdjustmentCategory"]).isEqualTo("KEY-DATE")
@@ -1002,7 +1080,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
               eq("sentencing-adjustment-deleted-success"),
-              org.mockito.kotlin.check {
+              check {
                 assertThat(it["adjustmentId"]).isEqualTo(ADJUSTMENT_ID)
                 assertThat(it["nomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
                 assertThat(it["nomisAdjustmentCategory"]).isEqualTo("SENTENCE")
