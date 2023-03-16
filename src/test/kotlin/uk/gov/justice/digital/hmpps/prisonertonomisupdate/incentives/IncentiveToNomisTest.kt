@@ -1,10 +1,16 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
 import com.github.tomakehurst.wiremock.client.WireMock
+import org.assertj.core.api.Assertions
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito
+import org.mockito.kotlin.any
+import org.mockito.kotlin.isNull
+import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.incentiveMessagePayload
@@ -90,6 +96,53 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
     await untilCallTo { mappingServer.postCountFor("/mapping/incentives") } matches { it == 4 } // 1 initial call, 2 retries and 1 final successful call
     await untilCallTo { awsSqsIncentiveClient.countAllMessagesOnQueue(incentiveQueueUrl).get() } matches { it == 0 }
     await untilCallTo { awsSqsIncentiveClient.countAllMessagesOnQueue(incentiveDlqUrl!!).get() } matches { it == 0 }
+  }
+
+  @Test
+  fun `will log when duplicate is detected`() {
+    incentivesApi.stubIncentiveGet(12, buildIncentiveApiDtoJsonResponse())
+    mappingServer.stubGetIncentiveIdWithError(12, 404)
+    nomisApi.stubIncentiveCreate(bookingId = 456)
+    mappingServer.stubCreateIncentiveWithDuplicateError(incentiveId = 12, nomisBookingId = 456, nomisIncentiveSequence = 1, duplicateNomisIncentiveSequence = 2)
+
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(incentiveMessagePayload(12))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue("incentives.iep-review.inserted").build(),
+          ),
+        ).build(),
+    ).get()
+
+    await untilAsserted {
+      verify(telemetryClient).trackEvent(
+        Mockito.eq("incentive-mapping-create-failed"),
+        any(),
+        isNull(),
+      )
+    }
+    await untilCallTo { incentivesApi.getCountFor("/iep/reviews/id/12") } matches { it == 1 }
+    await untilCallTo { nomisApi.postCountFor("/prisoners/booking-id/456/incentives") } matches { it == 1 }
+
+    // the mapping call fails but is not queued for retry
+    await untilCallTo { awsSqsIncentiveDlqClient!!.countAllMessagesOnQueue(incentiveDlqUrl!!).get() } matches { it == 0 }
+
+    await untilCallTo { mappingServer.postCountFor("/mapping/incentives") } matches { it == 1 } // only tried once
+
+    verify(telemetryClient).trackEvent(
+      Mockito.eq("to-nomis-synch-incentive-duplicate"),
+      org.mockito.kotlin.check {
+        Assertions.assertThat(it["existingIncentiveId"]).isEqualTo("12")
+        Assertions.assertThat(it["existingNomisBookingId"]).isEqualTo("456")
+        Assertions.assertThat(it["existingNomisIncentiveSequence"]).isEqualTo("1")
+        Assertions.assertThat(it["duplicateIncentiveId"]).isEqualTo("12")
+        Assertions.assertThat(it["duplicateNomisBookingId"]).isEqualTo("456")
+        Assertions.assertThat(it["duplicateNomisIncentiveSequence"]).isEqualTo("2")
+      },
+      isNull(),
+    )
   }
 
   fun buildIncentiveApiDtoJsonResponse(id: Long = 12): String =

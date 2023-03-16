@@ -14,6 +14,7 @@ import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
@@ -139,6 +140,58 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       await untilCallTo {
         awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get()
       } matches { it == 0 }
+    }
+
+    @Test
+    fun `will log when duplicate is detected`() {
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildApiActivityScheduleDtoJsonResponse())
+      activitiesApi.stubGetActivity(ACTIVITY_ID, buildApiActivityDtoJsonResponse())
+      mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
+      nomisApi.stubActivityCreate("""{ "courseActivityId": $COURSE_ACTIVITY_ID }""")
+      mappingServer.stubCreateActivityWithDuplicateError(
+        activityScheduleId = ACTIVITY_SCHEDULE_ID,
+        nomisCourseActivityId = COURSE_ACTIVITY_ID,
+        duplicateNomisCourseActivityId = 301,
+      )
+
+      awsSnsClient.publish(
+        PublishRequest.builder().topicArn(topicArn)
+          .message(activityMessagePayload("activities.activity-schedule.created", ACTIVITY_SCHEDULE_ID))
+          .messageAttributes(
+            mapOf(
+              "eventType" to MessageAttributeValue.builder().dataType("String")
+                .stringValue("activities.activity-schedule.created").build(),
+            ),
+          ).build(),
+      ).get()
+
+      await untilAsserted {
+        verify(telemetryClient).trackEvent(
+          Mockito.eq("activity-mapping-create-failed"),
+          any(),
+          isNull(),
+        )
+      }
+
+      await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID") } matches { it == 1 }
+      await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
+      await untilAsserted { mappingServer.verify(exactly(1), WireMock.postRequestedFor(urlEqualTo("/mapping/activities"))) }
+
+      // no messages sent to DLQ
+      await untilCallTo {
+        awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get()
+      } matches { it == 0 }
+
+      verify(telemetryClient).trackEvent(
+        Mockito.eq("to-nomis-synch-activity-duplicate"),
+        org.mockito.kotlin.check {
+          assertThat(it["existingActivityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
+          assertThat(it["existingNomisCourseActivityId"]).isEqualTo("$COURSE_ACTIVITY_ID")
+          assertThat(it["duplicateActivityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
+          assertThat(it["duplicateNomisCourseActivityId"]).isEqualTo("301")
+        },
+        isNull(),
+      )
     }
 
     @Test

@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
 import java.time.LocalDateTime
 
@@ -18,7 +18,7 @@ class ActivitiesMappingService(
       .uri("/mapping/activities")
       .bodyValue(request)
       .retrieve()
-      .awaitBodilessEntity()
+      .awaitBodilessEntityOrThrowOnConflict()
   }
 
   suspend fun getMappingGivenActivityScheduleIdOrNull(id: Long): ActivityMappingDto? =
