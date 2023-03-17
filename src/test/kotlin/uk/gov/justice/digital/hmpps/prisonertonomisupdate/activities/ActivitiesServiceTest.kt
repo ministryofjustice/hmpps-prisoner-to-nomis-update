@@ -766,5 +766,6 @@ private fun newAllocation(): Allocation {
     prisonPayBand = PrisonPayBand(1, 1, "", "", 1, "MDI"),
     scheduleDescription = "description",
     scheduleId = ACTIVITY_SCHEDULE_ID,
+    isUnemployment = false,
   )
 }

@@ -175,8 +175,8 @@ class ActivitiesService(
               allocation.bookingId!!,
               EndOffenderProgramProfileRequest(
                 endDate = allocation.endDate!!,
-                endReason = allocation.deallocatedReason, // TODO SDI-615 probably will need a mapping
-                // endComment = allocation.?, // TODO SDI-615 could put something useful in here
+                endReason = allocation.deallocatedReason, // TODO SDIT-421 probably will need a mapping
+                // endComment = allocation.?, // TODO SDIT-421 could put something useful in here
               ),
             ).also {
               telemetryMap["offenderProgramReferenceId"] = it.offenderProgramReferenceId.toString()
