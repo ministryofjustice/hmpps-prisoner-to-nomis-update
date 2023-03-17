@@ -71,7 +71,7 @@ For purging queues the queue name can be found in the [health check](https://pri
 There are various scenarios where a duplicate event may be received:
 - The call to the mapping service hangs for more than 2 minutes but eventually returns
 - Bugs in the publishing service, for instance double submits
-- SNS service simple sending a duplicate event
+- SNS service simply sending a duplicate event
 
 In all these scenarios manual intervention is required to solve duplicate issues. All duplicates will result in a single alert to the main Slack alerts channel.
 
@@ -82,11 +82,11 @@ These are as follows:
 - *To NOMIS synchronisation duplicate visit detected in Production*
 - *To NOMIS synchronisation duplicate sentencing adjustment detected in Production*
 
-The action top be taken as as follows: 
+The action to be taken is as follows: 
 
 ##### Activities
 
-TBD
+TBD in SDIT-674
 
 ##### Incentives
 
@@ -94,7 +94,7 @@ Duplicate incentives have no business impact in NOMIS but can cause confusion to
 
 ##### Visits
 
-A duplicate visit is serious since for sentenced prisoners they will have one less visit for that week. Therefore the visit should be cancelled. This could be dome by #dps-appsupport or by us using the cancel endpoint. The cancel endpoint is the quickest solution.
+A duplicate visit is serious since for sentenced prisoners they will have one less visit for that week. Therefore the visit should be cancelled. This could be done by #dps-appsupport or by us using the cancel endpoint. The cancel endpoint is the quickest solution.
 
 Example PUT to cancel a visit:
 
