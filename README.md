@@ -66,6 +66,70 @@ Since this services uses the HMPPS SQS library with defaults this has all the de
 
 For purging queues the queue name can be found in the [health check](https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk/health) and the required role is the default `ROLE_QUEUE_ADMIN`.
 
+#### Duplicate handling
+
+There are various scenarios where a duplicate event may be received:
+- The call to the mapping service hangs for more than 2 minutes but eventually returns
+- Bugs in the publishing service, for instance double submits
+- SNS service simply sending a duplicate event
+
+In all these scenarios manual intervention is required to solve duplicate issues. All duplicates will result in a single alert to the main Slack alerts channel.
+
+These are as follows:
+
+- *To NOMIS synchronisation duplicate activity detected in Production*
+- *To NOMIS synchronisation duplicate incentive detected in Production*
+- *To NOMIS synchronisation duplicate visit detected in Production*
+- *To NOMIS synchronisation duplicate sentencing adjustment detected in Production*
+
+The action to be taken is as follows: 
+
+##### Activities
+
+TBD in SDIT-674
+
+##### Incentives
+
+Duplicate incentives have no business impact in NOMIS but can cause confusion to users. That confusion is only the case so long as the NOMIS IEP page is still in use. This screen is currently being phased out. The only way to delete an IEP is to ask `#dps-appsupport` and supply them with the prisoner number and sequence. *For now it advised to take no action unless there is a complaint from the prison* since the impact on the business is negligible.
+
+##### Visits
+
+A duplicate visit is serious since for sentenced prisoners they will have one less visit for that week. Therefore the visit should be cancelled. This could be done by #dps-appsupport or by us using the cancel endpoint. The cancel endpoint is the quickest solution.
+
+Example PUT to cancel a visit:
+
+```
+curl --location --request PUT 'https://nomis-prisoner.aks-live-1.studio-hosting.service.justice.gov.uk/prisoners/A9999DP/visits/16999999/cancel' \
+--header 'Content-Type: application/json' \
+--header 'Accept: application/json' \
+--header 'Authorization: Bearer <token with role NOMIS_VISITS>' \
+--data-raw '{
+"outcome": "ADMIN"
+}'
+```
+##### Sentencing adjustments
+
+A duplicate sentencing adjustment is serious since it will result in the prisoner being released early/late. Therefore the sentencing adjustment should be cancelled. This could be dome by #dps-appsupport or by us using the delete endpoint. The delete endpoint is the quickest solution.
+
+Example DELETE to cancel a sentencing adjustment:
+
+For sentence adjustment:
+
+```
+curl -X 'DELETE' \
+  'https://nomis-prisoner.aks-live-1.studio-hosting.service.justice.gov.uk/sentence-adjustments/99999' \
+  -H 'accept: */*' \
+  -H 'Authorization: Bearer <token with role NOMIS_SENTENCING>'
+```
+
+For key date adjustment:
+
+```
+curl -X 'DELETE' \
+  'https://nomis-prisoner.aks-live-1.studio-hosting.service.justice.gov.uk/key-date-adjustments/99999' \
+  -H 'accept: */*' \
+  -H 'Authorization: Bearer <token with role NOMIS_SENTENCING>'
+```
 
 
 ### Architecture
