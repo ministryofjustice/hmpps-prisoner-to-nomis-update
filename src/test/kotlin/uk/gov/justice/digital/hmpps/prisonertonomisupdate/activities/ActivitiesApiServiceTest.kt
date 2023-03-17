@@ -16,6 +16,8 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 @SpringAPIServiceTest
 @Import(ActivitiesApiService::class, ActivitiesConfiguration::class)
@@ -430,6 +432,93 @@ internal class ActivitiesApiServiceTest {
 
       assertThrows<ServiceUnavailable> {
         activitiesApiService.getActivity(1234)
+      }
+    }
+  }
+
+  @Nested
+  inner class GetAllocation {
+    @BeforeEach
+    internal fun setUp() {
+      ActivitiesApiExtension.activitiesApi.stubGetAllocation(
+        1234,
+        """
+          {
+            "id": 1234,
+            "prisonerNumber": "A1234AA",
+            "bookingId": 10001,
+            "activitySummary": "Some activity summary",
+            "scheduleId": 2345,
+            "scheduleDescription": "Some schedule description",
+            "isUnemployment": true,
+            "prisonPayBand": {
+              "id": 3456,
+              "displaySequence": 1,
+              "alias": "Low",
+              "description": "Pay band 1",
+              "nomisPayBand": 1,
+              "prisonCode": "MDI"
+            },
+            "startDate": "2022-09-10",
+            "endDate": "2023-09-10",
+            "allocatedTime": "2023-03-17T10:35:19.136Z",
+            "allocatedBy": "Mr Blogs",
+            "deallocatedTime": "2023-03-17T10:35:19.136Z",
+            "deallocatedBy": "Mrs Blogs",
+            "deallocatedReason": "Not attending regularly"
+          }
+        """.trimIndent(),
+      )
+    }
+
+    @Test
+    fun `should call api with OAuth2 token`() = runTest {
+      activitiesApiService.getAllocation(1234)
+
+      ActivitiesApiExtension.activitiesApi.verify(
+        WireMock.getRequestedFor(WireMock.urlEqualTo("/allocations/id/1234"))
+          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `get parse core data`() = runTest {
+      val allocation = activitiesApiService.getAllocation(1234)
+
+      assertThat(allocation.id).isEqualTo(1234)
+      assertThat(allocation.prisonerNumber).isEqualTo("A1234AA")
+      assertThat(allocation.bookingId).isEqualTo(10001)
+      assertThat(allocation.activitySummary).isEqualTo("Some activity summary")
+      assertThat(allocation.scheduleId).isEqualTo(2345)
+      assertThat(allocation.scheduleDescription).isEqualTo("Some schedule description")
+      assertThat(allocation.isUnemployment).isEqualTo(true)
+      assertThat(allocation.prisonPayBand.id).isEqualTo(3456)
+      assertThat(allocation.prisonPayBand.nomisPayBand).isEqualTo(1)
+      assertThat(allocation.prisonPayBand.prisonCode).isEqualTo("MDI")
+      assertThat(allocation.startDate).isEqualTo(LocalDate.of(2022, 9, 10))
+      assertThat(allocation.endDate).isEqualTo(LocalDate.of(2023, 9, 10))
+      assertThat(allocation.allocatedTime).isEqualTo(LocalDateTime.of(2023, 3, 17, 10, 35, 19, 136000000))
+      assertThat(allocation.allocatedBy).isEqualTo("Mr Blogs")
+      assertThat(allocation.deallocatedTime).isEqualTo(LocalDateTime.of(2023, 3, 17, 10, 35, 19, 136000000))
+      assertThat(allocation.deallocatedBy).isEqualTo("Mrs Blogs")
+      assertThat(allocation.deallocatedReason).isEqualTo("Not attending regularly") // TODO SDIT-421 Do we need to receive a code that we can map?
+    }
+
+    @Test
+    fun `when allocation is not found an exception is thrown`() = runTest {
+      ActivitiesApiExtension.activitiesApi.stubGetAllocationWithError(1234, status = 404)
+
+      assertThrows<NotFound> {
+        activitiesApiService.getAllocation(1234)
+      }
+    }
+
+    @Test
+    fun `when any bad response is received an exception is thrown`() = runTest {
+      ActivitiesApiExtension.activitiesApi.stubGetAllocationWithError(1234, status = 503)
+
+      assertThrows<ServiceUnavailable> {
+        activitiesApiService.getAllocation(1234)
       }
     }
   }
