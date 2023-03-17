@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.awaitBodilessEntity
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
 import java.time.LocalDateTime
 
@@ -17,7 +17,7 @@ class IncentivesMappingService(
       .uri("/mapping/incentives")
       .bodyValue(request)
       .retrieve()
-      .awaitBodilessEntity()
+      .awaitBodilessEntityOrThrowOnConflict()
   }
 
   suspend fun getMappingGivenIncentiveIdOrNull(incentiveId: Long): IncentiveMappingDto? =

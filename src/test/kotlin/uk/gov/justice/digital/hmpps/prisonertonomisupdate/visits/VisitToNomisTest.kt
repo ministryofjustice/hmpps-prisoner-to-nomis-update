@@ -5,10 +5,16 @@ import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import org.assertj.core.api.Assertions
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito
+import org.mockito.kotlin.any
+import org.mockito.kotlin.isNull
+import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitMessagePayload
@@ -119,6 +125,52 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
     await untilCallTo { mappingServer.postCountFor("/mapping/visits") } matches { it == 3 } // 1 initial call, 1 retries and 1 final successful call
     await untilCallTo { awsSqsVisitClient.countAllMessagesOnQueue(visitQueueUrl).get() } matches { it == 0 }
     await untilCallTo { awsSqsVisitClient.countMessagesOnQueue(visitDlqUrl!!).get() } matches { it == 0 }
+  }
+
+  @Test
+  fun `will log when duplicate is detected`() {
+    visitsApi.stubVisitGet("12", buildVisitApiDtoJsonResponse(visitId = "12", prisonerId = "A32323Y"))
+    mappingServer.stubGetVsipWithError("12", 404)
+    nomisApi.stubVisitCreate(prisonerId = "A32323Y")
+    mappingServer.stubCreateWithDuplicateError(visitId = "12", nomisId = 12345, duplicateNomisId = 54321)
+
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(prisonVisitMessagePayload(eventType = "prison-visit.booked", prisonerId = "A32323Y"))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue("prison-visit.booked").build(),
+          ),
+        ).build(),
+    ).get()
+
+    await untilAsserted {
+      verify(telemetryClient).trackEvent(
+        Mockito.eq("visit-mapping-create-failed"),
+        any(),
+        isNull(),
+      )
+    }
+
+    await untilCallTo { visitsApi.getCountFor("/visits/12") } matches { it == 1 }
+    await untilCallTo { nomisApi.postCountFor("/prisoners/A32323Y/visits") } matches { it == 1 }
+
+    // the mapping call fails but is not queued for retry
+    await untilCallTo { awsSqsVisitClient.countMessagesOnQueue(visitDlqUrl!!).get() } matches { it == 0 }
+
+    await untilCallTo { mappingServer.postCountFor("/mapping/visits") } matches { it == 1 } // only tried once
+
+    verify(telemetryClient).trackEvent(
+      Mockito.eq("to-nomis-synch-visit-duplicate"),
+      org.mockito.kotlin.check {
+        Assertions.assertThat(it["existingVsipId"]).isEqualTo("12")
+        Assertions.assertThat(it["existingNomisId"]).isEqualTo("12345")
+        Assertions.assertThat(it["duplicateVsipId"]).isEqualTo("12")
+        Assertions.assertThat(it["duplicateNomisId"]).isEqualTo("54321")
+      },
+      isNull(),
+    )
   }
 
   @Test

@@ -68,6 +68,37 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubCreateWithDuplicateError(visitId: String, nomisId: Long, duplicateNomisId: Long) {
+    stubFor(
+      post("/mapping/visits").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            { 
+              "status": 409,
+              "errorCode": 1409,
+              "userMessage": "Conflict: Visit mapping already exist",
+              "moreInfo": {
+                "existing": {
+                  "vsipId": "$visitId",
+                  "nomisId": $nomisId,
+                  "mappingType": "ONLINE"
+                },
+                "duplicate": {
+                  "vsipId": "$visitId",
+                  "nomisId": $duplicateNomisId,
+                  "mappingType": "ONLINE"
+                }
+              }
+            }
+            """.trimMargin(),
+          )
+          .withStatus(409),
+      ),
+    )
+  }
+
   fun stubGetNomis(nomisId: String, response: String) {
     stubFor(
       get("/mapping/visits/nomisId/$nomisId").willReturn(
@@ -133,6 +164,39 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubCreateIncentiveWithDuplicateError(incentiveId: Long, nomisBookingId: Long, nomisIncentiveSequence: Long, duplicateNomisIncentiveSequence: Long) {
+    stubFor(
+      post("/mapping/incentives").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            { 
+              "status": 409,
+              "errorCode": 1409,
+              "userMessage": "Conflict: Incentive mapping already exist",
+              "moreInfo": {
+                "existing": {
+                  "incentiveId": "$incentiveId",
+                  "nomisBookingId": $nomisBookingId,
+                  "nomisIncentiveSequence": $nomisIncentiveSequence,
+                  "mappingType": "INCENTIVE_CREATED"
+                },
+                "duplicate": {
+                  "incentiveId": "$incentiveId",
+                  "nomisBookingId": $nomisBookingId,
+                  "nomisIncentiveSequence": $duplicateNomisIncentiveSequence,
+                  "mappingType": "INCENTIVE_CREATED"
+                }
+              }
+            }
+            """.trimMargin(),
+          )
+          .withStatus(409),
+      ),
+    )
+  }
+
   fun stubGetIncentiveId(incentiveId: Long, response: String) {
     stubFor(
       get("/mapping/incentives/incentive-id/$incentiveId").willReturn(
@@ -173,6 +237,38 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
           .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
           .withStatus(status),
       ),
+    )
+  }
+
+  fun stubCreateActivityWithDuplicateError(activityScheduleId: Long, nomisCourseActivityId: Long, duplicateNomisCourseActivityId: Long) {
+    stubFor(
+      post("/mapping/activities")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+            { 
+              "status": 409,
+              "errorCode": 1409,
+              "userMessage": "Conflict: Incentive mapping already exist",
+              "moreInfo": {
+                "existing": {
+                  "activityScheduleId": $activityScheduleId,
+                  "nomisCourseActivityId": $nomisCourseActivityId,
+                  "mappingType": "ACTIVITY_CREATED"
+                },
+                "duplicate": {
+                  "activityScheduleId": $activityScheduleId,
+                  "nomisCourseActivityId": $duplicateNomisCourseActivityId,
+                  "mappingType": "ACTIVITY_CREATED"
+                }
+              }
+            }
+              """.trimMargin(),
+            )
+            .withStatus(409),
+        ),
     )
   }
 
