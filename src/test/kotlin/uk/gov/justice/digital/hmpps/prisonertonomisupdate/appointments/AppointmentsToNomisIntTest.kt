@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.eq
 import org.mockito.kotlin.any
+import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
@@ -116,13 +118,13 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
               eq("appointment-create-success"),
-              org.mockito.kotlin.check {
+              check {
                 assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
                 assertThat(it["bookingId"]).isEqualTo(BOOKING_ID.toString())
                 assertThat(it["locationId"]).isEqualTo(LOCATION_ID.toString())
                 assertThat(it["date"]).isEqualTo("2023-03-14")
                 assertThat(it["start"]).isEqualTo("10:15")
-                assertThat(it["eventId"]).isEqualTo(EVENT_ID.toString())
+                assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
               },
               isNull(),
             )
@@ -348,7 +350,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         fun `should only create the NOMIS appointment once`() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
-              eq("appointment-retry-success"),
+              eq("appointment-create-mapping-retry-success"),
               any(),
               isNull(),
             )
@@ -366,7 +368,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           }
           await untilAsserted {
             verify(telemetryClient).trackEvent(
-              eq("appointment-retry-success"),
+              eq("appointment-create-mapping-retry-success"),
               any(),
               isNull(),
             )
@@ -405,6 +407,44 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           } matches { it == 1 }
         }
       }
+    }
+
+    @Test
+    fun `will log when duplicate is detected`() {
+      appointmentsApi.stubGetAppointment(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+      mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
+      nomisApi.stubAppointmentCreate("""{ "eventId": $EVENT_ID }""")
+      mappingServer.stubCreateAppointmentWithDuplicateError(
+        appointmentInstanceId = APPOINTMENT_INSTANCE_ID,
+        nomisEventId = EVENT_ID,
+        duplicateNomisEventId = 999,
+      )
+
+      publishCreateDomainEvent()
+
+      await untilAsserted {
+        verify(telemetryClient).trackEvent(eq("appointment-mapping-create-failed"), any(), isNull())
+      }
+      await untilCallTo { appointmentsApi.getCountFor("/appointments/$APPOINTMENT_INSTANCE_ID") } matches { it == 1 }
+      await untilCallTo { nomisApi.postCountFor("/appointments") } matches { it == 1 }
+
+      // the mapping call fails but is not queued for retry
+      await untilCallTo {
+        awsSqsAppointmentDlqClient!!.countAllMessagesOnQueue(appointmentDlqUrl!!).get()
+      } matches { it == 0 }
+
+      await untilCallTo { mappingServer.postCountFor("/mapping/appointments") } matches { it == 1 } // only tried once
+
+      verify(telemetryClient).trackEvent(
+        eq("to-nomis-synch-appointment-duplicate"),
+        check {
+          Assertions.assertThat(it["appointmentInstanceId"]).isEqualTo("$APPOINTMENT_INSTANCE_ID")
+          Assertions.assertThat(it["existingNomisEventId"]).isEqualTo("$EVENT_ID")
+          Assertions.assertThat(it["duplicateAppointmentInstanceId"]).isEqualTo("$APPOINTMENT_INSTANCE_ID")
+          Assertions.assertThat(it["duplicateNomisEventId"]).isEqualTo("999")
+        },
+        isNull(),
+      )
     }
   }
 

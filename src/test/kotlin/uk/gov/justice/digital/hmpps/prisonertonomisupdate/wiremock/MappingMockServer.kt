@@ -251,7 +251,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
             { 
               "status": 409,
               "errorCode": 1409,
-              "userMessage": "Conflict: Incentive mapping already exist",
+              "userMessage": "Conflict: Activity mapping already exists",
               "moreInfo": {
                 "existing": {
                   "activityScheduleId": $activityScheduleId,
@@ -338,6 +338,36 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
           .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
           .withStatus(status),
       ),
+    )
+  }
+
+  fun stubCreateAppointmentWithDuplicateError(appointmentInstanceId: Long, nomisEventId: Long, duplicateNomisEventId: Long) {
+    stubFor(
+      post("/mapping/appointments")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+            { 
+              "status": 409,
+              "errorCode": 1409,
+              "userMessage": "Conflict: Appointment mapping already exists",
+              "moreInfo": {
+                "existing": {
+                  "appointmentInstanceId": $appointmentInstanceId,
+                  "nomisEventId": $nomisEventId
+                },
+                "duplicate": {
+                  "appointmentInstanceId": $appointmentInstanceId,
+                  "nomisEventId": $duplicateNomisEventId
+                }
+              }
+            }
+              """.trimMargin(),
+            )
+            .withStatus(409),
+        ),
     )
   }
 
