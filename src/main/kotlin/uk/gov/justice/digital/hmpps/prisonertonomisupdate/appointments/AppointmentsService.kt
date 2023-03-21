@@ -1,12 +1,14 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAppointmentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDateTime
 
 @Service
@@ -16,61 +18,32 @@ class AppointmentsService(
   private val mappingService: AppointmentMappingService,
   private val appointmentsUpdateQueueService: AppointmentsUpdateQueueService,
   private val telemetryClient: TelemetryClient,
-) {
-
-  private companion object {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
-  }
+  private val objectMapper: ObjectMapper,
+) : CreateMappingRetryable {
 
   suspend fun createAppointment(event: AppointmentDomainEvent) {
-    appointmentsApiService.getAppointment(event.additionalInformation.id).run {
-      val telemetryMap = mutableMapOf(
-        "appointmentInstanceId" to id.toString(),
-        "bookingId" to bookingId.toString(),
-        "locationId" to locationId.toString(),
-        "date" to date.toString(),
-        "start" to start.toString(),
-      )
+    synchronise {
+      name = "appointment"
+      telemetryClient = this@AppointmentsService.telemetryClient
+      retryQueueService = appointmentsUpdateQueueService
+      eventTelemetry = mapOf("appointmentInstanceId" to event.additionalInformation.id.toString())
 
-      // to protect against repeated create messages for same appointment
-      if (mappingService.getMappingGivenAppointmentInstanceIdOrNull(id) != null) {
-        telemetryClient.trackEvent(
-          "appointment-create-duplicate",
-          mapOf(
-            "appointmentInstanceId" to id.toString(),
-            "bookingId" to bookingId.toString(),
-            "locationId" to locationId.toString(),
-            "date" to date.toString(),
-            "start" to start.toString(),
-          ),
-        )
-        return
+      checkMappingDoesNotExist {
+        mappingService.getMappingGivenAppointmentInstanceIdOrNull(event.additionalInformation.id)
       }
+      transform {
+        appointmentsApiService.getAppointment(event.additionalInformation.id).run {
+          eventTelemetry += "bookingId" to bookingId.toString()
+          eventTelemetry += "locationId" to locationId.toString()
+          eventTelemetry += "date" to date.toString()
+          eventTelemetry += "start" to start.toString()
 
-      val nomisResponse = try {
-        nomisApiService.createAppointment(toNomisAppointment(this))
-      } catch (e: Exception) {
-        telemetryClient.trackEvent("appointment-create-failed", telemetryMap)
-        log.error("createAppointment() Unexpected exception", e)
-        throw e
+          nomisApiService.createAppointment(toNomisAppointment(this)).let { nomisResponse ->
+            AppointmentMappingDto(nomisEventId = nomisResponse.eventId, appointmentInstanceId = id)
+          }
+        }
       }
-
-      telemetryMap["eventId"] = nomisResponse.eventId.toString()
-
-      try {
-        mappingService.createMapping(
-          AppointmentMappingDto(nomisEventId = nomisResponse.eventId, appointmentInstanceId = id),
-        )
-      } catch (e: Exception) {
-        telemetryClient.trackEvent("appointment-create-map-failed", telemetryMap)
-        log.error("Unexpected exception, queueing retry", e)
-        appointmentsUpdateQueueService.sendMessage(
-          AppointmentContext(nomisEventId = nomisResponse.eventId, appointmentInstanceId = id),
-        )
-        return
-      }
-
-      telemetryClient.trackEvent("appointment-create-success", telemetryMap)
+      saveMapping { mappingService.createMapping(it) }
     }
   }
 
@@ -87,8 +60,17 @@ class AppointmentsService(
   suspend fun createRetry(context: AppointmentContext) {
     mappingService.createMapping(
       AppointmentMappingDto(nomisEventId = context.nomisEventId, appointmentInstanceId = context.appointmentInstanceId),
-    )
+    ).also {
+      telemetryClient.trackEvent(
+        "appointment-create-mapping-retry-success",
+        mapOf("appointmentInstanceId" to context.appointmentInstanceId.toString()),
+      )
+    }
   }
+
+  override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
+  private inline fun <reified T> String.fromJson(): T =
+    objectMapper.readValue(this)
 }
 
 data class AppointmentDomainEvent(

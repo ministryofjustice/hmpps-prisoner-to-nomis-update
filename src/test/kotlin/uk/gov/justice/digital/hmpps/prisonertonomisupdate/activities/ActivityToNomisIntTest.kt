@@ -19,6 +19,8 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.activityMessagePayload
@@ -36,6 +38,10 @@ private const val ALLOCATION_ID: Long = 400
 private const val BOOKING_ID: Long = 500
 
 class ActivityToNomisIntTest : SqsIntegrationTestBase() {
+
+  companion object {
+    private val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
 
   @Nested
   inner class CreateActivitySchedule {
@@ -235,7 +241,10 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       await untilCallTo { awsSqsActivityClient.countAllMessagesOnQueue(activityQueueUrl).get() } matches { it == 0 }
       await untilCallTo {
         awsSqsActivityDlqClient!!.countAllMessagesOnQueue(activityDlqUrl!!).get()
-      } matches { it == 0 }
+      } matches {
+        log.trace("Messages on queue: {}", it)
+        it == 0
+      }
     }
   }
 

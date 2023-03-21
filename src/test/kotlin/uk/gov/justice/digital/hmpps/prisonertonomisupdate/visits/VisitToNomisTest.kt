@@ -15,6 +15,8 @@ import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitMessagePayload
@@ -26,6 +28,10 @@ import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 
 class VisitToNomisTest : SqsIntegrationTestBase() {
+
+  companion object {
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
 
   @Test
   fun `will consume a prison visits create message`() {
@@ -124,7 +130,10 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
 
     await untilCallTo { mappingServer.postCountFor("/mapping/visits") } matches { it == 3 } // 1 initial call, 1 retries and 1 final successful call
     await untilCallTo { awsSqsVisitClient.countAllMessagesOnQueue(visitQueueUrl).get() } matches { it == 0 }
-    await untilCallTo { awsSqsVisitClient.countMessagesOnQueue(visitDlqUrl!!).get() } matches { it == 0 }
+    await untilCallTo { awsSqsVisitClient.countMessagesOnQueue(visitDlqUrl!!).get() } matches {
+      log.trace("Messages on queue: {}", it)
+      it == 0
+    }
   }
 
   @Test
