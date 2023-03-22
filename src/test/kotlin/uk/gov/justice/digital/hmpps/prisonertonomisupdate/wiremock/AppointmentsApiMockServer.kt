@@ -61,13 +61,7 @@ class AppointmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       get("/appointments/$id").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(
-            """
-              {
-                "error": "some error"
-              }
-            """.trimIndent(),
-          )
+          .withBody("""{ "error": "some error" }""")
           .withStatus(status),
       ),
     )
@@ -89,6 +83,55 @@ class AppointmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     stubFor(
       get("/appointments/$id")
         .inScenario("Retry Appointments Scenario")
+        .whenScenarioStateIs("Cause Appointments Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(response)
+            .withStatus(200)
+            .withFixedDelay(500),
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetAppointmentInstance(id: Long, response: String) {
+    stubFor(
+      get("/appointment-instance-details/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubGetAppointmentInstanceWithError(id: Long, status: Int = 500) {
+    stubFor(
+      get("/appointment-instance-details/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "error": "some error" }""")
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubGetAppointmentInstanceWithErrorFollowedBySlowSuccess(id: Long, response: String) {
+    stubFor(
+      get("/appointment-instance-details/$id")
+        .inScenario("Retry Appointment instance Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause Appointments Success"),
+    )
+
+    stubFor(
+      get("/appointment-instance-details/$id")
+        .inScenario("Retry Appointment instance Scenario")
         .whenScenarioStateIs("Cause Appointments Success")
         .willReturn(
           aResponse()

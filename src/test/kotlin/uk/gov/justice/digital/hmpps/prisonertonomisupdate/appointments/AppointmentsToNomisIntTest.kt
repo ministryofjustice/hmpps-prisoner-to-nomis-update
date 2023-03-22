@@ -5,7 +5,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -37,11 +36,20 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
   private val appointmentResponse = """{
       "id": $APPOINTMENT_INSTANCE_ID,
       "bookingId": $BOOKING_ID,
-      "locationId": $LOCATION_ID,
-      "date": "2023-03-14",
-      "start": "10:15",
-      "end":  "11:42",
-      "eventSubType": "MEDI"
+      "internalLocationId": $LOCATION_ID,
+      "appointmentDate": "2023-03-14",
+      "startTime": "10:15",
+      "endTime":  "11:42",
+      "category": {
+        "id": 1919,
+        "active": true,
+        "code": "MEDI",
+        "description": "Medical - Initial assessment"
+      },
+      "prisonCode": "SKI",
+      "inCell": false,
+      "prisonerNumber": "A1234BC",
+      "cancelled": false
     }
   """.trimIndent()
 
@@ -68,14 +76,14 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           nomisApi.stubAppointmentCreate("""{ "eventId": $EVENT_ID }""")
-          appointmentsApi.stubGetAppointment(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+          appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
           publishCreateDomainEvent()
         }
 
         @Test
         fun `will callback back to appointment service to get more details`() {
           await untilAsserted {
-            appointmentsApi.verify(getRequestedFor(urlEqualTo("/appointments/$APPOINTMENT_INSTANCE_ID")))
+            appointmentsApi.verify(getRequestedFor(urlEqualTo("/appointment-instance-details/$APPOINTMENT_INSTANCE_ID")))
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
         }
@@ -146,7 +154,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          appointmentsApi.stubGetAppointment(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+          appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
 
           publishCreateDomainEvent()
         }
@@ -184,7 +192,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
           mappingServer.stubCreateAppointment()
           nomisApi.stubAppointmentCreate("""{ "eventId": $EVENT_ID }""")
-          appointmentsApi.stubGetAppointmentWithErrorFollowedBySlowSuccess(
+          appointmentsApi.stubGetAppointmentInstanceWithErrorFollowedBySlowSuccess(
             id = APPOINTMENT_INSTANCE_ID,
             response = appointmentResponse,
           )
@@ -194,7 +202,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to appointment service twice to get more details`() {
           await untilAsserted {
-            appointmentsApi.verify(2, getRequestedFor(urlEqualTo("/appointments/$APPOINTMENT_INSTANCE_ID")))
+            appointmentsApi.verify(2, getRequestedFor(urlEqualTo("/appointment-instance-details/$APPOINTMENT_INSTANCE_ID")))
           }
           await untilAsserted {
             verify(telemetryClient).trackEvent(
@@ -234,7 +242,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
-          appointmentsApi.stubGetAppointmentWithError(
+          appointmentsApi.stubGetAppointmentInstanceWithError(
             APPOINTMENT_INSTANCE_ID,
             503,
           )
@@ -248,7 +256,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to appointment service 3 times before given up`() {
           await untilAsserted {
-            appointmentsApi.verify(3, getRequestedFor(urlEqualTo("/appointments/$APPOINTMENT_INSTANCE_ID")))
+            appointmentsApi.verify(3, getRequestedFor(urlEqualTo("/appointment-instance-details/$APPOINTMENT_INSTANCE_ID")))
           }
         }
 
@@ -267,7 +275,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
           mappingServer.stubCreateAppointment()
           nomisApi.stubAppointmentCreateWithErrorFollowedBySlowSuccess("""{ "eventId": $EVENT_ID }""")
-          appointmentsApi.stubGetAppointment(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+          appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
 
           publishCreateDomainEvent()
         }
@@ -275,7 +283,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to appointment api and NOMIS service twice`() {
           await untilAsserted {
-            appointmentsApi.verify(2, getRequestedFor(urlEqualTo("/appointments/$APPOINTMENT_INSTANCE_ID")))
+            appointmentsApi.verify(2, getRequestedFor(urlEqualTo("/appointment-instance-details/$APPOINTMENT_INSTANCE_ID")))
           }
           await untilAsserted {
             nomisApi.verify(2, postRequestedFor(urlEqualTo("/appointments")))
@@ -309,7 +317,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
-          appointmentsApi.stubGetAppointment(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+          appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
 
           nomisApi.stubAppointmentCreateWithError(503)
           await untilCallTo {
@@ -341,7 +349,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
           mappingServer.stubCreateAppointmentWithErrorFollowedBySlowSuccess()
           nomisApi.stubAppointmentCreate("""{ "eventId": $EVENT_ID }""")
-          appointmentsApi.stubGetAppointment(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+          appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
 
           publishCreateDomainEvent()
         }
@@ -383,7 +391,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
           mappingServer.stubCreateAppointmentWithError(status = 503)
           nomisApi.stubAppointmentCreate("""{ "eventId": $EVENT_ID }""")
-          appointmentsApi.stubGetAppointment(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+          appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
 
           await untilCallTo {
             awsSqsAppointmentDlqClient!!.countAllMessagesOnQueue(appointmentDlqUrl!!).get()
@@ -411,7 +419,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
 
     @Test
     fun `will log when duplicate is detected`() {
-      appointmentsApi.stubGetAppointment(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+      appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
       mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
       nomisApi.stubAppointmentCreate("""{ "eventId": $EVENT_ID }""")
       mappingServer.stubCreateAppointmentWithDuplicateError(
@@ -425,7 +433,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
       await untilAsserted {
         verify(telemetryClient).trackEvent(eq("appointment-mapping-create-failed"), any(), isNull())
       }
-      await untilCallTo { appointmentsApi.getCountFor("/appointments/$APPOINTMENT_INSTANCE_ID") } matches { it == 1 }
+      await untilCallTo { appointmentsApi.getCountFor("/appointment-instance-details/$APPOINTMENT_INSTANCE_ID") } matches { it == 1 }
       await untilCallTo { nomisApi.postCountFor("/appointments") } matches { it == 1 }
 
       // the mapping call fails but is not queued for retry
@@ -438,10 +446,10 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
       verify(telemetryClient).trackEvent(
         eq("to-nomis-synch-appointment-duplicate"),
         check {
-          Assertions.assertThat(it["appointmentInstanceId"]).isEqualTo("$APPOINTMENT_INSTANCE_ID")
-          Assertions.assertThat(it["existingNomisEventId"]).isEqualTo("$EVENT_ID")
-          Assertions.assertThat(it["duplicateAppointmentInstanceId"]).isEqualTo("$APPOINTMENT_INSTANCE_ID")
-          Assertions.assertThat(it["duplicateNomisEventId"]).isEqualTo("999")
+          assertThat(it["appointmentInstanceId"]).isEqualTo("$APPOINTMENT_INSTANCE_ID")
+          assertThat(it["existingNomisEventId"]).isEqualTo("$EVENT_ID")
+          assertThat(it["duplicateAppointmentInstanceId"]).isEqualTo("$APPOINTMENT_INSTANCE_ID")
+          assertThat(it["duplicateNomisEventId"]).isEqualTo("999")
         },
         isNull(),
       )
