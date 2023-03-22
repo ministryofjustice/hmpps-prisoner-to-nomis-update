@@ -51,7 +51,16 @@ internal class ActivitiesApiServiceTest {
                 "attendanceReason": {
                   "id": 123456,
                   "code": "ABS",
-                  "description": "Unacceptable absence"
+                  "description": "Unacceptable absence",
+                  "attended": true,
+                  "capturePay": true,
+                  "captureMoreDetail": true,
+                  "captureCaseNote": true,
+                  "captureIncentiveLevelWarning": false,
+                  "captureOtherText": false,
+                  "displayInAbsence": false,
+                  "displaySequence": 1,
+                  "notes": "Maps to ACCAB in NOMIS"
                 },
                 "comment": "Prisoner was too unwell to attend the activity.",
                 "posted": true,
@@ -244,8 +253,17 @@ internal class ActivitiesApiServiceTest {
                   "prisonerNumber": "A1234AA",
                   "attendanceReason": {
                     "id": 123456,
-                    "code": "ABS",
-                    "description": "Unacceptable absence"
+                    "code": "SICK",
+                    "description": "Sick",
+                    "attended": true,
+                    "capturePay": true,
+                    "captureMoreDetail": true,
+                    "captureCaseNote": true,
+                    "captureIncentiveLevelWarning": false,
+                    "captureOtherText": false,
+                    "displayInAbsence": false,
+                    "displaySequence": 1,
+                    "notes": "Maps to ACCAB in NOMIS"
                   },
                   "comment": "Prisoner was too unwell to attend the activity.",
                   "posted": true,
