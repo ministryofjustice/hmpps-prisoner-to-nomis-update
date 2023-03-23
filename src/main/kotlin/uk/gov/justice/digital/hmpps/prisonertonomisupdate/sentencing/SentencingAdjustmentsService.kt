@@ -132,29 +132,33 @@ class SentencingAdjustmentsService(
     val offenderNo = createEvent.additionalInformation.offenderNo
     val telemetryMap = mutableMapOf("adjustmentId" to adjustmentId, "offenderNo" to offenderNo)
 
-    runCatching {
-      val mapping = sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(adjustmentId)
-        .also {
-          telemetryMap["nomisAdjustmentId"] = it.nomisAdjustmentId.toString()
-          telemetryMap["nomisAdjustmentCategory"] = it.nomisAdjustmentCategory
-        }
+    if (isDpsCreated(createEvent.additionalInformation)) {
+      runCatching {
+        val mapping = sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(adjustmentId)
+          .also {
+            telemetryMap["nomisAdjustmentId"] = it.nomisAdjustmentId.toString()
+            telemetryMap["nomisAdjustmentCategory"] = it.nomisAdjustmentCategory
+          }
 
-      if (mapping.nomisAdjustmentCategory == "SENTENCE") {
-        nomisApiService.deleteSentenceAdjustment(
-          mapping.nomisAdjustmentId,
-        )
-      } else {
-        nomisApiService.deleteKeyDateAdjustment(
-          mapping.nomisAdjustmentId,
-        )
-      }.also {
-        sentencingAdjustmentsMappingService.deleteMappingGivenAdjustmentId(adjustmentId)
+        if (mapping.nomisAdjustmentCategory == "SENTENCE") {
+          nomisApiService.deleteSentenceAdjustment(
+            mapping.nomisAdjustmentId,
+          )
+        } else {
+          nomisApiService.deleteKeyDateAdjustment(
+            mapping.nomisAdjustmentId,
+          )
+        }.also {
+          sentencingAdjustmentsMappingService.deleteMappingGivenAdjustmentId(adjustmentId)
+        }
+      }.onSuccess {
+        telemetryClient.trackEvent("sentencing-adjustment-deleted-success", telemetryMap, null)
+      }.onFailure { e ->
+        telemetryClient.trackEvent("sentencing-adjustment-deleted-failed", telemetryMap, null)
+        throw e
       }
-    }.onSuccess {
-      telemetryClient.trackEvent("sentencing-adjustment-deleted-success", telemetryMap, null)
-    }.onFailure { e ->
-      telemetryClient.trackEvent("sentencing-adjustment-deleted-failed", telemetryMap, null)
-      throw e
+    } else {
+      telemetryClient.trackEvent("sentencing-adjustment-deleted-ignored", telemetryMap, null)
     }
   }
 
