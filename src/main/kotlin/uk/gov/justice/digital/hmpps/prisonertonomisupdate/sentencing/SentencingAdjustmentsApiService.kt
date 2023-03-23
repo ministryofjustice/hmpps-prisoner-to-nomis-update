@@ -7,9 +7,14 @@ import java.time.LocalDate
 
 @Service
 class SentencingAdjustmentsApiService(private val sentenceAdjustmentsApiWebClient: WebClient) {
+  companion object {
+    const val LEGACY_CONTENT_TYPE = "application/vnd.nomis-offence+json"
+  }
+
   suspend fun getAdjustment(adjustmentId: String): AdjustmentDetails {
     return sentenceAdjustmentsApiWebClient.get()
       .uri("/legacy/adjustments/$adjustmentId")
+      .header("Content-Type", LEGACY_CONTENT_TYPE)
       .retrieve()
       .awaitBody()
   }
