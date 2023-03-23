@@ -9,25 +9,24 @@ import java.time.LocalDate
 class SentencingAdjustmentsApiService(private val sentenceAdjustmentsApiWebClient: WebClient) {
   suspend fun getAdjustment(adjustmentId: String): AdjustmentDetails {
     return sentenceAdjustmentsApiWebClient.get()
-      .uri("/adjustments/$adjustmentId")
+      .uri("/legacy/adjustments/$adjustmentId")
       .retrieve()
       .awaitBody()
   }
 }
 
 data class AdjustmentDetails(
-  val adjustmentId: String,
   val adjustmentDate: LocalDate,
-  val adjustmentStartPeriod: LocalDate?,
+  val adjustmentFromDate: LocalDate?,
   val adjustmentDays: Long,
   val bookingId: Long,
   val sentenceSequence: Long?,
   val adjustmentType: String,
   val comment: String?,
-  val creatingSystem: CreatingSystem,
+  val active: Boolean,
 )
 
 enum class CreatingSystem {
   NOMIS,
-  SENTENCE_ADJUSTMENTS,
+  DPS,
 }

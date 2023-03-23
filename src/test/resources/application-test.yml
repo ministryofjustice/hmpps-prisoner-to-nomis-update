@@ -50,7 +50,7 @@ hmpps.sqs:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"sentencing.sentence.adjustment.created\", \"sentencing.sentence.adjustment.updated\", \"sentencing.sentence.adjustment.deleted\"]}"
+      subscribeFilter: "{\"eventType\":[\"release-date-adjustments.adjustment.inserted\", \"release-date-adjustments.adjustment.updated\", \"release-date-adjustments.adjustment.deleted\"]}"
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
   topics:

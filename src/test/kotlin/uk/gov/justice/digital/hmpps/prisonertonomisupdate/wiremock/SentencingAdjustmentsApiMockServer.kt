@@ -47,26 +47,25 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubAdjustmentGet(
     adjustmentId: String,
     adjustmentDate: String = "2021-01-01",
-    adjustmentStartPeriod: String? = null,
+    adjustmentFromDate: String? = null,
     adjustmentDays: Long = 20,
     bookingId: Long = 1234,
     sentenceSequence: Long? = null,
     adjustmentType: String = "ADA",
     comment: String? = null,
-    creatingSystem: String = "SENTENCE_ADJUSTMENTS",
+    active: Boolean = true,
   ) {
-    val startPeriodJson = adjustmentStartPeriod?.let { """ "adjustmentStartPeriod": "$it",  """ } ?: ""
+    val startPeriodJson = adjustmentFromDate?.let { """ "adjustmentFromDate": "$it",  """ } ?: ""
     val sentenceSequenceJson = sentenceSequence?.let { """ "sentenceSequence": $it,  """ } ?: ""
     val commentJson = comment?.let { """ "comment": "$it",  """ } ?: ""
 
     stubFor(
-      get("/adjustments/$adjustmentId").willReturn(
+      get("/legacy/adjustments/$adjustmentId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             """
             {
-              "adjustmentId": "$adjustmentId",
               "adjustmentDate": "$adjustmentDate",
               "adjustmentDays": $adjustmentDays,
               $startPeriodJson
@@ -74,7 +73,7 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
               $sentenceSequenceJson
               $commentJson
               "adjustmentType": "$adjustmentType",
-              "creatingSystem": "$creatingSystem"
+              "active": $active
             }
             """.trimIndent(),
           )
@@ -85,7 +84,7 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubAdjustmentGetWithError(adjustmentId: String, status: Int) {
     stubFor(
-      get("/adjustments/$adjustmentId").willReturn(
+      get("/legacy/adjustments/$adjustmentId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
@@ -109,7 +108,7 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     adjustmentDays: Long = 20,
   ) {
     stubFor(
-      get("/adjustments/$adjustmentId")
+      get("/legacy/adjustments/$adjustmentId")
         .inScenario("Retry Adjustments Scenario")
         .whenScenarioStateIs(Scenario.STARTED)
         .willReturn(
@@ -121,7 +120,7 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
 
     stubFor(
-      get("/adjustments/$adjustmentId")
+      get("/legacy/adjustments/$adjustmentId")
         .inScenario("Retry Adjustments Scenario")
         .whenScenarioStateIs("Cause Adjustments Success")
         .willReturn(
@@ -130,13 +129,12 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withBody(
               """
             {
-              "adjustmentId": "$adjustmentId",
               "adjustmentDate": "$adjustmentDate",
               "adjustmentDays": $adjustmentDays,
               "bookingId": $bookingId,
               "sentenceSequence": $sentenceSequence,
               "adjustmentType": "$adjustmentType",
-              "creatingSystem": "SENTENCE_ADJUSTMENTS"
+              "active": true
             }
               """.trimIndent(),
             )

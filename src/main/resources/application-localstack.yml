@@ -25,7 +25,7 @@ hmpps.sqs:
       queueName: hmpps_prisoner_to_nomis_sentencing_queue
       dlqName: hmpps_prisoner_to_nomis_sentencing_dlq
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"sentencing.sentence.adjustment.created\", \"sentencing.sentence.adjustment.updated\", \"sentencing.sentence.adjustment.deleted\"]}"
+      subscribeFilter: "{\"eventType\":[\"release-date-adjustments.adjustment.inserted\", \"release-date-adjustments.adjustment.updated\", \"release-date-adjustments.adjustment.deleted\"]}"
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:hmpps_domain_events
