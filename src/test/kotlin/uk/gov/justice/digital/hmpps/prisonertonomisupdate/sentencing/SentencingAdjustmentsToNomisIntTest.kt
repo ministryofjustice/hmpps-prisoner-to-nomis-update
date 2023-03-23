@@ -40,7 +40,6 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
   inner class CreateSentencingAdjustment {
     @Nested
     inner class WhenAdjustmentHasJustBeenCreatedByAdjustmentService {
-      val creatingSystem = "SENTENCE_ADJUSTMENTS"
 
       @BeforeEach
       fun setUp() {
@@ -64,11 +63,11 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           sentencingAdjustmentsApi.stubAdjustmentGet(
             adjustmentId = ADJUSTMENT_ID,
             sentenceSequence = sentenceSequence,
-            creatingSystem = creatingSystem,
+            active = true,
             adjustmentDays = 99,
             adjustmentDate = "2022-01-01",
             adjustmentType = "RX",
-            adjustmentStartPeriod = "2020-07-19",
+            adjustmentFromDate = "2020-07-19",
             comment = "Adjusted for remand",
             bookingId = BOOKING_ID,
           )
@@ -78,7 +77,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to adjustment service to get more details`() {
           await untilAsserted {
-            sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
+            sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/legacy/adjustments/$ADJUSTMENT_ID")))
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
         }
@@ -141,11 +140,11 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           sentencingAdjustmentsApi.stubAdjustmentGet(
             adjustmentId = ADJUSTMENT_ID,
             sentenceSequence = null,
-            creatingSystem = creatingSystem,
+            active = true,
             adjustmentDays = 99,
             adjustmentDate = "2022-01-01",
             adjustmentType = "ADA",
-            adjustmentStartPeriod = "2020-07-19",
+            adjustmentFromDate = "2020-07-19",
             comment = "Adjusted for absence",
             bookingId = BOOKING_ID,
           )
@@ -155,7 +154,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to adjustment service to get more details`() {
           await untilAsserted {
-            sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
+            sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/legacy/adjustments/$ADJUSTMENT_ID")))
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
         }
@@ -218,22 +217,15 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           sentencingAdjustmentsApi.stubAdjustmentGet(
             adjustmentId = ADJUSTMENT_ID,
             sentenceSequence = sentenceSequence,
-            creatingSystem = creatingSystem,
+            active = true,
             adjustmentDays = 99,
             adjustmentDate = "2022-01-01",
             adjustmentType = "RX",
-            adjustmentStartPeriod = "2020-07-19",
+            adjustmentFromDate = "2020-07-19",
             comment = "Adjusted for remand",
             bookingId = BOOKING_ID,
           )
-          publishCreateAdjustmentDomainEvent()
-        }
-
-        @Test
-        fun `will callback back to adjustment service to get more details`() {
-          await untilAsserted {
-            sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
-          }
+          publishCreateAdjustmentDomainEvent(creatingSystem)
         }
 
         @Test
@@ -245,6 +237,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
               isNull(),
             )
           }
+          sentencingAdjustmentsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/adjustments/$ADJUSTMENT_ID")))
           nomisApi.verify(
             0,
             postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments")),
@@ -259,21 +252,21 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           sentencingAdjustmentsApi.stubAdjustmentGet(
             adjustmentId = ADJUSTMENT_ID,
             sentenceSequence = null,
-            creatingSystem = creatingSystem,
+            active = true,
             adjustmentDays = 99,
             adjustmentDate = "2022-01-01",
             adjustmentType = "ADA",
-            adjustmentStartPeriod = "2020-07-19",
+            adjustmentFromDate = "2020-07-19",
             comment = "Adjusted for absence",
             bookingId = BOOKING_ID,
           )
-          publishCreateAdjustmentDomainEvent()
+          publishCreateAdjustmentDomainEvent(creatingSystem)
         }
 
         @Test
-        fun `will callback back to adjustment service to get more details`() {
+        fun `will not callback back to adjustment service to get more details`() {
           await untilAsserted {
-            sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
+            sentencingAdjustmentsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/adjustments/$ADJUSTMENT_ID")))
           }
         }
 
@@ -296,7 +289,6 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
 
     @Nested
     inner class WhenMappingAlreadyCreatedForAdjustment {
-      val creatingSystem = "SENTENCE_ADJUSTMENTS"
 
       @BeforeEach
       fun setUp() {
@@ -312,11 +304,11 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           sentencingAdjustmentsApi.stubAdjustmentGet(
             adjustmentId = ADJUSTMENT_ID,
             sentenceSequence = sentenceSequence,
-            creatingSystem = creatingSystem,
+            active = true,
             adjustmentDays = 99,
             adjustmentDate = "2022-01-01",
             adjustmentType = "RX",
-            adjustmentStartPeriod = "2020-07-19",
+            adjustmentFromDate = "2020-07-19",
             comment = "Adjusted for remand",
             bookingId = BOOKING_ID,
           )
@@ -355,11 +347,11 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           sentencingAdjustmentsApi.stubAdjustmentGet(
             adjustmentId = ADJUSTMENT_ID,
             sentenceSequence = null,
-            creatingSystem = creatingSystem,
+            active = true,
             adjustmentDays = 99,
             adjustmentDate = "2022-01-01",
             adjustmentType = "ADA",
-            adjustmentStartPeriod = "2020-07-19",
+            adjustmentFromDate = "2020-07-19",
             comment = "Adjusted for absence",
             bookingId = BOOKING_ID,
           )
@@ -417,7 +409,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to adjustment service twice to get more details`() {
           await untilAsserted {
-            sentencingAdjustmentsApi.verify(2, getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
+            sentencingAdjustmentsApi.verify(2, getRequestedFor(urlEqualTo("/legacy/adjustments/$ADJUSTMENT_ID")))
           }
           await untilAsserted {
             verify(telemetryClient).trackEvent(
@@ -468,7 +460,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to adjustment service 3 times before given up`() {
           await untilAsserted {
-            sentencingAdjustmentsApi.verify(3, getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
+            sentencingAdjustmentsApi.verify(3, getRequestedFor(urlEqualTo("/legacy/adjustments/$ADJUSTMENT_ID")))
           }
         }
 
@@ -501,7 +493,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to adjustment and NOMIS service twice`() {
           await untilAsserted {
-            sentencingAdjustmentsApi.verify(2, getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
+            sentencingAdjustmentsApi.verify(2, getRequestedFor(urlEqualTo("/legacy/adjustments/$ADJUSTMENT_ID")))
           }
           await untilAsserted {
             nomisApi.verify(
@@ -751,7 +743,6 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
   inner class UpdateSentencingAdjustment {
     @Nested
     inner class WhenAdjustmentHasBeenUpdatedByAdjustmentService {
-      val creatingSystem = "SENTENCE_ADJUSTMENTS"
       private val nomisAdjustmentId = 98765L
 
       @BeforeEach
@@ -773,11 +764,11 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           sentencingAdjustmentsApi.stubAdjustmentGet(
             adjustmentId = ADJUSTMENT_ID,
             sentenceSequence = sentenceSequence,
-            creatingSystem = creatingSystem,
+            active = true,
             adjustmentDays = 99,
             adjustmentDate = "2022-01-01",
             adjustmentType = "RX",
-            adjustmentStartPeriod = "2020-07-19",
+            adjustmentFromDate = "2020-07-19",
             comment = "Adjusted for remand",
             bookingId = BOOKING_ID,
           )
@@ -787,7 +778,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to adjustment service to get more details`() {
           await untilAsserted {
-            sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
+            sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/legacy/adjustments/$ADJUSTMENT_ID")))
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
         }
@@ -832,11 +823,11 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
           sentencingAdjustmentsApi.stubAdjustmentGet(
             adjustmentId = ADJUSTMENT_ID,
             sentenceSequence = null,
-            creatingSystem = creatingSystem,
+            active = true,
             adjustmentDays = 99,
             adjustmentDate = "2022-01-01",
             adjustmentType = "ADA",
-            adjustmentStartPeriod = "2020-07-19",
+            adjustmentFromDate = "2020-07-19",
             comment = "Adjusted for absence",
             bookingId = BOOKING_ID,
           )
@@ -846,7 +837,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to adjustment service to get more details`() {
           await untilAsserted {
-            sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
+            sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/legacy/adjustments/$ADJUSTMENT_ID")))
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
         }
@@ -897,23 +888,15 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         sentencingAdjustmentsApi.stubAdjustmentGet(
           adjustmentId = ADJUSTMENT_ID,
           sentenceSequence = 1,
-          creatingSystem = creatingSystem,
+          active = true,
           adjustmentDays = 99,
           adjustmentDate = "2022-01-01",
           adjustmentType = "RX",
-          adjustmentStartPeriod = "2020-07-19",
+          adjustmentFromDate = "2020-07-19",
           comment = "Adjusted for remand",
           bookingId = BOOKING_ID,
         )
-        publishUpdateAdjustmentDomainEvent()
-      }
-
-      @Test
-      fun `will callback back to adjustment service to get more details`() {
-        await untilAsserted {
-          sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments/$ADJUSTMENT_ID")))
-        }
-        await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        publishUpdateAdjustmentDomainEvent(creatingSystem)
       }
 
       @Test
@@ -925,6 +908,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             isNull(),
           )
         }
+        sentencingAdjustmentsApi.verify(0, getRequestedFor(urlEqualTo("/legacy/adjustments/$ADJUSTMENT_ID")))
         nomisApi.verify(
           0,
           putRequestedFor(urlEqualTo("/sentence-adjustments/$nomisAdjustmentId")),
@@ -1112,11 +1096,11 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
     }
   }
 
-  private fun publishCreateAdjustmentDomainEvent() {
-    val eventType = "sentencing.sentence.adjustment.created"
+  private fun publishCreateAdjustmentDomainEvent(source: String = CreatingSystem.DPS.name) {
+    val eventType = "release-date-adjustments.adjustment.inserted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
-        .message(sentencingAdjustmentMessagePayload(ADJUSTMENT_ID, OFFENDER_NUMBER, eventType))
+        .message(sentencingAdjustmentMessagePayload(ADJUSTMENT_ID, OFFENDER_NUMBER, eventType, source))
         .messageAttributes(
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
@@ -1126,11 +1110,11 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishUpdateAdjustmentDomainEvent() {
-    val eventType = "sentencing.sentence.adjustment.updated"
+  private fun publishUpdateAdjustmentDomainEvent(source: String = CreatingSystem.DPS.name) {
+    val eventType = "release-date-adjustments.adjustment.updated"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
-        .message(sentencingAdjustmentMessagePayload(ADJUSTMENT_ID, OFFENDER_NUMBER, eventType))
+        .message(sentencingAdjustmentMessagePayload(ADJUSTMENT_ID, OFFENDER_NUMBER, eventType, source))
         .messageAttributes(
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
@@ -1140,11 +1124,11 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishDeleteAdjustmentDomainEvent() {
-    val eventType = "sentencing.sentence.adjustment.deleted"
+  private fun publishDeleteAdjustmentDomainEvent(source: String = CreatingSystem.DPS.name) {
+    val eventType = "release-date-adjustments.adjustment.deleted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
-        .message(sentencingAdjustmentMessagePayload(ADJUSTMENT_ID, OFFENDER_NUMBER, eventType))
+        .message(sentencingAdjustmentMessagePayload(ADJUSTMENT_ID, OFFENDER_NUMBER, eventType, source))
         .messageAttributes(
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
@@ -1154,6 +1138,6 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  fun sentencingAdjustmentMessagePayload(adjustmentId: String, nomsNumber: String, eventType: String) =
-    """{"eventType":"$eventType", "additionalInformation": {"id":"$adjustmentId", "nomsNumber": "$nomsNumber"}}"""
+  fun sentencingAdjustmentMessagePayload(adjustmentId: String, nomsNumber: String, eventType: String, source: String = "DPS") =
+    """{"eventType":"$eventType", "additionalInformation": {"id":"$adjustmentId", "offenderNo": "$nomsNumber", "source": "$source"}}"""
 }

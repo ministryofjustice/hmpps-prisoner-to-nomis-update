@@ -13,33 +13,31 @@ class MockSentencingResource(
   private val mockSentenceAdjustmentData: MockSentenceAdjustmentData,
   private val mockKeyDateAdjustmentData: MockKeyDateAdjustmentData,
 ) {
-  @GetMapping("/adjustments/{adjustmentId}")
+  @GetMapping("/legacy/adjustments/{adjustmentId}")
   @Operation(hidden = true)
   fun getAdjustment(
     @PathVariable adjustmentId: String,
   ): AdjustmentDetails = if (adjustmentId.endsWith("S")) {
     AdjustmentDetails(
-      adjustmentId = adjustmentId,
       adjustmentDate = LocalDate.now(),
-      adjustmentStartPeriod = LocalDate.now().minusMonths(1),
+      adjustmentFromDate = LocalDate.now().minusMonths(1),
       adjustmentDays = 15,
       bookingId = mockSentenceAdjustmentData.bookingId,
       sentenceSequence = mockSentenceAdjustmentData.sentenceSequence,
       adjustmentType = mockSentenceAdjustmentData.adjustmentType,
       comment = "Created using mock data",
-      creatingSystem = CreatingSystem.SENTENCE_ADJUSTMENTS,
+      active = true,
     )
   } else {
     AdjustmentDetails(
-      adjustmentId = adjustmentId,
       adjustmentDate = LocalDate.now(),
-      adjustmentStartPeriod = LocalDate.now().minusMonths(1),
+      adjustmentFromDate = LocalDate.now().minusMonths(1),
       adjustmentDays = 15,
       bookingId = mockKeyDateAdjustmentData.bookingId,
       sentenceSequence = null,
       adjustmentType = mockKeyDateAdjustmentData.adjustmentType,
       comment = "Created using mock data",
-      creatingSystem = CreatingSystem.SENTENCE_ADJUSTMENTS,
+      active = true,
     )
   }
 }

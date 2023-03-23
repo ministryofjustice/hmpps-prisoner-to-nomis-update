@@ -32,13 +32,13 @@ class SentencingDomainEventListener(
     rawMessage: String,
   ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
-      "sentencing.sentence.adjustment.created" ->
+      "release-date-adjustments.adjustment.inserted" ->
         sentencingAdjustmentsService.createAdjustment(message.fromJson())
 
-      "sentencing.sentence.adjustment.updated" ->
+      "release-date-adjustments.adjustment.updated" ->
         sentencingAdjustmentsService.updateAdjustment(message.fromJson())
 
-      "sentencing.sentence.adjustment.deleted" ->
+      "release-date-adjustments.adjustment.deleted" ->
         sentencingAdjustmentsService.deleteAdjustment(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
