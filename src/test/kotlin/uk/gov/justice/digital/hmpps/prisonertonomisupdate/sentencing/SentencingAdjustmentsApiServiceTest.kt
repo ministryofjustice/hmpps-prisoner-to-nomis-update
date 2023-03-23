@@ -29,7 +29,7 @@ internal class SentencingAdjustmentsApiServiceTest {
   private lateinit var sentencingAdjustmentsApiService: SentencingAdjustmentsApiService
 
   @Nested
-  @DisplayName("GET /adjustments/{adjustmentId}")
+  @DisplayName("GET /legacy/adjustments/{adjustmentId}")
   inner class GetAdjustment {
     @BeforeEach
     internal fun setUp() {
@@ -41,7 +41,7 @@ internal class SentencingAdjustmentsApiServiceTest {
       sentencingAdjustmentsApiService.getAdjustment("1234")
 
       sentencingAdjustmentsApi.verify(
-        getRequestedFor(urlEqualTo("/adjustments/1234"))
+        getRequestedFor(urlEqualTo("/legacy/adjustments/1234"))
           .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
       )
     }
@@ -53,17 +53,17 @@ internal class SentencingAdjustmentsApiServiceTest {
         adjustmentType = "RX",
         adjustmentDate = "2022-01-01",
         adjustmentDays = 1,
-        adjustmentStartPeriod = "2021-07-01",
+        adjustmentFromDate = "2021-07-01",
         sentenceSequence = 6,
         comment = "Remand added",
+        active = true,
       )
       val adjustment = sentencingAdjustmentsApiService.getAdjustment("1234")
 
-      assertThat(adjustment.adjustmentId).isEqualTo("1234")
       assertThat(adjustment.adjustmentDate).isEqualTo(LocalDate.parse("2022-01-01"))
       assertThat(adjustment.adjustmentType).isEqualTo("RX")
       assertThat(adjustment.adjustmentDays).isEqualTo(1)
-      assertThat(adjustment.adjustmentStartPeriod).isEqualTo(LocalDate.parse("2021-07-01"))
+      assertThat(adjustment.adjustmentFromDate).isEqualTo(LocalDate.parse("2021-07-01"))
       assertThat(adjustment.sentenceSequence).isEqualTo(6)
       assertThat(adjustment.comment).isEqualTo("Remand added")
     }
@@ -78,11 +78,10 @@ internal class SentencingAdjustmentsApiServiceTest {
       )
       val adjustment = sentencingAdjustmentsApiService.getAdjustment("1234")
 
-      assertThat(adjustment.adjustmentId).isEqualTo("1234")
       assertThat(adjustment.adjustmentDate).isEqualTo(LocalDate.parse("2022-01-01"))
       assertThat(adjustment.adjustmentType).isEqualTo("ADA")
       assertThat(adjustment.adjustmentDays).isEqualTo(1)
-      assertThat(adjustment.adjustmentStartPeriod).isNull()
+      assertThat(adjustment.adjustmentFromDate).isNull()
       assertThat(adjustment.sentenceSequence).isNull()
       assertThat(adjustment.comment).isNull()
     }
