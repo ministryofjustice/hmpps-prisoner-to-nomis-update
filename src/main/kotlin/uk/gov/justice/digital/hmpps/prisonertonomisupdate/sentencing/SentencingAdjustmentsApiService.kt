@@ -21,7 +21,7 @@ class SentencingAdjustmentsApiService(private val sentenceAdjustmentsApiWebClien
 }
 
 data class AdjustmentDetails(
-  val adjustmentDate: LocalDate = LocalDate.now(),
+  val adjustmentDate: LocalDate? = LocalDate.now(), // TODO remove optional when implemented in adjustments api
   val adjustmentFromDate: LocalDate?,
   val adjustmentDays: Long,
   val bookingId: Long,
