@@ -64,7 +64,7 @@ class SentencingAdjustmentsService(
   private suspend fun createTransformedAdjustment(adjustment: AdjustmentDetails) =
     CreateSentencingAdjustmentRequest(
       adjustmentTypeCode = adjustment.adjustmentType,
-      adjustmentDate = adjustment.adjustmentDate,
+      adjustmentDate = adjustment.adjustmentDate!!,
       adjustmentFromDate = adjustment.adjustmentFromDate,
       adjustmentDays = adjustment.adjustmentDays,
       comment = adjustment.comment,
@@ -109,7 +109,7 @@ class SentencingAdjustmentsService(
   private suspend fun updateTransformedAdjustment(nomisAdjustmentId: Long, adjustment: AdjustmentDetails) =
     UpdateSentencingAdjustmentRequest(
       adjustmentTypeCode = adjustment.adjustmentType,
-      adjustmentDate = adjustment.adjustmentDate,
+      adjustmentDate = adjustment.adjustmentDate!!,
       adjustmentFromDate = adjustment.adjustmentFromDate,
       adjustmentDays = adjustment.adjustmentDays,
       comment = adjustment.comment,
