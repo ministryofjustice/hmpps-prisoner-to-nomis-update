@@ -12,7 +12,6 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
-import org.joda.time.LocalDate
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -30,6 +29,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtens
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension.Companion.sentencingAdjustmentsApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
+import java.time.LocalDate
 
 const val ADJUSTMENT_ID = "1234T"
 const val OFFENDER_NUMBER = "A1234TT"
