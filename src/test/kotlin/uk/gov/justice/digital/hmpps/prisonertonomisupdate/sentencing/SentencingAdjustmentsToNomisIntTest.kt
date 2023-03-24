@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtens
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension.Companion.sentencingAdjustmentsApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
+import java.time.LocalDate
 
 const val ADJUSTMENT_ID = "1234T"
 const val OFFENDER_NUMBER = "A1234TT"
@@ -166,6 +167,31 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
               postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/adjustments"))
                 .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("ADA")))
                 .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
+                .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
+                .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
+                .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for absence"))),
+            )
+          }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        }
+
+        @Test
+        fun `will allow a null adjustmentDate from the Adjustments API`() {
+          sentencingAdjustmentsApi.stubAdjustmentGet(
+            adjustmentId = ADJUSTMENT_ID,
+            sentenceSequence = null,
+            active = true,
+            adjustmentDays = 99,
+            adjustmentType = "LAL",
+            adjustmentFromDate = "2020-07-19",
+            comment = "Adjusted for absence",
+            bookingId = BOOKING_ID,
+          )
+          await untilAsserted {
+            nomisApi.verify(
+              postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/adjustments"))
+                .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("LAL")))
+                .withRequestBody(matchingJsonPath("adjustmentDate", equalTo(LocalDate.now().toString())))
                 .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
                 .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
                 .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for absence"))),
