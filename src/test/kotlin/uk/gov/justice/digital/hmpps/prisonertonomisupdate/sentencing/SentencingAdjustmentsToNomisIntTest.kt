@@ -12,6 +12,7 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
+import org.joda.time.LocalDate
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -166,6 +167,31 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
               postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/adjustments"))
                 .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("ADA")))
                 .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
+                .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
+                .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
+                .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for absence"))),
+            )
+          }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        }
+
+        @Test
+        fun `will allow a null adjustmentDate from the Adjustments API`() {
+          sentencingAdjustmentsApi.stubAdjustmentGet(
+            adjustmentId = ADJUSTMENT_ID,
+            sentenceSequence = null,
+            active = true,
+            adjustmentDays = 99,
+            adjustmentType = "LAL",
+            adjustmentFromDate = "2020-07-19",
+            comment = "Adjusted for absence",
+            bookingId = BOOKING_ID,
+          )
+          await untilAsserted {
+            nomisApi.verify(
+              postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/adjustments"))
+                .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("LAL")))
+                .withRequestBody(matchingJsonPath("adjustmentDate", equalTo(LocalDate.now().toString())))
                 .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
                 .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
                 .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for absence"))),

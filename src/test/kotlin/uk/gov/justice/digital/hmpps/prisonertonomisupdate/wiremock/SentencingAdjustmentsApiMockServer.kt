@@ -46,7 +46,7 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubAdjustmentGet(
     adjustmentId: String,
-    adjustmentDate: String = "2021-01-01",
+    adjustmentDate: String? = null,
     adjustmentFromDate: String? = null,
     adjustmentDays: Long = 20,
     bookingId: Long = 1234,
@@ -58,6 +58,7 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     val startPeriodJson = adjustmentFromDate?.let { """ "adjustmentFromDate": "$it",  """ } ?: ""
     val sentenceSequenceJson = sentenceSequence?.let { """ "sentenceSequence": $it,  """ } ?: ""
     val commentJson = comment?.let { """ "comment": "$it",  """ } ?: ""
+    val adjustmentDateJson = adjustmentDate?.let { """ "adjustmentDate": "$it",  """ } ?: """ "adjustmentDate": null,  """
 
     stubFor(
       get("/legacy/adjustments/$adjustmentId").willReturn(
@@ -66,7 +67,7 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withBody(
             """
             {
-              "adjustmentDate": "$adjustmentDate",
+              $adjustmentDateJson
               "adjustmentDays": $adjustmentDays,
               $startPeriodJson
               "bookingId": $bookingId,

@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateSentenc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateSentencingAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+import java.time.LocalDate
 
 @Service
 class SentencingAdjustmentsService(
@@ -64,7 +65,7 @@ class SentencingAdjustmentsService(
   private suspend fun createTransformedAdjustment(adjustment: AdjustmentDetails) =
     CreateSentencingAdjustmentRequest(
       adjustmentTypeCode = adjustment.adjustmentType,
-      adjustmentDate = adjustment.adjustmentDate!!,
+      adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
       adjustmentFromDate = adjustment.adjustmentFromDate,
       adjustmentDays = adjustment.adjustmentDays,
       comment = adjustment.comment,
@@ -109,7 +110,7 @@ class SentencingAdjustmentsService(
   private suspend fun updateTransformedAdjustment(nomisAdjustmentId: Long, adjustment: AdjustmentDetails) =
     UpdateSentencingAdjustmentRequest(
       adjustmentTypeCode = adjustment.adjustmentType,
-      adjustmentDate = adjustment.adjustmentDate!!,
+      adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
       adjustmentFromDate = adjustment.adjustmentFromDate,
       adjustmentDays = adjustment.adjustmentDays,
       comment = adjustment.comment,
