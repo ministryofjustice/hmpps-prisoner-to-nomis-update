@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-03-20.3802.30269fb"
+    "version": "2023-03-27.3956.15d1f7e"
   },
   "servers": [
     {
@@ -64,6 +64,16 @@
               }
             }
           },
+          "404": {
+            "description": "Not Found, the scheduled instance does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -76,16 +86,6 @@
           },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found, the scheduled instance does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -130,16 +130,6 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -150,8 +140,8 @@
               }
             }
           },
-          "404": {
-            "description": "The scheduled instance was not found.",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -170,8 +160,18 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The scheduled instance was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -350,8 +350,8 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "Schedule ID not found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -360,8 +360,18 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Schedule ID not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -379,16 +389,6 @@
                   "items": {
                     "$ref": "#/components/schemas/Allocation"
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -434,26 +434,6 @@
               }
             }
           },
-          "404": {
-            "description": "The activity schedule for this ID was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -466,6 +446,26 @@
           },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The activity schedule for this ID was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -540,32 +540,22 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "Successful call - zero or more scheduled events found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrisonerScheduledEvents"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -582,6 +572,16 @@
           },
           "404": {
             "description": "Requested resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
             "content": {
               "application/json": {
                 "schema": {
@@ -650,32 +650,22 @@
           "required": true
         },
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "Successful call - zero or more scheduled events found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrisonerScheduledEvents"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -692,6 +682,16 @@
           },
           "404": {
             "description": "Requested resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
             "content": {
               "application/json": {
                 "schema": {
@@ -745,19 +745,6 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "The allocations for the prisoners",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PrisonerAllocations"
-                  }
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -774,6 +761,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "The allocations for the prisoners",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PrisonerAllocations"
+                  }
                 }
               }
             }
@@ -866,16 +866,6 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "201": {
             "description": "The appointment or series of appointment occurrences was created.",
             "content": {
@@ -888,6 +878,16 @@
           },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -928,16 +928,6 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -950,6 +940,16 @@
           },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -980,16 +980,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Activity schedules",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ActivityScheduleLite"
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -1000,8 +990,8 @@
               }
             }
           },
-          "404": {
-            "description": "Activity ID not found",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1010,8 +1000,18 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "200": {
+            "description": "Activity schedules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityScheduleLite"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Activity ID not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1061,8 +1061,18 @@
               }
             }
           },
-          "404": {
-            "description": "Activity ID was not found.",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1081,18 +1091,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "Activity ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1124,16 +1124,6 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "Activity found",
             "content": {
@@ -1144,8 +1134,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "The activity for this ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1154,8 +1144,18 @@
               }
             }
           },
-          "404": {
-            "description": "The activity for this ID was not found.",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1186,8 +1186,8 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "Schedule ID not found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1196,8 +1196,18 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Schedule ID not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1212,16 +1222,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CapacityAndAllocated"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1249,16 +1249,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Scheduled instance found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ActivityScheduleInstance"
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -1269,8 +1259,8 @@
               }
             }
           },
-          "404": {
-            "description": "The scheduled instance was not found.",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1279,8 +1269,18 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "200": {
+            "description": "Scheduled instance found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityScheduleInstance"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The scheduled instance was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1312,26 +1312,6 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The scheduled instance was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "Attendance records found",
             "content": {
@@ -1345,8 +1325,28 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The scheduled instance was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1377,8 +1377,8 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "The prison for this code was not found.",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1387,8 +1387,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1407,8 +1407,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "The prison for this code was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1514,6 +1514,19 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "Successful call - zero or more scheduled instance records found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActivityScheduleInstance"
+                  }
+                }
+              }
+            }
+          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -1530,19 +1543,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Successful call - zero or more scheduled instance records found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ActivityScheduleInstance"
-                  }
                 }
               }
             }
@@ -1737,19 +1737,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Locations found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/InternalLocation"
-                  }
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -1766,6 +1753,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Locations found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InternalLocation"
+                  }
                 }
               }
             }
@@ -1800,16 +1800,6 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "Category ID not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "Activity category capacity",
             "content": {
@@ -1822,6 +1812,16 @@
           },
           "403": {
             "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category ID not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1870,16 +1870,6 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "Category ID not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "Activities within the category",
             "content": {
@@ -1895,6 +1885,16 @@
           },
           "403": {
             "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category ID not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1999,6 +1999,16 @@
               }
             }
           },
+          "404": {
+            "description": "The prison regime for this prison code was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -2011,16 +2021,6 @@
           },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The prison regime for this prison code was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2082,16 +2082,6 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -2104,6 +2094,16 @@
           },
           "404": {
             "description": "Requested resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
             "content": {
               "application/json": {
                 "schema": {
@@ -2142,28 +2142,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Successful call - Location prefix found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LocationPrefixDto"
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
             "content": {
               "application/json": {
                 "schema": {
@@ -2188,6 +2168,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful call - Location prefix found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationPrefixDto"
                 }
               }
             }
@@ -2214,31 +2214,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Successful call - zero or more location groups found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LocationGroup"
-                  }
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
             "content": {
               "application/json": {
                 "schema": {
@@ -2266,6 +2243,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful call - zero or more location groups found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LocationGroup"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -2278,16 +2278,6 @@
         "summary": "Get the list of attendance reasons",
         "operationId": "getAttendanceReasons",
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "Attendance reasons found",
             "content": {
@@ -2297,6 +2287,16 @@
                   "items": {
                     "$ref": "#/components/schemas/AttendanceReason"
                   }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2334,12 +2334,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Appointment found",
+          "404": {
+            "description": "The appointment for this ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Appointment"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2354,12 +2354,12 @@
               }
             }
           },
-          "404": {
-            "description": "The appointment for this ID was not found.",
+          "200": {
+            "description": "Appointment found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/Appointment"
                 }
               }
             }
@@ -2397,8 +2397,51 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "The appointment occurrence for this ID was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appointment-instances/{appointmentInstanceId}": {
+      "get": {
+        "tags": [
+          "appointment-instance-controller"
+        ],
+        "summary": "Get an appointment instance by its id",
+        "description": "Returns an appointment instance and its details by its unique identifier.",
+        "operationId": "getAppointmentInstanceById",
+        "parameters": [
+          {
+            "name": "appointmentInstanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "The appointment instance for this ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2413,6 +2456,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Appointment instance found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentInstance"
                 }
               }
             }
@@ -2440,6 +2493,16 @@
           }
         ],
         "responses": {
+          "404": {
+            "description": "The appointment for this ID was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Appointment found",
             "content": {
@@ -2459,16 +2522,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "The appointment for this ID was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
           }
         }
       }
@@ -2478,20 +2531,19 @@
         "tags": [
           "appointment-category-controller"
         ],
-        "summary": "Get the list of top-level appointment categories",
+        "summary": "Get the list of appointment categories",
         "operationId": "getAppointmentCategories",
-        "parameters": [
-          {
-            "name": "includeInactive",
-            "in": "query",
-            "description": "If true will return all appointment categories otherwise only active categories will be returned. Defaults to false.",
-            "required": false,
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        ],
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Appointment categories found",
             "content": {
@@ -2499,18 +2551,8 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AppointmentCategory"
+                    "$ref": "#/components/schemas/AppointmentCategorySummary"
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2538,26 +2580,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "allocation found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Allocation"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The allocation for this ID was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -2570,6 +2592,26 @@
           },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "allocation found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Allocation"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The allocation for this ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2599,6 +2641,16 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Activity categories found",
             "content": {
@@ -2608,16 +2660,6 @@
                   "items": {
                     "$ref": "#/components/schemas/ActivityCategory"
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2645,8 +2687,8 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "The activity for this ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2655,12 +2697,12 @@
               }
             }
           },
-          "200": {
-            "description": "Activity found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Activity"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2675,12 +2717,12 @@
               }
             }
           },
-          "404": {
-            "description": "The activity for this ID was not found.",
+          "200": {
+            "description": "Activity found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/Activity"
                 }
               }
             }
@@ -2727,8 +2769,8 @@
               }
             }
           },
-          "404": {
-            "description": "Activity ID not found",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -2737,8 +2779,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "Activity ID not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -3270,7 +3312,7 @@
       },
       "AppointmentCreateRequest": {
         "required": [
-          "categoryId",
+          "categoryCode",
           "comment",
           "endTime",
           "inCell",
@@ -3281,11 +3323,10 @@
         ],
         "type": "object",
         "properties": {
-          "categoryId": {
-            "type": "integer",
-            "description": "The category id for this appointment. Must exist and be active",
-            "format": "int64",
-            "example": 21
+          "categoryCode": {
+            "type": "string",
+            "description": "The NOMIS reference code for this appointment. Must exist and be active",
+            "example": "CHAP"
           },
           "prisonCode": {
             "maxLength": 3,
@@ -3376,7 +3417,7 @@
       },
       "Appointment": {
         "required": [
-          "category",
+          "categoryCode",
           "comment",
           "created",
           "createdBy",
@@ -3395,17 +3436,19 @@
             "format": "int64",
             "example": 12345
           },
-          "category": {
-            "$ref": "#/components/schemas/AppointmentCategory"
+          "categoryCode": {
+            "type": "string",
+            "description": "The NOMIS REFERENCE_CODES.CODE (DOMAIN = 'INT_SCH_RSN') value for mapping to NOMIS",
+            "example": "CHAP"
           },
           "prisonCode": {
             "type": "string",
-            "description": "\n    The NOMIS AGENCY_LOCATIONS.AGY_LOC_ID value for mapping to NOMIS.\n    Note, this property does not exist on the appointment occurrences and is therefore consistent across all occurrences\n    ",
+            "description": "The NOMIS AGENCY_LOCATIONS.AGY_LOC_ID value for mapping to NOMIS",
             "example": "SKI"
           },
           "internalLocationId": {
             "type": "integer",
-            "description": "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Should be null if in cell = true\n    ",
+            "description": "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
             "format": "int64",
             "example": 123
           },
@@ -3453,7 +3496,7 @@
           },
           "updatedBy": {
             "type": "string",
-            "description": "\n    The username of the user authenticated via HMPPS auth that edited the appointment.\n    Usually a NOMIS username. Will be null if the appointment has not been altered since it was created\n    ",
+            "description": "\n    The username of the user authenticated via HMPPS auth that edited the appointment.\n    Will be null if the appointment has not been altered since it was created\n    ",
             "example": "AAA01U"
           },
           "schedule": {
@@ -3469,140 +3512,12 @@
         },
         "description": "\n  The top level appointment containing the initial values for all appointment properties.\n  Joins together one or more appointment occurrences and optionally a schedule if the appointment is recurring.\n  The child appointment occurrences will by default have the same property values.\n  The occurrence property values can be changed independently to support rescheduling, cancelling and altered\n  attendee lists at an individual occurrence level.\n  Editing a property at the appointment level will cascade the edit to all *future* child occurrences\n  "
       },
-      "AppointmentCategory": {
-        "required": [
-          "active",
-          "code",
-          "description",
-          "id"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "The internally generated identifier for this appointment category",
-            "format": "int64",
-            "example": 51
-          },
-          "parent": {
-            "$ref": "#/components/schemas/AppointmentCategory"
-          },
-          "code": {
-            "type": "string",
-            "description": "The NOMIS REFERENCE_CODES.CODE (DOMAIN = 'INT_SCH_RSN') value for mapping to NOMIS",
-            "example": "CHAP"
-          },
-          "description": {
-            "type": "string",
-            "description": "The description of the appointment category",
-            "example": "Chaplaincy"
-          },
-          "active": {
-            "type": "boolean",
-            "description": "Flag to indicate if this (sub)category) is active. Only active (sub)categories are valid for create and update requests",
-            "example": true
-          },
-          "displayOrder": {
-            "type": "integer",
-            "description": "Override to the default of ordering alphabetically by description supporting explicit ordering",
-            "format": "int32",
-            "example": 1
-          }
-        },
-        "description": "\n  Describes an appointment category. Categories can have a two level hierarchy, category and subcategory.\n  Subcategory level categories will have a parent.\n  Tables referencing appointment category should use the id primary key.\n  Mapping to NOMIS is via the code property.\n  The active property is a soft delete allowing categories that only exist in NOMIS to be maintained in the database\n  but not supported when creating or editing appointments.\n  Display order supports explicit ordering of categories and subcategories. Ordering will default to alphabetically\n  by description of display order is not specified.\n  "
-      },
-      "AppointmentInstance": {
-        "required": [
-          "appointmentDate",
-          "bookingId",
-          "cancelled",
-          "category",
-          "id",
-          "inCell",
-          "prisonCode",
-          "prisonerNumber",
-          "startTime"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "The internally generated identifier for this appointment instance",
-            "format": "int64",
-            "example": 123456
-          },
-          "category": {
-            "$ref": "#/components/schemas/AppointmentCategory"
-          },
-          "prisonCode": {
-            "type": "string",
-            "description": "The NOMIS AGENCY_LOCATIONS.AGY_LOC_ID value for mapping to NOMIS",
-            "example": "SKI"
-          },
-          "internalLocationId": {
-            "type": "integer",
-            "description": "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Should be null if in cell = true\n    ",
-            "format": "int64",
-            "example": 123
-          },
-          "inCell": {
-            "type": "boolean",
-            "description": "\n    Flag to indicate if the location of the appointment is in cell rather than an internal prison location.\n    Internal location id should be null if in cell = true\n    ",
-            "example": false
-          },
-          "prisonerNumber": {
-            "type": "string",
-            "description": "The NOMIS OFFENDERS.OFFENDER_ID_DISPLAY value for mapping to a prisoner record in NOMIS",
-            "example": "A1234BC"
-          },
-          "bookingId": {
-            "type": "integer",
-            "description": "The NOMIS OFFENDER_BOOKINGS.OFFENDER_BOOK_ID value for mapping to a prisoner booking record in NOMIS",
-            "format": "int64",
-            "example": 456
-          },
-          "appointmentDate": {
-            "type": "string",
-            "description": "The date of the appointment instance",
-            "format": "date"
-          },
-          "startTime": {
-            "type": "string",
-            "description": "The starting time of the appointment instance",
-            "format": "partial-time",
-            "example": "09:00"
-          },
-          "endTime": {
-            "type": "string",
-            "description": "The end time of the appointment instance",
-            "format": "partial-time",
-            "example": "10:30"
-          },
-          "comment": {
-            "type": "string",
-            "description": "\n    Notes relating to the appointment instance.\n    Could support adding a note specific to an individual prisoner's attendance of a specific group appointment\n    occurrence. Something that is supported within existing systems\n    ",
-            "example": "This appointment will help prisoner A1234BC adjust to life outside of prison"
-          },
-          "attended": {
-            "type": "boolean",
-            "description": "\n    Simple attendance marking model. Expectation that this will be enhanced to support non attendance reasons in future\n    ",
-            "example": false
-          },
-          "cancelled": {
-            "type": "boolean",
-            "description": "Indicates that the parent appointment occurrence was cancelled",
-            "example": false
-          }
-        },
-        "description": "\n  Represents an appointment instance for a specific prisoner to attend at the specified location, date and time.\n  The fully denormalised representation of the appointment occurrences and allocations.\n  "
-      },
       "AppointmentOccurrence": {
         "required": [
           "allocations",
           "cancelled",
           "id",
           "inCell",
-          "instances",
           "startDate",
           "startTime"
         ],
@@ -3616,7 +3531,7 @@
           },
           "internalLocationId": {
             "type": "integer",
-            "description": "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Should be null if in cell = true\n    ",
+            "description": "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
             "format": "int64",
             "example": 123
           },
@@ -3668,13 +3583,6 @@
             "items": {
               "$ref": "#/components/schemas/AppointmentOccurrenceAllocation"
             }
-          },
-          "instances": {
-            "type": "array",
-            "description": "\n    The instance or instances of this appointment occurrence. Single non recurring appointments such as medical will have one\n    instance record. A group appointment e.g. gym or chaplaincy sessions will have more than one instance record.\n    Instances are at the occurrence level supporting alteration of attendees in any future occurrence.\n    ",
-            "items": {
-              "$ref": "#/components/schemas/AppointmentInstance"
-            }
           }
         },
         "description": "\n  Represents a specific appointment occurrence. Non recurring appointments will have a single appointment occurrence\n  containing the same property values as the parent appointment. The same start date, time and end time. Recurring\n  appointments will have a series of occurrences. The first in the series will also contain the same property values\n  as the parent appointment and subsequent occurrences will have start dates following on from the original start date\n  incremented as specified by the appointment's schedule. Each occurrence can be edited independently of the parent.\n  All properties of an occurrence override those of the parent appointment with a null coalesce back to the parent for\n  nullable properties. The full series of occurrences specified by the schedule will be created in advance.\n  "
@@ -3689,7 +3597,7 @@
         "properties": {
           "id": {
             "type": "integer",
-            "description": "The internally generated identifier for this appointment allocation",
+            "description": "The internally generated identifier for this appointment occurrence allocation",
             "format": "int64",
             "example": 123456
           },
@@ -5394,17 +5302,10 @@
       "AppointmentCategorySummary": {
         "required": [
           "code",
-          "description",
-          "id"
+          "description"
         ],
         "type": "object",
         "properties": {
-          "id": {
-            "type": "integer",
-            "description": "The internally generated identifier for this appointment category",
-            "format": "int64",
-            "example": 51
-          },
           "code": {
             "type": "string",
             "description": "The NOMIS REFERENCE_CODES.CODE (DOMAIN = 'INT_SCH_RSN') value for mapping to NOMIS",
@@ -5633,6 +5534,125 @@
           }
         },
         "description": "\n    The summary of the last user to edit this appointment occurrence. Will be null if the appointment occurrence has not\n    been independently changed from the original state it was in when it was created as part of a recurring series\n    "
+      },
+      "AppointmentInstance": {
+        "required": [
+          "appointmentDate",
+          "appointmentId",
+          "appointmentOccurrenceAllocationId",
+          "appointmentOccurrenceId",
+          "bookingId",
+          "categoryCode",
+          "created",
+          "createdBy",
+          "id",
+          "inCell",
+          "prisonCode",
+          "prisonerNumber",
+          "startTime"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The internally generated identifier for this appointment instance",
+            "format": "int64",
+            "example": 123456
+          },
+          "appointmentId": {
+            "type": "integer",
+            "description": "The internally generated identifier for the parent appointment",
+            "format": "int64",
+            "example": 1234
+          },
+          "appointmentOccurrenceId": {
+            "type": "integer",
+            "description": "The internally generated identifier for the parent appointment occurrence",
+            "format": "int64",
+            "example": 12345
+          },
+          "appointmentOccurrenceAllocationId": {
+            "type": "integer",
+            "description": "The internally generated identifier for the parent appointment occurrence allocation",
+            "format": "int64",
+            "example": 123456
+          },
+          "categoryCode": {
+            "type": "string",
+            "description": "The NOMIS REFERENCE_CODES.CODE (DOMAIN = 'INT_SCH_RSN') value for mapping to NOMIS",
+            "example": "CHAP"
+          },
+          "prisonCode": {
+            "type": "string",
+            "description": "The NOMIS AGENCY_LOCATIONS.AGY_LOC_ID value for mapping to NOMIS",
+            "example": "SKI"
+          },
+          "internalLocationId": {
+            "type": "integer",
+            "description": "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
+            "format": "int64",
+            "example": 123
+          },
+          "inCell": {
+            "type": "boolean",
+            "description": "\n    Flag to indicate if the location of the appointment is in cell rather than an internal prison location.\n    Internal location id should be null if in cell = true\n    ",
+            "example": false
+          },
+          "prisonerNumber": {
+            "type": "string",
+            "description": "The NOMIS OFFENDERS.OFFENDER_ID_DISPLAY value for mapping to a prisoner record in NOMIS",
+            "example": "A1234BC"
+          },
+          "bookingId": {
+            "type": "integer",
+            "description": "The NOMIS OFFENDER_BOOKINGS.OFFENDER_BOOK_ID value for mapping to a prisoner booking record in NOMIS",
+            "format": "int64",
+            "example": 456
+          },
+          "appointmentDate": {
+            "type": "string",
+            "description": "The date of the appointment instance",
+            "format": "date"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "The starting time of the appointment instance",
+            "format": "partial-time",
+            "example": "09:00"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "The end time of the appointment instance",
+            "format": "partial-time",
+            "example": "10:30"
+          },
+          "comment": {
+            "type": "string",
+            "description": "\n    Notes relating to the appointment instance.\n    Could support adding a note specific to an individual prisoner's attendance of a specific group appointment\n    occurrence. Something that is supported within existing systems\n    ",
+            "example": "This appointment will help prisoner A1234BC adjust to life outside of prison"
+          },
+          "created": {
+            "type": "string",
+            "description": "The date and time this appointment instance was created. Will not change",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "\n    The username of the user authenticated via HMPPS auth that created the appointment instance.\n    Usually a NOMIS username\n    ",
+            "example": "AAA01U"
+          },
+          "updated": {
+            "type": "string",
+            "description": "\n    The date and time this appointment instance was last changed.\n    Will be null if the appointment instance has not been altered since it was created\n    ",
+            "format": "date-time"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "\n    The username of the user authenticated via HMPPS auth that edited the appointment instance.\n    Will be null if the appointment instance has not been altered since it was created\n    ",
+            "example": "AAA01U"
+          }
+        },
+        "description": "\n  Represents an appointment instance for a specific prisoner to attend at the specified location, date and time.\n  The fully denormalised representation of the appointment occurrences and allocations.\n  "
       },
       "AppointmentDetails": {
         "required": [

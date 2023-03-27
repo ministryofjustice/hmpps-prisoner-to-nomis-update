@@ -27,29 +27,26 @@ internal class AppointmentApiServiceTest {
   @Nested
   inner class GetAppointmentInstance {
 
-    private val appointmentResponse = """{
+    private val appointmentInstanceResponse = """{
       "id": 1234,
       "bookingId": 12345,
       "internalLocationId": 34567,
       "appointmentDate": "2023-03-14",
       "startTime": "10:15",
       "endTime":  "11:42",
-      "category": {
-        "id": 1919,
-        "active": true,
-        "code": "DUFF",
-        "description": "Medical - Initial assessment"
-      },
+      "categoryCode": "DUFF",
       "prisonCode": "SKI",
       "inCell": false,
       "prisonerNumber": "A1234BC",
-      "cancelled": false
+      "cancelled": false,
+      "created": "2021-03-14T10:15:00",
+      "createdBy": "user1"
     }
     """.trimIndent()
 
     @BeforeEach
     internal fun setUp() {
-      AppointmentsApiExtension.appointmentsApi.stubGetAppointmentInstance(1234, appointmentResponse)
+      AppointmentsApiExtension.appointmentsApi.stubGetAppointmentInstance(1234, appointmentInstanceResponse)
     }
 
     @Test
@@ -58,7 +55,7 @@ internal class AppointmentApiServiceTest {
         appointmentsApiService.getAppointmentInstance(1234)
 
         AppointmentsApiExtension.appointmentsApi.verify(
-          WireMock.getRequestedFor(WireMock.urlEqualTo("/appointment-instance-details/1234"))
+          WireMock.getRequestedFor(WireMock.urlEqualTo("/appointment-instances/1234"))
             .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
         )
       }

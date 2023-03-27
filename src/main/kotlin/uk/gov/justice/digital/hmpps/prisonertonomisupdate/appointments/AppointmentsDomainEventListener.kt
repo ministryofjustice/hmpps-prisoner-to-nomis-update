@@ -30,7 +30,7 @@ class AppointmentsDomainEventListener(
   @WithSpan(value = "Digital-Prison-Services-hmpps_prisoner_to_nomis_appointment_queue", kind = SpanKind.SERVER)
   fun onMessage(rawMessage: String): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
-      "appointments.appointment.created" -> appointmentsService.createAppointment(message.fromJson())
+      "appointments.appointment-instance.created" -> appointmentsService.createAppointment(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }

@@ -96,7 +96,7 @@ class AppointmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetAppointmentInstance(id: Long, response: String) {
     stubFor(
-      get("/appointment-instance-details/$id").willReturn(
+      get("/appointment-instances/$id").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
@@ -107,7 +107,7 @@ class AppointmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetAppointmentInstanceWithError(id: Long, status: Int = 500) {
     stubFor(
-      get("/appointment-instance-details/$id").willReturn(
+      get("/appointment-instances/$id").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "error": "some error" }""")
@@ -118,7 +118,7 @@ class AppointmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetAppointmentInstanceWithErrorFollowedBySlowSuccess(id: Long, response: String) {
     stubFor(
-      get("/appointment-instance-details/$id")
+      get("/appointment-instances/$id")
         .inScenario("Retry Appointment instance Scenario")
         .whenScenarioStateIs(Scenario.STARTED)
         .willReturn(
@@ -130,7 +130,7 @@ class AppointmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
 
     stubFor(
-      get("/appointment-instance-details/$id")
+      get("/appointment-instances/$id")
         .inScenario("Retry Appointment instance Scenario")
         .whenScenarioStateIs("Cause Appointments Success")
         .willReturn(
