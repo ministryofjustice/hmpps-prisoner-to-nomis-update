@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Appointment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentOccurrenceDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAppointmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
@@ -28,21 +30,24 @@ class AppointmentsService(
       name = "appointment"
       telemetryClient = this@AppointmentsService.telemetryClient
       retryQueueService = appointmentsUpdateQueueService
-      eventTelemetry = mapOf("appointmentInstanceId" to event.additionalInformation.id.toString())
+      eventTelemetry = mapOf("appointmentInstanceId" to event.additionalInformation.appointmentInstanceId.toString())
 
       checkMappingDoesNotExist {
-        mappingService.getMappingGivenAppointmentInstanceIdOrNull(event.additionalInformation.id)
+        mappingService.getMappingGivenAppointmentInstanceIdOrNull(event.additionalInformation.appointmentInstanceId)
       }
       transform {
-        appointmentsApiService.getAppointmentInstance(event.additionalInformation.id).run {
-          // val occurrence = appointmentsApiService.getAppointmentOccurrence(??) // TODO coalesce with parent record values
-          eventTelemetry += "bookingId" to bookingId.toString()
-          eventTelemetry += "locationId" to internalLocationId.toString()
-          eventTelemetry += "date" to appointmentDate.toString()
-          eventTelemetry += "start" to startTime
+        appointmentsApiService.getAppointmentInstance(event.additionalInformation.appointmentInstanceId).run {
+//          val occurrence = appointmentsApiService.getAppointmentOccurrence(appointmentOccurrenceId)
+//          val appointment = appointmentsApiService.getAppointment(appointmentId)
+          val request = toNomisAppointment(this, null, null) // occurrence, appointment)
+
+          eventTelemetry += "bookingId" to request.bookingId.toString()
+          eventTelemetry += "locationId" to request.internalLocationId.toString()
+          eventTelemetry += "date" to request.eventDate.toString()
+          eventTelemetry += "start" to request.startTime.toString()
 
           AppointmentMappingDto(
-            nomisEventId = nomisApiService.createAppointment(toNomisAppointment(this)).eventId,
+            nomisEventId = nomisApiService.createAppointment(request).eventId,
             appointmentInstanceId = id,
           )
         }
@@ -51,15 +56,22 @@ class AppointmentsService(
     }
   }
 
-  private fun toNomisAppointment(instance: AppointmentInstance): CreateAppointmentRequest =
-    CreateAppointmentRequest(
-      bookingId = instance.bookingId,
-      internalLocationId = instance.internalLocationId!!,
-      eventDate = instance.appointmentDate,
-      startTime = LocalTime.parse(instance.startTime),
-      endTime = LocalTime.parse(instance.endTime),
-      eventSubType = instance.category.code,
-    )
+  private fun toNomisAppointment(
+    instance: AppointmentInstance,
+    occurrence: AppointmentOccurrenceDetails?,
+    appointment: Appointment?,
+  ): CreateAppointmentRequest = CreateAppointmentRequest(
+    bookingId = instance.bookingId,
+    internalLocationId = if (instance.inCell) {
+      null
+    } else {
+      instance.internalLocationId // ?: occurrence.internalLocation?.id ?: appointment.internalLocationId
+    },
+    eventDate = instance.appointmentDate,
+    startTime = LocalTime.parse(instance.startTime),
+    endTime = LocalTime.parse(instance.endTime),
+    eventSubType = instance.categoryCode,
+  )
 
   suspend fun createRetry(context: AppointmentContext) {
     mappingService.createMapping(
@@ -86,5 +98,5 @@ data class AppointmentDomainEvent(
 )
 
 data class AppointmentAdditionalInformation(
-  val id: Long,
+  val appointmentInstanceId: Long,
 )

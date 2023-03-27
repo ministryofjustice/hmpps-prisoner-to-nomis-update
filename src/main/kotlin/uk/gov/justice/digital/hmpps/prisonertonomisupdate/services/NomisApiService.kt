@@ -289,7 +289,7 @@ data class CreateAppointmentRequest(
   val startTime: LocalTime,
   @JsonFormat(pattern = "HH:mm")
   val endTime: LocalTime,
-  val internalLocationId: Long,
+  val internalLocationId: Long? = null, // in cell if null
   val eventSubType: String,
 )
 

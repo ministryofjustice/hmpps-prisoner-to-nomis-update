@@ -40,16 +40,13 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
       "appointmentDate": "2023-03-14",
       "startTime": "10:15",
       "endTime":  "11:42",
-      "category": {
-        "id": 1919,
-        "active": true,
-        "code": "MEDI",
-        "description": "Medical - Initial assessment"
-      },
+      "categoryCode": "MEDI",
       "prisonCode": "SKI",
       "inCell": false,
       "prisonerNumber": "A1234BC",
-      "cancelled": false
+      "cancelled": false,
+      "created": "2021-03-14T10:15:00",
+      "createdBy": "user1"
     }
   """.trimIndent()
 
@@ -83,7 +80,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to appointment service to get more details`() {
           await untilAsserted {
-            appointmentsApi.verify(getRequestedFor(urlEqualTo("/appointment-instance-details/$APPOINTMENT_INSTANCE_ID")))
+            appointmentsApi.verify(getRequestedFor(urlEqualTo("/appointment-instances/$APPOINTMENT_INSTANCE_ID")))
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
         }
@@ -202,7 +199,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to appointment service twice to get more details`() {
           await untilAsserted {
-            appointmentsApi.verify(2, getRequestedFor(urlEqualTo("/appointment-instance-details/$APPOINTMENT_INSTANCE_ID")))
+            appointmentsApi.verify(2, getRequestedFor(urlEqualTo("/appointment-instances/$APPOINTMENT_INSTANCE_ID")))
           }
           await untilAsserted {
             verify(telemetryClient).trackEvent(
@@ -256,7 +253,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to appointment service 3 times before given up`() {
           await untilAsserted {
-            appointmentsApi.verify(3, getRequestedFor(urlEqualTo("/appointment-instance-details/$APPOINTMENT_INSTANCE_ID")))
+            appointmentsApi.verify(3, getRequestedFor(urlEqualTo("/appointment-instances/$APPOINTMENT_INSTANCE_ID")))
           }
         }
 
@@ -283,7 +280,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to appointment api and NOMIS service twice`() {
           await untilAsserted {
-            appointmentsApi.verify(2, getRequestedFor(urlEqualTo("/appointment-instance-details/$APPOINTMENT_INSTANCE_ID")))
+            appointmentsApi.verify(2, getRequestedFor(urlEqualTo("/appointment-instances/$APPOINTMENT_INSTANCE_ID")))
           }
           await untilAsserted {
             nomisApi.verify(2, postRequestedFor(urlEqualTo("/appointments")))
@@ -433,7 +430,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
       await untilAsserted {
         verify(telemetryClient).trackEvent(eq("appointment-mapping-create-failed"), any(), isNull())
       }
-      await untilCallTo { appointmentsApi.getCountFor("/appointment-instance-details/$APPOINTMENT_INSTANCE_ID") } matches { it == 1 }
+      await untilCallTo { appointmentsApi.getCountFor("/appointment-instances/$APPOINTMENT_INSTANCE_ID") } matches { it == 1 }
       await untilCallTo { nomisApi.postCountFor("/appointments") } matches { it == 1 }
 
       // the mapping call fails but is not queued for retry
@@ -457,7 +454,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   private fun publishCreateDomainEvent() {
-    val eventType = "appointments.appointment.created"
+    val eventType = "appointments.appointment-instance.created"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(appointmentMessagePayload(eventType, APPOINTMENT_INSTANCE_ID))
@@ -471,5 +468,5 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   fun appointmentMessagePayload(eventType: String, appointmentInstanceId: Long) =
-    """{"eventType":"$eventType", "additionalInformation": { "id": $appointmentInstanceId }, "version": "1.0", "description": "description", "occurredAt": "2023-02-05T11:23:56.031Z"}"""
+    """{"eventType":"$eventType", "additionalInformation": { "appointmentInstanceId": $appointmentInstanceId }, "version": "1.0", "description": "description", "occurredAt": "2023-02-05T11:23:56.031Z"}"""
 }
