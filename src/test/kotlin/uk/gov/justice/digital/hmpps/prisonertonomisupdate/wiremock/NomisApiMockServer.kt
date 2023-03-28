@@ -243,6 +243,27 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubCreateAttendance(scheduleId: Long, bookingId: Long) {
+    stubFor(
+      post("/schedules/$scheduleId/booking/$bookingId/attendance").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCreateAttendanceWithError(scheduleId: Long, bookingId: Long, status: Int = 500) {
+    stubFor(
+      post("/schedules/$scheduleId/booking/$bookingId/attendance").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status),
+      ),
+    )
+  }
+
   fun stubAppointmentCreate(response: String) {
     stubFor(
       post("/appointments").willReturn(

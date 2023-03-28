@@ -404,6 +404,48 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
+  inner class CreateAttendance {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      NomisApiExtension.nomisApi.stubCreateAttendance(11, 22)
+
+      nomisApiService.createAttendance(11, 22, newAttendance())
+
+      NomisApiExtension.nomisApi.verify(
+        postRequestedFor(urlEqualTo("/schedules/11/booking/22/attendance"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will post data to nomis api`() = runTest {
+      NomisApiExtension.nomisApi.stubCreateAttendance(11, 22)
+
+      nomisApiService.createAttendance(11, 22, newAttendance())
+
+      NomisApiExtension.nomisApi.verify(
+        postRequestedFor(urlEqualTo("/schedules/11/booking/22/attendance"))
+          .withRequestBody(matchingJsonPath("$.eventStatusCode", equalTo("COMP")))
+          .withRequestBody(matchingJsonPath("$.eventOutcomeCode", equalTo("ACCAB")))
+          .withRequestBody(matchingJsonPath("$.comments", equalTo("Prisoner was too unwell to attend the activity.")))
+          .withRequestBody(matchingJsonPath("$.unexcusedAbsence", equalTo("false")))
+          .withRequestBody(matchingJsonPath("$.authorisedAbsence", equalTo("true")))
+          .withRequestBody(matchingJsonPath("$.paid", equalTo("true"))),
+      )
+    }
+
+    @Test
+    fun `when any error response is received an exception is thrown`() = runTest {
+      NomisApiExtension.nomisApi.stubCreateAttendanceWithError(11, 22, 400)
+
+      assertThrows<BadRequest> {
+        nomisApiService.createAttendance(11, 22, newAttendance())
+      }
+    }
+  }
+
+  @Nested
   inner class CreateAppointment {
 
     @Test
@@ -867,6 +909,15 @@ fun newAllocation() = CreateOffenderProgramProfileRequest(
 fun newDeallocation() = EndOffenderProgramProfileRequest(
   endDate = LocalDate.parse("2023-01-21"),
   endReason = "REASON",
+)
+
+private fun newAttendance() = CreateAttendanceRequest(
+  eventStatusCode = "COMP",
+  eventOutcomeCode = "ACCAB",
+  comments = "Prisoner was too unwell to attend the activity.",
+  unexcusedAbsence = false,
+  authorisedAbsence = true,
+  paid = true,
 )
 
 private fun newAppointment() = CreateAppointmentRequest(
