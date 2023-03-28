@@ -540,4 +540,91 @@ internal class ActivitiesApiServiceTest {
       }
     }
   }
+
+  @Nested
+  inner class GetAttendance {
+    @BeforeEach
+    internal fun setUp() {
+      ActivitiesApiExtension.activitiesApi.stubGetAttendance(
+        1234,
+        """
+          {
+            "id": 1234,
+            "prisonerNumber": "A1234AA",
+            "attendanceReason": {
+              "id": 1,
+              "code": "SICK",
+              "description": "Sick",
+              "attended": true,
+              "capturePay": true,
+              "captureMoreDetail": true,
+              "captureCaseNote": true,
+              "captureIncentiveLevelWarning": false,
+              "captureOtherText": false,
+              "displayInAbsence": false,
+              "displaySequence": 1,
+              "notes": "Maps to ACCAB in NOMIS"
+            },
+            "comment": "Prisoner was too unwell to attend the activity.",
+            "recordedTime": "2023-03-28T14:26:08.975Z",
+            "recordedBy": "A.JONES",
+            "status": "WAITING",
+            "payAmount": 100,
+            "bonusAmount": 50,
+            "pieces": 0,
+            "issuePayment": true,
+            "incentiveLevelWarningIssued": true,
+            "otherAbsenceReason": "Prisoner has a valid reason to miss the activity."
+          }
+        """.trimIndent(),
+      )
+    }
+
+    @Test
+    fun `should call api with OAuth2 token`() = runTest {
+      activitiesApiService.getAttendance(1234)
+
+      ActivitiesApiExtension.activitiesApi.verify(
+        WireMock.getRequestedFor(WireMock.urlEqualTo("/attendances/1234"))
+          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `get parse core data`() = runTest {
+      val attendance = activitiesApiService.getAttendance(1234)
+
+      assertThat(attendance.id).isEqualTo(1234)
+      assertThat(attendance.prisonerNumber).isEqualTo("A1234AA")
+      assertThat(attendance.attendanceReason?.code).isEqualTo("SICK")
+      assertThat(attendance.comment).isEqualTo("Prisoner was too unwell to attend the activity.")
+      assertThat(attendance.recordedTime).isEqualTo("2023-03-28T14:26:08.975")
+      assertThat(attendance.recordedBy).isEqualTo("A.JONES")
+      assertThat(attendance.status).isEqualTo("WAITING")
+      assertThat(attendance.payAmount).isEqualTo(100)
+      assertThat(attendance.bonusAmount).isEqualTo(50)
+      assertThat(attendance.pieces).isEqualTo(0)
+      assertThat(attendance.issuePayment).isEqualTo(true)
+      assertThat(attendance.incentiveLevelWarningIssued).isEqualTo(true)
+      assertThat(attendance.otherAbsenceReason).isEqualTo("Prisoner has a valid reason to miss the activity.")
+    }
+
+    @Test
+    fun `when attendance is not found an exception is thrown`() = runTest {
+      ActivitiesApiExtension.activitiesApi.stubGetAttendanceWithError(1234, status = 404)
+
+      assertThrows<NotFound> {
+        activitiesApiService.getAttendance(1234)
+      }
+    }
+
+    @Test
+    fun `when any bad response is received an exception is thrown`() = runTest {
+      ActivitiesApiExtension.activitiesApi.stubGetAttendanceWithError(1234, status = 503)
+
+      assertThrows<ServiceUnavailable> {
+        activitiesApiService.getAttendance(1234)
+      }
+    }
+  }
 }

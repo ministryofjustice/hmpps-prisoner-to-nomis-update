@@ -27,7 +27,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.24.0")
 
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.12")
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.13")
   testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.0")
   testImplementation("org.mockito:mockito-inline:5.2.0")
   testImplementation("org.testcontainers:localstack:1.17.6")
