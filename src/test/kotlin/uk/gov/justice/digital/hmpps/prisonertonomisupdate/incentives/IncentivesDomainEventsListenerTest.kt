@@ -22,12 +22,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeature
 
 internal class IncentivesDomainEventsListenerTest {
   private val incentivesService: IncentivesService = mock()
+  private val incentivesReferenceService: IncentivesReferenceService = mock()
   private val objectMapper: ObjectMapper = objectMapper()
   private val eventFeatureSwitch: EventFeatureSwitch = mock()
 
   private val listener =
     IncentivesDomainEventListener(
       incentivesService,
+      incentivesReferenceService,
       objectMapper,
       eventFeatureSwitch,
     )

@@ -72,5 +72,25 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubIncentiveLevelGet(incentiveCode: String? = "STD") {
+    stubFor(
+      get("/incentive/levels/$incentiveCode?with-inactive=true").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            {
+              "code": "$incentiveCode",
+              "description": "Description for $incentiveCode",
+              "active": true,
+              "required": true
+            }
+            """,
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
   fun getCountFor(url: String) = this.findAll(WireMock.getRequestedFor(WireMock.urlEqualTo(url))).count()
 }

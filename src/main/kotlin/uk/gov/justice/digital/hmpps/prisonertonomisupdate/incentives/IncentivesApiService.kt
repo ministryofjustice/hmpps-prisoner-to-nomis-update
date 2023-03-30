@@ -16,7 +16,22 @@ class IncentivesApiService(@Qualifier("incentivesApiWebClient") private val webC
       .retrieve()
       .awaitBody()
   }
+
+  suspend fun getGlobalIncentiveLevel(incentiveLevelCode: String): IncentiveLevel {
+    return webClient.get()
+      .uri("/incentive/levels/$incentiveLevelCode?with-inactive=true")
+      .retrieve()
+      .awaitBody()
+  }
 }
+
+data class IncentiveLevel(
+  val code: String,
+  val description: String,
+  val active: Boolean = true,
+  val required: Boolean = false,
+  // TODO no sequence level exposed on incentive level api - do need on create - or will it default?
+)
 
 data class IepDetail(
   val id: Long? = null,

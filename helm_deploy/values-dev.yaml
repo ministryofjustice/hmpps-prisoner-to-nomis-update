@@ -17,6 +17,7 @@ generic-service:
     API_BASE_URL_ACTIVITIES: https://activities-api-dev.prison.service.justice.gov.uk
     API_BASE_URL_APPOINTMENTS: https://activities-api-dev.prison.service.justice.gov.uk
     API_BASE_URL_SENTENCE_ADJUSTMENTS: https://adjustments-api-dev.hmpps.service.justice.gov.uk
+    FEATURE_EVENT_INCENTIVES_LEVEL_CHANGED: false
 
 generic-prometheus-alerts:
   sqsAlertsQueueNames:
