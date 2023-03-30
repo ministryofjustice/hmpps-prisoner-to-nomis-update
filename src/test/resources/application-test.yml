@@ -29,7 +29,7 @@ hmpps.sqs:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"incentives.iep-review.inserted\"]}"
+      subscribeFilter: "{\"eventType\":[\"incentives.iep-review.inserted\", \"incentives.level.changed\"]}"
       dlqMaxReceiveCount: 2
       visibilityTimeout: 1
     activity:

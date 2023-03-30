@@ -14,6 +14,7 @@ import java.util.concurrent.CompletableFuture
 @Service
 class IncentivesDomainEventListener(
   private val incentivesService: IncentivesService,
+  private val incentivesReferenceService: IncentivesReferenceService,
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
 ) : DomainEventListener(
@@ -31,6 +32,7 @@ class IncentivesDomainEventListener(
   fun onMessage(rawMessage: String): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "incentives.iep-review.inserted" -> incentivesService.createIncentive(message.fromJson())
+      "incentives.level.changed" -> incentivesReferenceService.globalIncentiveLevelChange(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }

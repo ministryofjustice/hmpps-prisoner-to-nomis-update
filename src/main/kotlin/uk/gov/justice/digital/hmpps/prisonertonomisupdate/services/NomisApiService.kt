@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -172,6 +173,27 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .uri("/key-date-adjustments/$adjustmentId")
       .retrieve()
       .awaitBody()
+
+  suspend fun getGlobalIncentiveLevel(incentiveLevel: String): ReferenceCode? =
+    webClient.get()
+      .uri("/reference-domains/domains/IEP_LEVEL/codes/$incentiveLevel")
+      .retrieve()
+      .awaitBodyOrNotFound()
+
+  suspend fun updateGlobalIncentiveLevel(incentiveLevel: ReferenceCode) {
+    webClient.put()
+      .uri("/reference-domains/domains/IEP_LEVEL/codes/${incentiveLevel.code}")
+      .bodyValue(incentiveLevel)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
+  suspend fun createGlobalIncentiveLevel(incentiveLevel: ReferenceCode) =
+    webClient.post()
+      .uri("/reference-domains/domains/IEP_LEVEL/codes")
+      .bodyValue(incentiveLevel)
+      .retrieve()
+      .awaitBodilessEntity()
 }
 
 data class CreateVisitDto(
@@ -351,4 +373,11 @@ data class CreateSentencingAdjustmentResponse(val id: Long)
 
 data class CreateVisitResponseDto(
   val visitId: String,
+)
+
+data class ReferenceCode(
+  val code: String,
+  val domain: String,
+  val description: String,
+  val active: Boolean,
 )

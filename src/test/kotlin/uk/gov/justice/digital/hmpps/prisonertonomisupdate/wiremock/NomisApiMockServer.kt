@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.springframework.http.HttpStatus
 
 class NomisApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
   companion object {
@@ -474,6 +475,77 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
           .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubNomisGlobalIncentiveLevel(incentiveLevelCode: String = "STD") {
+    stubFor(
+      get(WireMock.urlPathMatching("/reference-domains/domains/IEP_LEVEL/codes/$incentiveLevelCode")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(
+            """
+              {
+                "domain": "IEP_LEVEL",
+                "code": "$incentiveLevelCode",
+                "description": "description for $incentiveLevelCode",
+                "active": true
+              }
+            """.trimIndent(),
+          ),
+      ),
+    )
+  }
+
+  fun stubNomisGlobalIncentiveLevelCreate(incentiveLevelCode: String = "STD") {
+    stubFor(
+      post("/reference-domains/domains/IEP_LEVEL/codes").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              {
+                "domain": "IEP_LEVEL",
+                "code": "$incentiveLevelCode",
+                "description": "description for $incentiveLevelCode",
+                "active": true,
+              }
+            """.trimIndent(),
+          )
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubNomisGlobalIncentiveLevelUpdate(incentiveLevelCode: String = "STD") {
+    stubFor(
+      put("/reference-domains/domains/IEP_LEVEL/codes/$incentiveLevelCode").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              {
+                "domain": "IEP_LEVEL",
+                "code": "$incentiveLevelCode",
+                "description": "description for $incentiveLevelCode",
+                "active": true,
+              }
+            """.trimIndent(),
+          )
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubNomisGlobalIncentiveLevelNotFound(incentiveLevelCode: String = "STD") {
+    stubFor(
+      get(WireMock.urlPathMatching("/reference-domains/domains/IEP_LEVEL/codes/$incentiveLevelCode")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NOT_FOUND.value())
+          .withBody("""{"message":"Not found"}"""),
       ),
     )
   }

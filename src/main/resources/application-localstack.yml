@@ -10,7 +10,7 @@ hmpps.sqs:
       queueName: hmpps_prisoner_to_nomis_incentive_queue
       dlqName: hmpps_prisoner_to_nomis_incentive_dlq
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"incentives.iep-review.inserted\"]}"
+      subscribeFilter: "{\"eventType\":[\"incentives.iep-review.inserted\", \"incentives.level.changed\"]}"
     activity:
       queueName: hmpps_prisoner_to_nomis_activity_queue
       dlqName: hmpps_prisoner_to_nomis_activity_dlq

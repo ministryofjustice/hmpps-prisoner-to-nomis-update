@@ -42,6 +42,9 @@ fun retryVisitsCreateMappingMessage() = """
 fun incentiveMessagePayload(incentiveId: Long) =
   """{"eventType":"incentives.iep-review.inserted", "additionalInformation": {"id":"$incentiveId"}}"""
 
+fun incentiveLevelChangedMessagePayload(incentiveLevel: String) =
+  """{"eventType":"incentives.level.changed", "additionalInformation": {"incentiveLevel":"$incentiveLevel"}}"""
+
 fun incentiveCreatedMessage(incentiveId: Long) = """
       {
         "Type": "Notification", 
