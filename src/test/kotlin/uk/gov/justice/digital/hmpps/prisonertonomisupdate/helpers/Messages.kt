@@ -45,6 +45,9 @@ fun incentiveMessagePayload(incentiveId: Long) =
 fun incentiveLevelChangedMessagePayload(incentiveLevel: String) =
   """{"eventType":"incentives.level.changed", "additionalInformation": {"incentiveLevel":"$incentiveLevel"}}"""
 
+fun incentiveLevelsReorderedMessagePayload() =
+  """{"eventType":"incentives.levels.reordered", "additionalInformation": {}}"""
+
 fun incentiveCreatedMessage(incentiveId: Long) = """
       {
         "Type": "Notification", 

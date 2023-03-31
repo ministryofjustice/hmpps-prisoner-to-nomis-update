@@ -194,6 +194,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyValue(incentiveLevel)
       .retrieve()
       .awaitBodilessEntity()
+
+  suspend fun globalIncentiveLevelReorder(levels: List<String>) =
+    webClient.post()
+      .uri("/reference-domains/iep-reorder")
+      .bodyValue(levels)
+      .retrieve()
+      .awaitBodilessEntity()
 }
 
 data class CreateVisitDto(

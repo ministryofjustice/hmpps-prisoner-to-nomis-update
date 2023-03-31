@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -10,9 +9,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ReferenceCode
 class IncentivesReferenceService(
   private val incentivesApiService: IncentivesApiService,
   private val nomisApiService: NomisApiService,
-  private val incentivesUpdateQueueService: IncentivesUpdateQueueService,
   private val telemetryClient: TelemetryClient,
-  private val objectMapper: ObjectMapper,
 ) {
 
   private fun IncentiveLevel.toNomisIncentiveLevel(): ReferenceCode = ReferenceCode(
@@ -25,13 +22,41 @@ class IncentivesReferenceService(
   suspend fun globalIncentiveLevelChange(event: GlobalIncentiveChangedEvent) {
     val incentiveLevelCode = event.additionalInformation.incentiveLevel
     nomisApiService.getGlobalIncentiveLevel(incentiveLevelCode)?.also {
-      // update
       incentivesApiService.getGlobalIncentiveLevel(incentiveLevelCode)
-        .also { incentiveLevel -> nomisApiService.updateGlobalIncentiveLevel(incentiveLevel.toNomisIncentiveLevel()) }
+        .also { incentiveLevel ->
+          nomisApiService.updateGlobalIncentiveLevel(incentiveLevel.toNomisIncentiveLevel())
+          trackEvent("global-incentive-level-updated", incentiveLevel)
+        }
     } ?: also {
-      // insert
       incentivesApiService.getGlobalIncentiveLevel(incentiveLevelCode)
-        .also { incentiveLevel -> nomisApiService.createGlobalIncentiveLevel(incentiveLevel.toNomisIncentiveLevel()) }
+        .also { incentiveLevel ->
+          nomisApiService.createGlobalIncentiveLevel(incentiveLevel.toNomisIncentiveLevel())
+          trackEvent("global-incentive-level-inserted", incentiveLevel)
+        }
+    }
+  }
+
+  private fun trackEvent(eventName: String, incentiveLevel: IncentiveLevel) {
+    telemetryClient.trackEvent(
+      eventName,
+      mutableMapOf(
+        "code" to incentiveLevel.code,
+        "description" to incentiveLevel.description,
+        "active" to incentiveLevel.active.toString(),
+      ),
+      null,
+    )
+  }
+
+  suspend fun globalIncentiveLevelsReorder() {
+    incentivesApiService.getGlobalIncentiveLevelsInOrder().also {
+      val orderedIepCodes = it.toCodeList()
+      nomisApiService.globalIncentiveLevelReorder(orderedIepCodes)
+      telemetryClient.trackEvent(
+        "global-incentive-levels-reordered",
+        mutableMapOf("orderedIepCodes" to orderedIepCodes.toString()),
+        null,
+      )
     }
   }
 

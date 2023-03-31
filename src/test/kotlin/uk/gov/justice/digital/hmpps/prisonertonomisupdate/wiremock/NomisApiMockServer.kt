@@ -550,6 +550,14 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubNomisGlobalIncentiveLevelReorder() {
+    stubFor(
+      post("/reference-domains/iep-reorder").willReturn(
+        aResponse().withStatus(200),
+      ),
+    )
+  }
+
   private val CREATE_VISIT_RESPONSE = """
     {
       "visitId": "12345"
