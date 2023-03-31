@@ -23,6 +23,17 @@ class IncentivesApiService(@Qualifier("incentivesApiWebClient") private val webC
       .retrieve()
       .awaitBody()
   }
+
+  suspend fun getGlobalIncentiveLevelsInOrder(): List<IncentiveLevel> {
+    return webClient.get()
+      .uri("/incentive/levels?with-inactive=true")
+      .retrieve()
+      .awaitBody()
+  }
+}
+
+fun List<IncentiveLevel>.toCodeList(): List<String> {
+  return this.map { it.code }
 }
 
 data class IncentiveLevel(

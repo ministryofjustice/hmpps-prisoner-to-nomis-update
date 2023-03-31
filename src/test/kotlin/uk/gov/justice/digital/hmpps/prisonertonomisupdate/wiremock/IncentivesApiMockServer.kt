@@ -72,7 +72,7 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubIncentiveLevelGet(incentiveCode: String? = "STD") {
+  fun stubGlobalIncentiveLevelGet(incentiveCode: String? = "STD") {
     stubFor(
       get("/incentive/levels/$incentiveCode?with-inactive=true").willReturn(
         aResponse()
@@ -85,6 +85,58 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
               "active": true,
               "required": true
             }
+            """,
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubGlobalIncentiveLevelsGet() {
+    stubFor(
+      get("/incentive/levels?with-inactive=true").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            [
+                {
+                    "code": "BAS",
+                    "description": "Basic",
+                    "active": true,
+                    "required": true
+                },
+                {
+                    "code": "STD",
+                    "description": "Standard",
+                    "active": true,
+                    "required": true
+                },
+                {
+                    "code": "ENH",
+                    "description": "Enhanced",
+                    "active": true,
+                    "required": true
+                },
+                {
+                    "code": "EN2",
+                    "description": "Enhanced 2",
+                    "active": true,
+                    "required": false
+                },
+                {
+                    "code": "EN3",
+                    "description": "Enhanced 3",
+                    "active": true,
+                    "required": false
+                },
+                {
+                    "code": "ENT",
+                    "description": "Entry",
+                    "active": false,
+                    "required": false
+                }
+            ]
             """,
           )
           .withStatus(200),
