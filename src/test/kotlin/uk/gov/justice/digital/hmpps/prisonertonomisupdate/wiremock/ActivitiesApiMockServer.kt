@@ -128,9 +128,9 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetAttendance(id: Long, response: String) {
+  fun stubGetAttendanceSync(id: Long, response: String) {
     stubFor(
-      get("/attendances/$id").willReturn(
+      get("/synchronisation/attendance/$id").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
@@ -139,9 +139,9 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetAttendanceWithError(id: Long, status: Int = 500) {
+  fun stubGetAttendanceSyncWithError(id: Long, status: Int = 500) {
     stubFor(
-      get("/attendances/$id").willReturn(
+      get("/synchronisation/attendance/$id").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(

@@ -79,7 +79,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("payRates[0].incentiveLevel", equalTo("BAS")))
           .withRequestBody(matchingJsonPath("payRates[0].payBand", equalTo("1")))
           .withRequestBody(matchingJsonPath("payRates[0].rate", equalTo("1.5")))
-          .withRequestBody(matchingJsonPath("description", equalTo("SAA Maths level 1 Monday AM Houseblock 3")))
+          .withRequestBody(matchingJsonPath("description", equalTo("SAA Maths level 1")))
           .withRequestBody(matchingJsonPath("minimumIncentiveLevelCode", equalTo("BAS")))
           .withRequestBody(matchingJsonPath("programCode", equalTo("LEISURE_SOCIAL")))
           .withRequestBody(matchingJsonPath("payPerSession", equalTo("F")))

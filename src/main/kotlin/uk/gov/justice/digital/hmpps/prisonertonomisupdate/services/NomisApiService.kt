@@ -107,12 +107,12 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     scheduleId: Long,
     bookingId: Long,
     request: CreateAttendanceRequest,
-  ) =
+  ): CreateAttendanceResponse =
     webClient.post()
       .uri("/schedules/$scheduleId/booking/$bookingId/attendance")
       .bodyValue(request)
       .retrieve()
-      .awaitBodilessEntity()
+      .awaitBody()
 
   suspend fun createAppointment(request: CreateAppointmentRequest): CreateAppointmentResponse =
     webClient.post()
@@ -330,6 +330,8 @@ data class CreateAttendanceRequest(
   val paid: Boolean = false,
   val bonusPay: BigDecimal? = null,
 )
+
+data class CreateAttendanceResponse(val eventId: Long)
 
 data class CreateAppointmentRequest(
   val bookingId: Long,
