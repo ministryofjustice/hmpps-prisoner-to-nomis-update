@@ -244,11 +244,12 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubCreateAttendance(scheduleId: Long, bookingId: Long) {
+  fun stubCreateAttendance(scheduleId: Long, bookingId: Long, response: String) {
     stubFor(
       post("/schedules/$scheduleId/booking/$bookingId/attendance").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
+          .withBody(response)
           .withStatus(201),
       ),
     )

@@ -408,7 +408,7 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `should call nomis api with OAuth2 token`() = runTest {
-      NomisApiExtension.nomisApi.stubCreateAttendance(11, 22)
+      NomisApiExtension.nomisApi.stubCreateAttendance(11, 22, """{ "eventId": 1 }""")
 
       nomisApiService.createAttendance(11, 22, newAttendance())
 
@@ -420,7 +420,7 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `will post data to nomis api`() = runTest {
-      NomisApiExtension.nomisApi.stubCreateAttendance(11, 22)
+      NomisApiExtension.nomisApi.stubCreateAttendance(11, 22, """{ "eventId": 1 }""")
 
       nomisApiService.createAttendance(11, 22, newAttendance())
 
