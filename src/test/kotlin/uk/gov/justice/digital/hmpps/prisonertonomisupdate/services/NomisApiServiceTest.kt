@@ -912,6 +912,9 @@ fun newDeallocation() = EndOffenderProgramProfileRequest(
 )
 
 private fun newAttendance() = CreateAttendanceRequest(
+  scheduleDate = LocalDate.now(),
+  startTime = LocalTime.parse("08:00"),
+  endTime = LocalTime.parse("11:00"),
   eventStatusCode = "COMP",
   eventOutcomeCode = "ACCAB",
   comments = "Prisoner was too unwell to attend the activity.",

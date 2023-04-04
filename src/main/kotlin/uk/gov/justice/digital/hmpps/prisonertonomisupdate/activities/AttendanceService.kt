@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Service
 class AttendanceService(
@@ -35,6 +36,7 @@ class AttendanceService(
         attendanceSync.toNomisCourseAttendance(),
       ).also {
         telemetryMap["attendanceEventId"] = it.eventId.toString()
+        telemetryMap["nomisCourseScheduleId"] = it.courseScheduleId.toString()
       }
     }.onSuccess {
       telemetryClient.trackEvent("activity-attendance-create-success", telemetryMap, null)
@@ -56,9 +58,12 @@ class AttendanceService(
       "bookingId" to bookingId.toString(),
     )
 
-  fun AttendanceSync.toNomisCourseAttendance(): CreateAttendanceRequest {
+  private fun AttendanceSync.toNomisCourseAttendance(): CreateAttendanceRequest {
     val eventOutcome = toEventOutcome()
     return CreateAttendanceRequest(
+      scheduleDate = this.sessionDate,
+      startTime = LocalTime.parse(this.sessionStartTime),
+      endTime = LocalTime.parse(this.sessionEndTime),
       eventStatusCode = toEventStatus(),
       eventOutcomeCode = eventOutcome?.code,
       comments = comment,

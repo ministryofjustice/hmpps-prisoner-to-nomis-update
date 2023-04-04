@@ -30,6 +30,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+private const val ATTENDANCE_ID = 1L
+private const val SCHEDULE_INSTANCE_ID = 2L
+private const val ACTIVITY_SCHEDULE_ID = 3L
+private const val NOMIS_BOOKING_ID = 4L
+private const val NOMIS_PRISONER_NUMBER = "A1234BC"
+private const val NOMIS_CRS_ACTY_ID = 5L
+private const val NOMIS_CRS_SCH_ID = 6L
+private const val NOMIS_EVENT_ID = 7L
+
 class AttendanceServiceTest {
 
   private val activitiesApiService: ActivitiesApiService = mock()
@@ -53,7 +62,7 @@ class AttendanceServiceTest {
       verify(telemetryClient).trackEvent(
         eq("activity-attendance-create-failed"),
         check<MutableMap<String, String>> {
-          assertThat(it).containsExactlyInAnyOrderEntriesOf(mapOf("attendanceId" to "1"))
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(mapOf("attendanceId" to "$ATTENDANCE_ID"))
         },
         isNull(),
       )
@@ -74,10 +83,10 @@ class AttendanceServiceTest {
         check<MutableMap<String, String>> {
           assertThat(it).containsAllEntriesOf(
             mapOf(
-              "scheduleInstanceId" to "2",
-              "activityScheduleId" to "3",
-              "prisonerNumber" to "A1234AB",
-              "bookingId" to "4",
+              "scheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
+              "activityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
+              "prisonerNumber" to NOMIS_PRISONER_NUMBER,
+              "bookingId" to "$NOMIS_BOOKING_ID",
               "sessionDate" to LocalDate.now().plusDays(1).toString(),
               "sessionStartTime" to "10:00",
               "sessionEndTime" to "11:00",
@@ -98,13 +107,13 @@ class AttendanceServiceTest {
         attendanceService.createAttendance(attendanceEvent())
       }
 
-      verify(nomisApiService).createAttendance(eq(5), eq(4), any())
+      verify(nomisApiService).createAttendance(eq(NOMIS_CRS_ACTY_ID), eq(NOMIS_BOOKING_ID), any())
       verify(telemetryClient).trackEvent(
         eq("activity-attendance-create-failed"),
         check<MutableMap<String, String>> {
           assertThat(it).containsAllEntriesOf(
             mapOf(
-              "nomisCourseActivityId" to "5",
+              "nomisCourseActivityId" to "$NOMIS_CRS_ACTY_ID",
             ),
           )
         },
@@ -129,15 +138,15 @@ class AttendanceServiceTest {
         check<MutableMap<String, String>> {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
-              "attendanceId" to "1",
-              "scheduleInstanceId" to "2",
-              "activityScheduleId" to "3",
-              "prisonerNumber" to "A1234AB",
-              "bookingId" to "4",
+              "attendanceId" to "$ATTENDANCE_ID",
+              "scheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
+              "activityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
+              "prisonerNumber" to NOMIS_PRISONER_NUMBER,
+              "bookingId" to "$NOMIS_BOOKING_ID",
               "sessionDate" to LocalDate.now().plusDays(1).toString(),
               "sessionStartTime" to "10:00",
               "sessionEndTime" to "11:00",
-              "nomisCourseActivityId" to "5",
+              "nomisCourseActivityId" to "$NOMIS_CRS_ACTY_ID",
             ),
           )
         },
@@ -162,15 +171,15 @@ class AttendanceServiceTest {
         check<MutableMap<String, String>> {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
-              "attendanceId" to "1",
-              "scheduleInstanceId" to "2",
-              "activityScheduleId" to "3",
-              "prisonerNumber" to "A1234AB",
-              "bookingId" to "4",
+              "attendanceId" to "$ATTENDANCE_ID",
+              "scheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
+              "activityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
+              "prisonerNumber" to NOMIS_PRISONER_NUMBER,
+              "bookingId" to "$NOMIS_BOOKING_ID",
               "sessionDate" to LocalDate.now().plusDays(1).toString(),
               "sessionStartTime" to "10:00",
               "sessionEndTime" to "11:00",
-              "nomisCourseActivityId" to "5",
+              "nomisCourseActivityId" to "$NOMIS_CRS_ACTY_ID",
             ),
           )
         },
@@ -189,8 +198,8 @@ class AttendanceServiceTest {
       }
 
       verify(nomisApiService).createAttendance(
-        eq(5),
-        eq(4),
+        eq(NOMIS_CRS_ACTY_ID),
+        eq(NOMIS_BOOKING_ID),
         check {
           assertThat(it.eventStatusCode).isEqualTo("SCH")
           assertThat(it.eventOutcomeCode).isNull()
@@ -206,16 +215,17 @@ class AttendanceServiceTest {
         check<MutableMap<String, String>> {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
-              "attendanceId" to "1",
-              "scheduleInstanceId" to "2",
-              "activityScheduleId" to "3",
-              "prisonerNumber" to "A1234AB",
-              "bookingId" to "4",
+              "attendanceId" to "$ATTENDANCE_ID",
+              "scheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
+              "activityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
+              "prisonerNumber" to NOMIS_PRISONER_NUMBER,
+              "bookingId" to "$NOMIS_BOOKING_ID",
               "sessionDate" to LocalDate.now().plusDays(1).toString(),
               "sessionStartTime" to "10:00",
               "sessionEndTime" to "11:00",
-              "nomisCourseActivityId" to "5",
-              "attendanceEventId" to "6",
+              "nomisCourseActivityId" to "$NOMIS_CRS_ACTY_ID",
+              "attendanceEventId" to "$NOMIS_EVENT_ID",
+              "nomisCourseScheduleId" to "$NOMIS_CRS_SCH_ID",
             ),
           )
         },
@@ -225,31 +235,34 @@ class AttendanceServiceTest {
 
     private fun attendanceEvent() = AttendanceDomainEvent(
       eventType = "activities.prisoner.attendance-created",
-      additionalInformation = AttendanceAdditionalInformation(1),
+      additionalInformation = AttendanceAdditionalInformation(ATTENDANCE_ID),
       version = "1.0",
       description = "some description",
       occurredAt = LocalDateTime.now(),
     )
 
     private fun attendanceSync() = AttendanceSync(
-      attendanceId = 1,
-      scheduledInstanceId = 2,
-      activityScheduleId = 3,
+      attendanceId = ATTENDANCE_ID,
+      scheduledInstanceId = SCHEDULE_INSTANCE_ID,
+      activityScheduleId = ACTIVITY_SCHEDULE_ID,
       sessionDate = LocalDate.now().plusDays(1),
       sessionStartTime = "10:00",
       sessionEndTime = "11:00",
-      prisonerNumber = "A1234AB",
-      bookingId = 4,
+      prisonerNumber = NOMIS_PRISONER_NUMBER,
+      bookingId = NOMIS_BOOKING_ID,
       status = "WAITING",
     )
 
     private fun activityMappingDto() = ActivityMappingDto(
-      nomisCourseActivityId = 5,
-      activityScheduleId = 3,
+      nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
+      activityScheduleId = ACTIVITY_SCHEDULE_ID,
       mappingType = "ACTIVITY_CREATED",
     )
 
-    private fun createAttendanceResponse() = CreateAttendanceResponse(6)
+    private fun createAttendanceResponse() = CreateAttendanceResponse(
+      eventId = NOMIS_EVENT_ID,
+      courseScheduleId = NOMIS_CRS_SCH_ID,
+    )
   }
 
   @Nested
