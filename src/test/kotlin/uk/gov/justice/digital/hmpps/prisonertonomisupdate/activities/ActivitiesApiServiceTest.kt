@@ -63,13 +63,13 @@ internal class ActivitiesApiServiceTest {
                   "notes": "Maps to ACCAB in NOMIS"
                 },
                 "comment": "Prisoner was too unwell to attend the activity.",
-                "posted": true,
                 "recordedTime": "2022-12-30T14:03:06.365Z",
                 "recordedBy": "10/09/2023",
                 "status": "SCHEDULED",
                 "payAmount": 100,
                 "bonusAmount": 50,
-                "pieces": 0
+                "pieces": 0,
+                "attendanceHistory": []
               }
             ]
           }
@@ -250,6 +250,7 @@ internal class ActivitiesApiServiceTest {
               "attendances": [
                 {
                   "id": 123456,
+                  "scheduleInstanceId": 123456,
                   "prisonerNumber": "A1234AA",
                   "attendanceReason": {
                     "id": 123456,
@@ -266,13 +267,13 @@ internal class ActivitiesApiServiceTest {
                     "notes": "Maps to ACCAB in NOMIS"
                   },
                   "comment": "Prisoner was too unwell to attend the activity.",
-                  "posted": true,
                   "recordedTime": "2022-12-30T16:09:11.127Z",
                   "recordedBy": "10/09/2023",
                   "status": "SCHEDULED",
                   "payAmount": 100,
                   "bonusAmount": 50,
-                  "pieces": 0
+                  "pieces": 0,
+                  "attendanceHistory": []
                 }
               ]
             }
@@ -542,39 +543,27 @@ internal class ActivitiesApiServiceTest {
   }
 
   @Nested
-  inner class GetAttendance {
+  inner class GetAttendanceSync {
     @BeforeEach
     internal fun setUp() {
-      ActivitiesApiExtension.activitiesApi.stubGetAttendance(
+      ActivitiesApiExtension.activitiesApi.stubGetAttendanceSync(
         1234,
         """
           {
-            "id": 1234,
+            "attendanceId": 1234,
+            "scheduledInstanceId": 2345,
+            "activityScheduleId": 3456,
+            "sessionDate": "2023-03-23",
+            "sessionStartTime": "10:00",
+            "sessionEndTime": "11:00",
             "prisonerNumber": "A1234AA",
-            "attendanceReason": {
-              "id": 1,
-              "code": "SICK",
-              "description": "Sick",
-              "attended": true,
-              "capturePay": true,
-              "captureMoreDetail": true,
-              "captureCaseNote": true,
-              "captureIncentiveLevelWarning": false,
-              "captureOtherText": false,
-              "displayInAbsence": false,
-              "displaySequence": 1,
-              "notes": "Maps to ACCAB in NOMIS"
-            },
+            "bookingId": 4567,
+            "attendanceReasonCode": "SICK",
             "comment": "Prisoner was too unwell to attend the activity.",
-            "recordedTime": "2023-03-28T14:26:08.975Z",
-            "recordedBy": "A.JONES",
             "status": "WAITING",
             "payAmount": 100,
             "bonusAmount": 50,
-            "pieces": 0,
-            "issuePayment": true,
-            "incentiveLevelWarningIssued": true,
-            "otherAbsenceReason": "Prisoner has a valid reason to miss the activity."
+            "issuePayment": true
           }
         """.trimIndent(),
       )
@@ -582,48 +571,51 @@ internal class ActivitiesApiServiceTest {
 
     @Test
     fun `should call api with OAuth2 token`() = runTest {
-      activitiesApiService.getAttendance(1234)
+      activitiesApiService.getAttendanceSync(1234)
 
       ActivitiesApiExtension.activitiesApi.verify(
-        WireMock.getRequestedFor(WireMock.urlEqualTo("/attendances/1234"))
+        WireMock.getRequestedFor(WireMock.urlEqualTo("/synchronisation/attendance/1234"))
           .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
       )
     }
 
     @Test
     fun `get parse core data`() = runTest {
-      val attendance = activitiesApiService.getAttendance(1234)
+      val attendance = activitiesApiService.getAttendanceSync(1234)
 
-      assertThat(attendance.id).isEqualTo(1234)
-      assertThat(attendance.prisonerNumber).isEqualTo("A1234AA")
-      assertThat(attendance.attendanceReason?.code).isEqualTo("SICK")
-      assertThat(attendance.comment).isEqualTo("Prisoner was too unwell to attend the activity.")
-      assertThat(attendance.recordedTime).isEqualTo("2023-03-28T14:26:08.975")
-      assertThat(attendance.recordedBy).isEqualTo("A.JONES")
-      assertThat(attendance.status).isEqualTo("WAITING")
-      assertThat(attendance.payAmount).isEqualTo(100)
-      assertThat(attendance.bonusAmount).isEqualTo(50)
-      assertThat(attendance.pieces).isEqualTo(0)
-      assertThat(attendance.issuePayment).isEqualTo(true)
-      assertThat(attendance.incentiveLevelWarningIssued).isEqualTo(true)
-      assertThat(attendance.otherAbsenceReason).isEqualTo("Prisoner has a valid reason to miss the activity.")
+      with(attendance) {
+        assertThat(attendanceId).isEqualTo(1234)
+        assertThat(scheduledInstanceId).isEqualTo(2345)
+        assertThat(activityScheduleId).isEqualTo(3456)
+        assertThat(sessionDate).isEqualTo("2023-03-23")
+        assertThat(sessionStartTime).isEqualTo("10:00")
+        assertThat(sessionEndTime).isEqualTo("11:00")
+        assertThat(prisonerNumber).isEqualTo("A1234AA")
+        assertThat(bookingId).isEqualTo(4567)
+        assertThat(attendanceReasonCode).isEqualTo("SICK")
+        assertThat(comment).isEqualTo("Prisoner was too unwell to attend the activity.")
+        assertThat(status).isEqualTo("WAITING")
+        assertThat(payAmount).isEqualTo(100)
+        assertThat(bonusAmount).isEqualTo(50)
+        assertThat(issuePayment).isEqualTo(true)
+      }
     }
 
     @Test
     fun `when attendance is not found an exception is thrown`() = runTest {
-      ActivitiesApiExtension.activitiesApi.stubGetAttendanceWithError(1234, status = 404)
+      ActivitiesApiExtension.activitiesApi.stubGetAttendanceSyncWithError(1234, status = 404)
 
       assertThrows<NotFound> {
-        activitiesApiService.getAttendance(1234)
+        activitiesApiService.getAttendanceSync(1234)
       }
     }
 
     @Test
     fun `when any bad response is received an exception is thrown`() = runTest {
-      ActivitiesApiExtension.activitiesApi.stubGetAttendanceWithError(1234, status = 503)
+      ActivitiesApiExtension.activitiesApi.stubGetAttendanceSyncWithError(1234, status = 503)
 
       assertThrows<ServiceUnavailable> {
-        activitiesApiService.getAttendance(1234)
+        activitiesApiService.getAttendanceSync(1234)
       }
     }
   }

@@ -200,7 +200,7 @@ class ActivitiesService(
       internalLocationId = schedule.internalLocation?.id?.toLong(),
       capacity = schedule.capacity,
       payRates = activity.pay.toPayRateRequests(),
-      description = toNomisActivityDescription(activity.summary, schedule.description),
+      description = toNomisActivityDescription(activity.summary),
       minimumIncentiveLevelCode = activity.minimumIncentiveNomisCode,
       programCode = activity.category.code,
       payPerSession = activity.payPerSession.value,
@@ -209,14 +209,8 @@ class ActivitiesService(
     )
   }
 
-  private fun toNomisActivityDescription(activityDescription: String, scheduleDescription: String): String {
-    var description = "SAA $activityDescription"
-      .let { it.substring(0, min(it.length, 40)).trim() }
-    if (description.length < 39) {
-      description += " ${scheduleDescription.let { it.substring(0, min(it.length, 39 - description.length)) }}"
-    }
-    return description
-  }
+  private fun toNomisActivityDescription(activityDescription: String): String =
+    "SAA " + activityDescription.substring(0, min(36, activityDescription.length))
 
   private fun List<ActivityScheduleSlot>.toScheduleRuleRequests(): List<ScheduleRuleRequest> =
     map { slot ->

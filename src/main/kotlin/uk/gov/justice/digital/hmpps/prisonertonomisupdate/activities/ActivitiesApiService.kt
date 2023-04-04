@@ -7,7 +7,7 @@ import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Attendance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
 
 @Service
 class ActivitiesApiService(@Qualifier("activitiesApiWebClient") private val webClient: WebClient) {
@@ -33,9 +33,9 @@ class ActivitiesApiService(@Qualifier("activitiesApiWebClient") private val webC
       .awaitBody()
   }
 
-  suspend fun getAttendance(attendanceId: Long): Attendance {
+  suspend fun getAttendanceSync(attendanceId: Long): AttendanceSync {
     return webClient.get()
-      .uri("/attendances/$attendanceId")
+      .uri("/synchronisation/attendance/$attendanceId")
       .retrieve()
       .awaitBody()
   }
