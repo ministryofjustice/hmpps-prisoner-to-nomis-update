@@ -324,9 +324,9 @@ data class EndOffenderProgramProfileRequest(
 data class CreateAttendanceRequest(
   @JsonFormat(pattern = "yyyy-MM-dd")
   val scheduleDate: LocalDate,
-  @JsonFormat(pattern = "hh:mm")
+  @JsonFormat(pattern = "HH:mm")
   val startTime: LocalTime,
-  @JsonFormat(pattern = "hh:mm")
+  @JsonFormat(pattern = "HH:mm")
   val endTime: LocalTime,
   val eventStatusCode: String,
   val eventOutcomeCode: String? = null,

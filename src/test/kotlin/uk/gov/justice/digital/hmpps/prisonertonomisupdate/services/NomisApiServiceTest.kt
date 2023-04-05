@@ -426,6 +426,9 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/activities/11/booking/22/attendance"))
+          .withRequestBody(matchingJsonPath("$.scheduleDate", equalTo("${LocalDate.now()}")))
+          .withRequestBody(matchingJsonPath("$.startTime", equalTo("11:00")))
+          .withRequestBody(matchingJsonPath("$.endTime", equalTo("13:00")))
           .withRequestBody(matchingJsonPath("$.eventStatusCode", equalTo("COMP")))
           .withRequestBody(matchingJsonPath("$.eventOutcomeCode", equalTo("ACCAB")))
           .withRequestBody(matchingJsonPath("$.comments", equalTo("Prisoner was too unwell to attend the activity.")))
@@ -913,8 +916,8 @@ fun newDeallocation() = EndOffenderProgramProfileRequest(
 
 private fun newAttendance() = CreateAttendanceRequest(
   scheduleDate = LocalDate.now(),
-  startTime = LocalTime.parse("08:00"),
-  endTime = LocalTime.parse("11:00"),
+  startTime = LocalTime.parse("11:00"),
+  endTime = LocalTime.parse("13:00"),
   eventStatusCode = "COMP",
   eventOutcomeCode = "ACCAB",
   comments = "Prisoner was too unwell to attend the activity.",
