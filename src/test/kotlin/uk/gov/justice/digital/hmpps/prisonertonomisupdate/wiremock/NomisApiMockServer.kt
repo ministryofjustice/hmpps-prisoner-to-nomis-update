@@ -255,9 +255,9 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubCreateAttendanceWithError(scheduleId: Long, bookingId: Long, status: Int = 500) {
+  fun stubCreateAttendanceWithError(courseActivityId: Long, bookingId: Long, status: Int = 500) {
     stubFor(
-      post("/schedules/$scheduleId/booking/$bookingId/attendance").willReturn(
+      post("/activities/$courseActivityId/booking/$bookingId/attendance").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)

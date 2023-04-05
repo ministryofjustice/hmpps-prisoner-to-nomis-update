@@ -413,7 +413,7 @@ internal class NomisApiServiceTest {
       nomisApiService.createAttendance(11, 22, newAttendance())
 
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/schedules/11/booking/22/attendance"))
+        postRequestedFor(urlEqualTo("/activities/11/booking/22/attendance"))
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
@@ -425,7 +425,7 @@ internal class NomisApiServiceTest {
       nomisApiService.createAttendance(11, 22, newAttendance())
 
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/schedules/11/booking/22/attendance"))
+        postRequestedFor(urlEqualTo("/activities/11/booking/22/attendance"))
           .withRequestBody(matchingJsonPath("$.eventStatusCode", equalTo("COMP")))
           .withRequestBody(matchingJsonPath("$.eventOutcomeCode", equalTo("ACCAB")))
           .withRequestBody(matchingJsonPath("$.comments", equalTo("Prisoner was too unwell to attend the activity.")))
