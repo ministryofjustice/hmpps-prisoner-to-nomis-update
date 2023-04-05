@@ -322,6 +322,9 @@ data class EndOffenderProgramProfileRequest(
 )
 
 data class CreateAttendanceRequest(
+  val scheduleDate: LocalDate,
+  val startTime: LocalTime,
+  val endTime: LocalTime,
   val eventStatusCode: String,
   val eventOutcomeCode: String? = null,
   val comments: String? = null,
@@ -331,7 +334,10 @@ data class CreateAttendanceRequest(
   val bonusPay: BigDecimal? = null,
 )
 
-data class CreateAttendanceResponse(val eventId: Long)
+data class CreateAttendanceResponse(
+  val eventId: Long,
+  val courseScheduleId: Long,
+)
 
 data class CreateAppointmentRequest(
   val bookingId: Long,
