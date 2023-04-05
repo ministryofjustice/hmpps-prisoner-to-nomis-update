@@ -103,6 +103,15 @@ fun allocationMessagePayload(eventType: String, scheduleId: Long, allocationId: 
     }
   """.trimMargin()
 
+fun attendanceMessagePayload(eventType: String, attendanceId: Long) =
+  """{"eventType":"$eventType",
+    "version": "1.0", "description": "description", "occurredAt": "2021-03-05T11:23:56.031Z",
+    "additionalInformation": {
+        "attendanceId"  : "$attendanceId"
+      }
+    }
+  """.trimMargin()
+
 fun objectMapper(): ObjectMapper {
   return ObjectMapper()
     .setSerializationInclusion(JsonInclude.Include.NON_NULL)

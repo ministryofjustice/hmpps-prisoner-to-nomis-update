@@ -104,12 +104,12 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .awaitBody()
 
   suspend fun createAttendance(
-    scheduleId: Long,
+    courseActivityId: Long,
     bookingId: Long,
     request: CreateAttendanceRequest,
   ): CreateAttendanceResponse =
     webClient.post()
-      .uri("/schedules/$scheduleId/booking/$bookingId/attendance")
+      .uri("/activities/$courseActivityId/booking/$bookingId/attendance")
       .bodyValue(request)
       .retrieve()
       .awaitBody()
@@ -322,8 +322,11 @@ data class EndOffenderProgramProfileRequest(
 )
 
 data class CreateAttendanceRequest(
+  @JsonFormat(pattern = "yyyy-MM-dd")
   val scheduleDate: LocalDate,
+  @JsonFormat(pattern = "hh:mm")
   val startTime: LocalTime,
+  @JsonFormat(pattern = "hh:mm")
   val endTime: LocalTime,
   val eventStatusCode: String,
   val eventOutcomeCode: String? = null,

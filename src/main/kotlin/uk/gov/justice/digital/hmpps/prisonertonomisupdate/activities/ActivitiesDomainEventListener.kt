@@ -14,6 +14,7 @@ import java.util.concurrent.CompletableFuture
 @Service
 class ActivitiesDomainEventListener(
   private val activitiesService: ActivitiesService,
+  private val attendanceService: AttendanceService,
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
 ) : DomainEventListener(
@@ -35,6 +36,7 @@ class ActivitiesDomainEventListener(
       "activities.scheduled-instances.amended" -> activitiesService.updateScheduleInstances(message.fromJson())
       "activities.prisoner.allocated" -> activitiesService.createAllocation(message.fromJson())
       "activities.prisoner.deallocated" -> activitiesService.deallocate(message.fromJson())
+      "activities.prisoner.attendance-created" -> attendanceService.createAttendance(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
