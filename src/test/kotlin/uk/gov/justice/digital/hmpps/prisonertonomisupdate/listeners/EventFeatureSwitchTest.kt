@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.TestPropertySource
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 
 @TestPropertySource(
   properties = [
@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.Integratio
     "feature.event.prison-visit.revised=false",
   ],
 )
-internal class EventFeatureSwitchTest : IntegrationTestBase() {
+internal class EventFeatureSwitchTest : SqsIntegrationTestBase() {
 
   @Autowired
   private lateinit var featureSwitch: EventFeatureSwitch

@@ -31,6 +31,7 @@ dependencies {
   testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.0")
   testImplementation("org.mockito:mockito-inline:5.2.0")
   testImplementation("org.testcontainers:localstack:1.17.6")
+  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.440")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
