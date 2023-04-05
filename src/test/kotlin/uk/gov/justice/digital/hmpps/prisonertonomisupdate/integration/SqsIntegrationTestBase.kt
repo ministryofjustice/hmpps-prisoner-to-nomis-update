@@ -66,9 +66,9 @@ abstract class SqsIntegrationTestBase {
   internal val activityQueue by lazy { hmppsQueueService.findByQueueId("activity") as HmppsQueue }
 
   internal val awsSqsActivityClient by lazy { activityQueue.sqsClient }
-  internal val awsSqsActivityDlqClient by lazy { activityQueue.sqsDlqClient }
+  internal val awsSqsActivityDlqClient by lazy { activityQueue.sqsDlqClient as SqsAsyncClient }
   internal val activityQueueUrl by lazy { activityQueue.queueUrl }
-  internal val activityDlqUrl by lazy { activityQueue.dlqUrl }
+  internal val activityDlqUrl by lazy { activityQueue.dlqUrl as String }
 
   internal val appointmentQueue by lazy { hmppsQueueService.findByQueueId("appointment") as HmppsQueue }
 
