@@ -38,10 +38,9 @@ fun List<IncentiveLevel>.toCodeList(): List<String> {
 
 data class IncentiveLevel(
   val code: String,
-  val description: String,
+  val name: String,
   val active: Boolean = true,
   val required: Boolean = false,
-  // TODO no sequence level exposed on incentive level api - do need on create - or will it default?
 )
 
 data class IepDetail(
