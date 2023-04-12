@@ -15,7 +15,7 @@ class IncentivesReferenceService(
   private fun IncentiveLevel.toNomisIncentiveLevel(): ReferenceCode = ReferenceCode(
     code = code,
     domain = "IEP_LEVEL",
-    description = description,
+    description = name,
     active = active,
   )
 
@@ -41,7 +41,7 @@ class IncentivesReferenceService(
       eventName,
       mutableMapOf(
         "code" to incentiveLevel.code,
-        "description" to incentiveLevel.description,
+        "description" to incentiveLevel.name,
         "active" to incentiveLevel.active.toString(),
       ),
       null,

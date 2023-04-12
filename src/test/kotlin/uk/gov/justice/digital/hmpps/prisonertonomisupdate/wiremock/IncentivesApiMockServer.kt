@@ -81,7 +81,7 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
             """
             {
               "code": "$incentiveCode",
-              "description": "Description for $incentiveCode",
+              "name": "Description for $incentiveCode",
               "active": true,
               "required": true
             }
@@ -102,37 +102,37 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
             [
                 {
                     "code": "BAS",
-                    "description": "Basic",
+                    "name": "Basic",
                     "active": true,
                     "required": true
                 },
                 {
                     "code": "STD",
-                    "description": "Standard",
+                    "name": "Standard",
                     "active": true,
                     "required": true
                 },
                 {
                     "code": "ENH",
-                    "description": "Enhanced",
+                    "name": "Enhanced",
                     "active": true,
                     "required": true
                 },
                 {
                     "code": "EN2",
-                    "description": "Enhanced 2",
+                    "name": "Enhanced 2",
                     "active": true,
                     "required": false
                 },
                 {
                     "code": "EN3",
-                    "description": "Enhanced 3",
+                    "name": "Enhanced 3",
                     "active": true,
                     "required": false
                 },
                 {
                     "code": "ENT",
-                    "description": "Entry",
+                    "name": "Entry",
                     "active": false,
                     "required": false
                 }
