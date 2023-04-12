@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.GetAttendanceStatusRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpsertAttendanceRequest
 import java.math.BigDecimal
@@ -30,10 +31,16 @@ class AttendanceService(
       val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(attendanceSync.activityScheduleId).nomisCourseActivityId
         .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
 
+      val nomisAttendanceStatus = if (attendanceSync.status == "LOCKED") {
+        getNomisAttendanceStatus(nomisCourseActivityId, attendanceSync)?.eventStatus
+      } else {
+        null
+      }
+
       nomisApiService.upsertAttendance(
         nomisCourseActivityId,
         attendanceSync.bookingId,
-        attendanceSync.toUpsertAttendanceRequest(),
+        attendanceSync.toUpsertAttendanceRequest(nomisAttendanceStatus),
       ).also {
         telemetryMap["attendanceEventId"] = it.eventId.toString()
         telemetryMap["nomisCourseScheduleId"] = it.courseScheduleId.toString()
@@ -47,6 +54,20 @@ class AttendanceService(
     }
   }
 
+  private suspend fun getNomisAttendanceStatus(
+    nomisCourseActivityId: Long,
+    attendanceSync: AttendanceSync,
+  ) =
+    nomisApiService.getAttendanceStatus(
+      nomisCourseActivityId,
+      attendanceSync.bookingId,
+      GetAttendanceStatusRequest(
+        attendanceSync.sessionDate,
+        LocalTime.parse(attendanceSync.sessionStartTime),
+        LocalTime.parse(attendanceSync.sessionEndTime),
+      ),
+    )
+
   private fun AttendanceSync.toTelemetry(): Map<String, String> =
     mapOf(
       "attendanceId" to attendanceId.toString(),
@@ -59,13 +80,13 @@ class AttendanceService(
       "bookingId" to bookingId.toString(),
     )
 
-  private fun AttendanceSync.toUpsertAttendanceRequest(): UpsertAttendanceRequest {
+  private suspend fun AttendanceSync.toUpsertAttendanceRequest(nomisAttendanceStatus: String?): UpsertAttendanceRequest {
     val eventOutcome = toEventOutcome()
     return UpsertAttendanceRequest(
       scheduleDate = this.sessionDate,
       startTime = LocalTime.parse(this.sessionStartTime),
       endTime = LocalTime.parse(this.sessionEndTime),
-      eventStatusCode = toEventStatus(),
+      eventStatusCode = toEventStatus(nomisAttendanceStatus),
       eventOutcomeCode = eventOutcome?.code,
       comments = comment,
       unexcusedAbsence = eventOutcome?.unexcusedAbsence ?: false,
@@ -114,7 +135,7 @@ fun AttendanceSync.toEventOutcome() = attendanceReasonCode?.let {
   }
 }
 
-fun AttendanceSync.toEventStatus() = status.let {
+fun AttendanceSync.toEventStatus(nomisAttendanceStatus: String?): String = status.let {
   when {
     it == "WAITING" -> "SCH"
 
@@ -122,8 +143,11 @@ fun AttendanceSync.toEventStatus() = status.let {
 
     it == "COMPLETED" -> "COMP"
 
-    // TODO SDIT-688 For updates, if the old Nomis event status is COMP then it does not change if now LOCKED
-    it == "LOCKED" -> "EXP"
+    it == "LOCKED" -> when (nomisAttendanceStatus) {
+      "SCH" -> "EXP"
+      null -> "EXP"
+      else -> nomisAttendanceStatus
+    }
 
     else -> throw InvalidAttendanceStatusException("Unable to handle attendance status code=$it and attendance reason code=$attendanceReasonCode")
   }
