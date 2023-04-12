@@ -25,8 +25,10 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
 import org.springframework.web.reactive.function.client.WebClientResponseException.Forbidden
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAttendanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpsertAttendanceResponse
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -49,13 +51,13 @@ class AttendanceServiceTest {
     AttendanceService(activitiesApiService, nomisApiService, mappingService, telemetryClient)
 
   @Nested
-  inner class CreateAttendance {
+  inner class UpsertAttendance {
     @Test
     fun `should throw and raise telemetry if fails to retrieve activity's attendance details`() = runTest {
       whenever(activitiesApiService.getAttendanceSync(anyLong())).thenThrow(BadGateway::class.java)
 
       assertThrows<BadGateway> {
-        attendanceService.createAttendance(attendanceEvent())
+        attendanceService.upsertAttendance(attendanceEvent())
       }
 
       verify(activitiesApiService).getAttendanceSync(1)
@@ -70,11 +72,11 @@ class AttendanceServiceTest {
 
     @Test
     fun `should throw and raise telemetry if fails to retrieve mapping details`() = runTest {
-      whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSync())
+      whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSyncWaiting())
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenThrow(Forbidden::class.java)
 
       assertThrows<Forbidden> {
-        attendanceService.createAttendance(attendanceEvent())
+        attendanceService.upsertAttendance(attendanceEvent())
       }
 
       verify(mappingService).getMappingGivenActivityScheduleId(3)
@@ -98,16 +100,16 @@ class AttendanceServiceTest {
     }
 
     @Test
-    fun `should throw and raise telemetry if fails to create attendance in Nomis`() = runTest {
-      whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSync())
+    fun `should throw and raise telemetry if fails to upsert attendance in Nomis`() = runTest {
+      whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSyncWaiting())
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(activityMappingDto())
-      whenever(nomisApiService.createAttendance(anyLong(), anyLong(), any())).thenThrow(BadRequest::class.java)
+      whenever(nomisApiService.upsertAttendance(anyLong(), anyLong(), any())).thenThrow(BadRequest::class.java)
 
       assertThrows<BadRequest> {
-        attendanceService.createAttendance(attendanceEvent())
+        attendanceService.upsertAttendance(attendanceEvent())
       }
 
-      verify(nomisApiService).createAttendance(eq(NOMIS_CRS_ACTY_ID), eq(NOMIS_BOOKING_ID), any())
+      verify(nomisApiService).upsertAttendance(eq(NOMIS_CRS_ACTY_ID), eq(NOMIS_BOOKING_ID), any())
       verify(telemetryClient).trackEvent(
         eq("activity-attendance-create-failed"),
         check<MutableMap<String, String>> {
@@ -123,11 +125,11 @@ class AttendanceServiceTest {
 
     @Test
     fun `should throw and raise telemetry if fails to map event status`() = runTest {
-      whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSync().copy(status = "INVALID"))
+      whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSyncWaiting().copy(status = "INVALID"))
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(activityMappingDto())
 
       assertThrows<InvalidAttendanceStatusException> {
-        attendanceService.createAttendance(attendanceEvent())
+        attendanceService.upsertAttendance(attendanceEvent())
       }.also {
         assertThat(it.message).contains("INVALID")
       }
@@ -156,11 +158,11 @@ class AttendanceServiceTest {
 
     @Test
     fun `should throw and raise telemetry if fails to map event outcome`() = runTest {
-      whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSync().copy(attendanceReasonCode = "INVALID"))
+      whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSyncWaiting().copy(attendanceReasonCode = "INVALID"))
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(activityMappingDto())
 
       assertThrows<InvalidAttendanceReasonException> {
-        attendanceService.createAttendance(attendanceEvent())
+        attendanceService.upsertAttendance(attendanceEvent())
       }.also {
         assertThat(it.message).contains("INVALID")
       }
@@ -188,16 +190,16 @@ class AttendanceServiceTest {
     }
 
     @Test
-    fun `should create attendance in Nomis and raise telemetry`() = runTest {
-      whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSync())
+    fun `should create attendance in Nomis and raise telemetry for create request`() = runTest {
+      whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSyncWaiting())
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(activityMappingDto())
-      whenever(nomisApiService.createAttendance(anyLong(), anyLong(), any())).thenReturn(createAttendanceResponse())
+      whenever(nomisApiService.upsertAttendance(anyLong(), anyLong(), any())).thenReturn(upsertAttendanceResponse())
 
       assertDoesNotThrow {
-        attendanceService.createAttendance(attendanceEvent())
+        attendanceService.upsertAttendance(attendanceEvent())
       }
 
-      verify(nomisApiService).createAttendance(
+      verify(nomisApiService).upsertAttendance(
         eq(NOMIS_CRS_ACTY_ID),
         eq(NOMIS_BOOKING_ID),
         check {
@@ -226,6 +228,7 @@ class AttendanceServiceTest {
               "nomisCourseActivityId" to "$NOMIS_CRS_ACTY_ID",
               "attendanceEventId" to "$NOMIS_EVENT_ID",
               "nomisCourseScheduleId" to "$NOMIS_CRS_SCH_ID",
+              "created" to "true",
             ),
           )
         },
@@ -233,15 +236,62 @@ class AttendanceServiceTest {
       )
     }
 
-    private fun attendanceEvent() = AttendanceDomainEvent(
-      eventType = "activities.prisoner.attendance-created",
+    @Test
+    fun `should update attendance in Nomis and raise telemetry for update request`() = runTest {
+      whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSyncAttended())
+      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(activityMappingDto())
+      whenever(nomisApiService.upsertAttendance(anyLong(), anyLong(), any())).thenReturn(upsertAttendanceResponse(created = false))
+
+      assertDoesNotThrow {
+        attendanceService.upsertAttendance(attendanceEvent("activities.prisoner.attendance-amended"))
+      }
+
+      verify(nomisApiService).upsertAttendance(
+        eq(NOMIS_CRS_ACTY_ID),
+        eq(NOMIS_BOOKING_ID),
+        check {
+          assertThat(it.eventStatusCode).isEqualTo("COMP")
+          assertThat(it.eventOutcomeCode).isEqualTo("ATT")
+          assertThat(it.comments).isEqualTo("Attended")
+          assertThat(it.unexcusedAbsence).isFalse()
+          assertThat(it.authorisedAbsence).isFalse()
+          assertThat(it.paid).isTrue()
+          assertThat(it.bonusPay).isEqualTo(BigDecimal(100).setScale(3, RoundingMode.HALF_UP))
+        },
+      )
+      verify(telemetryClient).trackEvent(
+        eq("activity-attendance-update-success"),
+        check<MutableMap<String, String>> {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "attendanceId" to "$ATTENDANCE_ID",
+              "scheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
+              "activityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
+              "prisonerNumber" to NOMIS_PRISONER_NUMBER,
+              "bookingId" to "$NOMIS_BOOKING_ID",
+              "sessionDate" to LocalDate.now().plusDays(1).toString(),
+              "sessionStartTime" to "10:00",
+              "sessionEndTime" to "11:00",
+              "nomisCourseActivityId" to "$NOMIS_CRS_ACTY_ID",
+              "attendanceEventId" to "$NOMIS_EVENT_ID",
+              "nomisCourseScheduleId" to "$NOMIS_CRS_SCH_ID",
+              "created" to "false",
+            ),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    private fun attendanceEvent(eventType: String = "activities.prisoner.attendance-created") = AttendanceDomainEvent(
+      eventType = eventType,
       additionalInformation = AttendanceAdditionalInformation(ATTENDANCE_ID),
       version = "1.0",
       description = "some description",
       occurredAt = LocalDateTime.now(),
     )
 
-    private fun attendanceSync() = AttendanceSync(
+    private fun attendanceSyncWaiting() = AttendanceSync(
       attendanceId = ATTENDANCE_ID,
       scheduledInstanceId = SCHEDULE_INSTANCE_ID,
       activityScheduleId = ACTIVITY_SCHEDULE_ID,
@@ -253,15 +303,32 @@ class AttendanceServiceTest {
       status = "WAITING",
     )
 
+    private fun attendanceSyncAttended() = AttendanceSync(
+      attendanceId = ATTENDANCE_ID,
+      scheduledInstanceId = SCHEDULE_INSTANCE_ID,
+      activityScheduleId = ACTIVITY_SCHEDULE_ID,
+      sessionDate = LocalDate.now().plusDays(1),
+      sessionStartTime = "10:00",
+      sessionEndTime = "11:00",
+      prisonerNumber = NOMIS_PRISONER_NUMBER,
+      bookingId = NOMIS_BOOKING_ID,
+      status = "COMPLETED",
+      attendanceReasonCode = "ATTENDED",
+      comment = "Attended",
+      issuePayment = true,
+      bonusAmount = 100,
+    )
+
     private fun activityMappingDto() = ActivityMappingDto(
       nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
       activityScheduleId = ACTIVITY_SCHEDULE_ID,
       mappingType = "ACTIVITY_CREATED",
     )
 
-    private fun createAttendanceResponse() = CreateAttendanceResponse(
+    private fun upsertAttendanceResponse(created: Boolean = true) = UpsertAttendanceResponse(
       eventId = NOMIS_EVENT_ID,
       courseScheduleId = NOMIS_CRS_SCH_ID,
+      created = created,
     )
   }
 

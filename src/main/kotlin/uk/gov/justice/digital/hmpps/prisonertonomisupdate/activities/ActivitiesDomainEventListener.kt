@@ -36,7 +36,8 @@ class ActivitiesDomainEventListener(
       "activities.scheduled-instances.amended" -> activitiesService.updateScheduleInstances(message.fromJson())
       "activities.prisoner.allocated" -> activitiesService.createAllocation(message.fromJson())
       "activities.prisoner.deallocated" -> activitiesService.deallocate(message.fromJson())
-      "activities.prisoner.attendance-created" -> attendanceService.createAttendance(message.fromJson())
+      "activities.prisoner.attendance-created" -> attendanceService.upsertAttendance(message.fromJson())
+      "activities.prisoner.attendance-amended" -> attendanceService.upsertAttendance(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }

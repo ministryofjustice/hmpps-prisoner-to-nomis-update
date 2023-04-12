@@ -10,6 +10,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -404,13 +405,20 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
-  inner class CreateAttendance {
+  inner class UpsertAttendance {
+
+    val validResponse = """{
+        "eventId": 1,
+        "courseScheduleId": 2,
+        "created": true
+      }
+    """.trimMargin()
 
     @Test
     fun `should call nomis api with OAuth2 token`() = runTest {
-      NomisApiExtension.nomisApi.stubCreateAttendance(11, 22, """{ "eventId": 1 }""")
+      NomisApiExtension.nomisApi.stubUpsertAttendance(11, 22, validResponse)
 
-      nomisApiService.createAttendance(11, 22, newAttendance())
+      nomisApiService.upsertAttendance(11, 22, newAttendance())
 
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/activities/11/booking/22/attendance"))
@@ -420,9 +428,9 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `will post data to nomis api`() = runTest {
-      NomisApiExtension.nomisApi.stubCreateAttendance(11, 22, """{ "eventId": 1 }""")
+      NomisApiExtension.nomisApi.stubUpsertAttendance(11, 22, validResponse)
 
-      nomisApiService.createAttendance(11, 22, newAttendance())
+      nomisApiService.upsertAttendance(11, 22, newAttendance())
 
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/activities/11/booking/22/attendance"))
@@ -439,11 +447,24 @@ internal class NomisApiServiceTest {
     }
 
     @Test
+    fun `will parse the response`() = runTest {
+      NomisApiExtension.nomisApi.stubUpsertAttendance(11, 22, validResponse)
+
+      val response = nomisApiService.upsertAttendance(11, 22, newAttendance())
+
+      with(response) {
+        assertThat(eventId).isEqualTo(1)
+        assertThat(courseScheduleId).isEqualTo(2)
+        assertThat(created).isTrue()
+      }
+    }
+
+    @Test
     fun `when any error response is received an exception is thrown`() = runTest {
-      NomisApiExtension.nomisApi.stubCreateAttendanceWithError(11, 22, 400)
+      NomisApiExtension.nomisApi.stubUpsertAttendanceWithError(11, 22, 400)
 
       assertThrows<BadRequest> {
-        nomisApiService.createAttendance(11, 22, newAttendance())
+        nomisApiService.upsertAttendance(11, 22, newAttendance())
       }
     }
   }
@@ -914,7 +935,7 @@ fun newDeallocation() = EndOffenderProgramProfileRequest(
   endReason = "REASON",
 )
 
-private fun newAttendance() = CreateAttendanceRequest(
+private fun newAttendance() = UpsertAttendanceRequest(
   scheduleDate = LocalDate.now(),
   startTime = LocalTime.parse("11:00"),
   endTime = LocalTime.parse("13:00"),
