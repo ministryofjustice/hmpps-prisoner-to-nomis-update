@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAttendanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpsertAttendanceRequest
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDateTime
@@ -18,9 +18,10 @@ class AttendanceService(
   private val telemetryClient: TelemetryClient,
 ) {
 
-  suspend fun createAttendance(attendanceEvent: AttendanceDomainEvent) {
+  suspend fun upsertAttendance(attendanceEvent: AttendanceDomainEvent) {
     val attendanceId = attendanceEvent.additionalInformation.attendanceId
     val telemetryMap = mutableMapOf("attendanceId" to attendanceId.toString())
+    val upsertType = if (attendanceEvent.eventType.contains("created")) "create" else "update"
 
     runCatching {
       val attendanceSync = activitiesApiService.getAttendanceSync(attendanceId)
@@ -29,19 +30,19 @@ class AttendanceService(
       val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(attendanceSync.activityScheduleId).nomisCourseActivityId
         .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
 
-      // TODO SDIT-688 If this call responds with a 409=conflict (i.e. attendance already exists) can/should we treat this as an update instead?
-      nomisApiService.createAttendance(
+      nomisApiService.upsertAttendance(
         nomisCourseActivityId,
         attendanceSync.bookingId,
-        attendanceSync.toNomisCourseAttendance(),
+        attendanceSync.toUpsertAttendanceRequest(),
       ).also {
         telemetryMap["attendanceEventId"] = it.eventId.toString()
         telemetryMap["nomisCourseScheduleId"] = it.courseScheduleId.toString()
+        telemetryMap["created"] = it.created.toString()
       }
     }.onSuccess {
-      telemetryClient.trackEvent("activity-attendance-create-success", telemetryMap, null)
+      telemetryClient.trackEvent("activity-attendance-$upsertType-success", telemetryMap, null)
     }.onFailure { e ->
-      telemetryClient.trackEvent("activity-attendance-create-failed", telemetryMap, null)
+      telemetryClient.trackEvent("activity-attendance-$upsertType-failed", telemetryMap, null)
       throw e
     }
   }
@@ -58,9 +59,9 @@ class AttendanceService(
       "bookingId" to bookingId.toString(),
     )
 
-  private fun AttendanceSync.toNomisCourseAttendance(): CreateAttendanceRequest {
+  private fun AttendanceSync.toUpsertAttendanceRequest(): UpsertAttendanceRequest {
     val eventOutcome = toEventOutcome()
-    return CreateAttendanceRequest(
+    return UpsertAttendanceRequest(
       scheduleDate = this.sessionDate,
       startTime = LocalTime.parse(this.sessionStartTime),
       endTime = LocalTime.parse(this.sessionEndTime),

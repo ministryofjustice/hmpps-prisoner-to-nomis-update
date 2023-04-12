@@ -428,12 +428,12 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
-  inner class CreateAttendance {
+  inner class UpsertAttendance {
     @Test
     fun `will consume a create attendance message`() {
       activitiesApi.stubGetAttendanceSync(ATTENDANCE_ID, buildGetAttendanceSyncResponse())
       mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildMappingDtoResponse())
-      nomisApi.stubCreateAttendance(NOMIS_CRS_ACTY_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
+      nomisApi.stubUpsertAttendance(NOMIS_CRS_ACTY_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
 
       awsSnsClient.publish(
         PublishRequest.builder().topicArn(topicArn)
@@ -457,6 +457,33 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("unexcusedAbsence", equalTo("false")))
           .withRequestBody(matchingJsonPath("authorisedAbsence", equalTo("false")))
           .withRequestBody(matchingJsonPath("paid", equalTo("false"))),
+      )
+    }
+
+    @Test
+    fun `will consume an amend attendance message`() {
+      activitiesApi.stubGetAttendanceSync(ATTENDANCE_ID, buildGetAttendanceSyncResponse())
+      mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildMappingDtoResponse())
+      nomisApi.stubUpsertAttendance(NOMIS_CRS_ACTY_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
+
+      awsSnsClient.publish(
+        PublishRequest.builder().topicArn(topicArn)
+          .message(attendanceMessagePayload("activities.prisoner.attendance-amended", ATTENDANCE_ID))
+          .messageAttributes(
+            mapOf(
+              "eventType" to MessageAttributeValue.builder().dataType("String")
+                .stringValue("activities.prisoner.attendance-amended").build(),
+            ),
+          ).build(),
+      ).get()
+
+      await untilCallTo { activitiesApi.getCountFor("/synchronisation/attendance/$ATTENDANCE_ID") } matches { it == 1 }
+      await untilCallTo { nomisApi.postCountFor("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance") } matches { it == 1 }
+      nomisApi.verify(
+        postRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance"))
+          .withRequestBody(matchingJsonPath("scheduleDate", equalTo(LocalDate.now().plusDays(1).toString())))
+          .withRequestBody(matchingJsonPath("startTime", equalTo("10:00")))
+          .withRequestBody(matchingJsonPath("endTime", equalTo("11:00"))),
       )
     }
 
