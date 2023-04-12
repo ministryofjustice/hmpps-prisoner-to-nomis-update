@@ -39,9 +39,9 @@ class IncentiveReferenceToNomisIntTest : SqsIntegrationTestBase() {
 
     await untilCallTo { awsSqsIncentiveClient.countMessagesOnQueue(incentiveQueueUrl).get() } matches { it == 0 }
     await untilCallTo { incentivesApi.getCountFor("/incentive/levels/STD?with-inactive=true") } matches { it == 1 }
-    await untilCallTo { nomisApi.postCountFor("/reference-domains/domains/IEP_LEVEL/codes") } matches { it == 1 }
+    await untilCallTo { nomisApi.postCountFor("/incentives/reference-codes") } matches { it == 1 }
     nomisApi.verify(
-      WireMock.postRequestedFor(WireMock.urlEqualTo("/reference-domains/domains/IEP_LEVEL/codes"))
+      WireMock.postRequestedFor(WireMock.urlEqualTo("/incentives/reference-codes"))
         .withRequestBody(WireMock.matchingJsonPath("code", WireMock.equalTo("STD")))
         .withRequestBody(WireMock.matchingJsonPath("description", WireMock.equalTo("Description for STD"))),
     )
@@ -75,9 +75,9 @@ class IncentiveReferenceToNomisIntTest : SqsIntegrationTestBase() {
 
     await untilCallTo { awsSqsIncentiveClient.countMessagesOnQueue(incentiveQueueUrl).get() } matches { it == 0 }
     await untilCallTo { incentivesApi.getCountFor("/incentive/levels/STD?with-inactive=true") } matches { it == 1 }
-    await untilCallTo { nomisApi.putCountFor("/reference-domains/domains/IEP_LEVEL/codes/STD") } matches { it == 1 }
+    await untilCallTo { nomisApi.putCountFor("/incentives/reference-codes/STD") } matches { it == 1 }
     nomisApi.verify(
-      WireMock.putRequestedFor(WireMock.urlEqualTo("/reference-domains/domains/IEP_LEVEL/codes/STD"))
+      WireMock.putRequestedFor(WireMock.urlEqualTo("/incentives/reference-codes/STD"))
         .withRequestBody(WireMock.matchingJsonPath("code", WireMock.equalTo("STD")))
         .withRequestBody(WireMock.matchingJsonPath("description", WireMock.equalTo("Description for STD"))),
     )
@@ -110,9 +110,9 @@ class IncentiveReferenceToNomisIntTest : SqsIntegrationTestBase() {
 
     await untilCallTo { awsSqsIncentiveClient.countMessagesOnQueue(incentiveQueueUrl).get() } matches { it == 0 }
     await untilCallTo { incentivesApi.getCountFor("/incentive/levels?with-inactive=true") } matches { it == 1 }
-    await untilCallTo { nomisApi.postCountFor("/reference-domains/iep-reorder") } matches { it == 1 }
+    await untilCallTo { nomisApi.postCountFor("/incentives/reference-codes/reorder") } matches { it == 1 }
     nomisApi.verify(
-      WireMock.postRequestedFor(WireMock.urlEqualTo("/reference-domains/iep-reorder"))
+      WireMock.postRequestedFor(WireMock.urlEqualTo("/incentives/reference-codes/reorder"))
         .withRequestBody(WireMock.equalToJson("[\"BAS\",\"STD\",\"ENH\",\"EN2\",\"EN3\",\"ENT\"]")),
     )
     verify(telemetryClient).trackEvent(

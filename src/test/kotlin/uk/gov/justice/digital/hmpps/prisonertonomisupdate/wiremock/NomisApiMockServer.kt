@@ -504,7 +504,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubNomisGlobalIncentiveLevel(incentiveLevelCode: String = "STD") {
     stubFor(
-      get(WireMock.urlPathMatching("/reference-domains/domains/IEP_LEVEL/codes/$incentiveLevelCode")).willReturn(
+      get(WireMock.urlPathMatching("/incentives/reference-codes/$incentiveLevelCode")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
@@ -524,7 +524,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubNomisGlobalIncentiveLevelCreate(incentiveLevelCode: String = "STD") {
     stubFor(
-      post("/reference-domains/domains/IEP_LEVEL/codes").willReturn(
+      post("/incentives/reference-codes").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
@@ -544,7 +544,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubNomisGlobalIncentiveLevelUpdate(incentiveLevelCode: String = "STD") {
     stubFor(
-      put("/reference-domains/domains/IEP_LEVEL/codes/$incentiveLevelCode").willReturn(
+      put("/incentives/reference-codes/$incentiveLevelCode").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
@@ -564,7 +564,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubNomisGlobalIncentiveLevelNotFound(incentiveLevelCode: String = "STD") {
     stubFor(
-      get(WireMock.urlPathMatching("/reference-domains/domains/IEP_LEVEL/codes/$incentiveLevelCode")).willReturn(
+      get(WireMock.urlPathMatching("/incentives/reference-codes/$incentiveLevelCode")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.NOT_FOUND.value())
@@ -575,7 +575,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubNomisGlobalIncentiveLevelReorder() {
     stubFor(
-      post("/reference-domains/iep-reorder").willReturn(
+      post("/incentives/reference-codes/reorder").willReturn(
         aResponse().withStatus(200),
       ),
     )
