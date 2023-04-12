@@ -250,7 +250,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
-          .withStatus(201),
+          .withStatus(200),
       ),
     )
   }
@@ -258,6 +258,28 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubUpsertAttendanceWithError(courseActivityId: Long, bookingId: Long, status: Int = 500) {
     stubFor(
       post("/activities/$courseActivityId/booking/$bookingId/attendance").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubGetAttendanceStatus(courseActivityId: Long, bookingId: Long, response: String) {
+    stubFor(
+      post("/activities/$courseActivityId/booking/$bookingId/attendance-status").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubGetAttendanceStatusWithError(courseActivityId: Long, bookingId: Long, status: Int = 500) {
+    stubFor(
+      post("/activities/$courseActivityId/booking/$bookingId/attendance-status").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
