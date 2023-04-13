@@ -187,13 +187,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   suspend fun getGlobalIncentiveLevel(incentiveLevel: String): ReferenceCode? =
     webClient.get()
-      .uri("/reference-domains/domains/IEP_LEVEL/codes/$incentiveLevel")
+      .uri("/incentives/reference-codes/$incentiveLevel")
       .retrieve()
       .awaitBodyOrNotFound()
 
   suspend fun updateGlobalIncentiveLevel(incentiveLevel: ReferenceCode) {
     webClient.put()
-      .uri("/reference-domains/domains/IEP_LEVEL/codes/${incentiveLevel.code}")
+      .uri("/incentives/reference-codes/${incentiveLevel.code}")
       .bodyValue(incentiveLevel)
       .retrieve()
       .awaitBodilessEntity()
@@ -201,14 +201,14 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   suspend fun createGlobalIncentiveLevel(incentiveLevel: ReferenceCode) =
     webClient.post()
-      .uri("/reference-domains/domains/IEP_LEVEL/codes")
+      .uri("/incentives/reference-codes")
       .bodyValue(incentiveLevel)
       .retrieve()
       .awaitBodilessEntity()
 
   suspend fun globalIncentiveLevelReorder(levels: List<String>) =
     webClient.post()
-      .uri("/reference-domains/iep-reorder")
+      .uri("/incentives/reference-codes/reorder")
       .bodyValue(levels)
       .retrieve()
       .awaitBodilessEntity()
