@@ -96,16 +96,19 @@ Duplicate incentives have no business impact in NOMIS but can cause confusion to
 
 A duplicate visit is serious since for sentenced prisoners they will have one less visit for that week. Therefore the visit should be cancelled. This could be done by #dps-appsupport or by us using the cancel endpoint. The cancel endpoint is the quickest solution.
 
-Example PUT to cancel a visit:
-
+* Click on the View button of the alert and check the `customDimensions` of the App Insights query results to get the `offenderNo` and `duplicateNomisId`
+* Check the offender's visits in production Nomis to prove there is a duplicate, e.g. `https://digital.prison.service.justice.gov.uk/prisoner/<offenderNo>/visits-details`
+* Grab an auth token with role `NOMIS_VISITS` and call the following API to cancel the duplicate visit:
 ```
-curl --location --request PUT 'https://nomis-prisoner.aks-live-1.studio-hosting.service.justice.gov.uk/prisoners/A9999DP/visits/16999999/cancel' \
+curl --location --request PUT 'https://nomis-prisoner.aks-live-1.studio-hosting.service.justice.gov.uk/prisoners/<offenderNo>/visits/<duplicateNomisId>/cancel' \
 --header 'Content-Type: application/json' \
 --header 'Accept: application/json' \
 --header 'Authorization: Bearer <token with role NOMIS_VISITS>' \
 --data-raw '{
 "outcome": "ADMIN"
 }'
+* Check in Nomis again and the duplicate visit should have been cancelled
+
 ```
 ##### Sentencing adjustments
 
