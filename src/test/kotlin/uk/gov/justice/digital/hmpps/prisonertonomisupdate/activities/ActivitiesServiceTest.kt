@@ -33,9 +33,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Priso
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAllocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.OffenderProgramProfileResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -478,7 +478,7 @@ internal class ActivitiesServiceTest {
         ),
       )
       whenever(nomisApiService.createAllocation(eq(NOMIS_COURSE_ACTIVITY_ID), any())).thenReturn(
-        OffenderProgramProfileResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID),
+        CreateAllocationResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID),
       )
 
       activitiesService.createAllocation(
@@ -558,8 +558,8 @@ internal class ActivitiesServiceTest {
           mappingType = "ACTIVITY_CREATED",
         ),
       )
-      whenever(nomisApiService.deallocate(eq(NOMIS_COURSE_ACTIVITY_ID), any(), any())).thenReturn(
-        OffenderProgramProfileResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID),
+      whenever(nomisApiService.deallocate(eq(NOMIS_COURSE_ACTIVITY_ID), any())).thenReturn(
+        CreateAllocationResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID),
       )
 
       activitiesService.deallocate(
@@ -596,7 +596,7 @@ internal class ActivitiesServiceTest {
           mappingType = "ACTIVITY_CREATED",
         ),
       )
-      whenever(nomisApiService.deallocate(any(), any(), any())).thenThrow(RuntimeException("test"))
+      whenever(nomisApiService.deallocate(any(), any())).thenThrow(RuntimeException("test"))
 
       assertThat(
         assertThrows<RuntimeException> {

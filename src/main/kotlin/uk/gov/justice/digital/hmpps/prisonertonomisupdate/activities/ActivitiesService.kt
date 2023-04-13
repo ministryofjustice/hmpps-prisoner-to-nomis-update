@@ -11,15 +11,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateOffenderProgramProfileRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.EndOffenderProgramProfileRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRuleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.lang.Integer.min
 import java.math.BigDecimal
@@ -140,7 +140,7 @@ class ActivitiesService(
         mappingService.getMappingGivenActivityScheduleId(allocation.scheduleId).let { mapping ->
           nomisApiService.createAllocation(
             mapping.nomisCourseActivityId,
-            CreateOffenderProgramProfileRequest(
+            CreateAllocationRequest(
               bookingId = allocation.bookingId!!,
               startDate = allocation.startDate,
               endDate = allocation.endDate,
@@ -172,8 +172,8 @@ class ActivitiesService(
           .let { mapping ->
             nomisApiService.deallocate(
               mapping.nomisCourseActivityId,
-              allocation.bookingId!!,
-              EndOffenderProgramProfileRequest(
+              UpdateAllocationRequest(
+                bookingId = allocation.bookingId!!,
                 endDate = allocation.endDate!!,
                 endReason = allocation.deallocatedReason, // TODO SDIT-421 probably will need a mapping
                 // endComment = allocation.?, // TODO SDIT-421 could put something useful in here

@@ -339,7 +339,7 @@ internal class NomisApiServiceTest {
       nomisApiService.createAllocation(12, newAllocation())
 
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/activities/12"))
+        postRequestedFor(urlEqualTo("/activities/12/allocations"))
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
@@ -351,7 +351,7 @@ internal class NomisApiServiceTest {
       nomisApiService.createAllocation(12, newAllocation())
 
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/activities/12"))
+        postRequestedFor(urlEqualTo("/activities/12/allocations"))
           .withRequestBody(matchingJsonPath("$.bookingId", equalTo("456"))),
       )
     }
@@ -371,24 +371,24 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `should call nomis api with OAuth2 token`() = runTest {
-      NomisApiExtension.nomisApi.stubDeallocate(12, 456)
+      NomisApiExtension.nomisApi.stubDeallocate(12)
 
-      nomisApiService.deallocate(12, 456, newDeallocation())
+      nomisApiService.deallocate(12, newDeallocation())
 
       NomisApiExtension.nomisApi.verify(
-        putRequestedFor(urlEqualTo("/activities/12/booking-id/456/end"))
+        putRequestedFor(urlEqualTo("/activities/12/allocations"))
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
     @Test
     fun `will post data to nomis api`() = runTest {
-      NomisApiExtension.nomisApi.stubDeallocate(12, 456)
+      NomisApiExtension.nomisApi.stubDeallocate(12)
 
-      nomisApiService.deallocate(12, 456, newDeallocation())
+      nomisApiService.deallocate(12, newDeallocation())
 
       NomisApiExtension.nomisApi.verify(
-        putRequestedFor(urlEqualTo("/activities/12/booking-id/456/end"))
+        putRequestedFor(urlEqualTo("/activities/12/allocations"))
           .withRequestBody(matchingJsonPath("$.endDate", equalTo("2023-01-21")))
           .withRequestBody(matchingJsonPath("$.endReason", equalTo("REASON"))),
       )
@@ -396,10 +396,10 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `when any error response is received an exception is thrown`() = runTest {
-      NomisApiExtension.nomisApi.stubDeallocateWithError(12, 456, 400)
+      NomisApiExtension.nomisApi.stubDeallocateWithError(12, 400)
 
       assertThrows<BadRequest> {
-        nomisApiService.deallocate(12, 456, newDeallocation())
+        nomisApiService.deallocate(12, newDeallocation())
       }
     }
   }
@@ -985,14 +985,15 @@ fun updateScheduleInstances() = listOf(
   ScheduleRequest(date = LocalDate.parse("2023-02-11"), startTime = LocalTime.parse("08:00"), endTime = LocalTime.parse("11:00")),
 )
 
-fun newAllocation() = CreateOffenderProgramProfileRequest(
+fun newAllocation() = CreateAllocationRequest(
   bookingId = 456L,
   startDate = LocalDate.parse("2023-01-20"),
   endDate = LocalDate.parse("2023-01-21"),
   payBandCode = "PAY",
 )
 
-fun newDeallocation() = EndOffenderProgramProfileRequest(
+fun newDeallocation() = UpdateAllocationRequest(
+  bookingId = 456L,
   endDate = LocalDate.parse("2023-01-21"),
   endReason = "REASON",
 )
