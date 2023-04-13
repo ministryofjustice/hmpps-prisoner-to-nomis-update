@@ -202,7 +202,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubAllocationCreate(courseActivityId: Long) {
     stubFor(
-      post("/activities/$courseActivityId").willReturn(
+      post("/activities/$courseActivityId/allocations").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "offenderProgramReferenceId": 1234 }""")
@@ -213,7 +213,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubAllocationCreateWithError(courseActivityId: Long, status: Int = 500) {
     stubFor(
-      post("/activities/$courseActivityId").willReturn(
+      post("/activities/$courseActivityId/allocations").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
@@ -222,20 +222,20 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubDeallocate(courseActivityId: Long, bookingId: Long) {
+  fun stubDeallocate(courseActivityId: Long) {
     stubFor(
-      put("/activities/$courseActivityId/booking-id/$bookingId/end").willReturn(
+      put("/activities/$courseActivityId/allocations").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "offenderProgramReferenceId": 1234 }""")
-          .withStatus(201),
+          .withStatus(200),
       ),
     )
   }
 
-  fun stubDeallocateWithError(courseActivityId: Long, bookingId: Long, status: Int = 500) {
+  fun stubDeallocateWithError(courseActivityId: Long, status: Int = 500) {
     stubFor(
-      put("/activities/$courseActivityId/booking-id/$bookingId/end").willReturn(
+      put("/activities/$courseActivityId/allocations").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)

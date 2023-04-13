@@ -84,21 +84,20 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   suspend fun createAllocation(
     courseActivityId: Long,
-    request: CreateOffenderProgramProfileRequest,
-  ): OffenderProgramProfileResponse =
+    request: CreateAllocationRequest,
+  ): CreateAllocationResponse =
     webClient.post()
-      .uri("/activities/$courseActivityId")
+      .uri("/activities/$courseActivityId/allocations")
       .bodyValue(request)
       .retrieve()
       .awaitBody()
 
   suspend fun deallocate(
     courseActivityId: Long,
-    bookingId: Long,
-    request: EndOffenderProgramProfileRequest,
-  ): OffenderProgramProfileResponse =
+    request: UpdateAllocationRequest,
+  ): CreateAllocationResponse =
     webClient.put()
-      .uri("/activities/$courseActivityId/booking-id/$bookingId/end")
+      .uri("/activities/$courseActivityId/allocations")
       .bodyValue(request)
       .retrieve()
       .awaitBody()
@@ -312,7 +311,7 @@ data class CreateActivityResponse(
   val courseActivityId: Long,
 )
 
-data class CreateOffenderProgramProfileRequest(
+data class CreateAllocationRequest(
   val bookingId: Long,
   @JsonFormat(pattern = "yyyy-MM-dd")
   val startDate: LocalDate,
@@ -321,11 +320,12 @@ data class CreateOffenderProgramProfileRequest(
   val payBandCode: String,
 )
 
-data class OffenderProgramProfileResponse(
+data class CreateAllocationResponse(
   val offenderProgramReferenceId: Long,
 )
 
-data class EndOffenderProgramProfileRequest(
+data class UpdateAllocationRequest(
+  val bookingId: Long,
   @JsonFormat(pattern = "yyyy-MM-dd")
   val endDate: LocalDate,
   val endReason: String? = null,

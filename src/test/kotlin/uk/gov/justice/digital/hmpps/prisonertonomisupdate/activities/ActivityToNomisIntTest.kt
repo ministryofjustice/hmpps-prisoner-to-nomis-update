@@ -387,9 +387,9 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       ).get()
 
       await untilCallTo { activitiesApi.getCountFor("/allocations/id/$ALLOCATION_ID") } matches { it == 1 }
-      await untilCallTo { nomisApi.postCountFor("/activities/$NOMIS_CRS_ACTY_ID") } matches { it == 1 }
+      await untilCallTo { nomisApi.postCountFor("/activities/$NOMIS_CRS_ACTY_ID/allocations") } matches { it == 1 }
       nomisApi.verify(
-        postRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID"))
+        postRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/allocations"))
           .withRequestBody(matchingJsonPath("bookingId", equalTo("$NOMIS_BOOKING_ID")))
           .withRequestBody(matchingJsonPath("startDate", equalTo("2023-01-12")))
           .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-13")))
@@ -404,7 +404,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     fun `will consume a deallocation message`() {
       activitiesApi.stubGetAllocation(ALLOCATION_ID, buildApiAllocationDtoJsonResponse())
       mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildMappingDtoResponse())
-      nomisApi.stubDeallocate(NOMIS_CRS_ACTY_ID, NOMIS_BOOKING_ID)
+      nomisApi.stubDeallocate(NOMIS_CRS_ACTY_ID)
 
       awsSnsClient.publish(
         PublishRequest.builder().topicArn(topicArn)
@@ -418,9 +418,10 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       ).get()
 
       await untilCallTo { activitiesApi.getCountFor("/allocations/id/$ALLOCATION_ID") } matches { it == 1 }
-      await untilCallTo { nomisApi.putCountFor("/activities/$NOMIS_CRS_ACTY_ID/booking-id/$NOMIS_BOOKING_ID/end") } matches { it == 1 }
+      await untilCallTo { nomisApi.putCountFor("/activities/$NOMIS_CRS_ACTY_ID/allocations") } matches { it == 1 }
       nomisApi.verify(
-        putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/booking-id/$NOMIS_BOOKING_ID/end"))
+        putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/allocations"))
+          .withRequestBody(matchingJsonPath("bookingId", equalTo("$NOMIS_BOOKING_ID")))
           .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-13")))
           .withRequestBody(matchingJsonPath("endReason", equalTo("END"))),
       )
