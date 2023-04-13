@@ -113,7 +113,7 @@ class IncentiveReferenceToNomisIntTest : SqsIntegrationTestBase() {
     await untilCallTo { nomisApi.postCountFor("/incentives/reference-codes/reorder") } matches { it == 1 }
     nomisApi.verify(
       WireMock.postRequestedFor(WireMock.urlEqualTo("/incentives/reference-codes/reorder"))
-        .withRequestBody(WireMock.equalToJson("[\"BAS\",\"STD\",\"ENH\",\"EN2\",\"EN3\",\"ENT\"]")),
+        .withRequestBody(WireMock.equalToJson("{ \"codeList\": [\"BAS\",\"STD\",\"ENH\",\"EN2\",\"EN3\",\"ENT\"]}")),
     )
     verify(telemetryClient).trackEvent(
       eq("global-incentive-levels-reordered"),
