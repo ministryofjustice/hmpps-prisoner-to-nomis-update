@@ -119,7 +119,7 @@ fun AttendanceSync.toEventOutcome() = attendanceReasonCode?.let {
 
     it == "REFUSED" -> EventOutcome("UNACAB", unexcusedAbsence = true, authorisedAbsence = false)
 
-    it == "NOT_REQUIRED" -> EventOutcome("ACCAB", unexcusedAbsence = false, authorisedAbsence = true)
+    it == "NOT_REQUIRED" -> EventOutcome("NREQ", unexcusedAbsence = false, authorisedAbsence = true)
 
     it == "REST" && issuePayment == true -> EventOutcome("ACCAB", unexcusedAbsence = false, authorisedAbsence = true)
 
