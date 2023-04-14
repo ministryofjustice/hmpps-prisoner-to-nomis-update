@@ -396,7 +396,7 @@ class AttendanceServiceTest {
         "SICK,true,ACCAB,false,true",
         "SICK,false,REST,false,true",
         "REFUSED,false,UNACAB,true,false",
-        "NOT_REQUIRED,true,ACCAB,false,true",
+        "NOT_REQUIRED,true,NREQ,false,true",
         "REST,false,REST,false,true",
         "REST,true,ACCAB,false,true",
         "CLASH,true,ACCAB,false,true",
