@@ -208,7 +208,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
   suspend fun globalIncentiveLevelReorder(levels: List<String>) =
     webClient.post()
       .uri("/incentives/reference-codes/reorder")
-      .bodyValue(levels)
+      .bodyValue(ReorderRequest(levels))
       .retrieve()
       .awaitBodilessEntity()
 }
@@ -415,6 +415,10 @@ data class CreateSentencingAdjustmentResponse(val id: Long)
 
 data class CreateVisitResponseDto(
   val visitId: String,
+)
+
+data class ReorderRequest(
+  val codeList: List<String>,
 )
 
 data class ReferenceCode(
