@@ -1,9 +1,10 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -44,117 +45,71 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetSchedule(id: Long, response: String) {
+  private fun stubGet(url: String, response: String) =
     stubFor(
-      get("/schedules/$id").willReturn(
+      get(url).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
           .withStatus(200),
       ),
     )
+
+  private fun stubGetWithError(url: String, status: Int = 500) =
+    stubFor(
+      get(url).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              {
+                "error": "some error"
+              }
+            """.trimIndent(),
+          )
+          .withStatus(status),
+      ),
+    )
+
+  fun stubGetSchedule(id: Long, response: String) {
+    stubGet("/schedules/$id", response)
   }
 
   fun stubGetScheduleWithError(id: Long, status: Int = 500) {
-    stubFor(
-      get("/schedules/$id").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(
-            """
-              {
-                "error": "some error"
-              }
-            """.trimIndent(),
-          )
-          .withStatus(status),
-      ),
-    )
+    stubGetWithError("/schedules/$id", status)
   }
 
   fun stubGetActivity(id: Long, response: String) {
-    stubFor(
-      get("/activities/$id").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(response)
-          .withStatus(200),
-      ),
-    )
+    stubGet("/activities/$id", response)
   }
 
   fun stubGetActivityWithError(id: Long, status: Int = 500) {
-    stubFor(
-      get("/activities/$id").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(
-            """
-              {
-                "error": "some error"
-              }
-            """.trimIndent(),
-          )
-          .withStatus(status),
-      ),
-    )
+    stubGetWithError("/activities/$id", status)
   }
 
   fun stubGetAllocation(id: Long, response: String) {
-    stubFor(
-      get("/allocations/id/$id").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(response)
-          .withStatus(200),
-      ),
-    )
+    stubGet("/allocations/id/$id", response)
   }
 
   fun stubGetAllocationWithError(id: Long, status: Int = 500) {
-    stubFor(
-      get("/allocations/id/$id").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(
-            """
-              {
-                "error": "some error"
-              }
-            """.trimIndent(),
-          )
-          .withStatus(status),
-      ),
-    )
+    stubGetWithError("/allocations/id/$id", status)
   }
 
   fun stubGetAttendanceSync(id: Long, response: String) {
-    stubFor(
-      get("/synchronisation/attendance/$id").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(response)
-          .withStatus(200),
-      ),
-    )
+    stubGet("/synchronisation/attendance/$id", response)
   }
 
   fun stubGetAttendanceSyncWithError(id: Long, status: Int = 500) {
-    stubFor(
-      get("/synchronisation/attendance/$id").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(
-            """
-              {
-                "error": "some error"
-              }
-            """.trimIndent(),
-          )
-          .withStatus(status),
-      ),
-    )
+    stubGetWithError("/synchronisation/attendance/$id", status)
   }
 
-  fun getCountFor(url: String) = this.findAll(WireMock.getRequestedFor(WireMock.urlEqualTo(url))).count()
+  fun stubGetScheduledInstance(id: Long, response: String) {
+    stubGet("/scheduled-instances/$id", response)
+  }
+
+  fun stubGetScheduledInstanceWithError(id: Long, status: Int = 500) {
+    stubGetWithError("/scheduled-instances/$id", status)
+  }
+
+  fun getCountFor(url: String) = this.findAll(getRequestedFor(urlEqualTo(url))).count()
 }
