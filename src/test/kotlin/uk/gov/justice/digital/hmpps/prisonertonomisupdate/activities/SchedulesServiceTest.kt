@@ -27,10 +27,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-private const val ACTIVITY_SCHEDULE_ID: Long = 100
-private const val ACTIVITY_ID: Long = 200
-private const val NOMIS_COURSE_ACTIVITY_ID: Long = 300
-
 class SchedulesServiceTest {
 
   private val activitiesApiService: ActivitiesApiService = mock()
@@ -97,7 +93,7 @@ class SchedulesServiceTest {
       whenever(activitiesApiService.getActivitySchedule(ArgumentMatchers.anyLong())).thenReturn(newActivitySchedule())
       whenever(mappingService.getMappingGivenActivityScheduleId(ArgumentMatchers.anyLong())).thenReturn(
         ActivityMappingDto(
-          NOMIS_COURSE_ACTIVITY_ID,
+          NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
           "ACTIVITY_CREATED",
           LocalDateTime.now(),
@@ -110,14 +106,14 @@ class SchedulesServiceTest {
         schedulesService.updateScheduleInstances(aDomainEvent())
       }
 
-      verify(nomisApiService).updateScheduleInstances(eq(NOMIS_COURSE_ACTIVITY_ID), any())
+      verify(nomisApiService).updateScheduleInstances(eq(NOMIS_CRS_ACTY_ID), any())
       verify(telemetryClient).trackEvent(
         eq("schedule-instances-amend-failed"),
         org.mockito.kotlin.check<Map<String, String>> {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
-              "nomisCourseActivityId" to NOMIS_COURSE_ACTIVITY_ID.toString(),
+              "nomisCourseActivityId" to NOMIS_CRS_ACTY_ID.toString(),
             ),
           )
         },
@@ -130,7 +126,7 @@ class SchedulesServiceTest {
       whenever(activitiesApiService.getActivitySchedule(ArgumentMatchers.anyLong())).thenReturn(newActivitySchedule(endDate = LocalDate.now().plusDays(1)))
       whenever(mappingService.getMappingGivenActivityScheduleId(ArgumentMatchers.anyLong())).thenReturn(
         ActivityMappingDto(
-          NOMIS_COURSE_ACTIVITY_ID,
+          NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
           "ACTIVITY_CREATED",
           LocalDateTime.now(),
@@ -140,7 +136,7 @@ class SchedulesServiceTest {
       schedulesService.updateScheduleInstances(aDomainEvent())
 
       verify(nomisApiService).updateScheduleInstances(
-        eq(NOMIS_COURSE_ACTIVITY_ID),
+        eq(NOMIS_CRS_ACTY_ID),
         org.mockito.kotlin.check {
           with(it[0]) {
             assertThat(date).isEqualTo("2023-02-10")
@@ -160,7 +156,7 @@ class SchedulesServiceTest {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
-              "nomisCourseActivityId" to NOMIS_COURSE_ACTIVITY_ID.toString(),
+              "nomisCourseActivityId" to NOMIS_CRS_ACTY_ID.toString(),
             ),
           )
         },

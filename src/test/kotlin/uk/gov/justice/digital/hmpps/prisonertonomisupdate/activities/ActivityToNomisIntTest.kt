@@ -14,8 +14,8 @@ import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito
 import org.mockito.kotlin.any
+import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
@@ -24,25 +24,23 @@ import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.activityMessagePayload
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.allocationMessagePayload
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.attendanceMessagePayload
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension.Companion.activitiesApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
-import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
-import java.time.LocalDate
 
-private const val ACTIVITY_SCHEDULE_ID: Long = 100
-private const val ACTIVITY_ID: Long = 200
-private const val NOMIS_CRS_ACTY_ID: Long = 300
-private const val ALLOCATION_ID: Long = 400
-private const val NOMIS_BOOKING_ID: Long = 500
-private const val SCHEDULE_INSTANCE_ID: Long = 600
-private const val ATTENDANCE_ID: Long = 700
-private const val NOMIS_EVENT_ID: Long = 800
-private const val NOMIS_CRS_SCH_ID: Long = 900
+internal const val ACTIVITY_SCHEDULE_ID: Long = 100
+internal const val ACTIVITY_ID: Long = 200
+internal const val NOMIS_CRS_ACTY_ID: Long = 300
+internal const val ALLOCATION_ID: Long = 400
+internal const val NOMIS_BOOKING_ID: Long = 500
+internal const val OFFENDER_PROGRAM_REFERENCE_ID: Long = 550
+internal const val SCHEDULE_INSTANCE_ID: Long = 600
+internal const val ATTENDANCE_ID: Long = 700
+internal const val NOMIS_EVENT_ID: Long = 800
+internal const val NOMIS_CRS_SCH_ID: Long = 900
+internal const val OFFENDER_NO = "A1234AA"
 
 class ActivityToNomisIntTest : SqsIntegrationTestBase() {
 
@@ -55,8 +53,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
 
     @Test
     fun `will consume a create activity schedule message`() {
-      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildApiActivityScheduleDtoJsonResponse())
-      activitiesApi.stubGetActivity(ACTIVITY_ID, buildApiActivityDtoJsonResponse())
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
+      activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
       mappingServer.stubCreateActivity()
       nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID }""")
@@ -119,8 +117,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
 
     @Test
     fun `will retry after a mapping failure`() {
-      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildApiActivityScheduleDtoJsonResponse())
-      activitiesApi.stubGetActivity(ACTIVITY_ID, buildApiActivityDtoJsonResponse())
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
+      activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
       nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID }""")
       mappingServer.stubCreateActivityWithErrorFollowedBySuccess()
@@ -157,8 +155,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
 
     @Test
     fun `will log when duplicate is detected`() {
-      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildApiActivityScheduleDtoJsonResponse())
-      activitiesApi.stubGetActivity(ACTIVITY_ID, buildApiActivityDtoJsonResponse())
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
+      activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
       nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID }""")
       mappingServer.stubCreateActivityWithDuplicateError(
@@ -180,7 +178,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
 
       await untilAsserted {
         verify(telemetryClient).trackEvent(
-          Mockito.eq("activity-mapping-create-failed"),
+          eq("activity-mapping-create-failed"),
           any(),
           isNull(),
         )
@@ -196,8 +194,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       } matches { it == 0 }
 
       verify(telemetryClient).trackEvent(
-        Mockito.eq("to-nomis-synch-activity-duplicate"),
-        org.mockito.kotlin.check {
+        eq("to-nomis-synch-activity-duplicate"),
+        check {
           assertThat(it["existingActivityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
           assertThat(it["existingNomisCourseActivityId"]).isEqualTo("$NOMIS_CRS_ACTY_ID")
           assertThat(it["duplicateActivityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
@@ -209,8 +207,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
 
     @Test
     fun `constant mapping failure will result in DLQ message which can be retried`() {
-      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildApiActivityScheduleDtoJsonResponse())
-      activitiesApi.stubGetActivity(ACTIVITY_ID, buildApiActivityDtoJsonResponse())
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
+      activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
       nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID }""")
       mappingServer.stubCreateActivityWithError()
@@ -259,9 +257,9 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
   inner class UpdateActivitySchedule {
     @Test
     fun `should update an activity`() {
-      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildApiActivityScheduleDtoJsonResponse())
-      activitiesApi.stubGetActivity(ACTIVITY_ID, buildApiActivityDtoJsonResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildMappingDtoResponse())
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
+      activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
+      mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
       nomisApi.stubActivityUpdate(NOMIS_CRS_ACTY_ID)
 
       awsSnsClient.publish(amendActivityEvent()).get()
@@ -314,206 +312,66 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           ),
         ).build()
   }
+}
 
-  @Nested
-  inner class UpdateScheduleInstances {
-    @Test
-    fun `should update scheduled instances`() {
-      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildApiActivityScheduleDtoJsonResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildMappingDtoResponse())
-      nomisApi.stubScheduleInstancesUpdate(NOMIS_CRS_ACTY_ID)
-
-      awsSnsClient.publish(amendScheduledInstancesEvent())
-
-      await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/schedules/$ACTIVITY_SCHEDULE_ID"))) }
-      await untilAsserted { mappingServer.verify(getRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/$ACTIVITY_SCHEDULE_ID"))) }
-      await untilAsserted {
-        nomisApi.verify(
-          putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/schedules"))
-            .withRequestBody(matchingJsonPath("$[0].date", equalTo("2023-01-13")))
-            .withRequestBody(matchingJsonPath("$[0].startTime", equalTo("09:00")))
-            .withRequestBody(matchingJsonPath("$[0].endTime", equalTo("10:00")))
-            .withRequestBody(matchingJsonPath("$[1].date", equalTo("2023-01-14")))
-            .withRequestBody(matchingJsonPath("$[1].startTime", equalTo("14:00")))
-            .withRequestBody(matchingJsonPath("$[1].endTime", equalTo("16:30"))),
-        )
-      }
-      assertThat(awsSqsActivityDlqClient.countAllMessagesOnQueue(activityDlqUrl).get()).isEqualTo(0)
+fun buildGetActivityResponse(id: Long = ACTIVITY_ID): String =
+  """
+    {
+  "id": $id,
+  "prisonCode": "PVI",
+  "attendanceRequired": false,
+  "inCell": false,
+  "pieceWork": false,
+  "outsideWork": false,
+  "payPerSession": "F",
+  "summary": "Maths level 1",
+  "description": "A basic maths course suitable for introduction to the subject",
+  "category": {
+    "id": 1,
+    "code": "LEISURE_SOCIAL",
+    "name": "Leisure and social",
+    "description": "Such as association, library time and social clubs, like music or art"
+  },
+  "eligibilityRules": [],
+  "schedules": [],
+  "waitingList": [],
+  "pay": [
+    {
+      "id": 3579,
+      "incentiveLevel": "Basic",
+      "incentiveNomisCode": "BAS",
+      "prisonPayBand": {
+         "id": 987,
+         "displaySequence": 1,
+         "alias": "Low",
+         "description": "Pay band 1",
+         "nomisPayBand": 1,
+         "prisonCode": "PVI"
+      },
+      "rate": 150,
+      "pieceRate": 250,
+      "pieceRateItems": 10
     }
-
-    @Test
-    fun `should put messages on DLQ if external API call fails`() {
-      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildApiActivityScheduleDtoJsonResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildMappingDtoResponse())
-      nomisApi.stubScheduleInstancesUpdateWithError(NOMIS_CRS_ACTY_ID)
-
-      awsSnsClient.publish(amendScheduledInstancesEvent())
-
-      await untilAsserted {
-        assertThat(
-          awsSqsActivityDlqClient.countAllMessagesOnQueue(activityDlqUrl).get(),
-        ).isEqualTo(1)
-      }
+  ],
+  "startDate": "2023-01-12",
+  "endDate": "2023-01-13",
+  "riskLevel": "High",
+  "minimumIncentiveLevel": "Basic",
+  "minimumIncentiveNomisCode": "BAS",
+  "createdTime": "2023-01-12T17:26:18.332Z",
+  "createdBy": "Adam Smith",
+  "minimumEducationLevel": [
+    {
+      "id": 123456,
+      "educationLevelCode": "Basic",
+      "educationLevelDescription": "Basic"
     }
+  ]
+}
+  """.trimIndent()
 
-    private fun amendScheduledInstancesEvent(): PublishRequest? =
-      PublishRequest.builder().topicArn(topicArn)
-        .message(activityMessagePayload("activities.scheduled-instances.amended", ACTIVITY_SCHEDULE_ID))
-        .messageAttributes(
-          mapOf(
-            "eventType" to MessageAttributeValue.builder().dataType("String")
-              .stringValue("activities.scheduled-instances.amended").build(),
-          ),
-        ).build()
-  }
-
-  @Nested
-  inner class AllocatePrisoner {
-    @Test
-    fun `will consume an allocation message`() {
-      activitiesApi.stubGetAllocation(ALLOCATION_ID, buildApiAllocationDtoJsonResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildMappingDtoResponse())
-      nomisApi.stubAllocationCreate(NOMIS_CRS_ACTY_ID)
-
-      awsSnsClient.publish(
-        PublishRequest.builder().topicArn(topicArn)
-          .message(allocationMessagePayload("activities.prisoner.allocated", ACTIVITY_SCHEDULE_ID, ALLOCATION_ID))
-          .messageAttributes(
-            mapOf(
-              "eventType" to MessageAttributeValue.builder().dataType("String")
-                .stringValue("activities.prisoner.allocated").build(),
-            ),
-          ).build(),
-      ).get()
-
-      await untilCallTo { activitiesApi.getCountFor("/allocations/id/$ALLOCATION_ID") } matches { it == 1 }
-      await untilCallTo { nomisApi.postCountFor("/activities/$NOMIS_CRS_ACTY_ID/allocations") } matches { it == 1 }
-      nomisApi.verify(
-        postRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/allocations"))
-          .withRequestBody(matchingJsonPath("bookingId", equalTo("$NOMIS_BOOKING_ID")))
-          .withRequestBody(matchingJsonPath("startDate", equalTo("2023-01-12")))
-          .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-13")))
-          .withRequestBody(matchingJsonPath("payBandCode", equalTo("7"))),
-      )
-    }
-  }
-
-  @Nested
-  inner class DeallocatePrisoner {
-    @Test
-    fun `will consume a deallocation message`() {
-      activitiesApi.stubGetAllocation(ALLOCATION_ID, buildApiAllocationDtoJsonResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildMappingDtoResponse())
-      nomisApi.stubDeallocate(NOMIS_CRS_ACTY_ID)
-
-      awsSnsClient.publish(
-        PublishRequest.builder().topicArn(topicArn)
-          .message(allocationMessagePayload("activities.prisoner.deallocated", ACTIVITY_SCHEDULE_ID, ALLOCATION_ID))
-          .messageAttributes(
-            mapOf(
-              "eventType" to MessageAttributeValue.builder().dataType("String")
-                .stringValue("activities.prisoner.deallocated").build(),
-            ),
-          ).build(),
-      ).get()
-
-      await untilCallTo { activitiesApi.getCountFor("/allocations/id/$ALLOCATION_ID") } matches { it == 1 }
-      await untilCallTo { nomisApi.putCountFor("/activities/$NOMIS_CRS_ACTY_ID/allocations") } matches { it == 1 }
-      nomisApi.verify(
-        putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/allocations"))
-          .withRequestBody(matchingJsonPath("bookingId", equalTo("$NOMIS_BOOKING_ID")))
-          .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-13")))
-          .withRequestBody(matchingJsonPath("endReason", equalTo("END"))),
-      )
-    }
-  }
-
-  @Nested
-  inner class UpsertAttendance {
-    @Test
-    fun `will consume a create attendance message`() {
-      activitiesApi.stubGetAttendanceSync(ATTENDANCE_ID, buildGetAttendanceSyncResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildMappingDtoResponse())
-      nomisApi.stubUpsertAttendance(NOMIS_CRS_ACTY_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
-
-      awsSnsClient.publish(
-        PublishRequest.builder().topicArn(topicArn)
-          .message(attendanceMessagePayload("activities.prisoner.attendance-created", ATTENDANCE_ID))
-          .messageAttributes(
-            mapOf(
-              "eventType" to MessageAttributeValue.builder().dataType("String")
-                .stringValue("activities.prisoner.attendance-created").build(),
-            ),
-          ).build(),
-      ).get()
-
-      await untilCallTo { activitiesApi.getCountFor("/synchronisation/attendance/$ATTENDANCE_ID") } matches { it == 1 }
-      await untilCallTo { nomisApi.postCountFor("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance") } matches { it == 1 }
-      nomisApi.verify(
-        postRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance"))
-          .withRequestBody(matchingJsonPath("scheduleDate", equalTo(LocalDate.now().plusDays(1).toString())))
-          .withRequestBody(matchingJsonPath("startTime", equalTo("10:00")))
-          .withRequestBody(matchingJsonPath("endTime", equalTo("11:00")))
-          .withRequestBody(matchingJsonPath("eventStatusCode", equalTo("SCH")))
-          .withRequestBody(matchingJsonPath("unexcusedAbsence", equalTo("false")))
-          .withRequestBody(matchingJsonPath("authorisedAbsence", equalTo("false")))
-          .withRequestBody(matchingJsonPath("paid", equalTo("false"))),
-      )
-    }
-
-    @Test
-    fun `will consume an amend attendance message`() {
-      activitiesApi.stubGetAttendanceSync(ATTENDANCE_ID, buildGetAttendanceSyncResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildMappingDtoResponse())
-      nomisApi.stubUpsertAttendance(NOMIS_CRS_ACTY_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
-
-      awsSnsClient.publish(
-        PublishRequest.builder().topicArn(topicArn)
-          .message(attendanceMessagePayload("activities.prisoner.attendance-amended", ATTENDANCE_ID))
-          .messageAttributes(
-            mapOf(
-              "eventType" to MessageAttributeValue.builder().dataType("String")
-                .stringValue("activities.prisoner.attendance-amended").build(),
-            ),
-          ).build(),
-      ).get()
-
-      await untilCallTo { activitiesApi.getCountFor("/synchronisation/attendance/$ATTENDANCE_ID") } matches { it == 1 }
-      await untilCallTo { nomisApi.postCountFor("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance") } matches { it == 1 }
-      nomisApi.verify(
-        postRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance"))
-          .withRequestBody(matchingJsonPath("scheduleDate", equalTo(LocalDate.now().plusDays(1).toString())))
-          .withRequestBody(matchingJsonPath("startTime", equalTo("10:00")))
-          .withRequestBody(matchingJsonPath("endTime", equalTo("11:00"))),
-      )
-    }
-
-    @Test
-    fun `will push a failed message onto the DLQ`() {
-      activitiesApi.stubGetAttendanceSyncWithError(1, 503)
-
-      awsSnsClient.publish(
-        PublishRequest.builder().topicArn(topicArn)
-          .message(attendanceMessagePayload("activities.prisoner.attendance-created", ATTENDANCE_ID))
-          .messageAttributes(
-            mapOf(
-              "eventType" to MessageAttributeValue.builder().dataType("String")
-                .stringValue("activities.prisoner.attendance-created").build(),
-            ),
-          ).build(),
-      ).get()
-
-      await untilCallTo { activitiesApi.getCountFor("/synchronisation/attendance/$ATTENDANCE_ID") } matches { it == 1 }
-      await untilCallTo { awsSqsActivityDlqClient.countMessagesOnQueue(activityDlqUrl).get() } matches { it == 1 }
-      nomisApi.verify(
-        0,
-        postRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance")),
-      )
-    }
-  }
-
-  fun buildApiActivityScheduleDtoJsonResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
-    """
+fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
+  """
 {
   "id": $id,
   "instances": [
@@ -609,110 +467,15 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
   "endDate" : "2023-01-23",
   "runsOnBankHoliday": true
 }
-    """.trimIndent()
+  """.trimIndent()
 
-  fun buildApiActivityDtoJsonResponse(id: Long = ACTIVITY_ID): String =
-    """
-    {
-  "id": $id,
-  "prisonCode": "PVI",
-  "attendanceRequired": false,
-  "inCell": false,
-  "pieceWork": false,
-  "outsideWork": false,
-  "payPerSession": "F",
-  "summary": "Maths level 1",
-  "description": "A basic maths course suitable for introduction to the subject",
-  "category": {
-    "id": 1,
-    "code": "LEISURE_SOCIAL",
-    "name": "Leisure and social",
-    "description": "Such as association, library time and social clubs, like music or art"
-  },
-  "eligibilityRules": [],
-  "schedules": [],
-  "waitingList": [],
-  "pay": [
-    {
-      "id": 3579,
-      "incentiveLevel": "Basic",
-      "incentiveNomisCode": "BAS",
-      "prisonPayBand": {
-         "id": 987,
-         "displaySequence": 1,
-         "alias": "Low",
-         "description": "Pay band 1",
-         "nomisPayBand": 1,
-         "prisonCode": "PVI"
-      },
-      "rate": 150,
-      "pieceRate": 250,
-      "pieceRateItems": 10
-    }
-  ],
-  "startDate": "2023-01-12",
-  "endDate": "2023-01-13",
-  "riskLevel": "High",
-  "minimumIncentiveLevel": "Basic",
-  "minimumIncentiveNomisCode": "BAS",
-  "createdTime": "2023-01-12T17:26:18.332Z",
-  "createdBy": "Adam Smith",
-  "minimumEducationLevel": [
-    {
-      "id": 123456,
-      "educationLevelCode": "Basic",
-      "educationLevelDescription": "Basic"
-    }
-  ]
-}
-   """
-
-  fun buildMappingDtoResponse(
-    nomisActivityId: Long = NOMIS_CRS_ACTY_ID,
-    activityScheduleId: Long = ACTIVITY_SCHEDULE_ID,
-  ) =
-    """{
+fun buildGetMappingResponse(
+  nomisActivityId: Long = NOMIS_CRS_ACTY_ID,
+  activityScheduleId: Long = ACTIVITY_SCHEDULE_ID,
+) =
+  """{
           "nomisCourseActivityId": $nomisActivityId,
           "activityScheduleId": $activityScheduleId,
           "mappingType": "TYPE"
         }
-    """.trimIndent()
-
-  fun buildApiAllocationDtoJsonResponse(id: Long = ALLOCATION_ID): String {
-    return """
-  {
-    "id": $id,
-    "prisonerNumber": "A1234AA",
-    "bookingId": $NOMIS_BOOKING_ID,
-    "scheduleId": $ACTIVITY_SCHEDULE_ID,
-    "startDate": "2023-01-12",
-    "endDate": "2023-01-13",
-    "prisonPayBand": {
-      "id": 1,
-      "displaySequence": 1,
-      "alias": "seven",
-      "description": "seven",
-      "nomisPayBand": 7,
-      "prisonCode": "MDI"
-    },
-    "deallocatedReason": "END",
-    "scheduleDescription" : "description",
-    "activitySummary" : "summary"
-  }
-      """
-  }
-}
-
-fun buildGetAttendanceSyncResponse() = """
-  {
-    "attendanceId": $ATTENDANCE_ID,
-    "scheduledInstanceId": $SCHEDULE_INSTANCE_ID,
-    "activityScheduleId": $ACTIVITY_SCHEDULE_ID,
-    "sessionDate": "${LocalDate.now().plusDays(1)}",
-    "sessionStartTime": "10:00",
-    "sessionEndTime": "11:00",
-    "prisonerNumber": "A1234AB",
-    "bookingId": $NOMIS_BOOKING_ID,
-    "status": "WAITING"
-  }
-""".trimIndent()
+  """.trimIndent()

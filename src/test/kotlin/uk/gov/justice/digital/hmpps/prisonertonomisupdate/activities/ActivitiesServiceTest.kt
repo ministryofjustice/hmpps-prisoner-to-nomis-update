@@ -38,10 +38,6 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-private const val ACTIVITY_SCHEDULE_ID: Long = 100
-private const val ACTIVITY_ID: Long = 200
-private const val NOMIS_COURSE_ACTIVITY_ID: Long = 300
-
 internal class ActivitiesServiceTest {
 
   private val activitiesApiService: ActivitiesApiService = mock()
@@ -78,7 +74,7 @@ internal class ActivitiesServiceTest {
       )
       whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(newActivity())
       whenever(nomisApiService.createActivity(any())).thenReturn(
-        CreateActivityResponse(courseActivityId = NOMIS_COURSE_ACTIVITY_ID),
+        CreateActivityResponse(courseActivityId = NOMIS_CRS_ACTY_ID),
       )
 
       activitiesService.createActivity(aDomainEvent())
@@ -86,7 +82,7 @@ internal class ActivitiesServiceTest {
       verify(telemetryClient).trackEvent(
         eq("activity-create-success"),
         check {
-          assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_COURSE_ACTIVITY_ID")
+          assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_CRS_ACTY_ID")
           assertThat(it["activityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
           assertThat(it["description"]).isEqualTo("description")
         },
@@ -103,7 +99,7 @@ internal class ActivitiesServiceTest {
         newActivity().copy(summary = "An activity summary that is very very very long"),
       )
       whenever(nomisApiService.createActivity(any())).thenReturn(
-        CreateActivityResponse(courseActivityId = NOMIS_COURSE_ACTIVITY_ID),
+        CreateActivityResponse(courseActivityId = NOMIS_CRS_ACTY_ID),
       )
 
       activitiesService.createActivity(aDomainEvent())
@@ -124,7 +120,7 @@ internal class ActivitiesServiceTest {
       whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(newActivity())
       whenever(mappingService.getMappingGivenActivityScheduleIdOrNull(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
-          nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
+          nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
           activityScheduleId = ACTIVITY_SCHEDULE_ID,
           mappingType = "A_TYPE",
         ),
@@ -142,7 +138,7 @@ internal class ActivitiesServiceTest {
       )
       whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(newActivity())
       whenever(nomisApiService.createActivity(any())).thenReturn(
-        CreateActivityResponse(courseActivityId = NOMIS_COURSE_ACTIVITY_ID),
+        CreateActivityResponse(courseActivityId = NOMIS_CRS_ACTY_ID),
       )
       whenever(mappingService.createMapping(any())).thenThrow(RuntimeException("test"))
 
@@ -151,7 +147,7 @@ internal class ActivitiesServiceTest {
       verify(telemetryClient).trackEvent(
         eq("activity-mapping-create-failed"),
         check {
-          assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_COURSE_ACTIVITY_ID")
+          assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_CRS_ACTY_ID")
           assertThat(it["activityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
           assertThat(it["description"]).isEqualTo("description")
         },
@@ -176,7 +172,7 @@ internal class ActivitiesServiceTest {
     fun `should throw and raise telemetry if cannot load Activity Schedule`() = runTest {
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
         ActivityMappingDto(
-          NOMIS_COURSE_ACTIVITY_ID,
+          NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
           "ACTIVITY_CREATED",
           LocalDateTime.now(),
@@ -203,7 +199,7 @@ internal class ActivitiesServiceTest {
     fun `should throw and raise telemetry if cannot load Activity `() = runTest {
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
         ActivityMappingDto(
-          NOMIS_COURSE_ACTIVITY_ID,
+          NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
           "ACTIVITY_CREATED",
           LocalDateTime.now(),
@@ -221,7 +217,7 @@ internal class ActivitiesServiceTest {
       verify(telemetryClient).trackEvent(
         eq("activity-amend-failed"),
         check<Map<String, String>> {
-          assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_COURSE_ACTIVITY_ID")
+          assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_CRS_ACTY_ID")
           assertThat(it["activityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
         },
         isNull(),
@@ -259,7 +255,7 @@ internal class ActivitiesServiceTest {
       whenever(activitiesApiService.getActivity(anyLong())).thenReturn(newActivity())
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
         ActivityMappingDto(
-          NOMIS_COURSE_ACTIVITY_ID,
+          NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
           "ACTIVITY_CREATED",
           LocalDateTime.now(),
@@ -272,7 +268,7 @@ internal class ActivitiesServiceTest {
         activitiesService.updateActivity(aDomainEvent())
       }
 
-      verify(nomisApiService).updateActivity(eq(NOMIS_COURSE_ACTIVITY_ID), any())
+      verify(nomisApiService).updateActivity(eq(NOMIS_CRS_ACTY_ID), any())
       verify(telemetryClient).trackEvent(
         eq("activity-amend-failed"),
         check<Map<String, String>> {
@@ -280,7 +276,7 @@ internal class ActivitiesServiceTest {
             mapOf(
               "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
               "activityId" to ACTIVITY_ID.toString(),
-              "nomisCourseActivityId" to NOMIS_COURSE_ACTIVITY_ID.toString(),
+              "nomisCourseActivityId" to NOMIS_CRS_ACTY_ID.toString(),
             ),
           )
         },
@@ -294,7 +290,7 @@ internal class ActivitiesServiceTest {
       whenever(activitiesApiService.getActivity(anyLong())).thenReturn(newActivity())
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
         ActivityMappingDto(
-          NOMIS_COURSE_ACTIVITY_ID,
+          NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
           "ACTIVITY_CREATED",
           LocalDateTime.now(),
@@ -304,7 +300,7 @@ internal class ActivitiesServiceTest {
       activitiesService.updateActivity(aDomainEvent())
 
       verify(nomisApiService).updateActivity(
-        eq(NOMIS_COURSE_ACTIVITY_ID),
+        eq(NOMIS_CRS_ACTY_ID),
         check {
           assertThat(it.endDate).isEqualTo(LocalDate.now().plusDays(1))
           assertThat(it.internalLocationId).isEqualTo(345)
@@ -318,7 +314,7 @@ internal class ActivitiesServiceTest {
             mapOf(
               "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
               "activityId" to ACTIVITY_ID.toString(),
-              "nomisCourseActivityId" to NOMIS_COURSE_ACTIVITY_ID.toString(),
+              "nomisCourseActivityId" to NOMIS_CRS_ACTY_ID.toString(),
             ),
           )
         },
@@ -335,7 +331,7 @@ internal class ActivitiesServiceTest {
       activitiesService.createRetry(
         CreateMappingRetryMessage(
           mapping = ActivityContext(
-            nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
+            nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
             activityScheduleId = ACTIVITY_SCHEDULE_ID,
           ),
           telemetryAttributes = mapOf(),
@@ -344,7 +340,7 @@ internal class ActivitiesServiceTest {
 
       verify(mappingService).createMapping(
         ActivityMappingDto(
-          nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
+          nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
           activityScheduleId = ACTIVITY_SCHEDULE_ID,
           mappingType = "ACTIVITY_CREATED",
         ),

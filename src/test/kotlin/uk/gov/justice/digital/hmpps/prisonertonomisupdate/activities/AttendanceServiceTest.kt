@@ -34,15 +34,6 @@ import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-private const val ATTENDANCE_ID = 1L
-private const val SCHEDULE_INSTANCE_ID = 2L
-private const val ACTIVITY_SCHEDULE_ID = 3L
-private const val NOMIS_BOOKING_ID = 4L
-private const val NOMIS_PRISONER_NUMBER = "A1234BC"
-private const val NOMIS_CRS_ACTY_ID = 5L
-private const val NOMIS_CRS_SCH_ID = 6L
-private const val NOMIS_EVENT_ID = 7L
-
 class AttendanceServiceTest {
 
   private val activitiesApiService: ActivitiesApiService = mock()
@@ -62,7 +53,7 @@ class AttendanceServiceTest {
         attendanceService.upsertAttendance(attendanceEvent())
       }
 
-      verify(activitiesApiService).getAttendanceSync(1)
+      verify(activitiesApiService).getAttendanceSync(ATTENDANCE_ID)
       verify(telemetryClient).trackEvent(
         eq("activity-attendance-create-failed"),
         check<MutableMap<String, String>> {
@@ -81,7 +72,7 @@ class AttendanceServiceTest {
         attendanceService.upsertAttendance(attendanceEvent())
       }
 
-      verify(mappingService).getMappingGivenActivityScheduleId(3)
+      verify(mappingService).getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)
       verify(telemetryClient).trackEvent(
         eq("activity-attendance-create-failed"),
         check<MutableMap<String, String>> {
@@ -89,7 +80,7 @@ class AttendanceServiceTest {
             mapOf(
               "scheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
               "activityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
-              "prisonerNumber" to NOMIS_PRISONER_NUMBER,
+              "prisonerNumber" to OFFENDER_NO,
               "bookingId" to "$NOMIS_BOOKING_ID",
               "sessionDate" to LocalDate.now().plusDays(1).toString(),
               "sessionStartTime" to "10:00",
@@ -145,7 +136,7 @@ class AttendanceServiceTest {
               "attendanceId" to "$ATTENDANCE_ID",
               "scheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
               "activityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
-              "prisonerNumber" to NOMIS_PRISONER_NUMBER,
+              "prisonerNumber" to OFFENDER_NO,
               "bookingId" to "$NOMIS_BOOKING_ID",
               "sessionDate" to LocalDate.now().plusDays(1).toString(),
               "sessionStartTime" to "10:00",
@@ -178,7 +169,7 @@ class AttendanceServiceTest {
               "attendanceId" to "$ATTENDANCE_ID",
               "scheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
               "activityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
-              "prisonerNumber" to NOMIS_PRISONER_NUMBER,
+              "prisonerNumber" to OFFENDER_NO,
               "bookingId" to "$NOMIS_BOOKING_ID",
               "sessionDate" to LocalDate.now().plusDays(1).toString(),
               "sessionStartTime" to "10:00",
@@ -226,7 +217,7 @@ class AttendanceServiceTest {
               "attendanceId" to "$ATTENDANCE_ID",
               "scheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
               "activityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
-              "prisonerNumber" to NOMIS_PRISONER_NUMBER,
+              "prisonerNumber" to OFFENDER_NO,
               "bookingId" to "$NOMIS_BOOKING_ID",
               "sessionDate" to LocalDate.now().plusDays(1).toString(),
               "sessionStartTime" to "10:00",
@@ -276,7 +267,7 @@ class AttendanceServiceTest {
               "attendanceId" to "$ATTENDANCE_ID",
               "scheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
               "activityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
-              "prisonerNumber" to NOMIS_PRISONER_NUMBER,
+              "prisonerNumber" to OFFENDER_NO,
               "bookingId" to "$NOMIS_BOOKING_ID",
               "sessionDate" to LocalDate.now().plusDays(1).toString(),
               "sessionStartTime" to "10:00",
@@ -336,7 +327,7 @@ class AttendanceServiceTest {
       sessionDate = LocalDate.now().plusDays(1),
       sessionStartTime = "10:00",
       sessionEndTime = "11:00",
-      prisonerNumber = NOMIS_PRISONER_NUMBER,
+      prisonerNumber = OFFENDER_NO,
       bookingId = NOMIS_BOOKING_ID,
       status = "WAITING",
     )
@@ -348,7 +339,7 @@ class AttendanceServiceTest {
       sessionDate = LocalDate.now().plusDays(1),
       sessionStartTime = "10:00",
       sessionEndTime = "11:00",
-      prisonerNumber = NOMIS_PRISONER_NUMBER,
+      prisonerNumber = OFFENDER_NO,
       bookingId = NOMIS_BOOKING_ID,
       status = "LOCKED",
     )
@@ -360,7 +351,7 @@ class AttendanceServiceTest {
       sessionDate = LocalDate.now().plusDays(1),
       sessionStartTime = "10:00",
       sessionEndTime = "11:00",
-      prisonerNumber = NOMIS_PRISONER_NUMBER,
+      prisonerNumber = OFFENDER_NO,
       bookingId = NOMIS_BOOKING_ID,
       status = "COMPLETED",
       attendanceReasonCode = "ATTENDED",

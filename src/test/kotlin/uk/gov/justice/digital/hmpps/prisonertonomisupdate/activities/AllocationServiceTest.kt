@@ -22,13 +22,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-private const val ACTIVITY_SCHEDULE_ID: Long = 100
-private const val NOMIS_COURSE_ACTIVITY_ID: Long = 300
-private const val ALLOCATION_ID: Long = 400
-private const val OFFENDER_PROGRAM_REFERENCE_ID: Long = 500
-private const val BOOKING_ID: Long = 600
-private const val OFFENDER_NO = "A1234AA"
-
 class AllocationServiceTest {
 
   private val activitiesApiService: ActivitiesApiService = mock()
@@ -45,12 +38,12 @@ class AllocationServiceTest {
       whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
       whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
-          nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
+          nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
           activityScheduleId = ACTIVITY_SCHEDULE_ID,
           mappingType = "ACTIVITY_CREATED",
         ),
       )
-      whenever(nomisApiService.createAllocation(eq(NOMIS_COURSE_ACTIVITY_ID), any())).thenReturn(
+      whenever(nomisApiService.createAllocation(eq(NOMIS_CRS_ACTY_ID), any())).thenReturn(
         CreateAllocationResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID),
       )
 
@@ -71,7 +64,7 @@ class AllocationServiceTest {
         org.mockito.kotlin.check {
           assertThat(it["allocationId"]).isEqualTo("$ALLOCATION_ID")
           assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-          assertThat(it["bookingId"]).isEqualTo("$BOOKING_ID")
+          assertThat(it["bookingId"]).isEqualTo("$NOMIS_BOOKING_ID")
           assertThat(it["offenderProgramReferenceId"]).isEqualTo("$OFFENDER_PROGRAM_REFERENCE_ID")
         },
         isNull(),
@@ -83,7 +76,7 @@ class AllocationServiceTest {
       whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
       whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
-          nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
+          nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
           activityScheduleId = ACTIVITY_SCHEDULE_ID,
           mappingType = "ACTIVITY_CREATED",
         ),
@@ -111,7 +104,7 @@ class AllocationServiceTest {
         org.mockito.kotlin.check {
           assertThat(it["allocationId"]).isEqualTo("$ALLOCATION_ID")
           assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-          assertThat(it["bookingId"]).isEqualTo("$BOOKING_ID")
+          assertThat(it["bookingId"]).isEqualTo("$NOMIS_BOOKING_ID")
         },
         isNull(),
       )
@@ -126,12 +119,12 @@ class AllocationServiceTest {
       whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
       whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
-          nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
+          nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
           activityScheduleId = ACTIVITY_SCHEDULE_ID,
           mappingType = "ACTIVITY_CREATED",
         ),
       )
-      whenever(nomisApiService.deallocate(eq(NOMIS_COURSE_ACTIVITY_ID), any())).thenReturn(
+      whenever(nomisApiService.deallocate(eq(NOMIS_CRS_ACTY_ID), any())).thenReturn(
         CreateAllocationResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID),
       )
 
@@ -152,7 +145,7 @@ class AllocationServiceTest {
         org.mockito.kotlin.check {
           assertThat(it["allocationId"]).isEqualTo("$ALLOCATION_ID")
           assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-          assertThat(it["bookingId"]).isEqualTo("$BOOKING_ID")
+          assertThat(it["bookingId"]).isEqualTo("$NOMIS_BOOKING_ID")
           assertThat(it["offenderProgramReferenceId"]).isEqualTo("$OFFENDER_PROGRAM_REFERENCE_ID")
         },
         isNull(),
@@ -164,7 +157,7 @@ class AllocationServiceTest {
       whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
       whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
-          nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
+          nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
           activityScheduleId = ACTIVITY_SCHEDULE_ID,
           mappingType = "ACTIVITY_CREATED",
         ),
@@ -192,7 +185,7 @@ class AllocationServiceTest {
         org.mockito.kotlin.check {
           assertThat(it["allocationId"]).isEqualTo("$ALLOCATION_ID")
           assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-          assertThat(it["bookingId"]).isEqualTo("$BOOKING_ID")
+          assertThat(it["bookingId"]).isEqualTo("$NOMIS_BOOKING_ID")
         },
         isNull(),
       )
@@ -205,7 +198,7 @@ private fun newAllocation(): Allocation {
     id = ALLOCATION_ID,
     prisonerNumber = OFFENDER_NO,
     activitySummary = "summary",
-    bookingId = BOOKING_ID,
+    bookingId = NOMIS_BOOKING_ID,
     startDate = LocalDate.parse("2023-01-12"),
     endDate = LocalDate.parse("2023-01-13"),
     prisonPayBand = PrisonPayBand(1, 1, "", "", 1, "MDI"),
