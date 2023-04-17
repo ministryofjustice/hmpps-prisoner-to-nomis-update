@@ -22,14 +22,18 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeature
 
 internal class ActivitiesDomainEventsListenerTest {
   private val activitiesService: ActivitiesService = mock()
+  private val allocationService: AllocationService = mock()
   private val attendanceService: AttendanceService = mock()
+  private val schedulesService: SchedulesService = mock()
   private val objectMapper: ObjectMapper = objectMapper()
   private val eventFeatureSwitch: EventFeatureSwitch = mock()
 
   private val listener =
     ActivitiesDomainEventListener(
       activitiesService,
+      allocationService,
       attendanceService,
+      schedulesService,
       objectMapper,
       eventFeatureSwitch,
     )

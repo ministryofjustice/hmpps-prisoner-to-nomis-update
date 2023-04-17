@@ -9,7 +9,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.mockito.ArgumentMatchers.anyList
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
@@ -27,13 +26,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityMinimumEducationLevel
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityPay
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.InternalLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.PrisonPayBand
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAllocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
@@ -44,10 +41,6 @@ import java.time.LocalDateTime
 private const val ACTIVITY_SCHEDULE_ID: Long = 100
 private const val ACTIVITY_ID: Long = 200
 private const val NOMIS_COURSE_ACTIVITY_ID: Long = 300
-private const val ALLOCATION_ID: Long = 400
-private const val OFFENDER_PROGRAM_REFERENCE_ID: Long = 500
-private const val BOOKING_ID: Long = 600
-private const val OFFENDER_NO = "A1234AA"
 
 internal class ActivitiesServiceTest {
 
@@ -335,298 +328,6 @@ internal class ActivitiesServiceTest {
   }
 
   @Nested
-  inner class AmendScheduleInstances {
-
-    private fun aDomainEvent() =
-      ScheduleDomainEvent(
-        eventType = "activities.scheduled-instances.amended",
-        additionalInformation = ScheduleAdditionalInformation(ACTIVITY_SCHEDULE_ID),
-        version = "1.0",
-        description = "description",
-        occurredAt = LocalDateTime.now(),
-      )
-
-    @Test
-    fun `should throw and raise telemetry if cannot load Activity Schedule`() = runTest {
-      whenever(activitiesApiService.getActivitySchedule(anyLong()))
-        .thenThrow(NotFound::class.java)
-
-      assertThrows<NotFound> {
-        activitiesService.updateScheduleInstances(aDomainEvent())
-      }
-
-      verify(activitiesApiService).getActivitySchedule(ACTIVITY_SCHEDULE_ID)
-      verify(telemetryClient).trackEvent(
-        eq("schedule-instances-amend-failed"),
-        check<Map<String, String>> {
-          assertThat(it).containsAllEntriesOf(mapOf("activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()))
-        },
-        isNull(),
-      )
-    }
-
-    @Test
-    fun `should throw and raise telemetry if cannot find mappings`() = runTest {
-      whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong()))
-        .thenThrow(NotFound::class.java)
-
-      assertThrows<NotFound> {
-        activitiesService.updateScheduleInstances(aDomainEvent())
-      }
-
-      verify(mappingService).getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)
-      verify(telemetryClient).trackEvent(
-        eq("schedule-instances-amend-failed"),
-        check<Map<String, String>> {
-          assertThat(it).containsExactlyInAnyOrderEntriesOf(
-            mapOf("activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()),
-          )
-        },
-        isNull(),
-      )
-    }
-
-    @Test
-    fun `should throw and raise telemetry if fails to update Nomis`() = runTest {
-      whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
-        ActivityMappingDto(
-          NOMIS_COURSE_ACTIVITY_ID,
-          ACTIVITY_SCHEDULE_ID,
-          "ACTIVITY_CREATED",
-          LocalDateTime.now(),
-        ),
-      )
-      whenever(nomisApiService.updateScheduleInstances(anyLong(), anyList()))
-        .thenThrow(ServiceUnavailable::class.java)
-
-      assertThrows<ServiceUnavailable> {
-        activitiesService.updateScheduleInstances(aDomainEvent())
-      }
-
-      verify(nomisApiService).updateScheduleInstances(eq(NOMIS_COURSE_ACTIVITY_ID), any())
-      verify(telemetryClient).trackEvent(
-        eq("schedule-instances-amend-failed"),
-        check<Map<String, String>> {
-          assertThat(it).containsExactlyInAnyOrderEntriesOf(
-            mapOf(
-              "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
-              "nomisCourseActivityId" to NOMIS_COURSE_ACTIVITY_ID.toString(),
-            ),
-          )
-        },
-        isNull(),
-      )
-    }
-
-    @Test
-    fun `should raise telemetry when update of Nomis successful`() = runTest {
-      whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule(endDate = LocalDate.now().plusDays(1)))
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
-        ActivityMappingDto(
-          NOMIS_COURSE_ACTIVITY_ID,
-          ACTIVITY_SCHEDULE_ID,
-          "ACTIVITY_CREATED",
-          LocalDateTime.now(),
-        ),
-      )
-
-      activitiesService.updateScheduleInstances(aDomainEvent())
-
-      verify(nomisApiService).updateScheduleInstances(
-        eq(NOMIS_COURSE_ACTIVITY_ID),
-        check {
-          with(it[0]) {
-            assertThat(date).isEqualTo("2023-02-10")
-            assertThat(startTime).isEqualTo("08:00")
-            assertThat(endTime).isEqualTo("11:00")
-          }
-          with(it[1]) {
-            assertThat(date).isEqualTo("2023-02-11")
-            assertThat(startTime).isEqualTo("08:00")
-            assertThat(endTime).isEqualTo("11:00")
-          }
-        },
-      )
-      verify(telemetryClient).trackEvent(
-        eq("schedule-instances-amend-success"),
-        check<Map<String, String>> {
-          assertThat(it).containsExactlyInAnyOrderEntriesOf(
-            mapOf(
-              "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
-              "nomisCourseActivityId" to NOMIS_COURSE_ACTIVITY_ID.toString(),
-            ),
-          )
-        },
-        isNull(),
-      )
-    }
-  }
-
-  @Nested
-  inner class Allocate {
-
-    @Test
-    fun `should log an allocation event`() = runTest {
-      whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
-      whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
-        ActivityMappingDto(
-          nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
-          activityScheduleId = ACTIVITY_SCHEDULE_ID,
-          mappingType = "ACTIVITY_CREATED",
-        ),
-      )
-      whenever(nomisApiService.createAllocation(eq(NOMIS_COURSE_ACTIVITY_ID), any())).thenReturn(
-        CreateAllocationResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID),
-      )
-
-      activitiesService.createAllocation(
-        AllocationDomainEvent(
-          eventType = "dummy",
-          version = "1.0",
-          description = "description",
-          occurredAt = LocalDateTime.now(),
-          additionalInformation = AllocationAdditionalInformation(
-            allocationId = ALLOCATION_ID,
-          ),
-        ),
-      )
-
-      verify(telemetryClient).trackEvent(
-        eq("activity-allocation-create-success"),
-        check {
-          assertThat(it["allocationId"]).isEqualTo("$ALLOCATION_ID")
-          assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-          assertThat(it["bookingId"]).isEqualTo("$BOOKING_ID")
-          assertThat(it["offenderProgramReferenceId"]).isEqualTo("$OFFENDER_PROGRAM_REFERENCE_ID")
-        },
-        isNull(),
-      )
-    }
-
-    @Test
-    fun `should log a creation failure`() = runTest {
-      whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
-      whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
-        ActivityMappingDto(
-          nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
-          activityScheduleId = ACTIVITY_SCHEDULE_ID,
-          mappingType = "ACTIVITY_CREATED",
-        ),
-      )
-      whenever(nomisApiService.createAllocation(any(), any())).thenThrow(RuntimeException("test"))
-
-      assertThat(
-        assertThrows<RuntimeException> {
-          activitiesService.createAllocation(
-            AllocationDomainEvent(
-              eventType = "dummy",
-              version = "1.0",
-              description = "description",
-              occurredAt = LocalDateTime.now(),
-              additionalInformation = AllocationAdditionalInformation(
-                allocationId = ALLOCATION_ID,
-              ),
-            ),
-          )
-        }.message,
-      ).isEqualTo("test")
-
-      verify(telemetryClient).trackEvent(
-        eq("activity-allocation-create-failed"),
-        check {
-          assertThat(it["allocationId"]).isEqualTo("$ALLOCATION_ID")
-          assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-          assertThat(it["bookingId"]).isEqualTo("$BOOKING_ID")
-        },
-        isNull(),
-      )
-    }
-  }
-
-  @Nested
-  inner class Deallocate {
-
-    @Test
-    fun `should log an allocation event`() = runTest {
-      whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
-      whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
-        ActivityMappingDto(
-          nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
-          activityScheduleId = ACTIVITY_SCHEDULE_ID,
-          mappingType = "ACTIVITY_CREATED",
-        ),
-      )
-      whenever(nomisApiService.deallocate(eq(NOMIS_COURSE_ACTIVITY_ID), any())).thenReturn(
-        CreateAllocationResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID),
-      )
-
-      activitiesService.deallocate(
-        AllocationDomainEvent(
-          eventType = "dummy",
-          version = "1.0",
-          description = "description",
-          occurredAt = LocalDateTime.now(),
-          additionalInformation = AllocationAdditionalInformation(
-            allocationId = ALLOCATION_ID,
-          ),
-        ),
-      )
-
-      verify(telemetryClient).trackEvent(
-        eq("activity-deallocate-success"),
-        check {
-          assertThat(it["allocationId"]).isEqualTo("$ALLOCATION_ID")
-          assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-          assertThat(it["bookingId"]).isEqualTo("$BOOKING_ID")
-          assertThat(it["offenderProgramReferenceId"]).isEqualTo("$OFFENDER_PROGRAM_REFERENCE_ID")
-        },
-        isNull(),
-      )
-    }
-
-    @Test
-    fun `should log a nomis failure`() = runTest {
-      whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
-      whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
-        ActivityMappingDto(
-          nomisCourseActivityId = NOMIS_COURSE_ACTIVITY_ID,
-          activityScheduleId = ACTIVITY_SCHEDULE_ID,
-          mappingType = "ACTIVITY_CREATED",
-        ),
-      )
-      whenever(nomisApiService.deallocate(any(), any())).thenThrow(RuntimeException("test"))
-
-      assertThat(
-        assertThrows<RuntimeException> {
-          activitiesService.deallocate(
-            AllocationDomainEvent(
-              eventType = "dummy",
-              version = "1.0",
-              description = "description",
-              occurredAt = LocalDateTime.now(),
-              additionalInformation = AllocationAdditionalInformation(
-                allocationId = ALLOCATION_ID,
-              ),
-            ),
-          )
-        }.message,
-      ).isEqualTo("test")
-
-      verify(telemetryClient).trackEvent(
-        eq("activity-deallocate-failed"),
-        check {
-          assertThat(it["allocationId"]).isEqualTo("$ALLOCATION_ID")
-          assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-          assertThat(it["bookingId"]).isEqualTo("$BOOKING_ID")
-        },
-        isNull(),
-      )
-    }
-  }
-
-  @Nested
   inner class Retry {
 
     @Test
@@ -754,18 +455,3 @@ private fun newActivity(): Activity = Activity(
     ),
   ),
 )
-
-private fun newAllocation(): Allocation {
-  return Allocation(
-    id = ALLOCATION_ID,
-    prisonerNumber = OFFENDER_NO,
-    activitySummary = "summary",
-    bookingId = BOOKING_ID,
-    startDate = LocalDate.parse("2023-01-12"),
-    endDate = LocalDate.parse("2023-01-13"),
-    prisonPayBand = PrisonPayBand(1, 1, "", "", 1, "MDI"),
-    scheduleDescription = "description",
-    scheduleId = ACTIVITY_SCHEDULE_ID,
-    isUnemployment = false,
-  )
-}

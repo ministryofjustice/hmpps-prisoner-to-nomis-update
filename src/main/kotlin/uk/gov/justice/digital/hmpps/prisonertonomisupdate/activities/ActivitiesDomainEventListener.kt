@@ -14,7 +14,9 @@ import java.util.concurrent.CompletableFuture
 @Service
 class ActivitiesDomainEventListener(
   private val activitiesService: ActivitiesService,
+  private val allocationService: AllocationService,
   private val attendanceService: AttendanceService,
+  private val schedulesService: SchedulesService,
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
 ) : DomainEventListener(
@@ -33,9 +35,9 @@ class ActivitiesDomainEventListener(
     when (eventType) {
       "activities.activity-schedule.created" -> activitiesService.createActivity(message.fromJson())
       "activities.activity-schedule.amended" -> activitiesService.updateActivity(message.fromJson())
-      "activities.scheduled-instances.amended" -> activitiesService.updateScheduleInstances(message.fromJson())
-      "activities.prisoner.allocated" -> activitiesService.createAllocation(message.fromJson())
-      "activities.prisoner.deallocated" -> activitiesService.deallocate(message.fromJson())
+      "activities.scheduled-instances.amended" -> schedulesService.updateScheduleInstances(message.fromJson())
+      "activities.prisoner.allocated" -> allocationService.createAllocation(message.fromJson())
+      "activities.prisoner.deallocated" -> allocationService.deallocate(message.fromJson())
       "activities.prisoner.attendance-created" -> attendanceService.upsertAttendance(message.fromJson())
       "activities.prisoner.attendance-amended" -> attendanceService.upsertAttendance(message.fromJson())
 
