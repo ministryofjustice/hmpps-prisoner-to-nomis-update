@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 
 @Service
 class ActivitiesApiService(@Qualifier("activitiesApiWebClient") private val webClient: WebClient) {
@@ -36,6 +37,13 @@ class ActivitiesApiService(@Qualifier("activitiesApiWebClient") private val webC
   suspend fun getAttendanceSync(attendanceId: Long): AttendanceSync {
     return webClient.get()
       .uri("/synchronisation/attendance/$attendanceId")
+      .retrieve()
+      .awaitBody()
+  }
+
+  suspend fun getScheduledInstance(scheduledInstanceId: Long): ScheduledInstance {
+    return webClient.get()
+      .uri("/scheduled-instances/$scheduledInstanceId")
       .retrieve()
       .awaitBody()
   }

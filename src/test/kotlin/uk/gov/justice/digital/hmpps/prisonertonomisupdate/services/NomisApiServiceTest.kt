@@ -330,6 +330,46 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
+  inner class UpdateScheduledInstance {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      NomisApiExtension.nomisApi.stubScheduledInstanceUpdate(1L, """{ "courseScheduleId": 2 }""")
+
+      nomisApiService.updateScheduledInstance(1L, updateScheduledInstance())
+
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/1/schedule"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will put data to nomis api`() = runTest {
+      NomisApiExtension.nomisApi.stubScheduleInstancesUpdate(1L)
+
+      nomisApiService.updateScheduledInstance(1L, updateScheduledInstance())
+
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/1/schedule"))
+          .withRequestBody(matchingJsonPath("date", equalTo("2023-02-10")))
+          .withRequestBody(matchingJsonPath("startTime", equalTo("08:00")))
+          .withRequestBody(matchingJsonPath("endTime", equalTo("11:00")))
+          .withRequestBody(matchingJsonPath("cancelled", equalTo("true"))),
+      )
+    }
+
+    @Test
+    fun `when any error response is received an exception is thrown`() = runTest {
+      NomisApiExtension.nomisApi.stubScheduledInstanceUpdateWithError(1, 503)
+
+      assertThrows<ServiceUnavailable> {
+        nomisApiService.updateScheduledInstance(1L, updateScheduledInstance())
+      }
+    }
+  }
+
+  @Nested
   inner class Allocation {
 
     @Test
@@ -984,6 +1024,14 @@ fun updateScheduleInstances() = listOf(
   ScheduleRequest(date = LocalDate.parse("2023-02-10"), startTime = LocalTime.parse("08:00"), endTime = LocalTime.parse("11:00")),
   ScheduleRequest(date = LocalDate.parse("2023-02-11"), startTime = LocalTime.parse("08:00"), endTime = LocalTime.parse("11:00")),
 )
+
+fun updateScheduledInstance() =
+  UpdateScheduleRequest(
+    date = LocalDate.parse("2023-02-10"),
+    startTime = LocalTime.parse("08:00"),
+    endTime = LocalTime.parse("11:00"),
+    cancelled = true,
+  )
 
 fun newAllocation() = CreateAllocationRequest(
   bookingId = 456L,

@@ -2,7 +2,9 @@
 
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
-import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -15,7 +17,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension.Companion.activitiesApi
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -30,7 +32,7 @@ internal class ActivitiesApiServiceTest {
   inner class GetSchedule {
     @BeforeEach
     internal fun setUp() {
-      ActivitiesApiExtension.activitiesApi.stubGetSchedule(
+      activitiesApi.stubGetSchedule(
         1234,
         """
       {
@@ -163,9 +165,9 @@ internal class ActivitiesApiServiceTest {
     fun `should call api with OAuth2 token`() = runTest {
       activitiesApiService.getActivitySchedule(1234)
 
-      ActivitiesApiExtension.activitiesApi.verify(
-        WireMock.getRequestedFor(WireMock.urlEqualTo("/schedules/1234"))
-          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+      activitiesApi.verify(
+        getRequestedFor(urlEqualTo("/schedules/1234"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -194,7 +196,7 @@ internal class ActivitiesApiServiceTest {
 
     @Test
     fun `when schedule is not found an exception is thrown`() = runTest {
-      ActivitiesApiExtension.activitiesApi.stubGetScheduleWithError(1234, status = 404)
+      activitiesApi.stubGetScheduleWithError(1234, status = 404)
 
       assertThrows<NotFound> {
         activitiesApiService.getActivitySchedule(1234)
@@ -203,7 +205,7 @@ internal class ActivitiesApiServiceTest {
 
     @Test
     fun `when any bad response is received an exception is thrown`() = runTest {
-      ActivitiesApiExtension.activitiesApi.stubGetScheduleWithError(1234, status = 503)
+      activitiesApi.stubGetScheduleWithError(1234, status = 503)
 
       assertThrows<ServiceUnavailable> {
         activitiesApiService.getActivitySchedule(1234)
@@ -215,7 +217,7 @@ internal class ActivitiesApiServiceTest {
   inner class GetActivity {
     @BeforeEach
     internal fun setUp() {
-      ActivitiesApiExtension.activitiesApi.stubGetActivity(
+      activitiesApi.stubGetActivity(
         1234,
         """
     {
@@ -410,9 +412,9 @@ internal class ActivitiesApiServiceTest {
     fun `should call api with OAuth2 token`() = runTest {
       activitiesApiService.getActivity(1234)
 
-      ActivitiesApiExtension.activitiesApi.verify(
-        WireMock.getRequestedFor(WireMock.urlEqualTo("/activities/1234"))
-          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+      activitiesApi.verify(
+        getRequestedFor(urlEqualTo("/activities/1234"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -438,7 +440,7 @@ internal class ActivitiesApiServiceTest {
 
     @Test
     fun `when schedule is not found an exception is thrown`() = runTest {
-      ActivitiesApiExtension.activitiesApi.stubGetActivityWithError(1234, status = 404)
+      activitiesApi.stubGetActivityWithError(1234, status = 404)
 
       assertThrows<NotFound> {
         activitiesApiService.getActivity(1234)
@@ -447,7 +449,7 @@ internal class ActivitiesApiServiceTest {
 
     @Test
     fun `when any bad response is received an exception is thrown`() = runTest {
-      ActivitiesApiExtension.activitiesApi.stubGetActivityWithError(1234, status = 503)
+      activitiesApi.stubGetActivityWithError(1234, status = 503)
 
       assertThrows<ServiceUnavailable> {
         activitiesApiService.getActivity(1234)
@@ -459,7 +461,7 @@ internal class ActivitiesApiServiceTest {
   inner class GetAllocation {
     @BeforeEach
     internal fun setUp() {
-      ActivitiesApiExtension.activitiesApi.stubGetAllocation(
+      activitiesApi.stubGetAllocation(
         1234,
         """
           {
@@ -494,9 +496,9 @@ internal class ActivitiesApiServiceTest {
     fun `should call api with OAuth2 token`() = runTest {
       activitiesApiService.getAllocation(1234)
 
-      ActivitiesApiExtension.activitiesApi.verify(
-        WireMock.getRequestedFor(WireMock.urlEqualTo("/allocations/id/1234"))
-          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+      activitiesApi.verify(
+        getRequestedFor(urlEqualTo("/allocations/id/1234"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -525,7 +527,7 @@ internal class ActivitiesApiServiceTest {
 
     @Test
     fun `when allocation is not found an exception is thrown`() = runTest {
-      ActivitiesApiExtension.activitiesApi.stubGetAllocationWithError(1234, status = 404)
+      activitiesApi.stubGetAllocationWithError(1234, status = 404)
 
       assertThrows<NotFound> {
         activitiesApiService.getAllocation(1234)
@@ -534,7 +536,7 @@ internal class ActivitiesApiServiceTest {
 
     @Test
     fun `when any bad response is received an exception is thrown`() = runTest {
-      ActivitiesApiExtension.activitiesApi.stubGetAllocationWithError(1234, status = 503)
+      activitiesApi.stubGetAllocationWithError(1234, status = 503)
 
       assertThrows<ServiceUnavailable> {
         activitiesApiService.getAllocation(1234)
@@ -546,7 +548,7 @@ internal class ActivitiesApiServiceTest {
   inner class GetAttendanceSync {
     @BeforeEach
     internal fun setUp() {
-      ActivitiesApiExtension.activitiesApi.stubGetAttendanceSync(
+      activitiesApi.stubGetAttendanceSync(
         1234,
         """
           {
@@ -573,9 +575,9 @@ internal class ActivitiesApiServiceTest {
     fun `should call api with OAuth2 token`() = runTest {
       activitiesApiService.getAttendanceSync(1234)
 
-      ActivitiesApiExtension.activitiesApi.verify(
-        WireMock.getRequestedFor(WireMock.urlEqualTo("/synchronisation/attendance/1234"))
-          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+      activitiesApi.verify(
+        getRequestedFor(urlEqualTo("/synchronisation/attendance/1234"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -603,7 +605,7 @@ internal class ActivitiesApiServiceTest {
 
     @Test
     fun `when attendance is not found an exception is thrown`() = runTest {
-      ActivitiesApiExtension.activitiesApi.stubGetAttendanceSyncWithError(1234, status = 404)
+      activitiesApi.stubGetAttendanceSyncWithError(1234, status = 404)
 
       assertThrows<NotFound> {
         activitiesApiService.getAttendanceSync(1234)
@@ -612,10 +614,171 @@ internal class ActivitiesApiServiceTest {
 
     @Test
     fun `when any bad response is received an exception is thrown`() = runTest {
-      ActivitiesApiExtension.activitiesApi.stubGetAttendanceSyncWithError(1234, status = 503)
+      activitiesApi.stubGetAttendanceSyncWithError(1234, status = 503)
 
       assertThrows<ServiceUnavailable> {
         activitiesApiService.getAttendanceSync(1234)
+      }
+    }
+  }
+
+  @Nested
+  inner class GetScheduledInstance {
+    @BeforeEach
+    internal fun setUp() {
+      activitiesApi.stubGetScheduledInstance(
+        1234,
+        """
+{
+  "id": 1234,
+  "date": "2022-09-30",
+  "startTime": "09:00",
+  "endTime": "10:00",
+  "cancelled": true,
+  "cancelledTime": "2023-04-17T14:09:07.329Z",
+  "cancelledBy": "Adam Smith",
+  "cancelledReason": "Staff unavailable",
+  "previousScheduledInstanceId": 123456,
+  "previousScheduledInstanceDate": "2022-09-30",
+  "nextScheduledInstanceId": 123456,
+  "nextScheduledInstanceDate": "2022-09-30",
+  "attendances": [
+    {
+      "id": 123456,
+      "scheduleInstanceId": 123456,
+      "prisonerNumber": "A1234AA",
+      "attendanceReason": {
+        "id": 1,
+        "code": "SICK",
+        "description": "Sick",
+        "attended": true,
+        "capturePay": true,
+        "captureMoreDetail": true,
+        "captureCaseNote": true,
+        "captureIncentiveLevelWarning": false,
+        "captureOtherText": false,
+        "displayInAbsence": false,
+        "displaySequence": 1,
+        "notes": "Maps to ACCAB in NOMIS"
+      },
+      "comment": "Prisoner was too unwell to attend the activity.",
+      "recordedTime": "2023-04-17T14:09:07.330Z",
+      "recordedBy": "A.JONES",
+      "status": "WAITING",
+      "payAmount": 100,
+      "bonusAmount": 50,
+      "pieces": 0,
+      "issuePayment": true,
+      "incentiveLevelWarningIssued": true,
+      "otherAbsenceReason": "Prisoner has a valid reason to miss the activity.",
+      "attendanceHistory": [
+        {
+          "id": 123456,
+          "attendanceReason": {
+            "id": 1,
+            "code": "SICK",
+            "description": "Sick",
+            "attended": true,
+            "capturePay": true,
+            "captureMoreDetail": true,
+            "captureCaseNote": true,
+            "captureIncentiveLevelWarning": false,
+            "captureOtherText": false,
+            "displayInAbsence": false,
+            "displaySequence": 1,
+            "notes": "Maps to ACCAB in NOMIS"
+          },
+          "comment": "Prisoner was too unwell to attend the activity.",
+          "recordedTime": "2023-04-17T14:09:07.330Z",
+          "recordedBy": "A.JONES",
+          "issuePayment": true,
+          "incentiveLevelWarningIssued": true,
+          "otherAbsenceReason": "Prisoner has a valid reason to miss the activity."
+        }
+      ]
+    }
+  ],
+  "activitySchedule": {
+    "id": 123456,
+    "description": "Monday AM Houseblock 3",
+    "internalLocation": 98877667,
+    "capacity": 10,
+    "activity": {
+      "id": 123456,
+      "prisonCode": "PVI",
+      "attendanceRequired": false,
+      "inCell": false,
+      "pieceWork": false,
+      "outsideWork": false,
+      "payPerSession": "H",
+      "summary": "Maths level 1",
+      "description": "A basic maths course suitable for introduction to the subject",
+      "category": {
+        "id": 1,
+        "code": "LEISURE_SOCIAL",
+        "name": "Leisure and social",
+        "description": "Such as association, library time and social clubs, like music or art"
+      },
+      "riskLevel": "high",
+      "minimumIncentiveNomisCode": "BAS",
+      "minimumIncentiveLevel": "Basic",
+      "minimumEducationLevel": [
+        {
+          "id": 123456,
+          "educationLevelCode": "Basic",
+          "educationLevelDescription": "Basic"
+        }
+      ]
+    },
+    "slots": [
+      {
+        "id": 123456,
+        "startTime": "9:00",
+        "endTime": "11:30",
+        "daysOfWeek": "[Mon,Tue,Wed]",
+        "mondayFlag": true,
+        "tuesdayFlag": true,
+        "wednesdayFlag": true,
+        "thursdayFlag": false,
+        "fridayFlag": false,
+        "saturdayFlag": false,
+        "sundayFlag": false
+      }
+    ],
+    "startDate": "2022-09-21",
+    "endDate": "2022-10-21"
+  }
+}
+        """.trimIndent(),
+      )
+    }
+
+    @Test
+    fun `should call api with OAuth2 token`() = runTest {
+      activitiesApiService.getScheduledInstance(1234)
+
+      activitiesApi.verify(
+        getRequestedFor(urlEqualTo("/scheduled-instances/1234"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `get parse core data`() = runTest {
+      val attendance = activitiesApiService.getScheduledInstance(1234)
+
+      with(attendance) {
+        assertThat(id).isEqualTo(1234)
+        assertThat(cancelled).isEqualTo(true)
+      }
+    }
+
+    @Test
+    fun `when any bad response is received an exception is thrown`() = runTest {
+      activitiesApi.stubGetScheduledInstanceWithError(1234, status = 503)
+
+      assertThrows<ServiceUnavailable> {
+        activitiesApiService.getScheduledInstance(1234)
       }
     }
   }

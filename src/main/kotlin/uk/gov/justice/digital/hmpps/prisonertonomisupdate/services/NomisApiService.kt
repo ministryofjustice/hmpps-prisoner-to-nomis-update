@@ -82,6 +82,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .awaitBodilessEntity()
   }
 
+  suspend fun updateScheduledInstance(courseActivityId: Long, request: UpdateScheduleRequest): UpdateScheduleResponse =
+    webClient.put()
+      .uri("/activities/$courseActivityId/schedule")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBody()
+
   suspend fun createAllocation(
     courseActivityId: Long,
     request: CreateAllocationRequest,
@@ -399,6 +406,20 @@ data class ScheduleRequest(
   val startTime: LocalTime,
   @JsonFormat(pattern = "HH:mm")
   val endTime: LocalTime,
+)
+
+data class UpdateScheduleRequest(
+  @JsonFormat(pattern = "yyyy-MM-dd")
+  val date: LocalDate,
+  @JsonFormat(pattern = "HH:mm")
+  val startTime: LocalTime,
+  @JsonFormat(pattern = "HH:mm")
+  val endTime: LocalTime,
+  val cancelled: Boolean,
+)
+
+data class UpdateScheduleResponse(
+  val courseScheduleId: Long,
 )
 
 data class UpdateSentencingAdjustmentRequest(
