@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-04-03.4263.e139faf"
+    "version": "2023-04-14.4715.7193289"
   },
   "servers": [
     {
@@ -54,18 +54,8 @@
           "required": true
         },
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "Not Found, the scheduled instance does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -84,8 +74,18 @@
               }
             }
           },
-          "404": {
-            "description": "Not Found, the scheduled instance does not exist",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -130,12 +130,22 @@
           "required": true
         },
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Scheduled instance successfully cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             }
@@ -160,22 +170,12 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "204": {
-            "description": "Scheduled instance successfully cancelled",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
                 }
               }
             }
@@ -298,8 +298,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -308,8 +308,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -350,8 +350,21 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "The allocations for an activity schedule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Allocation"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Schedule ID not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -370,21 +383,8 @@
               }
             }
           },
-          "200": {
-            "description": "The allocations for an activity schedule",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Allocation"
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Schedule ID not found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -424,32 +424,12 @@
           "required": true
         },
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "204": {
             "description": "The allocation was created and added to the schedule.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -473,6 +453,26 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -483,8 +483,8 @@
           "scheduled-event-controller"
         ],
         "summary": "Get a list of scheduled events for a prison, prisoner, date range (max 3 months) and optional time slot.",
-        "description": "\n      Returns scheduled events for the prison, prisoner, date range (max 3 months) and optional time slot.\n      Court hearings, appointments and visits always come from NOMIS (via prison API).\n      Activities come from either NOMIS or the new Activities database, depending on whether the prison is\n      marked as rolled-out in the activities database.\n      (Intended usage: Prisoner calendar)\n    ",
-        "operationId": "getScheduledEventsByPrisonAndPrisonerAndDateRange",
+        "description": "\n      Returns scheduled events for the prison, prisoner, date range (max 3 months) and optional time slot.\n      Court hearings, adjudication hearings, transfers and visits come from NOMIS (via prison API).\n      Activities and appointments come from either NOMIS or the local database depending on whether the prison is\n      marked as active for appointments and/or activities.\n      (Intended usage: Prisoner calendar / schedule)\n    ",
+        "operationId": "getScheduledEventsForSinglePrisoner",
         "parameters": [
           {
             "name": "prisonCode",
@@ -540,12 +540,12 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Successful call - zero or more scheduled events found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/PrisonerScheduledEvents"
                 }
               }
             }
@@ -580,12 +580,12 @@
               }
             }
           },
-          "200": {
-            "description": "Successful call - zero or more scheduled events found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PrisonerScheduledEvents"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -597,8 +597,8 @@
           "scheduled-event-controller"
         ],
         "summary": "Get a list of scheduled events for a prison and list of prisoner numbers for a date and time slot",
-        "description": "\n      Returns scheduled events for the prison, prisoner numbers, single date and an optional time slot.\n      Court hearings, appointments and visits always come from NOMIS (via prison API).\n      Activities come from either NOMIS or the new activities database, depending on whether the prison is\n      marked as rolled-out in the activities database.\n      (Intended usage: Unlock list)\n    ",
-        "operationId": "getScheduledEventsByPrisonAndPrisonersAndDateRange",
+        "description": "\n      Returns scheduled events for the prison, prisoner numbers, single date and an optional time slot.\n      Court hearings, adjudication hearings, transfers and visits come from NOMIS (via prison API).\n      Activities and appointments come from either NOMIS or the local database depending on whether the prison is\n      marked as rolled-out for activities and/or appointments.\n      (Intended usage: Unlock list)\n    ",
+        "operationId": "getScheduledEventsForMultiplePrisoners",
         "parameters": [
           {
             "name": "prisonCode",
@@ -650,12 +650,12 @@
           "required": true
         },
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Successful call - zero or more scheduled events found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/PrisonerScheduledEvents"
                 }
               }
             }
@@ -690,12 +690,12 @@
               }
             }
           },
-          "200": {
-            "description": "Successful call - zero or more scheduled events found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PrisonerScheduledEvents"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -758,8 +758,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -768,8 +768,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -847,6 +847,89 @@
         }
       }
     },
+    "/audit/search": {
+      "post": {
+        "tags": [
+          "audit-controller"
+        ],
+        "summary": "Search for audit records",
+        "description": "Returns all records that match the search criteria.",
+        "operationId": "getAuditRecords",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 3
+            }
+          },
+          {
+            "name": "sortDirection",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuditRecordSearchFilters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Search performed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Activity"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/appointments": {
       "post": {
         "tags": [
@@ -876,8 +959,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -886,8 +969,8 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -928,8 +1011,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -948,8 +1031,81 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appointment-occurrences/{appointmentOccurrenceId}": {
+      "patch": {
+        "tags": [
+          "appointment-occurrence-controller"
+        ],
+        "summary": "Update an appointment occurrence or series of appointment occurrences",
+        "description": "\n    Update an appointment occurrence or series of appointment occurrences based on the applyTo property.\n    Does not require any specific roles\n    ",
+        "operationId": "updateAppointmentOccurrence",
+        "parameters": [
+          {
+            "name": "appointmentOccurrenceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppointmentOccurrenceUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
           "400": {
             "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The appointment occurrence for this ID was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "The appointment occurrence or series of appointment occurrences was updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentOccurrence"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1055,8 +1211,163 @@
           }
         ],
         "responses": {
+          "404": {
+            "description": "The activity for this ID was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Activity found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivitySchedule"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schedules/{scheduleId}/candidates": {
+      "get": {
+        "tags": [
+          "activity-schedule-controller"
+        ],
+        "summary": "Get the suitable candidates for an activity",
+        "description": "Returns a paginated view of the list of candidates suitable for a given activity schedule. Filterable by employment status, workplace risk assessment, and incentive level. Requires any one of the following roles ['ACTIVITY_HUB', 'ACTIVITY_HUB_LEAD', 'ACTIVITY_ADMIN'].",
+        "operationId": "candidates",
+        "parameters": [
+          {
+            "name": "scheduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "suitableIncentiveLevel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "suitableRiskLevel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "suitableForEmployed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of candidates was returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageActivityCandidate"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The activity schedule for this ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1075,22 +1386,12 @@
               }
             }
           },
-          "404": {
-            "description": "The activity for this ID was not found.",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Activity found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ActivitySchedule"
                 }
               }
             }
@@ -1117,8 +1418,8 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "Schedule ID not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1147,8 +1448,8 @@
               }
             }
           },
-          "404": {
-            "description": "Schedule ID not found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1180,12 +1481,12 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Scheduled instance found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ActivityScheduleInstance"
                 }
               }
             }
@@ -1210,12 +1511,12 @@
               }
             }
           },
-          "200": {
-            "description": "Scheduled instance found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ActivityScheduleInstance"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1243,12 +1544,15 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Attendance records found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Attendance"
+                  }
                 }
               }
             }
@@ -1273,15 +1577,12 @@
               }
             }
           },
-          "200": {
-            "description": "Attendance records found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Attendance"
-                  }
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1308,18 +1609,8 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "The prison for this code was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1338,8 +1629,18 @@
               }
             }
           },
-          "404": {
-            "description": "The prison for this code was not found.",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1445,12 +1746,15 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Successful call - zero or more scheduled instance records found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActivityScheduleInstance"
+                  }
                 }
               }
             }
@@ -1465,15 +1769,12 @@
               }
             }
           },
-          "200": {
-            "description": "Successful call - zero or more scheduled instance records found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ActivityScheduleInstance"
-                  }
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1534,12 +1835,15 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Activity schedules found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActivitySchedule"
+                  }
                 }
               }
             }
@@ -1554,15 +1858,12 @@
               }
             }
           },
-          "200": {
-            "description": "Activity schedules found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ActivitySchedule"
-                  }
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1589,12 +1890,15 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Prison pay bands found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PrisonPayBand"
+                  }
                 }
               }
             }
@@ -1609,15 +1913,12 @@
               }
             }
           },
-          "200": {
-            "description": "Prison pay bands found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PrisonPayBand"
-                  }
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1668,12 +1969,15 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Locations found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InternalLocation"
+                  }
                 }
               }
             }
@@ -1688,15 +1992,12 @@
               }
             }
           },
-          "200": {
-            "description": "Locations found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/InternalLocation"
-                  }
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1731,8 +2032,18 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Activity category capacity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapacityAndAllocated"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category ID not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1751,18 +2062,8 @@
               }
             }
           },
-          "200": {
-            "description": "Activity category capacity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CapacityAndAllocated"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Category ID not found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1801,26 +2102,6 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "404": {
             "description": "Category ID not found",
             "content": {
@@ -1840,6 +2121,26 @@
                   "items": {
                     "$ref": "#/components/schemas/ActivityLite"
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1865,12 +2166,15 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Activities",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActivityLite"
+                  }
                 }
               }
             }
@@ -1885,15 +2189,12 @@
               }
             }
           },
-          "200": {
-            "description": "Activities",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ActivityLite"
-                  }
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1920,28 +2221,8 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The prison regime for this prison code was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1956,6 +2237,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrisonRegime"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The prison regime for this prison code was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1990,8 +2291,8 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "400": {
+            "description": "Invalid request",
             "content": {
               "application/json": {
                 "schema": {
@@ -2013,16 +2314,6 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -2035,6 +2326,16 @@
           },
           "404": {
             "description": "Requested resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -2073,8 +2374,8 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "400": {
+            "description": "Invalid request",
             "content": {
               "application/json": {
                 "schema": {
@@ -2083,12 +2384,12 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid request",
+          "200": {
+            "description": "Successful call - Location prefix found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/LocationPrefixDto"
                 }
               }
             }
@@ -2113,12 +2414,12 @@
               }
             }
           },
-          "200": {
-            "description": "Successful call - Location prefix found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LocationPrefixDto"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2145,12 +2446,15 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Successful call - zero or more location groups found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LocationGroup"
+                  }
                 }
               }
             }
@@ -2185,15 +2489,12 @@
               }
             }
           },
-          "200": {
-            "description": "Successful call - zero or more location groups found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LocationGroup"
-                  }
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2221,8 +2522,18 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Attendance found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attendance"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The attendance was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2241,18 +2552,8 @@
               }
             }
           },
-          "200": {
-            "description": "Attendance found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Attendance"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The attendance was not found.",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -2285,8 +2586,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -2295,8 +2596,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -2381,6 +2682,16 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "Appointment Occurrence found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentOccurrenceDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "The appointment occurrence for this ID was not found.",
             "content": {
@@ -2397,16 +2708,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Appointment Occurrence found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppointmentOccurrenceDetails"
                 }
               }
             }
@@ -2434,6 +2735,16 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "Appointment instance found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentInstance"
+                }
+              }
+            }
+          },
           "404": {
             "description": "The appointment instance for this ID was not found.",
             "content": {
@@ -2450,16 +2761,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Appointment instance found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppointmentInstance"
                 }
               }
             }
@@ -2574,12 +2875,12 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "allocation found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/Allocation"
                 }
               }
             }
@@ -2604,12 +2905,12 @@
               }
             }
           },
-          "200": {
-            "description": "allocation found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Allocation"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2625,12 +2926,15 @@
         "summary": "Get the list of top-level activity categories",
         "operationId": "getCategories",
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Activity categories found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActivityCategory"
+                  }
                 }
               }
             }
@@ -2645,15 +2949,12 @@
               }
             }
           },
-          "200": {
-            "description": "Activity categories found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ActivityCategory"
-                  }
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2681,18 +2982,8 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "The activity for this ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2711,8 +3002,18 @@
               }
             }
           },
-          "404": {
-            "description": "The activity for this ID was not found.",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -2743,8 +3044,8 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "Activity ID not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -2773,8 +3074,8 @@
               }
             }
           },
-          "404": {
-            "description": "Activity ID not found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -2805,8 +3106,18 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Activity capacity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapacityAndAllocated"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Activity ID not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -2825,18 +3136,8 @@
               }
             }
           },
-          "200": {
-            "description": "Activity capacity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CapacityAndAllocated"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Activity ID not found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -2974,7 +3275,6 @@
       },
       "AttendanceUpdateRequest": {
         "required": [
-          "attendanceReason",
           "id",
           "status"
         ],
@@ -3130,8 +3430,12 @@
       },
       "ScheduledEvent": {
         "required": [
+          "cancelled",
+          "inCell",
+          "outsidePrison",
           "priority",
-          "startTime"
+          "startTime",
+          "suspended"
         ],
         "type": "object",
         "properties": {
@@ -3140,63 +3444,107 @@
             "description": "The prison code for this scheduled event",
             "example": "MDI"
           },
+          "eventSource": {
+            "type": "string",
+            "description": "The source of this event - valid values are NOMIS or SAA (scheduling activities and appointments)",
+            "example": "NOMIS"
+          },
+          "eventType": {
+            "type": "string",
+            "description": "The event type (APPOINTMENT, ACTIVITY, COURT_HEARING, EXTERNAL_TRANSFER, ADJUDICATION_HEARING, VISIT)",
+            "example": "APPOINTMENT"
+          },
+          "scheduledInstanceId": {
+            "type": "integer",
+            "description": "For activities from SAA the ID for the activity scheduled instance, or null when from NOMIS",
+            "format": "int64",
+            "example": 9999
+          },
+          "appointmentInstanceId": {
+            "type": "integer",
+            "description": "For appointments from SAA the ID for the appointment instance, or null when from NOMIS",
+            "format": "int64",
+            "example": 9999
+          },
+          "appointmentOccurrenceId": {
+            "type": "integer",
+            "description": "For appointments from SAA the ID for the appointment occurrence, or null when from NOMIS",
+            "format": "int64",
+            "example": 9999
+          },
+          "oicHearingId": {
+            "type": "integer",
+            "description": "For adjudication hearings from NOMIS the ID for the OIC hearing, or null for other types",
+            "format": "int64",
+            "example": 9999
+          },
           "eventId": {
             "type": "integer",
-            "description": "The event id for this scheduled event",
+            "description": "The event ID for events from NOMIS, otherwise null if from SAA",
             "format": "int64",
             "example": 10001
           },
           "bookingId": {
             "type": "integer",
-            "description": "The booking id for this scheduled event",
+            "description": "The booking id of the prisoner this event relates to.",
             "format": "int64",
             "example": 10001
           },
-          "location": {
-            "type": "string",
-            "description": "The location of this scheduled event",
-            "example": "INDUCTION CLASSROOM"
-          },
-          "locationId": {
+          "internalLocationId": {
             "type": "integer",
-            "description": "The location id of this scheduled event",
+            "description": "The NOMIS internal location id where this event takes place",
             "format": "int64",
             "example": 10001
           },
-          "eventClass": {
+          "internalLocationCode": {
             "type": "string",
-            "description": "Scheduled event class",
-            "example": "INT_MOV"
+            "description": "The NOMIS location code for this event",
+            "example": "MDI-HB1-EDUCATION-RM1"
           },
-          "eventStatus": {
+          "internalLocationDescription": {
             "type": "string",
-            "description": "Scheduled event status",
-            "example": "SCH"
+            "description": "The NOMIS location description for this event",
+            "example": "Education Room One"
           },
-          "eventType": {
+          "categoryCode": {
             "type": "string",
-            "description": "Scheduled event type",
-            "example": "APP"
-          },
-          "eventTypeDesc": {
-            "type": "string",
-            "description": "Scheduled event type description",
-            "example": "Appointment"
-          },
-          "event": {
-            "type": "string",
-            "description": "Scheduled event",
+            "description": "Event category code (e.g appointment category code, activity category code)",
             "example": "GOVE"
           },
-          "eventDesc": {
+          "categoryDescription": {
             "type": "string",
-            "description": "Scheduled event description",
+            "description": "Event category description.",
             "example": "Governor"
           },
-          "details": {
+          "summary": {
             "type": "string",
-            "description": "Details of this scheduled event",
-            "example": "Dont be late"
+            "description": "The event summary to show on unlock lists, schedules and calendars",
+            "example": "Court hearing"
+          },
+          "comments": {
+            "type": "string",
+            "description": "Any comments supplied that relate to this event",
+            "example": "Reception for 8am please."
+          },
+          "inCell": {
+            "type": "boolean",
+            "description": "Set to true if this event will take place in the prisoner's cell",
+            "example": false
+          },
+          "outsidePrison": {
+            "type": "boolean",
+            "description": "Set to true if this event takes place outside the prison",
+            "example": false
+          },
+          "cancelled": {
+            "type": "boolean",
+            "description": "Set to true if this event has been cancelled",
+            "example": false
+          },
+          "suspended": {
+            "type": "boolean",
+            "description": "Set to true if this prisoner is suspended for this event (only applies to activities)",
+            "example": false
           },
           "prisonerNumber": {
             "type": "string",
@@ -3205,7 +3553,7 @@
           },
           "date": {
             "type": "string",
-            "description": "The specific date for this scheduled instance",
+            "description": "The specific date for this event",
             "format": "date",
             "example": "2022-09-30"
           },
@@ -3213,7 +3561,7 @@
             "type": "string",
             "description": "The start time for this scheduled instance",
             "format": "partial-time",
-            "example": "9:00"
+            "example": "09:00"
           },
           "endTime": {
             "type": "string",
@@ -3223,7 +3571,7 @@
           },
           "priority": {
             "type": "integer",
-            "description": "The event priority",
+            "description": "The event priority - configurable by prison, or via defaults.",
             "format": "int32"
           }
         },
@@ -3385,657 +3733,75 @@
         },
         "description": "Describes a prisoners allocations"
       },
-      "AppointmentCreateRequest": {
-        "required": [
-          "categoryCode",
-          "comment",
-          "endTime",
-          "inCell",
-          "prisonCode",
-          "prisonerNumbers",
-          "startDate",
-          "startTime"
-        ],
+      "AuditRecordSearchFilters": {
         "type": "object",
         "properties": {
-          "categoryCode": {
-            "type": "string",
-            "description": "The NOMIS reference code for this appointment. Must exist and be active",
-            "example": "CHAP"
-          },
           "prisonCode": {
-            "maxLength": 3,
-            "minLength": 0,
             "type": "string",
-            "description": "The NOMIS prison code where this appointment takes place",
+            "description": "The code of the prison",
             "example": "PVI"
-          },
-          "internalLocationId": {
-            "type": "integer",
-            "description": "\n    The NOMIS internal location id within the specified prison. This must be supplied if inCell is false.\n    The internal location id must exist, must be within the prison specified by the prisonCode property and be active. \n    ",
-            "format": "int64",
-            "example": 123
-          },
-          "inCell": {
-            "type": "boolean",
-            "description": "\n    Flag to indicate if the location of the appointment is in cell rather than an internal prison location.\n    Internal location id will be ignored if inCell is true\n    ",
-            "example": false
-          },
-          "startDate": {
-            "type": "string",
-            "description": "The date of the appointment or first appointment occurrence in the series",
-            "format": "date"
-          },
-          "startTime": {
-            "type": "string",
-            "description": "The starting time of the appointment or first appointment occurrence in the series",
-            "format": "partial-time",
-            "example": "09:00"
-          },
-          "endTime": {
-            "type": "string",
-            "description": "The end time of the appointment or first appointment occurrence in the series",
-            "format": "partial-time",
-            "example": "10:30"
-          },
-          "repeat": {
-            "$ref": "#/components/schemas/AppointmentRepeat"
-          },
-          "comment": {
-            "type": "string",
-            "description": "\n    Notes relating to the appointment.\n    The default value if no notes are specified at the occurrence or instance levels\n    ",
-            "example": "This appointment will help adjusting to life outside of prison"
-          },
-          "prisonerNumbers": {
-            "type": "array",
-            "description": "The prisoner or prisoners to allocate to the created appointment or series of appointment occurrences",
-            "example": [
-              "A1234BC"
-            ],
-            "items": {
-              "type": "string",
-              "description": "The prisoner or prisoners to allocate to the created appointment or series of appointment occurrences",
-              "example": "[\"A1234BC\"]"
-            }
-          }
-        },
-        "description": "The create request with the new appointment or series of appointment occurrences details"
-      },
-      "AppointmentRepeat": {
-        "required": [
-          "count",
-          "period"
-        ],
-        "type": "object",
-        "properties": {
-          "period": {
-            "type": "string",
-            "description": "\n    The period or frequency of the occurrences in the repeating appointment series. When they will repeat and how often\n    ",
-            "example": "WEEKLY",
-            "enum": [
-              "WEEKDAY",
-              "DAILY",
-              "WEEKLY",
-              "FORTNIGHTLY",
-              "MONTHLY"
-            ]
-          },
-          "count": {
-            "minimum": 1,
-            "type": "integer",
-            "description": "\n    The total number of occurrences in the appointment series\n    ",
-            "format": "int32",
-            "example": 6
-          }
-        },
-        "description": "\n  Describes how an appointment will repeat. The period or frequency of those occurrences and how many occurrences there\n  will be in total in the series.\n  "
-      },
-      "Appointment": {
-        "required": [
-          "categoryCode",
-          "comment",
-          "created",
-          "createdBy",
-          "id",
-          "inCell",
-          "occurrences",
-          "prisonCode",
-          "startDate",
-          "startTime"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "The internally generated identifier for this appointment",
-            "format": "int64",
-            "example": 12345
-          },
-          "categoryCode": {
-            "type": "string",
-            "description": "The NOMIS REFERENCE_CODES.CODE (DOMAIN = 'INT_SCH_RSN') value for mapping to NOMIS",
-            "example": "CHAP"
-          },
-          "prisonCode": {
-            "type": "string",
-            "description": "The NOMIS AGENCY_LOCATIONS.AGY_LOC_ID value for mapping to NOMIS",
-            "example": "SKI"
-          },
-          "internalLocationId": {
-            "type": "integer",
-            "description": "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
-            "format": "int64",
-            "example": 123
-          },
-          "inCell": {
-            "type": "boolean",
-            "description": "\n    Flag to indicate if the location of the appointment is in cell rather than an internal prison location.\n    Internal location id should be null if in cell = true\n    ",
-            "example": false
-          },
-          "startDate": {
-            "type": "string",
-            "description": "The date of the appointment or first appointment occurrence in the series",
-            "format": "date"
-          },
-          "startTime": {
-            "type": "string",
-            "description": "The starting time of the appointment or first appointment occurrence in the series",
-            "format": "partial-time",
-            "example": "09:00"
-          },
-          "endTime": {
-            "type": "string",
-            "description": "The end time of the appointment or first appointment occurrence in the series",
-            "format": "partial-time",
-            "example": "10:30"
-          },
-          "comment": {
-            "type": "string",
-            "description": "\n    Notes relating to the appointment.\n    The default value if no notes are specified at the occurrence or instance levels\n    ",
-            "example": "This appointment will help adjusting to life outside of prison"
-          },
-          "created": {
-            "type": "string",
-            "description": "The date and time this appointment was created. Will not change",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "\n    The username of the user authenticated via HMPPS auth that created the appointment.\n    Usually a NOMIS username\n    ",
-            "example": "AAA01U"
-          },
-          "updated": {
-            "type": "string",
-            "description": "\n    The date and time this appointment was last changed.\n    Will be null if the appointment has not been altered since it was created\n    ",
-            "format": "date-time"
-          },
-          "updatedBy": {
-            "type": "string",
-            "description": "\n    The username of the user authenticated via HMPPS auth that edited the appointment.\n    Will be null if the appointment has not been altered since it was created\n    ",
-            "example": "AAA01U"
-          },
-          "schedule": {
-            "$ref": "#/components/schemas/AppointmentSchedule"
-          },
-          "occurrences": {
-            "type": "array",
-            "description": "\n    The individual occurrence or occurrences of this appointment. Non recurring appointments will have a single\n    appointment occurrence containing the same property values as the parent appointment. The same start date, time\n    and end time. Recurring appointments will have a series of occurrences. The first in the series will also\n    contain the same property values as the parent appointment and subsequent occurrences will have start dates\n    following on from the original start date incremented as specified by the appointment's schedule. Each occurrence\n    can be edited independently of the parent. All properties of an occurrence override those of the parent appointment\n    with a null coalesce back to the parent for nullable properties. The full series of occurrences specified by the\n    schedule will be created in advance.\n    ",
-            "items": {
-              "$ref": "#/components/schemas/AppointmentOccurrence"
-            }
-          }
-        },
-        "description": "\n  The top level appointment containing the initial values for all appointment properties.\n  Joins together one or more appointment occurrences and optionally a schedule if the appointment is recurring.\n  The child appointment occurrences will by default have the same property values.\n  The occurrence property values can be changed independently to support rescheduling, cancelling and altered\n  attendee lists at an individual occurrence level.\n  Editing a property at the appointment level will cascade the edit to all *future* child occurrences\n  "
-      },
-      "AppointmentOccurrence": {
-        "required": [
-          "allocations",
-          "cancelled",
-          "id",
-          "inCell",
-          "startDate",
-          "startTime"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "The internally generated identifier for this appointment occurrence",
-            "format": "int64",
-            "example": 123456
-          },
-          "internalLocationId": {
-            "type": "integer",
-            "description": "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
-            "format": "int64",
-            "example": 123
-          },
-          "inCell": {
-            "type": "boolean",
-            "description": "\n    Flag to indicate if the location of the appointment is in cell rather than an internal prison location.\n    Internal location id should be null if in cell = true\n    ",
-            "example": false
-          },
-          "startDate": {
-            "type": "string",
-            "description": "The date this appointment occurrence is taking place on",
-            "format": "date"
-          },
-          "startTime": {
-            "type": "string",
-            "description": "The starting time of this appointment occurrence",
-            "format": "partial-time",
-            "example": "13:00"
-          },
-          "endTime": {
-            "type": "string",
-            "description": "The end time of this appointment occurrence",
-            "format": "partial-time",
-            "example": "13:30"
-          },
-          "comment": {
-            "type": "string",
-            "description": "\n    Notes relating to this appointment occurrence.\n    The comment value from the parent appointment will be used if this is null\n    ",
-            "example": "This appointment occurrence has been rescheduled due to staff availability"
-          },
-          "cancelled": {
-            "type": "boolean",
-            "description": "\n    Supports cancelling of this appointment occurrence. This is different from (soft) deleting the parent appointment\n    and can be used to highlight where an appointment has been cancelled on unlock lists and similar\n    ",
-            "example": false
-          },
-          "updated": {
-            "type": "string",
-            "description": "\n    The date and time this appointment occurrence was last changed.\n    Will be null if the appointment occurrence has not been altered independently from the parent appointment\n    since it was created\n    ",
-            "format": "date-time"
-          },
-          "updatedBy": {
-            "type": "string",
-            "description": "\n    The username of the user authenticated via HMPPS auth that edited this appointment instance.\n    Usually a NOMIS username. Will be null if the appointment occurrence has not been altered independently from the\n    parent appointment since it was created\n    ",
-            "example": "AAA01U"
-          },
-          "allocations": {
-            "type": "array",
-            "description": "\n    The prisoner or prisoners attending this appointment occurrence. Single appointments such as medical will have one\n    allocation record. A group appointment e.g. gym or chaplaincy sessions will have more than one allocation record.\n    Allocations are at the occurrence level supporting alteration of attendees in any future occurrence.\n    When viewing or editing a recurring appointment, the allocations from the next appointment occurrence in the series\n    will be used.\n    ",
-            "items": {
-              "$ref": "#/components/schemas/AppointmentOccurrenceAllocation"
-            }
-          }
-        },
-        "description": "\n  Represents a specific appointment occurrence. Non recurring appointments will have a single appointment occurrence\n  containing the same property values as the parent appointment. The same start date, time and end time. Recurring\n  appointments will have a series of occurrences. The first in the series will also contain the same property values\n  as the parent appointment and subsequent occurrences will have start dates following on from the original start date\n  incremented as specified by the appointment's schedule. Each occurrence can be edited independently of the parent.\n  All properties of an occurrence override those of the parent appointment with a null coalesce back to the parent for\n  nullable properties. The full series of occurrences specified by the schedule will be created in advance.\n  "
-      },
-      "AppointmentOccurrenceAllocation": {
-        "required": [
-          "bookingId",
-          "id",
-          "prisonerNumber"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "The internally generated identifier for this appointment occurrence allocation",
-            "format": "int64",
-            "example": 123456
           },
           "prisonerNumber": {
             "type": "string",
-            "description": "The NOMIS OFFENDERS.OFFENDER_ID_DISPLAY value for mapping to a prisoner record in NOMIS",
-            "example": "A1234BC"
+            "description": "The prisoner number",
+            "example": "A1234AA"
           },
-          "bookingId": {
-            "type": "integer",
-            "description": "The NOMIS OFFENDER_BOOKINGS.OFFENDER_BOOK_ID value for mapping to a prisoner booking record in NOMIS",
-            "format": "int64",
-            "example": 456
-          }
-        },
-        "description": "\n  The allocation of a prisoner to an appointment occurrence. Standard single appointments will have one prisoner\n  allocated to its single appointment occurrence. More than one prisoner allocation record signifies the associated\n  appointment is a group appointment. Group appointments support additional checks such as non-associations.\n  "
-      },
-      "AppointmentSchedule": {
-        "required": [
-          "endDate",
-          "fridayFlag",
-          "id",
-          "mondayFlag",
-          "saturdayFlag",
-          "sundayFlag",
-          "thursdayFlag",
-          "tuesdayFlag",
-          "wednesdayFlag"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "The internally generated identifier for this appointment schedule",
-            "format": "int64",
-            "example": 12345
-          },
-          "endDate": {
+          "username": {
             "type": "string",
-            "description": "\n    The date the series of appointment occurrences should end. The UI will provide options to specify an end date or\n    a number of occurrences. The later case should be used to calculate the end date internally\n    ",
-            "format": "date"
+            "description": "The username of the logged-in user",
+            "example": "JONESA"
           },
-          "mondayFlag": {
-            "type": "boolean",
-            "description": "Indicates the appointment reoccurs every Monday",
-            "example": false
-          },
-          "tuesdayFlag": {
-            "type": "boolean",
-            "description": "Indicates the appointment reoccurs every Tuesday",
-            "example": true
-          },
-          "wednesdayFlag": {
-            "type": "boolean",
-            "description": "Indicates the appointment reoccurs every Wednesday",
-            "example": false
-          },
-          "thursdayFlag": {
-            "type": "boolean",
-            "description": "Indicates the appointment reoccurs every Thursday",
-            "example": false
-          },
-          "fridayFlag": {
-            "type": "boolean",
-            "description": "Indicates the appointment reoccurs every Friday",
-            "example": false
-          },
-          "saturdayFlag": {
-            "type": "boolean",
-            "description": "Indicates the appointment reoccurs every Saturday",
-            "example": false
-          },
-          "sundayFlag": {
-            "type": "boolean",
-            "description": "Indicates the appointment reoccurs every Sunday",
-            "example": false
-          }
-        },
-        "description": "\n  Describes the recurrence of an appointment. The days of the week an occurrence of the appointment will be scheduled\n  and the end date of the series.\n  "
-      },
-      "ActivityCreateRequest": {
-        "required": [
-          "attendanceRequired",
-          "categoryId",
-          "eligibilityRuleIds",
-          "inCell",
-          "minimumEducationLevel",
-          "minimumIncentiveLevel",
-          "minimumIncentiveNomisCode",
-          "outsideWork",
-          "pay",
-          "pieceWork",
-          "prisonCode",
-          "riskLevel",
-          "runsOnBankHoliday",
-          "slots",
-          "summary"
-        ],
-        "type": "object",
-        "properties": {
-          "prisonCode": {
-            "maxLength": 3,
-            "minLength": 0,
+          "auditType": {
             "type": "string",
-            "description": "The prison code where this activity takes place",
-            "example": "PVI"
-          },
-          "attendanceRequired": {
-            "type": "boolean",
-            "description": "Flag to indicate if attendance is required for this activity, e.g. gym induction might not be mandatory attendance",
-            "example": false
-          },
-          "inCell": {
-            "type": "boolean",
-            "description": "Flag to indicate if the location of the activity is in cell",
-            "example": false
-          },
-          "pieceWork": {
-            "type": "boolean",
-            "description": "Flag to indicate if the activity is piece work",
-            "example": false
-          },
-          "outsideWork": {
-            "type": "boolean",
-            "description": "Flag to indicate if the activity carried out outside of the prison",
-            "example": false
-          },
-          "payPerSession": {
-            "type": "string",
-            "description": "Indicates whether the activity session is a (F)ull day or a (H)alf day (for payment purposes). ",
-            "example": "H",
+            "description": "The top-level audit category",
+            "example": "ACTIVITY",
             "enum": [
-              "H",
-              "F"
+              "PRISONER",
+              "ACTIVITY"
             ]
           },
-          "summary": {
-            "maxLength": 50,
-            "minLength": 0,
+          "auditEventType": {
             "type": "string",
-            "description": "A brief summary description of this activity for use in forms and lists",
-            "example": "Maths level 1"
+            "description": "The specific event type",
+            "example": "ACTIVITY_CREATED",
+            "enum": [
+              "ACTIVITY_CREATED",
+              "ACTIVITY_UPDATED",
+              "BONUS_PAYMENT_MADE_FOR_ACTIVITY_ATTENDANCE",
+              "INCENTIVE_LEVEL_WARNING_GIVEN_FOR_ACTIVITY_ATTENDANCE",
+              "PRISONER_ACCEPTED_FROM_WAITING_LIST",
+              "PRISONER_ADDED_TO_WAITING_LIST",
+              "PRISONER_ALLOCATED",
+              "PRISONER_DEALLOCATED",
+              "PRISONER_REJECTED_FROM_WAITING_LIST",
+              "PRISONER_SUSPENDED_FROM_ACTIVITY",
+              "PRISONER_UNSUSPENDED_FROM_ACTIVITY"
+            ]
           },
-          "description": {
-            "maxLength": 300,
-            "minLength": 0,
+          "startTime": {
             "type": "string",
-            "description": "A detailed description for this activity",
-            "example": "A basic maths course suitable for introduction to the subject"
+            "description": "The date and time on or after which to search for events",
+            "format": "date-time"
           },
-          "categoryId": {
-            "type": "integer",
-            "description": "The category id for this activity, one of the high-level categories",
-            "format": "int64"
+          "endTime": {
+            "type": "string",
+            "description": "The date and time on or before which to search for events",
+            "format": "date-time"
           },
-          "tierId": {
+          "activityId": {
             "type": "integer",
-            "description": "The tier id for this activity, as defined by the Future Prison Regime team",
+            "description": "The ID of the activity",
             "format": "int64",
-            "example": 1
+            "example": 123456
           },
-          "eligibilityRuleIds": {
-            "type": "array",
-            "description": "A list of eligibility rules ids which apply to this activity.",
-            "example": [
-              1,
-              2,
-              3
-            ],
-            "items": {
-              "type": "integer",
-              "description": "A list of eligibility rules ids which apply to this activity.",
-              "format": "int64"
-            }
-          },
-          "pay": {
-            "type": "array",
-            "description": "The list of pay rates that can apply to this activity",
-            "items": {
-              "$ref": "#/components/schemas/ActivityPayCreateRequest"
-            }
-          },
-          "riskLevel": {
-            "maxLength": 10,
-            "minLength": 0,
-            "type": "string",
-            "description": "The most recent risk assessment level for this activity",
-            "example": "high"
-          },
-          "minimumIncentiveNomisCode": {
-            "maxLength": 3,
-            "minLength": 0,
-            "type": "string",
-            "description": "The NOMIS code for the minimum incentive/earned privilege level for this activity",
-            "example": "BAS"
-          },
-          "minimumIncentiveLevel": {
-            "maxLength": 10,
-            "minLength": 0,
-            "type": "string",
-            "description": "The minimum incentive/earned privilege level for this activity",
-            "example": "Basic"
-          },
-          "startDate": {
-            "type": "string",
-            "description": "The date on which this activity will start. From this date, any schedules will be created as real, planned instances",
-            "format": "date",
-            "example": "2022-12-23"
-          },
-          "endDate": {
-            "type": "string",
-            "description": "The date on which this activity ends. From this date, there will be no more planned instances of the activity. If null, the activity has no end date and will be scheduled indefinitely.",
-            "format": "date",
-            "example": "2022-12-23"
-          },
-          "minimumEducationLevel": {
-            "type": "array",
-            "description": "The list of minimum education levels that apply to this activity",
-            "items": {
-              "$ref": "#/components/schemas/ActivityMinimumEducationLevelCreateRequest"
-            }
-          },
-          "locationId": {
+          "scheduleId": {
             "type": "integer",
-            "description": "The optional NOMIS internal location id for this schedule",
+            "description": "The ID of the activity schedule",
             "format": "int64",
-            "example": 98877667
-          },
-          "capacity": {
-            "type": "integer",
-            "description": "The maximum number of prisoners allowed for a scheduled instance of this schedule",
-            "format": "int32",
-            "example": 10
-          },
-          "slots": {
-            "type": "array",
-            "description": "The days and times an activity schedule can take place",
-            "items": {
-              "$ref": "#/components/schemas/Slot"
-            }
-          },
-          "runsOnBankHoliday": {
-            "type": "boolean",
-            "description": "Whether the schedule runs on bank holidays",
-            "example": true
+            "example": 123456
           }
         },
-        "description": "The create request with the new activity details"
-      },
-      "ActivityMinimumEducationLevelCreateRequest": {
-        "required": [
-          "educationLevelCode",
-          "educationLevelDescription"
-        ],
-        "type": "object",
-        "properties": {
-          "educationLevelCode": {
-            "maxLength": 10,
-            "minLength": 0,
-            "type": "string",
-            "description": "The Education level code",
-            "example": "1"
-          },
-          "educationLevelDescription": {
-            "maxLength": 60,
-            "minLength": 0,
-            "type": "string",
-            "description": "The Education level description",
-            "example": "Reading Measure 1.0"
-          }
-        },
-        "description": "Describes the minimum education levels to be created for an activity"
-      },
-      "ActivityPayCreateRequest": {
-        "required": [
-          "incentiveLevel",
-          "incentiveNomisCode",
-          "payBandId"
-        ],
-        "type": "object",
-        "properties": {
-          "incentiveNomisCode": {
-            "maxLength": 3,
-            "minLength": 0,
-            "type": "string",
-            "description": "The NOMIS code for the incentive/earned privilege level",
-            "example": "BAS"
-          },
-          "incentiveLevel": {
-            "maxLength": 10,
-            "minLength": 0,
-            "type": "string",
-            "description": "The incentive/earned privilege level",
-            "example": "Basic"
-          },
-          "payBandId": {
-            "type": "integer",
-            "description": "The id of the prison pay band used",
-            "format": "int64",
-            "example": 1
-          },
-          "rate": {
-            "type": "integer",
-            "description": "The earning rate for one half day session for someone of this incentive level and pay band (in pence)",
-            "format": "int32",
-            "example": 150
-          },
-          "pieceRate": {
-            "type": "integer",
-            "description": "Where payment is related to produced amounts of a product, this indicates the payment rate (in pence) per pieceRateItems produced",
-            "format": "int32",
-            "example": 150
-          },
-          "pieceRateItems": {
-            "type": "integer",
-            "description": "Where payment is related to the number of items produced in a batch of a product, this is the batch size that attract 1 x pieceRate",
-            "format": "int32",
-            "example": 10
-          }
-        },
-        "description": "Describes the pay rates and bands to be created for an activity"
-      },
-      "Slot": {
-        "required": [
-          "friday",
-          "monday",
-          "saturday",
-          "sunday",
-          "thursday",
-          "timeSlot",
-          "tuesday",
-          "wednesday"
-        ],
-        "type": "object",
-        "properties": {
-          "timeSlot": {
-            "type": "string",
-            "description": "The time slot of the activity schedule, morning afternoon or evening e.g. AM, PM or ED",
-            "example": "AM"
-          },
-          "monday": {
-            "type": "boolean"
-          },
-          "tuesday": {
-            "type": "boolean"
-          },
-          "wednesday": {
-            "type": "boolean"
-          },
-          "thursday": {
-            "type": "boolean"
-          },
-          "friday": {
-            "type": "boolean"
-          },
-          "saturday": {
-            "type": "boolean"
-          },
-          "sunday": {
-            "type": "boolean"
-          }
-        },
-        "description": "\n    Describes time slot and day (or days) the scheduled activity would run. At least one day must be specified.\n    \n    e.g. 'AM, Monday, Wednesday and Friday' or 'PM Tuesday, Thursday, Sunday'\n  "
+        "description": "Set of search filters for searching audit records"
       },
       "Activity": {
         "required": [
@@ -5011,6 +4777,747 @@
         },
         "description": "Describes the period of time an activity schedule has been suspended"
       },
+      "AppointmentCreateRequest": {
+        "required": [
+          "appointmentType",
+          "categoryCode",
+          "comment",
+          "endTime",
+          "inCell",
+          "prisonCode",
+          "prisonerNumbers",
+          "startDate",
+          "startTime"
+        ],
+        "type": "object",
+        "properties": {
+          "categoryCode": {
+            "type": "string",
+            "description": "The NOMIS reference code for this appointment. Must exist and be active",
+            "example": "CHAP"
+          },
+          "prisonCode": {
+            "maxLength": 3,
+            "minLength": 0,
+            "type": "string",
+            "description": "The NOMIS prison code where this appointment takes place",
+            "example": "PVI"
+          },
+          "internalLocationId": {
+            "type": "integer",
+            "description": "\n    The NOMIS internal location id within the specified prison. This must be supplied if inCell is false.\n    The internal location id must exist, must be within the prison specified by the prisonCode property and be active. \n    ",
+            "format": "int64",
+            "example": 123
+          },
+          "inCell": {
+            "type": "boolean",
+            "description": "\n    Flag to indicate if the location of the appointment is in cell rather than an internal prison location.\n    Internal location id will be ignored if inCell is true\n    ",
+            "example": false
+          },
+          "startDate": {
+            "type": "string",
+            "description": "The date of the appointment or first appointment occurrence in the series",
+            "format": "date"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "The starting time of the appointment or first appointment occurrence in the series",
+            "format": "partial-time",
+            "example": "09:00"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "The end time of the appointment or first appointment occurrence in the series",
+            "format": "partial-time",
+            "example": "10:30"
+          },
+          "appointmentType": {
+            "type": "string",
+            "description": "The appointment type (INDIVIDUAL or GROUP)",
+            "example": "INDIVIDUAL",
+            "enum": [
+              "INDIVIDUAL",
+              "GROUP"
+            ]
+          },
+          "repeat": {
+            "$ref": "#/components/schemas/AppointmentRepeat"
+          },
+          "comment": {
+            "type": "string",
+            "description": "\n    Notes relating to the appointment.\n    The default value if no notes are specified at the occurrence or instance levels\n    ",
+            "example": "This appointment will help adjusting to life outside of prison"
+          },
+          "prisonerNumbers": {
+            "type": "array",
+            "description": "The prisoner or prisoners to allocate to the created appointment or series of appointment occurrences",
+            "example": [
+              "A1234BC"
+            ],
+            "items": {
+              "type": "string",
+              "description": "The prisoner or prisoners to allocate to the created appointment or series of appointment occurrences",
+              "example": "[\"A1234BC\"]"
+            }
+          }
+        },
+        "description": "The create request with the new appointment or series of appointment occurrences details"
+      },
+      "AppointmentRepeat": {
+        "required": [
+          "count",
+          "period"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "description": "\n    The period or frequency of the occurrences in the repeating appointment series. When they will repeat and how often\n    ",
+            "example": "WEEKLY",
+            "enum": [
+              "WEEKDAY",
+              "DAILY",
+              "WEEKLY",
+              "FORTNIGHTLY",
+              "MONTHLY"
+            ]
+          },
+          "count": {
+            "minimum": 1,
+            "type": "integer",
+            "description": "\n    The total number of occurrences in the appointment series\n    ",
+            "format": "int32",
+            "example": 6
+          }
+        },
+        "description": "\n  Describes how an appointment will repeat. The period or frequency of those occurrences and how many occurrences there\n  will be in total in the series.\n  "
+      },
+      "Appointment": {
+        "required": [
+          "appointmentType",
+          "categoryCode",
+          "comment",
+          "created",
+          "createdBy",
+          "id",
+          "inCell",
+          "occurrences",
+          "prisonCode",
+          "startDate",
+          "startTime"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The internally generated identifier for this appointment",
+            "format": "int64",
+            "example": 12345
+          },
+          "categoryCode": {
+            "type": "string",
+            "description": "The NOMIS REFERENCE_CODES.CODE (DOMAIN = 'INT_SCH_RSN') value for mapping to NOMIS",
+            "example": "CHAP"
+          },
+          "prisonCode": {
+            "type": "string",
+            "description": "The NOMIS AGENCY_LOCATIONS.AGY_LOC_ID value for mapping to NOMIS",
+            "example": "SKI"
+          },
+          "internalLocationId": {
+            "type": "integer",
+            "description": "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
+            "format": "int64",
+            "example": 123
+          },
+          "inCell": {
+            "type": "boolean",
+            "description": "\n    Flag to indicate if the location of the appointment is in cell rather than an internal prison location.\n    Internal location id should be null if in cell = true\n    ",
+            "example": false
+          },
+          "startDate": {
+            "type": "string",
+            "description": "The date of the appointment or first appointment occurrence in the series",
+            "format": "date"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "The starting time of the appointment or first appointment occurrence in the series",
+            "format": "partial-time",
+            "example": "09:00"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "The end time of the appointment or first appointment occurrence in the series",
+            "format": "partial-time",
+            "example": "10:30"
+          },
+          "appointmentType": {
+            "type": "string",
+            "description": "The appointment type (INDIVIDUAL or GROUP)",
+            "example": "INDIVIDUAL",
+            "enum": [
+              "INDIVIDUAL",
+              "GROUP"
+            ]
+          },
+          "comment": {
+            "type": "string",
+            "description": "\n    Notes relating to the appointment.\n    The default value if no notes are specified at the occurrence or instance levels\n    ",
+            "example": "This appointment will help adjusting to life outside of prison"
+          },
+          "created": {
+            "type": "string",
+            "description": "The date and time this appointment was created. Will not change",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "\n    The username of the user authenticated via HMPPS auth that created the appointment.\n    Usually a NOMIS username\n    ",
+            "example": "AAA01U"
+          },
+          "updated": {
+            "type": "string",
+            "description": "\n    The date and time this appointment was last changed.\n    Will be null if the appointment has not been altered since it was created\n    ",
+            "format": "date-time"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "\n    The username of the user authenticated via HMPPS auth that edited the appointment.\n    Will be null if the appointment has not been altered since it was created\n    ",
+            "example": "AAA01U"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/AppointmentSchedule"
+          },
+          "occurrences": {
+            "type": "array",
+            "description": "\n    The individual occurrence or occurrences of this appointment. Non recurring appointments will have a single\n    appointment occurrence containing the same property values as the parent appointment. The same start date, time\n    and end time. Recurring appointments will have a series of occurrences. The first in the series will also\n    contain the same property values as the parent appointment and subsequent occurrences will have start dates\n    following on from the original start date incremented as specified by the appointment's schedule. Each occurrence\n    can be edited independently of the parent. All properties of an occurrence override those of the parent appointment\n    with a null coalesce back to the parent for nullable properties. The full series of occurrences specified by the\n    schedule will be created in advance.\n    ",
+            "items": {
+              "$ref": "#/components/schemas/AppointmentOccurrence"
+            }
+          }
+        },
+        "description": "\n  The top level appointment containing the initial values for all appointment properties.\n  Joins together one or more appointment occurrences and optionally a schedule if the appointment is recurring.\n  The child appointment occurrences will by default have the same property values.\n  The occurrence property values can be changed independently to support rescheduling, cancelling and altered\n  attendee lists at an individual occurrence level.\n  Editing a property at the appointment level will cascade the edit to all *future* child occurrences\n  "
+      },
+      "AppointmentOccurrence": {
+        "required": [
+          "allocations",
+          "cancelled",
+          "id",
+          "inCell",
+          "startDate",
+          "startTime"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The internally generated identifier for this appointment occurrence",
+            "format": "int64",
+            "example": 123456
+          },
+          "internalLocationId": {
+            "type": "integer",
+            "description": "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
+            "format": "int64",
+            "example": 123
+          },
+          "inCell": {
+            "type": "boolean",
+            "description": "\n    Flag to indicate if the location of the appointment is in cell rather than an internal prison location.\n    Internal location id should be null if in cell = true\n    ",
+            "example": false
+          },
+          "startDate": {
+            "type": "string",
+            "description": "The date this appointment occurrence is taking place on",
+            "format": "date"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "The starting time of this appointment occurrence",
+            "format": "partial-time",
+            "example": "13:00"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "The end time of this appointment occurrence",
+            "format": "partial-time",
+            "example": "13:30"
+          },
+          "comment": {
+            "type": "string",
+            "description": "\n    Notes relating to this appointment occurrence.\n    The comment value from the parent appointment will be used if this is null\n    ",
+            "example": "This appointment occurrence has been rescheduled due to staff availability"
+          },
+          "cancelled": {
+            "type": "boolean",
+            "description": "\n    Supports cancelling of this appointment occurrence. This is different from (soft) deleting the parent appointment\n    and can be used to highlight where an appointment has been cancelled on unlock lists and similar\n    ",
+            "example": false
+          },
+          "updated": {
+            "type": "string",
+            "description": "\n    The date and time this appointment occurrence was last changed.\n    Will be null if the appointment occurrence has not been altered independently from the parent appointment\n    since it was created\n    ",
+            "format": "date-time"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "\n    The username of the user authenticated via HMPPS auth that edited this appointment instance.\n    Usually a NOMIS username. Will be null if the appointment occurrence has not been altered independently from the\n    parent appointment since it was created\n    ",
+            "example": "AAA01U"
+          },
+          "allocations": {
+            "type": "array",
+            "description": "\n    The prisoner or prisoners attending this appointment occurrence. Single appointments such as medical will have one\n    allocation record. A group appointment e.g. gym or chaplaincy sessions will have more than one allocation record.\n    Allocations are at the occurrence level supporting alteration of attendees in any future occurrence.\n    When viewing or editing a recurring appointment, the allocations from the next appointment occurrence in the series\n    will be used.\n    ",
+            "items": {
+              "$ref": "#/components/schemas/AppointmentOccurrenceAllocation"
+            }
+          }
+        },
+        "description": "\n  Represents a specific appointment occurrence. Non recurring appointments will have a single appointment occurrence\n  containing the same property values as the parent appointment. The same start date, time and end time. Recurring\n  appointments will have a series of occurrences. The first in the series will also contain the same property values\n  as the parent appointment and subsequent occurrences will have start dates following on from the original start date\n  incremented as specified by the appointment's schedule. Each occurrence can be edited independently of the parent.\n  All properties of an occurrence override those of the parent appointment with a null coalesce back to the parent for\n  nullable properties. The full series of occurrences specified by the schedule will be created in advance.\n  "
+      },
+      "AppointmentOccurrenceAllocation": {
+        "required": [
+          "bookingId",
+          "id",
+          "prisonerNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The internally generated identifier for this appointment occurrence allocation",
+            "format": "int64",
+            "example": 123456
+          },
+          "prisonerNumber": {
+            "type": "string",
+            "description": "The NOMIS OFFENDERS.OFFENDER_ID_DISPLAY value for mapping to a prisoner record in NOMIS",
+            "example": "A1234BC"
+          },
+          "bookingId": {
+            "type": "integer",
+            "description": "The NOMIS OFFENDER_BOOKINGS.OFFENDER_BOOK_ID value for mapping to a prisoner booking record in NOMIS",
+            "format": "int64",
+            "example": 456
+          }
+        },
+        "description": "\n  The allocation of a prisoner to an appointment occurrence. Standard single appointments will have one prisoner\n  allocated to its single appointment occurrence. More than one prisoner allocation record signifies the associated\n  appointment is a group appointment. Group appointments support additional checks such as non-associations.\n  "
+      },
+      "AppointmentSchedule": {
+        "required": [
+          "endDate",
+          "fridayFlag",
+          "id",
+          "mondayFlag",
+          "saturdayFlag",
+          "sundayFlag",
+          "thursdayFlag",
+          "tuesdayFlag",
+          "wednesdayFlag"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The internally generated identifier for this appointment schedule",
+            "format": "int64",
+            "example": 12345
+          },
+          "endDate": {
+            "type": "string",
+            "description": "\n    The date the series of appointment occurrences should end. The UI will provide options to specify an end date or\n    a number of occurrences. The later case should be used to calculate the end date internally\n    ",
+            "format": "date"
+          },
+          "mondayFlag": {
+            "type": "boolean",
+            "description": "Indicates the appointment reoccurs every Monday",
+            "example": false
+          },
+          "tuesdayFlag": {
+            "type": "boolean",
+            "description": "Indicates the appointment reoccurs every Tuesday",
+            "example": true
+          },
+          "wednesdayFlag": {
+            "type": "boolean",
+            "description": "Indicates the appointment reoccurs every Wednesday",
+            "example": false
+          },
+          "thursdayFlag": {
+            "type": "boolean",
+            "description": "Indicates the appointment reoccurs every Thursday",
+            "example": false
+          },
+          "fridayFlag": {
+            "type": "boolean",
+            "description": "Indicates the appointment reoccurs every Friday",
+            "example": false
+          },
+          "saturdayFlag": {
+            "type": "boolean",
+            "description": "Indicates the appointment reoccurs every Saturday",
+            "example": false
+          },
+          "sundayFlag": {
+            "type": "boolean",
+            "description": "Indicates the appointment reoccurs every Sunday",
+            "example": false
+          }
+        },
+        "description": "\n  Describes the recurrence of an appointment. The days of the week an occurrence of the appointment will be scheduled\n  and the end date of the series.\n  "
+      },
+      "ActivityCreateRequest": {
+        "required": [
+          "attendanceRequired",
+          "categoryId",
+          "eligibilityRuleIds",
+          "inCell",
+          "minimumEducationLevel",
+          "minimumIncentiveLevel",
+          "minimumIncentiveNomisCode",
+          "outsideWork",
+          "pay",
+          "pieceWork",
+          "prisonCode",
+          "riskLevel",
+          "runsOnBankHoliday",
+          "slots",
+          "summary"
+        ],
+        "type": "object",
+        "properties": {
+          "prisonCode": {
+            "maxLength": 3,
+            "minLength": 0,
+            "type": "string",
+            "description": "The prison code where this activity takes place",
+            "example": "PVI"
+          },
+          "attendanceRequired": {
+            "type": "boolean",
+            "description": "Flag to indicate if attendance is required for this activity, e.g. gym induction might not be mandatory attendance",
+            "example": false
+          },
+          "inCell": {
+            "type": "boolean",
+            "description": "Flag to indicate if the location of the activity is in cell",
+            "example": false
+          },
+          "pieceWork": {
+            "type": "boolean",
+            "description": "Flag to indicate if the activity is piece work",
+            "example": false
+          },
+          "outsideWork": {
+            "type": "boolean",
+            "description": "Flag to indicate if the activity carried out outside of the prison",
+            "example": false
+          },
+          "payPerSession": {
+            "type": "string",
+            "description": "Indicates whether the activity session is a (F)ull day or a (H)alf day (for payment purposes). ",
+            "example": "H",
+            "enum": [
+              "H",
+              "F"
+            ]
+          },
+          "summary": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "A brief summary description of this activity for use in forms and lists",
+            "example": "Maths level 1"
+          },
+          "description": {
+            "maxLength": 300,
+            "minLength": 0,
+            "type": "string",
+            "description": "A detailed description for this activity",
+            "example": "A basic maths course suitable for introduction to the subject"
+          },
+          "categoryId": {
+            "type": "integer",
+            "description": "The category id for this activity, one of the high-level categories",
+            "format": "int64"
+          },
+          "tierId": {
+            "type": "integer",
+            "description": "The tier id for this activity, as defined by the Future Prison Regime team",
+            "format": "int64",
+            "example": 1
+          },
+          "eligibilityRuleIds": {
+            "type": "array",
+            "description": "A list of eligibility rules ids which apply to this activity.",
+            "example": [
+              1,
+              2,
+              3
+            ],
+            "items": {
+              "type": "integer",
+              "description": "A list of eligibility rules ids which apply to this activity.",
+              "format": "int64"
+            }
+          },
+          "pay": {
+            "type": "array",
+            "description": "The list of pay rates that can apply to this activity",
+            "items": {
+              "$ref": "#/components/schemas/ActivityPayCreateRequest"
+            }
+          },
+          "riskLevel": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string",
+            "description": "The most recent risk assessment level for this activity",
+            "example": "high"
+          },
+          "minimumIncentiveNomisCode": {
+            "maxLength": 3,
+            "minLength": 0,
+            "type": "string",
+            "description": "The NOMIS code for the minimum incentive/earned privilege level for this activity",
+            "example": "BAS"
+          },
+          "minimumIncentiveLevel": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string",
+            "description": "The minimum incentive/earned privilege level for this activity",
+            "example": "Basic"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "The date on which this activity will start. From this date, any schedules will be created as real, planned instances",
+            "format": "date",
+            "example": "2022-12-23"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "The date on which this activity ends. From this date, there will be no more planned instances of the activity. If null, the activity has no end date and will be scheduled indefinitely.",
+            "format": "date",
+            "example": "2022-12-23"
+          },
+          "minimumEducationLevel": {
+            "type": "array",
+            "description": "The list of minimum education levels that apply to this activity",
+            "items": {
+              "$ref": "#/components/schemas/ActivityMinimumEducationLevelCreateRequest"
+            }
+          },
+          "locationId": {
+            "type": "integer",
+            "description": "The optional NOMIS internal location id for this schedule",
+            "format": "int64",
+            "example": 98877667
+          },
+          "capacity": {
+            "type": "integer",
+            "description": "The maximum number of prisoners allowed for a scheduled instance of this schedule",
+            "format": "int32",
+            "example": 10
+          },
+          "slots": {
+            "type": "array",
+            "description": "The days and times an activity schedule can take place",
+            "items": {
+              "$ref": "#/components/schemas/Slot"
+            }
+          },
+          "runsOnBankHoliday": {
+            "type": "boolean",
+            "description": "Whether the schedule runs on bank holidays",
+            "example": true
+          }
+        },
+        "description": "The create request with the new activity details"
+      },
+      "ActivityMinimumEducationLevelCreateRequest": {
+        "required": [
+          "educationLevelCode",
+          "educationLevelDescription"
+        ],
+        "type": "object",
+        "properties": {
+          "educationLevelCode": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string",
+            "description": "The Education level code",
+            "example": "1"
+          },
+          "educationLevelDescription": {
+            "maxLength": 60,
+            "minLength": 0,
+            "type": "string",
+            "description": "The Education level description",
+            "example": "Reading Measure 1.0"
+          }
+        },
+        "description": "Describes the minimum education levels to be created for an activity"
+      },
+      "ActivityPayCreateRequest": {
+        "required": [
+          "incentiveLevel",
+          "incentiveNomisCode",
+          "payBandId"
+        ],
+        "type": "object",
+        "properties": {
+          "incentiveNomisCode": {
+            "maxLength": 3,
+            "minLength": 0,
+            "type": "string",
+            "description": "The NOMIS code for the incentive/earned privilege level",
+            "example": "BAS"
+          },
+          "incentiveLevel": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string",
+            "description": "The incentive/earned privilege level",
+            "example": "Basic"
+          },
+          "payBandId": {
+            "type": "integer",
+            "description": "The id of the prison pay band used",
+            "format": "int64",
+            "example": 1
+          },
+          "rate": {
+            "type": "integer",
+            "description": "The earning rate for one half day session for someone of this incentive level and pay band (in pence)",
+            "format": "int32",
+            "example": 150
+          },
+          "pieceRate": {
+            "type": "integer",
+            "description": "Where payment is related to produced amounts of a product, this indicates the payment rate (in pence) per pieceRateItems produced",
+            "format": "int32",
+            "example": 150
+          },
+          "pieceRateItems": {
+            "type": "integer",
+            "description": "Where payment is related to the number of items produced in a batch of a product, this is the batch size that attract 1 x pieceRate",
+            "format": "int32",
+            "example": 10
+          }
+        },
+        "description": "Describes the pay rates and bands to be created for an activity"
+      },
+      "Slot": {
+        "required": [
+          "friday",
+          "monday",
+          "saturday",
+          "sunday",
+          "thursday",
+          "timeSlot",
+          "tuesday",
+          "wednesday"
+        ],
+        "type": "object",
+        "properties": {
+          "timeSlot": {
+            "type": "string",
+            "description": "The time slot of the activity schedule, morning afternoon or evening e.g. AM, PM or ED",
+            "example": "AM"
+          },
+          "monday": {
+            "type": "boolean"
+          },
+          "tuesday": {
+            "type": "boolean"
+          },
+          "wednesday": {
+            "type": "boolean"
+          },
+          "thursday": {
+            "type": "boolean"
+          },
+          "friday": {
+            "type": "boolean"
+          },
+          "saturday": {
+            "type": "boolean"
+          },
+          "sunday": {
+            "type": "boolean"
+          }
+        },
+        "description": "\n    Describes time slot and day (or days) the scheduled activity would run. At least one day must be specified.\n    \n    e.g. 'AM, Monday, Wednesday and Friday' or 'PM Tuesday, Thursday, Sunday'\n  "
+      },
+      "AppointmentOccurrenceUpdateRequest": {
+        "required": [
+          "applyTo"
+        ],
+        "type": "object",
+        "properties": {
+          "categoryCode": {
+            "type": "string",
+            "description": "\n    The updated NOMIS reference code for the parent appointment. Must exist and be active.\n    NOTE: updating the category will apply to all appointment occurrences as the category is associated with the\n    parent appointment only. The value for applyTo will be ignored.\n    ",
+            "example": "GYMW"
+          },
+          "internalLocationId": {
+            "type": "integer",
+            "description": "\n    The updated NOMIS internal location id within the specified prison. This must be supplied if inCell is false.\n    The internal location id must exist, must be within the prison specified by the prisonCode property on the\n    parent appointment and be active. \n    ",
+            "format": "int64",
+            "example": 123
+          },
+          "inCell": {
+            "type": "boolean",
+            "description": "\n    Flag to indicate if the location of the appointment occurrence is in cell rather than an internal prison location.\n    Internal location id will be ignored if inCell is true\n    ",
+            "example": false
+          },
+          "startDate": {
+            "type": "string",
+            "description": "\n    The updated date of the appointment occurrence. NOTE: this property specifies the day or date of all or all future\n    occurrences when used in conjunction with the applyTo property\n    ",
+            "format": "date"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "The updated starting time of the appointment occurrence",
+            "format": "partial-time",
+            "example": "09:00"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "The updated end time of the appointment occurrence",
+            "format": "partial-time",
+            "example": "10:30"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Updated notes relating to the appointment occurrence",
+            "example": "This appointment occurrence has been rescheduled due to staff availability"
+          },
+          "prisonerNumbers": {
+            "type": "array",
+            "description": "The replacement prisoner or prisoners to allocate to the appointment occurrence",
+            "example": [
+              "A1234BC"
+            ],
+            "items": {
+              "type": "string",
+              "description": "The replacement prisoner or prisoners to allocate to the appointment occurrence",
+              "example": "[\"A1234BC\"]"
+            }
+          },
+          "applyTo": {
+            "type": "string",
+            "description": "\n    Specifies which appointment occurrence or occurrences this update should apply to.\n    Defaults to THIS_OCCURRENCE meaning the update will be applied to the appointment occurrence specified by the\n    supplied id only.\n    ",
+            "example": "THIS_OCCURRENCE",
+            "enum": [
+              "THIS_OCCURRENCE",
+              "THIS_AND_ALL_FUTURE_OCCURRENCES",
+              "ALL_FUTURE_OCCURRENCES"
+            ]
+          }
+        },
+        "description": "The update request with the new appointment occurrence details and how to apply the update"
+      },
       "AttendanceSync": {
         "required": [
           "activityScheduleId",
@@ -5106,6 +5613,363 @@
         },
         "description": "\n  Represents the key data required to synchronise an attendance with Nomis \n  "
       },
+      "ActivityCandidate": {
+        "required": [
+          "educationLevels",
+          "name",
+          "otherAllocations",
+          "prisonerNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The candidate's name",
+            "example": "Joe Bloggs"
+          },
+          "prisonerNumber": {
+            "type": "string",
+            "description": "The candidate's prisoner number",
+            "example": "GF10101"
+          },
+          "cellLocation": {
+            "type": "string",
+            "description": "The candidate's cell location",
+            "example": "MDI-1-1-101"
+          },
+          "otherAllocations": {
+            "type": "array",
+            "description": "Any activities the candidate is currently allocated to",
+            "items": {
+              "$ref": "#/components/schemas/Allocation"
+            }
+          },
+          "releaseDate": {
+            "type": "string",
+            "description": "The candidate's earliest release date",
+            "format": "date",
+            "example": "2027-01-24"
+          },
+          "educationLevels": {
+            "type": "array",
+            "description": "The qualifications this candidate holds",
+            "items": {
+              "$ref": "#/components/schemas/Education"
+            }
+          }
+        },
+        "description": "Describes a candidate for allocation to an activity"
+      },
+      "AddressDto": {
+        "required": [
+          "noFixedAddress",
+          "primary"
+        ],
+        "type": "object",
+        "properties": {
+          "primary": {
+            "type": "boolean",
+            "description": "Primary Address",
+            "example": false
+          },
+          "noFixedAddress": {
+            "type": "boolean",
+            "description": "No Fixed Address",
+            "example": false
+          },
+          "addressId": {
+            "type": "integer",
+            "description": "Address Id",
+            "format": "int64",
+            "example": 543524
+          },
+          "addressType": {
+            "type": "string",
+            "description": "Address Type. Note: Reference domain is ADDR_TYPE",
+            "example": "BUS"
+          },
+          "flat": {
+            "type": "string",
+            "description": "Flat",
+            "example": "3B"
+          },
+          "premise": {
+            "type": "string",
+            "description": "Premise",
+            "example": "Liverpool Prison"
+          },
+          "street": {
+            "type": "string",
+            "description": "Street",
+            "example": "Slinn Street"
+          },
+          "locality": {
+            "type": "string",
+            "description": "Locality",
+            "example": "Brincliffe"
+          },
+          "town": {
+            "type": "string",
+            "description": "Town/City. Note: Reference domain is CITY",
+            "example": "Liverpool"
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "Postal Code",
+            "example": "LI1 5TH"
+          },
+          "county": {
+            "type": "string",
+            "description": "County. Note: Reference domain is COUNTY",
+            "example": "HEREFORD"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country. Note: Reference domain is COUNTRY",
+            "example": "ENG"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Comment",
+            "example": "This is a comment text"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Date Added",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Date ended",
+            "format": "date"
+          },
+          "phones": {
+            "type": "array",
+            "description": "The phone number associated with the address",
+            "items": {
+              "$ref": "#/components/schemas/Telephone"
+            },
+            "example": null
+          },
+          "addressUsages": {
+            "type": "array",
+            "description": "The address usages/types",
+            "items": {
+              "$ref": "#/components/schemas/AddressUsageDto"
+            },
+            "example": null
+          }
+        }
+      },
+      "AddressUsageDto": {
+        "type": "object",
+        "properties": {
+          "addressId": {
+            "type": "integer",
+            "description": "Address ID of the associated address",
+            "format": "int64",
+            "example": 23422313
+          },
+          "addressUsage": {
+            "type": "string",
+            "description": "The address usages",
+            "example": "HDC"
+          },
+          "addressUsageDescription": {
+            "type": "string",
+            "description": "The address usages description",
+            "example": "HDC Address"
+          },
+          "activeFlag": {
+            "type": "boolean",
+            "description": "Active Flag",
+            "example": true
+          }
+        },
+        "description": "The address usages/types",
+        "example": null
+      },
+      "Education": {
+        "required": [
+          "addresses",
+          "bookingId",
+          "comment",
+          "educationLevel",
+          "endDate",
+          "graduationYear",
+          "isSpecialEducation",
+          "numberOfYears",
+          "schedule",
+          "school",
+          "startDate",
+          "studyArea"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "studyArea": {
+            "type": "string"
+          },
+          "educationLevel": {
+            "type": "string"
+          },
+          "numberOfYears": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "graduationYear": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "school": {
+            "type": "string"
+          },
+          "isSpecialEducation": {
+            "type": "boolean"
+          },
+          "schedule": {
+            "type": "string"
+          },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AddressDto"
+            }
+          }
+        },
+        "description": "The qualifications this candidate holds"
+      },
+      "PageActivityCandidate": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActivityCandidate"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PageableObject": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "paged": {
+            "type": "boolean"
+          },
+          "unpaged": {
+            "type": "boolean"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "SortObject": {
+        "type": "object",
+        "properties": {
+          "empty": {
+            "type": "boolean"
+          },
+          "sorted": {
+            "type": "boolean"
+          },
+          "unsorted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Telephone": {
+        "required": [
+          "number",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "string",
+            "description": "Telephone number",
+            "example": "0114 2345678"
+          },
+          "type": {
+            "type": "string",
+            "description": "Telephone type",
+            "example": "TEL"
+          },
+          "phoneId": {
+            "type": "integer",
+            "description": "Phone Id",
+            "format": "int64",
+            "example": 2234232
+          },
+          "ext": {
+            "type": "string",
+            "description": "Telephone extension number",
+            "example": "123"
+          }
+        },
+        "description": "The phone number associated with the address",
+        "example": null
+      },
       "CapacityAndAllocated": {
         "required": [
           "allocated",
@@ -5183,6 +6047,30 @@
             "type": "string",
             "description": "The reason this scheduled instance was cancelled",
             "example": "Staff unavailable"
+          },
+          "previousScheduledInstanceId": {
+            "type": "integer",
+            "description": "The id for the previous scheduled instance",
+            "format": "int64",
+            "example": 123456
+          },
+          "previousScheduledInstanceDate": {
+            "type": "string",
+            "description": "The date for the previous scheduled instance",
+            "format": "date",
+            "example": "2022-09-30"
+          },
+          "nextScheduledInstanceId": {
+            "type": "integer",
+            "description": "The id for the next scheduled instance",
+            "format": "int64",
+            "example": 123456
+          },
+          "nextScheduledInstanceDate": {
+            "type": "string",
+            "description": "The date for the next scheduled instance",
+            "format": "date",
+            "example": "2022-09-30"
           },
           "attendances": {
             "type": "array",
@@ -5555,6 +6443,7 @@
       "AppointmentOccurrenceDetails": {
         "required": [
           "appointmentId",
+          "appointmentType",
           "category",
           "comment",
           "created",
@@ -5621,6 +6510,15 @@
             "description": "The end time of this appointment occurrence",
             "format": "partial-time",
             "example": "13:30"
+          },
+          "appointmentType": {
+            "type": "string",
+            "description": "The appointment type (INDIVIDUAL or GROUP)",
+            "example": "INDIVIDUAL",
+            "enum": [
+              "INDIVIDUAL",
+              "GROUP"
+            ]
           },
           "comment": {
             "type": "string",
@@ -5862,6 +6760,7 @@
       },
       "AppointmentDetails": {
         "required": [
+          "appointmentType",
           "category",
           "comment",
           "created",
@@ -5917,6 +6816,15 @@
           },
           "repeat": {
             "$ref": "#/components/schemas/AppointmentRepeat"
+          },
+          "appointmentType": {
+            "type": "string",
+            "description": "The appointment type (INDIVIDUAL or GROUP)",
+            "example": "INDIVIDUAL",
+            "enum": [
+              "INDIVIDUAL",
+              "GROUP"
+            ]
           },
           "comment": {
             "type": "string",

@@ -8,18 +8,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityPay
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleSlot
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRuleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateActivityRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.lang.Integer.min
 import java.math.BigDecimal
@@ -100,96 +96,6 @@ class ActivitiesService(
       payRates = pay.toPayRateRequests(),
       scheduleRules = slots.toScheduleRuleRequests(),
     )
-
-  suspend fun updateScheduleInstances(amendInstancesEvent: ScheduleDomainEvent) {
-    val telemetryMap = mutableMapOf("activityScheduleId" to amendInstancesEvent.additionalInformation.activityScheduleId.toString())
-
-    runCatching {
-      val activitySchedule = activitiesApiService.getActivitySchedule(amendInstancesEvent.additionalInformation.activityScheduleId)
-
-      val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(activitySchedule.id).nomisCourseActivityId
-        .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
-
-      activitySchedule.instances.toScheduleRequests()
-        .also { nomisApiService.updateScheduleInstances(nomisCourseActivityId, it) }
-    }.onSuccess {
-      telemetryClient.trackEvent("schedule-instances-amend-success", telemetryMap, null)
-    }.onFailure { e ->
-      telemetryClient.trackEvent("schedule-instances-amend-failed", telemetryMap, null)
-      throw e
-    }
-  }
-
-  private fun List<ScheduledInstance>.toScheduleRequests() =
-    map {
-      ScheduleRequest(
-        date = it.date,
-        startTime = LocalTime.parse(it.startTime),
-        endTime = LocalTime.parse(it.endTime),
-      )
-    }
-
-  suspend fun createAllocation(allocationEvent: AllocationDomainEvent) {
-    val telemetryMap = mutableMapOf(
-      "allocationId" to allocationEvent.additionalInformation.allocationId.toString(),
-    )
-    runCatching {
-      activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
-        telemetryMap["offenderNo"] = allocation.prisonerNumber
-        telemetryMap["bookingId"] = allocation.bookingId.toString()
-        mappingService.getMappingGivenActivityScheduleId(allocation.scheduleId).let { mapping ->
-          nomisApiService.createAllocation(
-            mapping.nomisCourseActivityId,
-            CreateAllocationRequest(
-              bookingId = allocation.bookingId!!,
-              startDate = allocation.startDate,
-              endDate = allocation.endDate,
-              payBandCode = allocation.prisonPayBand.nomisPayBand.toString(),
-            ),
-          ).also {
-            telemetryMap["offenderProgramReferenceId"] = it.offenderProgramReferenceId.toString()
-          }
-        }
-      }
-    }.onSuccess {
-      telemetryClient.trackEvent("activity-allocation-create-success", telemetryMap)
-    }.onFailure { e ->
-      telemetryClient.trackEvent("activity-allocation-create-failed", telemetryMap)
-      throw e
-    }
-  }
-
-  suspend fun deallocate(allocationEvent: AllocationDomainEvent) {
-    val telemetryMap = mutableMapOf(
-      "allocationId" to allocationEvent.additionalInformation.allocationId.toString(),
-    )
-
-    runCatching {
-      activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
-        telemetryMap["offenderNo"] = allocation.prisonerNumber
-        telemetryMap["bookingId"] = allocation.bookingId.toString()
-        mappingService.getMappingGivenActivityScheduleId(allocation.scheduleId)
-          .let { mapping ->
-            nomisApiService.deallocate(
-              mapping.nomisCourseActivityId,
-              UpdateAllocationRequest(
-                bookingId = allocation.bookingId!!,
-                endDate = allocation.endDate!!,
-                endReason = allocation.deallocatedReason, // TODO SDIT-421 probably will need a mapping
-                // endComment = allocation.?, // TODO SDIT-421 could put something useful in here
-              ),
-            ).also {
-              telemetryMap["offenderProgramReferenceId"] = it.offenderProgramReferenceId.toString()
-            }
-          }
-      }
-    }.onSuccess {
-      telemetryClient.trackEvent("activity-deallocate-success", telemetryMap)
-    }.onFailure { e ->
-      telemetryClient.trackEvent("activity-deallocate-failed", telemetryMap)
-      throw e
-    }
-  }
 
   private fun toNomisActivity(schedule: ActivitySchedule, activity: Activity): CreateActivityRequest {
     return CreateActivityRequest(
