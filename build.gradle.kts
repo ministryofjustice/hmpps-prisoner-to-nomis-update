@@ -10,10 +10,6 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-repositories {
-  maven { url = uri("https://repo.spring.io/milestone") }
-  mavenCentral()
-}
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-security")

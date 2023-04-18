@@ -31,6 +31,9 @@ class AppointmentsDomainEventListener(
   fun onMessage(rawMessage: String): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "appointments.appointment-instance.created" -> appointmentsService.createAppointment(message.fromJson())
+      "appointments.appointment-instance.updated" -> appointmentsService.updateAppointment(message.fromJson())
+      "appointments.appointment-instance.cancelled" -> appointmentsService.cancelAppointment(message.fromJson())
+      "appointments.appointment-instance.deleted" -> appointmentsService.deleteAppointment(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }

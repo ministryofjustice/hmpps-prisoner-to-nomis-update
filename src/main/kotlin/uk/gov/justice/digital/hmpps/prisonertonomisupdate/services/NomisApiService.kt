@@ -138,6 +138,25 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .awaitBody()
 
+  suspend fun updateAppointment(nomisEventId: Long, request: UpdateAppointmentRequest) =
+    webClient.put()
+      .uri("/appointments/$nomisEventId")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+
+  suspend fun cancelAppointment(nomisEventId: Long) =
+    webClient.put()
+      .uri("/appointments/$nomisEventId/cancel")
+      .retrieve()
+      .awaitBodilessEntity()
+
+  suspend fun deleteAppointment(nomisEventId: Long) =
+    webClient.delete()
+      .uri("/appointments/$nomisEventId")
+      .retrieve()
+      .awaitBodilessEntity()
+
   suspend fun createSentenceAdjustment(
     bookingId: Long,
     sentenceSequence: Long,
@@ -387,6 +406,17 @@ data class CreateAppointmentRequest(
 
 data class CreateAppointmentResponse(
   val eventId: Long,
+)
+
+data class UpdateAppointmentRequest(
+  @JsonFormat(pattern = "yyyy-MM-dd")
+  val eventDate: LocalDate,
+  @JsonFormat(pattern = "HH:mm")
+  val startTime: LocalTime,
+  @JsonFormat(pattern = "HH:mm")
+  val endTime: LocalTime,
+  val internalLocationId: Long? = null, // in cell if null
+  val eventSubType: String,
 )
 
 data class CreateSentencingAdjustmentRequest(

@@ -356,7 +356,125 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withStatus(200)
             .withFixedDelay(1500),
 
-        ).willSetStateTo(Scenario.STARTED),
+          ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubAppointmentUpdate(eventId: Long) {
+    stubFor(
+      put("/appointments/$eventId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubAppointmentUpdateWithError(eventId: Long, status: Int = 500) {
+    stubFor(
+      put("/appointments/$eventId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubAppointmentCancel(eventId: Long) {
+    stubFor(
+      put("/appointments/$eventId/cancel").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubAppointmentCancelWithError(eventId: Long, status: Int = 500) {
+    stubFor(
+      put("/appointments/$eventId/cancel").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubAppointmentCancelWithErrorFollowedBySlowSuccess(eventId: Long) {
+    stubFor(
+      put("/appointments/$eventId/cancel")
+        .inScenario("Retry NOMIS Appointments Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause NOMIS Appointments Success"),
+    )
+
+    stubFor(
+      put("/appointments/$eventId/cancel")
+        .inScenario("Retry NOMIS Appointments Scenario")
+        .whenScenarioStateIs("Cause NOMIS Appointments Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(200)
+            .withFixedDelay(1500),
+
+          ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+
+  fun stubAppointmentDelete(eventId: Long) {
+    stubFor(
+      delete("/appointments/$eventId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubAppointmentDeleteWithError(eventId: Long, status: Int = 500) {
+    stubFor(
+      delete("/appointments/$eventId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubAppointmentDeleteWithErrorFollowedBySlowSuccess(eventId: Long) {
+    stubFor(
+      delete("/appointments/$eventId")
+        .inScenario("Retry NOMIS Appointments Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause NOMIS Appointments Success"),
+    )
+
+    stubFor(
+      delete("/appointments/$eventId")
+        .inScenario("Retry NOMIS Appointments Scenario")
+        .whenScenarioStateIs("Cause NOMIS Appointments Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(200)
+            .withFixedDelay(1500),
+
+          ).willSetStateTo(Scenario.STARTED),
     )
   }
 
