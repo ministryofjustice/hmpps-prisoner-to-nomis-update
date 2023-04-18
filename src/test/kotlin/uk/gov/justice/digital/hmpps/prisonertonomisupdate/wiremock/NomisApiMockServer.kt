@@ -355,8 +355,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withBody(response)
             .withStatus(200)
             .withFixedDelay(1500),
-
-          ).willSetStateTo(Scenario.STARTED),
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 
@@ -424,11 +423,9 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withHeader("Content-Type", "application/json")
             .withStatus(200)
             .withFixedDelay(1500),
-
-          ).willSetStateTo(Scenario.STARTED),
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
-
 
   fun stubAppointmentDelete(eventId: Long) {
     stubFor(
@@ -473,8 +470,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withHeader("Content-Type", "application/json")
             .withStatus(200)
             .withFixedDelay(1500),
-
-          ).willSetStateTo(Scenario.STARTED),
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 
@@ -542,7 +538,6 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
             )
             .withStatus(200)
             .withFixedDelay(1500),
-
         ).willSetStateTo(Scenario.STARTED),
     )
   }
