@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateScheduleRequest
+import java.time.LocalDateTime
 import java.time.LocalTime
 
 @Service
@@ -33,6 +35,36 @@ class SchedulesService(
       throw e
     }
   }
+
+  suspend fun updateScheduledInstance(amendInstanceEvent: ScheduledInstanceDomainEvent) {
+    val scheduledInstanceId = amendInstanceEvent.additionalInformation.scheduledInstanceId
+    val activityScheduleId = amendInstanceEvent.additionalInformation.activityScheduleId
+    val telemetryMap = mutableMapOf(
+      "scheduledInstanceId" to scheduledInstanceId.toString(),
+      "activityScheduleId" to activityScheduleId.toString(),
+    )
+
+    runCatching {
+      val scheduledInstance = activitiesApiService.getScheduledInstance(scheduledInstanceId)
+        .also {
+          telemetryMap["scheduleDate"] = it.date.toString()
+          telemetryMap["startTime"] = it.startTime
+          telemetryMap["endTime"] = it.endTime
+        }
+
+      val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(activityScheduleId).nomisCourseActivityId
+        .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
+
+      scheduledInstance.toUpdateScheduleRequest()
+        .let { nomisApiService.updateScheduledInstance(nomisCourseActivityId, it) }
+        .also { telemetryMap["nomisCourseScheduleId"] = it.courseScheduleId.toString() }
+    }.onSuccess {
+      telemetryClient.trackEvent("scheduled-instance-amend-success", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("scheduled-instance-amend-failed", telemetryMap, null)
+      throw e
+    }
+  }
 }
 
 fun List<ScheduledInstance>.toScheduleRequests() =
@@ -43,3 +75,24 @@ fun List<ScheduledInstance>.toScheduleRequests() =
       endTime = LocalTime.parse(it.endTime),
     )
   }
+
+fun ScheduledInstance.toUpdateScheduleRequest() =
+  UpdateScheduleRequest(
+    date = date,
+    startTime = LocalTime.parse(startTime),
+    endTime = LocalTime.parse(endTime),
+    cancelled = cancelled,
+  )
+
+data class ScheduledInstanceDomainEvent(
+  val eventType: String,
+  val additionalInformation: ScheduledInstanceAdditionalInformation,
+  val version: String,
+  val description: String,
+  val occurredAt: LocalDateTime,
+)
+
+data class ScheduledInstanceAdditionalInformation(
+  val activityScheduleId: Long,
+  val scheduledInstanceId: Long,
+)

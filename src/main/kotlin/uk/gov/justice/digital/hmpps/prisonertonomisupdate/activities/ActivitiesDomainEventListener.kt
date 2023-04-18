@@ -36,6 +36,7 @@ class ActivitiesDomainEventListener(
       "activities.activity-schedule.created" -> activitiesService.createActivity(message.fromJson())
       "activities.activity-schedule.amended" -> activitiesService.updateActivity(message.fromJson())
       "activities.scheduled-instances.amended" -> schedulesService.updateScheduleInstances(message.fromJson())
+      "activities.scheduled-instance.amended" -> schedulesService.updateScheduledInstance(message.fromJson())
       "activities.prisoner.allocated" -> allocationService.createAllocation(message.fromJson())
       "activities.prisoner.deallocated" -> allocationService.deallocate(message.fromJson())
       "activities.prisoner.attendance-created" -> attendanceService.upsertAttendance(message.fromJson())

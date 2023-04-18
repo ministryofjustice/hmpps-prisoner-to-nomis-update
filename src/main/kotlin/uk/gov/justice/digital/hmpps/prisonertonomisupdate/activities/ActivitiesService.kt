@@ -173,15 +173,3 @@ data class ScheduleDomainEvent(
 data class ScheduleAdditionalInformation(
   val activityScheduleId: Long,
 )
-
-data class AllocationDomainEvent(
-  val eventType: String,
-  val version: String,
-  val description: String,
-  val occurredAt: LocalDateTime,
-  val additionalInformation: AllocationAdditionalInformation,
-)
-
-data class AllocationAdditionalInformation(
-  val allocationId: Long,
-)
