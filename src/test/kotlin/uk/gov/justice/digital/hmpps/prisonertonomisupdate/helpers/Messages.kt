@@ -72,6 +72,9 @@ fun incentiveRetryMessage() = """
 fun activityMessagePayload(eventType: String, scheduleId: Long) =
   """{"eventType":"$eventType", "additionalInformation": { "activityScheduleId": "$scheduleId" }, "version": "1.0", "description": "description", "occurredAt": "2021-03-05T11:23:56.031Z"}"""
 
+fun scheduledInstanceMessagePayload(eventType: String, scheduleId: Long, scheduledInstanceId: Long) =
+  """{"eventType":"$eventType", "additionalInformation": { "activityScheduleId": "$scheduleId", "scheduledInstanceId": "$scheduledInstanceId" }, "version": "1.0", "description": "description", "occurredAt": "2021-03-05T11:23:56.031Z"}"""
+
 fun activityCreatedMessage(identifier: Long) = """
       {
         "Type": "Notification", 

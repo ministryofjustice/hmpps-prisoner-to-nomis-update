@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateAllocationRequest
+import java.time.LocalDateTime
 
 @Service
 class AllocationService(
@@ -77,3 +78,15 @@ class AllocationService(
     }
   }
 }
+
+data class AllocationDomainEvent(
+  val eventType: String,
+  val version: String,
+  val description: String,
+  val occurredAt: LocalDateTime,
+  val additionalInformation: AllocationAdditionalInformation,
+)
+
+data class AllocationAdditionalInformation(
+  val allocationId: Long,
+)
