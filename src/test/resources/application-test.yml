@@ -43,7 +43,7 @@ hmpps.sqs:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"appointments.appointment-instance.created\"]}"
+      subscribeFilter: "{\"eventType\":[\"appointments.appointment-instance.created\", \"appointments.appointment-instance.updated\", \"appointments.appointment-instance.cancelled\", \"appointments.appointment-instance.deleted\"]}"
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
     sentencing:

@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments
 
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -15,8 +17,10 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.eq
 import org.mockito.kotlin.any
+import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
@@ -74,7 +78,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           nomisApi.stubAppointmentCreate("""{ "eventId": $EVENT_ID }""")
           appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
-          publishCreateDomainEvent()
+          publishAppointmentEvent("appointments.appointment-instance.created")
         }
 
         @Test
@@ -153,7 +157,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
 
-          publishCreateDomainEvent()
+          publishAppointmentEvent("appointments.appointment-instance.created")
         }
 
         @Test
@@ -193,7 +197,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
             id = APPOINTMENT_INSTANCE_ID,
             response = appointmentResponse,
           )
-          publishCreateDomainEvent()
+          publishAppointmentEvent("appointments.appointment-instance.created")
         }
 
         @Test
@@ -247,7 +251,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
             awsSqsAppointmentDlqClient!!.countAllMessagesOnQueue(appointmentDlqUrl!!).get()
           } matches { it == 0 }
 
-          publishCreateDomainEvent()
+          publishAppointmentEvent("appointments.appointment-instance.created")
         }
 
         @Test
@@ -274,7 +278,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           nomisApi.stubAppointmentCreateWithErrorFollowedBySlowSuccess("""{ "eventId": $EVENT_ID }""")
           appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
 
-          publishCreateDomainEvent()
+          publishAppointmentEvent("appointments.appointment-instance.created")
         }
 
         @Test
@@ -321,7 +325,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
             awsSqsAppointmentDlqClient!!.countAllMessagesOnQueue(appointmentDlqUrl!!).get()
           } matches { it == 0 }
 
-          publishCreateDomainEvent()
+          publishAppointmentEvent("appointments.appointment-instance.created")
         }
 
         @Test
@@ -348,7 +352,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           nomisApi.stubAppointmentCreate("""{ "eventId": $EVENT_ID }""")
           appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
 
-          publishCreateDomainEvent()
+          publishAppointmentEvent("appointments.appointment-instance.created")
         }
 
         @Test
@@ -394,7 +398,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
             awsSqsAppointmentDlqClient!!.countAllMessagesOnQueue(appointmentDlqUrl!!).get()
           } matches { it == 0 }
 
-          publishCreateDomainEvent()
+          publishAppointmentEvent("appointments.appointment-instance.created")
         }
 
         @Test
@@ -425,7 +429,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         duplicateNomisEventId = 999,
       )
 
-      publishCreateDomainEvent()
+      publishAppointmentEvent("appointments.appointment-instance.created")
 
       await untilAsserted {
         verify(telemetryClient).trackEvent(eq("appointment-mapping-create-failed"), any(), isNull())
@@ -453,8 +457,344 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
-  private fun publishCreateDomainEvent() {
-    val eventType = "appointments.appointment-instance.created"
+  @Nested
+  inner class UpdateAppointment {
+
+    @Nested
+    inner class WhenAppointmentHasJustBeenUpdatedByAppointmentService {
+
+      @BeforeEach
+      fun setUp() {
+        appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+        mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+        nomisApi.stubAppointmentUpdate(EVENT_ID)
+        publishAppointmentEvent("appointments.appointment-instance.updated")
+      }
+
+      @Test
+      fun `will callback back to appointment service to get more details`() {
+        await untilAsserted {
+          appointmentsApi.verify(getRequestedFor(urlEqualTo("/appointment-instances/$APPOINTMENT_INSTANCE_ID")))
+        }
+      }
+
+      @Test
+      fun `will update an appointment in NOMIS`() {
+        await untilAsserted {
+          nomisApi.verify(
+            putRequestedFor(urlEqualTo("/appointments/$EVENT_ID"))
+              .withRequestBody(matchingJsonPath("internalLocationId", equalTo("$LOCATION_ID")))
+              .withRequestBody(matchingJsonPath("eventDate", equalTo("2023-03-14")))
+              .withRequestBody(matchingJsonPath("startTime", equalTo("10:15")))
+              .withRequestBody(matchingJsonPath("endTime", equalTo("11:42")))
+              .withRequestBody(matchingJsonPath("eventSubType", equalTo("MEDI"))),
+          )
+        }
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("appointment-update-success"),
+            check {
+              assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+              assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+
+    @Nested
+    inner class Exceptions {
+
+      @Nested
+      inner class WhenServiceFailsOnce {
+
+        @BeforeEach
+        fun setUp() {
+          appointmentsApi.stubGetAppointmentInstanceWithErrorFollowedBySlowSuccess(
+            id = APPOINTMENT_INSTANCE_ID,
+            response = appointmentResponse,
+          )
+          mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+          nomisApi.stubAppointmentUpdate(EVENT_ID)
+          publishAppointmentEvent("appointments.appointment-instance.updated")
+        }
+
+        @Test
+        fun `will callback back to appointment service twice to get more details`() {
+          await untilAsserted {
+            appointmentsApi.verify(2, getRequestedFor(urlEqualTo("/appointment-instances/$APPOINTMENT_INSTANCE_ID")))
+            verify(telemetryClient).trackEvent(eq("appointment-update-success"), any(), isNull())
+          }
+        }
+
+        @Test
+        fun `will eventually update the appointment in NOMIS`() {
+          await untilAsserted {
+            nomisApi.verify(1, putRequestedFor(urlEqualTo("/appointments/$EVENT_ID")))
+            verify(telemetryClient).trackEvent(eq("appointment-update-failed"), any(), isNull())
+            verify(telemetryClient).trackEvent(eq("appointment-update-success"), any(), isNull())
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenServiceKeepsFailing {
+
+        @BeforeEach
+        fun setUp() {
+          appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+          mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+          nomisApi.stubAppointmentUpdateWithError(EVENT_ID, 503)
+          publishAppointmentEvent("appointments.appointment-instance.updated")
+        }
+
+        @Test
+        fun `will callback back to appointment service 3 times before given up`() {
+          await untilAsserted {
+            appointmentsApi.verify(3, getRequestedFor(urlEqualTo("/appointment-instances/$APPOINTMENT_INSTANCE_ID")))
+          }
+        }
+
+        @Test
+        fun `will create failure telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              eq("appointment-update-failed"),
+              check {
+                assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+                assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
+              },
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will add message to dead letter queue`() {
+          await untilCallTo {
+            awsSqsAppointmentDlqClient!!.countAllMessagesOnQueue(appointmentDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class CancelAppointment {
+    @Nested
+    inner class WhenAppointmentHasJustBeenCancelledByAppointmentService {
+
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+        nomisApi.stubAppointmentCancel(EVENT_ID)
+        publishAppointmentEvent("appointments.appointment-instance.cancelled")
+      }
+
+      @Test
+      fun `will cancel an appointment in NOMIS`() {
+        await untilAsserted {
+          nomisApi.verify(putRequestedFor(urlEqualTo("/appointments/$EVENT_ID/cancel")))
+        }
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("appointment-cancel-success"),
+            check {
+              assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+              assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+
+    @Nested
+    inner class Exceptions {
+
+      @Nested
+      inner class WhenServiceFailsOnce {
+
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+          nomisApi.stubAppointmentCancelWithErrorFollowedBySlowSuccess(EVENT_ID)
+          publishAppointmentEvent("appointments.appointment-instance.cancelled")
+        }
+
+        @Test
+        fun `will callback back to mapping service twice to get more details`() {
+          await untilAsserted {
+            mappingServer.verify(2, getRequestedFor(urlEqualTo("/mapping/appointments/appointment-instance-id/$APPOINTMENT_INSTANCE_ID")))
+          }
+        }
+
+        @Test
+        fun `will eventually cancel the appointment in NOMIS`() {
+          await untilAsserted {
+            nomisApi.verify(2, putRequestedFor(urlEqualTo("/appointments/$EVENT_ID/cancel")))
+            verify(telemetryClient).trackEvent(eq("appointment-cancel-failed"), any(), isNull())
+            verify(telemetryClient).trackEvent(eq("appointment-cancel-success"), any(), isNull())
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenServiceKeepsFailing {
+        @BeforeEach
+        fun setUp() {
+          appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+          mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+          nomisApi.stubAppointmentCancelWithError(EVENT_ID, 503)
+          publishAppointmentEvent("appointments.appointment-instance.cancelled")
+        }
+
+        @Test
+        fun `will callback back to mapping service 3 times before given up`() {
+          await untilAsserted {
+            mappingServer.verify(3, getRequestedFor(urlEqualTo("/mapping/appointments/appointment-instance-id/$APPOINTMENT_INSTANCE_ID")))
+          }
+        }
+
+        @Test
+        fun `will create failure telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient, atLeast(3)).trackEvent(
+              eq("appointment-cancel-failed"),
+              check {
+                assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+                assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
+              },
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will add message to dead letter queue`() {
+          await untilCallTo {
+            awsSqsAppointmentDlqClient!!.countAllMessagesOnQueue(appointmentDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class DeleteAppointment {
+    @Nested
+    inner class WhenAppointmentHasJustBeenDeletedByAppointmentService {
+
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+        nomisApi.stubAppointmentDelete(EVENT_ID)
+        publishAppointmentEvent("appointments.appointment-instance.deleted")
+      }
+
+      @Test
+      fun `will delete an appointment in NOMIS`() {
+        await untilAsserted {
+          nomisApi.verify(deleteRequestedFor(urlEqualTo("/appointments/$EVENT_ID")))
+        }
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("appointment-delete-success"),
+            check {
+              assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+              assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+
+    @Nested
+    inner class Exceptions {
+
+      @Nested
+      inner class WhenServiceFailsOnce {
+
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+          nomisApi.stubAppointmentDeleteWithErrorFollowedBySlowSuccess(EVENT_ID)
+          publishAppointmentEvent("appointments.appointment-instance.deleted")
+        }
+
+        @Test
+        fun `will callback back to mapping service twice to get more details`() {
+          await untilAsserted {
+            mappingServer.verify(2, getRequestedFor(urlEqualTo("/mapping/appointments/appointment-instance-id/$APPOINTMENT_INSTANCE_ID")))
+            verify(telemetryClient).trackEvent(eq("appointment-delete-success"), any(), isNull())
+          }
+        }
+
+        @Test
+        fun `will eventually delete the appointment in NOMIS`() {
+          await untilAsserted {
+            nomisApi.verify(2, deleteRequestedFor(urlEqualTo("/appointments/$EVENT_ID")))
+            verify(telemetryClient).trackEvent(eq("appointment-delete-failed"), any(), isNull())
+            verify(telemetryClient).trackEvent(eq("appointment-delete-success"), any(), isNull())
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenServiceKeepsFailing {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+          nomisApi.stubAppointmentDeleteWithError(EVENT_ID, 503)
+          publishAppointmentEvent("appointments.appointment-instance.deleted")
+        }
+
+        @Test
+        fun `will callback back to mapping service 3 times before given up`() {
+          await untilAsserted {
+            mappingServer.verify(3, getRequestedFor(urlEqualTo("/mapping/appointments/appointment-instance-id/$APPOINTMENT_INSTANCE_ID")))
+          }
+        }
+
+        @Test
+        fun `will create failure telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient, atLeast(3)).trackEvent(
+              eq("appointment-delete-failed"),
+              check {
+                assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+                assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
+              },
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will add message to dead letter queue`() {
+          await untilCallTo {
+            awsSqsAppointmentDlqClient!!.countAllMessagesOnQueue(appointmentDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+      }
+    }
+  }
+
+  private fun publishAppointmentEvent(eventType: String) {
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(appointmentMessagePayload(eventType, APPOINTMENT_INSTANCE_ID))

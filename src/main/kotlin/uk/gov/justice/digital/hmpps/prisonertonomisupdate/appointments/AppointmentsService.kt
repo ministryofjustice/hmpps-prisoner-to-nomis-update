@@ -4,13 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Appointment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentOccurrenceDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAppointmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateAppointmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -37,9 +36,7 @@ class AppointmentsService(
       }
       transform {
         appointmentsApiService.getAppointmentInstance(event.additionalInformation.appointmentInstanceId).run {
-//          val occurrence = appointmentsApiService.getAppointmentOccurrence(appointmentOccurrenceId)
-//          val appointment = appointmentsApiService.getAppointment(appointmentId)
-          val request = toNomisAppointment(this, null, null) // occurrence, appointment)
+          val request = toCreateAppointmentRequest(this)
 
           eventTelemetry += "bookingId" to request.bookingId.toString()
           eventTelemetry += "locationId" to request.internalLocationId.toString()
@@ -56,17 +53,73 @@ class AppointmentsService(
     }
   }
 
-  private fun toNomisAppointment(
-    instance: AppointmentInstance,
-    occurrence: AppointmentOccurrenceDetails?,
-    appointment: Appointment?,
-  ): CreateAppointmentRequest = CreateAppointmentRequest(
+  suspend fun updateAppointment(event: AppointmentDomainEvent) {
+    val telemetryMap =
+      mutableMapOf("appointmentInstanceId" to event.additionalInformation.appointmentInstanceId.toString())
+
+    runCatching {
+      val appointmentInstance = appointmentsApiService.getAppointmentInstance(event.additionalInformation.appointmentInstanceId)
+
+      val nomisEventId =
+        mappingService.getMappingGivenAppointmentInstanceId(event.additionalInformation.appointmentInstanceId).nomisEventId
+          .also { telemetryMap["nomisEventId"] = it.toString() }
+
+      nomisApiService.updateAppointment(nomisEventId, toUpdateAppointmentRequest(appointmentInstance))
+    }.onSuccess {
+      telemetryClient.trackEvent("appointment-update-success", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("appointment-update-failed", telemetryMap, null)
+      throw e
+    }
+  }
+
+  suspend fun cancelAppointment(event: AppointmentDomainEvent) {
+    val telemetryMap =
+      mutableMapOf("appointmentInstanceId" to event.additionalInformation.appointmentInstanceId.toString())
+
+    runCatching {
+      val nomisEventId =
+        mappingService.getMappingGivenAppointmentInstanceId(event.additionalInformation.appointmentInstanceId).nomisEventId
+          .also { telemetryMap["nomisEventId"] = it.toString() }
+
+      nomisApiService.cancelAppointment(nomisEventId)
+    }.onSuccess {
+      telemetryClient.trackEvent("appointment-cancel-success", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("appointment-cancel-failed", telemetryMap, null)
+      throw e
+    }
+  }
+
+  suspend fun deleteAppointment(event: AppointmentDomainEvent) {
+    val telemetryMap =
+      mutableMapOf("appointmentInstanceId" to event.additionalInformation.appointmentInstanceId.toString())
+
+    runCatching {
+      val nomisEventId =
+        mappingService.getMappingGivenAppointmentInstanceId(event.additionalInformation.appointmentInstanceId).nomisEventId
+          .also { telemetryMap["nomisEventId"] = it.toString() }
+
+      nomisApiService.deleteAppointment(nomisEventId)
+    }.onSuccess {
+      telemetryClient.trackEvent("appointment-delete-success", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("appointment-delete-failed", telemetryMap, null)
+      throw e
+    }
+  }
+
+  private fun toCreateAppointmentRequest(instance: AppointmentInstance) = CreateAppointmentRequest(
     bookingId = instance.bookingId,
-    internalLocationId = if (instance.inCell) {
-      null
-    } else {
-      instance.internalLocationId // ?: occurrence.internalLocation?.id ?: appointment.internalLocationId
-    },
+    internalLocationId = if (instance.inCell) { null } else { instance.internalLocationId },
+    eventDate = instance.appointmentDate,
+    startTime = LocalTime.parse(instance.startTime),
+    endTime = LocalTime.parse(instance.endTime),
+    eventSubType = instance.categoryCode,
+  )
+
+  private fun toUpdateAppointmentRequest(instance: AppointmentInstance) = UpdateAppointmentRequest(
+    internalLocationId = if (instance.inCell) { null } else { instance.internalLocationId },
     eventDate = instance.appointmentDate,
     startTime = LocalTime.parse(instance.startTime),
     endTime = LocalTime.parse(instance.endTime),

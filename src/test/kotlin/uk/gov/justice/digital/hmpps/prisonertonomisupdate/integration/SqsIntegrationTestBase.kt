@@ -96,7 +96,7 @@ abstract class SqsIntegrationTestBase {
     awsSqsIncentiveDlqClient?.purgeQueue(incentiveDlqUrl)?.get()
 
     awsSqsActivityClient.purgeQueue(activityQueueUrl).get()
-    awsSqsActivityDlqClient?.purgeQueue(activityDlqUrl)?.get()
+    awsSqsActivityDlqClient.purgeQueue(activityDlqUrl)?.get()
 
     awsSqsAppointmentClient.purgeQueue(appointmentQueueUrl).get()
     awsSqsAppointmentDlqClient?.purgeQueue(appointmentDlqUrl)?.get()
