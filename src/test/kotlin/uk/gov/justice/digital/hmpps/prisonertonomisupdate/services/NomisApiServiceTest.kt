@@ -2,6 +2,7 @@
 
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
@@ -211,6 +212,47 @@ internal class NomisApiServiceTest {
 
       assertThrows<ServiceUnavailable> {
         nomisApiService.createIncentive(456, newIncentive())
+      }
+    }
+  }
+
+  @Nested
+  inner class GetCurrentIncentive {
+    @BeforeEach
+    internal fun setUp() {
+      NomisApiExtension.nomisApi.stubCurrentIncentiveGet(99, "STD")
+    }
+
+    @Test
+    fun `should call api with OAuth2 token`() = runTest {
+      nomisApiService.getCurrentIncentive(99)
+
+      NomisApiExtension.nomisApi.verify(
+        WireMock.getRequestedFor(urlEqualTo("/incentives/booking-id/99/current"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `get parse core data`() = runTest {
+      val incentive = nomisApiService.getCurrentIncentive(99)
+
+      assertThat(incentive?.iepLevel?.code).isEqualTo("STD")
+    }
+
+    @Test
+    internal fun `when incentive is not found level will be null`() = runTest {
+      val incentive = nomisApiService.getCurrentIncentive(88)
+
+      assertThat(incentive).isNull()
+    }
+
+    @Test
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
+      NomisApiExtension.nomisApi.stubCurrentIncentiveGetWithError(99, responseCode = 503)
+
+      assertThrows<ServiceUnavailable> {
+        nomisApiService.getCurrentIncentive(99)
       }
     }
   }

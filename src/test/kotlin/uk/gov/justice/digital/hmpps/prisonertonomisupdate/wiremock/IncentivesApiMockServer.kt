@@ -144,5 +144,28 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubCurrentIncentiveGet(bookingId: Long, iepCode: String) {
+    stubFor(
+      get("/iep/reviews/booking/$bookingId?with-details=false").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{"iepCode": "$iepCode"}""")
+          .withFixedDelay(500)
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubCurrentIncentiveGetWithError(bookingId: Long, responseCode: Int) {
+    stubFor(
+      get("/iep/reviews/booking/$bookingId?with-details=false").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(responseCode)
+          .withBody("""{"message":"Error"}"""),
+      ),
+    )
+  }
+
   fun getCountFor(url: String) = this.findAll(WireMock.getRequestedFor(WireMock.urlEqualTo(url))).count()
 }

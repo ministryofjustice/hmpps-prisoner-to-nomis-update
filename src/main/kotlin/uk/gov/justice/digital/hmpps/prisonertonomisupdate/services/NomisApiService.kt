@@ -1,10 +1,17 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.JsonNode
+import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.core.ParameterizedTypeReference
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
@@ -237,6 +244,28 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyValue(ReorderRequest(levels))
       .retrieve()
       .awaitBodilessEntity()
+
+  suspend fun getActivePrisoners(
+    pageNumber: Long,
+    pageSize: Long,
+  ): PageImpl<ActivePrisonerId> =
+    webClient.get()
+      .uri {
+        it.path("/prisoners/ids")
+          .queryParam("active", true)
+          .queryParam("page", pageNumber)
+          .queryParam("size", pageSize)
+          .build()
+      }
+      .retrieve()
+      .bodyToMono(typeReference<RestResponsePage<ActivePrisonerId>>())
+      .awaitSingle()
+
+  suspend fun getCurrentIncentive(bookingId: Long): NomisIncentive? =
+    webClient.get()
+      .uri("/incentives/booking-id/{bookingId}/current", bookingId)
+      .retrieve()
+      .awaitBodyOrNotFound()
 }
 
 data class CreateVisitDto(
@@ -478,3 +507,30 @@ data class ReferenceCode(
   val description: String,
   val active: Boolean,
 )
+
+data class ActivePrisonerId(
+  val bookingId: Long,
+  val offenderNo: String,
+)
+
+data class NomisIncentive(
+  val iepLevel: NomisCodeDescription,
+)
+
+data class NomisCodeDescription(val code: String, val description: String)
+
+class RestResponsePage<T>
+@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+constructor(
+  @JsonProperty("content") content: List<T>,
+  @JsonProperty("number") number: Int,
+  @JsonProperty("size") size: Int,
+  @JsonProperty("totalElements") totalElements: Long,
+  @Suppress("UNUSED_PARAMETER")
+  @JsonProperty(
+    "pageable",
+  )
+  pageable: JsonNode,
+) : PageImpl<T>(content, PageRequest.of(number, size), totalElements)
+
+inline fun <reified T> typeReference() = object : ParameterizedTypeReference<T>() {}

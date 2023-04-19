@@ -7,12 +7,14 @@ import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
 
 class NomisApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
   companion object {
@@ -668,7 +670,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "domain": "IEP_LEVEL",
                 "code": "$incentiveLevelCode",
                 "description": "description for $incentiveLevelCode",
-                "active": true,
+                "active": true
               }
             """.trimIndent(),
           )
@@ -688,7 +690,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "domain": "IEP_LEVEL",
                 "code": "$incentiveLevelCode",
                 "description": "description for $incentiveLevelCode",
-                "active": true,
+                "active": true
               }
             """.trimIndent(),
           )
@@ -714,6 +716,119 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse().withStatus(200),
       ),
     )
+  }
+
+  fun stubGetActivePrisonersInitialCount(totalElements: Long) {
+    stubFor(
+      get(
+        urlPathEqualTo("/prisoners/ids"),
+      )
+        .withQueryParam("page", WireMock.equalTo("0"))
+        .withQueryParam("size", WireMock.equalTo("1"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(activePrisonersPagedResponse(totalElements = totalElements, pageSize = 1)),
+        ),
+    )
+  }
+
+  fun stubGetActivePrisonersPage(totalElements: Long, pageNumber: Long, numberOfElements: Long = 10, pageSize: Long = 10) {
+    stubFor(
+      get(
+        urlPathEqualTo("/prisoners/ids"),
+      )
+        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
+        .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withFixedDelay(500)
+            .withBody(activePrisonersPagedResponse(totalElements = totalElements, numberOfElements = numberOfElements, pageNumber = pageNumber, pageSize = pageSize)),
+        ),
+    )
+  }
+
+  fun stubGetActivePrisonersPageWithError(pageNumber: Long, responseCode: Int) {
+    stubFor(
+      get(
+        urlPathEqualTo("/prisoners/ids"),
+      )
+        .withQueryParam("page", WireMock.equalTo(pageNumber.toString())).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(responseCode)
+            .withBody("""{"message":"Error"}"""),
+        ),
+    )
+  }
+
+  fun stubCurrentIncentiveGet(bookingId: Long, iepCode: String) {
+    stubFor(
+      get("/incentives/booking-id/$bookingId/current").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{"iepLevel": { "code" : "$iepCode", "description" : "description for $iepCode" }}""")
+          .withFixedDelay(500)
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubCurrentIncentiveGetWithError(bookingId: Long, responseCode: Int) {
+    stubFor(
+      get("/incentives/booking-id/$bookingId/current").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(responseCode)
+          .withBody("""{"message":"Error"}"""),
+      ),
+    )
+  }
+
+  private fun activePrisonersPagedResponse(
+    totalElements: Long = 10,
+    numberOfElements: Long = 10,
+    pageSize: Long = 10,
+    pageNumber: Long = 0,
+  ): String {
+    val activePrisonerId = (1..numberOfElements).map { it + (pageNumber * pageSize) }.map { ActivePrisonerId(bookingId = it, offenderNo = "A${it.toString().padStart(4, '0')}TZ") }
+    val content = activePrisonerId.map { """{ "bookingId": ${it.bookingId}, "offenderNo": "${it.offenderNo}" }""" }.joinToString { it }
+    return """
+{
+    "content": [
+        $content
+    ],
+    "pageable": {
+        "sort": {
+            "empty": false,
+            "sorted": true,
+            "unsorted": false
+        },
+        "offset": 0,
+        "pageSize": $pageSize,
+        "pageNumber": $pageNumber,
+        "paged": true,
+        "unpaged": false
+    },
+    "last": false,
+    "totalPages": ${totalElements / pageSize + 1},
+    "totalElements": $totalElements,
+    "size": $pageSize,
+    "number": $pageNumber,
+    "sort": {
+        "empty": false,
+        "sorted": true,
+        "unsorted": false
+    },
+    "first": true,
+    "numberOfElements": ${activePrisonerId.size},
+    "empty": false
+}                
+      
+    """.trimIndent()
   }
 
   private val CREATE_VISIT_RESPONSE = """
