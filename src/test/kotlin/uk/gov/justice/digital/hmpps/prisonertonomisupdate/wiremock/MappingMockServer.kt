@@ -320,6 +320,27 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubDeleteActivityMapping(activityScheduleId: Long) {
+    stubFor(
+      delete("/mapping/activities/activity-schedule-id/$activityScheduleId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
+
+  fun stubGetAllActivityMappings(response: String) {
+    stubFor(
+      get("/mapping/activities").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(200),
+      ),
+    )
+  }
+
   fun stubCreateAppointment() {
     stubFor(
       post("/mapping/appointments").willReturn(
@@ -417,6 +438,27 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
             .withFixedDelay(1500),
 
         ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetAllAppointmentMappings(response: String) {
+    stubFor(
+      get("/mapping/appointments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubDeleteAppointmentMapping(id: Long) {
+    stubFor(
+      delete("/mapping/appointments/appointment-instance-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
     )
   }
 

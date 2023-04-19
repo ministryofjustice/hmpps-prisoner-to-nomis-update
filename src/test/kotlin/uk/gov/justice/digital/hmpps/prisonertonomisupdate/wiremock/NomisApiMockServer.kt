@@ -181,6 +181,16 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubActivityDelete(eventId: Long) {
+    stubFor(
+      delete("/activities/$eventId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
+
   fun stubScheduleInstancesUpdate(nomisActivityId: Long) {
     stubFor(
       put("/activities/$nomisActivityId/schedules").willReturn(
@@ -434,7 +444,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       delete("/appointments/$eventId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(200),
+          .withStatus(204),
       ),
     )
   }

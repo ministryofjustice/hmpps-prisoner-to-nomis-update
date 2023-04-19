@@ -794,6 +794,38 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class DeleteAll {
+    @Test
+    fun `should delete all appointments`() {
+      mappingServer.stubGetAllAppointmentMappings(
+        """[
+        {"appointmentInstanceId": 101, "nomisEventId": 201, "label": "2021-04-11", "mappingType": "APPOINTMENT_CREATED", "whenCreated": "2020-01-01T00:00:00Z"},
+        {"appointmentInstanceId": 102, "nomisEventId": 202, "label": "2022-05-12", "mappingType": "MIGRATED"}
+        ]
+        """.trimMargin(),
+      )
+      mappingServer.stubDeleteAppointmentMapping(101)
+      mappingServer.stubDeleteAppointmentMapping(102)
+      nomisApi.stubAppointmentDelete(201)
+      nomisApi.stubAppointmentDelete(202)
+
+      webTestClient.delete()
+        .uri("/appointments")
+        .headers(setAuthorisation(roles = listOf("ROLE_QUEUE_ADMIN")))
+        .exchange()
+        .expectStatus()
+        .isNoContent
+
+      await untilAsserted {
+        mappingServer.verify(deleteRequestedFor(urlEqualTo("/mapping/appointments/appointment-instance-id/101")))
+        mappingServer.verify(deleteRequestedFor(urlEqualTo("/mapping/appointments/appointment-instance-id/102")))
+        nomisApi.verify(deleteRequestedFor(urlEqualTo("/appointments/201")))
+        nomisApi.verify(deleteRequestedFor(urlEqualTo("/appointments/202")))
+      }
+    }
+  }
+
   private fun publishAppointmentEvent(eventType: String) {
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)

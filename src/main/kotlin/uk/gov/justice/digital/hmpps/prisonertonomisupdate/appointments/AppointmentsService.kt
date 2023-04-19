@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
@@ -114,7 +115,6 @@ class AppointmentsService(
       runCatching {
         nomisApiService.deleteAppointment(mapping.nomisEventId)
         mappingService.deleteMapping(mapping.appointmentInstanceId)
-
       }.onSuccess {
         telemetryClient.trackEvent(
           "appointment-DELETE-ALL-success",
@@ -125,6 +125,7 @@ class AppointmentsService(
           null,
         )
       }.onFailure { e ->
+        log.error("Failed to delete appointment with appointmentInstanceId ${mapping.appointmentInstanceId}", e)
         telemetryClient.trackEvent(
           "appointment-DELETE-ALL-failed",
           mapOf(
@@ -168,6 +169,10 @@ class AppointmentsService(
   override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
   private inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
+
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+  }
 }
 
 data class AppointmentDomainEvent(

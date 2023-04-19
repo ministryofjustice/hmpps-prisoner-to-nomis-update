@@ -169,7 +169,6 @@ class ActivitiesService(
       runCatching {
         nomisApiService.deleteActivity(mapping.nomisCourseActivityId)
         mappingService.deleteMapping(mapping.activityScheduleId)
-
       }.onSuccess {
         telemetryClient.trackEvent(
           "activity-DELETE-ALL-success",
@@ -180,6 +179,7 @@ class ActivitiesService(
           null,
         )
       }.onFailure { e ->
+        log.error("Failed to delete activity with id ${mapping.nomisCourseActivityId}", e)
         telemetryClient.trackEvent(
           "activity-DELETE-ALL-failed",
           mapOf(
@@ -195,6 +195,10 @@ class ActivitiesService(
   override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
   private inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
+
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+  }
 }
 
 data class ScheduleDomainEvent(
