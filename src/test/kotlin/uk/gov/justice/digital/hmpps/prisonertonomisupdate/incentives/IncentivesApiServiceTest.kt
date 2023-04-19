@@ -88,4 +88,45 @@ internal class IncentivesApiServiceTest {
       }
     }
   }
+
+  @Nested
+  inner class GetCurrentIncentive {
+    @BeforeEach
+    internal fun setUp() {
+      IncentivesApiExtension.incentivesApi.stubCurrentIncentiveGet(99, "STD")
+    }
+
+    @Test
+    fun `should call api with OAuth2 token`() = runTest {
+      incentivesApiService.getCurrentIncentive(99)
+
+      IncentivesApiExtension.incentivesApi.verify(
+        WireMock.getRequestedFor(WireMock.urlEqualTo("/iep/reviews/booking/99?with-details=false"))
+          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `get parse core data`() = runTest {
+      val incentive = incentivesApiService.getCurrentIncentive(99)
+
+      assertThat(incentive?.iepCode).isEqualTo("STD")
+    }
+
+    @Test
+    internal fun `when incentive is not found level will be null`() = runTest {
+      val incentive = incentivesApiService.getCurrentIncentive(88)
+
+      assertThat(incentive).isNull()
+    }
+
+    @Test
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
+      IncentivesApiExtension.incentivesApi.stubCurrentIncentiveGetWithError(99, responseCode = 503)
+
+      assertThrows<ServiceUnavailable> {
+        incentivesApiService.getCurrentIncentive(99)
+      }
+    }
+  }
 }
