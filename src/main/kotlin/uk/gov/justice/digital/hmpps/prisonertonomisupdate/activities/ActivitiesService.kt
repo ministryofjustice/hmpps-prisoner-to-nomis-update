@@ -112,6 +112,7 @@ class ActivitiesService(
       payPerSession = activity.payPerSession.value,
       schedules = schedule.instances.toScheduleRequests(),
       scheduleRules = schedule.slots.toScheduleRuleRequests(),
+      runsOnBankHolidays = schedule.runsOnBankHoliday,
     )
   }
 

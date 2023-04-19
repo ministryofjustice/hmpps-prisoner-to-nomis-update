@@ -1053,6 +1053,7 @@ fun newActivity() = CreateActivityRequest(
   payPerSession = "H",
   schedules = listOf(),
   scheduleRules = emptyList(),
+  runsOnBankHolidays = true,
 )
 
 fun updateActivity() = UpdateActivityRequest(
