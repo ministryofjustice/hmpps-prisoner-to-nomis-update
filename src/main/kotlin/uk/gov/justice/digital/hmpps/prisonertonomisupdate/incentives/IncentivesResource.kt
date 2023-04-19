@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
 import com.microsoft.applicationinsights.TelemetryClient
-import kotlinx.coroutines.*
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
