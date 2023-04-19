@@ -109,6 +109,34 @@ class AppointmentsService(
     }
   }
 
+  suspend fun deleteAllAppointments() {
+    mappingService.getAllMappings().forEach { mapping ->
+      runCatching {
+        nomisApiService.deleteAppointment(mapping.nomisEventId)
+        mappingService.deleteMapping(mapping.appointmentInstanceId)
+
+      }.onSuccess {
+        telemetryClient.trackEvent(
+          "appointment-DELETE-ALL-success",
+          mapOf(
+            "nomisEventId" to mapping.nomisEventId.toString(),
+            "appointmentInstanceId" to mapping.appointmentInstanceId.toString(),
+          ),
+          null,
+        )
+      }.onFailure { e ->
+        telemetryClient.trackEvent(
+          "appointment-DELETE-ALL-failed",
+          mapOf(
+            "nomisEventId" to mapping.nomisEventId.toString(),
+            "appointmentInstanceId" to mapping.appointmentInstanceId.toString(),
+          ),
+          null,
+        )
+      }
+    }
+  }
+
   private fun toCreateAppointmentRequest(instance: AppointmentInstance) = CreateAppointmentRequest(
     bookingId = instance.bookingId,
     internalLocationId = if (instance.inCell) { null } else { instance.internalLocationId },

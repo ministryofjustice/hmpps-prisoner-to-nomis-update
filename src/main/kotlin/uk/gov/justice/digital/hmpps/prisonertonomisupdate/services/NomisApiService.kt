@@ -266,6 +266,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .uri("/incentives/booking-id/{bookingId}/current", bookingId)
       .retrieve()
       .awaitBodyOrNotFound()
+
+  suspend fun deleteActivity(courseActivityId: Long) {
+    webClient.delete()
+      .uri("/activities/$courseActivityId")
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 }
 
 data class CreateVisitDto(
