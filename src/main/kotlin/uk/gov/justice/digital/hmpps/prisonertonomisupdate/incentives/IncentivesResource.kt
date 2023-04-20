@@ -26,9 +26,14 @@ class IncentivesResource(private val telemetryClient: TelemetryClient, private v
     telemetryClient.trackEvent("incentives-reports-reconciliation-requested")
     log.info("Incentives reconciliation report requested")
     GlobalScope.launch {
-      incentivesReconciliationService.generateReconciliationReport().also {
-        log.info("Incentives reconciliation report completed with ${it.size} mismatches")
-        telemetryClient.trackEvent("incentives-reports-reconciliation-report", mapOf("mismatch-count" to it.size.toString()) + it.asMap())
+      runCatching {
+        incentivesReconciliationService.generateReconciliationReport().also {
+          log.info("Incentives reconciliation report completed with ${it.size} mismatches")
+          telemetryClient.trackEvent("incentives-reports-reconciliation-report", mapOf("mismatch-count" to it.size.toString(), "success" to "true") + it.asMap())
+        }
+      }.onFailure {
+        log.error("Incentives reconciliation report failed", it)
+        telemetryClient.trackEvent("incentives-reports-reconciliation-report", mapOf("mismatch-count" to "0", "success" to "false"))
       }
     }
   }

@@ -159,6 +159,26 @@ class IncentivesResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `when initial prison count fails the whole report fails`() {
+      nomisApi.stubGetActivePrisonersPageWithError(0, 500)
+
+      webTestClient.put().uri("/incentives/reports/reconciliation")
+        .exchange()
+        .expectStatus().isAccepted
+
+      await untilAsserted { verify(telemetryClient).trackEvent(eq("incentives-reports-reconciliation-report"), any(), isNull()) }
+
+      verify(telemetryClient).trackEvent(
+        eq("incentives-reports-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("mismatch-count", "0")
+          assertThat(it).containsEntry("success", "false")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
     fun `will attempt to complete a report even if whole pages of the checks fail`() {
       nomisApi.stubGetActivePrisonersPageWithError(2, 500)
 
