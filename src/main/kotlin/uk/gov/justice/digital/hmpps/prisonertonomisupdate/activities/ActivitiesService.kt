@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityPay
@@ -32,6 +33,8 @@ class ActivitiesService(
   private val objectMapper: ObjectMapper,
 ) : CreateMappingRetryable {
 
+  private val logger = LoggerFactory.getLogger(this::class.java)
+
   suspend fun createActivity(event: ScheduleDomainEvent) {
     synchronise {
       name = "activity"
@@ -47,6 +50,7 @@ class ActivitiesService(
       transform {
         activitiesApiService.getActivitySchedule(event.additionalInformation.activityScheduleId).let { activitySchedule ->
           eventTelemetry += "description" to activitySchedule.description
+          logger.info("activitiesHolidayFlag=${activitySchedule.runsOnBankHoliday}")
 
           createTransformedActivity(activitySchedule).let { nomisResponse ->
             ActivityMappingDto(
@@ -113,7 +117,9 @@ class ActivitiesService(
       schedules = schedule.instances.toScheduleRequests(),
       scheduleRules = schedule.slots.toScheduleRuleRequests(),
       runsOnBankHolidays = schedule.runsOnBankHoliday,
-    )
+    ).also {
+      logger.info("requestedHolidayFlag=${it.runsOnBankHolidays}")
+    }
   }
 
   private fun toNomisActivityDescription(activityDescription: String): String =
