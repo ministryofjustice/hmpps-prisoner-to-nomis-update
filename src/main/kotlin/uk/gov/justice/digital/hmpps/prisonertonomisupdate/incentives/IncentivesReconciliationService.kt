@@ -46,7 +46,7 @@ class IncentivesReconciliationService(
       }.getOrElse { emptyList() }.also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
   private suspend fun checkBookingIncentiveMatch(prisonerId: ActivePrisonerId): MismatchIncentiveLevel? = runCatching {
-    log.info("Checking booking: ${prisonerId.bookingId}")
+    log.debug("Checking booking: ${prisonerId.bookingId}")
     val (nomisIncentiveLevel, dpsIncentiveLevel) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getCurrentIncentive(prisonerId.bookingId) } to
         async { incentivesApiService.getCurrentIncentive(prisonerId.bookingId) }
