@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
 import com.microsoft.applicationinsights.TelemetryClient
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -22,20 +23,9 @@ class IncentivesReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun generateReconciliationReport(): List<MismatchIncentiveLevel> {
-    val activePrisonersCount = nomisApiService.getActivePrisoners(0, 1).totalElements
+  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<MismatchIncentiveLevel> {
     return activePrisonersCount.asPages().flatMap { page ->
-      val activePrisoners = runCatching { nomisApiService.getActivePrisoners(page.first, page.second).content }
-        .onFailure {
-          telemetryClient.trackEvent(
-            "incentives-reports-reconciliation-mismatch-page-error",
-            mapOf(
-              "page" to page.first.toString(),
-            ),
-          )
-          log.error("Unable to match entire page of prisoners: $page", it)
-        }.getOrElse { emptyList() }
-      log.info("Page requested: $page, with ${activePrisoners.size} active prisoners")
+      val activePrisoners = getActivePrisonersForPage(page)
 
       withContext(Dispatchers.Unconfined) {
         activePrisoners.map { async { checkBookingIncentiveMatch(it) } }
@@ -43,12 +33,25 @@ class IncentivesReconciliationService(
     }
   }
 
+  private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) =
+    runCatching { nomisApiService.getActivePrisoners(page.first, page.second).content }
+      .onFailure {
+        telemetryClient.trackEvent(
+          "incentives-reports-reconciliation-mismatch-page-error",
+          mapOf(
+            "page" to page.first.toString(),
+          ),
+        )
+        log.error("Unable to match entire page of prisoners: $page", it)
+      }.getOrElse { emptyList() }.also { log.info("Page requested: $page, with ${it.size} active prisoners") }
+
   private suspend fun checkBookingIncentiveMatch(prisonerId: ActivePrisonerId): MismatchIncentiveLevel? = runCatching {
     log.info("Checking booking: ${prisonerId.bookingId}")
     val (nomisIncentiveLevel, dpsIncentiveLevel) = withContext(Dispatchers.Unconfined) {
-      async { nomisApiService.getCurrentIncentive(prisonerId.bookingId) }.await() to
-        async { incentivesApiService.getCurrentIncentive(prisonerId.bookingId) }.await()
-    }
+      async { nomisApiService.getCurrentIncentive(prisonerId.bookingId) } to
+        async { incentivesApiService.getCurrentIncentive(prisonerId.bookingId) }
+    }.awaitBoth()
+
     return if (nomisIncentiveLevel?.iepLevel?.code != dpsIncentiveLevel?.iepCode) {
       MismatchIncentiveLevel(prisonerId, nomisIncentiveLevel?.iepLevel?.code, dpsIncentiveLevel?.iepCode).also { mismatch ->
         log.info("Incentive Mismatch found  $mismatch")
@@ -81,3 +84,5 @@ data class MismatchIncentiveLevel(val prisonerId: ActivePrisonerId, val nomisInc
 
 private fun Long.asPages(): Array<Pair<Long, Long>> =
   (0..(this / 10)).map { it to 10L }.toTypedArray()
+
+private suspend fun <A, B> Pair<Deferred<A>, Deferred<B>>.awaitBoth(): Pair<A, B> = this.first.await() to this.second.await()
