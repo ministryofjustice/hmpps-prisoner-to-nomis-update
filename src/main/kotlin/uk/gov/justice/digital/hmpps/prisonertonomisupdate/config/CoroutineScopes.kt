@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class CoroutineScopes {
+  // since everything is non-blocking, we don't need to worry about blocking threads so use whatever thread
+  // the last coroutine was on, continue on that one rather than switching threads
   @Bean
-  fun reportScope() = CoroutineScope(Dispatchers.Unconfined)
+  fun nonBlockingReportScope() = CoroutineScope(Dispatchers.Unconfined)
 }
