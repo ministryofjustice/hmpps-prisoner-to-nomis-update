@@ -6,7 +6,6 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -51,18 +50,15 @@ class IncentivesResourceIntTest : IntegrationTestBase() {
       }
     }
 
-    @AfterEach
-    fun tearDown() {
-      await untilAsserted { verify(telemetryClient).trackEvent(eq("incentives-reports-reconciliation-report"), any(), isNull()) }
-    }
-
     @Test
     fun `will output report requested telemetry`() {
       webTestClient.put().uri("/incentives/reports/reconciliation")
         .exchange()
         .expectStatus().isAccepted
 
-      verify(telemetryClient).trackEvent(eq("incentives-reports-reconciliation-requested"))
+      verify(telemetryClient).trackEvent(eq("incentives-reports-reconciliation-requested"), check { assertThat(it).containsEntry("active-prisoners", "34") }, isNull())
+
+      awaitReportFinished()
     }
 
     @Test
@@ -71,7 +67,7 @@ class IncentivesResourceIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isAccepted
 
-      await untilAsserted { verify(telemetryClient).trackEvent(eq("incentives-reports-reconciliation-report"), any(), isNull()) }
+      awaitReportFinished()
       nomisApi.verify(
         WireMock.getRequestedFor(urlPathEqualTo("/prisoners/ids"))
           .withQueryParam("size", WireMock.equalTo("1"))
@@ -91,7 +87,7 @@ class IncentivesResourceIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isAccepted
 
-      await untilAsserted { verify(telemetryClient).trackEvent(eq("incentives-reports-reconciliation-report"), any(), isNull()) }
+      awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
         eq("incentives-reports-reconciliation-report"),
@@ -139,7 +135,7 @@ class IncentivesResourceIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isAccepted
 
-      await untilAsserted { verify(telemetryClient).trackEvent(eq("incentives-reports-reconciliation-report"), any(), isNull()) }
+      awaitReportFinished()
 
       verify(telemetryClient, times(2)).trackEvent(
         eq("incentives-reports-reconciliation-mismatch-error"),
@@ -164,18 +160,7 @@ class IncentivesResourceIntTest : IntegrationTestBase() {
 
       webTestClient.put().uri("/incentives/reports/reconciliation")
         .exchange()
-        .expectStatus().isAccepted
-
-      await untilAsserted { verify(telemetryClient).trackEvent(eq("incentives-reports-reconciliation-report"), any(), isNull()) }
-
-      verify(telemetryClient).trackEvent(
-        eq("incentives-reports-reconciliation-report"),
-        check {
-          assertThat(it).containsEntry("mismatch-count", "0")
-          assertThat(it).containsEntry("success", "false")
-        },
-        isNull(),
-      )
+        .expectStatus().is5xxServerError
     }
 
     @Test
@@ -186,7 +171,7 @@ class IncentivesResourceIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isAccepted
 
-      await untilAsserted { verify(telemetryClient).trackEvent(eq("incentives-reports-reconciliation-report"), any(), isNull()) }
+      awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
         eq("incentives-reports-reconciliation-mismatch-page-error"),
@@ -204,5 +189,9 @@ class IncentivesResourceIntTest : IntegrationTestBase() {
         isNull(),
       )
     }
+  }
+
+  private fun awaitReportFinished() {
+    await untilAsserted { verify(telemetryClient).trackEvent(eq("incentives-reports-reconciliation-report"), any(), isNull()) }
   }
 }
