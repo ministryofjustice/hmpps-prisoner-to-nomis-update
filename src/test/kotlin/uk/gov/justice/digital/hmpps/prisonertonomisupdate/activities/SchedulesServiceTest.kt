@@ -23,6 +23,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityLite
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityMinimumEducationLevel
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleInstance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleLite
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.InternalLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -194,7 +196,6 @@ class SchedulesServiceTest {
         eq("scheduled-instance-amend-failed"),
         check<Map<String, String>> {
           assertThat(it["scheduledInstanceId"]).isEqualTo(SCHEDULE_INSTANCE_ID.toString())
-          assertThat(it["activityScheduleId"]).isEqualTo(ACTIVITY_SCHEDULE_ID.toString())
         },
         isNull(),
       )
@@ -353,7 +354,7 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
   runsOnBankHoliday = true,
 )
 
-private fun newScheduledInstance() = ScheduledInstance(
+private fun newScheduledInstance() = ActivityScheduleInstance(
   id = SCHEDULE_INSTANCE_ID,
   date = LocalDate.parse("2023-02-23"),
   startTime = "08:00",
@@ -362,4 +363,34 @@ private fun newScheduledInstance() = ScheduledInstance(
   attendances = listOf(),
   cancelledTime = null,
   cancelledBy = null,
+  activitySchedule =
+  ActivityScheduleLite(
+    id = ACTIVITY_SCHEDULE_ID,
+    description = "test",
+    capacity = 10,
+    slots = listOf(),
+    startDate = LocalDate.parse("2023-02-01"),
+    activity =
+    ActivityLite(
+      id = ACTIVITY_ID,
+      prisonCode = "LEI",
+      attendanceRequired = true,
+      inCell = false,
+      pieceWork = false,
+      outsideWork = false,
+      payPerSession = ActivityLite.PayPerSession.h,
+      summary = "test",
+      riskLevel = "risk",
+      minimumIncentiveNomisCode = "A",
+      minimumIncentiveLevel = "BAS",
+      minimumEducationLevel = listOf(),
+      category =
+      ActivityCategory(
+        id = 123,
+        code = "ANY",
+        description = "any",
+        name = "any",
+      ),
+    ),
+  ),
 )

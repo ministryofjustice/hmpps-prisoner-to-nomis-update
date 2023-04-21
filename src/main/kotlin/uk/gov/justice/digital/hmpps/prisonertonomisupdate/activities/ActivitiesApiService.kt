@@ -6,9 +6,9 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 
 @Service
 class ActivitiesApiService(@Qualifier("activitiesApiWebClient") private val webClient: WebClient) {
@@ -41,7 +41,7 @@ class ActivitiesApiService(@Qualifier("activitiesApiWebClient") private val webC
       .awaitBody()
   }
 
-  suspend fun getScheduledInstance(scheduledInstanceId: Long): ScheduledInstance {
+  suspend fun getScheduledInstance(scheduledInstanceId: Long): ActivityScheduleInstance {
     return webClient.get()
       .uri("/scheduled-instances/$scheduledInstanceId")
       .retrieve()

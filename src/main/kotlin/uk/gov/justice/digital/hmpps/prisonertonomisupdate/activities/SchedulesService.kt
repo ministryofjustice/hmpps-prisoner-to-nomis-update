@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRequest
@@ -38,21 +39,20 @@ class SchedulesService(
 
   suspend fun updateScheduledInstance(amendInstanceEvent: ScheduledInstanceDomainEvent) {
     val scheduledInstanceId = amendInstanceEvent.additionalInformation.scheduledInstanceId
-    val activityScheduleId = amendInstanceEvent.additionalInformation.activityScheduleId
     val telemetryMap = mutableMapOf(
       "scheduledInstanceId" to scheduledInstanceId.toString(),
-      "activityScheduleId" to activityScheduleId.toString(),
     )
 
     runCatching {
       val scheduledInstance = activitiesApiService.getScheduledInstance(scheduledInstanceId)
         .also {
+          telemetryMap["activityScheduleId"] = it.activitySchedule.id.toString()
           telemetryMap["scheduleDate"] = it.date.toString()
           telemetryMap["startTime"] = it.startTime
           telemetryMap["endTime"] = it.endTime
         }
 
-      val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(activityScheduleId).nomisCourseActivityId
+      val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(scheduledInstance.activitySchedule.id).nomisCourseActivityId
         .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
 
       scheduledInstance.toUpdateScheduleRequest()
@@ -76,7 +76,7 @@ fun List<ScheduledInstance>.toScheduleRequests() =
     )
   }
 
-fun ScheduledInstance.toUpdateScheduleRequest() =
+fun ActivityScheduleInstance.toUpdateScheduleRequest() =
   UpdateScheduleRequest(
     date = date,
     startTime = LocalTime.parse(startTime),
