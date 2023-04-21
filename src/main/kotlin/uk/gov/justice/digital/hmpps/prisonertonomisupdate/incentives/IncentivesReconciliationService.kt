@@ -8,6 +8,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
@@ -18,6 +19,8 @@ class IncentivesReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val nomisApiService: NomisApiService,
   private val incentivesApiService: IncentivesApiService,
+  @Value("\${reports.incentives.reconciliation.page-size}")
+  private val pageSize: Long = 20,
 ) {
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -78,11 +81,11 @@ class IncentivesReconciliationService(
       ),
     )
   }.getOrNull()
+
+  private fun Long.asPages(): Array<Pair<Long, Long>> =
+    (0..(this / pageSize)).map { it to pageSize }.toTypedArray()
 }
 
 data class MismatchIncentiveLevel(val prisonerId: ActivePrisonerId, val nomisIncentiveLevel: String?, val dpsIncentiveLevel: String?)
-
-private fun Long.asPages(): Array<Pair<Long, Long>> =
-  (0..(this / 10)).map { it to 10L }.toTypedArray()
 
 private suspend fun <A, B> Pair<Deferred<A>, Deferred<B>>.awaitBoth(): Pair<A, B> = this.first.await() to this.second.await()

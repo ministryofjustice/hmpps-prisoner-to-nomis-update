@@ -62,7 +62,9 @@ class IncentivesResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should execute batches of 10 prisoners`() {
+    fun `should execute batches of prisoners`() {
+      // given "reports.incentives.reconciliation.page-size=10"
+
       webTestClient.put().uri("/incentives/reports/reconciliation")
         .exchange()
         .expectStatus().isAccepted
