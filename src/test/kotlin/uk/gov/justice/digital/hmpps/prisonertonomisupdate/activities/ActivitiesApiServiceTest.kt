@@ -631,122 +631,90 @@ internal class ActivitiesApiServiceTest {
         """
 {
   "id": 1234,
-  "date": "2022-09-30",
+  "date": "2023-05-02",
   "startTime": "09:00",
-  "endTime": "10:00",
+  "endTime": "12:00",
   "cancelled": true,
-  "cancelledTime": "2023-04-17T14:09:07.329Z",
+  "cancelledTime": "2023-04-21T13:13:28.192Z",
   "cancelledBy": "Adam Smith",
   "cancelledReason": "Staff unavailable",
-  "previousScheduledInstanceId": 123456,
-  "previousScheduledInstanceDate": "2022-09-30",
-  "nextScheduledInstanceId": 123456,
-  "nextScheduledInstanceDate": "2022-09-30",
-  "attendances": [
-    {
-      "id": 123456,
-      "scheduleInstanceId": 123456,
-      "prisonerNumber": "A1234AA",
-      "attendanceReason": {
-        "id": 1,
-        "code": "SICK",
-        "description": "Sick",
-        "attended": true,
-        "capturePay": true,
-        "captureMoreDetail": true,
-        "captureCaseNote": true,
-        "captureIncentiveLevelWarning": false,
-        "captureOtherText": false,
-        "displayInAbsence": false,
-        "displaySequence": 1,
-        "notes": "Maps to ACCAB in NOMIS"
-      },
-      "comment": "Prisoner was too unwell to attend the activity.",
-      "recordedTime": "2023-04-17T14:09:07.330Z",
-      "recordedBy": "A.JONES",
-      "status": "WAITING",
-      "payAmount": 100,
-      "bonusAmount": 50,
-      "pieces": 0,
-      "issuePayment": true,
-      "incentiveLevelWarningIssued": true,
-      "otherAbsenceReason": "Prisoner has a valid reason to miss the activity.",
-      "attendanceHistory": [
-        {
-          "id": 123456,
-          "attendanceReason": {
-            "id": 1,
-            "code": "SICK",
-            "description": "Sick",
-            "attended": true,
-            "capturePay": true,
-            "captureMoreDetail": true,
-            "captureCaseNote": true,
-            "captureIncentiveLevelWarning": false,
-            "captureOtherText": false,
-            "displayInAbsence": false,
-            "displaySequence": 1,
-            "notes": "Maps to ACCAB in NOMIS"
-          },
-          "comment": "Prisoner was too unwell to attend the activity.",
-          "recordedTime": "2023-04-17T14:09:07.330Z",
-          "recordedBy": "A.JONES",
-          "issuePayment": true,
-          "incentiveLevelWarningIssued": true,
-          "otherAbsenceReason": "Prisoner has a valid reason to miss the activity."
-        }
-      ]
-    }
-  ],
+  "previousScheduledInstanceId": 58,
+  "previousScheduledInstanceDate": "2023-05-01",
+  "nextScheduledInstanceId": 60,
+  "nextScheduledInstanceDate": "2023-05-02",
+  "attendances": [],
   "activitySchedule": {
-    "id": 123456,
-    "description": "Monday AM Houseblock 3",
-    "internalLocation": 98877667,
+    "id": 4,
+    "description": "Pen testing again",
+    "internalLocation": {
+      "id": 197684,
+      "code": "ASSO",
+      "description": "ASSOCIATION"
+    },
     "capacity": 10,
     "activity": {
-      "id": 123456,
-      "prisonCode": "PVI",
-      "attendanceRequired": false,
+      "id": 4,
+      "prisonCode": "MDI",
+      "attendanceRequired": true,
       "inCell": false,
       "pieceWork": false,
       "outsideWork": false,
       "payPerSession": "H",
-      "summary": "Maths level 1",
-      "description": "A basic maths course suitable for introduction to the subject",
+      "summary": "Pen testing again",
+      "description": "Pen testing again",
       "category": {
-        "id": 1,
-        "code": "LEISURE_SOCIAL",
-        "name": "Leisure and social",
-        "description": "Such as association, library time and social clubs, like music or art"
+        "id": 3,
+        "code": "SAA_PRISON_JOBS",
+        "name": "Prison jobs",
+        "description": "Such as kitchen, cleaning, gardens or other maintenance and services to keep the prison running"
       },
       "riskLevel": "high",
-      "minimumIncentiveNomisCode": "BAS",
-      "minimumIncentiveLevel": "Basic",
-      "minimumEducationLevel": [
-        {
-          "id": 123456,
-          "educationLevelCode": "Basic",
-          "educationLevelDescription": "Basic"
-        }
-      ]
+      "minimumIncentiveNomisCode": "STD",
+      "minimumIncentiveLevel": "Standard",
+      "minimumEducationLevel": []
     },
     "slots": [
       {
-        "id": 123456,
-        "startTime": "9:00",
-        "endTime": "11:30",
-        "daysOfWeek": "[Mon,Tue,Wed]",
+        "id": 5,
+        "startTime": "09:00",
+        "endTime": "12:00",
+        "daysOfWeek": [
+          "Mon",
+          "Tue",
+          "Wed",
+          "Thu",
+          "Fri"
+        ],
         "mondayFlag": true,
         "tuesdayFlag": true,
         "wednesdayFlag": true,
-        "thursdayFlag": false,
-        "fridayFlag": false,
+        "thursdayFlag": true,
+        "fridayFlag": true,
+        "saturdayFlag": false,
+        "sundayFlag": false
+      },
+      {
+        "id": 6,
+        "startTime": "13:00",
+        "endTime": "16:30",
+        "daysOfWeek": [
+          "Mon",
+          "Tue",
+          "Wed",
+          "Thu",
+          "Fri"
+        ],
+        "mondayFlag": true,
+        "tuesdayFlag": true,
+        "wednesdayFlag": true,
+        "thursdayFlag": true,
+        "fridayFlag": true,
         "saturdayFlag": false,
         "sundayFlag": false
       }
     ],
-    "startDate": "2022-09-21",
-    "endDate": "2022-10-21"
+    "startDate": "2023-04-20",
+    "endDate": null
   }
 }
         """.trimIndent(),

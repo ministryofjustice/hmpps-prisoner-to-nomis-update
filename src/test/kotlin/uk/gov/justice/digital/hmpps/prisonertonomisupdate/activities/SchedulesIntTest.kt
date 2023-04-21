@@ -114,7 +114,7 @@ class SchedulesIntTest : SqsIntegrationTestBase() {
 
     private fun amendScheduledInstanceEvent(): PublishRequest? =
       PublishRequest.builder().topicArn(topicArn)
-        .message(scheduledInstanceMessagePayload("activities.scheduled-instance.amended", ACTIVITY_SCHEDULE_ID, SCHEDULE_INSTANCE_ID))
+        .message(scheduledInstanceMessagePayload("activities.scheduled-instance.amended", SCHEDULE_INSTANCE_ID))
         .messageAttributes(
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
@@ -134,6 +134,32 @@ private fun buildGetScheduledInstanceResponse() =
       "cancelled": true,
       "attendances": [],
       "cancelledTime": null,
-      "cancelledBy": null
+      "cancelledBy": null,
+      "activitySchedule": {
+        "id": $ACTIVITY_SCHEDULE_ID,
+        "description": "activity",
+        "capacity": 5,
+        "slots": [],
+        "startDate": "2023-02-01",
+        "activity": {
+          "id": $ACTIVITY_ID,
+          "prisonCode": "LEI",
+          "attendanceRequired": true,
+          "inCell": false,
+          "pieceWork": false,
+          "outsideWork": false,
+          "payPerSession": "H",
+          "summary": "work",
+          "riskLevel": "amy",
+          "minimumIncentiveNomisCode": "BAS",
+          "minimumIncentiveLevel": "BAS",
+          "minimumEducationLevel": [],
+          "category": {
+            "id": 123,
+            "code": "any",
+            "name": "any"
+          }
+        }
+      }
     }
   """.trimIndent()
