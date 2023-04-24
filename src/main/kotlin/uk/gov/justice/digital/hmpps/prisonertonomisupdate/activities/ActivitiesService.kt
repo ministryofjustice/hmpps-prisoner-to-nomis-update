@@ -112,7 +112,7 @@ class ActivitiesService(
       payPerSession = activity.payPerSession.value,
       schedules = schedule.instances.toScheduleRequests(),
       scheduleRules = schedule.slots.toScheduleRuleRequests(),
-      runsOnBankHolidays = schedule.runsOnBankHoliday,
+      excludeBankHolidays = !schedule.runsOnBankHoliday, // Nomis models the negative (exclude) and Activities models the positive (runs on)
     )
   }
 

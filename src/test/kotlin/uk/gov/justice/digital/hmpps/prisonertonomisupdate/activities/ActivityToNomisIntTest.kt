@@ -106,7 +106,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("scheduleRules[1].tuesday", equalTo("true")))
           .withRequestBody(matchingJsonPath("scheduleRules[1].wednesday", equalTo("true")))
           .withRequestBody(matchingJsonPath("scheduleRules[1].thursday", equalTo("false")))
-          .withRequestBody(matchingJsonPath("runsOnBankHolidays", equalTo("true"))),
+          .withRequestBody(matchingJsonPath("excludeBankHolidays", equalTo("false"))),
       )
       mappingServer.verify(
         postRequestedFor(urlEqualTo("/mapping/activities"))
