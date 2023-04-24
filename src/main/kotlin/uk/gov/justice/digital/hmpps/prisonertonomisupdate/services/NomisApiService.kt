@@ -332,7 +332,7 @@ data class CreateActivityRequest(
   val payPerSession: String,
   val schedules: List<ScheduleRequest>,
   val scheduleRules: List<ScheduleRuleRequest>,
-  val runsOnBankHolidays: Boolean,
+  val excludeBankHolidays: Boolean,
 )
 
 data class UpdateActivityRequest(
