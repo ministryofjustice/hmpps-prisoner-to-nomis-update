@@ -46,6 +46,10 @@ tasks {
       jvmTarget = "19"
     }
   }
+  withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask> {
+    // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
+    mustRunAfter("buildActivityApiModel")
+  }
 }
 
 tasks.register("buildActivityApiModel", GenerateTask::class) {
