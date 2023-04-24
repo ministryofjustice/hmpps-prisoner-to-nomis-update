@@ -266,6 +266,26 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .uri("/incentives/booking-id/{bookingId}/current", bookingId)
       .retrieve()
       .awaitBodyOrNotFound()
+
+  suspend fun updatePrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest) =
+    webClient.put()
+      .uri("/incentives/prison/$prison/code/${prisonIncentive.levelCode}")
+      .bodyValue(prisonIncentive)
+      .retrieve()
+      .awaitBodilessEntity()
+
+  suspend fun createPrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest) =
+    webClient.post()
+      .uri("/incentives/prison/$prison")
+      .bodyValue(prisonIncentive)
+      .retrieve()
+      .awaitBodilessEntity()
+
+  suspend fun getPrisonIncentiveLevel(prison: String, code: String): PrisonIncentiveLevel? =
+    webClient.get()
+      .uri("/incentives/prison/$prison/code/$code")
+      .retrieve()
+      .awaitBodyOrNotFound()
 }
 
 data class CreateVisitDto(
@@ -409,6 +429,7 @@ data class UpsertAttendanceResponse(
   val courseScheduleId: Long,
   val created: Boolean,
 )
+
 data class GetAttendanceStatusRequest(
   @JsonFormat(pattern = "yyyy-MM-dd")
   val scheduleDate: LocalDate,
@@ -535,3 +556,31 @@ constructor(
 ) : PageImpl<T>(content, PageRequest.of(number, size), totalElements)
 
 inline fun <reified T> typeReference() = object : ParameterizedTypeReference<T>() {}
+
+data class PrisonIncentiveLevelRequest(
+  val levelCode: String,
+  val active: Boolean,
+  val defaultOnAdmission: Boolean,
+  val visitOrderAllowance: Int?,
+  val privilegedVisitOrderAllowance: Int?,
+  val remandTransferLimitInPence: Int? = null,
+  val remandSpendLimitInPence: Int? = null,
+  val convictedTransferLimitInPence: Int? = null,
+  val convictedSpendLimitInPence: Int? = null,
+)
+
+data class PrisonIncentiveLevel(
+  val prisonId: String,
+  val iepLevelCode: String,
+  val visitOrderAllowance: Int?,
+  val privilegedVisitOrderAllowance: Int?,
+  val defaultOnAdmission: Boolean,
+  val remandTransferLimitInPence: Int?,
+  val remandSpendLimitInPence: Int?,
+  val convictedTransferLimitInPence: Int?,
+  val convictedSpendLimitInPence: Int?,
+  val active: Boolean,
+  val expiryDate: LocalDate?,
+  val visitAllowanceActive: Boolean?,
+  val visitAllowanceExpiryDate: LocalDate?,
+)

@@ -38,6 +38,13 @@ class IncentivesApiService(@Qualifier("incentivesApiWebClient") private val webC
       .retrieve()
       .awaitBody()
   }
+
+  suspend fun getPrisonIncentiveLevel(prisonId: String, incentiveLevelCode: String): PrisonIncentiveLevel {
+    return webClient.get()
+      .uri("/incentive/prison-levels/$prisonId/level/$incentiveLevelCode")
+      .retrieve()
+      .awaitBody()
+  }
 }
 
 fun List<IncentiveLevel>.toCodeList(): List<String> {
@@ -65,6 +72,19 @@ data class IepDetail(
   val locationId: String? = null,
   val userId: String?,
   val auditModuleName: String? = null,
+)
+
+data class PrisonIncentiveLevel(
+  val levelCode: String,
+  val prisonId: String,
+  val active: Boolean = true,
+  val defaultOnAdmission: Boolean = true,
+  val remandTransferLimitInPence: Int?,
+  val remandSpendLimitInPence: Int?,
+  val convictedTransferLimitInPence: Int?,
+  val convictedSpendLimitInPence: Int?,
+  val visitOrders: Int?,
+  val privilegedVisitOrders: Int?,
 )
 
 data class IepSummary(val iepCode: String)
