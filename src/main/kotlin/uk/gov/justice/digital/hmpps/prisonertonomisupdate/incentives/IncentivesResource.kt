@@ -33,10 +33,15 @@ class IncentivesResource(
     log.info("Incentives reconciliation report requested for $activePrisonersCount active prisoners")
 
     reportScope.launch {
-      incentivesReconciliationService.generateReconciliationReport(activePrisonersCount).also {
-        log.info("Incentives reconciliation report completed with ${it.size} mismatches")
-        telemetryClient.trackEvent("incentives-reports-reconciliation-report", mapOf("mismatch-count" to it.size.toString(), "success" to "true") + it.asMap())
-      }
+      runCatching { incentivesReconciliationService.generateReconciliationReport(activePrisonersCount) }
+        .onSuccess {
+          log.info("Incentives reconciliation report completed with ${it.size} mismatches")
+          telemetryClient.trackEvent("incentives-reports-reconciliation-report", mapOf("mismatch-count" to it.size.toString(), "success" to "true") + it.asMap())
+        }
+        .onFailure {
+          telemetryClient.trackEvent("incentives-reports-reconciliation-report", mapOf("success" to "false"))
+          log.error("Incentives reconciliation report failed", it)
+        }
     }
   }
 }
