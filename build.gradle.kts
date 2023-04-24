@@ -1,8 +1,8 @@
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.1.4-beta-2"
-  kotlin("plugin.spring") version "1.8.10"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.1.4-beta-3"
+  kotlin("plugin.spring") version "1.8.20"
   id("org.openapi.generator") version "6.5.0"
 }
 
@@ -19,7 +19,7 @@ dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.0.0-beta-14")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.2")
+  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
@@ -29,7 +29,7 @@ dependencies {
   testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.0")
   testImplementation("org.mockito:mockito-inline:5.2.0")
   testImplementation("org.testcontainers:localstack:1.18.0")
-  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.451")
+  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.454")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
@@ -45,6 +45,10 @@ tasks {
     kotlinOptions {
       jvmTarget = "19"
     }
+  }
+  withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask> {
+    // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
+    mustRunAfter("buildActivityApiModel")
   }
 }
 
