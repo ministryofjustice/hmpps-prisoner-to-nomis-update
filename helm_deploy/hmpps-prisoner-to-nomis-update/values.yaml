@@ -52,6 +52,7 @@ generic-service:
     FEATURE_EVENT_RELEASE_DATE_ADJUSTMENTS_ADJUSTMENT_DELETED: true
     FEATURE_EVENT_INCENTIVES_LEVEL_CHANGED: true
     FEATURE_EVENT_INCENTIVES_LEVELS_REORDERED: true
+    FEATURE_EVENT_INCENTIVES_PRISON_LEVEL_CHANGED: true
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:

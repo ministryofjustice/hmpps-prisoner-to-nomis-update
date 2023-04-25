@@ -19,6 +19,7 @@ generic-service:
     API_BASE_URL_SENTENCE_ADJUSTMENTS: https://adjustments-api-dev.hmpps.service.justice.gov.uk
     FEATURE_EVENT_INCENTIVES_LEVEL_CHANGED: true
     FEATURE_EVENT_INCENTIVES_LEVELS_REORDERED: true
+    FEATURE_EVENT_INCENTIVES_PRISON_LEVEL_CHANGED: true
 
 generic-prometheus-alerts:
   sqsAlertsQueueNames:

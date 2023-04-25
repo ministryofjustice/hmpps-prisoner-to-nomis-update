@@ -841,6 +841,102 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     """.trimIndent()
   }
 
+  fun stubNomisPrisonIncentiveLevel(prisonId: String = "MDI", incentiveLevelCode: String = "STD") {
+    stubFor(
+      get(WireMock.urlPathMatching("/incentives/prison/$prisonId/code/$incentiveLevelCode")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(
+            """
+              {
+                  "prisonId": "$prisonId",
+                  "iepLevelCode": "$incentiveLevelCode",
+                  "visitOrderAllowance": 2,
+                  "privilegedVisitOrderAllowance": 2,
+                  "defaultOnAdmission": false,
+                  "remandTransferLimitInPence": 4750,
+                  "remandSpendLimitInPence": 47500,
+                  "convictedTransferLimitInPence": 1550,
+                  "convictedSpendLimitInPence": 15500,
+                  "active": true,
+                  "visitAllowanceActive": true
+              }
+            """.trimIndent(),
+          ),
+      ),
+    )
+  }
+
+  fun stubNomisPrisonIncentiveLevelCreate(prisonId: String = "MDI", incentiveLevelCode: String = "STD") {
+    stubFor(
+      post("/incentives/prison/$prisonId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              {
+                "prisonId": "$prisonId",
+                "iepLevelCode": "$incentiveLevelCode",
+                "visitOrderAllowance": 0,
+                "privilegedVisitOrderAllowance": 0,
+                "defaultOnAdmission": true,
+                "remandTransferLimitInPence": 0,
+                "remandSpendLimitInPence": 0,
+                "convictedTransferLimitInPence": 0,
+                "convictedSpendLimitInPence": 0,
+                "active": true,
+                "expiryDate": "2023-04-24",
+                "visitAllowanceActive": true,
+                "visitAllowanceExpiryDate": "2023-04-24"
+              }
+            """.trimIndent(),
+          )
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubNomisPrisonIncentiveLevelUpdate(prisonId: String = "MDI", incentiveLevelCode: String = "STD") {
+    stubFor(
+      put("/incentives/prison/$prisonId/code/$incentiveLevelCode").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              {
+                "prisonId": "$prisonId",
+                "iepLevelCode": "$incentiveLevelCode",
+                "visitOrderAllowance": 0,
+                "privilegedVisitOrderAllowance": 0,
+                "defaultOnAdmission": true,
+                "remandTransferLimitInPence": 0,
+                "remandSpendLimitInPence": 0,
+                "convictedTransferLimitInPence": 0,
+                "convictedSpendLimitInPence": 0,
+                "active": true,
+                "expiryDate": "2023-04-24",
+                "visitAllowanceActive": true,
+                "visitAllowanceExpiryDate": "2023-04-24"
+              }
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubNomisPrisonIncentiveLevelNotFound(prisonId: String = "MDI", incentiveLevelCode: String = "STD") {
+    stubFor(
+      get(WireMock.urlPathMatching("/incentives/prison/$prisonId/code/$incentiveLevelCode")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NOT_FOUND.value())
+          .withBody("""{"message":"Not found"}"""),
+      ),
+    )
+  }
+
   private val CREATE_VISIT_RESPONSE = """
     {
       "visitId": "12345"
