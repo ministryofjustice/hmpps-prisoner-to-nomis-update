@@ -21,7 +21,7 @@ class AttendanceService(
 
   suspend fun upsertAttendance(attendanceEvent: AttendanceDomainEvent) {
     val attendanceId = attendanceEvent.additionalInformation.attendanceId
-    val telemetryMap = mutableMapOf("attendanceId" to attendanceId.toString())
+    val telemetryMap = mutableMapOf("dpsAttendanceId" to attendanceId.toString())
     val upsertType = if (attendanceEvent.eventType.contains("created")) "create" else "update"
 
     runCatching {
@@ -42,7 +42,7 @@ class AttendanceService(
         attendanceSync.bookingId,
         attendanceSync.toUpsertAttendanceRequest(nomisAttendanceStatus),
       ).also {
-        telemetryMap["attendanceEventId"] = it.eventId.toString()
+        telemetryMap["nomisAttendanceEventId"] = it.eventId.toString()
         telemetryMap["nomisCourseScheduleId"] = it.courseScheduleId.toString()
         telemetryMap["created"] = it.created.toString()
       }
@@ -70,13 +70,13 @@ class AttendanceService(
 
   private fun AttendanceSync.toTelemetry(): Map<String, String> =
     mapOf(
-      "attendanceId" to attendanceId.toString(),
-      "activityScheduleId" to activityScheduleId.toString(),
-      "scheduleInstanceId" to scheduledInstanceId.toString(),
+      "dpsAttendanceId" to attendanceId.toString(),
+      "dpsActivityScheduleId" to activityScheduleId.toString(),
+      "dpsScheduleInstanceId" to scheduledInstanceId.toString(),
       "sessionDate" to sessionDate.toString(),
       "sessionStartTime" to sessionStartTime,
       "sessionEndTime" to sessionEndTime,
-      "prisonerNumber" to prisonerNumber,
+      "offenderNo" to prisonerNumber,
       "bookingId" to bookingId.toString(),
     )
 

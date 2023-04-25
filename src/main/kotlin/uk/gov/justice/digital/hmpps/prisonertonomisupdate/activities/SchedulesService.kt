@@ -19,7 +19,7 @@ class SchedulesService(
 ) {
 
   suspend fun updateScheduleInstances(amendInstancesEvent: ScheduleDomainEvent) {
-    val telemetryMap = mutableMapOf("activityScheduleId" to amendInstancesEvent.additionalInformation.activityScheduleId.toString())
+    val telemetryMap = mutableMapOf("dpsActivityScheduleId" to amendInstancesEvent.additionalInformation.activityScheduleId.toString())
 
     runCatching {
       val activitySchedule = activitiesApiService.getActivitySchedule(amendInstancesEvent.additionalInformation.activityScheduleId)
@@ -30,9 +30,9 @@ class SchedulesService(
       activitySchedule.instances.toScheduleRequests()
         .also { nomisApiService.updateScheduleInstances(nomisCourseActivityId, it) }
     }.onSuccess {
-      telemetryClient.trackEvent("schedule-instances-amend-success", telemetryMap, null)
+      telemetryClient.trackEvent("activity-schedule-instances-amend-success", telemetryMap, null)
     }.onFailure { e ->
-      telemetryClient.trackEvent("schedule-instances-amend-failed", telemetryMap, null)
+      telemetryClient.trackEvent("activity-schedule-instances-amend-failed", telemetryMap, null)
       throw e
     }
   }
@@ -40,13 +40,13 @@ class SchedulesService(
   suspend fun updateScheduledInstance(amendInstanceEvent: ScheduledInstanceDomainEvent) {
     val scheduledInstanceId = amendInstanceEvent.additionalInformation.scheduledInstanceId
     val telemetryMap = mutableMapOf(
-      "scheduledInstanceId" to scheduledInstanceId.toString(),
+      "dpsScheduledInstanceId" to scheduledInstanceId.toString(),
     )
 
     runCatching {
       val scheduledInstance = activitiesApiService.getScheduledInstance(scheduledInstanceId)
         .also {
-          telemetryMap["activityScheduleId"] = it.activitySchedule.id.toString()
+          telemetryMap["dpsActivityScheduleId"] = it.activitySchedule.id.toString()
           telemetryMap["scheduleDate"] = it.date.toString()
           telemetryMap["startTime"] = it.startTime
           telemetryMap["endTime"] = it.endTime
@@ -59,9 +59,9 @@ class SchedulesService(
         .let { nomisApiService.updateScheduledInstance(nomisCourseActivityId, it) }
         .also { telemetryMap["nomisCourseScheduleId"] = it.courseScheduleId.toString() }
     }.onSuccess {
-      telemetryClient.trackEvent("scheduled-instance-amend-success", telemetryMap, null)
+      telemetryClient.trackEvent("activity-scheduled-instance-amend-success", telemetryMap, null)
     }.onFailure { e ->
-      telemetryClient.trackEvent("scheduled-instance-amend-failed", telemetryMap, null)
+      telemetryClient.trackEvent("activity-scheduled-instance-amend-failed", telemetryMap, null)
       throw e
     }
   }
