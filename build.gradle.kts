@@ -7,6 +7,8 @@ plugins {
 }
 
 configurations {
+  implementation { exclude(module = "spring-boot-starter-web") }
+  implementation { exclude(module = "spring-boot-starter-tomcat") }
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
@@ -18,11 +20,11 @@ dependencies {
   implementation("org.springframework.data:spring-data-commons:3.0.5")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.0.0-beta-14")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.1.0")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.25.0")
 
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.13")
@@ -50,6 +52,10 @@ tasks {
     }
   }
   withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask> {
+    // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
+    mustRunAfter("buildActivityApiModel")
+  }
+  withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask> {
     // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
     mustRunAfter("buildActivityApiModel")
   }

@@ -17,7 +17,7 @@ class OpenApiDocsTest : SqsIntegrationTestBase() {
   @Test
   fun `open api docs are available`() {
     webTestClient.get()
-      .uri("/swagger-ui/index.html?configUrl=/v3/api-docs")
+      .uri("/webjars/swagger-ui/index.html?configUrl=/v3/api-docs")
       .accept(MediaType.APPLICATION_JSON)
       .exchange()
       .expectStatus().isOk
