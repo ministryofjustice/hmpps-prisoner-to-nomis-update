@@ -2,25 +2,23 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
-import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity
 import org.springframework.security.config.annotation.web.invoke
-import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
+import org.springframework.security.config.web.server.ServerHttpSecurity
+import org.springframework.security.config.web.server.invoke
+import org.springframework.security.web.server.SecurityWebFilterChain
 
 @Configuration
-@EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
+@EnableWebFluxSecurity
+@EnableReactiveMethodSecurity(useAuthorizationManager = false)
 class ResourceServerConfiguration {
   @Bean
-  fun filterChain(http: HttpSecurity): SecurityFilterChain {
+  fun springSecurityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain =
     http {
-      headers { frameOptions { sameOrigin = true } }
-      sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
       // Can't have CSRF protection as requires session
       csrf { disable() }
-      authorizeHttpRequests {
+      authorizeExchange {
         listOf(
           "/webjars/**", "/favicon.ico", "/csrf",
           "/health/**", "/info", "/startup", "/h2-console/**",
@@ -28,10 +26,8 @@ class ResourceServerConfiguration {
           "/queue-admin/retry-all-dlqs",
           "/incentives/reports/reconciliation",
         ).forEach { authorize(it, permitAll) }
-        authorize(anyRequest, authenticated)
+        authorize(anyExchange, authenticated)
       }
       oauth2ResourceServer { jwt { jwtAuthenticationConverter = AuthAwareTokenConverter() } }
     }
-    return http.build()
-  }
 }
