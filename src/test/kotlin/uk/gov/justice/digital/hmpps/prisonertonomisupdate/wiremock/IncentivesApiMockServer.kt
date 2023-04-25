@@ -167,5 +167,32 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubPrisonIncentiveLevelGet(incentiveCode: String? = "STD", prisonId: String? = "MDI", defaultOnAdmission: Boolean? = true) {
+    stubFor(
+      get("/incentive/prison-levels/$prisonId/level/$incentiveCode").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            {
+              "levelCode": "$incentiveCode",
+              "levelName": "Standard",
+              "prisonId": "$prisonId",
+              "active": true,
+              "defaultOnAdmission": $defaultOnAdmission,
+              "remandTransferLimitInPence": 6050,
+              "remandSpendLimitInPence": 60500,
+              "convictedTransferLimitInPence": 1980,
+              "convictedSpendLimitInPence": 19800,
+              "visitOrders": 1,
+              "privilegedVisitOrders": 2
+            }
+            """,
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
   fun getCountFor(url: String) = this.findAll(WireMock.getRequestedFor(WireMock.urlEqualTo(url))).count()
 }

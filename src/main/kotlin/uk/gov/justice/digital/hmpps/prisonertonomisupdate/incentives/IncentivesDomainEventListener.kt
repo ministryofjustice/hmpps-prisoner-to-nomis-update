@@ -34,6 +34,7 @@ class IncentivesDomainEventListener(
       "incentives.iep-review.inserted" -> incentivesService.createIncentive(message.fromJson())
       "incentives.level.changed" -> incentivesReferenceService.globalIncentiveLevelChange(message.fromJson())
       "incentives.levels.reordered" -> incentivesReferenceService.globalIncentiveLevelsReorder()
+      "incentives.prison-level.changed" -> incentivesReferenceService.prisonIncentiveLevelChange(message.fromJson()) // TODO
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
