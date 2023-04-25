@@ -6,9 +6,13 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 
 @RestController
-class AppointmentsResource(private val appointmentsService: AppointmentsService) {
+class AppointmentsResource(
+  private val appointmentsService: AppointmentsService,
+  private val eventFeatureSwitch: EventFeatureSwitch,
+) {
 
   /**
    * For dev environment only - delete all appointments, for when activities environment is reset
@@ -18,6 +22,10 @@ class AppointmentsResource(private val appointmentsService: AppointmentsService)
   @DeleteMapping("/appointments")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   suspend fun deleteAllAppointments() {
-    appointmentsService.deleteAllAppointments()
+    if (eventFeatureSwitch.isEnabled("DELETEALL")) {
+      appointmentsService.deleteAllAppointments()
+    } else {
+      throw RuntimeException("Attempt to delete appointments in wrong environment")
+    }
   }
 }

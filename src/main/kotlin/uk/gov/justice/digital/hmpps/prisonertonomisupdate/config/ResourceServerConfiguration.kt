@@ -27,7 +27,6 @@ class ResourceServerConfiguration {
           "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
           "/queue-admin/retry-all-dlqs",
           "/incentives/reports/reconciliation",
-          "/appointments", "/activities",
         ).forEach { authorize(it, permitAll) }
         authorize(anyRequest, authenticated)
       }

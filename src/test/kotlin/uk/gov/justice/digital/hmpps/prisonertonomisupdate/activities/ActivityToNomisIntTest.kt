@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
-import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -313,38 +312,6 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
               .stringValue("activities.activity-schedule.amended").build(),
           ),
         ).build()
-  }
-
-  @Nested
-  inner class DeleteAll {
-    @Test
-    fun `should delete all activities`() {
-      mappingServer.stubGetAllActivityMappings(
-        """[
-           { "activityScheduleId": 101, "nomisCourseActivityId": 201, "mappingType": "ACTIVITY_CREATED", "whenCreated": "2020-01-01T00:00:00Z" },
-           { "activityScheduleId": 102, "nomisCourseActivityId": 202, "mappingType": "MIGRATED" }
-           ]
-          """.trimIndent(),
-      )
-      mappingServer.stubDeleteActivityMapping(101)
-      mappingServer.stubDeleteActivityMapping(102)
-      nomisApi.stubActivityDelete(201)
-      nomisApi.stubActivityDelete(202)
-
-      webTestClient.delete()
-        .uri("/activities")
-        .headers(setAuthorisation(roles = listOf("ROLE_QUEUE_ADMIN")))
-        .exchange()
-        .expectStatus()
-        .isNoContent
-
-      await untilAsserted {
-        mappingServer.verify(deleteRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/101")))
-        mappingServer.verify(deleteRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/102")))
-        nomisApi.verify(deleteRequestedFor(urlEqualTo("/activities/201")))
-        nomisApi.verify(deleteRequestedFor(urlEqualTo("/activities/202")))
-      }
-    }
   }
 }
 
