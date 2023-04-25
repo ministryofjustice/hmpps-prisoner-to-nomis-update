@@ -83,7 +83,7 @@ internal class ActivitiesServiceTest {
         eq("activity-create-success"),
         check {
           assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_CRS_ACTY_ID")
-          assertThat(it["activityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
+          assertThat(it["dpsActivityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
           assertThat(it["description"]).isEqualTo("description")
         },
         isNull(),
@@ -148,7 +148,7 @@ internal class ActivitiesServiceTest {
         eq("activity-mapping-create-failed"),
         check {
           assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_CRS_ACTY_ID")
-          assertThat(it["activityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
+          assertThat(it["dpsActivityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
           assertThat(it["description"]).isEqualTo("description")
         },
         isNull(),
@@ -189,7 +189,7 @@ internal class ActivitiesServiceTest {
       verify(telemetryClient).trackEvent(
         eq("activity-amend-failed"),
         check<Map<String, String>> {
-          assertThat(it).containsAllEntriesOf(mapOf("activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()))
+          assertThat(it).containsAllEntriesOf(mapOf("dpsActivityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()))
         },
         isNull(),
       )
@@ -218,7 +218,7 @@ internal class ActivitiesServiceTest {
         eq("activity-amend-failed"),
         check<Map<String, String>> {
           assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_CRS_ACTY_ID")
-          assertThat(it["activityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
+          assertThat(it["dpsActivityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
         },
         isNull(),
       )
@@ -241,7 +241,7 @@ internal class ActivitiesServiceTest {
         check<Map<String, String>> {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
-              "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
+              "dpsActivityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
             ),
           )
         },
@@ -274,8 +274,8 @@ internal class ActivitiesServiceTest {
         check<Map<String, String>> {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
-              "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
-              "activityId" to ACTIVITY_ID.toString(),
+              "dpsActivityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
+              "dpsActivityId" to ACTIVITY_ID.toString(),
               "nomisCourseActivityId" to NOMIS_CRS_ACTY_ID.toString(),
             ),
           )
@@ -312,8 +312,8 @@ internal class ActivitiesServiceTest {
         check<Map<String, String>> {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
-              "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
-              "activityId" to ACTIVITY_ID.toString(),
+              "dpsActivityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
+              "dpsActivityId" to ACTIVITY_ID.toString(),
               "nomisCourseActivityId" to NOMIS_CRS_ACTY_ID.toString(),
             ),
           )

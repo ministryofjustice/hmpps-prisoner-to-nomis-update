@@ -39,7 +39,7 @@ class ActivitiesService(
       telemetryClient = this@ActivitiesService.telemetryClient
       retryQueueService = activitiesUpdateQueueService
       eventTelemetry = mapOf(
-        "activityScheduleId" to event.additionalInformation.activityScheduleId.toString(),
+        "dpsActivityScheduleId" to event.additionalInformation.activityScheduleId.toString(),
       )
 
       checkMappingDoesNotExist {
@@ -49,13 +49,15 @@ class ActivitiesService(
         activitiesApiService.getActivitySchedule(event.additionalInformation.activityScheduleId).let { activitySchedule ->
           eventTelemetry += "description" to activitySchedule.description
 
-          createTransformedActivity(activitySchedule).let { nomisResponse ->
-            ActivityMappingDto(
-              nomisCourseActivityId = nomisResponse.courseActivityId,
-              activityScheduleId = event.additionalInformation.activityScheduleId,
-              mappingType = "ACTIVITY_CREATED",
-            )
-          }
+          createTransformedActivity(activitySchedule)
+            .also { eventTelemetry += "nomisCourseActivityId" to it.courseActivityId.toString() }
+            .let { nomisResponse ->
+              ActivityMappingDto(
+                nomisCourseActivityId = nomisResponse.courseActivityId,
+                activityScheduleId = event.additionalInformation.activityScheduleId,
+                mappingType = "ACTIVITY_CREATED",
+              )
+            }
         }
       }
       saveMapping { mappingService.createMapping(it) }
@@ -69,7 +71,7 @@ class ActivitiesService(
 
   suspend fun updateActivity(event: ScheduleDomainEvent) {
     val activityScheduleId = event.additionalInformation.activityScheduleId
-    val telemetryMap = mutableMapOf("activityScheduleId" to activityScheduleId.toString())
+    val telemetryMap = mutableMapOf("dpsActivityScheduleId" to activityScheduleId.toString())
 
     runCatching {
       val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(activityScheduleId).nomisCourseActivityId
@@ -78,7 +80,7 @@ class ActivitiesService(
       val activitySchedule = activitiesApiService.getActivitySchedule(activityScheduleId)
 
       val activity = activitiesApiService.getActivity(activitySchedule.activity.id)
-        .also { telemetryMap["activityId"] = it.id.toString() }
+        .also { telemetryMap["dpsActivityId"] = it.id.toString() }
 
       activitySchedule.toUpdateActivityRequest(activity.pay)
         .also { nomisApiService.updateActivity(nomisCourseActivityId, it) }

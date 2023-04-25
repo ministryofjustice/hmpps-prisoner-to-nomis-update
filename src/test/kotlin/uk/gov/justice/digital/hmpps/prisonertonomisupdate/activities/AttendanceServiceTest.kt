@@ -57,7 +57,7 @@ class AttendanceServiceTest {
       verify(telemetryClient).trackEvent(
         eq("activity-attendance-create-failed"),
         check<MutableMap<String, String>> {
-          assertThat(it).containsExactlyInAnyOrderEntriesOf(mapOf("attendanceId" to "$ATTENDANCE_ID"))
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(mapOf("dpsAttendanceId" to "$ATTENDANCE_ID"))
         },
         isNull(),
       )
@@ -78,9 +78,9 @@ class AttendanceServiceTest {
         check<MutableMap<String, String>> {
           assertThat(it).containsAllEntriesOf(
             mapOf(
-              "scheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
-              "activityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
-              "prisonerNumber" to OFFENDER_NO,
+              "dpsScheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
+              "dpsActivityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
+              "offenderNo" to OFFENDER_NO,
               "bookingId" to "$NOMIS_BOOKING_ID",
               "sessionDate" to LocalDate.now().plusDays(1).toString(),
               "sessionStartTime" to "10:00",
@@ -133,10 +133,10 @@ class AttendanceServiceTest {
         check<MutableMap<String, String>> {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
-              "attendanceId" to "$ATTENDANCE_ID",
-              "scheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
-              "activityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
-              "prisonerNumber" to OFFENDER_NO,
+              "dpsAttendanceId" to "$ATTENDANCE_ID",
+              "dpsScheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
+              "dpsActivityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
+              "offenderNo" to OFFENDER_NO,
               "bookingId" to "$NOMIS_BOOKING_ID",
               "sessionDate" to LocalDate.now().plusDays(1).toString(),
               "sessionStartTime" to "10:00",
@@ -166,10 +166,10 @@ class AttendanceServiceTest {
         check<MutableMap<String, String>> {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
-              "attendanceId" to "$ATTENDANCE_ID",
-              "scheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
-              "activityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
-              "prisonerNumber" to OFFENDER_NO,
+              "dpsAttendanceId" to "$ATTENDANCE_ID",
+              "dpsScheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
+              "dpsActivityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
+              "offenderNo" to OFFENDER_NO,
               "bookingId" to "$NOMIS_BOOKING_ID",
               "sessionDate" to LocalDate.now().plusDays(1).toString(),
               "sessionStartTime" to "10:00",
@@ -214,16 +214,16 @@ class AttendanceServiceTest {
         check<MutableMap<String, String>> {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
-              "attendanceId" to "$ATTENDANCE_ID",
-              "scheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
-              "activityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
-              "prisonerNumber" to OFFENDER_NO,
+              "dpsAttendanceId" to "$ATTENDANCE_ID",
+              "dpsScheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
+              "dpsActivityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
+              "offenderNo" to OFFENDER_NO,
               "bookingId" to "$NOMIS_BOOKING_ID",
               "sessionDate" to LocalDate.now().plusDays(1).toString(),
               "sessionStartTime" to "10:00",
               "sessionEndTime" to "11:00",
               "nomisCourseActivityId" to "$NOMIS_CRS_ACTY_ID",
-              "attendanceEventId" to "$NOMIS_EVENT_ID",
+              "nomisAttendanceEventId" to "$NOMIS_EVENT_ID",
               "nomisCourseScheduleId" to "$NOMIS_CRS_SCH_ID",
               "created" to "true",
             ),
@@ -264,16 +264,16 @@ class AttendanceServiceTest {
         check<MutableMap<String, String>> {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
-              "attendanceId" to "$ATTENDANCE_ID",
-              "scheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
-              "activityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
-              "prisonerNumber" to OFFENDER_NO,
+              "dpsAttendanceId" to "$ATTENDANCE_ID",
+              "dpsScheduleInstanceId" to "$SCHEDULE_INSTANCE_ID",
+              "dpsActivityScheduleId" to "$ACTIVITY_SCHEDULE_ID",
+              "offenderNo" to OFFENDER_NO,
               "bookingId" to "$NOMIS_BOOKING_ID",
               "sessionDate" to LocalDate.now().plusDays(1).toString(),
               "sessionStartTime" to "10:00",
               "sessionEndTime" to "11:00",
               "nomisCourseActivityId" to "$NOMIS_CRS_ACTY_ID",
-              "attendanceEventId" to "$NOMIS_EVENT_ID",
+              "nomisAttendanceEventId" to "$NOMIS_EVENT_ID",
               "nomisCourseScheduleId" to "$NOMIS_CRS_SCH_ID",
               "created" to "false",
             ),

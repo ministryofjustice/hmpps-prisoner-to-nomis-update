@@ -18,25 +18,28 @@ class AllocationService(
 
   suspend fun createAllocation(allocationEvent: AllocationDomainEvent) {
     val telemetryMap = mutableMapOf(
-      "allocationId" to allocationEvent.additionalInformation.allocationId.toString(),
+      "dpsAllocationId" to allocationEvent.additionalInformation.allocationId.toString(),
     )
     runCatching {
       activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
         telemetryMap["offenderNo"] = allocation.prisonerNumber
         telemetryMap["bookingId"] = allocation.bookingId.toString()
-        mappingService.getMappingGivenActivityScheduleId(allocation.scheduleId).let { mapping ->
-          nomisApiService.createAllocation(
-            mapping.nomisCourseActivityId,
-            CreateAllocationRequest(
-              bookingId = allocation.bookingId!!,
-              startDate = allocation.startDate,
-              endDate = allocation.endDate,
-              payBandCode = allocation.prisonPayBand.nomisPayBand.toString(),
-            ),
-          ).also {
-            telemetryMap["offenderProgramReferenceId"] = it.offenderProgramReferenceId.toString()
+        telemetryMap["dpsActivityScheduleId"] = allocation.scheduleId.toString()
+        mappingService.getMappingGivenActivityScheduleId(allocation.scheduleId)
+          .also { telemetryMap["nomisCourseActivityId"] = it.nomisCourseActivityId.toString() }
+          .let { mapping ->
+            nomisApiService.createAllocation(
+              mapping.nomisCourseActivityId,
+              CreateAllocationRequest(
+                bookingId = allocation.bookingId!!,
+                startDate = allocation.startDate,
+                endDate = allocation.endDate,
+                payBandCode = allocation.prisonPayBand.nomisPayBand.toString(),
+              ),
+            ).also {
+              telemetryMap["nomisAllocationId"] = it.offenderProgramReferenceId.toString()
+            }
           }
-        }
       }
     }.onSuccess {
       telemetryClient.trackEvent("activity-allocation-create-success", telemetryMap)
@@ -48,14 +51,16 @@ class AllocationService(
 
   suspend fun deallocate(allocationEvent: AllocationDomainEvent) {
     val telemetryMap = mutableMapOf(
-      "allocationId" to allocationEvent.additionalInformation.allocationId.toString(),
+      "dpsAllocationId" to allocationEvent.additionalInformation.allocationId.toString(),
     )
 
     runCatching {
       activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
         telemetryMap["offenderNo"] = allocation.prisonerNumber
         telemetryMap["bookingId"] = allocation.bookingId.toString()
+        telemetryMap["dpsActivityScheduleId"] = allocation.scheduleId.toString()
         mappingService.getMappingGivenActivityScheduleId(allocation.scheduleId)
+          .also { telemetryMap["nomisCourseActivityId"] = it.nomisCourseActivityId.toString() }
           .let { mapping ->
             nomisApiService.deallocate(
               mapping.nomisCourseActivityId,
@@ -66,7 +71,7 @@ class AllocationService(
                 // endComment = allocation.?, // TODO SDIT-421 could put something useful in here
               ),
             ).also {
-              telemetryMap["offenderProgramReferenceId"] = it.offenderProgramReferenceId.toString()
+              telemetryMap["nomisAllocationId"] = it.offenderProgramReferenceId.toString()
             }
           }
       }

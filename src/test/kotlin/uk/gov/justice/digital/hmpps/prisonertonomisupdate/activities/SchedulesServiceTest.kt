@@ -63,9 +63,9 @@ class SchedulesServiceTest {
 
       verify(activitiesApiService).getActivitySchedule(ACTIVITY_SCHEDULE_ID)
       verify(telemetryClient).trackEvent(
-        eq("schedule-instances-amend-failed"),
+        eq("activity-schedule-instances-amend-failed"),
         check<Map<String, String>> {
-          assertThat(it).containsAllEntriesOf(mapOf("activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()))
+          assertThat(it).containsAllEntriesOf(mapOf("dpsActivityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()))
         },
         isNull(),
       )
@@ -83,10 +83,10 @@ class SchedulesServiceTest {
 
       verify(mappingService).getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)
       verify(telemetryClient).trackEvent(
-        eq("schedule-instances-amend-failed"),
+        eq("activity-schedule-instances-amend-failed"),
         check<Map<String, String>> {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
-            mapOf("activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()),
+            mapOf("dpsActivityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()),
           )
         },
         isNull(),
@@ -113,11 +113,11 @@ class SchedulesServiceTest {
 
       verify(nomisApiService).updateScheduleInstances(eq(NOMIS_CRS_ACTY_ID), any())
       verify(telemetryClient).trackEvent(
-        eq("schedule-instances-amend-failed"),
+        eq("activity-schedule-instances-amend-failed"),
         check<Map<String, String>> {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
-              "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
+              "dpsActivityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
               "nomisCourseActivityId" to NOMIS_CRS_ACTY_ID.toString(),
             ),
           )
@@ -156,11 +156,11 @@ class SchedulesServiceTest {
         },
       )
       verify(telemetryClient).trackEvent(
-        eq("schedule-instances-amend-success"),
+        eq("activity-schedule-instances-amend-success"),
         check<Map<String, String>> {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
-              "activityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
+              "dpsActivityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
               "nomisCourseActivityId" to NOMIS_CRS_ACTY_ID.toString(),
             ),
           )
@@ -193,9 +193,9 @@ class SchedulesServiceTest {
 
       verify(activitiesApiService).getScheduledInstance(SCHEDULE_INSTANCE_ID)
       verify(telemetryClient).trackEvent(
-        eq("scheduled-instance-amend-failed"),
+        eq("activity-scheduled-instance-amend-failed"),
         check<Map<String, String>> {
-          assertThat(it["scheduledInstanceId"]).isEqualTo(SCHEDULE_INSTANCE_ID.toString())
+          assertThat(it["dpsScheduledInstanceId"]).isEqualTo(SCHEDULE_INSTANCE_ID.toString())
         },
         isNull(),
       )
@@ -213,7 +213,7 @@ class SchedulesServiceTest {
 
       verify(mappingService).getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)
       verify(telemetryClient).trackEvent(
-        eq("scheduled-instance-amend-failed"),
+        eq("activity-scheduled-instance-amend-failed"),
         check<Map<String, String>> {
           assertThat(it["scheduleDate"]).isEqualTo("2023-02-23")
           assertThat(it["startTime"]).isEqualTo("08:00")
@@ -243,7 +243,7 @@ class SchedulesServiceTest {
 
       verify(nomisApiService).updateScheduledInstance(eq(NOMIS_CRS_ACTY_ID), any())
       verify(telemetryClient).trackEvent(
-        eq("scheduled-instance-amend-failed"),
+        eq("activity-scheduled-instance-amend-failed"),
         check<Map<String, String>> {
           assertThat(it["nomisCourseActivityId"]).isEqualTo(NOMIS_CRS_ACTY_ID.toString())
         },
@@ -277,10 +277,10 @@ class SchedulesServiceTest {
         },
       )
       verify(telemetryClient).trackEvent(
-        eq("scheduled-instance-amend-success"),
+        eq("activity-scheduled-instance-amend-success"),
         check<Map<String, String>> {
-          assertThat(it["scheduledInstanceId"]).isEqualTo(SCHEDULE_INSTANCE_ID.toString())
-          assertThat(it["activityScheduleId"]).isEqualTo(ACTIVITY_SCHEDULE_ID.toString())
+          assertThat(it["dpsScheduledInstanceId"]).isEqualTo(SCHEDULE_INSTANCE_ID.toString())
+          assertThat(it["dpsActivityScheduleId"]).isEqualTo(ACTIVITY_SCHEDULE_ID.toString())
           assertThat(it["nomisCourseActivityId"]).isEqualTo(NOMIS_CRS_ACTY_ID.toString())
           assertThat(it["scheduleDate"]).isEqualTo("2023-02-23")
           assertThat(it["startTime"]).isEqualTo("08:00")
