@@ -62,10 +62,10 @@ class AllocationServiceTest {
       verify(telemetryClient).trackEvent(
         eq("activity-allocation-create-success"),
         org.mockito.kotlin.check {
-          assertThat(it["allocationId"]).isEqualTo("$ALLOCATION_ID")
+          assertThat(it["dpsAllocationId"]).isEqualTo("$ALLOCATION_ID")
           assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
           assertThat(it["bookingId"]).isEqualTo("$NOMIS_BOOKING_ID")
-          assertThat(it["offenderProgramReferenceId"]).isEqualTo("$OFFENDER_PROGRAM_REFERENCE_ID")
+          assertThat(it["nomisAllocationId"]).isEqualTo("$OFFENDER_PROGRAM_REFERENCE_ID")
         },
         isNull(),
       )
@@ -102,7 +102,7 @@ class AllocationServiceTest {
       verify(telemetryClient).trackEvent(
         eq("activity-allocation-create-failed"),
         org.mockito.kotlin.check {
-          assertThat(it["allocationId"]).isEqualTo("$ALLOCATION_ID")
+          assertThat(it["dpsAllocationId"]).isEqualTo("$ALLOCATION_ID")
           assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
           assertThat(it["bookingId"]).isEqualTo("$NOMIS_BOOKING_ID")
         },
@@ -143,10 +143,10 @@ class AllocationServiceTest {
       verify(telemetryClient).trackEvent(
         eq("activity-deallocate-success"),
         org.mockito.kotlin.check {
-          assertThat(it["allocationId"]).isEqualTo("$ALLOCATION_ID")
+          assertThat(it["dpsAllocationId"]).isEqualTo("$ALLOCATION_ID")
           assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
           assertThat(it["bookingId"]).isEqualTo("$NOMIS_BOOKING_ID")
-          assertThat(it["offenderProgramReferenceId"]).isEqualTo("$OFFENDER_PROGRAM_REFERENCE_ID")
+          assertThat(it["nomisAllocationId"]).isEqualTo("$OFFENDER_PROGRAM_REFERENCE_ID")
         },
         isNull(),
       )
@@ -183,7 +183,7 @@ class AllocationServiceTest {
       verify(telemetryClient).trackEvent(
         eq("activity-deallocate-failed"),
         org.mockito.kotlin.check {
-          assertThat(it["allocationId"]).isEqualTo("$ALLOCATION_ID")
+          assertThat(it["dpsAllocationId"]).isEqualTo("$ALLOCATION_ID")
           assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
           assertThat(it["bookingId"]).isEqualTo("$NOMIS_BOOKING_ID")
         },
