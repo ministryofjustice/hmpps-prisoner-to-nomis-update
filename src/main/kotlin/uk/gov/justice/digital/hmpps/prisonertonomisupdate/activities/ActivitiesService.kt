@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityPay
@@ -158,9 +159,41 @@ class ActivitiesService(
     }
   }
 
+  suspend fun deleteAllActivities() {
+    mappingService.getAllMappings().forEach { mapping ->
+      runCatching {
+        nomisApiService.deleteActivity(mapping.nomisCourseActivityId)
+        mappingService.deleteMapping(mapping.activityScheduleId)
+      }.onSuccess {
+        telemetryClient.trackEvent(
+          "activity-DELETE-ALL-success",
+          mapOf(
+            "activityScheduleId" to mapping.activityScheduleId.toString(),
+            "nomisCourseActivityId" to mapping.nomisCourseActivityId.toString(),
+          ),
+          null,
+        )
+      }.onFailure { e ->
+        log.error("Failed to delete activity with id ${mapping.nomisCourseActivityId}", e)
+        telemetryClient.trackEvent(
+          "activity-DELETE-ALL-failed",
+          mapOf(
+            "activityScheduleId" to mapping.activityScheduleId.toString(),
+            "nomisCourseActivityId" to mapping.nomisCourseActivityId.toString(),
+          ),
+          null,
+        )
+      }
+    }
+  }
+
   override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
   private inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
+
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+  }
 }
 
 data class ScheduleDomainEvent(
