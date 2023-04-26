@@ -58,6 +58,12 @@ e.g.
 `MOCK_VISITS_PRISON_ID=WWI`
 `MOCK_VISITS_VISITORS=1838,273723`
 
+### Generating APi client models
+
+For some of our external API calls we use `openapi-generator` to generate the models used in the API clients. The Open API specifications used can be found in directory `openapi-specs`.
+
+####
+
 ### Runbook
 
 #### Queue Dead letter queue maintenance

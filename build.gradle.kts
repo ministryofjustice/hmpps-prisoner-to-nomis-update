@@ -1,3 +1,7 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jlleitschuh.gradle.ktlint.KtlintExtension
+import org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask
+import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
@@ -45,29 +49,49 @@ java {
 }
 
 tasks {
-  withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    dependsOn("buildActivityApiModel")
+  withType<KotlinCompile> {
+    dependsOn("buildActivityApiModel", "buildNomisSyncApiModel")
     kotlinOptions {
       jvmTarget = "19"
     }
   }
-  withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask> {
+  withType<KtLintCheckTask> {
     // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
-    mustRunAfter("buildActivityApiModel")
+    mustRunAfter("buildActivityApiModel", "buildNomisSyncApiModel")
   }
-  withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask> {
+  withType<KtLintFormatTask> {
     // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
-    mustRunAfter("buildActivityApiModel")
+    mustRunAfter("buildActivityApiModel", "buildNomisSyncApiModel")
   }
 }
 
 tasks.register("buildActivityApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
-  inputSpec.set("activities-api-docs.json")
+  inputSpec.set("openapi-specs/activities-api-docs.json")
   // remoteInputSpec.set("https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs")
   outputDir.set("$buildDir/generated")
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.api")
+  configOptions.set(
+    mapOf(
+      "dateLibrary" to "java8-localdatetime",
+      "serializationLibrary" to "jackson"
+    )
+  )
+  globalProperties.set(
+    mapOf(
+      "models" to ""
+    )
+  )
+}
+
+tasks.register("buildNomisSyncApiModel", GenerateTask::class) {
+  generatorName.set("kotlin")
+  inputSpec.set("openapi-specs/nomis-sync-api-docs.json")
+  // remoteInputSpec.set("https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/v3/api-docs")
+  outputDir.set("$buildDir/generated")
+  modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model")
+  apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.api")
   configOptions.set(
     mapOf(
       "dateLibrary" to "java8-localdatetime",
@@ -87,7 +111,7 @@ kotlin {
   }
 }
 
-configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+configure<KtlintExtension> {
   filter {
     exclude {
       it.file.path.contains("build/generated/src/main/")
