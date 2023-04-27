@@ -133,6 +133,82 @@ curl -X 'DELETE' \
   -H 'accept: */*' \
   -H 'Authorization: Bearer <token with role NOMIS_SENTENCING>'
 ```
+#### Incentive Reconciliation Report Alert
+
+A weekly job checks whether for any active prisoner the NOMIS IEP level matches the DPS Incentive level. When there is a mismatch an alert is sent to the `#sycon-alerts` channel. 
+
+The alert is as follows: `NOMIS IEP level does not match DPS Incentive level in Production`. This will be sent of each individual prisoner that has a mismatch when the following custom event is written `incentives-reports-reconciliation-mismatch`, this contains the levels, bookingId and prisoner number.
+
+In Application Insights there is also an additional custom event `incentives-reports-reconciliation-report` which contains the summary of mismatches (if any) for the week.
+
+##### Action to be taken
+
+The action to be taken depends on the system that is in incorrect state and the cause of the mismatch.
+
+First check the state of NOMIS and ths state of DPS.
+
+To check NOMIS you can run this endpoint:
+```bash
+curl --location 'https://nomis-prisoner.aks-live-1.studio-hosting.service.justice.gov.uk/incentives/booking-id/{bookingId}}/current' \
+--header 'Authorization: Bearer <token with ROLE_NOMIS_INCENTIVES>'
+```
+This will return what NOMIS believes is the current IEP, for instance the snippet 
+```json
+{
+  "iepDateTime": "2023-02-24T13:14:23",
+  "iepLevel": {
+    "code": "ENH",
+    "description": "Enhanced"
+  }
+}
+```
+clearly means NOMIS thinks the prisoner is on Enhanced level.
+
+To check DPS you can run this endpoint:
+
+```bash
+curl --location 'https://incentives-api.hmpps.service.justice.gov.uk/iep/reviews/booking/{bookingId}}?with-details=true' \
+--header 'Authorization: Bearer <token with valid token>'
+```
+This will return what DPS believes is the current IEP, for instance the snippet
+```json
+{
+  "iepCode": "STD",
+  "iepLevel": "Standard",
+  "iepDate": "2022-06-30",
+  "iepTime": "2022-06-30T15:12:36"
+}
+ ```
+clearly means DPS thinks the prisoner is on Standard level.
+
+##### Finding the source of truth
+
+The current level should either be set to the last manually created review or the Incentive DPS service needs to create a system generate review based on the last movement. Given that 
+any new mismatches should never have an IEP level derived from a system generated one from NOMIS, the current IEP in NOMIS should have an `auditModule` that is either `JDBC Thin Client` or `OIDOIEPS` else it means NOMIS has the wrong level.
+
+It is likely to have the wrong level for one of these two reasons:
+- The DPS Incentive service was not aware of a prisoner movement, e.g. they never received a `prisoner-offender-search.prisoner.received` event. This will be the case if the last DPS Incentive Review has not been created when the prisoner moved to the current prison. This date could be found in the database or from the DPS case notes.
+- NOMIS has created a system generated IEP *after* DPS has created its system generated IEP review. This would be the case if there are multiple IEP records all around the same time and the auditModule is the transfer or admission NOMIS screen. This indicates the prisoner has somehow been transferred in twice (which is possible if two users transfer the same prisoner in at roughly the same time)
+
+
+##### Fixing the mismatch
+- For the missing `prisoner-offender-search.prisoner.received` event, this can be triggered manually using an endpoint in `prisoner-offender-search`. The endpoint requires client credentials with the role `EVENTS_ADMIN`. Example request is 
+```bash
+
+  curl --location --request PUT 'https://prisoner-offender-search.prison.service.justice.gov.uk/events/prisoner/received/A9999AR' \
+--header 'Authorization: Bearer <token with ROLE_EVENTS_ADMIN>' \
+--header 'Content-Type: application/json' \
+--data '{
+  "reason": "TRANSFERRED",
+  "prisonId": "MDI",
+  "occurredAt": "2023-02-24T13:14:23"
+}'
+  ```
+The side effect of this event is a DPS IEP Review is created which is then written back to NOMIS
+
+- For duplicate NOMIS system generated IEP the only solution is for NOMIS Support Team to delete the rouge IEP records, that is the one or more records that was generated after the DPS one.
+
+
 
 
 ### Architecture
