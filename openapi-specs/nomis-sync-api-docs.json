@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-04-26"
+    "version": "2023-04-27"
   },
   "servers": [
     {
@@ -1151,7 +1151,10 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateActivityRequest"
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SchedulesRequest"
+                }
               }
             }
           },
@@ -1159,14 +1162,7 @@
         },
         "responses": {
           "200": {
-            "description": "Schedules updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateActivityResponse"
-                }
-              }
-            }
+            "description": "Schedules updated"
           },
           "400": {
             "description": "There was an error with the request",
@@ -1292,7 +1288,7 @@
         ],
         "summary": "Updates a prisoner's allocation to an activity",
         "description": "Updates a prisoner's allocation to an activity. Requires role NOMIS_ACTIVITIES",
-        "operationId": "endOffenderProgramProfile",
+        "operationId": "updateAllocation",
         "parameters": [
           {
             "name": "courseActivityId",
@@ -1374,7 +1370,7 @@
         ],
         "summary": "Allocates a prisoner to an activity",
         "description": "Allocates a prisoner to an activity. Requires role NOMIS_ACTIVITIES",
-        "operationId": "createOffenderProgramProfile",
+        "operationId": "createAllocation",
         "parameters": [
           {
             "name": "courseActivityId",
@@ -2109,7 +2105,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateActivityRequest"
+                "$ref": "#/components/schemas/UpsertAttendanceRequest"
               }
             }
           },
@@ -2121,7 +2117,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateActivityResponse"
+                  "$ref": "#/components/schemas/UpsertAttendanceResponse"
                 }
               }
             }
@@ -3607,59 +3603,17 @@
       },
       "UpdateActivityRequest": {
         "required": [
-          "payRates",
-          "scheduleRules"
-        ],
-        "type": "object",
-        "properties": {
-          "endDate": {
-            "type": "string",
-            "description": "Activity end date",
-            "format": "date",
-            "example": "2022-08-12"
-          },
-          "internalLocationId": {
-            "type": "integer",
-            "description": "Room where the activity is to occur (from activity schedule)",
-            "format": "int64"
-          },
-          "payRates": {
-            "type": "array",
-            "description": "Pay rates",
-            "items": {
-              "$ref": "#/components/schemas/PayRateRequest"
-            }
-          },
-          "scheduleRules": {
-            "type": "array",
-            "description": "Course schedule rules",
-            "items": {
-              "$ref": "#/components/schemas/ScheduleRuleRequest"
-            }
-          }
-        },
-        "description": "Course activity update request"
-      },
-      "CreateActivityRequest": {
-        "required": [
           "capacity",
-          "code",
           "description",
           "excludeBankHolidays",
+          "minimumIncentiveLevelCode",
           "payPerSession",
           "payRates",
-          "prisonId",
-          "programCode",
           "scheduleRules",
-          "schedules",
           "startDate"
         ],
         "type": "object",
         "properties": {
-          "code": {
-            "type": "string",
-            "description": "Code generated from the activity and schedule ids and mapped"
-          },
           "startDate": {
             "type": "string",
             "description": "Activity start date",
@@ -3671,10 +3625,6 @@
             "description": "Activity end date",
             "format": "date",
             "example": "2022-08-12"
-          },
-          "prisonId": {
-            "type": "string",
-            "description": "Prison where the activity is to occur"
           },
           "internalLocationId": {
             "type": "integer",
@@ -3702,10 +3652,6 @@
             "type": "string",
             "description": "Minimum Incentive Level"
           },
-          "programCode": {
-            "type": "string",
-            "description": "Program Service code (from activity category)"
-          },
           "payPerSession": {
             "type": "string",
             "description": "Half or Full day (H or F)",
@@ -3714,13 +3660,6 @@
               "F",
               "H"
             ]
-          },
-          "schedules": {
-            "type": "array",
-            "description": "Schedules",
-            "items": {
-              "$ref": "#/components/schemas/SchedulesRequest"
-            }
           },
           "scheduleRules": {
             "type": "array",
@@ -3734,7 +3673,7 @@
             "description": "Exclude bank holidays?"
           }
         },
-        "description": "Course activity creation request"
+        "description": "Course activity update request"
       },
       "SchedulesRequest": {
         "required": [
@@ -3764,20 +3703,6 @@
           }
         },
         "description": "Course activity creation request schedules"
-      },
-      "CreateActivityResponse": {
-        "required": [
-          "courseActivityId"
-        ],
-        "type": "object",
-        "properties": {
-          "courseActivityId": {
-            "type": "integer",
-            "description": "The created course activity id",
-            "format": "int64"
-          }
-        },
-        "description": "Activity creation response"
       },
       "UpdateCourseScheduleRequest": {
         "required": [
@@ -4108,18 +4033,214 @@
           }
         }
       },
-      "GetAttendanceStatusResponse": {
+      "CreateActivityRequest": {
         "required": [
-          "eventStatus"
+          "capacity",
+          "code",
+          "description",
+          "excludeBankHolidays",
+          "minimumIncentiveLevelCode",
+          "payPerSession",
+          "payRates",
+          "prisonId",
+          "programCode",
+          "scheduleRules",
+          "schedules",
+          "startDate"
         ],
         "type": "object",
         "properties": {
-          "eventStatus": {
+          "code": {
             "type": "string",
-            "description": "The event status for the attendance"
+            "description": "Code generated from the activity and schedule ids and mapped"
+          },
+          "startDate": {
+            "pattern": "yyyy-MM-dd",
+            "type": "string",
+            "description": "Activity start date",
+            "format": "date",
+            "example": "2022-08-12"
+          },
+          "endDate": {
+            "pattern": "yyyy-MM-dd",
+            "type": "string",
+            "description": "Activity end date",
+            "format": "date",
+            "example": "2022-08-12"
+          },
+          "prisonId": {
+            "type": "string",
+            "description": "Prison where the activity is to occur"
+          },
+          "internalLocationId": {
+            "type": "integer",
+            "description": "Room where the activity is to occur (from activity schedule)",
+            "format": "int64"
+          },
+          "capacity": {
+            "maximum": 999,
+            "type": "integer",
+            "description": "Capacity of activity (from activity schedule)",
+            "format": "int32"
+          },
+          "payRates": {
+            "type": "array",
+            "description": "Pay rates",
+            "items": {
+              "$ref": "#/components/schemas/PayRateRequest"
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "Description from concatenated activity and activity schedule"
+          },
+          "minimumIncentiveLevelCode": {
+            "type": "string",
+            "description": "Minimum Incentive Level"
+          },
+          "programCode": {
+            "type": "string",
+            "description": "Program Service code (from activity category)"
+          },
+          "payPerSession": {
+            "type": "string",
+            "description": "Half or Full day (H or F)",
+            "example": "H",
+            "enum": [
+              "F",
+              "H"
+            ]
+          },
+          "schedules": {
+            "type": "array",
+            "description": "Schedules",
+            "items": {
+              "$ref": "#/components/schemas/SchedulesRequest"
+            }
+          },
+          "scheduleRules": {
+            "type": "array",
+            "description": "Schedule rules",
+            "items": {
+              "$ref": "#/components/schemas/ScheduleRuleRequest"
+            }
+          },
+          "excludeBankHolidays": {
+            "type": "boolean",
+            "description": "Exclude bank holidays?"
           }
         },
-        "description": "Attendance status response"
+        "description": "Course activity creation request"
+      },
+      "CreateActivityResponse": {
+        "required": [
+          "courseActivityId"
+        ],
+        "type": "object",
+        "properties": {
+          "courseActivityId": {
+            "type": "integer",
+            "description": "The created course activity id",
+            "format": "int64"
+          }
+        },
+        "description": "Activity creation response"
+      },
+      "UpsertAttendanceRequest": {
+        "required": [
+          "authorisedAbsence",
+          "endTime",
+          "eventStatusCode",
+          "paid",
+          "scheduleDate",
+          "startTime",
+          "unexcusedAbsence"
+        ],
+        "type": "object",
+        "properties": {
+          "scheduleDate": {
+            "type": "string",
+            "description": "The date of the course schedule",
+            "format": "date",
+            "example": "2023-04-03"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "The time of the course schedule",
+            "format": "partial-time",
+            "example": "10:00"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "The time the course schedule ends",
+            "format": "partial-time",
+            "example": "11:00"
+          },
+          "eventStatusCode": {
+            "type": "string",
+            "description": "The status of the attendance",
+            "example": "SCH"
+          },
+          "eventOutcomeCode": {
+            "type": "string",
+            "description": "The outcome code for a completed attendance",
+            "example": "ATT"
+          },
+          "comments": {
+            "type": "string",
+            "description": "Comments relating to the attendance",
+            "example": "Disruptive"
+          },
+          "unexcusedAbsence": {
+            "type": "boolean",
+            "description": "Whether the absence is excused",
+            "example": true,
+            "default": false
+          },
+          "authorisedAbsence": {
+            "type": "boolean",
+            "description": "Whether the absence is authorised",
+            "example": true,
+            "default": false
+          },
+          "paid": {
+            "type": "boolean",
+            "description": "Whether the attendance is to be paid",
+            "example": true,
+            "default": false
+          },
+          "bonusPay": {
+            "type": "number",
+            "description": "Any bonus pay for the attendance",
+            "example": 1.5
+          }
+        },
+        "description": "Course activity create/update request"
+      },
+      "UpsertAttendanceResponse": {
+        "required": [
+          "courseScheduleId",
+          "created",
+          "eventId"
+        ],
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "integer",
+            "description": "The attendance event id",
+            "format": "int64"
+          },
+          "courseScheduleId": {
+            "type": "integer",
+            "description": "The course schedule id for the attendance",
+            "format": "int64"
+          },
+          "created": {
+            "type": "boolean",
+            "description": "Whether or the attendance was created"
+          }
+        },
+        "description": "Attendance create/update response"
       },
       "GetAttendanceStatusRequest": {
         "required": [
@@ -4149,6 +4270,19 @@
           }
         },
         "description": "Get attendance status request"
+      },
+      "GetAttendanceStatusResponse": {
+        "required": [
+          "eventStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "eventStatus": {
+            "type": "string",
+            "description": "The event status for the attendance"
+          }
+        },
+        "description": "Attendance status response"
       },
       "CreateAllocationRequest": {
         "required": [
@@ -4443,6 +4577,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "paged": {
+            "type": "boolean"
+          },
+          "unpaged": {
+            "type": "boolean"
+          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
@@ -4450,12 +4590,6 @@
           "pageSize": {
             "type": "integer",
             "format": "int32"
-          },
-          "paged": {
-            "type": "boolean"
-          },
-          "unpaged": {
-            "type": "boolean"
           }
         }
       },

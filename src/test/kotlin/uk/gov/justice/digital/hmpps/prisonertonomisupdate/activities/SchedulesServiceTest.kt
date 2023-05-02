@@ -27,8 +27,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleLite
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.InternalLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateScheduleResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -262,7 +262,7 @@ class SchedulesServiceTest {
           LocalDateTime.now(),
         ),
       )
-      whenever(nomisApiService.updateScheduledInstance(anyLong(), any())).thenReturn(UpdateScheduleResponse(NOMIS_CRS_SCH_ID))
+      whenever(nomisApiService.updateScheduledInstance(anyLong(), any())).thenReturn(UpdateCourseScheduleResponse(NOMIS_CRS_SCH_ID))
 
       schedulesService.updateScheduledInstance(aDomainEvent())
 

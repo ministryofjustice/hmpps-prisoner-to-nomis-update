@@ -26,9 +26,9 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
 import org.springframework.web.reactive.function.client.WebClientResponseException.Forbidden
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.GetAttendanceStatusResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.GetAttendanceStatusResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpsertAttendanceResponse
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate

@@ -17,7 +17,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.PrisonPayBand
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAllocationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAllocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
 import java.time.LocalDateTime

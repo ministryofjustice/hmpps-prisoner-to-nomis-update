@@ -19,7 +19,19 @@ import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
-import java.math.BigDecimal
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAllocationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAllocationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.GetAttendanceStatusRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.GetAttendanceStatusResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SchedulesRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAllocationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -81,7 +93,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .awaitBodilessEntity()
   }
 
-  suspend fun updateScheduleInstances(courseActivityId: Long, request: List<ScheduleRequest>) {
+  suspend fun updateScheduleInstances(courseActivityId: Long, request: List<SchedulesRequest>) {
     webClient.put()
       .uri("/activities/$courseActivityId/schedules")
       .bodyValue(request)
@@ -89,7 +101,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .awaitBodilessEntity()
   }
 
-  suspend fun updateScheduledInstance(courseActivityId: Long, request: UpdateScheduleRequest): UpdateScheduleResponse =
+  suspend fun updateScheduledInstance(courseActivityId: Long, request: UpdateCourseScheduleRequest): UpdateCourseScheduleResponse =
     webClient.put()
       .uri("/activities/$courseActivityId/schedule")
       .bodyValue(request)
@@ -343,113 +355,6 @@ data class CreateIncentiveResponseDto(
   val sequence: Long,
 )
 
-data class CreateActivityRequest(
-  val code: String,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val startDate: LocalDate,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val endDate: LocalDate? = null,
-  val prisonId: String,
-  val internalLocationId: Long? = null,
-  val capacity: Int,
-  val payRates: List<PayRateRequest>,
-  val description: String,
-  val minimumIncentiveLevelCode: String? = null,
-  val programCode: String,
-  val payPerSession: String,
-  val schedules: List<ScheduleRequest>,
-  val scheduleRules: List<ScheduleRuleRequest>,
-  val excludeBankHolidays: Boolean,
-)
-
-data class UpdateActivityRequest(
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val endDate: LocalDate? = null,
-  val internalLocationId: Long? = null,
-  val payRates: List<PayRateRequest>,
-  val scheduleRules: List<ScheduleRuleRequest>,
-)
-
-data class PayRateRequest(
-  val incentiveLevel: String,
-  val payBand: String,
-  val rate: BigDecimal,
-)
-
-data class ScheduleRuleRequest(
-  @JsonFormat(pattern = "HH:mm")
-  val startTime: LocalTime,
-  @JsonFormat(pattern = "HH:mm")
-  val endTime: LocalTime,
-  val monday: Boolean,
-  val tuesday: Boolean,
-  val wednesday: Boolean,
-  val thursday: Boolean,
-  val friday: Boolean,
-  val saturday: Boolean,
-  val sunday: Boolean,
-)
-
-data class CreateActivityResponse(
-  val courseActivityId: Long,
-)
-
-data class CreateAllocationRequest(
-  val bookingId: Long,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val startDate: LocalDate,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val endDate: LocalDate? = null,
-  val payBandCode: String,
-)
-
-data class CreateAllocationResponse(
-  val offenderProgramReferenceId: Long,
-)
-
-data class UpdateAllocationRequest(
-  val bookingId: Long,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val endDate: LocalDate,
-  val endReason: String? = null,
-  val endComment: String? = null,
-)
-
-data class UpsertAttendanceRequest(
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val scheduleDate: LocalDate,
-  @JsonFormat(pattern = "HH:mm")
-  val startTime: LocalTime,
-  @JsonFormat(pattern = "HH:mm")
-  val endTime: LocalTime,
-  val eventStatusCode: String,
-  val eventOutcomeCode: String? = null,
-  val comments: String? = null,
-  val unexcusedAbsence: Boolean = false,
-  val authorisedAbsence: Boolean = false,
-  val paid: Boolean = false,
-  val bonusPay: BigDecimal? = null,
-)
-
-data class UpsertAttendanceResponse(
-  val eventId: Long,
-  val courseScheduleId: Long,
-  val created: Boolean,
-)
-
-data class GetAttendanceStatusRequest(
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val scheduleDate: LocalDate,
-  @JsonFormat(pattern = "HH:mm")
-  val startTime: LocalTime,
-  @JsonFormat(pattern = "HH:mm")
-  val endTime: LocalTime,
-)
-
-data class GetAttendanceStatusResponse(
-  val eventStatus: String,
-)
-
 data class CreateAppointmentRequest(
   val bookingId: Long,
   @JsonFormat(pattern = "yyyy-MM-dd")
@@ -485,29 +390,6 @@ data class CreateSentencingAdjustmentRequest(
   val adjustmentFromDate: LocalDate?,
   val adjustmentDays: Long,
   val comment: String?,
-)
-
-data class ScheduleRequest(
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val date: LocalDate,
-  @JsonFormat(pattern = "HH:mm")
-  val startTime: LocalTime,
-  @JsonFormat(pattern = "HH:mm")
-  val endTime: LocalTime,
-)
-
-data class UpdateScheduleRequest(
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val date: LocalDate,
-  @JsonFormat(pattern = "HH:mm")
-  val startTime: LocalTime,
-  @JsonFormat(pattern = "HH:mm")
-  val endTime: LocalTime,
-  val cancelled: Boolean,
-)
-
-data class UpdateScheduleResponse(
-  val courseScheduleId: Long,
 )
 
 data class UpdateSentencingAdjustmentRequest(

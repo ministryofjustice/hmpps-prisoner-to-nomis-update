@@ -22,6 +22,14 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAllocationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.GetAttendanceStatusRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SchedulesRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAllocationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -317,7 +325,14 @@ internal class NomisApiServiceTest {
 
       NomisApiExtension.nomisApi.verify(
         putRequestedFor(urlEqualTo("/activities/1"))
-          .withRequestBody(matchingJsonPath("$.endDate", equalTo("2023-02-10"))),
+          .withRequestBody(matchingJsonPath("$.startDate", equalTo("2023-02-01")))
+          .withRequestBody(matchingJsonPath("$.capacity", equalTo("123")))
+          .withRequestBody(matchingJsonPath("$.description", equalTo("activity updated")))
+          .withRequestBody(matchingJsonPath("$.minimumIncentiveLevelCode", equalTo("STD")))
+          .withRequestBody(matchingJsonPath("$.payPerSession", equalTo("F")))
+          .withRequestBody(matchingJsonPath("$.excludeBankHolidays", equalTo("true")))
+          .withRequestBody(matchingJsonPath("$.endDate", equalTo("2023-02-10")))
+          .withRequestBody(matchingJsonPath("$.internalLocationId", equalTo("703000"))),
       )
     }
 
@@ -1050,29 +1065,36 @@ fun newActivity() = CreateActivityRequest(
   payRates = emptyList(),
   description = "the description",
   programCode = "IRS",
-  payPerSession = "H",
+  payPerSession = CreateActivityRequest.PayPerSession.h,
   schedules = listOf(),
   scheduleRules = emptyList(),
   excludeBankHolidays = true,
+  minimumIncentiveLevelCode = "STD",
 )
 
 fun updateActivity() = UpdateActivityRequest(
+  startDate = LocalDate.parse("2023-02-01"),
+  capacity = 123,
+  payRates = emptyList(),
+  description = "updated activity",
+  minimumIncentiveLevelCode = "STD",
+  payPerSession = UpdateActivityRequest.PayPerSession.f,
+  scheduleRules = emptyList(),
+  excludeBankHolidays = true,
   endDate = LocalDate.parse("2023-02-10"),
   internalLocationId = 703000,
-  payRates = emptyList(),
-  scheduleRules = emptyList(),
 )
 
 fun updateScheduleInstances() = listOf(
-  ScheduleRequest(date = LocalDate.parse("2023-02-10"), startTime = LocalTime.parse("08:00"), endTime = LocalTime.parse("11:00")),
-  ScheduleRequest(date = LocalDate.parse("2023-02-11"), startTime = LocalTime.parse("08:00"), endTime = LocalTime.parse("11:00")),
+  SchedulesRequest(date = LocalDate.parse("2023-02-10"), startTime = "08:00", endTime = "11:00"),
+  SchedulesRequest(date = LocalDate.parse("2023-02-11"), startTime = "08:00", endTime = "11:00"),
 )
 
 fun updateScheduledInstance() =
-  UpdateScheduleRequest(
+  UpdateCourseScheduleRequest(
     date = LocalDate.parse("2023-02-10"),
-    startTime = LocalTime.parse("08:00"),
-    endTime = LocalTime.parse("11:00"),
+    startTime = "08:00",
+    endTime = "11:00",
     cancelled = true,
   )
 
@@ -1091,8 +1113,8 @@ fun newDeallocation() = UpdateAllocationRequest(
 
 private fun newAttendance() = UpsertAttendanceRequest(
   scheduleDate = LocalDate.now(),
-  startTime = LocalTime.parse("11:00"),
-  endTime = LocalTime.parse("13:00"),
+  startTime = "11:00",
+  endTime = "13:00",
   eventStatusCode = "COMP",
   eventOutcomeCode = "ACCAB",
   comments = "Prisoner was too unwell to attend the activity.",
@@ -1103,8 +1125,8 @@ private fun newAttendance() = UpsertAttendanceRequest(
 
 private fun newGetAttendanceStatusRequest() = GetAttendanceStatusRequest(
   scheduleDate = LocalDate.now(),
-  startTime = LocalTime.parse("11:00"),
-  endTime = LocalTime.parse("13:00"),
+  startTime = "11:00",
+  endTime = "13:00",
 )
 
 private fun newAppointment() = CreateAppointmentRequest(

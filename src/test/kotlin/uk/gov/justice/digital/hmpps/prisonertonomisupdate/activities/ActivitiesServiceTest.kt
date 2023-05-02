@@ -30,10 +30,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Inter
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.PrisonPayBand
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PayRateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
