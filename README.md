@@ -58,20 +58,18 @@ e.g.
 `MOCK_VISITS_PRISON_ID=WWI`
 `MOCK_VISITS_VISITORS=1838,273723`
 
-### Generating APi client models
+## Generating APi client models
 
 For some of our external API calls we use `openapi-generator` to generate the models used in the API clients. The Open API specifications used can be found in directory `openapi-specs`.
 
-#### Updating the Open API specs
+### Updating the Open API specs
 
-Run the following commands to take a copy of the latest specs:
+Run the following commands to take a copy of the latest specs (requires `jq` is installed):
 
 ```
-curl https://nomis-prsner-dev.aks-dev-1.studio-hosting.service.justice.gov.uk/v3/api-docs > openapi-specs/nomis-sync-api-docs.json
-curl https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs > openapi-specs/activities-api-docs.json
+curl https://nomis-prsner-dev.aks-dev-1.studio-hosting.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/nomis-sync-api-docs.json
+curl https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/activities-api-docs.json
 ```
-
-Go into the specs and reformat so they and the diffs are easier for humans to read.
 
 Then run another command to regenerate the models in the `build/generated/src` directory:
 
@@ -81,15 +79,15 @@ Now build the project and deal with any compile errors caused by changes to the 
 
 Finally run the tests and fix any issues caused by changes to the models.
 
-### Runbook
+## Runbook
 
-#### Queue Dead letter queue maintenance
+### Queue Dead letter queue maintenance
 
 Since this services uses the HMPPS SQS library with defaults this has all the default endpoints for queue maintenance as documented in the [SQS library](https://github.com/ministryofjustice/hmpps-spring-boot-sqs/blob/main/README.md).
 
 For purging queues the queue name can be found in the [health check](https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk/health) and the required role is the default `ROLE_QUEUE_ADMIN`.
 
-#### Duplicate handling
+### Duplicate handling
 
 There are various scenarios where a duplicate event may be received:
 - The call to the mapping service hangs for more than 2 minutes but eventually returns
@@ -107,15 +105,15 @@ These are as follows:
 
 The action to be taken is as follows: 
 
-##### Activities
+#### Activities
 
 TBD in SDIT-674
 
-##### Incentives
+#### Incentives
 
 Duplicate incentives have no business impact in NOMIS but can cause confusion to users. That confusion is only the case so long as the NOMIS IEP page is still in use. This screen is currently being phased out. The only way to delete an IEP is to ask `#dps-appsupport` and supply them with the prisoner number and sequence. *For now it advised to take no action unless there is a complaint from the prison* since the impact on the business is negligible.
 
-##### Visits
+#### Visits
 
 A duplicate visit is serious since for sentenced prisoners they will have one less visit for that week. Therefore the visit should be cancelled. This could be done by #dps-appsupport or by us using the cancel endpoint. The cancel endpoint is the quickest solution.
 
@@ -133,7 +131,7 @@ curl --location --request PUT 'https://nomis-prisoner.aks-live-1.studio-hosting.
 * Check in Nomis again and the duplicate visit should have been cancelled
 
 ```
-##### Sentencing adjustments
+#### Sentencing adjustments
 
 A duplicate sentencing adjustment is serious since it will result in the prisoner being released early/late. Therefore the sentencing adjustment should be cancelled. This could be dome by #dps-appsupport or by us using the delete endpoint. The delete endpoint is the quickest solution.
 
@@ -156,7 +154,7 @@ curl -X 'DELETE' \
   -H 'accept: */*' \
   -H 'Authorization: Bearer <token with role NOMIS_SENTENCING>'
 ```
-#### Incentive Reconciliation Report Alert
+### Incentive Reconciliation Report Alert
 
 A weekly job checks whether for any active prisoner the NOMIS IEP level matches the DPS Incentive level. When there is a mismatch an alert is sent to the `#sycon-alerts` channel. 
 
@@ -164,7 +162,7 @@ The alert is as follows: `NOMIS IEP level does not match DPS Incentive level in 
 
 In Application Insights there is also an additional custom event `incentives-reports-reconciliation-report` which contains the summary of mismatches (if any) for the week.
 
-##### Action to be taken
+#### Action to be taken
 
 The action to be taken depends on the system that is in incorrect state and the cause of the mismatch.
 
@@ -204,7 +202,7 @@ This will return what DPS believes is the current IEP, for instance the snippet
  ```
 clearly means DPS thinks the prisoner is on Standard level.
 
-##### Finding the source of truth
+#### Finding the source of truth
 
 The current level should either be set to the last manually created review or the Incentive DPS service needs to create a system generate review based on the last movement. Given that 
 any new mismatches should never have an IEP level derived from a system generated one from NOMIS, the current IEP in NOMIS should have an `auditModule` that is either `JDBC Thin Client` or `OIDOIEPS` else it means NOMIS has the wrong level.
@@ -214,7 +212,7 @@ It is likely to have the wrong level for one of these two reasons:
 - NOMIS has created a system generated IEP *after* DPS has created its system generated IEP review. This would be the case if there are multiple IEP records all around the same time and the auditModule is the transfer or admission NOMIS screen. This indicates the prisoner has somehow been transferred in twice (which is possible if two users transfer the same prisoner in at roughly the same time)
 
 
-##### Fixing the mismatch
+#### Fixing the mismatch
 - For the missing `prisoner-offender-search.prisoner.received` event, this can be triggered manually using an endpoint in `prisoner-offender-search`. The endpoint requires client credentials with the role `EVENTS_ADMIN`. Example request is 
 ```bash
 
@@ -231,9 +229,6 @@ The side effect of this event is a DPS IEP Review is created which is then writt
 
 - For duplicate NOMIS system generated IEP the only solution is for NOMIS Support Team to delete the rouge IEP records, that is the one or more records that was generated after the DPS one.
 
-
-
-
-### Architecture
+## Architecture
 
 Architecture decision records start [here](doc/architecture/decisions/0001-use-adr.md)

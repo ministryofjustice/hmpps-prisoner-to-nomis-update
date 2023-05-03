@@ -29,6 +29,7 @@ internal class AppointmentApiServiceTest {
 
     private val appointmentInstanceResponse = """{
       "id": 1234,
+      "appointmentType": "INDIVIDUAL",
       "bookingId": 12345,
       "internalLocationId": 34567,
       "appointmentDate": "2023-03-14",
