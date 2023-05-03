@@ -10,18 +10,17 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PayRateRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ScheduleRuleRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PayRateRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRuleRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.lang.Integer.min
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import java.time.LocalTime
 
 @Service
 class ActivitiesService(
@@ -66,7 +65,7 @@ class ActivitiesService(
 
   private suspend fun createTransformedActivity(activitySchedule: ActivitySchedule) =
     activitiesApiService.getActivity(activitySchedule.activity.id).let {
-      nomisApiService.createActivity(toNomisActivity(activitySchedule, it))
+      nomisApiService.createActivity(toCreateActivityRequest(activitySchedule, it))
     }
 
   suspend fun updateActivity(event: ScheduleDomainEvent) {
@@ -94,13 +93,19 @@ class ActivitiesService(
 
   private fun ActivitySchedule.toUpdateActivityRequest(pay: List<ActivityPay>) =
     UpdateActivityRequest(
+      startDate = startDate,
+      capacity = capacity,
+      payRates = pay.toPayRateRequests(),
+      description = description,
+      minimumIncentiveLevelCode = activity.minimumIncentiveLevel,
+      payPerSession = toUpdatePayPerSession(),
+      scheduleRules = slots.toScheduleRuleRequests(),
+      excludeBankHolidays = !runsOnBankHoliday,
       endDate = endDate,
       internalLocationId = internalLocation?.id?.toLong(),
-      payRates = pay.toPayRateRequests(),
-      scheduleRules = slots.toScheduleRuleRequests(),
     )
 
-  private fun toNomisActivity(schedule: ActivitySchedule, activity: Activity): CreateActivityRequest {
+  private fun toCreateActivityRequest(schedule: ActivitySchedule, activity: Activity): CreateActivityRequest {
     return CreateActivityRequest(
       code = schedule.id.toString(),
       startDate = activity.startDate,
@@ -112,7 +117,7 @@ class ActivitiesService(
       description = toNomisActivityDescription(activity.summary),
       minimumIncentiveLevelCode = activity.minimumIncentiveNomisCode,
       programCode = activity.category.code,
-      payPerSession = activity.payPerSession.value,
+      payPerSession = schedule.toCreatePayPerSession(),
       schedules = schedule.instances.toScheduleRequests(),
       scheduleRules = schedule.slots.toScheduleRuleRequests(),
       excludeBankHolidays = !schedule.runsOnBankHoliday, // Nomis models the negative (exclude) and Activities models the positive (runs on)
@@ -125,8 +130,8 @@ class ActivitiesService(
   private fun List<ActivityScheduleSlot>.toScheduleRuleRequests(): List<ScheduleRuleRequest> =
     map { slot ->
       ScheduleRuleRequest(
-        startTime = LocalTime.parse(slot.startTime),
-        endTime = LocalTime.parse(slot.endTime),
+        startTime = slot.startTime,
+        endTime = slot.endTime,
         monday = slot.mondayFlag,
         tuesday = slot.tuesdayFlag,
         wednesday = slot.wednesdayFlag,
@@ -209,3 +214,11 @@ data class ScheduleDomainEvent(
 data class ScheduleAdditionalInformation(
   val activityScheduleId: Long,
 )
+
+fun ActivitySchedule.toCreatePayPerSession(): CreateActivityRequest.PayPerSession =
+  CreateActivityRequest.PayPerSession.values()
+    .first { it.value == this.activity.payPerSession.value }
+
+fun ActivitySchedule.toUpdatePayPerSession(): UpdateActivityRequest.PayPerSession =
+  UpdateActivityRequest.PayPerSession.values()
+    .first { it.value == this.activity.payPerSession.value }

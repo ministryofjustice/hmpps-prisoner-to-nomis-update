@@ -44,12 +44,7 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
       await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance") } matches { it == 1 }
       NomisApiExtension.nomisApi.verify(
         postRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance"))
-          .withRequestBody(
-            matchingJsonPath(
-              "scheduleDate",
-              equalTo(LocalDate.now().plusDays(1).toString()),
-            ),
-          )
+          .withRequestBody(matchingJsonPath("scheduleDate", equalTo(LocalDate.now().plusDays(1).toString())))
           .withRequestBody(matchingJsonPath("startTime", equalTo("10:00")))
           .withRequestBody(matchingJsonPath("endTime", equalTo("11:00")))
           .withRequestBody(matchingJsonPath("eventStatusCode", equalTo("SCH")))

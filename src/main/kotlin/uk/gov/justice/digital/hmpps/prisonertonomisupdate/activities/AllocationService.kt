@@ -3,9 +3,9 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAllocationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAllocationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateAllocationRequest
 import java.time.LocalDateTime
 
 @Service

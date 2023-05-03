@@ -4,11 +4,10 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SchedulesRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ScheduleRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateScheduleRequest
 import java.time.LocalDateTime
-import java.time.LocalTime
 
 @Service
 class SchedulesService(
@@ -69,18 +68,18 @@ class SchedulesService(
 
 fun List<ScheduledInstance>.toScheduleRequests() =
   map {
-    ScheduleRequest(
+    SchedulesRequest(
       date = it.date,
-      startTime = LocalTime.parse(it.startTime),
-      endTime = LocalTime.parse(it.endTime),
+      startTime = it.startTime,
+      endTime = it.endTime,
     )
   }
 
 fun ActivityScheduleInstance.toUpdateScheduleRequest() =
-  UpdateScheduleRequest(
+  UpdateCourseScheduleRequest(
     date = date,
-    startTime = LocalTime.parse(startTime),
-    endTime = LocalTime.parse(endTime),
+    startTime = startTime,
+    endTime = endTime,
     cancelled = cancelled,
   )
 

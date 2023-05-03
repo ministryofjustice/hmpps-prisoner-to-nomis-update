@@ -28,12 +28,13 @@ class WebClientConfiguration(
   fun oauthApiHealthWebClient(): WebClient = WebClient.builder().baseUrl(oauthApiBaseUri).build()
 
   @Bean
-  fun nomisApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager): WebClient {
+  fun nomisApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, webClientBuilder: WebClient.Builder): WebClient {
     val oauth2Client = ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).also {
       it.setDefaultClientRegistrationId("nomis-api")
     }
 
-    return WebClient.builder()
+    return webClientBuilder
+      .clone() // clone so that we don't dirty the singleton builder
       .baseUrl(nomisApiBaseUri)
       .filter(oauth2Client)
       .build()

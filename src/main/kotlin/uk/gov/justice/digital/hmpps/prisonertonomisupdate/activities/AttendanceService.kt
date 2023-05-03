@@ -3,13 +3,12 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.GetAttendanceStatusRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.GetAttendanceStatusRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpsertAttendanceRequest
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDateTime
-import java.time.LocalTime
 
 @Service
 class AttendanceService(
@@ -63,8 +62,8 @@ class AttendanceService(
       attendanceSync.bookingId,
       GetAttendanceStatusRequest(
         attendanceSync.sessionDate,
-        LocalTime.parse(attendanceSync.sessionStartTime),
-        LocalTime.parse(attendanceSync.sessionEndTime),
+        attendanceSync.sessionStartTime,
+        attendanceSync.sessionEndTime,
       ),
     )
 
@@ -84,8 +83,8 @@ class AttendanceService(
     val eventOutcome = toEventOutcome()
     return UpsertAttendanceRequest(
       scheduleDate = this.sessionDate,
-      startTime = LocalTime.parse(this.sessionStartTime),
-      endTime = LocalTime.parse(this.sessionEndTime),
+      startTime = this.sessionStartTime,
+      endTime = this.sessionEndTime,
       eventStatusCode = toEventStatus(nomisAttendanceStatus),
       eventOutcomeCode = eventOutcome?.code,
       comments = comment,
