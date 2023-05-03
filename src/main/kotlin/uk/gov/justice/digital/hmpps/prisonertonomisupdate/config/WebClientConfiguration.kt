@@ -34,7 +34,6 @@ class WebClientConfiguration(
     }
 
     return webClientBuilder
-      .clone() // clone so that we don't dirty the singleton builder
       .baseUrl(nomisApiBaseUri)
       .filter(oauth2Client)
       .build()
