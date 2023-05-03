@@ -271,7 +271,13 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       await untilAsserted {
         nomisApi.verify(
           putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID"))
+            .withRequestBody(matchingJsonPath("startDate", equalTo("2023-01-20")))
             .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-23")))
+            .withRequestBody(matchingJsonPath("capacity", equalTo("10")))
+            .withRequestBody(matchingJsonPath("description", equalTo("Monday AM Houseblock 3")))
+            .withRequestBody(matchingJsonPath("minimumIncentiveLevelCode", equalTo("BAS")))
+            .withRequestBody(matchingJsonPath("payPerSession", equalTo("F")))
+            .withRequestBody(matchingJsonPath("excludeBankHolidays", equalTo("false")))
             .withRequestBody(matchingJsonPath("internalLocationId", equalTo("98877667")))
             .withRequestBody(matchingJsonPath("payRates[0].incentiveLevel", equalTo("BAS")))
             .withRequestBody(matchingJsonPath("payRates[0].payBand", equalTo("1")))
