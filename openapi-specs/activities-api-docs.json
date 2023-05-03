@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-04-21.5025.8fcd5ee"
+    "version": "2023-05-02.5452.809e035"
   },
   "servers": [
     {
@@ -54,16 +54,6 @@
           "required": true
         },
         "responses": {
-          "404": {
-            "description": "Not Found, the scheduled instance does not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -76,6 +66,16 @@
           },
           "403": {
             "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found, the scheduled instance does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -130,6 +130,16 @@
           "required": true
         },
         "responses": {
+          "404": {
+            "description": "The scheduled instance was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -150,16 +160,6 @@
               }
             }
           },
-          "204": {
-            "description": "Scheduled instance successfully cancelled",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
           "400": {
             "description": "Bad request",
             "content": {
@@ -170,12 +170,12 @@
               }
             }
           },
-          "404": {
-            "description": "The scheduled instance was not found.",
+          "204": {
+            "description": "Scheduled instance successfully cancelled",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "object"
                 }
               }
             }
@@ -321,6 +321,79 @@
         }
       }
     },
+    "/appointment-occurrences/{appointmentOccurrenceId}/cancel": {
+      "put": {
+        "tags": [
+          "appointment-occurrence-controller"
+        ],
+        "summary": "Cancel an appointment occurrence or series of appointment occurrences",
+        "description": "\n    Cancel an appointment occurrence or series of appointment occurrences based on the applyTo property.\n    Does not require any specific roles\n    ",
+        "operationId": "cancelAppointmentOccurrence",
+        "parameters": [
+          {
+            "name": "appointmentOccurrenceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppointmentOccurrenceCancelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "The appointment occurrence for this ID was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "The appointment occurrence or series of appointment occurrences was cancelled.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Appointment"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/schedules/{scheduleId}/allocations": {
       "get": {
         "tags": [
@@ -454,8 +527,8 @@
               }
             }
           },
-          "404": {
-            "description": "The activity schedule for this ID was not found.",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -464,8 +537,8 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "404": {
+            "description": "The activity schedule for this ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -540,16 +613,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Successful call - zero or more scheduled events found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PrisonerScheduledEvents"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -576,6 +639,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful call - zero or more scheduled events found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrisonerScheduledEvents"
                 }
               }
             }
@@ -650,16 +723,6 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "Successful call - zero or more scheduled events found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PrisonerScheduledEvents"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -686,6 +749,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful call - zero or more scheduled events found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrisonerScheduledEvents"
                 }
               }
             }
@@ -781,14 +854,14 @@
         }
       }
     },
-    "/job/deallocate-offenders": {
+    "/job/manage-allocations": {
       "post": {
         "tags": [
           "job-trigger-controller"
         ],
-        "summary": "Trigger the job to deallocate offenders when end dates are reached",
+        "summary": "Trigger the job to manage allocations",
         "description": "Can only be accessed from within the ingress. Requests from elsewhere will result in a 401 response code.",
-        "operationId": "triggerDeallocateOffendersJob",
+        "operationId": "triggerManageAllocationsJob",
         "responses": {
           "201": {
             "description": "Created",
@@ -840,6 +913,58 @@
               "text/plain": {
                 "schema": {
                   "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bulk-appointments": {
+      "post": {
+        "tags": [
+          "bulk-appointment-controller"
+        ],
+        "summary": "Bulk create a set of appointments",
+        "description": "\n    Create a list of appointments and allocate the supplied prisoner or prisoners to them.\n    Does not require any specific roles\n    ",
+        "operationId": "bulkCreateAppointment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkAppointmentsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "The appointments were created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkAppointment"
                 }
               }
             }
@@ -949,16 +1074,6 @@
           "required": true
         },
         "responses": {
-          "201": {
-            "description": "The appointment or series of appointment occurrences was created.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Appointment"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -975,6 +1090,81 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "The appointment or series of appointment occurrences was created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Appointment"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appointment-occurrences/{prisonCode}/search": {
+      "post": {
+        "tags": [
+          "appointment-occurrence-controller"
+        ],
+        "summary": "Search for appointment occurrences within the specified prison",
+        "description": "\n    Uses the supplied prison code and search parameters to filter and return appointment occurrence search results.\n    Does not require any specific roles\n    ",
+        "operationId": "searchAppointmentOccurrences",
+        "parameters": [
+          {
+            "name": "prisonCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppointmentOccurrenceSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Prison code and search parameters were accepted and results returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppointmentOccurrenceSearchResult"
+                  }
                 }
               }
             }
@@ -1074,6 +1264,16 @@
           "required": true
         },
         "responses": {
+          "404": {
+            "description": "The appointment occurrence for this ID was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -1099,17 +1299,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AppointmentOccurrence"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The appointment occurrence for this ID was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/Appointment"
                 }
               }
             }
@@ -1211,16 +1401,6 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "The activity for this ID was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -1233,6 +1413,16 @@
           },
           "403": {
             "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The activity for this ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1376,8 +1566,8 @@
               }
             }
           },
-          "404": {
-            "description": "The activity schedule for this ID was not found.",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -1386,8 +1576,8 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "404": {
+            "description": "The activity schedule for this ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1418,16 +1608,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Activity schedule capacity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CapacityAndAllocated"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -1457,6 +1637,16 @@
                 }
               }
             }
+          },
+          "200": {
+            "description": "Activity schedule capacity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapacityAndAllocated"
+                }
+              }
+            }
           }
         }
       }
@@ -1481,12 +1671,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Scheduled instance found",
+          "404": {
+            "description": "The scheduled instance was not found.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ActivityScheduleInstance"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1511,12 +1701,12 @@
               }
             }
           },
-          "404": {
-            "description": "The scheduled instance was not found.",
+          "200": {
+            "description": "Scheduled instance found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ActivityScheduleInstance"
                 }
               }
             }
@@ -1544,6 +1734,16 @@
           }
         ],
         "responses": {
+          "404": {
+            "description": "The scheduled instance was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Attendance records found",
             "content": {
@@ -1576,16 +1776,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "The scheduled instance was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
           }
         }
       }
@@ -1595,8 +1785,8 @@
         "tags": [
           "rollout-controller"
         ],
-        "summary": "Get a prison by its code",
-        "description": "Returns a single prison and its details by its unique code.",
+        "summary": "Get a prison's rollout plan by prison code",
+        "description": "Returns a single prison and its activities management service rollout plan by its unique code.",
         "operationId": "getPrisonByCode",
         "parameters": [
           {
@@ -1609,16 +1799,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Prison found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RolloutPrison"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -1635,6 +1815,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Prison rollout plan found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RolloutPrisonPlan"
                 }
               }
             }
@@ -1746,19 +1936,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Successful call - zero or more scheduled instance records found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ActivityScheduleInstance"
-                  }
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -1775,6 +1952,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful call - zero or more scheduled instance records found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActivityScheduleInstance"
+                  }
                 }
               }
             }
@@ -1835,19 +2025,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Activity schedules found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ActivitySchedule"
-                  }
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -1864,6 +2041,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Activity schedules found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActivitySchedule"
+                  }
                 }
               }
             }
@@ -1969,19 +2159,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Locations found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/InternalLocation"
-                  }
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -1998,6 +2175,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Locations found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InternalLocation"
+                  }
                 }
               }
             }
@@ -2032,16 +2222,6 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "Category ID not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -2068,6 +2248,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CapacityAndAllocated"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category ID not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2102,6 +2292,26 @@
           }
         ],
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Activities within the category",
             "content": {
@@ -2117,26 +2327,6 @@
           },
           "404": {
             "description": "Category ID not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -2221,26 +2411,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Prison regime found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PrisonRegime"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The prison regime for this prison code was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -2253,6 +2423,26 @@
           },
           "403": {
             "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Prison regime found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrisonRegime"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The prison regime for this prison code was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2291,6 +2481,19 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "Successful call - zero or more cell locations found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Location"
+                  }
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -2317,19 +2520,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Successful call - zero or more cell locations found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Location"
-                  }
                 }
               }
             }
@@ -2404,22 +2594,22 @@
               }
             }
           },
-          "200": {
-            "description": "Successful call - Location prefix found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LocationPrefixDto"
-                }
-              }
-            }
-          },
           "400": {
             "description": "Invalid request",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful call - Location prefix found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationPrefixDto"
                 }
               }
             }
@@ -2446,19 +2636,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Successful call - zero or more location groups found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LocationGroup"
-                  }
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -2485,6 +2662,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful call - zero or more location groups found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LocationGroup"
+                  }
                 }
               }
             }
@@ -2532,6 +2722,16 @@
               }
             }
           },
+          "200": {
+            "description": "Attendance found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attendance"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -2548,16 +2748,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Attendance found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Attendance"
                 }
               }
             }
@@ -2629,6 +2819,16 @@
           }
         ],
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "The appointment for this ID was not found.",
             "content": {
@@ -2645,16 +2845,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Appointment"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2682,12 +2872,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Appointment Occurrence found",
+          "404": {
+            "description": "The appointment occurrence for this ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AppointmentOccurrenceDetails"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2702,12 +2892,12 @@
               }
             }
           },
-          "404": {
-            "description": "The appointment occurrence for this ID was not found.",
+          "200": {
+            "description": "Appointment Occurrence found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/AppointmentOccurrenceDetails"
                 }
               }
             }
@@ -2733,16 +2923,6 @@
           }
         ],
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "Appointment locations found",
             "content": {
@@ -2752,6 +2932,16 @@
                   "items": {
                     "$ref": "#/components/schemas/AppointmentLocationSummary"
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2832,6 +3022,16 @@
           }
         ],
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "The appointment for this ID was not found.",
             "content": {
@@ -2851,16 +3051,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
           }
         }
       }
@@ -2873,6 +3063,16 @@
         "summary": "Get the list of appointment categories",
         "operationId": "getAppointmentCategories",
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Appointment categories found",
             "content": {
@@ -2882,16 +3082,6 @@
                   "items": {
                     "$ref": "#/components/schemas/AppointmentCategorySummary"
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -3026,8 +3216,18 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "The activity for this ID was not found.",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -3046,18 +3246,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "The activity for this ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3320,6 +3510,7 @@
       "AttendanceUpdateRequest": {
         "required": [
           "id",
+          "prisonCode",
           "status"
         ],
         "type": "object",
@@ -3329,6 +3520,11 @@
             "description": "The internally-generated ID for this attendance",
             "format": "int64",
             "example": 123456
+          },
+          "prisonCode": {
+            "type": "string",
+            "description": "The prison code",
+            "example": "MDI"
           },
           "status": {
             "type": "string",
@@ -3378,6 +3574,327 @@
           }
         },
         "description": "Request object for updating an attendance record"
+      },
+      "AppointmentOccurrenceCancelRequest": {
+        "required": [
+          "applyTo",
+          "cancellationReasonId"
+        ],
+        "type": "object",
+        "properties": {
+          "cancellationReasonId": {
+            "type": "integer",
+            "description": "\n    Specifies the id of the reason for the cancellation. The cancellation reason, identified byt this ID, will determine \n    whether the cancellation is also treated as a soft delete\n    ",
+            "format": "int64",
+            "example": 1234
+          },
+          "applyTo": {
+            "type": "string",
+            "description": "\n    Specifies which appointment occurrence or occurrences this cancellation should apply to.\n    Defaults to THIS_OCCURRENCE meaning the cancellation will be applied to the appointment occurrence specified by the\n    supplied id only.\n    ",
+            "example": "THIS_OCCURRENCE",
+            "enum": [
+              "THIS_OCCURRENCE",
+              "THIS_AND_ALL_FUTURE_OCCURRENCES",
+              "ALL_FUTURE_OCCURRENCES"
+            ]
+          }
+        },
+        "description": "The cancel request with the appointment occurrence details and how to apply the cancellation"
+      },
+      "Appointment": {
+        "required": [
+          "appointmentType",
+          "categoryCode",
+          "comment",
+          "created",
+          "createdBy",
+          "id",
+          "inCell",
+          "occurrences",
+          "prisonCode",
+          "startDate",
+          "startTime"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The internally generated identifier for this appointment",
+            "format": "int64",
+            "example": 12345
+          },
+          "appointmentType": {
+            "type": "string",
+            "description": "The appointment type (INDIVIDUAL or GROUP)",
+            "example": "INDIVIDUAL",
+            "enum": [
+              "INDIVIDUAL",
+              "GROUP"
+            ]
+          },
+          "prisonCode": {
+            "type": "string",
+            "description": "The NOMIS AGENCY_LOCATIONS.AGY_LOC_ID value for mapping to NOMIS",
+            "example": "SKI"
+          },
+          "categoryCode": {
+            "type": "string",
+            "description": "The NOMIS REFERENCE_CODES.CODE (DOMAIN = 'INT_SCH_RSN') value for mapping to NOMIS",
+            "example": "CHAP"
+          },
+          "appointmentDescription": {
+            "type": "string",
+            "description": "\n    Free text description for an appointment.  This is used to add more context to the appointment category.\n    ",
+            "example": "Meeting with the governor"
+          },
+          "internalLocationId": {
+            "type": "integer",
+            "description": "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
+            "format": "int64",
+            "example": 123
+          },
+          "inCell": {
+            "type": "boolean",
+            "description": "\n    Flag to indicate if the location of the appointment is in cell rather than an internal prison location.\n    Internal location id should be null if in cell = true\n    ",
+            "example": false
+          },
+          "startDate": {
+            "type": "string",
+            "description": "The date of the appointment or first appointment occurrence in the series",
+            "format": "date"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "The starting time of the appointment or first appointment occurrence in the series",
+            "format": "partial-time",
+            "example": "09:00"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "The end time of the appointment or first appointment occurrence in the series",
+            "format": "partial-time",
+            "example": "10:30"
+          },
+          "comment": {
+            "type": "string",
+            "description": "\n    Notes relating to the appointment.\n    The default value if no notes are specified at the occurrence or instance levels\n    ",
+            "example": "This appointment will help adjusting to life outside of prison"
+          },
+          "created": {
+            "type": "string",
+            "description": "The date and time this appointment was created. Will not change",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "\n    The username of the user authenticated via HMPPS auth that created the appointment.\n    Usually a NOMIS username\n    ",
+            "example": "AAA01U"
+          },
+          "updated": {
+            "type": "string",
+            "description": "\n    The date and time this appointment was last changed.\n    Will be null if the appointment has not been altered since it was created\n    ",
+            "format": "date-time"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "\n    The username of the user authenticated via HMPPS auth that edited the appointment.\n    Will be null if the appointment has not been altered since it was created\n    ",
+            "example": "AAA01U"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/AppointmentSchedule"
+          },
+          "occurrences": {
+            "type": "array",
+            "description": "\n    The individual occurrence or occurrences of this appointment. Non recurring appointments will have a single\n    appointment occurrence containing the same property values as the parent appointment. The same start date, time\n    and end time. Recurring appointments will have a series of occurrences. The first in the series will also\n    contain the same property values as the parent appointment and subsequent occurrences will have start dates\n    following on from the original start date incremented as specified by the appointment's schedule. Each occurrence\n    can be edited independently of the parent. All properties of an occurrence override those of the parent appointment\n    with a null coalesce back to the parent for nullable properties. The full series of occurrences specified by the\n    schedule will be created in advance.\n    ",
+            "items": {
+              "$ref": "#/components/schemas/AppointmentOccurrence"
+            }
+          }
+        },
+        "description": "\n  The top level appointment containing the initial values for all appointment properties.\n  Joins together one or more appointment occurrences and optionally a schedule if the appointment is recurring.\n  The child appointment occurrences will by default have the same property values.\n  The occurrence property values can be changed independently to support rescheduling, cancelling and altered\n  attendee lists at an individual occurrence level.\n  Editing a property at the appointment level will cascade the edit to all *future* child occurrences\n  "
+      },
+      "AppointmentOccurrence": {
+        "required": [
+          "allocations",
+          "id",
+          "inCell",
+          "sequenceNumber",
+          "startDate",
+          "startTime"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The internally generated identifier for this appointment occurrence",
+            "format": "int64",
+            "example": 123456
+          },
+          "sequenceNumber": {
+            "type": "integer",
+            "description": "The sequence number of this appointment occurrence within the recurring appointment series",
+            "format": "int32",
+            "example": 3
+          },
+          "internalLocationId": {
+            "type": "integer",
+            "description": "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
+            "format": "int64",
+            "example": 123
+          },
+          "inCell": {
+            "type": "boolean",
+            "description": "\n    Flag to indicate if the location of the appointment is in cell rather than an internal prison location.\n    Internal location id should be null if in cell = true\n    ",
+            "example": false
+          },
+          "startDate": {
+            "type": "string",
+            "description": "The date this appointment occurrence is taking place on",
+            "format": "date"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "The starting time of this appointment occurrence",
+            "format": "partial-time",
+            "example": "13:00"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "The end time of this appointment occurrence",
+            "format": "partial-time",
+            "example": "13:30"
+          },
+          "comment": {
+            "type": "string",
+            "description": "\n    Notes relating to this appointment occurrence.\n    The comment value from the parent appointment will be used if this is null\n    ",
+            "example": "This appointment occurrence has been rescheduled due to staff availability"
+          },
+          "cancelled": {
+            "type": "string",
+            "description": "\n    The time at which this appointment occurrence was cancelled (if applicable).\n    ",
+            "format": "date-time"
+          },
+          "cancellationReasonId": {
+            "type": "integer",
+            "description": "\n    The ID of the reason why this appointment occurrence was cancelled (if applicable).\n    ",
+            "format": "int64",
+            "example": 12345
+          },
+          "cancelledBy": {
+            "type": "string",
+            "description": "\n    The username of the user authenticated via HMPPS auth that cancelled this appointment instance (if applicable).\n    Usually a NOMIS username. Will be null if the appointment occurrence has not been altered independently from the\n    parent appointment since it was created\n    ",
+            "example": "AAA01U"
+          },
+          "updated": {
+            "type": "string",
+            "description": "\n    The date and time this appointment occurrence was last changed.\n    Will be null if the appointment occurrence has not been altered independently from the parent appointment\n    since it was created\n    ",
+            "format": "date-time"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "\n    The username of the user authenticated via HMPPS auth that edited this appointment instance.\n    Usually a NOMIS username. Will be null if the appointment occurrence has not been altered independently from the\n    parent appointment since it was created\n    ",
+            "example": "AAA01U"
+          },
+          "allocations": {
+            "type": "array",
+            "description": "\n    The prisoner or prisoners attending this appointment occurrence. Single appointments such as medical will have one\n    allocation record. A group appointment e.g. gym or chaplaincy sessions will have more than one allocation record.\n    Allocations are at the occurrence level supporting alteration of attendees in any future occurrence.\n    When viewing or editing a recurring appointment, the allocations from the next appointment occurrence in the series\n    will be used.\n    ",
+            "items": {
+              "$ref": "#/components/schemas/AppointmentOccurrenceAllocation"
+            }
+          }
+        },
+        "description": "\n  Represents a specific appointment occurrence. Non recurring appointments will have a single appointment occurrence\n  containing the same property values as the parent appointment. The same start date, time and end time. Recurring\n  appointments will have a series of occurrences. The first in the series will also contain the same property values\n  as the parent appointment and subsequent occurrences will have start dates following on from the original start date\n  incremented as specified by the appointment's schedule. Each occurrence can be edited independently of the parent.\n  All properties of an occurrence override those of the parent appointment with a null coalesce back to the parent for\n  nullable properties. The full series of occurrences specified by the schedule will be created in advance.\n  "
+      },
+      "AppointmentOccurrenceAllocation": {
+        "required": [
+          "bookingId",
+          "id",
+          "prisonerNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The internally generated identifier for this appointment occurrence allocation",
+            "format": "int64",
+            "example": 123456
+          },
+          "prisonerNumber": {
+            "type": "string",
+            "description": "The NOMIS OFFENDERS.OFFENDER_ID_DISPLAY value for mapping to a prisoner record in NOMIS",
+            "example": "A1234BC"
+          },
+          "bookingId": {
+            "type": "integer",
+            "description": "The NOMIS OFFENDER_BOOKINGS.OFFENDER_BOOK_ID value for mapping to a prisoner booking record in NOMIS",
+            "format": "int64",
+            "example": 456
+          }
+        },
+        "description": "\n  The allocation of a prisoner to an appointment occurrence. Appointments of type INDIVIDUAL will have one prisoner\n  allocated to each appointment occurrence. Appointments of type GROUP can have more than one prisoner allocated to each\n  appointment occurrence\n  "
+      },
+      "AppointmentSchedule": {
+        "required": [
+          "endDate",
+          "fridayFlag",
+          "id",
+          "mondayFlag",
+          "saturdayFlag",
+          "sundayFlag",
+          "thursdayFlag",
+          "tuesdayFlag",
+          "wednesdayFlag"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The internally generated identifier for this appointment schedule",
+            "format": "int64",
+            "example": 12345
+          },
+          "endDate": {
+            "type": "string",
+            "description": "\n    The date the series of appointment occurrences should end. The UI will provide options to specify an end date or\n    a number of occurrences. The later case should be used to calculate the end date internally\n    ",
+            "format": "date"
+          },
+          "mondayFlag": {
+            "type": "boolean",
+            "description": "Indicates the appointment reoccurs every Monday",
+            "example": false
+          },
+          "tuesdayFlag": {
+            "type": "boolean",
+            "description": "Indicates the appointment reoccurs every Tuesday",
+            "example": true
+          },
+          "wednesdayFlag": {
+            "type": "boolean",
+            "description": "Indicates the appointment reoccurs every Wednesday",
+            "example": false
+          },
+          "thursdayFlag": {
+            "type": "boolean",
+            "description": "Indicates the appointment reoccurs every Thursday",
+            "example": false
+          },
+          "fridayFlag": {
+            "type": "boolean",
+            "description": "Indicates the appointment reoccurs every Friday",
+            "example": false
+          },
+          "saturdayFlag": {
+            "type": "boolean",
+            "description": "Indicates the appointment reoccurs every Saturday",
+            "example": false
+          },
+          "sundayFlag": {
+            "type": "boolean",
+            "description": "Indicates the appointment reoccurs every Sunday",
+            "example": false
+          }
+        },
+        "description": "\n  Describes the recurrence of an appointment. The days of the week an occurrence of the appointment will be scheduled\n  and the end date of the series.\n  "
       },
       "PrisonerAllocationRequest": {
         "required": [
@@ -3788,6 +4305,126 @@
           }
         },
         "description": "Describes a prisoners allocations"
+      },
+      "BulkAppointmentsRequest": {
+        "required": [
+          "appointmentDescription",
+          "appointments",
+          "categoryCode",
+          "inCell",
+          "internalLocationId",
+          "prisonCode",
+          "startDate"
+        ],
+        "type": "object",
+        "properties": {
+          "prisonCode": {
+            "maxLength": 3,
+            "minLength": 0,
+            "type": "string",
+            "description": "The NOMIS prison code where these appointments takes place",
+            "example": "PVI"
+          },
+          "categoryCode": {
+            "type": "string",
+            "description": "The NOMIS reference code for these appointments. Must exist and be active",
+            "example": "CHAP"
+          },
+          "appointmentDescription": {
+            "maxLength": 40,
+            "minLength": 0,
+            "type": "string",
+            "description": "\n    Free text description for these appointments.  This is used to add more context to the appointment category.\n    ",
+            "example": "Meeting with the governor"
+          },
+          "internalLocationId": {
+            "type": "integer",
+            "description": "\n    The NOMIS internal location id within the specified prison. This must be supplied if inCell is false.\n    The internal location id must exist, must be within the prison specified by the prisonCode property and be active. \n    ",
+            "format": "int64",
+            "example": 123
+          },
+          "inCell": {
+            "type": "boolean",
+            "description": "\n    Flag to indicate if the location of the appointments is in cell rather than an internal prison location.\n    Internal location id will be ignored if inCell is true\n    ",
+            "example": false
+          },
+          "startDate": {
+            "type": "string",
+            "description": "The date of the appointments",
+            "format": "date"
+          },
+          "appointments": {
+            "type": "array",
+            "description": "\n    The list of appointments to create\n    ",
+            "items": {
+              "$ref": "#/components/schemas/IndividualAppointment"
+            }
+          }
+        },
+        "description": "The create request containing the new appointments"
+      },
+      "IndividualAppointment": {
+        "required": [
+          "endTime",
+          "prisonerNumber",
+          "startTime"
+        ],
+        "type": "object",
+        "properties": {
+          "prisonerNumber": {
+            "type": "string",
+            "description": "The prisoner to allocate to the created appointment",
+            "example": "A1234BC"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "The starting time of the appointment",
+            "format": "partial-time",
+            "example": "09:00"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "The end time of the appointment",
+            "format": "partial-time",
+            "example": "10:30"
+          }
+        },
+        "description": "\n    The list of appointments to create\n    "
+      },
+      "BulkAppointment": {
+        "required": [
+          "appointments",
+          "bulkAppointmentId",
+          "created",
+          "createdBy"
+        ],
+        "type": "object",
+        "properties": {
+          "bulkAppointmentId": {
+            "type": "integer",
+            "description": "The internally generated identifier for this bulk appointment",
+            "format": "int64",
+            "example": 12345
+          },
+          "appointments": {
+            "type": "array",
+            "description": "The list of appointments created in bulk.",
+            "items": {
+              "$ref": "#/components/schemas/Appointment"
+            }
+          },
+          "created": {
+            "type": "string",
+            "description": "The date and time this appointment was created. Will not change",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "\n    The username of the user authenticated via HMPPS auth that created the appointment.\n    Usually a NOMIS username\n    ",
+            "example": "AAA01U"
+          }
+        },
+        "description": "Describes a list of activities created as part of a single bulk operation"
       },
       "AuditRecordSearchFilters": {
         "type": "object",
@@ -4517,6 +5154,11 @@
             "description": "Free text to allow other reasons for non attendance against the attendance",
             "example": "Prisoner has a valid reason to miss the activity."
           },
+          "caseNoteText": {
+            "type": "string",
+            "description": "Free text for any case note entered against the attendance record",
+            "example": "Prisoner has refused to attend the activity without a valid reason to miss the activity."
+          },
           "attendanceHistory": {
             "type": "array",
             "description": "The attendance history records for this attendance",
@@ -4847,10 +5489,14 @@
         ],
         "type": "object",
         "properties": {
-          "categoryCode": {
+          "appointmentType": {
             "type": "string",
-            "description": "The NOMIS reference code for this appointment. Must exist and be active",
-            "example": "CHAP"
+            "description": "The appointment type (INDIVIDUAL or GROUP)",
+            "example": "INDIVIDUAL",
+            "enum": [
+              "INDIVIDUAL",
+              "GROUP"
+            ]
           },
           "prisonCode": {
             "maxLength": 3,
@@ -4858,6 +5504,30 @@
             "type": "string",
             "description": "The NOMIS prison code where this appointment takes place",
             "example": "PVI"
+          },
+          "prisonerNumbers": {
+            "type": "array",
+            "description": "The prisoner or prisoners to allocate to the created appointment or series of appointment occurrences",
+            "example": [
+              "A1234BC"
+            ],
+            "items": {
+              "type": "string",
+              "description": "The prisoner or prisoners to allocate to the created appointment or series of appointment occurrences",
+              "example": "[\"A1234BC\"]"
+            }
+          },
+          "categoryCode": {
+            "type": "string",
+            "description": "The NOMIS reference code for this appointment. Must exist and be active",
+            "example": "CHAP"
+          },
+          "appointmentDescription": {
+            "maxLength": 40,
+            "minLength": 0,
+            "type": "string",
+            "description": "\n    Free text description for an appointment.  This is used to add more context to the appointment category.\n    ",
+            "example": "Meeting with the governor"
           },
           "internalLocationId": {
             "type": "integer",
@@ -4887,15 +5557,6 @@
             "format": "partial-time",
             "example": "10:30"
           },
-          "appointmentType": {
-            "type": "string",
-            "description": "The appointment type (INDIVIDUAL or GROUP)",
-            "example": "INDIVIDUAL",
-            "enum": [
-              "INDIVIDUAL",
-              "GROUP"
-            ]
-          },
           "repeat": {
             "$ref": "#/components/schemas/AppointmentRepeat"
           },
@@ -4903,25 +5564,6 @@
             "type": "string",
             "description": "\n    Notes relating to the appointment.\n    The default value if no notes are specified at the occurrence or instance levels\n    ",
             "example": "This appointment will help adjusting to life outside of prison"
-          },
-          "appointmentDescription": {
-            "maxLength": 40,
-            "minLength": 0,
-            "type": "string",
-            "description": "\n    Free text description for an appointment.  This is used to add more context to the appointment category.\n    ",
-            "example": "Meeting with the governor"
-          },
-          "prisonerNumbers": {
-            "type": "array",
-            "description": "The prisoner or prisoners to allocate to the created appointment or series of appointment occurrences",
-            "example": [
-              "A1234BC"
-            ],
-            "items": {
-              "type": "string",
-              "description": "The prisoner or prisoners to allocate to the created appointment or series of appointment occurrences",
-              "example": "[\"A1234BC\"]"
-            }
           }
         },
         "description": "The create request with the new appointment or series of appointment occurrences details"
@@ -4955,144 +5597,190 @@
         },
         "description": "\n  Describes how an appointment will repeat. The period or frequency of those occurrences and how many occurrences there\n  will be in total in the series.\n  "
       },
-      "Appointment": {
+      "AppointmentOccurrenceSearchRequest": {
         "required": [
-          "appointmentType",
-          "categoryCode",
-          "comment",
-          "created",
-          "createdBy",
-          "id",
-          "inCell",
-          "occurrences",
-          "prisonCode",
-          "startDate",
-          "startTime"
+          "startDate"
         ],
         "type": "object",
         "properties": {
-          "id": {
-            "type": "integer",
-            "description": "The internally generated identifier for this appointment",
-            "format": "int64",
-            "example": 12345
-          },
-          "categoryCode": {
-            "type": "string",
-            "description": "The NOMIS REFERENCE_CODES.CODE (DOMAIN = 'INT_SCH_RSN') value for mapping to NOMIS",
-            "example": "CHAP"
-          },
-          "prisonCode": {
-            "type": "string",
-            "description": "The NOMIS AGENCY_LOCATIONS.AGY_LOC_ID value for mapping to NOMIS",
-            "example": "SKI"
-          },
-          "internalLocationId": {
-            "type": "integer",
-            "description": "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
-            "format": "int64",
-            "example": 123
-          },
-          "inCell": {
-            "type": "boolean",
-            "description": "\n    Flag to indicate if the location of the appointment is in cell rather than an internal prison location.\n    Internal location id should be null if in cell = true\n    ",
-            "example": false
-          },
-          "startDate": {
-            "type": "string",
-            "description": "The date of the appointment or first appointment occurrence in the series",
-            "format": "date"
-          },
-          "startTime": {
-            "type": "string",
-            "description": "The starting time of the appointment or first appointment occurrence in the series",
-            "format": "partial-time",
-            "example": "09:00"
-          },
-          "endTime": {
-            "type": "string",
-            "description": "The end time of the appointment or first appointment occurrence in the series",
-            "format": "partial-time",
-            "example": "10:30"
-          },
           "appointmentType": {
             "type": "string",
-            "description": "The appointment type (INDIVIDUAL or GROUP)",
+            "description": "\n    The appointment type (INDIVIDUAL or GROUP) match with the parent appointments. Will restrict the search results to\n    appointment occurrences that have a parent appointment with the matching type when this search parameter is supplied.\n    ",
             "example": "INDIVIDUAL",
             "enum": [
               "INDIVIDUAL",
               "GROUP"
             ]
           },
-          "comment": {
+          "startDate": {
             "type": "string",
-            "description": "\n    Notes relating to the appointment.\n    The default value if no notes are specified at the occurrence or instance levels\n    ",
-            "example": "This appointment will help adjusting to life outside of prison"
+            "description": "\n    The start date to match with the appointment occurrences. Will restrict the search results to appointment\n    occurrences that have the matching start date when this search parameter is supplied but no end date is supplied.\n    When an end date is also supplied, the search uses a date range and will restrict the search results to appointment\n    occurrences that have a start date within the date range.\n    ",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "\n    The end date of the date range to match with the appointment occurrences. Start date must be supplied if an end date\n    is specified. Will restrict the search results to appointment occurrences that have a start date within the date range.\n    ",
+            "format": "date"
+          },
+          "timeSlot": {
+            "type": "string",
+            "description": "\n    The time slot to match with the appointment occurrences. Will restrict the search results to appointment occurrences\n    that have a start time between the times defined by the prison for that time slot when this search parameter is\n    supplied.\n    ",
+            "example": "PM",
+            "enum": [
+              "AM",
+              "PM",
+              "ED"
+            ]
+          },
+          "categoryCode": {
+            "type": "string",
+            "description": "\n    The NOMIS reference code to match with the parent appointments. Will restrict the search results to appointment\n    occurrences that have a parent appointment with the matching category code when this search parameter is supplied.\n    ",
+            "example": "GYMW"
+          },
+          "internalLocationId": {
+            "type": "integer",
+            "description": "\n    The NOMIS internal location id to match with the appointment occurrences. Will restrict the search results to\n    appointment occurrences that have the matching internal location id when this search parameter is supplied.\n    ",
+            "format": "int64",
+            "example": 123
+          },
+          "inCell": {
+            "type": "boolean",
+            "description": "\n    The in cell flag value to match with the appointment occurrences. Will restrict the search results to appointment\n    occurrences that have the matching in cell value when this search parameter is supplied.\n    ",
+            "example": false
+          },
+          "prisonerNumbers": {
+            "type": "array",
+            "description": "\n    The allocated prisoner or prisoners to match with the appointment occurrences. Will restrict the search results to\n    appointment occurrences that have the at least one of the supplied prisoner numbers allocated to them when this\n    search parameter is supplied.\n    ",
+            "example": [
+              "A1234BC"
+            ],
+            "items": {
+              "type": "string",
+              "description": "\n    The allocated prisoner or prisoners to match with the appointment occurrences. Will restrict the search results to\n    appointment occurrences that have the at least one of the supplied prisoner numbers allocated to them when this\n    search parameter is supplied.\n    ",
+              "example": "[\"A1234BC\"]"
+            }
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "\n    The username of the user authenticated via HMPPS auth to match with the parent appointments. Will restrict the\n    search results to appointment occurrences that have a parent appointment created by this username when this search\n    parameter is supplied.\n    ",
+            "example": "AAA01U"
+          }
+        },
+        "description": "The search parameters to use to filter appointment occurrences"
+      },
+      "AppointmentCategorySummary": {
+        "required": [
+          "code",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "The NOMIS REFERENCE_CODES.CODE (DOMAIN = 'INT_SCH_RSN') value for mapping to NOMIS",
+            "example": "CHAP"
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the appointment category",
+            "example": "Chaplaincy"
+          }
+        },
+        "description": "\n  Summarises an appointment category for display purposes. Contains only properties needed to make additional API calls\n  and to display.\n  "
+      },
+      "AppointmentLocationSummary": {
+        "required": [
+          "description",
+          "id",
+          "prisonCode"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.",
+            "format": "int64",
+            "example": 27
+          },
+          "prisonCode": {
+            "type": "string",
+            "description": "\n    The NOMIS AGENCY_LOCATIONS.AGY_LOC_ID value for mapping to NOMIS.\n    ",
+            "example": "SKI"
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the appointment location. Mapped from AGENCY_INTERNAL_LOCATIONS.USER_DESC",
+            "example": "Chapel"
+          }
+        },
+        "description": "\n  Summarises an appointment location for display purposes. Contains only properties needed to make additional API calls\n  and to display. NOMIS is the current system of record for appointment locations and they are managed there.\n  "
+      },
+      "AppointmentOccurrenceSearchResult": {
+        "required": [
+          "allocations",
+          "appointmentId",
+          "appointmentOccurrenceId",
+          "appointmentType",
+          "category",
+          "inCell",
+          "isCancelled",
+          "isEdited",
+          "isRepeat",
+          "maxSequenceNumber",
+          "prisonCode",
+          "sequenceNumber",
+          "startDate",
+          "startTime"
+        ],
+        "type": "object",
+        "properties": {
+          "appointmentId": {
+            "type": "integer",
+            "description": "The internally generated identifier for the parent appointment",
+            "format": "int64",
+            "example": 12345
+          },
+          "appointmentOccurrenceId": {
+            "type": "integer",
+            "description": "The internally generated identifier for this appointment occurrence",
+            "format": "int64",
+            "example": 123456
+          },
+          "appointmentType": {
+            "type": "string",
+            "description": "The parent appointment's type (INDIVIDUAL or GROUP)",
+            "example": "INDIVIDUAL",
+            "enum": [
+              "INDIVIDUAL",
+              "GROUP"
+            ]
+          },
+          "prisonCode": {
+            "type": "string",
+            "description": "\n    The NOMIS AGENCY_LOCATIONS.AGY_LOC_ID value for mapping to NOMIS.\n    Note, this property does not exist on the appointment occurrences and is therefore consistent across all occurrences\n    ",
+            "example": "SKI"
+          },
+          "allocations": {
+            "type": "array",
+            "description": "\n    The prisoner or prisoners attending this appointment occurrence. Appointments of type INDIVIDUAL will have one\n    prisoner allocated to each appointment occurrence. Appointments of type GROUP can have more than one prisoner\n    allocated to each appointment occurrence\n    ",
+            "items": {
+              "$ref": "#/components/schemas/AppointmentOccurrenceAllocation"
+            }
+          },
+          "category": {
+            "$ref": "#/components/schemas/AppointmentCategorySummary"
           },
           "appointmentDescription": {
             "type": "string",
             "description": "\n    Free text description for an appointment.  This is used to add more context to the appointment category.\n    ",
             "example": "Meeting with the governor"
           },
-          "created": {
-            "type": "string",
-            "description": "The date and time this appointment was created. Will not change",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "\n    The username of the user authenticated via HMPPS auth that created the appointment.\n    Usually a NOMIS username\n    ",
-            "example": "AAA01U"
-          },
-          "updated": {
-            "type": "string",
-            "description": "\n    The date and time this appointment was last changed.\n    Will be null if the appointment has not been altered since it was created\n    ",
-            "format": "date-time"
-          },
-          "updatedBy": {
-            "type": "string",
-            "description": "\n    The username of the user authenticated via HMPPS auth that edited the appointment.\n    Will be null if the appointment has not been altered since it was created\n    ",
-            "example": "AAA01U"
-          },
-          "schedule": {
-            "$ref": "#/components/schemas/AppointmentSchedule"
-          },
-          "occurrences": {
-            "type": "array",
-            "description": "\n    The individual occurrence or occurrences of this appointment. Non recurring appointments will have a single\n    appointment occurrence containing the same property values as the parent appointment. The same start date, time\n    and end time. Recurring appointments will have a series of occurrences. The first in the series will also\n    contain the same property values as the parent appointment and subsequent occurrences will have start dates\n    following on from the original start date incremented as specified by the appointment's schedule. Each occurrence\n    can be edited independently of the parent. All properties of an occurrence override those of the parent appointment\n    with a null coalesce back to the parent for nullable properties. The full series of occurrences specified by the\n    schedule will be created in advance.\n    ",
-            "items": {
-              "$ref": "#/components/schemas/AppointmentOccurrence"
-            }
-          }
-        },
-        "description": "\n  The top level appointment containing the initial values for all appointment properties.\n  Joins together one or more appointment occurrences and optionally a schedule if the appointment is recurring.\n  The child appointment occurrences will by default have the same property values.\n  The occurrence property values can be changed independently to support rescheduling, cancelling and altered\n  attendee lists at an individual occurrence level.\n  Editing a property at the appointment level will cascade the edit to all *future* child occurrences\n  "
-      },
-      "AppointmentOccurrence": {
-        "required": [
-          "allocations",
-          "cancelled",
-          "id",
-          "inCell",
-          "startDate",
-          "startTime"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "The internally generated identifier for this appointment occurrence",
-            "format": "int64",
-            "example": 123456
-          },
-          "internalLocationId": {
-            "type": "integer",
-            "description": "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
-            "format": "int64",
-            "example": 123
+          "internalLocation": {
+            "$ref": "#/components/schemas/AppointmentLocationSummary"
           },
           "inCell": {
             "type": "boolean",
-            "description": "\n    Flag to indicate if the location of the appointment is in cell rather than an internal prison location.\n    Internal location id should be null if in cell = true\n    ",
+            "description": "\n    Flag to indicate if the location of the appointment is in cell rather than an internal prison location.\n    Internal location will be null if in cell = true\n    ",
             "example": false
           },
           "startDate": {
@@ -5112,126 +5800,35 @@
             "format": "partial-time",
             "example": "13:30"
           },
-          "comment": {
-            "type": "string",
-            "description": "\n    Notes relating to this appointment occurrence.\n    The comment value from the parent appointment will be used if this is null\n    ",
-            "example": "This appointment occurrence has been rescheduled due to staff availability"
-          },
-          "cancelled": {
+          "isRepeat": {
             "type": "boolean",
-            "description": "\n    Supports cancelling of this appointment occurrence. This is different from (soft) deleting the parent appointment\n    and can be used to highlight where an appointment has been cancelled on unlock lists and similar\n    ",
+            "description": "Indicates whether the parent appointment was specified to repeat",
             "example": false
           },
-          "updated": {
-            "type": "string",
-            "description": "\n    The date and time this appointment occurrence was last changed.\n    Will be null if the appointment occurrence has not been altered independently from the parent appointment\n    since it was created\n    ",
-            "format": "date-time"
-          },
-          "updatedBy": {
-            "type": "string",
-            "description": "\n    The username of the user authenticated via HMPPS auth that edited this appointment instance.\n    Usually a NOMIS username. Will be null if the appointment occurrence has not been altered independently from the\n    parent appointment since it was created\n    ",
-            "example": "AAA01U"
-          },
-          "allocations": {
-            "type": "array",
-            "description": "\n    The prisoner or prisoners attending this appointment occurrence. Single appointments such as medical will have one\n    allocation record. A group appointment e.g. gym or chaplaincy sessions will have more than one allocation record.\n    Allocations are at the occurrence level supporting alteration of attendees in any future occurrence.\n    When viewing or editing a recurring appointment, the allocations from the next appointment occurrence in the series\n    will be used.\n    ",
-            "items": {
-              "$ref": "#/components/schemas/AppointmentOccurrenceAllocation"
-            }
-          }
-        },
-        "description": "\n  Represents a specific appointment occurrence. Non recurring appointments will have a single appointment occurrence\n  containing the same property values as the parent appointment. The same start date, time and end time. Recurring\n  appointments will have a series of occurrences. The first in the series will also contain the same property values\n  as the parent appointment and subsequent occurrences will have start dates following on from the original start date\n  incremented as specified by the appointment's schedule. Each occurrence can be edited independently of the parent.\n  All properties of an occurrence override those of the parent appointment with a null coalesce back to the parent for\n  nullable properties. The full series of occurrences specified by the schedule will be created in advance.\n  "
-      },
-      "AppointmentOccurrenceAllocation": {
-        "required": [
-          "bookingId",
-          "id",
-          "prisonerNumber"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
+          "sequenceNumber": {
             "type": "integer",
-            "description": "The internally generated identifier for this appointment occurrence allocation",
-            "format": "int64",
-            "example": 123456
+            "description": "The sequence number of this appointment occurrence within the recurring appointment series",
+            "format": "int32",
+            "example": 3
           },
-          "prisonerNumber": {
-            "type": "string",
-            "description": "The NOMIS OFFENDERS.OFFENDER_ID_DISPLAY value for mapping to a prisoner record in NOMIS",
-            "example": "A1234BC"
-          },
-          "bookingId": {
+          "maxSequenceNumber": {
             "type": "integer",
-            "description": "The NOMIS OFFENDER_BOOKINGS.OFFENDER_BOOK_ID value for mapping to a prisoner booking record in NOMIS",
-            "format": "int64",
-            "example": 456
-          }
-        },
-        "description": "\n  The allocation of a prisoner to an appointment occurrence. Standard single appointments will have one prisoner\n  allocated to its single appointment occurrence. More than one prisoner allocation record signifies the associated\n  appointment is a group appointment. Group appointments support additional checks such as non-associations.\n  "
-      },
-      "AppointmentSchedule": {
-        "required": [
-          "endDate",
-          "fridayFlag",
-          "id",
-          "mondayFlag",
-          "saturdayFlag",
-          "sundayFlag",
-          "thursdayFlag",
-          "tuesdayFlag",
-          "wednesdayFlag"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "The internally generated identifier for this appointment schedule",
-            "format": "int64",
-            "example": 12345
+            "description": "The sequence number of the final appointment occurrence within the recurring appointment series",
+            "format": "int32",
+            "example": 6
           },
-          "endDate": {
-            "type": "string",
-            "description": "\n    The date the series of appointment occurrences should end. The UI will provide options to specify an end date or\n    a number of occurrences. The later case should be used to calculate the end date internally\n    ",
-            "format": "date"
-          },
-          "mondayFlag": {
+          "isEdited": {
             "type": "boolean",
-            "description": "Indicates the appointment reoccurs every Monday",
+            "description": "Indicates whether this appointment occurrence has been changed from its original state",
             "example": false
           },
-          "tuesdayFlag": {
+          "isCancelled": {
             "type": "boolean",
-            "description": "Indicates the appointment reoccurs every Tuesday",
-            "example": true
-          },
-          "wednesdayFlag": {
-            "type": "boolean",
-            "description": "Indicates the appointment reoccurs every Wednesday",
-            "example": false
-          },
-          "thursdayFlag": {
-            "type": "boolean",
-            "description": "Indicates the appointment reoccurs every Thursday",
-            "example": false
-          },
-          "fridayFlag": {
-            "type": "boolean",
-            "description": "Indicates the appointment reoccurs every Friday",
-            "example": false
-          },
-          "saturdayFlag": {
-            "type": "boolean",
-            "description": "Indicates the appointment reoccurs every Saturday",
-            "example": false
-          },
-          "sundayFlag": {
-            "type": "boolean",
-            "description": "Indicates the appointment reoccurs every Sunday",
+            "description": "Indicates whether this appointment occurrence has been cancelled",
             "example": false
           }
         },
-        "description": "\n  Describes the recurrence of an appointment. The days of the week an occurrence of the appointment will be scheduled\n  and the end date of the series.\n  "
+        "description": "\n  Summary search result details of a specific appointment occurrence found via search. Will contain copies of the parent\n  appointment's properties unless they have been changed on this appointment occurrence. Contains properties needed to\n  make additional API calls and to populate a table of search results.\n  "
       },
       "ActivityCreateRequest": {
         "required": [
@@ -5442,7 +6039,7 @@
             "example": "BAS"
           },
           "incentiveLevel": {
-            "maxLength": 10,
+            "maxLength": 50,
             "minLength": 0,
             "type": "string",
             "description": "The incentive/earned privilege level",
@@ -5923,13 +6520,13 @@
       "PageActivityCandidate": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -5955,11 +6552,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "last": {
-            "type": "boolean"
-          },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
+          },
+          "last": {
+            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
@@ -5980,15 +6577,15 @@
             "type": "integer",
             "format": "int32"
           },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
           "paged": {
             "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
-          },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
           }
         }
       },
@@ -6209,50 +6806,43 @@
         },
         "description": "\n  Describes the weekly schedule for an activity. There can be several of these defined for one activity.\n  An activity schedule describes when, during the week, an activity will be run and where.\n  e.g. Tuesday PM and Thursday AM - suitable for Houseblock 2 to attend.\n  e.g. Monday AM and Thursday PM - suitable for Houseblock 3 to attend.\n  this 'lite' version of ActivitySchedule does not have allocated or instances.\n  "
       },
-      "RolloutPrison": {
+      "RolloutPrisonPlan": {
         "required": [
-          "active",
-          "code",
-          "description",
-          "id",
-          "isAppointmentsEnabled"
+          "activitiesRolledOut",
+          "appointmentsRolledOut",
+          "prisonCode"
         ],
         "type": "object",
         "properties": {
-          "id": {
-            "type": "integer",
-            "description": "The internally-generated ID for this prison",
-            "format": "int64",
-            "example": 123456
-          },
-          "code": {
+          "prisonCode": {
             "type": "string",
-            "description": "The code for this prison",
+            "description": "The prison code of the requested prison",
             "example": "PVI"
           },
-          "description": {
-            "type": "string",
-            "description": "The description for this prison",
-            "example": "HMP Pentonville"
-          },
-          "active": {
+          "activitiesRolledOut": {
             "type": "boolean",
-            "description": "Flag to indicate if this prison is presently active",
+            "description": "Flag to indicate if this prison is presently rolled out for activities",
             "example": true
           },
-          "rolloutDate": {
+          "activitiesRolloutDate": {
             "type": "string",
-            "description": "The date rolled out",
+            "description": "The date activities rolled out. Can be null if the prison is not yet scheduled for rollout.",
             "format": "date",
             "example": "2022-09-30"
           },
-          "isAppointmentsEnabled": {
+          "appointmentsRolledOut": {
             "type": "boolean",
-            "description": "Whether appointments are being fetched from the activities service (as opposed to the Prison API)",
+            "description": "Flag to indicate if this prison is presently rolled out for appointments",
             "example": true
+          },
+          "appointmentsRolloutDate": {
+            "type": "string",
+            "description": "The date appointments rolled out. Can be null if the prison is not yet scheduled for rollout.",
+            "format": "date",
+            "example": "2022-09-30"
           }
         },
-        "description": "Describes one instance of a prison which may or may not be active (rolled out)"
+        "description": "Describes the rollout plan of a prison which may or may not be rolled out"
       },
       "GetDlqResult": {
         "required": [
@@ -6461,53 +7051,6 @@
           }
         }
       },
-      "AppointmentCategorySummary": {
-        "required": [
-          "code",
-          "description"
-        ],
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string",
-            "description": "The NOMIS REFERENCE_CODES.CODE (DOMAIN = 'INT_SCH_RSN') value for mapping to NOMIS",
-            "example": "CHAP"
-          },
-          "description": {
-            "type": "string",
-            "description": "The description of the appointment category",
-            "example": "Chaplaincy"
-          }
-        },
-        "description": "\n  Summarises an appointment category for display purposes. Contains only properties needed to make additional API calls\n  and to display.\n  "
-      },
-      "AppointmentLocationSummary": {
-        "required": [
-          "description",
-          "id",
-          "prisonCode"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.",
-            "format": "int64",
-            "example": 27
-          },
-          "prisonCode": {
-            "type": "string",
-            "description": "\n    The NOMIS AGENCY_LOCATIONS.AGY_LOC_ID value for mapping to NOMIS.\n    ",
-            "example": "SKI"
-          },
-          "description": {
-            "type": "string",
-            "description": "The description of the appointment location. Mapped from AGENCY_INTERNAL_LOCATIONS.USER_DESC",
-            "example": "Chapel"
-          }
-        },
-        "description": "\n  Summarises an appointment location for display purposes. Contains only properties needed to make additional API calls\n  and to display. NOMIS is the current system of record for appointment locations and they are managed there.\n  "
-      },
       "AppointmentOccurrenceDetails": {
         "required": [
           "appointmentId",
@@ -6555,13 +7098,25 @@
             "format": "int32",
             "example": 3
           },
-          "category": {
-            "$ref": "#/components/schemas/AppointmentCategorySummary"
-          },
           "prisonCode": {
             "type": "string",
             "description": "\n    The NOMIS AGENCY_LOCATIONS.AGY_LOC_ID value for mapping to NOMIS.\n    Note, this property does not exist on the appointment occurrences and is therefore consistent across all occurrences\n    ",
             "example": "SKI"
+          },
+          "prisoners": {
+            "type": "array",
+            "description": "\n    Summary of the prisoner or prisoners allocated to this appointment occurrence. Prisoners are allocated at the\n    occurrence level to allow for per occurrence allocation changes.\n    ",
+            "items": {
+              "$ref": "#/components/schemas/PrisonerSummary"
+            }
+          },
+          "category": {
+            "$ref": "#/components/schemas/AppointmentCategorySummary"
+          },
+          "appointmentDescription": {
+            "type": "string",
+            "description": "\n    Free text description for an appointment.  This is used to add more context to the appointment category.\n    ",
+            "example": "Meeting with the governor"
           },
           "internalLocation": {
             "$ref": "#/components/schemas/AppointmentLocationSummary"
@@ -6621,13 +7176,6 @@
           },
           "updatedBy": {
             "$ref": "#/components/schemas/UserSummary"
-          },
-          "prisoners": {
-            "type": "array",
-            "description": "\n    Summary of the prisoner or prisoners allocated to this appointment occurrence. Prisoners are allocated at the\n    occurrence level to allow for per occurrence allocation changes.\n    ",
-            "items": {
-              "$ref": "#/components/schemas/PrisonerSummary"
-            }
           }
         },
         "description": "\n  Details of a specific appointment occurrence. Will contain copies of the parent appointment's properties unless they\n  have been changed on this appointment occurrence. Contains only properties needed to make additional API calls\n  and to display.\n  "
@@ -6716,6 +7264,7 @@
           "appointmentId",
           "appointmentOccurrenceAllocationId",
           "appointmentOccurrenceId",
+          "appointmentType",
           "bookingId",
           "categoryCode",
           "created",
@@ -6752,26 +7301,19 @@
             "format": "int64",
             "example": 123456
           },
-          "categoryCode": {
+          "appointmentType": {
             "type": "string",
-            "description": "The NOMIS REFERENCE_CODES.CODE (DOMAIN = 'INT_SCH_RSN') value for mapping to NOMIS",
-            "example": "CHAP"
+            "description": "The appointment type (INDIVIDUAL or GROUP)",
+            "example": "INDIVIDUAL",
+            "enum": [
+              "INDIVIDUAL",
+              "GROUP"
+            ]
           },
           "prisonCode": {
             "type": "string",
             "description": "The NOMIS AGENCY_LOCATIONS.AGY_LOC_ID value for mapping to NOMIS",
             "example": "SKI"
-          },
-          "internalLocationId": {
-            "type": "integer",
-            "description": "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
-            "format": "int64",
-            "example": 123
-          },
-          "inCell": {
-            "type": "boolean",
-            "description": "\n    Flag to indicate if the location of the appointment is in cell rather than an internal prison location.\n    Internal location id should be null if in cell = true\n    ",
-            "example": false
           },
           "prisonerNumber": {
             "type": "string",
@@ -6783,6 +7325,27 @@
             "description": "The NOMIS OFFENDER_BOOKINGS.OFFENDER_BOOK_ID value for mapping to a prisoner booking record in NOMIS",
             "format": "int64",
             "example": 456
+          },
+          "categoryCode": {
+            "type": "string",
+            "description": "The NOMIS REFERENCE_CODES.CODE (DOMAIN = 'INT_SCH_RSN') value for mapping to NOMIS",
+            "example": "CHAP"
+          },
+          "appointmentDescription": {
+            "type": "string",
+            "description": "\n    Free text description for an appointment.  This is used to add more context to the appointment category.\n    ",
+            "example": "Meeting with the governor"
+          },
+          "internalLocationId": {
+            "type": "integer",
+            "description": "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
+            "format": "int64",
+            "example": 123
+          },
+          "inCell": {
+            "type": "boolean",
+            "description": "\n    Flag to indicate if the location of the appointment is in cell rather than an internal prison location.\n    Internal location id should be null if in cell = true\n    ",
+            "example": false
           },
           "appointmentDate": {
             "type": "string",
@@ -6861,13 +7424,25 @@
               "GROUP"
             ]
           },
-          "category": {
-            "$ref": "#/components/schemas/AppointmentCategorySummary"
-          },
           "prisonCode": {
             "type": "string",
             "description": "\n    The NOMIS AGENCY_LOCATIONS.AGY_LOC_ID value for mapping to NOMIS.\n    Note, this property does not exist on the appointment occurrences and is therefore consistent across all occurrences\n    ",
             "example": "SKI"
+          },
+          "prisoners": {
+            "type": "array",
+            "description": "\n    Summary of the prisoner or prisoners allocated to the first future occurrence (or most recent past occurrence if all\n    occurrences are in the past) of this appointment. Prisoners are allocated at the occurrence level to allow for per\n    occurrence allocation changes. The occurrence summary contains a count of allocated prisoners rather than the full\n    list as the expected usage is to show a summary of the occurrences then a link to display the full occurrence details.\n    ",
+            "items": {
+              "$ref": "#/components/schemas/PrisonerSummary"
+            }
+          },
+          "category": {
+            "$ref": "#/components/schemas/AppointmentCategorySummary"
+          },
+          "appointmentDescription": {
+            "type": "string",
+            "description": "\n    Free text description for an appointment.  This is used to add more context to the appointment category.\n    ",
+            "example": "Meeting with the governor"
           },
           "internalLocation": {
             "$ref": "#/components/schemas/AppointmentLocationSummary"
@@ -6924,13 +7499,6 @@
             "items": {
               "$ref": "#/components/schemas/AppointmentOccurrenceSummary"
             }
-          },
-          "prisoners": {
-            "type": "array",
-            "description": "\n    Summary of the prisoner or prisoners allocated to the first future occurrence (or most recent past occurrence if all\n    occurrences are in the past) of this appointment. Prisoners are allocated at the occurrence level to allow for per\n    occurrence allocation changes. The occurrence summary contains a count of allocated prisoners rather than the full\n    list as the expected usage is to show a summary of the occurrences then a link to display the full occurrence details.\n    ",
-            "items": {
-              "$ref": "#/components/schemas/PrisonerSummary"
-            }
           }
         },
         "description": "\n  The top level appointment details for display purposes. Contains only properties needed to make additional API calls\n  and to display.\n  "
@@ -6958,6 +7526,12 @@
           "sequenceNumber": {
             "type": "integer",
             "description": "The sequence number of this appointment occurrence within the recurring appointment series",
+            "format": "int32",
+            "example": 3
+          },
+          "prisonerCount": {
+            "type": "integer",
+            "description": "\n    The number of prisoners allocated to this appointment occurrence\n    ",
             "format": "int32",
             "example": 3
           },
@@ -7008,12 +7582,6 @@
           },
           "updatedBy": {
             "$ref": "#/components/schemas/UserSummary"
-          },
-          "prisonerCount": {
-            "type": "integer",
-            "description": "\n    The number of prisoners allocated to this appointment occurrence\n    ",
-            "format": "int32",
-            "example": 3
           }
         },
         "description": "\n  Summarises a specific appointment occurrence. Will contain copies of the parent appointment's properties unless they\n  have been changed on this appointment occurrence.\n  "
