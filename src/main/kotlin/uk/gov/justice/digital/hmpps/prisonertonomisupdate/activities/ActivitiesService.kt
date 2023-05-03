@@ -97,7 +97,7 @@ class ActivitiesService(
       capacity = capacity,
       payRates = pay.toPayRateRequests(),
       description = description,
-      minimumIncentiveLevelCode = activity.minimumIncentiveLevel,
+      minimumIncentiveLevelCode = activity.minimumIncentiveNomisCode,
       payPerSession = toUpdatePayPerSession(),
       scheduleRules = slots.toScheduleRuleRequests(),
       excludeBankHolidays = !runsOnBankHoliday,
