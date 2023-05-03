@@ -327,7 +327,7 @@ internal class NomisApiServiceTest {
         putRequestedFor(urlEqualTo("/activities/1"))
           .withRequestBody(matchingJsonPath("$.startDate", equalTo("2023-02-01")))
           .withRequestBody(matchingJsonPath("$.capacity", equalTo("123")))
-          .withRequestBody(matchingJsonPath("$.description", equalTo("activity updated")))
+          .withRequestBody(matchingJsonPath("$.description", equalTo("updated activity")))
           .withRequestBody(matchingJsonPath("$.minimumIncentiveLevelCode", equalTo("STD")))
           .withRequestBody(matchingJsonPath("$.payPerSession", equalTo("F")))
           .withRequestBody(matchingJsonPath("$.excludeBankHolidays", equalTo("true")))
