@@ -75,7 +75,8 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
         WireMock.putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/allocations"))
           .withRequestBody(matchingJsonPath("bookingId", equalTo("$NOMIS_BOOKING_ID")))
           .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-13")))
-          .withRequestBody(matchingJsonPath("endReason", equalTo("END"))),
+          .withRequestBody(matchingJsonPath("endReason", equalTo("PRG_END")))
+          .withRequestBody(matchingJsonPath("endComment", equalTo("End date reached"))),
       )
     }
   }
@@ -98,7 +99,7 @@ fun buildApiAllocationDtoJsonResponse(id: Long = ALLOCATION_ID): String {
       "nomisPayBand": 7,
       "prisonCode": "MDI"
     },
-    "deallocatedReason": "END",
+    "deallocatedReason": "End date reached",
     "scheduleDescription" : "description",
     "activitySummary" : "summary"
   }

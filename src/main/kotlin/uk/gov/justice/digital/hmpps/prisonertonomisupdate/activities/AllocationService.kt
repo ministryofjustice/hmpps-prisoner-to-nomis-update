@@ -67,8 +67,10 @@ class AllocationService(
               UpdateAllocationRequest(
                 bookingId = allocation.bookingId!!,
                 endDate = allocation.endDate!!,
-                endReason = allocation.deallocatedReason, // TODO SDIT-421 probably will need a mapping
-                // endComment = allocation.?, // TODO SDIT-421 could put something useful in here
+                // TODO SDIT-421 probably will need a mapping
+                // Currently (22/3/2023) the only applicable reason is that the end date has been reached.
+                endReason = "PRG_END",
+                endComment = allocation.deallocatedReason,
               ),
             ).also {
               telemetryMap["nomisAllocationId"] = it.offenderProgramReferenceId.toString()
