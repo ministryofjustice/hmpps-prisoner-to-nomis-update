@@ -23,12 +23,11 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.GetAttendanceStatusRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SchedulesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.time.LocalDate
@@ -427,76 +426,38 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
-  inner class Allocation {
+  inner class UpsertAllocation {
 
     @Test
     fun `should call nomis api with OAuth2 token`() = runTest {
-      NomisApiExtension.nomisApi.stubAllocationCreate(12)
+      NomisApiExtension.nomisApi.stubAllocationUpsert(12)
 
-      nomisApiService.createAllocation(12, newAllocation())
+      nomisApiService.upsertAllocation(12, upsertAllocation())
 
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/activities/12/allocations"))
+        putRequestedFor(urlEqualTo("/activities/12/allocation"))
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
     @Test
-    fun `will post data to nomis api`() = runTest {
-      NomisApiExtension.nomisApi.stubAllocationCreate(12)
+    fun `will send data to nomis api`() = runTest {
+      NomisApiExtension.nomisApi.stubAllocationUpsert(12)
 
-      nomisApiService.createAllocation(12, newAllocation())
+      nomisApiService.upsertAllocation(12, upsertAllocation())
 
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/activities/12/allocations"))
+        putRequestedFor(urlEqualTo("/activities/12/allocation"))
           .withRequestBody(matchingJsonPath("$.bookingId", equalTo("456"))),
       )
     }
 
     @Test
     fun `when any error response is received an exception is thrown`() = runTest {
-      NomisApiExtension.nomisApi.stubAllocationCreateWithError(12, 400)
+      NomisApiExtension.nomisApi.stubAllocationUpsertWithError(12, 400)
 
       assertThrows<BadRequest> {
-        nomisApiService.createAllocation(12, newAllocation())
-      }
-    }
-  }
-
-  @Nested
-  inner class Deallocation {
-
-    @Test
-    fun `should call nomis api with OAuth2 token`() = runTest {
-      NomisApiExtension.nomisApi.stubDeallocate(12)
-
-      nomisApiService.deallocate(12, newDeallocation())
-
-      NomisApiExtension.nomisApi.verify(
-        putRequestedFor(urlEqualTo("/activities/12/allocations"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE")),
-      )
-    }
-
-    @Test
-    fun `will post data to nomis api`() = runTest {
-      NomisApiExtension.nomisApi.stubDeallocate(12)
-
-      nomisApiService.deallocate(12, newDeallocation())
-
-      NomisApiExtension.nomisApi.verify(
-        putRequestedFor(urlEqualTo("/activities/12/allocations"))
-          .withRequestBody(matchingJsonPath("$.endDate", equalTo("2023-01-21")))
-          .withRequestBody(matchingJsonPath("$.endReason", equalTo("REASON"))),
-      )
-    }
-
-    @Test
-    fun `when any error response is received an exception is thrown`() = runTest {
-      NomisApiExtension.nomisApi.stubDeallocateWithError(12, 400)
-
-      assertThrows<BadRequest> {
-        nomisApiService.deallocate(12, newDeallocation())
+        nomisApiService.upsertAllocation(12, upsertAllocation())
       }
     }
   }
@@ -1098,17 +1059,11 @@ fun updateScheduledInstance() =
     cancelled = true,
   )
 
-fun newAllocation() = CreateAllocationRequest(
+fun upsertAllocation() = UpsertAllocationRequest(
   bookingId = 456L,
   startDate = LocalDate.parse("2023-01-20"),
   endDate = LocalDate.parse("2023-01-21"),
   payBandCode = "PAY",
-)
-
-fun newDeallocation() = UpdateAllocationRequest(
-  bookingId = 456L,
-  endDate = LocalDate.parse("2023-01-21"),
-  endReason = "REASON",
 )
 
 private fun newAttendance() = UpsertAttendanceRequest(

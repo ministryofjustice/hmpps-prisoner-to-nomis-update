@@ -17,7 +17,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.PrisonPayBand
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAllocationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -31,10 +31,10 @@ class AllocationServiceTest {
   private val allocationService = AllocationService(activitiesApiService, nomisApiService, mappingService, telemetryClient)
 
   @Nested
-  inner class Allocate {
+  inner class UpsertAllocation {
 
     @Test
-    fun `should log an allocation event`() = runTest {
+    fun `should publish telemetry for an allocation event`() = runTest {
       whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
       whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
@@ -43,11 +43,11 @@ class AllocationServiceTest {
           mappingType = "ACTIVITY_CREATED",
         ),
       )
-      whenever(nomisApiService.createAllocation(eq(NOMIS_CRS_ACTY_ID), any())).thenReturn(
-        CreateAllocationResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID),
+      whenever(nomisApiService.upsertAllocation(eq(NOMIS_CRS_ACTY_ID), any())).thenReturn(
+        UpsertAllocationResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID, created = true),
       )
 
-      allocationService.createAllocation(
+      allocationService.upsertAllocation(
         AllocationDomainEvent(
           eventType = "dummy",
           version = "1.0",
@@ -60,7 +60,7 @@ class AllocationServiceTest {
       )
 
       verify(telemetryClient).trackEvent(
-        eq("activity-allocation-create-success"),
+        eq("activity-allocation-success"),
         org.mockito.kotlin.check {
           assertThat(it["dpsAllocationId"]).isEqualTo("$ALLOCATION_ID")
           assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
@@ -72,7 +72,7 @@ class AllocationServiceTest {
     }
 
     @Test
-    fun `should log a creation failure`() = runTest {
+    fun `should publish telemetry for a failed allocation event`() = runTest {
       whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
       whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
@@ -81,11 +81,11 @@ class AllocationServiceTest {
           mappingType = "ACTIVITY_CREATED",
         ),
       )
-      whenever(nomisApiService.createAllocation(any(), any())).thenThrow(RuntimeException("test"))
+      whenever(nomisApiService.upsertAllocation(any(), any())).thenThrow(RuntimeException("test"))
 
       assertThat(
         assertThrows<RuntimeException> {
-          allocationService.createAllocation(
+          allocationService.upsertAllocation(
             AllocationDomainEvent(
               eventType = "dummy",
               version = "1.0",
@@ -100,88 +100,7 @@ class AllocationServiceTest {
       ).isEqualTo("test")
 
       verify(telemetryClient).trackEvent(
-        eq("activity-allocation-create-failed"),
-        org.mockito.kotlin.check {
-          assertThat(it["dpsAllocationId"]).isEqualTo("$ALLOCATION_ID")
-          assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-          assertThat(it["bookingId"]).isEqualTo("$NOMIS_BOOKING_ID")
-        },
-        isNull(),
-      )
-    }
-  }
-
-  @Nested
-  inner class Deallocate {
-
-    @Test
-    fun `should log an allocation event`() = runTest {
-      whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
-      whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
-        ActivityMappingDto(
-          nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
-          activityScheduleId = ACTIVITY_SCHEDULE_ID,
-          mappingType = "ACTIVITY_CREATED",
-        ),
-      )
-      whenever(nomisApiService.deallocate(eq(NOMIS_CRS_ACTY_ID), any())).thenReturn(
-        CreateAllocationResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID),
-      )
-
-      allocationService.deallocate(
-        AllocationDomainEvent(
-          eventType = "dummy",
-          version = "1.0",
-          description = "description",
-          occurredAt = LocalDateTime.now(),
-          additionalInformation = AllocationAdditionalInformation(
-            allocationId = ALLOCATION_ID,
-          ),
-        ),
-      )
-
-      verify(telemetryClient).trackEvent(
-        eq("activity-deallocate-success"),
-        org.mockito.kotlin.check {
-          assertThat(it["dpsAllocationId"]).isEqualTo("$ALLOCATION_ID")
-          assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-          assertThat(it["bookingId"]).isEqualTo("$NOMIS_BOOKING_ID")
-          assertThat(it["nomisAllocationId"]).isEqualTo("$OFFENDER_PROGRAM_REFERENCE_ID")
-        },
-        isNull(),
-      )
-    }
-
-    @Test
-    fun `should log a nomis failure`() = runTest {
-      whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
-      whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
-        ActivityMappingDto(
-          nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
-          activityScheduleId = ACTIVITY_SCHEDULE_ID,
-          mappingType = "ACTIVITY_CREATED",
-        ),
-      )
-      whenever(nomisApiService.deallocate(any(), any())).thenThrow(RuntimeException("test"))
-
-      assertThat(
-        assertThrows<RuntimeException> {
-          allocationService.deallocate(
-            AllocationDomainEvent(
-              eventType = "dummy",
-              version = "1.0",
-              description = "description",
-              occurredAt = LocalDateTime.now(),
-              additionalInformation = AllocationAdditionalInformation(
-                allocationId = ALLOCATION_ID,
-              ),
-            ),
-          )
-        }.message,
-      ).isEqualTo("test")
-
-      verify(telemetryClient).trackEvent(
-        eq("activity-deallocate-failed"),
+        eq("activity-allocation-failed"),
         org.mockito.kotlin.check {
           assertThat(it["dpsAllocationId"]).isEqualTo("$ALLOCATION_ID")
           assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
