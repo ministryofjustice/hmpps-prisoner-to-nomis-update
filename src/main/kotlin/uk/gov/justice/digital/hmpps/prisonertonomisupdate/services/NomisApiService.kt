@@ -21,15 +21,14 @@ import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAllocationRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAllocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.GetAttendanceStatusRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.GetAttendanceStatusResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SchedulesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceResponse
 import java.time.LocalDate
@@ -108,22 +107,12 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .awaitBody()
 
-  suspend fun createAllocation(
+  suspend fun upsertAllocation(
     courseActivityId: Long,
-    request: CreateAllocationRequest,
-  ): CreateAllocationResponse =
-    webClient.post()
-      .uri("/activities/$courseActivityId/allocations")
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
-
-  suspend fun deallocate(
-    courseActivityId: Long,
-    request: UpdateAllocationRequest,
-  ): CreateAllocationResponse =
+    request: UpsertAllocationRequest,
+  ): UpsertAllocationResponse =
     webClient.put()
-      .uri("/activities/$courseActivityId/allocations")
+      .uri("/activities/$courseActivityId/allocation")
       .bodyValue(request)
       .retrieve()
       .awaitBody()

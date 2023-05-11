@@ -2,11 +2,12 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAllocationRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAllocationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Service
 class AllocationService(
@@ -16,7 +17,9 @@ class AllocationService(
   private val telemetryClient: TelemetryClient,
 ) {
 
-  suspend fun createAllocation(allocationEvent: AllocationDomainEvent) {
+  private val humanTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
+  suspend fun upsertAllocation(allocationEvent: AllocationDomainEvent) {
     val telemetryMap = mutableMapOf(
       "dpsAllocationId" to allocationEvent.additionalInformation.allocationId.toString(),
     )
@@ -28,60 +31,33 @@ class AllocationService(
         mappingService.getMappingGivenActivityScheduleId(allocation.scheduleId)
           .also { telemetryMap["nomisCourseActivityId"] = it.nomisCourseActivityId.toString() }
           .let { mapping ->
-            nomisApiService.createAllocation(
+            nomisApiService.upsertAllocation(
               mapping.nomisCourseActivityId,
-              CreateAllocationRequest(
-                bookingId = allocation.bookingId!!,
-                startDate = allocation.startDate,
-                endDate = allocation.endDate,
-                payBandCode = allocation.prisonPayBand.nomisPayBand.toString(),
-              ),
+              toUpsertAllocationRequest(allocation),
             ).also {
               telemetryMap["nomisAllocationId"] = it.offenderProgramReferenceId.toString()
             }
           }
       }
     }.onSuccess {
-      telemetryClient.trackEvent("activity-allocation-create-success", telemetryMap)
+      telemetryClient.trackEvent("activity-allocation-success", telemetryMap)
     }.onFailure { e ->
-      telemetryClient.trackEvent("activity-allocation-create-failed", telemetryMap)
+      telemetryClient.trackEvent("activity-allocation-failed", telemetryMap)
       throw e
     }
   }
 
-  suspend fun deallocate(allocationEvent: AllocationDomainEvent) {
-    val telemetryMap = mutableMapOf(
-      "dpsAllocationId" to allocationEvent.additionalInformation.allocationId.toString(),
+  private fun toUpsertAllocationRequest(allocation: Allocation) =
+    UpsertAllocationRequest(
+      bookingId = allocation.bookingId!!, // TODO SDIT-438 this should not be nullable - waiting for fix to Activities endpoint
+      payBandCode = allocation.prisonPayBand.nomisPayBand.toString(),
+      startDate = allocation.startDate,
+      endDate = allocation.endDate,
+      endReason = "PRG_END", // TODO SDIT-438 waiting for the Activities team to provide reason codes that we can map to Nomis reason codes (reference coe domain PS_END_RSN)
+      endComment = "Deallocated in DPS by ${allocation.deallocatedBy} at ${allocation.deallocatedTime?.format(humanTimeFormat)}",
+      suspended = false, // TODO SDIT-438 waiting for the Activities team to expose the suspended details via their API
+      suspendedComment = null,
     )
-
-    runCatching {
-      activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
-        telemetryMap["offenderNo"] = allocation.prisonerNumber
-        telemetryMap["bookingId"] = allocation.bookingId.toString()
-        telemetryMap["dpsActivityScheduleId"] = allocation.scheduleId.toString()
-        mappingService.getMappingGivenActivityScheduleId(allocation.scheduleId)
-          .also { telemetryMap["nomisCourseActivityId"] = it.nomisCourseActivityId.toString() }
-          .let { mapping ->
-            nomisApiService.deallocate(
-              mapping.nomisCourseActivityId,
-              UpdateAllocationRequest(
-                bookingId = allocation.bookingId!!,
-                endDate = allocation.endDate!!,
-                endReason = allocation.deallocatedReason, // TODO SDIT-421 probably will need a mapping
-                // endComment = allocation.?, // TODO SDIT-421 could put something useful in here
-              ),
-            ).also {
-              telemetryMap["nomisAllocationId"] = it.offenderProgramReferenceId.toString()
-            }
-          }
-      }
-    }.onSuccess {
-      telemetryClient.trackEvent("activity-deallocate-success", telemetryMap)
-    }.onFailure { e ->
-      telemetryClient.trackEvent("activity-deallocate-failed", telemetryMap)
-      throw e
-    }
-  }
 }
 
 data class AllocationDomainEvent(

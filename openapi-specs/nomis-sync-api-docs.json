@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-04-27.3128.37431c5"
+    "version": "2023-05-10"
   },
   "servers": [
     {
@@ -1436,6 +1436,80 @@
           },
           "404": {
             "description": "The course activity does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/activities/{courseActivityId}/allocation": {
+      "put": {
+        "tags": [
+          "activities-resource"
+        ],
+        "summary": "Creates or Updates a prisoner's allocation to an activity",
+        "description": "Creates or updates a prisoner's allocation to an activity. Requires role NOMIS_ACTIVITIES",
+        "operationId": "upsertAllocation",
+        "parameters": [
+          {
+            "name": "courseActivityId",
+            "in": "path",
+            "description": "Course activity id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Course activity id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertAllocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpsertAllocationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "There was an error with the request, see the response for details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
             "content": {
               "application/json": {
                 "schema": {
@@ -3800,6 +3874,77 @@
         },
         "description": "OffenderProgramProfile creation response"
       },
+      "UpsertAllocationRequest": {
+        "required": [
+          "bookingId",
+          "payBandCode",
+          "startDate"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "Booking id of the prisoner",
+            "format": "int64",
+            "example": 1234567
+          },
+          "payBandCode": {
+            "type": "string",
+            "description": "The prisoner's pay band",
+            "example": "2"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Activity start date",
+            "format": "date",
+            "example": "2022-08-12"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Activity end date",
+            "format": "date",
+            "example": "2022-08-12"
+          },
+          "endReason": {
+            "type": "string",
+            "description": "Activity end reason (from domain PS_END_RSN)",
+            "example": "REL"
+          },
+          "endComment": {
+            "type": "string",
+            "description": "Activity end comment"
+          },
+          "suspended": {
+            "type": "boolean",
+            "description": "Offender is suspended from Activity?"
+          },
+          "suspendedComment": {
+            "type": "string",
+            "description": "Activity suspended comment"
+          }
+        },
+        "description": "Course activity create or update allocation request"
+      },
+      "UpsertAllocationResponse": {
+        "required": [
+          "created",
+          "offenderProgramReferenceId"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderProgramReferenceId": {
+            "type": "integer",
+            "description": "The created OffenderProgramProfile id",
+            "format": "int64",
+            "example": 12345678
+          },
+          "created": {
+            "type": "boolean",
+            "description": "Whether or not the allocation was created"
+          }
+        },
+        "description": "OffenderProgramProfile create/update response"
+      },
       "CreateVisitRequest": {
         "required": [
           "endTime",
@@ -4547,18 +4692,18 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
           },
-          "last": {
+          "first": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "last": {
+            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
@@ -4575,19 +4720,19 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageSize": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
           "paged": {
             "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -4737,18 +4882,18 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
           },
-          "last": {
+          "first": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "last": {
+            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
@@ -4878,18 +5023,18 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
           },
-          "last": {
+          "first": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "last": {
+            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
@@ -5019,18 +5164,18 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
           },
-          "last": {
+          "first": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "last": {
+            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
@@ -5084,18 +5229,18 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
           },
-          "last": {
+          "first": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "last": {
+            "type": "boolean"
           },
           "empty": {
             "type": "boolean"

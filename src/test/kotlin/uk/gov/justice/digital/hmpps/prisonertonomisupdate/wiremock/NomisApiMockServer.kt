@@ -234,42 +234,20 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubAllocationCreate(courseActivityId: Long) {
+  fun stubAllocationUpsert(courseActivityId: Long) {
     stubFor(
-      post("/activities/$courseActivityId/allocations").willReturn(
+      put("/activities/$courseActivityId/allocation").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody("""{ "offenderProgramReferenceId": 1234 }""")
-          .withStatus(201),
-      ),
-    )
-  }
-
-  fun stubAllocationCreateWithError(courseActivityId: Long, status: Int = 500) {
-    stubFor(
-      post("/activities/$courseActivityId/allocations").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(ERROR_RESPONSE)
-          .withStatus(status),
-      ),
-    )
-  }
-
-  fun stubDeallocate(courseActivityId: Long) {
-    stubFor(
-      put("/activities/$courseActivityId/allocations").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody("""{ "offenderProgramReferenceId": 1234 }""")
+          .withBody("""{ "offenderProgramReferenceId": 1234, "created": true }""")
           .withStatus(200),
       ),
     )
   }
 
-  fun stubDeallocateWithError(courseActivityId: Long, status: Int = 500) {
+  fun stubAllocationUpsertWithError(courseActivityId: Long, status: Int = 500) {
     stubFor(
-      put("/activities/$courseActivityId/allocations").willReturn(
+      put("/activities/$courseActivityId/allocation").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
