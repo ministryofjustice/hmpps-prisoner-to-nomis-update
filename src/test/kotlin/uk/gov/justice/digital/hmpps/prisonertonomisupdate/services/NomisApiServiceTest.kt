@@ -331,7 +331,8 @@ internal class NomisApiServiceTest {
           .withRequestBody(matchingJsonPath("$.payPerSession", equalTo("F")))
           .withRequestBody(matchingJsonPath("$.excludeBankHolidays", equalTo("true")))
           .withRequestBody(matchingJsonPath("$.endDate", equalTo("2023-02-10")))
-          .withRequestBody(matchingJsonPath("$.internalLocationId", equalTo("703000"))),
+          .withRequestBody(matchingJsonPath("$.internalLocationId", equalTo("703000")))
+          .withRequestBody(matchingJsonPath("$.programCode", equalTo("PROGRAM_SERVICE"))),
       )
     }
 
@@ -1044,6 +1045,7 @@ fun updateActivity() = UpdateActivityRequest(
   excludeBankHolidays = true,
   endDate = LocalDate.parse("2023-02-10"),
   internalLocationId = 703000,
+  programCode = "PROGRAM_SERVICE",
 )
 
 fun updateScheduleInstances() = listOf(

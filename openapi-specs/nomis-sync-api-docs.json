@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-05-10"
+    "version": "2023-05-12"
   },
   "servers": [
     {
@@ -1270,172 +1270,6 @@
           },
           "404": {
             "description": "The course schedule does not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/activities/{courseActivityId}/allocations": {
-      "put": {
-        "tags": [
-          "activities-resource"
-        ],
-        "summary": "Updates a prisoner's allocation to an activity",
-        "description": "Updates a prisoner's allocation to an activity. Requires role NOMIS_ACTIVITIES",
-        "operationId": "updateAllocation",
-        "parameters": [
-          {
-            "name": "courseActivityId",
-            "in": "path",
-            "description": "Course activity id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Course activity id"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateAllocationRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateAllocationResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "One or more of the following is true:<ul>\n        <li>the prisoner is not allocated to the course,</li>\n        <li>the course or prisoner does not exist,</li>\n        <li>the end date is missing or invalid,</li>\n        <li>the reason is invalid</li>\n        </ul>\n        ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The course activity or booking id do not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "activities-resource"
-        ],
-        "summary": "Allocates a prisoner to an activity",
-        "description": "Allocates a prisoner to an activity. Requires role NOMIS_ACTIVITIES",
-        "operationId": "createAllocation",
-        "parameters": [
-          {
-            "name": "courseActivityId",
-            "in": "path",
-            "description": "Course activity id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Course activity id"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateAllocationRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Offender program profile information with created id",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateAllocationResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "One or more of the following is true:<ul>\n        <li>the booking id does not exist,</li>\n        <li>the prisoner is already allocated,</li>\n        <li>the course is held at a different prison to the prisoner's location,</li>\n        <li>the pay band code does not exist for the given course activity.</li></ul>\n        ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The course activity does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -3683,6 +3517,7 @@
           "minimumIncentiveLevelCode",
           "payPerSession",
           "payRates",
+          "programCode",
           "scheduleRules",
           "startDate"
         ],
@@ -3745,6 +3580,10 @@
           "excludeBankHolidays": {
             "type": "boolean",
             "description": "Exclude bank holidays?"
+          },
+          "programCode": {
+            "type": "string",
+            "description": "Program Service code (from activity category)"
           }
         },
         "description": "Course activity update request"
@@ -3827,52 +3666,6 @@
           }
         },
         "description": "Course schedule update update response"
-      },
-      "UpdateAllocationRequest": {
-        "required": [
-          "bookingId",
-          "endDate"
-        ],
-        "type": "object",
-        "properties": {
-          "bookingId": {
-            "type": "integer",
-            "description": "Booking id of the prisoner currently allocated to the activity",
-            "format": "int64",
-            "example": 1234567
-          },
-          "endDate": {
-            "type": "string",
-            "description": "Activity end date",
-            "format": "date",
-            "example": "2022-08-12"
-          },
-          "endReason": {
-            "type": "string",
-            "description": "Activity end reason (from domain PS_END_RSN)",
-            "example": "REL"
-          },
-          "endComment": {
-            "type": "string",
-            "description": "Activity end comment"
-          }
-        },
-        "description": "Course activity update allocation request"
-      },
-      "CreateAllocationResponse": {
-        "required": [
-          "offenderProgramReferenceId"
-        ],
-        "type": "object",
-        "properties": {
-          "offenderProgramReferenceId": {
-            "type": "integer",
-            "description": "The created OffenderProgramProfile id",
-            "format": "int64",
-            "example": 12345678
-          }
-        },
-        "description": "OffenderProgramProfile creation response"
       },
       "UpsertAllocationRequest": {
         "required": [
@@ -4427,40 +4220,6 @@
         },
         "description": "Attendance status response"
       },
-      "CreateAllocationRequest": {
-        "required": [
-          "bookingId",
-          "payBandCode",
-          "startDate"
-        ],
-        "type": "object",
-        "properties": {
-          "bookingId": {
-            "type": "integer",
-            "description": "Booking id of the prisoner to be allocated to the activity",
-            "format": "int64",
-            "example": 1234567
-          },
-          "startDate": {
-            "type": "string",
-            "description": "Activity start date",
-            "format": "date",
-            "example": "2022-08-12"
-          },
-          "endDate": {
-            "type": "string",
-            "description": "Activity end date",
-            "format": "date",
-            "example": "2022-08-12"
-          },
-          "payBandCode": {
-            "type": "string",
-            "description": "The prisoner's pay band",
-            "example": "2"
-          }
-        },
-        "description": "Course activity allocation request"
-      },
       "CodeDescription": {
         "required": [
           "code",
@@ -4692,12 +4451,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -4720,12 +4479,6 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "paged": {
-            "type": "boolean"
-          },
-          "unpaged": {
-            "type": "boolean"
-          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
@@ -4733,6 +4486,12 @@
           "pageSize": {
             "type": "integer",
             "format": "int32"
+          },
+          "paged": {
+            "type": "boolean"
+          },
+          "unpaged": {
+            "type": "boolean"
           }
         }
       },
@@ -4882,12 +4641,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -5023,12 +4782,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -5164,12 +4923,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -5229,12 +4988,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
