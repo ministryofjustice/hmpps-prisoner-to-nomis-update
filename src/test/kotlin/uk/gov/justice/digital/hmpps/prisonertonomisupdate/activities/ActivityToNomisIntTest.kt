@@ -289,7 +289,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("scheduleRules[1].startTime", equalTo("13:45")))
             .withRequestBody(matchingJsonPath("scheduleRules[1].endTime", equalTo("14:25")))
             .withRequestBody(matchingJsonPath("scheduleRules[1].tuesday", equalTo("true")))
-            .withRequestBody(matchingJsonPath("scheduleRules[1].thursday", equalTo("false"))),
+            .withRequestBody(matchingJsonPath("scheduleRules[1].thursday", equalTo("false")))
+            .withRequestBody(matchingJsonPath("programCode", equalTo("LEISURE_SOCIAL"))),
         )
       }
       assertThat(awsSqsActivityDlqClient.countAllMessagesOnQueue(activityDlqUrl).get()).isEqualTo(0)

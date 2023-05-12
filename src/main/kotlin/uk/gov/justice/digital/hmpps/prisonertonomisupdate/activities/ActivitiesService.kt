@@ -81,7 +81,7 @@ class ActivitiesService(
       val activity = activitiesApiService.getActivity(activitySchedule.activity.id)
         .also { telemetryMap["dpsActivityId"] = it.id.toString() }
 
-      activitySchedule.toUpdateActivityRequest(activity.pay)
+      activitySchedule.toUpdateActivityRequest(activity.pay, activity.category.code)
         .also { nomisApiService.updateActivity(nomisCourseActivityId, it) }
     }.onSuccess {
       telemetryClient.trackEvent("activity-amend-success", telemetryMap, null)
@@ -91,7 +91,7 @@ class ActivitiesService(
     }
   }
 
-  private fun ActivitySchedule.toUpdateActivityRequest(pay: List<ActivityPay>) =
+  private fun ActivitySchedule.toUpdateActivityRequest(pay: List<ActivityPay>, categoryCode: String) =
     UpdateActivityRequest(
       startDate = startDate,
       capacity = capacity,
@@ -103,6 +103,7 @@ class ActivitiesService(
       excludeBankHolidays = !runsOnBankHoliday,
       endDate = endDate,
       internalLocationId = internalLocation?.id?.toLong(),
+      programCode = categoryCode,
     )
 
   private fun toCreateActivityRequest(schedule: ActivitySchedule, activity: Activity): CreateActivityRequest {
