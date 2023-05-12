@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.aCTIVE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.ACTIVE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension.Companion.activitiesApi
 import java.time.LocalDate
@@ -529,7 +529,7 @@ internal class ActivitiesApiServiceTest {
       assertThat(allocation.deallocatedTime).isEqualTo(LocalDateTime.of(2023, 3, 17, 10, 35, 19, 136000000))
       assertThat(allocation.deallocatedBy).isEqualTo("Mrs Blogs")
       assertThat(allocation.deallocatedReason).isEqualTo("Not attending regularly")
-      assertThat(allocation.status).isEqualTo(aCTIVE)
+      assertThat(allocation.status).isEqualTo(ACTIVE)
     }
 
     @Test

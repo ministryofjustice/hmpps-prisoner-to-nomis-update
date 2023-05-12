@@ -75,7 +75,8 @@ tasks.register("buildActivityApiModel", GenerateTask::class) {
   configOptions.set(
     mapOf(
       "dateLibrary" to "java8-localdatetime",
-      "serializationLibrary" to "jackson"
+      "serializationLibrary" to "jackson",
+      "enumPropertyNaming" to "original"
     )
   )
   globalProperties.set(
@@ -95,7 +96,8 @@ tasks.register("buildNomisSyncApiModel", GenerateTask::class) {
   configOptions.set(
     mapOf(
       "dateLibrary" to "java8-localdatetime",
-      "serializationLibrary" to "jackson"
+      "serializationLibrary" to "jackson",
+      "enumPropertyNaming" to "original"
     )
   )
   globalProperties.set(

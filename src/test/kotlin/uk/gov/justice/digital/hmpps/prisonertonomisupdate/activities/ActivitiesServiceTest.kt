@@ -393,7 +393,7 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
       description = "description",
     ),
     riskLevel = "high",
-    payPerSession = ActivityLite.PayPerSession.h,
+    payPerSession = ActivityLite.PayPerSession.H,
     minimumIncentiveLevel = "Basic",
     minimumIncentiveNomisCode = "BAS",
     minimumEducationLevel = listOf(
@@ -424,7 +424,7 @@ private fun newActivity(): Activity = Activity(
     name = "Category",
     description = "description",
   ),
-  payPerSession = Activity.PayPerSession.h,
+  payPerSession = Activity.PayPerSession.H,
   eligibilityRules = emptyList(),
   schedules = emptyList(),
   waitingList = emptyList(),

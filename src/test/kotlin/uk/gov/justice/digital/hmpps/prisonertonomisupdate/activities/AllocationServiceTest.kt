@@ -16,6 +16,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.ACTIVE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.PrisonPayBand
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -124,6 +125,6 @@ private fun newAllocation(): Allocation {
     scheduleDescription = "description",
     scheduleId = ACTIVITY_SCHEDULE_ID,
     isUnemployment = false,
-    status = Allocation.Status.aCTIVE,
+    status = ACTIVE,
   )
 }

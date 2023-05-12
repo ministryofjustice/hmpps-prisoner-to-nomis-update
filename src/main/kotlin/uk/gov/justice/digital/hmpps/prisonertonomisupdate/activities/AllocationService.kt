@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.eNDED
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.AUTO_SUSPENDED
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.ENDED
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.SUSPENDED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -61,17 +63,16 @@ class AllocationService(
     )
 
   private fun getEndReason(status: Allocation.Status) =
-    if (status == eNDED) "PRG_END" else null // TODO SDIT-438 waiting for the Activities team to provide reason codes that we can map to Nomis reason codes (reference coe domain PS_END_RSN)
+    if (status == ENDED) "PRG_END" else null // TODO SDIT-438 waiting for the Activities team to provide reason codes that we can map to Nomis reason codes (reference code domain PS_END_RSN)
 
   private fun getEndComment(status: Allocation.Status, by: String?, time: LocalDateTime?, reason: String?) =
-    if (status == eNDED) {
+    if (status == ENDED) {
       "Deallocated in DPS by $by at ${time?.format(humanTimeFormat)} for reason $reason"
     } else {
       null
     }
 
-  private fun isSuspended(status: Allocation.Status) =
-    listOf(Allocation.Status.sUSPENDED, Allocation.Status.aUTOSUSPENDED).contains(status)
+  private fun isSuspended(status: Allocation.Status) = status in listOf(SUSPENDED, AUTO_SUSPENDED)
 
   private fun getSuspendedComment(status: Allocation.Status, by: String?, time: LocalDateTime?, reason: String?) =
     if (isSuspended(status)) {

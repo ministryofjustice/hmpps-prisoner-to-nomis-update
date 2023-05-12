@@ -337,7 +337,7 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
       description = "description",
     ),
     riskLevel = "high",
-    payPerSession = ActivityLite.PayPerSession.h,
+    payPerSession = ActivityLite.PayPerSession.H,
     minimumIncentiveLevel = "Basic",
     minimumIncentiveNomisCode = "BAS",
     minimumEducationLevel = listOf(
@@ -378,7 +378,7 @@ private fun newScheduledInstance() = ActivityScheduleInstance(
       inCell = false,
       pieceWork = false,
       outsideWork = false,
-      payPerSession = ActivityLite.PayPerSession.h,
+      payPerSession = ActivityLite.PayPerSession.H,
       summary = "test",
       riskLevel = "risk",
       minimumIncentiveNomisCode = "A",
