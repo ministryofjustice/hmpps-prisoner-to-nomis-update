@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.ACTIVE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension.Companion.activitiesApi
 import java.time.LocalDate
@@ -80,6 +81,7 @@ internal class ActivitiesApiServiceTest {
           {
             "id": 123456,
             "prisonerNumber": "A1234AA",
+            "bookingId": 10001,
             "activitySummary": "string",
             "scheduleDescription": "string",
             "prisonPayBand": {
@@ -96,7 +98,8 @@ internal class ActivitiesApiServiceTest {
             "allocatedBy": "Mr Blogs",
             "deallocatedTime": "2022-12-30T14:03:06",
             "deallocatedBy": "Mrs Blogs",
-            "deallocatedReason": "Not attending regularly"
+            "deallocatedReason": "Not attending regularly",
+            "status": "ACTIVE"
           }
         ],
         "description": "Monday AM Houseblock 3",
@@ -284,6 +287,7 @@ internal class ActivitiesApiServiceTest {
             {
               "id": 123456,
               "prisonerNumber": "A1234AA",
+              "bookingId": 10001,
               "activitySummary": "string",
               "scheduleDescription": "string",
               "prisonPayBand": {
@@ -300,7 +304,8 @@ internal class ActivitiesApiServiceTest {
               "allocatedBy": "Mr Blogs",
               "deallocatedTime": "2022-12-30T16:09:11.127Z",
               "deallocatedBy": "Mrs Blogs",
-              "deallocatedReason": "Not attending regularly"
+              "deallocatedReason": "Not attending regularly",
+              "status": "ACTIVE"
             }
           ],
           "description": "Monday AM Houseblock 3",
@@ -486,7 +491,8 @@ internal class ActivitiesApiServiceTest {
             "allocatedBy": "Mr Blogs",
             "deallocatedTime": "2023-03-17T10:35:19.136Z",
             "deallocatedBy": "Mrs Blogs",
-            "deallocatedReason": "Not attending regularly"
+            "deallocatedReason": "Not attending regularly",
+            "status": "ACTIVE"
           }
         """.trimIndent(),
       )
@@ -522,7 +528,8 @@ internal class ActivitiesApiServiceTest {
       assertThat(allocation.allocatedBy).isEqualTo("Mr Blogs")
       assertThat(allocation.deallocatedTime).isEqualTo(LocalDateTime.of(2023, 3, 17, 10, 35, 19, 136000000))
       assertThat(allocation.deallocatedBy).isEqualTo("Mrs Blogs")
-      assertThat(allocation.deallocatedReason).isEqualTo("Not attending regularly") // TODO SDIT-421 Do we need to receive a code that we can map?
+      assertThat(allocation.deallocatedReason).isEqualTo("Not attending regularly")
+      assertThat(allocation.status).isEqualTo(ACTIVE)
     }
 
     @Test
