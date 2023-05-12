@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.eNDED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -49,15 +50,35 @@ class AllocationService(
 
   private fun toUpsertAllocationRequest(allocation: Allocation) =
     UpsertAllocationRequest(
-      bookingId = allocation.bookingId!!, // TODO SDIT-438 this should not be nullable - waiting for fix to Activities endpoint
+      bookingId = allocation.bookingId,
       payBandCode = allocation.prisonPayBand.nomisPayBand.toString(),
       startDate = allocation.startDate,
       endDate = allocation.endDate,
-      endReason = "PRG_END", // TODO SDIT-438 waiting for the Activities team to provide reason codes that we can map to Nomis reason codes (reference coe domain PS_END_RSN)
-      endComment = "Deallocated in DPS by ${allocation.deallocatedBy} at ${allocation.deallocatedTime?.format(humanTimeFormat)}",
-      suspended = false, // TODO SDIT-438 waiting for the Activities team to expose the suspended details via their API
-      suspendedComment = null,
+      endReason = getEndReason(allocation.status),
+      endComment = getEndComment(allocation.status, allocation.deallocatedBy, allocation.deallocatedTime, allocation.deallocatedReason),
+      suspended = isSuspended(allocation.status),
+      suspendedComment = getSuspendedComment(allocation.status, allocation.suspendedBy, allocation.suspendedTime, allocation.suspendedReason),
     )
+
+  private fun getEndReason(status: Allocation.Status) =
+    if (status == eNDED) "PRG_END" else null // TODO SDIT-438 waiting for the Activities team to provide reason codes that we can map to Nomis reason codes (reference coe domain PS_END_RSN)
+
+  private fun getEndComment(status: Allocation.Status, by: String?, time: LocalDateTime?, reason: String?) =
+    if (status == eNDED) {
+      "Deallocated in DPS by $by at ${time?.format(humanTimeFormat)} for reason $reason"
+    } else {
+      null
+    }
+
+  private fun isSuspended(status: Allocation.Status) =
+    listOf(Allocation.Status.sUSPENDED, Allocation.Status.aUTOSUSPENDED).contains(status)
+
+  private fun getSuspendedComment(status: Allocation.Status, by: String?, time: LocalDateTime?, reason: String?) =
+    if (isSuspended(status)) {
+      "Suspended in DPS by $by at ${time?.format(humanTimeFormat)} for reason $reason"
+    } else {
+      null
+    }
 }
 
 data class AllocationDomainEvent(

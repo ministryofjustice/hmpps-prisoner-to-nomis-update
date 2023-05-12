@@ -53,7 +53,7 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
   inner class DeallocatePrisoner {
     @Test
     fun `will consume an allocation amended message`() {
-      ActivitiesApiExtension.activitiesApi.stubGetAllocation(ALLOCATION_ID, buildApiAllocationAmendedDtoJsonResponse())
+      ActivitiesApiExtension.activitiesApi.stubGetAllocation(ALLOCATION_ID, buildApiAllocationDeallocatedJsonResponse())
       MappingExtension.mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
       NomisApiExtension.nomisApi.stubAllocationUpsert(NOMIS_CRS_ACTY_ID)
 
@@ -63,7 +63,7 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
           .messageAttributes(
             mapOf(
               "eventType" to MessageAttributeValue.builder().dataType("String")
-                .stringValue("activities.prisoner.deallocated").build(),
+                .stringValue("activities.prisoner.allocation-amended").build(),
             ),
           ).build(),
       ).get()
@@ -77,8 +77,37 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-13")))
           .withRequestBody(matchingJsonPath("payBandCode", equalTo("7")))
           .withRequestBody(matchingJsonPath("endReason", equalTo("PRG_END")))
-          .withRequestBody(matchingJsonPath("endComment", equalTo("Deallocated in DPS by ANOTHER_USER at 2023-01-13 18:49:04")))
+          .withRequestBody(matchingJsonPath("endComment", equalTo("Deallocated in DPS by ANOTHER_USER at 2023-01-13 18:49:04 for reason END")))
           .withRequestBody(matchingJsonPath("suspended", equalTo("false"))),
+      )
+    }
+  }
+
+  @Nested
+  inner class SuspendPrisoner {
+    @Test
+    fun `will consume an allocation amended message`() {
+      ActivitiesApiExtension.activitiesApi.stubGetAllocation(ALLOCATION_ID, buildApiAllocationSuspendedJsonResponse())
+      MappingExtension.mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      NomisApiExtension.nomisApi.stubAllocationUpsert(NOMIS_CRS_ACTY_ID)
+
+      awsSnsClient.publish(
+        PublishRequest.builder().topicArn(topicArn)
+          .message(allocationMessagePayload("activities.prisoner.allocation-amended", ACTIVITY_SCHEDULE_ID, ALLOCATION_ID))
+          .messageAttributes(
+            mapOf(
+              "eventType" to MessageAttributeValue.builder().dataType("String")
+                .stringValue("activities.prisoner.allocation-amended").build(),
+            ),
+          ).build(),
+      ).get()
+
+      await untilCallTo { ActivitiesApiExtension.activitiesApi.getCountFor("/allocations/id/$ALLOCATION_ID") } matches { it == 1 }
+      await untilCallTo { NomisApiExtension.nomisApi.putCountFor("/activities/$NOMIS_CRS_ACTY_ID/allocation") } matches { it == 1 }
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/allocation"))
+          .withRequestBody(matchingJsonPath("suspended", equalTo("true")))
+          .withRequestBody(matchingJsonPath("suspendedComment", equalTo("Suspended in DPS by SUSPEND_USER at 2023-01-13 18:49:04 for reason HOSPITAL"))),
       )
     }
   }
@@ -103,12 +132,13 @@ fun buildApiAllocationDtoJsonResponse(id: Long = ALLOCATION_ID): String {
     "allocatedBy": "SOME_USER",
     "allocatedTime": "2023-01-10T14:46:05.849Z",
     "scheduleDescription" : "description",
-    "activitySummary" : "summary"
+    "activitySummary" : "summary",
+    "status": "ACTIVE"
   }
   """.trimIndent()
 }
 
-fun buildApiAllocationAmendedDtoJsonResponse(id: Long = ALLOCATION_ID): String {
+fun buildApiAllocationDeallocatedJsonResponse(id: Long = ALLOCATION_ID): String {
   return """
   {
     "id": $id,
@@ -131,7 +161,36 @@ fun buildApiAllocationAmendedDtoJsonResponse(id: Long = ALLOCATION_ID): String {
     "deallocatedReason": "END",
     "deallocatedTime": "2023-01-13T18:49:04.837Z",
     "scheduleDescription" : "description",
-    "activitySummary" : "summary"
+    "activitySummary" : "summary",
+    "status": "ENDED"
+  }
+  """.trimIndent()
+}
+
+fun buildApiAllocationSuspendedJsonResponse(id: Long = ALLOCATION_ID): String {
+  return """
+  {
+    "id": $id,
+    "prisonerNumber": "A1234AA",
+    "bookingId": $NOMIS_BOOKING_ID,
+    "scheduleId": $ACTIVITY_SCHEDULE_ID,
+    "startDate": "2023-01-12",
+    "prisonPayBand": {
+      "id": 1,
+      "displaySequence": 1,
+      "alias": "seven",
+      "description": "seven",
+      "nomisPayBand": 7,
+      "prisonCode": "MDI"
+    },
+    "allocatedBy": "SOME_USER",
+    "allocatedTime": "2023-01-10T14:46:05.849Z",
+    "suspendedBy": "SUSPEND_USER",
+    "suspendedReason": "HOSPITAL",
+    "suspendedTime": "2023-01-13T18:49:04.837Z",
+    "scheduleDescription" : "description",
+    "activitySummary" : "summary",
+    "status": "SUSPENDED"
   }
   """.trimIndent()
 }

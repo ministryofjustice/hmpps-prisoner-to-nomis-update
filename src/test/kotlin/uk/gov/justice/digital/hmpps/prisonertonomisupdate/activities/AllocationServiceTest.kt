@@ -124,5 +124,6 @@ private fun newAllocation(): Allocation {
     scheduleDescription = "description",
     scheduleId = ACTIVITY_SCHEDULE_ID,
     isUnemployment = false,
+    status = Allocation.Status.aCTIVE,
   )
 }
