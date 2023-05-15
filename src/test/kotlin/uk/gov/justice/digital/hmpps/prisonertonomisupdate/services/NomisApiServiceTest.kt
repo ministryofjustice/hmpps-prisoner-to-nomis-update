@@ -22,11 +22,10 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourseScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.GetAttendanceStatusRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SchedulesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
@@ -342,46 +341,6 @@ internal class NomisApiServiceTest {
 
       assertThrows<ServiceUnavailable> {
         nomisApiService.updateActivity(1L, updateActivity())
-      }
-    }
-  }
-
-  @Nested
-  inner class UpdateScheduleInstances {
-
-    @Test
-    fun `should call nomis api with OAuth2 token`() = runTest {
-      NomisApiExtension.nomisApi.stubScheduleInstancesUpdate(1L)
-
-      nomisApiService.updateScheduleInstances(1L, updateScheduleInstances())
-
-      NomisApiExtension.nomisApi.verify(
-        putRequestedFor(urlEqualTo("/activities/1/schedules"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE")),
-      )
-    }
-
-    @Test
-    fun `will put data to nomis api`() = runTest {
-      NomisApiExtension.nomisApi.stubScheduleInstancesUpdate(1L)
-
-      nomisApiService.updateScheduleInstances(1L, updateScheduleInstances())
-
-      NomisApiExtension.nomisApi.verify(
-        putRequestedFor(urlEqualTo("/activities/1/schedules"))
-          .withRequestBody(matchingJsonPath("$[0].date", equalTo("2023-02-10")))
-          .withRequestBody(matchingJsonPath("$[0].startTime", equalTo("08:00")))
-          .withRequestBody(matchingJsonPath("$[0].endTime", equalTo("11:00")))
-          .withRequestBody(matchingJsonPath("$[1].date", equalTo("2023-02-11"))),
-      )
-    }
-
-    @Test
-    fun `when any error response is received an exception is thrown`() = runTest {
-      NomisApiExtension.nomisApi.stubScheduleInstancesUpdateWithError(1, 503)
-
-      assertThrows<ServiceUnavailable> {
-        nomisApiService.updateScheduleInstances(1L, updateScheduleInstances())
       }
     }
   }
@@ -1042,19 +1001,15 @@ fun updateActivity() = UpdateActivityRequest(
   minimumIncentiveLevelCode = "STD",
   payPerSession = UpdateActivityRequest.PayPerSession.F,
   scheduleRules = emptyList(),
+  schedules = emptyList(),
   excludeBankHolidays = true,
   endDate = LocalDate.parse("2023-02-10"),
   internalLocationId = 703000,
   programCode = "PROGRAM_SERVICE",
 )
 
-fun updateScheduleInstances() = listOf(
-  SchedulesRequest(date = LocalDate.parse("2023-02-10"), startTime = "08:00", endTime = "11:00"),
-  SchedulesRequest(date = LocalDate.parse("2023-02-11"), startTime = "08:00", endTime = "11:00"),
-)
-
 fun updateScheduledInstance() =
-  UpdateCourseScheduleRequest(
+  CourseScheduleRequest(
     date = LocalDate.parse("2023-02-10"),
     startTime = "08:00",
     endTime = "11:00",
