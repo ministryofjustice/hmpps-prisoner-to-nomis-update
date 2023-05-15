@@ -29,46 +29,57 @@ class SynchroniseBuilder<MAPPING_DTO>(
         null,
       )
     } ?: let {
-      transform().also { mapping ->
-        mapping?.run {
-          val telemetryAttributes = eventTelemetry + mapping.asMap()
-          kotlin.runCatching {
-            postMapping(mapping)
-          }
-            .onFailure { e ->
-              telemetryClient?.trackEvent(
-                "$name-mapping-create-failed",
-                telemetryAttributes,
-                null,
-              )
-              when (e) {
-                is DuplicateMappingException -> {
-                  telemetryClient?.trackEvent(
-                    "to-nomis-synch-$name-duplicate",
-                    telemetryAttributes + e.error.moreInfo.asTelemetry(),
-                    null,
-                  )
-                }
+      runCatching {
+        transform()
+      }.onFailure {
+        telemetryClient?.trackEvent(
+          "$name-create-failed",
+          eventTelemetry,
+          null,
+        )
+        throw it
+      }.onSuccess {
+        it.also { mapping ->
+          mapping?.run {
+            val telemetryAttributes = eventTelemetry + mapping.asMap()
+            kotlin.runCatching {
+              postMapping(mapping)
+            }
+              .onFailure { e ->
+                telemetryClient?.trackEvent(
+                  "$name-mapping-create-failed",
+                  telemetryAttributes,
+                  null,
+                )
+                when (e) {
+                  is DuplicateMappingException -> {
+                    telemetryClient?.trackEvent(
+                      "to-nomis-synch-$name-duplicate",
+                      telemetryAttributes + e.error.moreInfo.asTelemetry(),
+                      null,
+                    )
+                  }
 
-                else -> {
-                  retryQueueService?.sendMessage(mapping, telemetryAttributes)
-                  log.error("Failed to create $name mapping", e)
+                  else -> {
+                    retryQueueService?.sendMessage(mapping, telemetryAttributes)
+                    log.error("Failed to create $name mapping", e)
+                  }
                 }
               }
-            }
-            .onSuccess {
-              telemetryClient?.trackEvent(
-                "$name-create-success",
-                telemetryAttributes,
-                null,
-              )
-            }
-        } ?: kotlin.run {
-          telemetryClient?.trackEvent(
-            "$name-create-ignored",
-            eventTelemetry,
-            null,
-          )
+              .onSuccess {
+                telemetryClient?.trackEvent(
+                  "$name-create-success",
+                  telemetryAttributes,
+                  null,
+                )
+              }
+          } ?: kotlin.run {
+            telemetryClient?.trackEvent(
+              "$name-create-ignored",
+              eventTelemetry,
+              null,
+            )
+          }
         }
       }
     }

@@ -252,6 +252,43 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
         it == 0
       }
     }
+
+    @Test
+    fun `will retry and publish telemetry after a Nomis update failure`() {
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
+      activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
+      mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
+      mappingServer.stubCreateActivity()
+      nomisApi.stubActivityCreateWithError(status = 500)
+
+      awsSnsClient.publish(
+        PublishRequest.builder().topicArn(topicArn)
+          .message(activityMessagePayload("activities.activity-schedule.created", ACTIVITY_SCHEDULE_ID))
+          .messageAttributes(
+            mapOf(
+              "eventType" to MessageAttributeValue.builder().dataType("String")
+                .stringValue("activities.activity-schedule.created").build(),
+            ),
+          ).build(),
+      ).get()
+
+      await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID") } matches { it == 1 }
+      await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
+
+      // message sent to DLQ
+      await untilCallTo {
+        awsSqsActivityDlqClient.countAllMessagesOnQueue(activityDlqUrl).get()
+      } matches { it == 1 }
+
+      // telemetry is published for the failure
+      verify(telemetryClient).trackEvent(
+        eq("activity-create-failed"),
+        check {
+          assertThat(it["dpsActivityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
+        },
+        isNull(),
+      )
+    }
   }
 
   @Nested
