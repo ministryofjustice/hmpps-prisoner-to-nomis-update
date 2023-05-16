@@ -100,6 +100,7 @@ class ActivitiesService(
       minimumIncentiveLevelCode = activity.minimumIncentiveNomisCode,
       payPerSession = toUpdatePayPerSession(),
       scheduleRules = slots.toScheduleRuleRequests(),
+      schedules = instances.toCourseScheduleRequests(),
       excludeBankHolidays = !runsOnBankHoliday,
       endDate = endDate,
       internalLocationId = internalLocation?.id?.toLong(),
@@ -119,7 +120,7 @@ class ActivitiesService(
       minimumIncentiveLevelCode = activity.minimumIncentiveNomisCode,
       programCode = activity.category.code,
       payPerSession = schedule.toCreatePayPerSession(),
-      schedules = schedule.instances.toScheduleRequests(),
+      schedules = schedule.instances.toCourseScheduleRequests(),
       scheduleRules = schedule.slots.toScheduleRuleRequests(),
       excludeBankHolidays = !schedule.runsOnBankHoliday, // Nomis models the negative (exclude) and Activities models the positive (runs on)
     )

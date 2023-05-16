@@ -19,13 +19,12 @@ import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourseScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.GetAttendanceStatusRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.GetAttendanceStatusResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SchedulesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationResponse
@@ -92,15 +91,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .awaitBodilessEntity()
   }
 
-  suspend fun updateScheduleInstances(courseActivityId: Long, request: List<SchedulesRequest>) {
-    webClient.put()
-      .uri("/activities/$courseActivityId/schedules")
-      .bodyValue(request)
-      .retrieve()
-      .awaitBodilessEntity()
-  }
-
-  suspend fun updateScheduledInstance(courseActivityId: Long, request: UpdateCourseScheduleRequest): UpdateCourseScheduleResponse =
+  suspend fun updateScheduledInstance(courseActivityId: Long, request: CourseScheduleRequest): UpdateCourseScheduleResponse =
     webClient.put()
       .uri("/activities/$courseActivityId/schedule")
       .bodyValue(request)

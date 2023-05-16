@@ -35,7 +35,6 @@ class ActivitiesDomainEventListener(
     when (eventType) {
       "activities.activity-schedule.created" -> activitiesService.createActivity(message.fromJson())
       "activities.activity-schedule.amended" -> activitiesService.updateActivity(message.fromJson())
-      "activities.scheduled-instances.amended" -> schedulesService.updateScheduleInstances(message.fromJson())
       "activities.scheduled-instance.amended" -> schedulesService.updateScheduledInstance(message.fromJson())
       "activities.prisoner.allocated" -> allocationService.upsertAllocation(message.fromJson())
       "activities.prisoner.deallocated" -> allocationService.upsertAllocation(message.fromJson()) // TODO SDIT-438 waiting for Activities to drop this message in favour of allocation-amended

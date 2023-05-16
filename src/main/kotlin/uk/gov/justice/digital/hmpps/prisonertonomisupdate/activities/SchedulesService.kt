@@ -4,8 +4,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SchedulesRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourseScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDateTime
 
@@ -16,25 +15,6 @@ class SchedulesService(
   private val mappingService: ActivitiesMappingService,
   private val telemetryClient: TelemetryClient,
 ) {
-
-  suspend fun updateScheduleInstances(amendInstancesEvent: ScheduleDomainEvent) {
-    val telemetryMap = mutableMapOf("dpsActivityScheduleId" to amendInstancesEvent.additionalInformation.activityScheduleId.toString())
-
-    runCatching {
-      val activitySchedule = activitiesApiService.getActivitySchedule(amendInstancesEvent.additionalInformation.activityScheduleId)
-
-      val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(activitySchedule.id).nomisCourseActivityId
-        .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
-
-      activitySchedule.instances.toScheduleRequests()
-        .also { nomisApiService.updateScheduleInstances(nomisCourseActivityId, it) }
-    }.onSuccess {
-      telemetryClient.trackEvent("activity-schedule-instances-amend-success", telemetryMap, null)
-    }.onFailure { e ->
-      telemetryClient.trackEvent("activity-schedule-instances-amend-failed", telemetryMap, null)
-      throw e
-    }
-  }
 
   suspend fun updateScheduledInstance(amendInstanceEvent: ScheduledInstanceDomainEvent) {
     val scheduledInstanceId = amendInstanceEvent.additionalInformation.scheduledInstanceId
@@ -54,7 +34,7 @@ class SchedulesService(
       val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(scheduledInstance.activitySchedule.id).nomisCourseActivityId
         .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
 
-      scheduledInstance.toUpdateScheduleRequest()
+      scheduledInstance.toCourseScheduleRequest()
         .let { nomisApiService.updateScheduledInstance(nomisCourseActivityId, it) }
         .also { telemetryMap["nomisCourseScheduleId"] = it.courseScheduleId.toString() }
     }.onSuccess {
@@ -66,17 +46,18 @@ class SchedulesService(
   }
 }
 
-fun List<ScheduledInstance>.toScheduleRequests() =
+fun List<ScheduledInstance>.toCourseScheduleRequests() =
   map {
-    SchedulesRequest(
+    CourseScheduleRequest(
       date = it.date,
       startTime = it.startTime,
       endTime = it.endTime,
+      cancelled = it.cancelled,
     )
   }
 
-fun ActivityScheduleInstance.toUpdateScheduleRequest() =
-  UpdateCourseScheduleRequest(
+fun ActivityScheduleInstance.toCourseScheduleRequest() =
+  CourseScheduleRequest(
     date = date,
     startTime = startTime,
     endTime = endTime,

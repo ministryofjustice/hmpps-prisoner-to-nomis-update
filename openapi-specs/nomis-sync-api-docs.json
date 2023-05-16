@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-05-12"
+    "version": "2023-05-15"
   },
   "servers": [
     {
@@ -1127,76 +1127,6 @@
         }
       }
     },
-    "/activities/{courseActivityId}/schedules": {
-      "put": {
-        "tags": [
-          "activities-resource"
-        ],
-        "summary": "Updates activity schedules",
-        "description": "Recreates schedules from tomorrow. Requires role NOMIS_ACTIVITIES",
-        "operationId": "updateSchedules",
-        "parameters": [
-          {
-            "name": "courseActivityId",
-            "in": "path",
-            "description": "Course activity id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Course activity id"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/SchedulesRequest"
-                }
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Schedules updated"
-          },
-          "400": {
-            "description": "There was an error with the request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/activities/{courseActivityId}/schedule": {
       "put": {
         "tags": [
@@ -1221,7 +1151,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateCourseScheduleRequest"
+                "$ref": "#/components/schemas/CourseScheduleRequest"
               }
             }
           },
@@ -3419,6 +3349,41 @@
         },
         "description": "Offender individual schedule creation request"
       },
+      "CourseScheduleRequest": {
+        "required": [
+          "cancelled",
+          "date",
+          "endTime",
+          "startTime"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "The date of the course schedule",
+            "format": "date",
+            "example": "2023-04-03"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "The time of the course schedule",
+            "format": "partial-time",
+            "example": "10:00"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "The time the course schedule ends",
+            "format": "partial-time",
+            "example": "11:00"
+          },
+          "cancelled": {
+            "type": "boolean",
+            "description": "Whether the course schedule has been cancelled",
+            "example": true
+          }
+        },
+        "description": "Course schedule request"
+      },
       "PayRateRequest": {
         "required": [
           "incentiveLevel",
@@ -3519,6 +3484,7 @@
           "payRates",
           "programCode",
           "scheduleRules",
+          "schedules",
           "startDate"
         ],
         "type": "object",
@@ -3584,73 +3550,16 @@
           "programCode": {
             "type": "string",
             "description": "Program Service code (from activity category)"
+          },
+          "schedules": {
+            "type": "array",
+            "description": "Schedules",
+            "items": {
+              "$ref": "#/components/schemas/CourseScheduleRequest"
+            }
           }
         },
         "description": "Course activity update request"
-      },
-      "SchedulesRequest": {
-        "required": [
-          "date",
-          "endTime",
-          "startTime"
-        ],
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "description": "Schedule date",
-            "format": "date",
-            "example": "2022-08-12"
-          },
-          "startTime": {
-            "type": "string",
-            "description": "Schedule start time in 24 hour clock",
-            "format": "partial-time",
-            "example": "08:00"
-          },
-          "endTime": {
-            "type": "string",
-            "description": "Schedule end time in 24 hour clock",
-            "format": "partial-time",
-            "example": "11:00"
-          }
-        },
-        "description": "Course activity creation request schedules"
-      },
-      "UpdateCourseScheduleRequest": {
-        "required": [
-          "cancelled",
-          "date",
-          "endTime",
-          "startTime"
-        ],
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "description": "The date of the course schedule",
-            "format": "date",
-            "example": "2023-04-03"
-          },
-          "startTime": {
-            "type": "string",
-            "description": "The time of the course schedule",
-            "format": "partial-time",
-            "example": "10:00"
-          },
-          "endTime": {
-            "type": "string",
-            "description": "The time the course schedule ends",
-            "format": "partial-time",
-            "example": "11:00"
-          },
-          "cancelled": {
-            "type": "boolean",
-            "description": "Whether the course schedule has been cancelled",
-            "example": true
-          }
-        },
-        "description": "Course schedule update update request"
       },
       "UpdateCourseScheduleResponse": {
         "required": [
@@ -4051,7 +3960,7 @@
             "type": "array",
             "description": "Schedules",
             "items": {
-              "$ref": "#/components/schemas/SchedulesRequest"
+              "$ref": "#/components/schemas/CourseScheduleRequest"
             }
           },
           "scheduleRules": {
@@ -4451,12 +4360,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -4501,10 +4410,10 @@
           "empty": {
             "type": "boolean"
           },
-          "sorted": {
+          "unsorted": {
             "type": "boolean"
           },
-          "unsorted": {
+          "sorted": {
             "type": "boolean"
           }
         }
@@ -4641,12 +4550,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -4782,12 +4691,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -4923,12 +4832,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -4988,12 +4897,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"

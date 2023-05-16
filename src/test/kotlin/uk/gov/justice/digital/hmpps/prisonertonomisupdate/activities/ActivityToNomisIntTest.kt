@@ -327,6 +327,12 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("scheduleRules[1].endTime", equalTo("14:25")))
             .withRequestBody(matchingJsonPath("scheduleRules[1].tuesday", equalTo("true")))
             .withRequestBody(matchingJsonPath("scheduleRules[1].thursday", equalTo("false")))
+            .withRequestBody(matchingJsonPath("schedules[0].date", equalTo("2023-01-13")))
+            .withRequestBody(matchingJsonPath("schedules[0].startTime", equalTo("09:00")))
+            .withRequestBody(matchingJsonPath("schedules[0].endTime", equalTo("10:00")))
+            .withRequestBody(matchingJsonPath("schedules[0].cancelled", equalTo("false")))
+            .withRequestBody(matchingJsonPath("schedules[1].date", equalTo("2023-01-14")))
+            .withRequestBody(matchingJsonPath("schedules[1].cancelled", equalTo("true")))
             .withRequestBody(matchingJsonPath("programCode", equalTo("LEISURE_SOCIAL"))),
         )
       }
@@ -435,7 +441,7 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
       "date": "2023-01-14",
       "startTime": "14:00",
       "endTime": "16:30",
-      "cancelled": false,
+      "cancelled": true,
       "cancelledTime": "2023-01-13T09:38:26.092Z",
       "cancelledBy": "Adam Smith",
       "attendances": []
