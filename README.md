@@ -107,7 +107,17 @@ The action to be taken is as follows:
 
 #### Activities
 
-TBD in SDIT-674
+##### Course Activities
+
+A duplicate course activity in Nomis will have no detrimental effects:
+* the Nomis Course Activities id mentioned in the mapping table `activity_mapping` is "active" 
+* updates/allocations/attendances will all be synchronised against this course activity
+* the duplicate course activity does no particular harm as it is not used or referenced 
+
+However, you should still remove the duplicate in Nomis so it doesn't cause any confusion:
+* click the View button on the Slack alert to find the customEvent in App Insights
+* the customDimensions should contain a `duplicateNomisCourseActivityId` - this is the id of the COURSE_ACTIVITIES record in Nomis we need to remove
+* there is an endpoint in hmpps-nomis-prisoner-api - `DEL /activities/{courseActivityId}` - call this to remove the duplicate
 
 #### Incentives
 
