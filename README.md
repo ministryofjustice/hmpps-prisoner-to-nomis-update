@@ -317,7 +317,7 @@ As this error should recover once the duplicate is deleted you don't need to pur
 
 #### Scheduled instance update errors
 
-If we receive an alert because of a DLQ message for event type `activities.scheudled-instance.amended` then it is likely one of the following scenarios:
+If we receive an alert because of a DLQ message for event type `activities.scheduled-instance.amended` then it is likely one of the following scenarios:
 * we received duplicate messages for the event, one pod succeeded to update but the other pod's Hibernate session fails to update a dirty entity
 * the scheduled instance was already deleted on a previous activity schedule update but the messages were processed out of order
 
