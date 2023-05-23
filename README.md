@@ -131,6 +131,10 @@ A duplicate attendance won't receive a `To NOMIS synchronisation duplicate activ
 
 A duplicate scheduled instance won't receive a `To NOMIS synchronisation duplicate activity detected` alert but will end up with a DLQ message. See [scheduled instance update errors](#scheduled-instance-update-errors) for more details.
 
+##### Activity schedules (various tables including pay rates, schedule rules and schedules)
+
+A duplicate activity schedule update won't receive a `To NOMIS synchronisation duplicate activity detected` alert but will end up with a DLQ message. See [duplicate activity schedule update errors](#duplicate-activity-schedule-update-errors) for more details.
+
 #### Incentives
 
 Duplicate incentives have no business impact in NOMIS but can cause confusion to users. That confusion is only the case so long as the NOMIS IEP page is still in use. This screen is currently being phased out. The only way to delete an IEP is to ask `#dps-appsupport` and supply them with the prisoner number and sequence. *For now it advised to take no action unless there is a complaint from the prison* since the impact on the business is negligible.
@@ -317,11 +321,29 @@ As this error should recover once the duplicate is deleted you don't need to pur
 
 #### Scheduled instance update errors
 
-If we receive an alert because of a DLQ message for event type `activities.scheudled-instance.amended` then it is likely one of the following scenarios:
+If we receive an alert because of a DLQ message for event type `activities.scheduled-instance.amended` then it is likely one of the following scenarios:
 * we received duplicate messages for the event, one pod succeeded to update but the other pod's Hibernate session fails to update a dirty entity
 * the scheduled instance was already deleted on a previous activity schedule update but the messages were processed out of order
 
-In either case the update has correctly failed and Nomis reflects reality. The DLQ message can be purged from the queue as there is nothing to do.
+In either case the update has correctly failed and Nomis reflects reality. The DLQ message will be retried and this should be a no-op - the entity is already upto date.
+
+NOTE: You should still investigate the error in case of other scenarios not foreseen above. If any are found then please document them here.
+
+#### Activity schedule update errors
+
+An activity update (event type `activities.activity-schedule.amended`) could involve one or more of the following:
+* the activity details have changed
+* pay rates have been updated and/or deleted and/or created
+* schedule rules have been deleted and/or created
+* scheduled instances have been delete and/or created
+
+Normally the error will represent a validation failure which should appear in the traces. In theory this should not happen but if it does then either the validation in the Activities service or the validation in this service is wrong. Work out which is wrong and fix - when fixed the message will eventually be retried and succeed.
+
+##### Duplicate activity schedule update errors
+
+If your investigation points to a problem caused by duplicate activity updates being processed at the same time then the likely error is that one of the pods failed because Hibernate failed to update a dirty entity. The failed message will be retried automatically and the next update will be a no-op - the entity is already upto date.
+
+NOTE: You should still investigate the error in case of other scenarios not foreseen above. If any are found then please document them here.
 
 ## Architecture
 
