@@ -127,6 +127,10 @@ A duplicate allocation won't receive a `To NOMIS synchronisation duplicate activ
 
 A duplicate attendance won't receive a `To NOMIS synchronisation duplicate activity detected` alert but will end up with a DLQ message. See [duplicate attendances](#duplicate-allocations-and-attendances) for more details.
 
+##### Scheduled Instances (OFFENDER_COURSE_SCHEDULES)
+
+A duplicate scheduled instance won't receive a `To NOMIS synchronisation duplicate activity detected` alert but will end up with a DLQ message. See [scheduled instance update errors](#scheduled-instance-update-errors) for more details.
+
 #### Incentives
 
 Duplicate incentives have no business impact in NOMIS but can cause confusion to users. That confusion is only the case so long as the NOMIS IEP page is still in use. This screen is currently being phased out. The only way to delete an IEP is to ask `#dps-appsupport` and supply them with the prisoner number and sequence. *For now it advised to take no action unless there is a complaint from the prison* since the impact on the business is negligible.
@@ -310,6 +314,14 @@ select * from OMS_OWNER.OFFENDER_COURSE_ATTENDANCES where CRS_ACTY_ID=<insert no
 * if you find a duplicate attendance call the [delete attendance endpoint](https://nomis-prsner-dev.aks-dev-1.studio-hosting.service.justice.gov.uk/swagger-ui/index.html?configUrl=/v3/api-docs#/activities-resource/deleteAttendance) using column `EVENT_ID`
 
 As this error should recover once the duplicate is deleted you don't need to purge the DLQ.
+
+#### Scheduled instance update errors
+
+If we receive an alert because of a DLQ message for event type `activities.scheudled-instance.amended` then it is likely one of the following scenarios:
+* we received duplicate messages for the event, one pod succeeded to update but the other pod's Hibernate session fails to update a dirty entity
+* the scheduled instance was already deleted on a previous activity schedule update but the messages were processed out of order
+
+In either case the update has correctly failed and Nomis reflects reality. The DLQ message can be purged from the queue as there is nothing to do.
 
 ## Architecture
 
