@@ -119,6 +119,10 @@ However, you should still remove the duplicate in Nomis so it doesn't cause any 
 * the customDimensions should contain a `duplicateNomisCourseActivityId` - this is the id of the COURSE_ACTIVITIES record in Nomis we need to remove
 * there is an endpoint in hmpps-nomis-prisoner-api - `DEL /activities/{courseActivityId}` - call this to remove the duplicate
 
+##### Allocations (OFFENDER_PROGRAM_PROFILES)
+
+A duplicate allocation won't receive a `To NOMIS synchronisation duplicate activity detected` alert but will end up with a DLQ message. See [duplicate allocations](#duplicate-allocations) for more details.
+
 #### Incentives
 
 Duplicate incentives have no business impact in NOMIS but can cause confusion to users. That confusion is only the case so long as the NOMIS IEP page is still in use. This screen is currently being phased out. The only way to delete an IEP is to ask `#dps-appsupport` and supply them with the prisoner number and sequence. *For now it advised to take no action unless there is a complaint from the prison* since the impact on the business is negligible.
@@ -238,6 +242,66 @@ It is likely to have the wrong level for one of these two reasons:
 The side effect of this event is a DPS IEP Review is created which is then written back to NOMIS
 
 - For duplicate NOMIS system generated IEP the only solution is for NOMIS Support Team to delete the rouge IEP records, that is the one or more records that was generated after the DPS one.
+
+### Activities Synchronisation Error Handling
+
+When a message ends up on the Activities Dead Letter Queue (DLQ) we receive an alert. To work out what went wrong:
+
+* First call the [get-dlq-messages endpoint](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html#/hmpps-reactive-queue-resource/getDlqMessages) to get the failed message. Note that the queue name can be found on the `/health` endpoint.
+* There should be an event type in the message and an id in the `additionalInformation` details, both of which tell you what the message was trying to achieve
+
+Find recent failures in App Insights Logs with the following query and look for the additionalInformation id in customDimensions (probably `dpsActivityScheduleId`/`nomisCourseActivityId` but there are other dps/nomis ids for different event types):
+```ksql
+customEvents
+| where name startswith "activity"
+| where name endswith "failed"
+| where timestamp > ago(30m)
+| join traces on $left.operation_Id == $right.operation_Id
+| where message !startswith "Received message"
+| where message !startswith "Created access"
+| where message !startswith "Setting visibility"
+| project timestamp, message, operation_Id, customDimensions
+| order by timestamp desc 
+```
+
+Sometimes you may also need further information to diagnose the problem. You can do this based upon the `operation_Id` returned from the above query.
+* Look for failed requests:
+```ksql
+requests
+| where operationId == '<insert operationId here>'
+| where success == False
+```
+* Look for exceptions:
+```ksql
+exceptions
+| where operationId == '<insert operationId here>'
+```
+
+After investigating the error you should now know if it's recoverable or not.
+
+* If the error is recoverable (e.g. calls to another service received a 504) then you can leave the message on the DLQ because a retry should work once the other service recovers.
+* If the error is unrecoverable (e.g. calls to another service received a 400) then you probably have enough information to diagnose the issue and constant failing retries/alerts will be annoying. Consider [purging the DLQ](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html#/hmpps-reactive-queue-resource/purgeQueue).
+
+#### Duplicate allocations
+
+If we receive duplicate create allocation messages on different pods at the same time then we may end up with duplicate `OFFENDER_PROGRAM_PROFILES` records in Nomis.
+
+As Hibernate isn't expecting these duplicates it will fail the next time we receive an update to the allocation or try to create an attendance for the allocation.
+
+This error is identifiable by looking at the exceptions in App Insights checkin for:
+* a Hibernate exception with text containing `query did not return a unique result` 
+* further down the call stack a mention of the `AllocationService`.
+
+To recover from this error we need to delete the duplicate allocation record:
+* the custom event from App Insights should have customDimension of `nomisCourseActivityId`
+* in the Nomis database run the following query to see all allocations for that course:
+```sql
+select * from OMS_OWNER.OFFENDER_PROGRAM_PROFILES where CRS_ACTY_ID=<insert nomisCourseActivityId here>;
+```
+* once you have identified the duplicate, find the value of column `OFF_PRGREF_ID`
+* call the endpoint to [delete the allocation](https://nomis-prsner-dev.aks-dev-1.studio-hosting.service.justice.gov.uk/swagger-ui/index.html?configUrl=/v3/api-docs#/activities-resource/deleteAllocation) by column `OFF_PRGREF_ID`
+
+As this error should recover once the duplicate is deleted you don't need to purge the DLQ.
 
 ## Architecture
 
