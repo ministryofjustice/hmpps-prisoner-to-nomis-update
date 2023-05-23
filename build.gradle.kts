@@ -5,9 +5,9 @@ import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.1.4-beta-4"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.2.0-beta"
   kotlin("plugin.spring") version "1.8.21"
-  id("org.openapi.generator") version "6.5.0"
+  id("org.openapi.generator") version "6.6.0"
 }
 
 configurations {
@@ -21,24 +21,24 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-  implementation("org.springframework.data:spring-data-commons:3.0.5")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.0.0-beta-15")
+  implementation("org.springframework.data:spring-data-commons:3.1.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.0.0")
 
   implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.1.0")
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.0")
+  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.25.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.26.0")
 
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.13")
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.14")
   testImplementation("io.jsonwebtoken:jjwt-impl:0.11.5")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
 
   testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.0")
   testImplementation("org.mockito:mockito-inline:5.2.0")
-  testImplementation("org.testcontainers:localstack:1.18.0")
-  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.456")
+  testImplementation("org.testcontainers:localstack:1.18.1")
+  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.472")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
