@@ -35,6 +35,7 @@ generic-service:
     FEATURE_EVENT_INCENTIVES_PRISON_LEVEL_CHANGED: true
 
 generic-prometheus-alerts:
+  businessHoursOnly: true
   sqsAlertsQueueNames:
     - "Digital-Prison-Services-preprod-hmpps_prisoner_to_nomis_visit_queue"
     - "Digital-Prison-Services-preprod-hmpps_prisoner_to_nomis_visit_dlq"
