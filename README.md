@@ -121,7 +121,11 @@ However, you should still remove the duplicate in Nomis so it doesn't cause any 
 
 ##### Allocations (OFFENDER_PROGRAM_PROFILES)
 
-A duplicate allocation won't receive a `To NOMIS synchronisation duplicate activity detected` alert but will end up with a DLQ message. See [duplicate allocations](#duplicate-allocations) for more details.
+A duplicate allocation won't receive a `To NOMIS synchronisation duplicate activity detected` alert but will end up with a DLQ message. See [duplicate allocations](#duplicate-allocations-and-attendances) for more details.
+
+##### Attendances (OFFENDER_COURSE_ATTENDANCES)
+
+A duplicate attendance won't receive a `To NOMIS synchronisation duplicate activity detected` alert but will end up with a DLQ message. See [duplicate attendances](#duplicate-allocations-and-attendances) for more details.
 
 #### Incentives
 
@@ -282,24 +286,28 @@ After investigating the error you should now know if it's recoverable or not.
 * If the error is recoverable (e.g. calls to another service received a 504) then you can leave the message on the DLQ because a retry should work once the other service recovers.
 * If the error is unrecoverable (e.g. calls to another service received a 400) then you probably have enough information to diagnose the issue and constant failing retries/alerts will be annoying. Consider [purging the DLQ](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html#/hmpps-reactive-queue-resource/purgeQueue).
 
-#### Duplicate allocations
+#### Duplicate allocations and attendances
 
-If we receive duplicate create allocation messages on different pods at the same time then we may end up with duplicate `OFFENDER_PROGRAM_PROFILES` records in Nomis.
+If we receive duplicate create allocation messages on different pods at the same time then we may end up with duplicate `OFFENDER_PROGRAM_PROFILES` records in Nomis. For attendances we may end up with duplicate `OFFENDER_COURSE_ATTENDANCES` records in Nomis.
 
-As Hibernate isn't expecting these duplicates it will fail the next time we receive an update to the allocation or try to create an attendance for the allocation.
+As Hibernate isn't expecting these duplicates it will fail the next time we try to update an allocation or attendance.
 
 This error is identifiable by looking at the exceptions in App Insights checkin for:
 * a Hibernate exception with text containing `query did not return a unique result` 
-* further down the call stack a mention of the `AllocationService`.
+* further down the call stack a mention of the `AllocationService` for allocations or `AttendanceService` for attendances.
 
-To recover from this error we need to delete the duplicate allocation record:
+To recover from this error we need to delete the duplicate allocation or attendance record:
 * the custom event from App Insights should have customDimension of `nomisCourseActivityId`
-* in the Nomis database run the following query to see all allocations for that course:
+* in the Nomis database run the following query to see all allocations for that course - 2 records for the same `OFFENDER_BOOK_ID`, `CRS_ACTY_ID` with `OFFENDER_PROGRAM_STATUS`='ALLOC' are duplicates:
 ```sql
 select * from OMS_OWNER.OFFENDER_PROGRAM_PROFILES where CRS_ACTY_ID=<insert nomisCourseActivityId here>;
 ```
-* once you have identified the duplicate, find the value of column `OFF_PRGREF_ID`
-* call the endpoint to [delete the allocation](https://nomis-prsner-dev.aks-dev-1.studio-hosting.service.justice.gov.uk/swagger-ui/index.html?configUrl=/v3/api-docs#/activities-resource/deleteAllocation) by column `OFF_PRGREF_ID`
+* and the following query to see all attendances for the course - 2 records for the same `OFFENDER_BOOK_ID`, `EVENT_DATE`, `START_TIME` and `END_TIME` are duplicates:
+```sql
+select * from OMS_OWNER.OFFENDER_COURSE_ATTENDANCES where CRS_ACTY_ID=<insert nomisCourseActivityId here>;
+```
+* if you find a duplicate allocation call the [delete allocation endpoint](https://nomis-prsner-dev.aks-dev-1.studio-hosting.service.justice.gov.uk/swagger-ui/index.html?configUrl=/v3/api-docs#/activities-resource/deleteAllocation) using column `OFF_PRGREF_ID`
+* if you find a duplicate attendance call the [delete attendance endpoint](https://nomis-prsner-dev.aks-dev-1.studio-hosting.service.justice.gov.uk/swagger-ui/index.html?configUrl=/v3/api-docs#/activities-resource/deleteAttendance) using column `EVENT_ID`
 
 As this error should recover once the duplicate is deleted you don't need to purge the DLQ.
 
