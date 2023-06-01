@@ -76,8 +76,8 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("startDate", equalTo("2023-01-12")))
           .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-13")))
           .withRequestBody(matchingJsonPath("payBandCode", equalTo("7")))
-          .withRequestBody(matchingJsonPath("endReason", equalTo("PRG_END")))
-          .withRequestBody(matchingJsonPath("endComment", equalTo("Deallocated in DPS by ANOTHER_USER at 2023-01-13 18:49:04 for reason END")))
+          .withRequestBody(matchingJsonPath("endReason", equalTo("OTH")))
+          .withRequestBody(matchingJsonPath("endComment", equalTo("Deallocated in DPS by ANOTHER_USER at 2023-01-13 18:49:04 for reason Released from prison")))
           .withRequestBody(matchingJsonPath("suspended", equalTo("false"))),
       )
     }
@@ -158,7 +158,10 @@ fun buildApiAllocationDeallocatedJsonResponse(id: Long = ALLOCATION_ID): String 
     "allocatedBy": "SOME_USER",
     "allocatedTime": "2023-01-10T14:46:05.849Z",
     "deallocatedBy": "ANOTHER_USER",
-    "deallocatedReason": "END",
+    "deallocatedReason": {
+      "code": "RELEASED",
+      "description": "Released from prison"
+    },
     "deallocatedTime": "2023-01-13T18:49:04.837Z",
     "scheduleDescription" : "description",
     "activitySummary" : "summary",

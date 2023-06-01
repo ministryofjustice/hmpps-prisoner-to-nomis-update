@@ -98,7 +98,10 @@ internal class ActivitiesApiServiceTest {
             "allocatedBy": "Mr Blogs",
             "deallocatedTime": "2022-12-30T14:03:06",
             "deallocatedBy": "Mrs Blogs",
-            "deallocatedReason": "Not attending regularly",
+            "deallocatedReason": {
+              "code": "RELEASED",
+              "description": "Released from prison"
+            },
             "status": "ACTIVE"
           }
         ],
@@ -133,14 +136,16 @@ internal class ActivitiesApiServiceTest {
           },
           "riskLevel": "High",
           "minimumIncentiveLevel": "Basic",
-        "minimumIncentiveNomisCode": "BAS",
+          "minimumIncentiveNomisCode": "BAS",
           "minimumEducationLevel": [
             {
               "id": 123456,
               "educationLevelCode": "Basic",
               "educationLevelDescription": "Basic"
             }
-          ]
+          ],
+          "createdTime": "2023-06-01T09:17:30.425Z",
+          "activityState": "LIVE"
         },
         "slots": [
           {
@@ -304,7 +309,10 @@ internal class ActivitiesApiServiceTest {
               "allocatedBy": "Mr Blogs",
               "deallocatedTime": "2022-12-30T16:09:11.127Z",
               "deallocatedBy": "Mrs Blogs",
-              "deallocatedReason": "Not attending regularly",
+              "deallocatedReason": {
+                "code": "RELEASED",
+                "description": "Released from prison"
+              },
               "status": "ACTIVE"
             }
           ],
@@ -346,7 +354,9 @@ internal class ActivitiesApiServiceTest {
                 "educationLevelCode": "Basic",
                 "educationLevelDescription": "Basic"
               }
-            ]
+            ],
+            "createdTime": "2023-06-01T09:17:30.425Z",
+            "activityState": "LIVE"
           },
           "slots": [
             {
@@ -491,7 +501,10 @@ internal class ActivitiesApiServiceTest {
             "allocatedBy": "Mr Blogs",
             "deallocatedTime": "2023-03-17T10:35:19.136Z",
             "deallocatedBy": "Mrs Blogs",
-            "deallocatedReason": "Not attending regularly",
+            "deallocatedReason": {
+              "code": "RELEASED",
+              "description": "Released from prison"
+            },
             "status": "ACTIVE"
           }
         """.trimIndent(),
@@ -528,7 +541,7 @@ internal class ActivitiesApiServiceTest {
       assertThat(allocation.allocatedBy).isEqualTo("Mr Blogs")
       assertThat(allocation.deallocatedTime).isEqualTo(LocalDateTime.of(2023, 3, 17, 10, 35, 19, 136000000))
       assertThat(allocation.deallocatedBy).isEqualTo("Mrs Blogs")
-      assertThat(allocation.deallocatedReason).isEqualTo("Not attending regularly")
+      assertThat(allocation.deallocatedReason?.code).isEqualTo("RELEASED")
       assertThat(allocation.status).isEqualTo(ACTIVE)
     }
 
@@ -678,7 +691,9 @@ internal class ActivitiesApiServiceTest {
       "riskLevel": "high",
       "minimumIncentiveNomisCode": "STD",
       "minimumIncentiveLevel": "Standard",
-      "minimumEducationLevel": []
+      "minimumEducationLevel": [],
+      "createdTime": "2023-06-01T09:17:30.425Z",
+      "activityState": "LIVE"
     },
     "slots": [
       {

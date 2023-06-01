@@ -105,7 +105,9 @@ private fun buildGetScheduledInstanceResponse() =
             "id": 123,
             "code": "any",
             "name": "any"
-          }
+          },
+          "createdTime": "2023-06-01T09:17:30.425Z",
+          "activityState": "LIVE"
         }
       }
     }
