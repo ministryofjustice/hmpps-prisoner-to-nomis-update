@@ -57,13 +57,13 @@ class AllocationService(
       startDate = allocation.startDate,
       endDate = allocation.endDate,
       endReason = getEndReason(allocation.status),
-      endComment = getEndComment(allocation.status, allocation.deallocatedBy, allocation.deallocatedTime, allocation.deallocatedReason),
+      endComment = getEndComment(allocation.status, allocation.deallocatedBy, allocation.deallocatedTime, allocation.deallocatedReason?.description),
       suspended = isSuspended(allocation.status),
       suspendedComment = getSuspendedComment(allocation.status, allocation.suspendedBy, allocation.suspendedTime, allocation.suspendedReason),
     )
 
   private fun getEndReason(status: Allocation.Status) =
-    if (status == ENDED) "PRG_END" else null // TODO SDIT-438 waiting for the Activities team to provide reason codes that we can map to Nomis reason codes (reference code domain PS_END_RSN)
+    if (status == ENDED) "OTH" else null
 
   private fun getEndComment(status: Allocation.Status, by: String?, time: LocalDateTime?, reason: String?) =
     if (status == ENDED) {

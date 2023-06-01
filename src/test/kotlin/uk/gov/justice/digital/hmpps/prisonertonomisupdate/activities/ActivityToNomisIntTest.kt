@@ -417,7 +417,9 @@ fun buildGetActivityResponse(id: Long = ACTIVITY_ID): String =
       "educationLevelCode": "Basic",
       "educationLevelDescription": "Basic"
     }
-  ]
+  ],
+  "createdTime": "2023-06-01T09:17:30.425Z",
+  "activityState": "LIVE"
 }
   """.trimIndent()
 
@@ -486,7 +488,9 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
         "educationLevelCode": "Basic",
         "educationLevelDescription": "Basic"
       }
-    ]
+    ],
+    "createdTime": "2023-06-01T09:17:30.425Z",
+    "activityState": "LIVE"
   },
   "slots": [{
     "id"        : 555666001,

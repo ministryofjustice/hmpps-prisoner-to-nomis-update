@@ -403,6 +403,8 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
         educationLevelDescription = "Basic",
       ),
     ),
+    createdTime = LocalDateTime.parse("2023-02-10T08:34:38"),
+    activityState = ActivityLite.ActivityState.LIVE,
   ),
   slots = emptyList(),
   startDate = LocalDate.now(),

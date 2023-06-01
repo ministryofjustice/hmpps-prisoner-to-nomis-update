@@ -195,6 +195,8 @@ private fun newScheduledInstance() = ActivityScheduleInstance(
         description = "any",
         name = "any",
       ),
+      createdTime = LocalDateTime.parse("2023-02-10T08:34:38"),
+      activityState = ActivityLite.ActivityState.LIVE,
     ),
   ),
 )
