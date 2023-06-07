@@ -28,6 +28,9 @@ generic-service:
     FEATURE_EVENT_ACTIVITIES_PRISONER_ATTENDANCE_CREATED: false
     FEATURE_EVENT_ACTIVITIES_PRISONER_ATTENDANCE_AMENDED: false
     FEATURE_EVENT_APPOINTMENTS_APPOINTMENT_INSTANCE_CREATED: false
+    FEATURE_EVENT_APPOINTMENTS_APPOINTMENT_INSTANCE_UPDATED: false
+    FEATURE_EVENT_APPOINTMENTS_APPOINTMENT_INSTANCE_CANCELLED: false
+    FEATURE_EVENT_APPOINTMENTS_APPOINTMENT_INSTANCE_DELETED: false
     FEATURE_EVENT_RELEASE_DATE_ADJUSTMENTS_ADJUSTMENT_INSERTED: false
     FEATURE_EVENT_RELEASE_DATE_ADJUSTMENTS_ADJUSTMENT_UPDATED: false
     FEATURE_EVENT_RELEASE_DATE_ADJUSTMENTS_ADJUSTMENT_DELETED: false
@@ -44,6 +47,8 @@ generic-prometheus-alerts:
     - "Digital-Prison-Services-preprod-hmpps_prisoner_to_nomis_incentive_dlq"
     - "Digital-Prison-Services-preprod-hmpps_prisoner_to_nomis_activity_queue"
     - "Digital-Prison-Services-preprod-hmpps_prisoner_to_nomis_activity_dlq"
+    - "Digital-Prison-Services-preprod-prisoner_to_nomis_appointment_queue"
+    - "Digital-Prison-Services-preprod-prisoner_to_nomis_appointment_dlq"
     - "Digital-Prison-Services-preprod-hmpps_prisoner_to_nomis_sentencing_queue"
     - "Digital-Prison-Services-preprod-hmpps_prisoner_to_nomis_sentencing_dlq"
   sqsAlertsOldestThreshold: 2
