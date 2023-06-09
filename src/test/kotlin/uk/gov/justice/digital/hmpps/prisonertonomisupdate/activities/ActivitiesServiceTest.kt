@@ -30,7 +30,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Inter
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.PrisonPayBand
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ActivityResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PayRateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -74,7 +74,7 @@ internal class ActivitiesServiceTest {
       )
       whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(newActivity())
       whenever(nomisApiService.createActivity(any())).thenReturn(
-        CreateActivityResponse(courseActivityId = NOMIS_CRS_ACTY_ID),
+        ActivityResponse(courseActivityId = NOMIS_CRS_ACTY_ID, courseSchedules = listOf()),
       )
 
       activitiesService.createActivity(aDomainEvent())
@@ -99,7 +99,7 @@ internal class ActivitiesServiceTest {
         newActivity().copy(summary = "An activity summary that is very very very long"),
       )
       whenever(nomisApiService.createActivity(any())).thenReturn(
-        CreateActivityResponse(courseActivityId = NOMIS_CRS_ACTY_ID),
+        ActivityResponse(courseActivityId = NOMIS_CRS_ACTY_ID, courseSchedules = listOf()),
       )
 
       activitiesService.createActivity(aDomainEvent())
@@ -138,7 +138,7 @@ internal class ActivitiesServiceTest {
       )
       whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(newActivity())
       whenever(nomisApiService.createActivity(any())).thenReturn(
-        CreateActivityResponse(courseActivityId = NOMIS_CRS_ACTY_ID),
+        ActivityResponse(courseActivityId = NOMIS_CRS_ACTY_ID, courseSchedules = listOf()),
       )
       whenever(mappingService.createMapping(any())).thenThrow(RuntimeException("test"))
 

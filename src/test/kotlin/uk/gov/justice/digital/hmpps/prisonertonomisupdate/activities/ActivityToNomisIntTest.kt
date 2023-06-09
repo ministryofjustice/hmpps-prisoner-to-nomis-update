@@ -57,7 +57,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
       mappingServer.stubCreateActivity()
-      nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID }""")
+      nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID, "courseSchedules": [] }""")
 
       awsSnsClient.publish(
         PublishRequest.builder().topicArn(topicArn)
@@ -121,7 +121,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
-      nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID }""")
+      nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID, "courseSchedules": [] }""")
       mappingServer.stubCreateActivityWithErrorFollowedBySuccess()
 
       awsSnsClient.publish(
@@ -159,7 +159,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
-      nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID }""")
+      nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID, "courseSchedules": [] }""")
       mappingServer.stubCreateActivityWithDuplicateError(
         activityScheduleId = ACTIVITY_SCHEDULE_ID,
         nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
@@ -211,7 +211,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
-      nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID }""")
+      nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID, "courseSchedules": [] }""")
       mappingServer.stubCreateActivityWithError()
 
       awsSnsClient.publish(

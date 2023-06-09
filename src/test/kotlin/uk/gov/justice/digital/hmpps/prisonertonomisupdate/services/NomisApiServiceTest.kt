@@ -268,7 +268,7 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `should call nomis api with OAuth2 token`() = runTest {
-      NomisApiExtension.nomisApi.stubActivityCreate("""{ "courseActivityId": 456 }""")
+      NomisApiExtension.nomisApi.stubActivityCreate("""{ "courseActivityId": 456, "courseSchedules": [] }""")
 
       nomisApiService.createActivity(newActivity())
 
@@ -280,7 +280,7 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `will post data to nomis api`() = runTest {
-      NomisApiExtension.nomisApi.stubActivityCreate("""{ "courseActivityId": 456 }""")
+      NomisApiExtension.nomisApi.stubActivityCreate("""{ "courseActivityId": 456, "courseSchedules": [] }""")
 
       nomisApiService.createActivity(newActivity())
 
