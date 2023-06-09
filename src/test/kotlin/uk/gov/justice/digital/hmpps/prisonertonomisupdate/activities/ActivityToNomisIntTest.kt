@@ -127,7 +127,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
-      nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID, "courseSchedules": [] }""")
+      nomisApi.stubActivityCreate(buildCreateActivityResponse())
       mappingServer.stubCreateActivityWithErrorFollowedBySuccess()
 
       awsSnsClient.publish(
@@ -150,7 +150,13 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           postRequestedFor(urlEqualTo("/mapping/activities"))
             .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$NOMIS_CRS_ACTY_ID")))
             .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
-            .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED"))),
+            .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].scheduledInstanceId", equalTo("$SCHEDULE_INSTANCE_ID")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].nomisCourseScheduleId", equalTo("$NOMIS_CRS_SCH_ID")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].mappingType", equalTo("ACTIVITY_CREATED")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].scheduledInstanceId", equalTo("${SCHEDULE_INSTANCE_ID + 1}")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].nomisCourseScheduleId", equalTo("${NOMIS_CRS_SCH_ID + 1}")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].mappingType", equalTo("ACTIVITY_CREATED"))),
         )
       }
 

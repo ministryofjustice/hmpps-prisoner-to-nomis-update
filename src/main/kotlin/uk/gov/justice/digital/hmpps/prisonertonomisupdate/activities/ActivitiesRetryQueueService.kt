@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryQueueSer
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 
 @Service
-class ActivitiesUpdateQueueService(
+class ActivitiesRetryQueueService(
   hmppsQueueService: HmppsQueueService,
   telemetryClient: TelemetryClient,
   objectMapper: ObjectMapper,
@@ -18,5 +18,3 @@ class ActivitiesUpdateQueueService(
     telemetryClient = telemetryClient,
     objectMapper = objectMapper,
   )
-
-data class ActivityContext(val nomisCourseActivityId: Long, val activityScheduleId: Long)

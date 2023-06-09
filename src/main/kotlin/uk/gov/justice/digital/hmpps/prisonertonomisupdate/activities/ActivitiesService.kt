@@ -30,7 +30,7 @@ class ActivitiesService(
   private val activitiesApiService: ActivitiesApiService,
   private val nomisApiService: NomisApiService,
   private val mappingService: ActivitiesMappingService,
-  private val activitiesUpdateQueueService: ActivitiesUpdateQueueService,
+  private val activitiesRetryQueueService: ActivitiesRetryQueueService,
   private val telemetryClient: TelemetryClient,
   private val objectMapper: ObjectMapper,
 ) : CreateMappingRetryable {
@@ -39,7 +39,7 @@ class ActivitiesService(
     synchronise {
       name = "activity"
       telemetryClient = this@ActivitiesService.telemetryClient
-      retryQueueService = activitiesUpdateQueueService
+      retryQueueService = activitiesRetryQueueService
       eventTelemetry = mapOf(
         "dpsActivityScheduleId" to event.additionalInformation.activityScheduleId.toString(),
       )
@@ -175,19 +175,14 @@ class ActivitiesService(
       )
     }
 
-  suspend fun createRetry(context: CreateMappingRetryMessage<ActivityContext>) {
-    mappingService.createMapping(
-      ActivityMappingDto(
-        nomisCourseActivityId = context.mapping.nomisCourseActivityId,
-        activityScheduleId = context.mapping.activityScheduleId,
-        mappingType = "ACTIVITY_CREATED",
-      ),
-    ).also {
-      telemetryClient.trackEvent(
-        "activity-create-mapping-retry-success",
-        mapOf("activityScheduleId" to context.mapping.activityScheduleId.toString()),
-      )
-    }
+  suspend fun createRetry(message: CreateMappingRetryMessage<ActivityMappingDto>) {
+    mappingService.createMapping(message.mapping)
+      .also {
+        telemetryClient.trackEvent(
+          "activity-create-mapping-retry-success",
+          mapOf("activityScheduleId" to message.mapping.activityScheduleId.toString()),
+        )
+      }
   }
 
   suspend fun deleteAllActivities() {
