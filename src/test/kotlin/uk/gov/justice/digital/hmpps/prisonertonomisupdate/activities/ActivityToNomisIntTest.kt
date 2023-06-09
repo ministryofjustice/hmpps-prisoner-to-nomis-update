@@ -57,7 +57,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
       mappingServer.stubCreateActivity()
-      nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID, "courseSchedules": [] }""")
+      nomisApi.stubActivityCreate(buildCreateActivityResponse())
 
       awsSnsClient.publish(
         PublishRequest.builder().topicArn(topicArn)
@@ -112,7 +112,13 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
         postRequestedFor(urlEqualTo("/mapping/activities"))
           .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$NOMIS_CRS_ACTY_ID")))
           .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
-          .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED"))),
+          .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED")))
+          .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].scheduledInstanceId", equalTo("$SCHEDULE_INSTANCE_ID")))
+          .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].nomisCourseScheduleId", equalTo("$NOMIS_CRS_SCH_ID")))
+          .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].mappingType", equalTo("ACTIVITY_CREATED")))
+          .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].scheduledInstanceId", equalTo("${SCHEDULE_INSTANCE_ID + 1}")))
+          .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].nomisCourseScheduleId", equalTo("${NOMIS_CRS_SCH_ID + 1}")))
+          .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].mappingType", equalTo("ACTIVITY_CREATED"))),
       )
     }
 
@@ -121,7 +127,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
-      nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID, "courseSchedules": [] }""")
+      nomisApi.stubActivityCreate(buildCreateActivityResponse())
       mappingServer.stubCreateActivityWithErrorFollowedBySuccess()
 
       awsSnsClient.publish(
@@ -144,7 +150,13 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           postRequestedFor(urlEqualTo("/mapping/activities"))
             .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$NOMIS_CRS_ACTY_ID")))
             .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
-            .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED"))),
+            .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].scheduledInstanceId", equalTo("$SCHEDULE_INSTANCE_ID")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].nomisCourseScheduleId", equalTo("$NOMIS_CRS_SCH_ID")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].mappingType", equalTo("ACTIVITY_CREATED")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].scheduledInstanceId", equalTo("${SCHEDULE_INSTANCE_ID + 1}")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].nomisCourseScheduleId", equalTo("${NOMIS_CRS_SCH_ID + 1}")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].mappingType", equalTo("ACTIVITY_CREATED"))),
         )
       }
 
@@ -429,7 +441,7 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
   "id": $id,
   "instances": [
     {
-      "id": 3456,
+      "id": $SCHEDULE_INSTANCE_ID,
       "date": "2023-01-13",
       "startTime": "09:00",
       "endTime": "10:00",
@@ -439,7 +451,7 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
       "attendances": []
     },
     {
-      "id": 3457,
+      "id": ${SCHEDULE_INSTANCE_ID + 1},
       "date": "2023-01-14",
       "startTime": "14:00",
       "endTime": "16:30",
@@ -534,3 +546,22 @@ fun buildGetMappingResponse(
           "mappingType": "TYPE"
         }
   """.trimIndent()
+
+fun buildCreateActivityResponse() = """{
+               "courseActivityId": $NOMIS_CRS_ACTY_ID, 
+               "courseSchedules": [
+                 {
+                   "courseScheduleId": $NOMIS_CRS_SCH_ID,
+                   "date": "2023-01-13",
+                   "startTime": "09:00",
+                   "endTime": "10:00"
+                 },
+                 {
+                   "courseScheduleId": ${NOMIS_CRS_SCH_ID + 1},
+                   "date": "2023-01-14",
+                   "startTime": "14:00",
+                   "endTime": "16:30"
+                 }
+               ] 
+             }
+""".trimIndent()

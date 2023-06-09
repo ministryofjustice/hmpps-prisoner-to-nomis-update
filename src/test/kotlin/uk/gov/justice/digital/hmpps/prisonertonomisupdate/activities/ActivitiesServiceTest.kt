@@ -43,7 +43,7 @@ internal class ActivitiesServiceTest {
   private val activitiesApiService: ActivitiesApiService = mock()
   private val nomisApiService: NomisApiService = mock()
   private val mappingService: ActivitiesMappingService = mock()
-  private val updateQueueService: ActivitiesUpdateQueueService = mock()
+  private val updateQueueService: ActivitiesRetryQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()
   private val activitiesService =
     ActivitiesService(
@@ -175,6 +175,7 @@ internal class ActivitiesServiceTest {
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
           "ACTIVITY_CREATED",
+          listOf(),
           LocalDateTime.now(),
         ),
       )
@@ -202,6 +203,7 @@ internal class ActivitiesServiceTest {
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
           "ACTIVITY_CREATED",
+          listOf(),
           LocalDateTime.now(),
         ),
       )
@@ -258,6 +260,7 @@ internal class ActivitiesServiceTest {
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
           "ACTIVITY_CREATED",
+          listOf(),
           LocalDateTime.now(),
         ),
       )
@@ -293,6 +296,7 @@ internal class ActivitiesServiceTest {
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
           "ACTIVITY_CREATED",
+          listOf(),
           LocalDateTime.now(),
         ),
       )
@@ -328,23 +332,26 @@ internal class ActivitiesServiceTest {
 
     @Test
     fun `should call mapping service`() = runTest {
+      val mappingDto = ActivityMappingDto(
+        nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
+        activityScheduleId = ACTIVITY_SCHEDULE_ID,
+        mappingType = "ACTIVITY_CREATED",
+        scheduledInstanceMappings = listOf(
+          ActivityScheduleMappingDto(
+            scheduledInstanceId = SCHEDULE_INSTANCE_ID,
+            nomisCourseScheduleId = NOMIS_CRS_SCH_ID,
+            mappingType = "ACTIVITY_CREATED",
+          ),
+        ),
+      )
       activitiesService.createRetry(
         CreateMappingRetryMessage(
-          mapping = ActivityContext(
-            nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
-            activityScheduleId = ACTIVITY_SCHEDULE_ID,
-          ),
+          mapping = mappingDto,
           telemetryAttributes = mapOf(),
         ),
       )
 
-      verify(mappingService).createMapping(
-        ActivityMappingDto(
-          nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
-          activityScheduleId = ACTIVITY_SCHEDULE_ID,
-          mappingType = "ACTIVITY_CREATED",
-        ),
-      )
+      verify(mappingService).createMapping(mappingDto)
     }
   }
 }
