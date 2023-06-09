@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-05-15"
+    "version": "2023-06-09"
   },
   "servers": [
     {
@@ -1082,7 +1082,14 @@
         },
         "responses": {
           "200": {
-            "description": "Activity information"
+            "description": "Activity information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityResponse"
+                }
+              }
+            }
           },
           "400": {
             "description": "Prison, location, program service or iep value do not exist",
@@ -1116,6 +1123,50 @@
           },
           "404": {
             "description": "Activity Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "activities-resource"
+        ],
+        "summary": "Delete a NOMIS course activity",
+        "description": "Deletes a course activity and its children - pay rates, schedules, allocations and attendances. Intended to be used for data fixes. Requires role NOMIS_ACTIVITIES",
+        "operationId": "deleteActivity",
+        "parameters": [
+          {
+            "name": "courseActivityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Activity is deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
             "content": {
               "application/json": {
                 "schema": {
@@ -1536,6 +1587,65 @@
         }
       }
     },
+    "/prisoners/booking-id/{bookingId}/incentives/reorder": {
+      "post": {
+        "tags": [
+          "incentives-resource"
+        ],
+        "summary": "Reorder a existing incentives to match time order",
+        "description": "Reorder a series of IEPs so the sequence number matches the IEP date time. Latest time gets the higher sequence so the current IEP is the latest. This is required to correct DPS incentives that are created out of order",
+        "operationId": "reorderCurrentIncentives",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "Offender Booking Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender Booking Id",
+              "example": 1234567
+            },
+            "example": 1234567
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Incentives successfully reordered"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access this endpoint forbidden, incorrect role. Must have NOMIS_INCENTIVES",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "booking does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/booking-id/{bookingId}/adjustments": {
       "post": {
         "tags": [
@@ -1871,7 +1981,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateActivityResponse"
+                  "$ref": "#/components/schemas/ActivityResponse"
                 }
               }
             }
@@ -2912,6 +3022,98 @@
           }
         }
       }
+    },
+    "/attendances/{eventId}": {
+      "delete": {
+        "tags": [
+          "activities-resource"
+        ],
+        "summary": "Delete a NOMIS attendance (from OFFENDER_COURSE_ATTENDANCES table)",
+        "description": "Deletes an attendance from NOMIS. Requires role NOMIS_ACTIVITIES",
+        "operationId": "deleteAttendance",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Attendance is deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/allocations/{referenceId}": {
+      "delete": {
+        "tags": [
+          "activities-resource"
+        ],
+        "summary": "Delete a NOMIS allocation (from OFFENDER_PROGRAM_PROFILES table)",
+        "description": "Deletes an allocation from NOMIS and any children - pay rates, attendances. Requires role NOMIS_ACTIVITIES",
+        "operationId": "deleteAllocation",
+        "parameters": [
+          {
+            "name": "referenceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Allocation is deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3561,6 +3763,60 @@
         },
         "description": "Course activity update request"
       },
+      "ActivityResponse": {
+        "required": [
+          "courseActivityId",
+          "courseSchedules"
+        ],
+        "type": "object",
+        "properties": {
+          "courseActivityId": {
+            "type": "integer",
+            "description": "The created course activity id",
+            "format": "int64"
+          },
+          "courseSchedules": {
+            "type": "array",
+            "description": "The created course schedules",
+            "items": {
+              "$ref": "#/components/schemas/ScheduledInstanceResponse"
+            }
+          }
+        },
+        "description": "Activity creation response"
+      },
+      "ScheduledInstanceResponse": {
+        "required": [
+          "courseScheduleId",
+          "date",
+          "endTime",
+          "startTime"
+        ],
+        "type": "object",
+        "properties": {
+          "courseScheduleId": {
+            "type": "integer",
+            "description": "The created scheduled instance id",
+            "format": "int64"
+          },
+          "date": {
+            "type": "string",
+            "description": "The instance date",
+            "format": "date"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "The instance start time",
+            "format": "partial-time"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "The instance end time",
+            "format": "partial-time"
+          }
+        },
+        "description": "The created course schedules"
+      },
       "UpdateCourseScheduleResponse": {
         "required": [
           "courseScheduleId"
@@ -3977,20 +4233,6 @@
         },
         "description": "Course activity creation request"
       },
-      "CreateActivityResponse": {
-        "required": [
-          "courseActivityId"
-        ],
-        "type": "object",
-        "properties": {
-          "courseActivityId": {
-            "type": "integer",
-            "description": "The created course activity id",
-            "format": "int64"
-          }
-        },
-        "description": "Activity creation response"
-      },
       "UpsertAttendanceRequest": {
         "required": [
           "authorisedAbsence",
@@ -4360,12 +4602,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -4388,6 +4630,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "paged": {
+            "type": "boolean"
+          },
+          "unpaged": {
+            "type": "boolean"
+          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
@@ -4395,12 +4643,6 @@
           "pageSize": {
             "type": "integer",
             "format": "int32"
-          },
-          "paged": {
-            "type": "boolean"
-          },
-          "unpaged": {
-            "type": "boolean"
           }
         }
       },
@@ -4550,12 +4792,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -4691,12 +4933,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -4832,12 +5074,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -4897,12 +5139,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
