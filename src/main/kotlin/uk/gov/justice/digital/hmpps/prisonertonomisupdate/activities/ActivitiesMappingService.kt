@@ -52,5 +52,13 @@ data class ActivityMappingDto(
   val nomisCourseActivityId: Long,
   val activityScheduleId: Long,
   val mappingType: String,
+  val scheduledInstanceMappings: List<ActivityScheduleMappingDto> = listOf(),
+  val whenCreated: LocalDateTime? = null,
+)
+
+data class ActivityScheduleMappingDto(
+  val scheduledInstanceId: Long,
+  val nomisCourseScheduleId: Long,
+  val mappingType: String,
   val whenCreated: LocalDateTime? = null,
 )

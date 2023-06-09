@@ -96,6 +96,7 @@ class SchedulesServiceTest {
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
           "ACTIVITY_CREATED",
+          listOf(),
           LocalDateTime.now(),
         ),
       )
@@ -124,6 +125,7 @@ class SchedulesServiceTest {
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
           "ACTIVITY_CREATED",
+          listOf(),
           LocalDateTime.now(),
         ),
       )

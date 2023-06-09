@@ -9,10 +9,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityPay
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleSlot
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ActivityResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PayRateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ScheduleRuleRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ScheduledInstanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
@@ -50,18 +53,37 @@ class ActivitiesService(
 
           createTransformedActivity(activitySchedule)
             .also { eventTelemetry += "nomisCourseActivityId" to it.courseActivityId.toString() }
-            .let { nomisResponse ->
-              ActivityMappingDto(
-                nomisCourseActivityId = nomisResponse.courseActivityId,
-                activityScheduleId = event.additionalInformation.activityScheduleId,
-                mappingType = "ACTIVITY_CREATED",
-              )
-            }
+            .let { nomisResponse -> buildActivityMappingDto(nomisResponse, activitySchedule) }
         }
       }
       saveMapping { mappingService.createMapping(it) }
     }
   }
+
+  private fun buildActivityMappingDto(nomisResponse: ActivityResponse, activitySchedule: ActivitySchedule): ActivityMappingDto =
+    nomisResponse.courseSchedules.map { nomisSchedule ->
+      ActivityScheduleMappingDto(
+        scheduledInstanceId = activitySchedule.instances.findScheduledInstanceId(nomisSchedule),
+        nomisCourseScheduleId = nomisSchedule.courseScheduleId,
+        mappingType = "ACTIVITY_CREATED",
+      )
+    }
+      .let {
+        ActivityMappingDto(
+          nomisCourseActivityId = nomisResponse.courseActivityId,
+          activityScheduleId = activitySchedule.id,
+          mappingType = "ACTIVITY_CREATED",
+          scheduledInstanceMappings = it,
+        )
+      }
+
+  private fun List<ScheduledInstance>.findScheduledInstanceId(nomisSchedule: ScheduledInstanceResponse) =
+    this.find { instance ->
+      instance.date == nomisSchedule.date &&
+        instance.startTime == nomisSchedule.startTime &&
+        instance.endTime == nomisSchedule.endTime
+    }?.id
+      ?: throw IllegalStateException("Unable to find an Activities scheduled instance for the Nomis course schedule we just created - this should not happen: $nomisSchedule")
 
   private suspend fun createTransformedActivity(activitySchedule: ActivitySchedule) =
     activitiesApiService.getActivity(activitySchedule.activity.id).let {
