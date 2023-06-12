@@ -362,7 +362,8 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].mappingType", equalTo("ACTIVITY_CREATED"))),
         )
       }
-      assertThat(awsSqsActivityDlqClient.countAllMessagesOnQueue(activityDlqUrl).get()).isEqualTo(0)
+      await untilAsserted { mappingServer.verify(putRequestedFor(urlEqualTo("/mapping/activities"))) }
+      await untilCallTo { awsSqsActivityDlqClient.countAllMessagesOnQueue(activityDlqUrl).get() } matches { it == 0 }
     }
 
     @Test
@@ -557,7 +558,8 @@ fun buildGetMappingResponse(
   """{
           "nomisCourseActivityId": $nomisActivityId,
           "activityScheduleId": $activityScheduleId,
-          "mappingType": "TYPE"
+          "mappingType": "TYPE",
+          "scheduledInstanceMappings": []
         }
   """.trimIndent()
 
