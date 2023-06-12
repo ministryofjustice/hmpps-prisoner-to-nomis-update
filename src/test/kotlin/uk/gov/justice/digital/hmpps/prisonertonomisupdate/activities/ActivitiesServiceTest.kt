@@ -291,6 +291,7 @@ internal class ActivitiesServiceTest {
     fun `should raise telemetry when update of Nomis successful`() = runTest {
       whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule(endDate = LocalDate.now().plusDays(1)))
       whenever(activitiesApiService.getActivity(anyLong())).thenReturn(newActivity())
+      whenever(nomisApiService.updateActivity(anyLong(), any())).thenReturn(ActivityResponse(1L, listOf()))
       whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
         ActivityMappingDto(
           NOMIS_CRS_ACTY_ID,
