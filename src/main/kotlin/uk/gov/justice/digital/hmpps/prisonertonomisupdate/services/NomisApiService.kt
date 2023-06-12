@@ -83,13 +83,12 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .awaitBody()
 
-  suspend fun updateActivity(courseActivityId: Long, request: UpdateActivityRequest) {
+  suspend fun updateActivity(courseActivityId: Long, request: UpdateActivityRequest): ActivityResponse =
     webClient.put()
       .uri("/activities/$courseActivityId")
       .bodyValue(request)
       .retrieve()
-      .awaitBodilessEntity()
-  }
+      .awaitBody()
 
   suspend fun updateScheduledInstance(courseActivityId: Long, request: CourseScheduleRequest): UpdateCourseScheduleResponse =
     webClient.put()

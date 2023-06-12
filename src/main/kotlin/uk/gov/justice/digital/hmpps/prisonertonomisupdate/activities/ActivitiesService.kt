@@ -106,7 +106,9 @@ class ActivitiesService(
         .also { telemetryMap["dpsActivityId"] = it.id.toString() }
 
       activitySchedule.toUpdateActivityRequest(activity.pay, activity.category.code)
-        .also { nomisApiService.updateActivity(nomisCourseActivityId, it) }
+        .let { nomisApiService.updateActivity(nomisCourseActivityId, it) }
+        .let { nomisResponse -> buildActivityMappingDto(nomisResponse, activitySchedule) }
+        .also { mappingRequest -> mappingService.updateMapping(mappingRequest) }
     }.onSuccess {
       telemetryClient.trackEvent("activity-amend-success", telemetryMap, null)
     }.onFailure { e ->

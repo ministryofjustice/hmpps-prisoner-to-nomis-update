@@ -22,6 +22,14 @@ class ActivitiesMappingService(
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
+  suspend fun updateMapping(request: ActivityMappingDto) {
+    webClient.put()
+      .uri("/mapping/activities")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntityOrThrowOnConflict()
+  }
+
   suspend fun getMappingGivenActivityScheduleIdOrNull(id: Long): ActivityMappingDto? =
     webClient.get()
       .uri("/mapping/activities/activity-schedule-id/$id")

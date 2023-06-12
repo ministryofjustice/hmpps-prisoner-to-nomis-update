@@ -57,7 +57,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
       mappingServer.stubCreateActivity()
-      nomisApi.stubActivityCreate(buildCreateActivityResponse())
+      nomisApi.stubActivityCreate(buildNomisActivityResponse())
 
       awsSnsClient.publish(
         PublishRequest.builder().topicArn(topicArn)
@@ -127,7 +127,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
-      nomisApi.stubActivityCreate(buildCreateActivityResponse())
+      nomisApi.stubActivityCreate(buildNomisActivityResponse())
       mappingServer.stubCreateActivityWithErrorFollowedBySuccess()
 
       awsSnsClient.publish(
@@ -310,7 +310,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
-      nomisApi.stubActivityUpdate(NOMIS_CRS_ACTY_ID)
+      nomisApi.stubActivityUpdate(NOMIS_CRS_ACTY_ID, buildNomisActivityResponse())
 
       awsSnsClient.publish(amendActivityEvent()).get()
 
@@ -344,8 +344,22 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("schedules[0].endTime", equalTo("10:00")))
             .withRequestBody(matchingJsonPath("schedules[0].cancelled", equalTo("false")))
             .withRequestBody(matchingJsonPath("schedules[1].date", equalTo("2023-01-14")))
+            .withRequestBody(matchingJsonPath("schedules[1].startTime", equalTo("14:00")))
+            .withRequestBody(matchingJsonPath("schedules[1].endTime", equalTo("16:30")))
             .withRequestBody(matchingJsonPath("schedules[1].cancelled", equalTo("true")))
             .withRequestBody(matchingJsonPath("programCode", equalTo("LEISURE_SOCIAL"))),
+        )
+        mappingServer.verify(
+          putRequestedFor(urlEqualTo("/mapping/activities"))
+            .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$NOMIS_CRS_ACTY_ID")))
+            .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
+            .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].scheduledInstanceId", equalTo("$SCHEDULE_INSTANCE_ID")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].nomisCourseScheduleId", equalTo("$NOMIS_CRS_SCH_ID")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].mappingType", equalTo("ACTIVITY_CREATED")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].scheduledInstanceId", equalTo("${SCHEDULE_INSTANCE_ID + 1}")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].nomisCourseScheduleId", equalTo("${NOMIS_CRS_SCH_ID + 1}")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].mappingType", equalTo("ACTIVITY_CREATED"))),
         )
       }
       assertThat(awsSqsActivityDlqClient.countAllMessagesOnQueue(activityDlqUrl).get()).isEqualTo(0)
@@ -547,7 +561,7 @@ fun buildGetMappingResponse(
         }
   """.trimIndent()
 
-fun buildCreateActivityResponse() = """{
+fun buildNomisActivityResponse() = """{
                "courseActivityId": $NOMIS_CRS_ACTY_ID, 
                "courseSchedules": [
                  {
