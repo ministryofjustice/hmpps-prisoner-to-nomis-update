@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.lang.Integer.min
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Service
 class ActivitiesService(
@@ -80,11 +81,12 @@ class ActivitiesService(
   private fun List<ScheduledInstance>.findScheduledInstanceId(nomisSchedule: ScheduledInstanceResponse) =
     this.find { instance ->
       instance.date == nomisSchedule.date &&
-        instance.startTime == nomisSchedule.startTime &&
-        instance.endTime == nomisSchedule.endTime
+        instance.startTime.toLocalTime() == nomisSchedule.startTime.toLocalTime() &&
+        instance.endTime.toLocalTime() == nomisSchedule.endTime.toLocalTime()
     }?.id
       ?: throw IllegalStateException("Unable to find an Activities scheduled instance for the Nomis course schedule we just created - this should not happen: $nomisSchedule")
 
+  private fun String.toLocalTime() = LocalTime.parse(this)
   private suspend fun createTransformedActivity(activitySchedule: ActivitySchedule) =
     activitiesApiService.getActivity(activitySchedule.activity.id).let {
       nomisApiService.createActivity(toCreateActivityRequest(activitySchedule, it))

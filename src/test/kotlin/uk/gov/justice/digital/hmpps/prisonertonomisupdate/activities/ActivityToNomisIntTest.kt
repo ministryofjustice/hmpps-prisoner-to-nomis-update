@@ -553,14 +553,14 @@ fun buildCreateActivityResponse() = """{
                  {
                    "courseScheduleId": $NOMIS_CRS_SCH_ID,
                    "date": "2023-01-13",
-                   "startTime": "09:00",
-                   "endTime": "10:00"
+                   "startTime": "09:00:00",
+                   "endTime": "10:00:00"
                  },
                  {
                    "courseScheduleId": ${NOMIS_CRS_SCH_ID + 1},
                    "date": "2023-01-14",
-                   "startTime": "14:00",
-                   "endTime": "16:30"
+                   "startTime": "14:00:00",
+                   "endTime": "16:30:00"
                  }
                ] 
              }
