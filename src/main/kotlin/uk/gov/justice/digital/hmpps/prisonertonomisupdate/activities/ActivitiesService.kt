@@ -61,19 +61,23 @@ class ActivitiesService(
     }
   }
 
-  private fun buildActivityMappingDto(nomisResponse: ActivityResponse, activitySchedule: ActivitySchedule): ActivityMappingDto =
+  private fun buildActivityMappingDto(
+    nomisResponse: ActivityResponse,
+    activitySchedule: ActivitySchedule,
+    mappingType: String = "ACTIVITY_CREATED",
+  ): ActivityMappingDto =
     nomisResponse.courseSchedules.map { nomisSchedule ->
       ActivityScheduleMappingDto(
         scheduledInstanceId = activitySchedule.instances.findScheduledInstanceId(nomisSchedule),
         nomisCourseScheduleId = nomisSchedule.courseScheduleId,
-        mappingType = "ACTIVITY_CREATED",
+        mappingType = mappingType,
       )
     }
       .let {
         ActivityMappingDto(
           nomisCourseActivityId = nomisResponse.courseActivityId,
           activityScheduleId = activitySchedule.id,
-          mappingType = "ACTIVITY_CREATED",
+          mappingType = mappingType,
           scheduledInstanceMappings = it,
         )
       }
@@ -107,7 +111,7 @@ class ActivitiesService(
 
       activitySchedule.toUpdateActivityRequest(activity.pay, activity.category.code)
         .let { nomisApiService.updateActivity(nomisCourseActivityId, it) }
-        .let { nomisResponse -> buildActivityMappingDto(nomisResponse, activitySchedule) }
+        .let { nomisResponse -> buildActivityMappingDto(nomisResponse, activitySchedule, "ACTIVITY_UPDATED") }
         .also { mappingRequest -> mappingService.updateMapping(mappingRequest) }
     }.onSuccess {
       telemetryClient.trackEvent("activity-amend-success", telemetryMap, null)
