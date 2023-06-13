@@ -311,6 +311,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
       nomisApi.stubActivityUpdate(NOMIS_CRS_ACTY_ID, buildNomisActivityResponse())
+      mappingServer.stubUpdateActivity()
 
       awsSnsClient.publish(amendActivityEvent()).get()
 
@@ -363,7 +364,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
         )
       }
       await untilAsserted { mappingServer.verify(putRequestedFor(urlEqualTo("/mapping/activities"))) }
-      await untilCallTo { awsSqsActivityDlqClient.countAllMessagesOnQueue(activityDlqUrl).get() } matches { it == 0 }
+      assertThat(awsSqsActivityDlqClient.countAllMessagesOnQueue(activityDlqUrl).get()).isEqualTo(0)
     }
 
     @Test
