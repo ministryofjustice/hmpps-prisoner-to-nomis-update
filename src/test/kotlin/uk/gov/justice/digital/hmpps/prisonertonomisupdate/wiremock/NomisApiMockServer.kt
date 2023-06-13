@@ -149,11 +149,12 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubActivityUpdate(nomisActivityId: Long) {
+  fun stubActivityUpdate(nomisActivityId: Long, response: String) {
     stubFor(
       put("/activities/$nomisActivityId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
+          .withBody(response)
           .withStatus(200),
       ),
     )

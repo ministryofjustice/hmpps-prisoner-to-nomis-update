@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
@@ -222,6 +223,16 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubCreateActivity() {
     stubFor(
       post("/mapping/activities").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubUpdateActivity() {
+    stubFor(
+      put("/mapping/activities").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(201),
