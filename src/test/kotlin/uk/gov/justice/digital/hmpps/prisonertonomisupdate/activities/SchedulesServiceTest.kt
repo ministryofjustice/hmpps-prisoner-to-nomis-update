@@ -199,6 +199,8 @@ private fun newScheduledInstance() = ActivityScheduleInstance(
       ),
       createdTime = LocalDateTime.parse("2023-02-10T08:34:38"),
       activityState = ActivityLite.ActivityState.LIVE,
+      allocated = 5,
+      capacity = 10,
     ),
   ),
 )

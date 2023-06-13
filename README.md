@@ -277,11 +277,10 @@ customEvents
 ```
 
 Sometimes you may also need further information to diagnose the problem. You can do this based upon the `operation_Id` returned from the above query.
-* Look for failed requests:
+* Look for failed requests (results with success = `False`):
 ```ksql
 requests
 | where operationId == '<insert operationId here>'
-| where success == False
 ```
 * Look for exceptions:
 ```ksql
@@ -293,6 +292,12 @@ After investigating the error you should now know if it's recoverable or not.
 
 * If the error is recoverable (e.g. calls to another service received a 504) then you can leave the message on the DLQ because a retry should work once the other service recovers.
 * If the error is unrecoverable (e.g. calls to another service received a 400) then you probably have enough information to diagnose the issue and constant failing retries/alerts will be annoying. Consider [purging the DLQ](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html#/hmpps-reactive-queue-resource/purgeQueue).
+
+#### Activities API breaking changes
+
+After investigating an error you find the last request was a successful call to the Activities API and that an exception was thrown with a message something like `JSON decoding error: Cannot deserialize value of type uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model` then it would appear that a breaking change has been made to the Activities API.
+
+To fix this see [Updating the Open API specs](#updating-the-open-api-specs).
 
 #### Duplicate allocations and attendances
 

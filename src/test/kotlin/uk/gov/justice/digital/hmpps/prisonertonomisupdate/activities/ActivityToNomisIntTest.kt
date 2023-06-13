@@ -443,11 +443,15 @@ fun buildGetActivityResponse(id: Long = ACTIVITY_ID): String =
     {
       "id": 123456,
       "educationLevelCode": "Basic",
-      "educationLevelDescription": "Basic"
+      "educationLevelDescription": "Basic",
+      "studyAreaCode": "ENGLA",
+      "studyAreaDescription":  "English language"
     }
   ],
   "createdTime": "2023-06-01T09:17:30.425Z",
-  "activityState": "LIVE"
+  "activityState": "LIVE",
+  "capacity": 10,
+  "allocated": 5
 }
   """.trimIndent()
 
@@ -514,11 +518,15 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
       {
         "id": 123456,
         "educationLevelCode": "Basic",
-        "educationLevelDescription": "Basic"
+        "educationLevelDescription": "Basic",
+        "studyAreaCode": "ENGLA",
+        "studyAreaDescription":  "English language"
       }
     ],
     "createdTime": "2023-06-01T09:17:30.425Z",
-    "activityState": "LIVE"
+    "activityState": "LIVE",
+    "capacity": 10,
+    "allocated": 5
   },
   "slots": [{
     "id"        : 555666001,
