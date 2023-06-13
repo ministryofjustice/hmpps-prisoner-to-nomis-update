@@ -354,13 +354,13 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           putRequestedFor(urlEqualTo("/mapping/activities"))
             .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$NOMIS_CRS_ACTY_ID")))
             .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
-            .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED")))
+            .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_UPDATED")))
             .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].scheduledInstanceId", equalTo("$SCHEDULE_INSTANCE_ID")))
             .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].nomisCourseScheduleId", equalTo("$NOMIS_CRS_SCH_ID")))
-            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].mappingType", equalTo("ACTIVITY_CREATED")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].mappingType", equalTo("ACTIVITY_UPDATED")))
             .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].scheduledInstanceId", equalTo("${SCHEDULE_INSTANCE_ID + 1}")))
             .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].nomisCourseScheduleId", equalTo("${NOMIS_CRS_SCH_ID + 1}")))
-            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].mappingType", equalTo("ACTIVITY_CREATED"))),
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].mappingType", equalTo("ACTIVITY_UPDATED"))),
         )
       }
       await untilAsserted { mappingServer.verify(putRequestedFor(urlEqualTo("/mapping/activities"))) }
