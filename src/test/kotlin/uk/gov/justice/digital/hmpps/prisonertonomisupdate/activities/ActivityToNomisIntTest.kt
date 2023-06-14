@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
+import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -88,9 +89,11 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("minimumIncentiveLevelCode", equalTo("BAS")))
           .withRequestBody(matchingJsonPath("programCode", equalTo("LEISURE_SOCIAL")))
           .withRequestBody(matchingJsonPath("payPerSession", equalTo("F")))
+          .withRequestBody(matchingJsonPath("schedules[0].id", absent()))
           .withRequestBody(matchingJsonPath("schedules[0].date", equalTo("2023-01-13")))
           .withRequestBody(matchingJsonPath("schedules[0].startTime", equalTo("09:00")))
           .withRequestBody(matchingJsonPath("schedules[0].endTime", equalTo("10:00")))
+          .withRequestBody(matchingJsonPath("schedules[1].id", absent()))
           .withRequestBody(matchingJsonPath("schedules[1].date", equalTo("2023-01-14")))
           .withRequestBody(matchingJsonPath("schedules[1].startTime", equalTo("14:00")))
           .withRequestBody(matchingJsonPath("schedules[1].endTime", equalTo("16:30")))
@@ -340,10 +343,12 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("scheduleRules[1].endTime", equalTo("14:25")))
             .withRequestBody(matchingJsonPath("scheduleRules[1].tuesday", equalTo("true")))
             .withRequestBody(matchingJsonPath("scheduleRules[1].thursday", equalTo("false")))
+            .withRequestBody(matchingJsonPath("schedules[0].id", equalTo("$NOMIS_CRS_SCH_ID")))
             .withRequestBody(matchingJsonPath("schedules[0].date", equalTo("2023-01-13")))
             .withRequestBody(matchingJsonPath("schedules[0].startTime", equalTo("09:00")))
             .withRequestBody(matchingJsonPath("schedules[0].endTime", equalTo("10:00")))
             .withRequestBody(matchingJsonPath("schedules[0].cancelled", equalTo("false")))
+            .withRequestBody(matchingJsonPath("schedules[1].id", absent()))
             .withRequestBody(matchingJsonPath("schedules[1].date", equalTo("2023-01-14")))
             .withRequestBody(matchingJsonPath("schedules[1].startTime", equalTo("14:00")))
             .withRequestBody(matchingJsonPath("schedules[1].endTime", equalTo("16:30")))
@@ -568,7 +573,11 @@ fun buildGetMappingResponse(
           "nomisCourseActivityId": $nomisActivityId,
           "activityScheduleId": $activityScheduleId,
           "mappingType": "TYPE",
-          "scheduledInstanceMappings": []
+          "scheduledInstanceMappings": [{
+            "scheduledInstanceId": "$SCHEDULE_INSTANCE_ID",
+            "nomisCourseScheduleId": "$NOMIS_CRS_SCH_ID",
+            "mappingType": "ACTIVITY_CREATED"
+          }]
         }
   """.trimIndent()
 

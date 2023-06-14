@@ -36,6 +36,7 @@ class SchedulesIntTest : SqsIntegrationTestBase() {
       await untilAsserted {
         NomisApiExtension.nomisApi.verify(
           putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/schedule"))
+            .withRequestBody(matchingJsonPath("id", equalTo("$NOMIS_CRS_SCH_ID")))
             .withRequestBody(matchingJsonPath("date", equalTo("2023-02-23")))
             .withRequestBody(matchingJsonPath("startTime", equalTo("08:00")))
             .withRequestBody(matchingJsonPath("endTime", equalTo("11:00"))),
