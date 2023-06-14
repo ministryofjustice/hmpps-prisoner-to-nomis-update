@@ -70,8 +70,8 @@ internal class ActivitiesMappingServiceTest {
 
     @Test
     fun `should call api with OAuth2 token`() = runTest {
-      MappingExtension.mappingServer.stubGetMappingGivenActivityScheduleId(
-        id = 1234,
+      MappingExtension.mappingServer.stubGetMappings(
+        activityScheduleId = 1234,
         response = """{
           "nomisCourseActivityId": 456,
           "activityScheduleId": 1234,
@@ -80,7 +80,7 @@ internal class ActivitiesMappingServiceTest {
         """.trimMargin(),
       )
 
-      mappingService.getMappingGivenActivityScheduleId(1234)
+      mappingService.getMappings(1234)
 
       MappingExtension.mappingServer.verify(
         getRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/1234"))
@@ -90,8 +90,8 @@ internal class ActivitiesMappingServiceTest {
 
     @Test
     fun `will return data`() = runTest {
-      MappingExtension.mappingServer.stubGetMappingGivenActivityScheduleId(
-        id = 1234,
+      MappingExtension.mappingServer.stubGetMappings(
+        activityScheduleId = 1234,
         response = """{
           "nomisCourseActivityId": 456,
           "activityScheduleId": 1234,
@@ -100,24 +100,24 @@ internal class ActivitiesMappingServiceTest {
         """.trimMargin(),
       )
 
-      val data = mappingService.getMappingGivenActivityScheduleId(1234)
+      val data = mappingService.getMappings(1234)
 
       assertThat(data).isEqualTo(newMapping())
     }
 
     @Test
     fun `when mapping is not found null is returned`() = runTest {
-      MappingExtension.mappingServer.stubGetMappingGivenActivityScheduleIdWithError(123, 404)
+      MappingExtension.mappingServer.stubGetMappingsWithError(123, 404)
 
-      assertThat(mappingService.getMappingGivenActivityScheduleIdOrNull(123)).isNull()
+      assertThat(mappingService.getMappingsOrNull(123)).isNull()
     }
 
     @Test
     fun `when any bad response is received an exception is thrown`() = runTest {
-      MappingExtension.mappingServer.stubGetMappingGivenActivityScheduleIdWithError(123, 503)
+      MappingExtension.mappingServer.stubGetMappingsWithError(123, 503)
 
       assertThrows<ServiceUnavailable> {
-        mappingService.getMappingGivenActivityScheduleId(123)
+        mappingService.getMappings(123)
       }
     }
   }

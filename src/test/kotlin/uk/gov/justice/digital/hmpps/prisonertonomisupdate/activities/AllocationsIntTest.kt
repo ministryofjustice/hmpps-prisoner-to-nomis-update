@@ -24,7 +24,7 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
     @Test
     fun `will consume an allocation message`() {
       ActivitiesApiExtension.activitiesApi.stubGetAllocation(ALLOCATION_ID, buildApiAllocationDtoJsonResponse())
-      MappingExtension.mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      MappingExtension.mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
       NomisApiExtension.nomisApi.stubAllocationUpsert(NOMIS_CRS_ACTY_ID)
 
       awsSnsClient.publish(
@@ -54,7 +54,7 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
     @Test
     fun `will consume an allocation amended message`() {
       ActivitiesApiExtension.activitiesApi.stubGetAllocation(ALLOCATION_ID, buildApiAllocationDeallocatedJsonResponse())
-      MappingExtension.mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      MappingExtension.mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
       NomisApiExtension.nomisApi.stubAllocationUpsert(NOMIS_CRS_ACTY_ID)
 
       awsSnsClient.publish(
@@ -88,7 +88,7 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
     @Test
     fun `will consume an allocation amended message`() {
       ActivitiesApiExtension.activitiesApi.stubGetAllocation(ALLOCATION_ID, buildApiAllocationSuspendedJsonResponse())
-      MappingExtension.mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      MappingExtension.mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
       NomisApiExtension.nomisApi.stubAllocationUpsert(NOMIS_CRS_ACTY_ID)
 
       awsSnsClient.publish(

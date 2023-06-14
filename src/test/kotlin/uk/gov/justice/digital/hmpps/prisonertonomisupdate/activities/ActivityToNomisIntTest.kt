@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
+import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -55,7 +56,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     fun `will consume a create activity schedule message`() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
+      mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
       mappingServer.stubCreateActivity()
       nomisApi.stubActivityCreate(buildNomisActivityResponse())
 
@@ -88,9 +89,11 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("minimumIncentiveLevelCode", equalTo("BAS")))
           .withRequestBody(matchingJsonPath("programCode", equalTo("LEISURE_SOCIAL")))
           .withRequestBody(matchingJsonPath("payPerSession", equalTo("F")))
+          .withRequestBody(matchingJsonPath("schedules[0].id", absent()))
           .withRequestBody(matchingJsonPath("schedules[0].date", equalTo("2023-01-13")))
           .withRequestBody(matchingJsonPath("schedules[0].startTime", equalTo("09:00")))
           .withRequestBody(matchingJsonPath("schedules[0].endTime", equalTo("10:00")))
+          .withRequestBody(matchingJsonPath("schedules[1].id", absent()))
           .withRequestBody(matchingJsonPath("schedules[1].date", equalTo("2023-01-14")))
           .withRequestBody(matchingJsonPath("schedules[1].startTime", equalTo("14:00")))
           .withRequestBody(matchingJsonPath("schedules[1].endTime", equalTo("16:30")))
@@ -126,7 +129,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     fun `will retry after a mapping failure`() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
+      mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
       nomisApi.stubActivityCreate(buildNomisActivityResponse())
       mappingServer.stubCreateActivityWithErrorFollowedBySuccess()
 
@@ -170,7 +173,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     fun `will log when duplicate is detected`() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
+      mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
       nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID, "courseSchedules": [] }""")
       mappingServer.stubCreateActivityWithDuplicateError(
         activityScheduleId = ACTIVITY_SCHEDULE_ID,
@@ -222,7 +225,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     fun `constant mapping failure will result in DLQ message which can be retried`() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
+      mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
       nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID, "courseSchedules": [] }""")
       mappingServer.stubCreateActivityWithError()
 
@@ -269,7 +272,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     fun `will retry and publish telemetry after a Nomis update failure`() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
+      mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
       mappingServer.stubCreateActivity()
       nomisApi.stubActivityCreateWithError(status = 500)
 
@@ -309,7 +312,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     fun `should update an activity`() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
       nomisApi.stubActivityUpdate(NOMIS_CRS_ACTY_ID, buildNomisActivityResponse())
       mappingServer.stubUpdateActivity()
 
@@ -340,10 +343,12 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("scheduleRules[1].endTime", equalTo("14:25")))
             .withRequestBody(matchingJsonPath("scheduleRules[1].tuesday", equalTo("true")))
             .withRequestBody(matchingJsonPath("scheduleRules[1].thursday", equalTo("false")))
+            .withRequestBody(matchingJsonPath("schedules[0].id", equalTo("$NOMIS_CRS_SCH_ID")))
             .withRequestBody(matchingJsonPath("schedules[0].date", equalTo("2023-01-13")))
             .withRequestBody(matchingJsonPath("schedules[0].startTime", equalTo("09:00")))
             .withRequestBody(matchingJsonPath("schedules[0].endTime", equalTo("10:00")))
             .withRequestBody(matchingJsonPath("schedules[0].cancelled", equalTo("false")))
+            .withRequestBody(matchingJsonPath("schedules[1].id", absent()))
             .withRequestBody(matchingJsonPath("schedules[1].date", equalTo("2023-01-14")))
             .withRequestBody(matchingJsonPath("schedules[1].startTime", equalTo("14:00")))
             .withRequestBody(matchingJsonPath("schedules[1].endTime", equalTo("16:30")))
@@ -568,7 +573,11 @@ fun buildGetMappingResponse(
           "nomisCourseActivityId": $nomisActivityId,
           "activityScheduleId": $activityScheduleId,
           "mappingType": "TYPE",
-          "scheduledInstanceMappings": []
+          "scheduledInstanceMappings": [{
+            "scheduledInstanceId": "$SCHEDULE_INSTANCE_ID",
+            "nomisCourseScheduleId": "$NOMIS_CRS_SCH_ID",
+            "mappingType": "ACTIVITY_CREATED"
+          }]
         }
   """.trimIndent()
 

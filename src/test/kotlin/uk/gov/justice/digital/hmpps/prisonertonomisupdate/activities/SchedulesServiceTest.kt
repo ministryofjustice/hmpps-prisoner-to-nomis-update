@@ -3,6 +3,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.microsoft.applicationinsights.TelemetryClient
+import jakarta.validation.ValidationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -69,14 +70,14 @@ class SchedulesServiceTest {
     @Test
     fun `should throw and raise telemetry if cannot find mappings`() = runTest {
       whenever(activitiesApiService.getScheduledInstance(anyLong())).thenReturn(newScheduledInstance())
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong()))
+      whenever(mappingService.getMappings(anyLong()))
         .thenThrow(WebClientResponseException.NotFound::class.java)
 
       assertThrows<WebClientResponseException.NotFound> {
         schedulesService.updateScheduledInstance(aDomainEvent())
       }
 
-      verify(mappingService).getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)
+      verify(mappingService).getMappings(ACTIVITY_SCHEDULE_ID)
       verify(telemetryClient).trackEvent(
         eq("activity-scheduled-instance-amend-failed"),
         check<Map<String, String>> {
@@ -89,14 +90,52 @@ class SchedulesServiceTest {
     }
 
     @Test
-    fun `should throw and raise telemetry if fails to update Nomis`() = runTest {
+    fun `should throw and raise telemetry if cannot find scheduled instance mapping`() = runTest {
       whenever(activitiesApiService.getScheduledInstance(anyLong())).thenReturn(newScheduledInstance())
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
+      whenever(mappingService.getMappings(anyLong())).thenReturn(
         ActivityMappingDto(
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
           "ACTIVITY_CREATED",
           listOf(),
+          LocalDateTime.now(),
+        ),
+      )
+
+      assertThrows<ValidationException> {
+        schedulesService.updateScheduledInstance(aDomainEvent())
+      }.also {
+        assertThat(it.message).isEqualTo("Mapping for Activity's scheduled instance id not found: $SCHEDULE_INSTANCE_ID")
+      }
+
+      verify(mappingService).getMappings(ACTIVITY_SCHEDULE_ID)
+      verify(telemetryClient).trackEvent(
+        eq("activity-scheduled-instance-amend-failed"),
+        check<Map<String, String>> {
+          assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_CRS_ACTY_ID")
+          assertThat(it["scheduleDate"]).isEqualTo("2023-02-23")
+          assertThat(it["startTime"]).isEqualTo("08:00")
+          assertThat(it["endTime"]).isEqualTo("11:00")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should throw and raise telemetry if fails to update Nomis`() = runTest {
+      whenever(activitiesApiService.getScheduledInstance(anyLong())).thenReturn(newScheduledInstance())
+      whenever(mappingService.getMappings(anyLong())).thenReturn(
+        ActivityMappingDto(
+          NOMIS_CRS_ACTY_ID,
+          ACTIVITY_SCHEDULE_ID,
+          "ACTIVITY_CREATED",
+          listOf(
+            ActivityScheduleMappingDto(
+              SCHEDULE_INSTANCE_ID,
+              NOMIS_CRS_SCH_ID,
+              "ACTIVITY_CREATED",
+            ),
+          ),
           LocalDateTime.now(),
         ),
       )
@@ -120,12 +159,18 @@ class SchedulesServiceTest {
     @Test
     fun `should raise telemetry when update of Nomis successful`() = runTest {
       whenever(activitiesApiService.getScheduledInstance(anyLong())).thenReturn(newScheduledInstance())
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
+      whenever(mappingService.getMappings(anyLong())).thenReturn(
         ActivityMappingDto(
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
           "ACTIVITY_CREATED",
-          listOf(),
+          listOf(
+            ActivityScheduleMappingDto(
+              SCHEDULE_INSTANCE_ID,
+              NOMIS_CRS_SCH_ID,
+              "ACTIVITY_CREATED",
+            ),
+          ),
           LocalDateTime.now(),
         ),
       )

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.microsoft.applicationinsights.TelemetryClient
+import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
@@ -31,12 +32,16 @@ class SchedulesService(
           telemetryMap["endTime"] = it.endTime
         }
 
-      val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(scheduledInstance.activitySchedule.id).nomisCourseActivityId
+      val mappings = mappingService.getMappings(scheduledInstance.activitySchedule.id)
+      val nomisCourseActivityId = mappings.nomisCourseActivityId
         .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
+      val nomisCourseScheduleId = mappings.scheduledInstanceMappings.find { it.scheduledInstanceId == scheduledInstanceId }
+        ?.nomisCourseScheduleId
+        ?.also { telemetryMap["nomisCourseScheduleId"] = it.toString() }
+        ?: throw ValidationException("Mapping for Activity's scheduled instance id not found: $scheduledInstanceId")
 
-      scheduledInstance.toCourseScheduleRequest()
+      scheduledInstance.toCourseScheduleRequest(nomisCourseScheduleId)
         .let { nomisApiService.updateScheduledInstance(nomisCourseActivityId, it) }
-        .also { telemetryMap["nomisCourseScheduleId"] = it.courseScheduleId.toString() }
     }.onSuccess {
       telemetryClient.trackEvent("activity-scheduled-instance-amend-success", telemetryMap, null)
     }.onFailure { e ->
@@ -46,9 +51,10 @@ class SchedulesService(
   }
 }
 
-fun List<ScheduledInstance>.toCourseScheduleRequests() =
+fun List<ScheduledInstance>.toCourseScheduleRequests(mappings: List<ActivityScheduleMappingDto>? = null) =
   map {
     CourseScheduleRequest(
+      id = mappings?.find { mapping -> mapping.scheduledInstanceId == it.id }?.nomisCourseScheduleId,
       date = it.date,
       startTime = it.startTime,
       endTime = it.endTime,
@@ -56,8 +62,9 @@ fun List<ScheduledInstance>.toCourseScheduleRequests() =
     )
   }
 
-fun ActivityScheduleInstance.toCourseScheduleRequest() =
+fun ActivityScheduleInstance.toCourseScheduleRequest(nomisCourseScheduleId: Long) =
   CourseScheduleRequest(
+    id = nomisCourseScheduleId,
     date = date,
     startTime = startTime,
     endTime = endTime,

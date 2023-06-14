@@ -66,13 +66,13 @@ class AttendanceServiceTest {
     @Test
     fun `should throw and raise telemetry if fails to retrieve mapping details`() = runTest {
       whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSyncWaiting())
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenThrow(Forbidden::class.java)
+      whenever(mappingService.getMappings(anyLong())).thenThrow(Forbidden::class.java)
 
       assertThrows<Forbidden> {
         attendanceService.upsertAttendance(attendanceEvent())
       }
 
-      verify(mappingService).getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)
+      verify(mappingService).getMappings(ACTIVITY_SCHEDULE_ID)
       verify(telemetryClient).trackEvent(
         eq("activity-attendance-create-failed"),
         check<MutableMap<String, String>> {
@@ -95,7 +95,7 @@ class AttendanceServiceTest {
     @Test
     fun `should throw and raise telemetry if fails to upsert attendance in Nomis`() = runTest {
       whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSyncWaiting())
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(activityMappingDto())
+      whenever(mappingService.getMappings(anyLong())).thenReturn(activityMappingDto())
       whenever(nomisApiService.upsertAttendance(anyLong(), anyLong(), any())).thenThrow(BadRequest::class.java)
 
       assertThrows<BadRequest> {
@@ -119,7 +119,7 @@ class AttendanceServiceTest {
     @Test
     fun `should throw and raise telemetry if fails to map event status`() = runTest {
       whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSyncWaiting().copy(status = "INVALID"))
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(activityMappingDto())
+      whenever(mappingService.getMappings(anyLong())).thenReturn(activityMappingDto())
 
       assertThrows<InvalidAttendanceStatusException> {
         attendanceService.upsertAttendance(attendanceEvent())
@@ -152,7 +152,7 @@ class AttendanceServiceTest {
     @Test
     fun `should throw and raise telemetry if fails to map event outcome`() = runTest {
       whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSyncWaiting().copy(attendanceReasonCode = "INVALID"))
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(activityMappingDto())
+      whenever(mappingService.getMappings(anyLong())).thenReturn(activityMappingDto())
 
       assertThrows<InvalidAttendanceReasonException> {
         attendanceService.upsertAttendance(attendanceEvent())
@@ -185,7 +185,7 @@ class AttendanceServiceTest {
     @Test
     fun `should create attendance in Nomis and raise telemetry for create request`() = runTest {
       whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSyncWaiting())
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(activityMappingDto())
+      whenever(mappingService.getMappings(anyLong())).thenReturn(activityMappingDto())
       whenever(nomisApiService.upsertAttendance(anyLong(), anyLong(), any())).thenReturn(upsertAttendanceResponse())
 
       assertDoesNotThrow {
@@ -236,7 +236,7 @@ class AttendanceServiceTest {
     @Test
     fun `should update attendance in Nomis and raise telemetry for update request`() = runTest {
       whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSyncAttended())
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(activityMappingDto())
+      whenever(mappingService.getMappings(anyLong())).thenReturn(activityMappingDto())
       whenever(nomisApiService.upsertAttendance(anyLong(), anyLong(), any())).thenReturn(upsertAttendanceResponse(created = false))
 
       assertDoesNotThrow {
@@ -286,7 +286,7 @@ class AttendanceServiceTest {
     @Test
     fun `should get the Nomis attendance if Activities status is now locked`() = runTest {
       whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSyncLocked())
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(activityMappingDto())
+      whenever(mappingService.getMappings(anyLong())).thenReturn(activityMappingDto())
       whenever(nomisApiService.upsertAttendance(anyLong(), anyLong(), any())).thenReturn(upsertAttendanceResponse())
       whenever(nomisApiService.getAttendanceStatus(anyLong(), anyLong(), any())).thenReturn(getAttendanceStatusResponse())
 

@@ -31,7 +31,7 @@ class AllocationService(
         telemetryMap["offenderNo"] = allocation.prisonerNumber
         telemetryMap["bookingId"] = allocation.bookingId.toString()
         telemetryMap["dpsActivityScheduleId"] = allocation.scheduleId.toString()
-        mappingService.getMappingGivenActivityScheduleId(allocation.scheduleId)
+        mappingService.getMappings(allocation.scheduleId)
           .also { telemetryMap["nomisCourseActivityId"] = it.nomisCourseActivityId.toString() }
           .let { mapping ->
             nomisApiService.upsertAllocation(

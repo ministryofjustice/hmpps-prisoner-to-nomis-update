@@ -26,7 +26,7 @@ class SchedulesIntTest : SqsIntegrationTestBase() {
     @Test
     fun `should update scheduled instance`() {
       ActivitiesApiExtension.activitiesApi.stubGetScheduledInstance(SCHEDULE_INSTANCE_ID, buildGetScheduledInstanceResponse())
-      MappingExtension.mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      MappingExtension.mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
       NomisApiExtension.nomisApi.stubScheduledInstanceUpdate(NOMIS_CRS_ACTY_ID, """{ "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
 
       awsSnsClient.publish(amendScheduledInstanceEvent())
@@ -36,6 +36,7 @@ class SchedulesIntTest : SqsIntegrationTestBase() {
       await untilAsserted {
         NomisApiExtension.nomisApi.verify(
           putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/schedule"))
+            .withRequestBody(matchingJsonPath("id", equalTo("$NOMIS_CRS_SCH_ID")))
             .withRequestBody(matchingJsonPath("date", equalTo("2023-02-23")))
             .withRequestBody(matchingJsonPath("startTime", equalTo("08:00")))
             .withRequestBody(matchingJsonPath("endTime", equalTo("11:00"))),
@@ -47,7 +48,7 @@ class SchedulesIntTest : SqsIntegrationTestBase() {
     @Test
     fun `should put messages on DLQ if external API call fails`() {
       ActivitiesApiExtension.activitiesApi.stubGetScheduledInstance(SCHEDULE_INSTANCE_ID, buildGetScheduledInstanceResponse())
-      MappingExtension.mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      MappingExtension.mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
       NomisApiExtension.nomisApi.stubScheduledInstanceUpdateWithError(NOMIS_CRS_ACTY_ID)
 
       awsSnsClient.publish(amendScheduledInstanceEvent())

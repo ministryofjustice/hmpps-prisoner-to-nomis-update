@@ -46,7 +46,7 @@ class ActivitiesService(
       )
 
       checkMappingDoesNotExist {
-        mappingService.getMappingGivenActivityScheduleIdOrNull(event.additionalInformation.activityScheduleId)
+        mappingService.getMappingsOrNull(event.additionalInformation.activityScheduleId)
       }
       transform {
         activitiesApiService.getActivitySchedule(event.additionalInformation.activityScheduleId).let { activitySchedule ->
@@ -101,16 +101,16 @@ class ActivitiesService(
     val telemetryMap = mutableMapOf("dpsActivityScheduleId" to activityScheduleId.toString())
 
     runCatching {
-      val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(activityScheduleId).nomisCourseActivityId
-        .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
+      val mappings = mappingService.getMappings(activityScheduleId)
+        .also { telemetryMap["nomisCourseActivityId"] = it.nomisCourseActivityId.toString() }
 
       val activitySchedule = activitiesApiService.getActivitySchedule(activityScheduleId)
 
       val activity = activitiesApiService.getActivity(activitySchedule.activity.id)
         .also { telemetryMap["dpsActivityId"] = it.id.toString() }
 
-      activitySchedule.toUpdateActivityRequest(activity.pay, activity.category.code)
-        .let { nomisApiService.updateActivity(nomisCourseActivityId, it) }
+      activitySchedule.toUpdateActivityRequest(activity.pay, activity.category.code, mappings)
+        .let { nomisApiService.updateActivity(mappings.nomisCourseActivityId, it) }
         .let { nomisResponse -> buildActivityMappingDto(nomisResponse, activitySchedule, "ACTIVITY_UPDATED") }
         .also { mappingRequest -> mappingService.updateMapping(mappingRequest) }
     }.onSuccess {
@@ -121,7 +121,7 @@ class ActivitiesService(
     }
   }
 
-  private fun ActivitySchedule.toUpdateActivityRequest(pay: List<ActivityPay>, categoryCode: String) =
+  private fun ActivitySchedule.toUpdateActivityRequest(pay: List<ActivityPay>, categoryCode: String, mappings: ActivityMappingDto) =
     UpdateActivityRequest(
       startDate = startDate,
       capacity = capacity,
@@ -130,7 +130,7 @@ class ActivitiesService(
       minimumIncentiveLevelCode = activity.minimumIncentiveNomisCode,
       payPerSession = toUpdatePayPerSession(),
       scheduleRules = slots.toScheduleRuleRequests(),
-      schedules = instances.toCourseScheduleRequests(),
+      schedules = instances.toCourseScheduleRequests(mappings.scheduledInstanceMappings),
       excludeBankHolidays = !runsOnBankHoliday,
       endDate = endDate,
       internalLocationId = internalLocation?.id?.toLong(),

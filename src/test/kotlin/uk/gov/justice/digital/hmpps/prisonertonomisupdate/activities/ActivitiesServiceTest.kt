@@ -118,7 +118,7 @@ internal class ActivitiesServiceTest {
         newActivitySchedule(),
       )
       whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(newActivity())
-      whenever(mappingService.getMappingGivenActivityScheduleIdOrNull(ACTIVITY_SCHEDULE_ID)).thenReturn(
+      whenever(mappingService.getMappingsOrNull(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
           nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
           activityScheduleId = ACTIVITY_SCHEDULE_ID,
@@ -170,7 +170,7 @@ internal class ActivitiesServiceTest {
 
     @Test
     fun `should throw and raise telemetry if cannot load Activity Schedule`() = runTest {
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
+      whenever(mappingService.getMappings(anyLong())).thenReturn(
         ActivityMappingDto(
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
@@ -198,7 +198,7 @@ internal class ActivitiesServiceTest {
 
     @Test
     fun `should throw and raise telemetry if cannot load Activity `() = runTest {
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
+      whenever(mappingService.getMappings(anyLong())).thenReturn(
         ActivityMappingDto(
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
@@ -230,14 +230,14 @@ internal class ActivitiesServiceTest {
     fun `should throw and raise telemetry if cannot find mappings`() = runTest {
       whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
       whenever(activitiesApiService.getActivity(anyLong())).thenReturn(newActivity())
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong()))
+      whenever(mappingService.getMappings(anyLong()))
         .thenThrow(NotFound::class.java)
 
       assertThrows<NotFound> {
         activitiesService.updateActivity(aDomainEvent())
       }
 
-      verify(mappingService).getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)
+      verify(mappingService).getMappings(ACTIVITY_SCHEDULE_ID)
       verify(telemetryClient).trackEvent(
         eq("activity-amend-failed"),
         check<Map<String, String>> {
@@ -255,7 +255,7 @@ internal class ActivitiesServiceTest {
     fun `should throw and raise telemetry if fail to update Nomis`() = runTest {
       whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
       whenever(activitiesApiService.getActivity(anyLong())).thenReturn(newActivity())
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
+      whenever(mappingService.getMappings(anyLong())).thenReturn(
         ActivityMappingDto(
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
@@ -292,7 +292,7 @@ internal class ActivitiesServiceTest {
       whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule(endDate = LocalDate.now().plusDays(1)))
       whenever(activitiesApiService.getActivity(anyLong())).thenReturn(newActivity())
       whenever(nomisApiService.updateActivity(anyLong(), any())).thenReturn(ActivityResponse(1L, listOf()))
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
+      whenever(mappingService.getMappings(anyLong())).thenReturn(
         ActivityMappingDto(
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,

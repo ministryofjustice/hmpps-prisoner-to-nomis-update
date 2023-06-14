@@ -27,7 +27,7 @@ class AttendanceService(
       val attendanceSync = activitiesApiService.getAttendanceSync(attendanceId)
         .also { telemetryMap.putAll(it.toTelemetry()) }
 
-      val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(attendanceSync.activityScheduleId).nomisCourseActivityId
+      val nomisCourseActivityId = mappingService.getMappings(attendanceSync.activityScheduleId).nomisCourseActivityId
         .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
 
       val nomisAttendanceStatus = if (attendanceSync.status == "LOCKED") {
