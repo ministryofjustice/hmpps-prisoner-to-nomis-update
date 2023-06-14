@@ -27,6 +27,8 @@ generic-service:
     host: app-hostname.local    # override per environment
     tlsSecretName: prisoner-to-nomis-cert
 
+  serviceAccountName: hmpps-prisoner-to-nomis-update
+
   # Environment variables to load into the deployment
   env:
     JAVA_OPTS: "-Xmx512m"
@@ -58,6 +60,7 @@ generic-service:
     FEATURE_EVENT_INCENTIVES_LEVELS_REORDERED: true
     FEATURE_EVENT_INCENTIVES_PRISON_LEVEL_CHANGED: true
     FEATURE_EVENT_DELETEALL: false
+    HMPPS_SQS_USE_WEB_TOKEN: true
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:
@@ -82,45 +85,25 @@ generic-service:
       SENTENCE_ADJUSTMENTS_CLIENT_ID: "SENTENCE_ADJUSTMENTS_CLIENT_ID"
       SENTENCE_ADJUSTMENTS_CLIENT_SECRET: "SENTENCE_ADJUSTMENTS_CLIENT_SECRET"
     sqs-nomis-update-visit-secret:
-      HMPPS_SQS_QUEUES_VISIT_QUEUE_ACCESS_KEY_ID: "access_key_id"
-      HMPPS_SQS_QUEUES_VISIT_QUEUE_SECRET_ACCESS_KEY: "secret_access_key"
       HMPPS_SQS_QUEUES_VISIT_QUEUE_NAME: "sqs_queue_name"
     sqs-nomis-update-visit-dlq-secret:
       HMPPS_SQS_QUEUES_VISIT_DLQ_NAME: "sqs_queue_name"
-      HMPPS_SQS_QUEUES_VISIT_DLQ_ACCESS_KEY_ID: "access_key_id"
-      HMPPS_SQS_QUEUES_VISIT_DLQ_SECRET_ACCESS_KEY: "secret_access_key"
     sqs-nomis-update-incentive-secret:
-      HMPPS_SQS_QUEUES_INCENTIVE_QUEUE_ACCESS_KEY_ID: "access_key_id"
-      HMPPS_SQS_QUEUES_INCENTIVE_QUEUE_SECRET_ACCESS_KEY: "secret_access_key"
       HMPPS_SQS_QUEUES_INCENTIVE_QUEUE_NAME: "sqs_queue_name"
     sqs-nomis-update-incentive-dlq-secret:
       HMPPS_SQS_QUEUES_INCENTIVE_DLQ_NAME: "sqs_queue_name"
-      HMPPS_SQS_QUEUES_INCENTIVE_DLQ_ACCESS_KEY_ID: "access_key_id"
-      HMPPS_SQS_QUEUES_INCENTIVE_DLQ_SECRET_ACCESS_KEY: "secret_access_key"
     sqs-nomis-update-activity-secret:
-      HMPPS_SQS_QUEUES_ACTIVITY_QUEUE_ACCESS_KEY_ID: "access_key_id"
-      HMPPS_SQS_QUEUES_ACTIVITY_QUEUE_SECRET_ACCESS_KEY: "secret_access_key"
       HMPPS_SQS_QUEUES_ACTIVITY_QUEUE_NAME: "sqs_queue_name"
     sqs-nomis-update-activity-dlq-secret:
       HMPPS_SQS_QUEUES_ACTIVITY_DLQ_NAME: "sqs_queue_name"
-      HMPPS_SQS_QUEUES_ACTIVITY_DLQ_ACCESS_KEY_ID: "access_key_id"
-      HMPPS_SQS_QUEUES_ACTIVITY_DLQ_SECRET_ACCESS_KEY: "secret_access_key"
     sqs-nomis-update-appointment-secret:
-      HMPPS_SQS_QUEUES_APPOINTMENT_QUEUE_ACCESS_KEY_ID: "access_key_id"
-      HMPPS_SQS_QUEUES_APPOINTMENT_QUEUE_SECRET_ACCESS_KEY: "secret_access_key"
       HMPPS_SQS_QUEUES_APPOINTMENT_QUEUE_NAME: "sqs_queue_name"
     sqs-nomis-update-appointment-dlq-secret:
       HMPPS_SQS_QUEUES_APPOINTMENT_DLQ_NAME: "sqs_queue_name"
-      HMPPS_SQS_QUEUES_APPOINTMENT_DLQ_ACCESS_KEY_ID: "access_key_id"
-      HMPPS_SQS_QUEUES_APPOINTMENT_DLQ_SECRET_ACCESS_KEY: "secret_access_key"
     sqs-nomis-update-sentencing-secret:
-      HMPPS_SQS_QUEUES_SENTENCING_QUEUE_ACCESS_KEY_ID: "access_key_id"
-      HMPPS_SQS_QUEUES_SENTENCING_QUEUE_SECRET_ACCESS_KEY: "secret_access_key"
       HMPPS_SQS_QUEUES_SENTENCING_QUEUE_NAME: "sqs_queue_name"
     sqs-nomis-update-sentencing-dlq-secret:
       HMPPS_SQS_QUEUES_SENTENCING_DLQ_NAME: "sqs_queue_name"
-      HMPPS_SQS_QUEUES_SENTENCING_DLQ_ACCESS_KEY_ID: "access_key_id"
-      HMPPS_SQS_QUEUES_SENTENCING_DLQ_SECRET_ACCESS_KEY: "secret_access_key"
 
   allowlist:
     office: "217.33.148.210/32"
