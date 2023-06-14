@@ -46,7 +46,7 @@ class ActivitiesService(
       )
 
       checkMappingDoesNotExist {
-        mappingService.getMappingGivenActivityScheduleIdOrNull(event.additionalInformation.activityScheduleId)
+        mappingService.getMappingsOrNull(event.additionalInformation.activityScheduleId)
       }
       transform {
         activitiesApiService.getActivitySchedule(event.additionalInformation.activityScheduleId).let { activitySchedule ->

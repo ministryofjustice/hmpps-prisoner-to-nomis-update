@@ -30,15 +30,15 @@ class ActivitiesMappingService(
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
-  suspend fun getMappingGivenActivityScheduleIdOrNull(id: Long): ActivityMappingDto? =
+  suspend fun getMappingsOrNull(activityScheduleId: Long): ActivityMappingDto? =
     webClient.get()
-      .uri("/mapping/activities/activity-schedule-id/$id")
+      .uri("/mapping/activities/activity-schedule-id/$activityScheduleId")
       .retrieve()
       .awaitBodyOrNotFound()
 
-  suspend fun getMappingGivenActivityScheduleId(id: Long): ActivityMappingDto =
+  suspend fun getMappings(activityScheduleId: Long): ActivityMappingDto =
     webClient.get()
-      .uri("/mapping/activities/activity-schedule-id/$id")
+      .uri("/mapping/activities/activity-schedule-id/$activityScheduleId")
       .retrieve()
       .awaitBody()
 

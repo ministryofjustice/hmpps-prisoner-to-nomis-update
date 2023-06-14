@@ -37,7 +37,7 @@ class AllocationServiceTest {
     @Test
     fun `should publish telemetry for an allocation event`() = runTest {
       whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
-      whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
+      whenever(mappingService.getMappings(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
           nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
           activityScheduleId = ACTIVITY_SCHEDULE_ID,
@@ -75,7 +75,7 @@ class AllocationServiceTest {
     @Test
     fun `should publish telemetry for a failed allocation event`() = runTest {
       whenever(activitiesApiService.getAllocation(ALLOCATION_ID)).thenReturn(newAllocation())
-      whenever(mappingService.getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)).thenReturn(
+      whenever(mappingService.getMappings(ACTIVITY_SCHEDULE_ID)).thenReturn(
         ActivityMappingDto(
           nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
           activityScheduleId = ACTIVITY_SCHEDULE_ID,

@@ -31,7 +31,7 @@ class SchedulesService(
           telemetryMap["endTime"] = it.endTime
         }
 
-      val nomisCourseActivityId = mappingService.getMappingGivenActivityScheduleId(scheduledInstance.activitySchedule.id).nomisCourseActivityId
+      val nomisCourseActivityId = mappingService.getMappings(scheduledInstance.activitySchedule.id).nomisCourseActivityId
         .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
 
       scheduledInstance.toCourseScheduleRequest()

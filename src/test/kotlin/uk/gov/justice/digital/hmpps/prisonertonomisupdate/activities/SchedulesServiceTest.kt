@@ -69,14 +69,14 @@ class SchedulesServiceTest {
     @Test
     fun `should throw and raise telemetry if cannot find mappings`() = runTest {
       whenever(activitiesApiService.getScheduledInstance(anyLong())).thenReturn(newScheduledInstance())
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong()))
+      whenever(mappingService.getMappings(anyLong()))
         .thenThrow(WebClientResponseException.NotFound::class.java)
 
       assertThrows<WebClientResponseException.NotFound> {
         schedulesService.updateScheduledInstance(aDomainEvent())
       }
 
-      verify(mappingService).getMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID)
+      verify(mappingService).getMappings(ACTIVITY_SCHEDULE_ID)
       verify(telemetryClient).trackEvent(
         eq("activity-scheduled-instance-amend-failed"),
         check<Map<String, String>> {
@@ -91,7 +91,7 @@ class SchedulesServiceTest {
     @Test
     fun `should throw and raise telemetry if fails to update Nomis`() = runTest {
       whenever(activitiesApiService.getScheduledInstance(anyLong())).thenReturn(newScheduledInstance())
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
+      whenever(mappingService.getMappings(anyLong())).thenReturn(
         ActivityMappingDto(
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
@@ -120,7 +120,7 @@ class SchedulesServiceTest {
     @Test
     fun `should raise telemetry when update of Nomis successful`() = runTest {
       whenever(activitiesApiService.getScheduledInstance(anyLong())).thenReturn(newScheduledInstance())
-      whenever(mappingService.getMappingGivenActivityScheduleId(anyLong())).thenReturn(
+      whenever(mappingService.getMappings(anyLong())).thenReturn(
         ActivityMappingDto(
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,

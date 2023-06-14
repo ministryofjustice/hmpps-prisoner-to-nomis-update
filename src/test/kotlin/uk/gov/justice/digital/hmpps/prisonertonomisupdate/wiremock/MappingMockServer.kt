@@ -309,9 +309,9 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetMappingGivenActivityScheduleId(id: Long, response: String) {
+  fun stubGetMappings(activityScheduleId: Long, response: String) {
     stubFor(
-      get("/mapping/activities/activity-schedule-id/$id").willReturn(
+      get("/mapping/activities/activity-schedule-id/$activityScheduleId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
@@ -320,9 +320,9 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetMappingGivenActivityScheduleIdWithError(id: Long, status: Int = 500) {
+  fun stubGetMappingsWithError(activityScheduleId: Long, status: Int = 500) {
     stubFor(
-      get("/mapping/activities/activity-schedule-id/$id").willReturn(
+      get("/mapping/activities/activity-schedule-id/$activityScheduleId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")

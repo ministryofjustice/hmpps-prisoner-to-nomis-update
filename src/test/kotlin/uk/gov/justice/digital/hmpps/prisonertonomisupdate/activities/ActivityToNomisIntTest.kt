@@ -55,7 +55,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     fun `will consume a create activity schedule message`() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
+      mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
       mappingServer.stubCreateActivity()
       nomisApi.stubActivityCreate(buildNomisActivityResponse())
 
@@ -126,7 +126,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     fun `will retry after a mapping failure`() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
+      mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
       nomisApi.stubActivityCreate(buildNomisActivityResponse())
       mappingServer.stubCreateActivityWithErrorFollowedBySuccess()
 
@@ -170,7 +170,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     fun `will log when duplicate is detected`() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
+      mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
       nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID, "courseSchedules": [] }""")
       mappingServer.stubCreateActivityWithDuplicateError(
         activityScheduleId = ACTIVITY_SCHEDULE_ID,
@@ -222,7 +222,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     fun `constant mapping failure will result in DLQ message which can be retried`() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
+      mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
       nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID, "courseSchedules": [] }""")
       mappingServer.stubCreateActivityWithError()
 
@@ -269,7 +269,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     fun `will retry and publish telemetry after a Nomis update failure`() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleIdWithError(ACTIVITY_SCHEDULE_ID, 404)
+      mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
       mappingServer.stubCreateActivity()
       nomisApi.stubActivityCreateWithError(status = 500)
 
@@ -309,7 +309,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     fun `should update an activity`() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
-      mappingServer.stubGetMappingGivenActivityScheduleId(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
       nomisApi.stubActivityUpdate(NOMIS_CRS_ACTY_ID, buildNomisActivityResponse())
       mappingServer.stubUpdateActivity()
 
