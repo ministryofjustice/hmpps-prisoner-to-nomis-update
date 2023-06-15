@@ -497,13 +497,18 @@ internal class ActivitiesApiServiceTest {
             "scheduleId": 2345,
             "scheduleDescription": "Some schedule description",
             "isUnemployment": true,
-            "prisonPayBand": {
-              "id": 3456,
-              "displaySequence": 1,
-              "alias": "Low",
-              "description": "Pay band 1",
-              "nomisPayBand": 1,
-              "prisonCode": "MDI"
+            "payRate": {
+              "id": 123,
+              "incentiveLevel": "1",
+              "incentiveNomisCode": "BAS",
+              "prisonPayBand": {
+                "id": 3456,
+                "displaySequence": 1,
+                "alias": "Low",
+                "description": "Pay band 1",
+                "nomisPayBand": 1,
+                "prisonCode": "MDI"
+              }
             },
             "startDate": "2022-09-10",
             "endDate": "2023-09-10",
@@ -542,9 +547,9 @@ internal class ActivitiesApiServiceTest {
       assertThat(allocation.scheduleId).isEqualTo(2345)
       assertThat(allocation.scheduleDescription).isEqualTo("Some schedule description")
       assertThat(allocation.isUnemployment).isEqualTo(true)
-      assertThat(allocation.prisonPayBand.id).isEqualTo(3456)
-      assertThat(allocation.prisonPayBand.nomisPayBand).isEqualTo(1)
-      assertThat(allocation.prisonPayBand.prisonCode).isEqualTo("MDI")
+      assertThat(allocation.payRate?.prisonPayBand?.id).isEqualTo(3456)
+      assertThat(allocation.payRate?.prisonPayBand?.nomisPayBand).isEqualTo(1)
+      assertThat(allocation.payRate?.prisonPayBand?.prisonCode).isEqualTo("MDI")
       assertThat(allocation.startDate).isEqualTo(LocalDate.of(2022, 9, 10))
       assertThat(allocation.endDate).isEqualTo(LocalDate.of(2023, 9, 10))
       assertThat(allocation.allocatedTime).isEqualTo(LocalDateTime.of(2023, 3, 17, 10, 35, 19, 136000000))
