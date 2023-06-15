@@ -15,6 +15,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityPay
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.ACTIVE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.PrisonPayBand
@@ -121,7 +122,12 @@ private fun newAllocation(): Allocation {
     bookingId = NOMIS_BOOKING_ID,
     startDate = LocalDate.parse("2023-01-12"),
     endDate = LocalDate.parse("2023-01-13"),
-    prisonPayBand = PrisonPayBand(1, 1, "", "", 1, "MDI"),
+    payRate = ActivityPay(
+      prisonPayBand = PrisonPayBand(1, 1, "", "", 1, "MDI"),
+      id = 1,
+      incentiveLevel = "Basic",
+      incentiveNomisCode = "BAS",
+    ),
     scheduleDescription = "description",
     scheduleId = ACTIVITY_SCHEDULE_ID,
     isUnemployment = false,
