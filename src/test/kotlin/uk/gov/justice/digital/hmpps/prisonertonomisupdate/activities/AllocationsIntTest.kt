@@ -44,7 +44,8 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
         putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/allocation"))
           .withRequestBody(matchingJsonPath("bookingId", equalTo("$NOMIS_BOOKING_ID")))
           .withRequestBody(matchingJsonPath("payBandCode", equalTo("7")))
-          .withRequestBody(matchingJsonPath("startDate", equalTo("2023-01-12"))),
+          .withRequestBody(matchingJsonPath("startDate", equalTo("2023-01-12")))
+          .withRequestBody(matchingJsonPath("programStatusCode", equalTo("ALLOC"))),
       )
     }
   }
@@ -78,7 +79,8 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("payBandCode", equalTo("7")))
           .withRequestBody(matchingJsonPath("endReason", equalTo("OTH")))
           .withRequestBody(matchingJsonPath("endComment", equalTo("Deallocated in DPS by ANOTHER_USER at 2023-01-13 18:49:04 for reason Released from prison")))
-          .withRequestBody(matchingJsonPath("suspended", equalTo("false"))),
+          .withRequestBody(matchingJsonPath("suspended", equalTo("false")))
+          .withRequestBody(matchingJsonPath("programStatusCode", equalTo("END"))),
       )
     }
   }
@@ -107,7 +109,8 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
       NomisApiExtension.nomisApi.verify(
         putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/allocation"))
           .withRequestBody(matchingJsonPath("suspended", equalTo("true")))
-          .withRequestBody(matchingJsonPath("suspendedComment", equalTo("Suspended in DPS by SUSPEND_USER at 2023-01-13 18:49:04 for reason HOSPITAL"))),
+          .withRequestBody(matchingJsonPath("suspendedComment", equalTo("Suspended in DPS by SUSPEND_USER at 2023-01-13 18:49:04 for reason HOSPITAL")))
+          .withRequestBody(matchingJsonPath("programStatusCode", equalTo("ALLOC"))),
       )
     }
   }

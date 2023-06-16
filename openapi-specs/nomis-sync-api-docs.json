@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-06-14.3426.302df8e"
+    "version": "2023-06-16"
   },
   "servers": [
     {
@@ -3023,6 +3023,72 @@
         }
       }
     },
+    "/adjudications/adjudication-number/{adjudicationNumber}": {
+      "get": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "get adjudication by adjudication number",
+        "description": "Retrieves an adjudication by the adjudication number. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "getAdjudication",
+        "parameters": [
+          {
+            "name": "adjudicationNumber",
+            "in": "path",
+            "description": "Adjudication number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Adjudication number",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Adjudication Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdjudicationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Adjudication does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/attendances/{eventId}": {
       "delete": {
         "tags": [
@@ -3842,6 +3908,7 @@
         "required": [
           "bookingId",
           "payBandCode",
+          "programStatusCode",
           "startDate"
         ],
         "type": "object",
@@ -3885,6 +3952,11 @@
           "suspendedComment": {
             "type": "string",
             "description": "Activity suspended comment"
+          },
+          "programStatusCode": {
+            "type": "string",
+            "description": "Offender program status from domain OFF_PRG_STS",
+            "example": "ALLOC"
           }
         },
         "description": "Course activity create or update allocation request"
@@ -4391,7 +4463,7 @@
             "type": "string"
           }
         },
-        "description": "NOMIS room"
+        "description": "Incident type "
       },
       "LeadVisitor": {
         "required": [
@@ -4608,15 +4680,15 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
           },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
+          },
+          "first": {
+            "type": "boolean"
           },
           "last": {
             "type": "boolean"
@@ -4636,11 +4708,11 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageSize": {
+          "pageNumber": {
             "type": "integer",
             "format": "int32"
           },
-          "pageNumber": {
+          "pageSize": {
             "type": "integer",
             "format": "int32"
           },
@@ -4658,10 +4730,10 @@
           "empty": {
             "type": "boolean"
           },
-          "sorted": {
+          "unsorted": {
             "type": "boolean"
           },
-          "unsorted": {
+          "sorted": {
             "type": "boolean"
           }
         }
@@ -4798,15 +4870,15 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
           },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
+          },
+          "first": {
+            "type": "boolean"
           },
           "last": {
             "type": "boolean"
@@ -4939,15 +5011,15 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
           },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
+          },
+          "first": {
+            "type": "boolean"
           },
           "last": {
             "type": "boolean"
@@ -5080,15 +5152,15 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
           },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
+          },
+          "first": {
+            "type": "boolean"
           },
           "last": {
             "type": "boolean"
@@ -5145,15 +5217,15 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
           },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
+          },
+          "first": {
+            "type": "boolean"
           },
           "last": {
             "type": "boolean"
@@ -5162,6 +5234,99 @@
             "type": "boolean"
           }
         }
+      },
+      "AdjudicationResponse": {
+        "required": [
+          "adjudicationIncidentId",
+          "adjudicationSequence",
+          "incidentDate",
+          "incidentStatus",
+          "incidentTime",
+          "incidentType",
+          "internalLocationId",
+          "offenderNo",
+          "partyAddedDate",
+          "prisonId",
+          "reportedDate",
+          "reportedTime",
+          "reportingStaffId"
+        ],
+        "type": "object",
+        "properties": {
+          "adjudicationIncidentId": {
+            "type": "integer",
+            "description": "The adjudication incident Id, part of the composite key with adjudicationSequence",
+            "format": "int64"
+          },
+          "adjudicationSequence": {
+            "type": "integer",
+            "description": "The adjudication sequence, part of the composite key with adjudicationIncidentId",
+            "format": "int32"
+          },
+          "offenderNo": {
+            "type": "string",
+            "description": "The offender number, aka nomsId, prisonerId"
+          },
+          "adjudicationNumber": {
+            "type": "integer",
+            "description": "The adjudication number (business key)",
+            "format": "int64"
+          },
+          "partyAddedDate": {
+            "type": "string",
+            "description": "Date Prisoner was added to the adjudication ????",
+            "format": "date"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Adjudication comments"
+          },
+          "reportingStaffId": {
+            "type": "integer",
+            "description": "Reporting staff member Id",
+            "format": "int64"
+          },
+          "incidentDate": {
+            "type": "string",
+            "description": "Date of the associated incident",
+            "format": "date"
+          },
+          "incidentTime": {
+            "type": "string",
+            "description": "Date and time of the associated incident",
+            "format": "partial-time"
+          },
+          "reportedDate": {
+            "type": "string",
+            "description": "Date when the associated incident was reported",
+            "format": "date"
+          },
+          "reportedTime": {
+            "type": "string",
+            "description": "Date and time when the associated incident was reported",
+            "format": "partial-time"
+          },
+          "internalLocationId": {
+            "type": "integer",
+            "description": "NOMIS room id",
+            "format": "int64"
+          },
+          "incidentType": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "incidentStatus": {
+            "type": "string"
+          },
+          "incidentDetails": {
+            "type": "string",
+            "description": "Incident details"
+          },
+          "prisonId": {
+            "type": "string",
+            "description": "Prison where the incident took place ??????"
+          }
+        },
+        "description": "Adjudication Information"
       }
     },
     "securitySchemes": {
