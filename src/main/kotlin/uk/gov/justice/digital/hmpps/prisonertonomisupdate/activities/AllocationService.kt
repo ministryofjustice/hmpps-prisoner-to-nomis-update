@@ -61,6 +61,7 @@ class AllocationService(
       endComment = getEndComment(allocation.status, allocation.deallocatedBy, allocation.deallocatedTime, allocation.deallocatedReason?.description),
       suspended = isSuspended(allocation.status),
       suspendedComment = getSuspendedComment(allocation.status, allocation.suspendedBy, allocation.suspendedTime, allocation.suspendedReason),
+      programStatusCode = getProgramStatus(allocation.status),
     )
 
   private fun getEndReason(status: Allocation.Status) =
@@ -80,6 +81,12 @@ class AllocationService(
       "Suspended in DPS by $by at ${time?.format(humanTimeFormat)} for reason $reason"
     } else {
       null
+    }
+
+  private fun getProgramStatus(status: Allocation.Status) =
+    when (status) {
+      ENDED -> "END"
+      else -> "ALLOC"
     }
 }
 

@@ -1021,6 +1021,7 @@ fun upsertAllocation() = UpsertAllocationRequest(
   startDate = LocalDate.parse("2023-01-20"),
   endDate = LocalDate.parse("2023-01-21"),
   payBandCode = "PAY",
+  programStatusCode = "ALLOC",
 )
 
 private fun newAttendance() = UpsertAttendanceRequest(
