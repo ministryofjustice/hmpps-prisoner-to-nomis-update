@@ -344,6 +344,7 @@ data class CreateAppointmentRequest(
   val endTime: LocalTime,
   val internalLocationId: Long? = null, // in cell if null
   val eventSubType: String,
+  val comment: String? = null,
 )
 
 data class CreateAppointmentResponse(
@@ -359,6 +360,7 @@ data class UpdateAppointmentRequest(
   val endTime: LocalTime,
   val internalLocationId: Long? = null, // in cell if null
   val eventSubType: String,
+  val comment: String? = null,
 )
 
 data class CreateSentencingAdjustmentRequest(
