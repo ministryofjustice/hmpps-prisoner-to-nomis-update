@@ -36,7 +36,7 @@ hmpps.sqs:
       queueName: "activity-${random.uuid}"
       dlqName: "activity-dlq-${random.uuid}"
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"activities.activity-schedule.created\", \"activities.activity-schedule.amended\", \"activities.scheduled-instances.amended\", \"activities.scheduled-instance.amended\", \"activities.prisoner.allocated\", \"activities.prisoner.deallocated\", \"activities.prisoner.allocation-amended\", \"activities.prisoner.attendance-created\", \"activities.prisoner.attendance-amended\"]}"
+      subscribeFilter: "{\"eventType\":[\"activities.activity-schedule.created\", \"activities.activity-schedule.amended\", \"activities.scheduled-instances.amended\", \"activities.scheduled-instance.amended\", \"activities.prisoner.allocated\", \"activities.prisoner.deallocated\", \"activities.prisoner.allocation-amended\", \"activities.prisoner.attendance-created\", \"activities.prisoner.attendance-amended\", \"activities.prisoner.attendance-expired\"]}"
       dlqMaxReceiveCount: 1
       visibilityTimeout: 120
     appointment:

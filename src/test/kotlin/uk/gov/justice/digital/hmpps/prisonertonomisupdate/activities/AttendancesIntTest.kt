@@ -84,6 +84,34 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
     }
 
     @Test
+    fun `will consume an attendance expired message`() {
+      ActivitiesApiExtension.activitiesApi.stubGetAttendanceSync(ATTENDANCE_ID, buildGetAttendanceSyncResponse(LocalDate.now().minusDays(1)))
+      MappingExtension.mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      NomisApiExtension.nomisApi.stubUpsertAttendance(NOMIS_CRS_ACTY_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
+
+      awsSnsClient.publish(
+        PublishRequest.builder().topicArn(topicArn)
+          .message(attendanceMessagePayload("activities.prisoner.attendance-expired", ATTENDANCE_ID))
+          .messageAttributes(
+            mapOf(
+              "eventType" to MessageAttributeValue.builder().dataType("String")
+                .stringValue("activities.prisoner.attendance-expired").build(),
+            ),
+          ).build(),
+      ).get()
+
+      await untilCallTo { ActivitiesApiExtension.activitiesApi.getCountFor("/synchronisation/attendance/$ATTENDANCE_ID") } matches { it == 1 }
+      await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance") } matches { it == 1 }
+      NomisApiExtension.nomisApi.verify(
+        postRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance"))
+          .withRequestBody(
+            matchingJsonPath("scheduleDate", equalTo(LocalDate.now().minusDays(1).toString())),
+          )
+          .withRequestBody(matchingJsonPath("eventStatusCode", equalTo("EXP"))),
+      )
+    }
+
+    @Test
     fun `will push a failed message onto the DLQ`() {
       ActivitiesApiExtension.activitiesApi.stubGetAttendanceSyncWithError(1, 503)
 
@@ -108,12 +136,12 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
   }
 }
 
-fun buildGetAttendanceSyncResponse() = """
+fun buildGetAttendanceSyncResponse(sessionDate: LocalDate = LocalDate.now().plusDays(1)) = """
   {
     "attendanceId": $ATTENDANCE_ID,
     "scheduledInstanceId": $SCHEDULE_INSTANCE_ID,
     "activityScheduleId": $ACTIVITY_SCHEDULE_ID,
-    "sessionDate": "${LocalDate.now().plusDays(1)}",
+    "sessionDate": "$sessionDate",
     "sessionStartTime": "10:00",
     "sessionEndTime": "11:00",
     "prisonerNumber": "A1234AB",

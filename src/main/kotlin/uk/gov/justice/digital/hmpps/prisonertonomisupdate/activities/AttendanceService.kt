@@ -3,11 +3,11 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.GetAttendanceStatusRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Service
@@ -30,16 +30,10 @@ class AttendanceService(
       val nomisCourseActivityId = mappingService.getMappings(attendanceSync.activityScheduleId).nomisCourseActivityId
         .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
 
-      val nomisAttendanceStatus = if (attendanceSync.status == "LOCKED") {
-        getNomisAttendanceStatus(nomisCourseActivityId, attendanceSync)?.eventStatus
-      } else {
-        null
-      }
-
       nomisApiService.upsertAttendance(
         nomisCourseActivityId,
         attendanceSync.bookingId,
-        attendanceSync.toUpsertAttendanceRequest(nomisAttendanceStatus),
+        attendanceSync.toUpsertAttendanceRequest(),
       ).also {
         telemetryMap["nomisAttendanceEventId"] = it.eventId.toString()
         telemetryMap["nomisCourseScheduleId"] = it.courseScheduleId.toString()
@@ -53,20 +47,6 @@ class AttendanceService(
     }
   }
 
-  private suspend fun getNomisAttendanceStatus(
-    nomisCourseActivityId: Long,
-    attendanceSync: AttendanceSync,
-  ) =
-    nomisApiService.getAttendanceStatus(
-      nomisCourseActivityId,
-      attendanceSync.bookingId,
-      GetAttendanceStatusRequest(
-        attendanceSync.sessionDate,
-        attendanceSync.sessionStartTime,
-        attendanceSync.sessionEndTime,
-      ),
-    )
-
   private fun AttendanceSync.toTelemetry(): Map<String, String> =
     mapOf(
       "dpsAttendanceId" to attendanceId.toString(),
@@ -79,13 +59,13 @@ class AttendanceService(
       "bookingId" to bookingId.toString(),
     )
 
-  private suspend fun AttendanceSync.toUpsertAttendanceRequest(nomisAttendanceStatus: String?): UpsertAttendanceRequest {
+  private suspend fun AttendanceSync.toUpsertAttendanceRequest(): UpsertAttendanceRequest {
     val eventOutcome = toEventOutcome()
     return UpsertAttendanceRequest(
       scheduleDate = this.sessionDate,
       startTime = this.sessionStartTime,
       endTime = this.sessionEndTime,
-      eventStatusCode = toEventStatus(nomisAttendanceStatus),
+      eventStatusCode = toEventStatus(),
       eventOutcomeCode = eventOutcome?.code,
       comments = comment,
       unexcusedAbsence = eventOutcome?.unexcusedAbsence ?: false,
@@ -134,19 +114,13 @@ fun AttendanceSync.toEventOutcome() = attendanceReasonCode?.let {
   }
 }
 
-fun AttendanceSync.toEventStatus(nomisAttendanceStatus: String?): String = status.let {
+fun AttendanceSync.toEventStatus(): String = status.let {
   when {
-    it == "WAITING" -> "SCH"
+    it == "WAITING" -> if (sessionDate >= LocalDate.now()) "SCH" else "EXP"
 
     it == "COMPLETED" && attendanceReasonCode == "CANCELLED" -> "CANC"
 
     it == "COMPLETED" -> "COMP"
-
-    it == "LOCKED" -> when (nomisAttendanceStatus) {
-      "SCH" -> "EXP"
-      null -> "EXP"
-      else -> nomisAttendanceStatus
-    }
 
     else -> throw InvalidAttendanceStatusException("Unable to handle attendance status code=$it and attendance reason code=$attendanceReasonCode")
   }
