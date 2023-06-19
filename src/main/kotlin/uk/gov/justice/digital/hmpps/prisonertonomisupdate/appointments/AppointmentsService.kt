@@ -145,6 +145,7 @@ class AppointmentsService(
     startTime = LocalTime.parse(instance.startTime),
     endTime = LocalTime.parse(instance.endTime),
     eventSubType = instance.categoryCode,
+    comment = constructComment(instance),
   )
 
   private fun toUpdateAppointmentRequest(instance: AppointmentInstance) = UpdateAppointmentRequest(
@@ -153,7 +154,19 @@ class AppointmentsService(
     startTime = LocalTime.parse(instance.startTime),
     endTime = LocalTime.parse(instance.endTime),
     eventSubType = instance.categoryCode,
+    comment = constructComment(instance),
   )
+
+  private fun constructComment(instance: AppointmentInstance) =
+    if (instance.appointmentDescription == null) {
+      instance.comment
+    } else {
+      if (instance.comment == null) {
+        instance.appointmentDescription
+      } else {
+        "${instance.appointmentDescription} - ${instance.comment}"
+      }
+    }
 
   suspend fun createRetry(context: AppointmentContext) {
     mappingService.createMapping(

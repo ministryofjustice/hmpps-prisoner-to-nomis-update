@@ -50,6 +50,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
       "inCell": false,
       "prisonerNumber": "A1234BC",
       "cancelled": false,
+      "comment": "Some comment",
       "created": "2021-03-14T10:15:00",
       "createdBy": "user1"
     }
@@ -100,7 +101,8 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("eventDate", equalTo("2023-03-14")))
                 .withRequestBody(matchingJsonPath("startTime", equalTo("10:15")))
                 .withRequestBody(matchingJsonPath("endTime", equalTo("11:42")))
-                .withRequestBody(matchingJsonPath("eventSubType", equalTo("MEDI"))),
+                .withRequestBody(matchingJsonPath("eventSubType", equalTo("MEDI")))
+                .withRequestBody(matchingJsonPath("comment", equalTo("Some comment"))),
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
