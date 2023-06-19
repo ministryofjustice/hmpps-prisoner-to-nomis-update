@@ -11,7 +11,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
@@ -26,7 +28,6 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
 import org.springframework.web.reactive.function.client.WebClientResponseException.Forbidden
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.GetAttendanceStatusResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.math.BigDecimal
@@ -283,35 +284,6 @@ class AttendanceServiceTest {
       )
     }
 
-    @Test
-    fun `should get the Nomis attendance if Activities status is now locked`() = runTest {
-      whenever(activitiesApiService.getAttendanceSync(anyLong())).thenReturn(attendanceSyncLocked())
-      whenever(mappingService.getMappings(anyLong())).thenReturn(activityMappingDto())
-      whenever(nomisApiService.upsertAttendance(anyLong(), anyLong(), any())).thenReturn(upsertAttendanceResponse())
-      whenever(nomisApiService.getAttendanceStatus(anyLong(), anyLong(), any())).thenReturn(getAttendanceStatusResponse())
-
-      assertDoesNotThrow {
-        attendanceService.upsertAttendance(attendanceEvent())
-      }
-
-      verify(nomisApiService).getAttendanceStatus(
-        eq(NOMIS_CRS_ACTY_ID),
-        eq(NOMIS_BOOKING_ID),
-        check {
-          assertThat(it.scheduleDate).isEqualTo(LocalDate.now().plusDays(1))
-          assertThat(it.startTime).isEqualTo("10:00")
-          assertThat(it.endTime).isEqualTo("11:00")
-        },
-      )
-      verify(nomisApiService).upsertAttendance(
-        eq(NOMIS_CRS_ACTY_ID),
-        eq(NOMIS_BOOKING_ID),
-        check {
-          assertThat(it.eventStatusCode).isEqualTo("EXP")
-        },
-      )
-    }
-
     private fun attendanceEvent(eventType: String = "activities.prisoner.attendance-created") = AttendanceDomainEvent(
       eventType = eventType,
       additionalInformation = AttendanceAdditionalInformation(ATTENDANCE_ID),
@@ -330,18 +302,6 @@ class AttendanceServiceTest {
       prisonerNumber = OFFENDER_NO,
       bookingId = NOMIS_BOOKING_ID,
       status = "WAITING",
-    )
-
-    private fun attendanceSyncLocked() = AttendanceSync(
-      attendanceId = ATTENDANCE_ID,
-      scheduledInstanceId = SCHEDULE_INSTANCE_ID,
-      activityScheduleId = ACTIVITY_SCHEDULE_ID,
-      sessionDate = LocalDate.now().plusDays(1),
-      sessionStartTime = "10:00",
-      sessionEndTime = "11:00",
-      prisonerNumber = OFFENDER_NO,
-      bookingId = NOMIS_BOOKING_ID,
-      status = "LOCKED",
     )
 
     private fun attendanceSyncAttended() = AttendanceSync(
@@ -371,8 +331,6 @@ class AttendanceServiceTest {
       courseScheduleId = NOMIS_CRS_SCH_ID,
       created = created,
     )
-
-    private fun getAttendanceStatusResponse() = GetAttendanceStatusResponse("SCH")
   }
 
   @Nested
@@ -435,40 +393,31 @@ class AttendanceServiceTest {
   @Nested
   inner class ToEventStatus {
     @ParameterizedTest
-    @CsvSource(
-      value = [
-        "WAITING,,,SCH",
-        "COMPLETED,CANCELLED,,CANC",
-        "COMPLETED,,,COMP",
-        "LOCKED,,,EXP",
-        "LOCKED,,SCH,EXP",
-        "LOCKED,,COMP,COMP",
-      ],
-    )
-    fun `should mp to Nomis event status code`(
+    @MethodSource("uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.AttendanceServiceTestKt#eventStatusTests")
+    fun `should map to Nomis event status code`(
       status: String,
       attendanceReasonCode: String?,
-      currentNomisAttendanceStatus: String?,
+      sessionDate: LocalDate,
       expectedNomisStatus: String,
     ) {
-      val eventStatus = attendanceSync(status, attendanceReasonCode).toEventStatus(currentNomisAttendanceStatus)
+      val eventStatus = attendanceSync(status, attendanceReasonCode, sessionDate).toEventStatus()
       assertThat(eventStatus).isEqualTo(expectedNomisStatus)
     }
 
     @Test
     fun `should throw if we are unable to map the status`() {
       assertThrows<InvalidAttendanceStatusException> {
-        attendanceSync("INVALID", null).toEventStatus(null)
+        attendanceSync("INVALID", null, LocalDate.now()).toEventStatus()
       }.also {
         assertThat(it.message).contains("Unable to handle attendance status code=INVALID and attendance reason code=null")
       }
     }
 
-    private fun attendanceSync(status: String, attendanceReasonCode: String?) = AttendanceSync(
+    private fun attendanceSync(status: String, attendanceReasonCode: String?, sessionDate: LocalDate) = AttendanceSync(
       attendanceId = 0,
       scheduledInstanceId = 0,
       activityScheduleId = 0,
-      sessionDate = LocalDate.now(),
+      sessionDate = sessionDate,
       sessionStartTime = "",
       sessionEndTime = "",
       prisonerNumber = "",
@@ -479,3 +428,10 @@ class AttendanceServiceTest {
     )
   }
 }
+
+private fun eventStatusTests(): List<Arguments> = listOf(
+  Arguments.of("WAITING", null, LocalDate.now(), "SCH"),
+  Arguments.of("WAITING", null, LocalDate.now().minusDays(1), "EXP"),
+  Arguments.of("COMPLETED", "CANCELLED", LocalDate.now(), "CANC"),
+  Arguments.of("COMPLETED", null, LocalDate.now().minusDays(1), "COMP"),
+)
