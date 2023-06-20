@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
-import org.apache.commons.lang3.StringUtils.isBlank
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
@@ -93,6 +92,24 @@ class AppointmentsService(
     }
   }
 
+  suspend fun uncancelAppointment(event: AppointmentDomainEvent) {
+    val telemetryMap =
+      mutableMapOf("appointmentInstanceId" to event.additionalInformation.appointmentInstanceId.toString())
+
+    runCatching {
+      val nomisEventId =
+        mappingService.getMappingGivenAppointmentInstanceId(event.additionalInformation.appointmentInstanceId).nomisEventId
+          .also { telemetryMap["nomisEventId"] = it.toString() }
+
+      nomisApiService.uncancelAppointment(nomisEventId)
+    }.onSuccess {
+      telemetryClient.trackEvent("appointment-uncancel-success", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("appointment-uncancel-failed", telemetryMap, null)
+      throw e
+    }
+  }
+
   suspend fun deleteAppointment(event: AppointmentDomainEvent) {
     val telemetryMap =
       mutableMapOf("appointmentInstanceId" to event.additionalInformation.appointmentInstanceId.toString())
@@ -159,14 +176,14 @@ class AppointmentsService(
   )
 
   private fun constructComment(instance: AppointmentInstance) =
-    if (isBlank(instance.appointmentDescription)) {
-      if (isBlank(instance.comment)) {
+    if (instance.appointmentDescription.isNullOrBlank()) {
+      if (instance.comment.isNullOrBlank()) {
         null
       } else {
         instance.comment
       }
     } else {
-      if (isBlank(instance.comment)) {
+      if (instance.comment.isNullOrBlank()) {
         instance.appointmentDescription
       } else {
         "${instance.appointmentDescription} - ${instance.comment}"

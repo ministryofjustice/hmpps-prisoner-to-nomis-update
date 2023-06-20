@@ -33,6 +33,7 @@ class AppointmentsDomainEventListener(
       "appointments.appointment-instance.created" -> appointmentsService.createAppointment(message.fromJson())
       "appointments.appointment-instance.updated" -> appointmentsService.updateAppointment(message.fromJson())
       "appointments.appointment-instance.cancelled" -> appointmentsService.cancelAppointment(message.fromJson())
+      "appointments.appointment-instance.uncancelled" -> appointmentsService.uncancelAppointment(message.fromJson())
       "appointments.appointment-instance.deleted" -> appointmentsService.deleteAppointment(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)

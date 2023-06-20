@@ -62,6 +62,14 @@ internal class AppointmentsServiceTest {
 
   @Test
   fun `Comments are constructed correctly 4`() = runTest {
+    callService(null, "Comment")
+    verify(nomisApiService).createAppointment(
+      check { assertThat(it.comment).isEqualTo("Comment") },
+    )
+  }
+
+  @Test
+  fun `Comments are constructed correctly 5`() = runTest {
     callService(null, "")
     verify(nomisApiService).createAppointment(
       check { assertThat(it.comment).isNull() },
