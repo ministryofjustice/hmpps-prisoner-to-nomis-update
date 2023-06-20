@@ -692,6 +692,40 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  inner class UncancelAppointment {
+    @Nested
+    inner class WhenAppointmentHasJustBeenUncancelledByAppointmentService {
+
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+        nomisApi.stubAppointmentUncancel(EVENT_ID)
+        publishAppointmentEvent("appointments.appointment-instance.uncancelled")
+      }
+
+      @Test
+      fun `will uncancel an appointment in NOMIS`() {
+        await untilAsserted {
+          nomisApi.verify(putRequestedFor(urlEqualTo("/appointments/$EVENT_ID/uncancel")))
+        }
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("appointment-uncancel-success"),
+            check {
+              assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+              assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
   @Nested
   inner class DeleteAppointment {
     @Nested

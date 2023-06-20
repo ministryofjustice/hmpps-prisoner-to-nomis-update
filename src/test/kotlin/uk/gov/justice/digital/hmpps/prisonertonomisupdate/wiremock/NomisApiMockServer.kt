@@ -418,6 +418,16 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubAppointmentUncancel(eventId: Long) {
+    stubFor(
+      put("/appointments/$eventId/uncancel").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200),
+      ),
+    )
+  }
+
   fun stubAppointmentDelete(eventId: Long) {
     stubFor(
       delete("/appointments/$eventId").willReturn(

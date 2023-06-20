@@ -149,6 +149,12 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .awaitBodilessEntity()
 
+  suspend fun uncancelAppointment(nomisEventId: Long) =
+    webClient.put()
+      .uri("/appointments/$nomisEventId/uncancel")
+      .retrieve()
+      .awaitBodilessEntity()
+
   suspend fun deleteAppointment(nomisEventId: Long) =
     webClient.delete()
       .uri("/appointments/$nomisEventId")
