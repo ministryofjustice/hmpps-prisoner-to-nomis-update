@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityLite
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.ACTIVE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension.Companion.activitiesApi
@@ -167,6 +168,7 @@ internal class ActivitiesApiServiceTest {
           }
         ],
         "startDate" : "2023-01-20",
+        "endDate" : "2023-12-24",
         "runsOnBankHoliday": true
       }
         """.trimIndent(),
@@ -188,22 +190,32 @@ internal class ActivitiesApiServiceTest {
       val schedule = activitiesApiService.getActivitySchedule(1234)
 
       assertThat(schedule.id).isEqualTo(1234)
+      assertThat(schedule.startDate).isEqualTo("2023-01-20")
+      assertThat(schedule.endDate).isEqualTo("2023-12-24")
       assertThat(schedule.description).isEqualTo("Monday AM Houseblock 3")
       assertThat(schedule.internalLocation?.id).isEqualTo(98877667)
       assertThat(schedule.internalLocation?.code).isEqualTo("EDU-ROOM-1")
       assertThat(schedule.capacity).isEqualTo(10)
-      val activity = schedule.activity
-      assertThat(activity.id).isEqualTo(123456)
-      assertThat(activity.prisonCode).isEqualTo("PVI")
-      assertThat(activity.description).isEqualTo("A basic maths course suitable for introduction to the subject")
-      assertThat(activity.category.code).isEqualTo("LEISURE_SOCIAL")
-      assertThat(activity.minimumIncentiveNomisCode).isEqualTo("BAS")
+      assertThat(schedule.activity.payPerSession).isEqualTo(ActivityLite.PayPerSession.F)
+      assertThat(schedule.activity.minimumIncentiveNomisCode).isEqualTo("BAS")
       with(schedule.instances.first()) {
         assertThat(date).isEqualTo("2022-12-30")
         assertThat(startTime).isEqualTo("9:00")
         assertThat(endTime).isEqualTo("10:00")
       }
-      // TODO: pay, start/end date
+      with(schedule.slots.first()) {
+        assertThat(startTime).isEqualTo("9:00")
+        assertThat(endTime).isEqualTo("11:30")
+        assertThat(mondayFlag).isTrue()
+        assertThat(tuesdayFlag).isTrue()
+        assertThat(wednesdayFlag).isTrue()
+        assertThat(thursdayFlag).isFalse()
+        assertThat(fridayFlag).isFalse()
+        assertThat(saturdayFlag).isFalse()
+        assertThat(sundayFlag).isFalse()
+      }
+      assertThat(schedule.runsOnBankHoliday).isTrue()
+      assertThat(schedule.activity.category.code).isEqualTo("LEISURE_SOCIAL")
     }
 
     @Test
@@ -454,8 +466,8 @@ internal class ActivitiesApiServiceTest {
       assertThat(activity.minimumIncentiveNomisCode).isEqualTo("BAS")
       assertThat(activity.startDate).isEqualTo("2022-12-30")
       assertThat(activity.endDate).isEqualTo("2022-12-31")
+      assertThat(activity.summary).isEqualTo("Maths level 1")
       val pay = activity.pay[0]
-      assertThat(pay.id).isEqualTo(3456)
       assertThat(pay.incentiveNomisCode).isEqualTo("BAS")
       assertThat(pay.prisonPayBand.nomisPayBand).isEqualTo(1)
       assertThat(pay.rate).isEqualTo(150)
@@ -520,6 +532,9 @@ internal class ActivitiesApiServiceTest {
               "code": "RELEASED",
               "description": "Released from prison"
             },
+            "suspendedTime": "2023-03-17T10:35:19.136Z",
+            "suspendedBy": "Mrs Blogs",
+            "suspendedReason": "TRANSFERRED",
             "status": "ACTIVE"
           }
         """.trimIndent(),
@@ -557,6 +572,9 @@ internal class ActivitiesApiServiceTest {
       assertThat(allocation.deallocatedTime).isEqualTo(LocalDateTime.of(2023, 3, 17, 10, 35, 19, 136000000))
       assertThat(allocation.deallocatedBy).isEqualTo("Mrs Blogs")
       assertThat(allocation.deallocatedReason?.code).isEqualTo("RELEASED")
+      assertThat(allocation.suspendedTime).isEqualTo(LocalDateTime.of(2023, 3, 17, 10, 35, 19, 136000000))
+      assertThat(allocation.suspendedBy).isEqualTo("Mrs Blogs")
+      assertThat(allocation.suspendedReason).isEqualTo("TRANSFERRED")
       assertThat(allocation.status).isEqualTo(ACTIVE)
     }
 

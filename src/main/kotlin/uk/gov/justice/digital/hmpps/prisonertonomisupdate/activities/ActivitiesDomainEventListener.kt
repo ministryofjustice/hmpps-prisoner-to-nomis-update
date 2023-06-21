@@ -37,7 +37,6 @@ class ActivitiesDomainEventListener(
       "activities.activity-schedule.amended" -> activitiesService.updateActivity(message.fromJson())
       "activities.scheduled-instance.amended" -> schedulesService.updateScheduledInstance(message.fromJson())
       "activities.prisoner.allocated" -> allocationService.upsertAllocation(message.fromJson())
-      "activities.prisoner.deallocated" -> allocationService.upsertAllocation(message.fromJson()) // TODO SDIT-438 waiting for Activities to drop this message in favour of allocation-amended
       "activities.prisoner.allocation-amended" -> allocationService.upsertAllocation(message.fromJson())
       "activities.prisoner.attendance-created" -> attendanceService.upsertAttendance(message.fromJson())
       "activities.prisoner.attendance-amended" -> attendanceService.upsertAttendance(message.fromJson())
