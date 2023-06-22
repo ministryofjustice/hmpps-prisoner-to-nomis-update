@@ -124,18 +124,13 @@ fun buildApiAllocationDtoJsonResponse(id: Long = ALLOCATION_ID): String {
     "bookingId": $NOMIS_BOOKING_ID,
     "scheduleId": $ACTIVITY_SCHEDULE_ID,
     "startDate": "2023-01-12",
-    "payRate": {
-      "id": 123,
-      "incentiveLevel": "1",
-      "incentiveNomisCode": "BAS",
-      "prisonPayBand": {
-        "id": 1,
-        "displaySequence": 1,
-        "alias": "seven",
-        "description": "seven",
-        "nomisPayBand": 7,
-        "prisonCode": "MDI"
-      }
+    "prisonPayBand": {
+      "id": 1,
+      "displaySequence": 1,
+      "alias": "seven",
+      "description": "seven",
+      "nomisPayBand": 7,
+      "prisonCode": "MDI"
     },
     "allocatedBy": "SOME_USER",
     "allocatedTime": "2023-01-10T14:46:05.849Z",
@@ -155,18 +150,13 @@ fun buildApiAllocationDeallocatedJsonResponse(id: Long = ALLOCATION_ID): String 
     "scheduleId": $ACTIVITY_SCHEDULE_ID,
     "startDate": "2023-01-12",
     "endDate": "2023-01-13",
-    "payRate": {
-      "id": 123,
-      "incentiveLevel": "1",
-      "incentiveNomisCode": "BAS",
-      "prisonPayBand": {
-        "id": 1,
-        "displaySequence": 1,
-        "alias": "seven",
-        "description": "seven",
-        "nomisPayBand": 7,
-        "prisonCode": "MDI"
-      }
+    "prisonPayBand": {
+      "id": 1,
+      "displaySequence": 1,
+      "alias": "seven",
+      "description": "seven",
+      "nomisPayBand": 7,
+      "prisonCode": "MDI"
     },
     "allocatedBy": "SOME_USER",
     "allocatedTime": "2023-01-10T14:46:05.849Z",
@@ -191,18 +181,13 @@ fun buildApiAllocationSuspendedJsonResponse(id: Long = ALLOCATION_ID): String {
     "bookingId": $NOMIS_BOOKING_ID,
     "scheduleId": $ACTIVITY_SCHEDULE_ID,
     "startDate": "2023-01-12",
-    "payRate": {
-      "id": 123,
-      "incentiveLevel": "1",
-      "incentiveNomisCode": "BAS",
-      "prisonPayBand": {
-        "id": 1,
-        "displaySequence": 1,
-        "alias": "seven",
-        "description": "seven",
-        "nomisPayBand": 7,
-        "prisonCode": "MDI"
-      }
+    "prisonPayBand": {
+      "id": 1,
+      "displaySequence": 1,
+      "alias": "seven",
+      "description": "seven",
+      "nomisPayBand": 7,
+      "prisonCode": "MDI"
     },
     "allocatedBy": "SOME_USER",
     "allocatedTime": "2023-01-10T14:46:05.849Z",

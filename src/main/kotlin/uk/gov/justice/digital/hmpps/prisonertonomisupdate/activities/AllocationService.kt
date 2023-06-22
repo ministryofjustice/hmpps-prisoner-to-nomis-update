@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.microsoft.applicationinsights.TelemetryClient
-import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.AUTO_SUSPENDED
@@ -54,7 +53,7 @@ class AllocationService(
   private fun toUpsertAllocationRequest(allocation: Allocation) =
     UpsertAllocationRequest(
       bookingId = allocation.bookingId,
-      payBandCode = allocation.payRate?.prisonPayBand?.nomisPayBand?.toString() ?: throw ValidationException("Unable to allocate without a pay band"), // TODO SDIT-891 allow nullable pay bands
+      payBandCode = allocation.prisonPayBand.nomisPayBand.toString(),
       startDate = allocation.startDate,
       endDate = allocation.endDate,
       endReason = getEndReason(allocation.status),
