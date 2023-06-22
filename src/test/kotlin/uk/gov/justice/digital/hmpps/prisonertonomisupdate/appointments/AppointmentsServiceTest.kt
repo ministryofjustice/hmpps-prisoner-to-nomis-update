@@ -76,6 +76,14 @@ internal class AppointmentsServiceTest {
     )
   }
 
+  @Test
+  fun `Comments are constructed correctly - truncated`() = runTest {
+    callService("x".repeat(5000), "")
+    verify(nomisApiService).createAppointment(
+      check { assertThat(it.comment).isEqualTo("x".repeat(4000)) },
+    )
+  }
+
   private suspend fun callService(appointmentDescription: String?, comment: String?) {
     whenever(appointmentsApiService.getAppointmentInstance(APPOINTMENT_INSTANCE_ID)).thenReturn(
       newAppointment(appointmentDescription, comment),

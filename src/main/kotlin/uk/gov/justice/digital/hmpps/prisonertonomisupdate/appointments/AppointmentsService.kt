@@ -175,8 +175,8 @@ class AppointmentsService(
     comment = constructComment(instance),
   )
 
-  private fun constructComment(instance: AppointmentInstance) =
-    if (instance.appointmentDescription.isNullOrBlank()) {
+  private fun constructComment(instance: AppointmentInstance): String? {
+    val comment = if (instance.appointmentDescription.isNullOrBlank()) {
       if (instance.comment.isNullOrBlank()) {
         null
       } else {
@@ -189,6 +189,8 @@ class AppointmentsService(
         "${instance.appointmentDescription} - ${instance.comment}"
       }
     }
+    return comment?.run { if (length <= 4000) this else substring(0, 4000) }
+  }
 
   suspend fun createRetry(context: AppointmentContext) {
     mappingService.createMapping(
