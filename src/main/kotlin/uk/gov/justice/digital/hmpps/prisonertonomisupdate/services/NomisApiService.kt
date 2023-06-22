@@ -22,8 +22,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ActivityResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourseScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.GetAttendanceStatusRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.GetAttendanceStatusResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
@@ -117,17 +115,6 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyValue(request)
       .retrieve()
       .awaitBody()
-
-  suspend fun getAttendanceStatus(
-    courseActivityId: Long,
-    bookingId: Long,
-    request: GetAttendanceStatusRequest,
-  ): GetAttendanceStatusResponse? =
-    webClient.post()
-      .uri("/activities/$courseActivityId/booking/$bookingId/attendance-status")
-      .bodyValue(request)
-      .retrieve()
-      .awaitBodyOrNotFound<GetAttendanceStatusResponse>()
 
   suspend fun createAppointment(request: CreateAppointmentRequest): CreateAppointmentResponse =
     webClient.post()

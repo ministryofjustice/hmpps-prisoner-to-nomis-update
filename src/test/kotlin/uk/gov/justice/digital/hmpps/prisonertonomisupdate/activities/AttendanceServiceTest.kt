@@ -20,7 +20,6 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
@@ -211,7 +210,6 @@ class AttendanceServiceTest {
           assertThat(it.bonusPay).isNull()
         },
       )
-      verify(nomisApiService, never()).getAttendanceStatus(anyLong(), anyLong(), any())
       verify(telemetryClient).trackEvent(
         eq("activity-attendance-create-success"),
         check<MutableMap<String, String>> {
