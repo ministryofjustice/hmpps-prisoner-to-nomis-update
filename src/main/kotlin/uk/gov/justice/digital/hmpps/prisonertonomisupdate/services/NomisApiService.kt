@@ -108,12 +108,12 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .awaitBody()
 
   suspend fun upsertAttendance(
-    courseActivityId: Long,
+    courseScheduleId: Long,
     bookingId: Long,
     request: UpsertAttendanceRequest,
   ): UpsertAttendanceResponse =
-    webClient.post()
-      .uri("/activities/$courseActivityId/booking/$bookingId/attendance")
+    webClient.put()
+      .uri("/schedules/$courseScheduleId/booking/$bookingId/attendance")
       .bodyValue(request)
       .retrieve()
       .awaitBody()

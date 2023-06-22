@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.microsoft.applicationinsights.TelemetryClient
+import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceRequest
@@ -27,16 +28,20 @@ class AttendanceService(
       val attendanceSync = activitiesApiService.getAttendanceSync(attendanceId)
         .also { telemetryMap.putAll(it.toTelemetry()) }
 
-      val nomisCourseActivityId = mappingService.getMappings(attendanceSync.activityScheduleId).nomisCourseActivityId
-        .also { telemetryMap["nomisCourseActivityId"] = it.toString() }
+      val mappings = mappingService.getMappings(attendanceSync.activityScheduleId)
+        .also { telemetryMap["nomisCourseActivityId"] = it.nomisCourseActivityId.toString() }
+      val nomisCourseScheduleId = mappings.scheduledInstanceMappings
+        .find { it.scheduledInstanceId == attendanceSync.scheduledInstanceId }
+        ?.nomisCourseScheduleId
+        ?.also { telemetryMap["nomisCourseScheduleId"] = it.toString() }
+        ?: throw ValidationException("Mapping for Activity's scheduled instance id not found: ${attendanceSync.scheduledInstanceId}")
 
       nomisApiService.upsertAttendance(
-        nomisCourseActivityId,
+        nomisCourseScheduleId,
         attendanceSync.bookingId,
         attendanceSync.toUpsertAttendanceRequest(),
       ).also {
         telemetryMap["nomisAttendanceEventId"] = it.eventId.toString()
-        telemetryMap["nomisCourseScheduleId"] = it.courseScheduleId.toString()
         telemetryMap["created"] = it.created.toString()
       }
     }.onSuccess {

@@ -439,7 +439,7 @@ internal class NomisApiServiceTest {
       nomisApiService.upsertAttendance(11, 22, newAttendance())
 
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/activities/11/booking/22/attendance"))
+        putRequestedFor(urlEqualTo("/schedules/11/booking/22/attendance"))
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
@@ -451,7 +451,7 @@ internal class NomisApiServiceTest {
       nomisApiService.upsertAttendance(11, 22, newAttendance())
 
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/activities/11/booking/22/attendance"))
+        putRequestedFor(urlEqualTo("/schedules/11/booking/22/attendance"))
           .withRequestBody(matchingJsonPath("$.scheduleDate", equalTo("${LocalDate.now()}")))
           .withRequestBody(matchingJsonPath("$.startTime", equalTo("11:00")))
           .withRequestBody(matchingJsonPath("$.endTime", equalTo("13:00")))
@@ -541,10 +541,10 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `when any error response is received an exception is thrown`() = runTest {
-      NomisApiExtension.nomisApi.stubUpsertAttendanceWithError(11, 22, 400)
+      NomisApiExtension.nomisApi.stubGetAttendanceStatusWithError(11, 22, 400)
 
       assertThrows<BadRequest> {
-        nomisApiService.upsertAttendance(11, 22, newAttendance())
+        nomisApiService.getAttendanceStatus(11, 22, newGetAttendanceStatusRequest())
       }
     }
   }
