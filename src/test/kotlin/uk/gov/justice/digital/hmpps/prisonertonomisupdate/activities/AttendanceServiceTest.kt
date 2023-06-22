@@ -103,7 +103,7 @@ class AttendanceServiceTest {
         attendanceService.upsertAttendance(attendanceEvent())
       }
 
-      verify(nomisApiService).upsertAttendance(eq(NOMIS_CRS_ACTY_ID), eq(NOMIS_BOOKING_ID), any())
+      verify(nomisApiService).upsertAttendance(eq(NOMIS_CRS_SCH_ID), eq(NOMIS_BOOKING_ID), any())
       verify(telemetryClient).trackEvent(
         eq("activity-attendance-create-failed"),
         check<MutableMap<String, String>> {
@@ -143,6 +143,7 @@ class AttendanceServiceTest {
               "sessionStartTime" to "10:00",
               "sessionEndTime" to "11:00",
               "nomisCourseActivityId" to "$NOMIS_CRS_ACTY_ID",
+              "nomisCourseScheduleId" to "$NOMIS_CRS_SCH_ID",
             ),
           )
         },
@@ -176,6 +177,7 @@ class AttendanceServiceTest {
               "sessionStartTime" to "10:00",
               "sessionEndTime" to "11:00",
               "nomisCourseActivityId" to "$NOMIS_CRS_ACTY_ID",
+              "nomisCourseScheduleId" to "$NOMIS_CRS_SCH_ID",
             ),
           )
         },
@@ -194,7 +196,7 @@ class AttendanceServiceTest {
       }
 
       verify(nomisApiService).upsertAttendance(
-        eq(NOMIS_CRS_ACTY_ID),
+        eq(NOMIS_CRS_SCH_ID),
         eq(NOMIS_BOOKING_ID),
         check {
           assertThat(it.scheduleDate).isEqualTo(LocalDate.now().plusDays(1))
@@ -245,7 +247,7 @@ class AttendanceServiceTest {
       }
 
       verify(nomisApiService).upsertAttendance(
-        eq(NOMIS_CRS_ACTY_ID),
+        eq(NOMIS_CRS_SCH_ID),
         eq(NOMIS_BOOKING_ID),
         check {
           assertThat(it.scheduleDate).isEqualTo(LocalDate.now().plusDays(1))
@@ -324,6 +326,13 @@ class AttendanceServiceTest {
       nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
       activityScheduleId = ACTIVITY_SCHEDULE_ID,
       mappingType = "ACTIVITY_CREATED",
+      scheduledInstanceMappings = listOf(
+        ActivityScheduleMappingDto(
+          scheduledInstanceId = SCHEDULE_INSTANCE_ID,
+          nomisCourseScheduleId = NOMIS_CRS_SCH_ID,
+          mappingType = "ACTIVITY_CREATED",
+        ),
+      ),
     )
 
     private fun upsertAttendanceResponse(created: Boolean = true) = UpsertAttendanceResponse(

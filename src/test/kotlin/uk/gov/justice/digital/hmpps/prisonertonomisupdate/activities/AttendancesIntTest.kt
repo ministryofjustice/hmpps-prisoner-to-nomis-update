@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -41,9 +42,9 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
       ).get()
 
       await untilCallTo { ActivitiesApiExtension.activitiesApi.getCountFor("/synchronisation/attendance/$ATTENDANCE_ID") } matches { it == 1 }
-      await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance") } matches { it == 1 }
+      await untilCallTo { NomisApiExtension.nomisApi.putCountFor("/schedules/$NOMIS_CRS_SCH_ID/booking/$NOMIS_BOOKING_ID/attendance") } matches { it == 1 }
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance"))
+        putRequestedFor(urlEqualTo("/schedules/$NOMIS_CRS_SCH_ID/booking/$NOMIS_BOOKING_ID/attendance"))
           .withRequestBody(matchingJsonPath("scheduleDate", equalTo(LocalDate.now().plusDays(1).toString())))
           .withRequestBody(matchingJsonPath("startTime", equalTo("10:00")))
           .withRequestBody(matchingJsonPath("endTime", equalTo("11:00")))
@@ -72,9 +73,9 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
       ).get()
 
       await untilCallTo { ActivitiesApiExtension.activitiesApi.getCountFor("/synchronisation/attendance/$ATTENDANCE_ID") } matches { it == 1 }
-      await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance") } matches { it == 1 }
+      await untilCallTo { NomisApiExtension.nomisApi.putCountFor("/schedules/$NOMIS_CRS_SCH_ID/booking/$NOMIS_BOOKING_ID/attendance") } matches { it == 1 }
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance"))
+        putRequestedFor(urlEqualTo("/schedules/$NOMIS_CRS_SCH_ID/booking/$NOMIS_BOOKING_ID/attendance"))
           .withRequestBody(
             matchingJsonPath("scheduleDate", equalTo(LocalDate.now().plusDays(1).toString())),
           )
@@ -101,9 +102,9 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
       ).get()
 
       await untilCallTo { ActivitiesApiExtension.activitiesApi.getCountFor("/synchronisation/attendance/$ATTENDANCE_ID") } matches { it == 1 }
-      await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance") } matches { it == 1 }
+      await untilCallTo { NomisApiExtension.nomisApi.putCountFor("/schedules/$NOMIS_CRS_SCH_ID/booking/$NOMIS_BOOKING_ID/attendance") } matches { it == 1 }
       NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance"))
+        putRequestedFor(urlEqualTo("/schedules/$NOMIS_CRS_SCH_ID/booking/$NOMIS_BOOKING_ID/attendance"))
           .withRequestBody(
             matchingJsonPath("scheduleDate", equalTo(LocalDate.now().minusDays(1).toString())),
           )
