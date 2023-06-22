@@ -488,68 +488,6 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
-  inner class GetAttendanceStatus {
-
-    val validResponse = """{
-        "eventStatus": "COMP"
-      }
-    """.trimMargin()
-
-    @Test
-    fun `should call nomis api with OAuth2 token`() = runTest {
-      NomisApiExtension.nomisApi.stubGetAttendanceStatus(11, 22, validResponse)
-
-      nomisApiService.getAttendanceStatus(11, 22, newGetAttendanceStatusRequest())
-
-      NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/activities/11/booking/22/attendance-status"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE")),
-      )
-    }
-
-    @Test
-    fun `will post data to nomis api`() = runTest {
-      NomisApiExtension.nomisApi.stubGetAttendanceStatus(11, 22, validResponse)
-
-      nomisApiService.getAttendanceStatus(11, 22, newGetAttendanceStatusRequest())
-
-      NomisApiExtension.nomisApi.verify(
-        postRequestedFor(urlEqualTo("/activities/11/booking/22/attendance-status"))
-          .withRequestBody(matchingJsonPath("$.scheduleDate", equalTo("${LocalDate.now()}")))
-          .withRequestBody(matchingJsonPath("$.startTime", equalTo("11:00")))
-          .withRequestBody(matchingJsonPath("$.endTime", equalTo("13:00"))),
-      )
-    }
-
-    @Test
-    fun `will parse the response`() = runTest {
-      NomisApiExtension.nomisApi.stubGetAttendanceStatus(11, 22, validResponse)
-
-      val response = nomisApiService.getAttendanceStatus(11, 22, newGetAttendanceStatusRequest())
-
-      assertThat(response?.eventStatus).isEqualTo("COMP")
-    }
-
-    @Test
-    fun `will parse an empty response`() = runTest {
-      NomisApiExtension.nomisApi.stubGetAttendanceStatusWithError(11, 22, 404)
-
-      val response = nomisApiService.getAttendanceStatus(11, 22, newGetAttendanceStatusRequest())
-
-      assertThat(response).isNull()
-    }
-
-    @Test
-    fun `when any error response is received an exception is thrown`() = runTest {
-      NomisApiExtension.nomisApi.stubGetAttendanceStatusWithError(11, 22, 400)
-
-      assertThrows<BadRequest> {
-        nomisApiService.getAttendanceStatus(11, 22, newGetAttendanceStatusRequest())
-      }
-    }
-  }
-
-  @Nested
   inner class CreateAppointment {
 
     @Test
