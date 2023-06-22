@@ -189,7 +189,7 @@ class AppointmentsService(
         "${instance.appointmentDescription} - ${instance.comment}"
       }
     }
-    return comment?.run { if (length <= 4000) this else substring(0, 4000) }
+    return comment?.take(4000)
   }
 
   suspend fun createRetry(context: AppointmentContext) {
