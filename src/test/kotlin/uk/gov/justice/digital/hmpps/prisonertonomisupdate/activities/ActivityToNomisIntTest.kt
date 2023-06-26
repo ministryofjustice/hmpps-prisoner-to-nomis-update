@@ -386,6 +386,39 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       nomisApi.verify(exactly(0), putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID")))
     }
 
+    @Test
+    fun `should handle a partial list of activity schedules returned from Activities`() {
+      // The first scheduled instance isn't returned from the Activities API
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponseWithMissingInstance())
+      activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
+      mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      nomisApi.stubActivityUpdate(NOMIS_CRS_ACTY_ID, buildNomisActivityResponse())
+      mappingServer.stubUpdateActivity()
+
+      awsSnsClient.publish(amendActivityEvent()).get()
+
+      await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/schedules/$ACTIVITY_SCHEDULE_ID"))) }
+      await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/activities/$ACTIVITY_ID"))) }
+      await untilAsserted { mappingServer.verify(getRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/$ACTIVITY_SCHEDULE_ID"))) }
+      // Both mappings are saved back to the mapping service - including the one no returned from the Activities API
+      await untilAsserted {
+        nomisApi.verify(putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID")))
+        mappingServer.verify(
+          putRequestedFor(urlEqualTo("/mapping/activities"))
+            .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$NOMIS_CRS_ACTY_ID")))
+            .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
+            .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_UPDATED")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].scheduledInstanceId", equalTo("$SCHEDULE_INSTANCE_ID")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].nomisCourseScheduleId", equalTo("$NOMIS_CRS_SCH_ID")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].mappingType", equalTo("ACTIVITY_UPDATED")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].scheduledInstanceId", equalTo("${SCHEDULE_INSTANCE_ID + 1}")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].nomisCourseScheduleId", equalTo("${NOMIS_CRS_SCH_ID + 1}")))
+            .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].mappingType", equalTo("ACTIVITY_UPDATED"))),
+        )
+      }
+      assertThat(awsSqsActivityDlqClient.countAllMessagesOnQueue(activityDlqUrl).get()).isEqualTo(0)
+    }
+
     private fun amendActivityEvent(): PublishRequest? =
       PublishRequest.builder().topicArn(topicArn)
         .message(activityMessagePayload("activities.activity-schedule.amended", ACTIVITY_SCHEDULE_ID))
@@ -475,6 +508,101 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
       "cancelledBy": "Adam Smith",
       "attendances": []
     },
+    {
+      "id": ${SCHEDULE_INSTANCE_ID + 1},
+      "date": "2023-01-14",
+      "startTime": "14:00",
+      "endTime": "16:30",
+      "cancelled": true,
+      "cancelledTime": "2023-01-13T09:38:26.092Z",
+      "cancelledBy": "Adam Smith",
+      "attendances": []
+    }
+  ],
+  "allocations": [],
+  "description": "Monday AM Houseblock 3",
+  "suspensions": [
+    {
+      "suspendedFrom": "2023-01-13",
+      "suspendedUntil": "2023-01-13"
+    }
+  ],
+  "internalLocation": {
+    "id": 98877667,
+    "code": "EDU-ROOM-1",
+    "description": "Education - R1"
+  },
+  "capacity": 10,
+  "activity": {
+    "id": $ACTIVITY_ID,
+    "prisonCode": "PVI",
+    "attendanceRequired": false,
+    "inCell": false,
+    "pieceWork": false,
+    "outsideWork": false,
+    "payPerSession": "F",
+    "summary": "Maths level 1",
+    "description": "A basic maths course suitable for introduction to the subject",
+    "category": {
+      "id": 1,
+      "code": "LEISURE_SOCIAL",
+      "name": "Leisure and social",
+      "description": "Such as association, library time and social clubs, like music or art"
+    },
+    "riskLevel": "High",
+    "minimumIncentiveLevel": "Basic",
+    "minimumIncentiveNomisCode": "BAS",
+    "minimumEducationLevel": [
+      {
+        "id": 123456,
+        "educationLevelCode": "Basic",
+        "educationLevelDescription": "Basic",
+        "studyAreaCode": "ENGLA",
+        "studyAreaDescription":  "English language"
+      }
+    ],
+    "createdTime": "2023-06-01T09:17:30.425Z",
+    "activityState": "LIVE",
+    "capacity": 10,
+    "allocated": 5
+  },
+  "slots": [{
+    "id"        : 555666001,
+    "startTime" : "07:45",
+    "endTime"   : "09:25",
+    "daysOfWeek": ["Sun","Thu"],
+    "mondayFlag": false,
+    "tuesdayFlag": false,
+    "wednesdayFlag": false,
+    "thursdayFlag": true,
+    "fridayFlag": false,
+    "saturdayFlag": false,
+    "sundayFlag": true
+  },
+  {
+    "id"        : 555666002,
+    "startTime" : "13:45",
+    "endTime"   : "14:25",
+    "daysOfWeek": ["Tue","Wed"],
+    "mondayFlag": false,
+    "tuesdayFlag": true,
+    "wednesdayFlag": true,
+    "thursdayFlag": false,
+    "fridayFlag": false,
+    "saturdayFlag": false,
+    "sundayFlag": false
+  }],
+  "startDate" : "2023-01-20",
+  "endDate" : "2023-01-23",
+  "runsOnBankHoliday": true
+}
+  """.trimIndent()
+
+fun buildGetScheduleResponseWithMissingInstance(id: Long = ACTIVITY_SCHEDULE_ID): String =
+  """
+{
+  "id": $id,
+  "instances": [
     {
       "id": ${SCHEDULE_INSTANCE_ID + 1},
       "date": "2023-01-14",
