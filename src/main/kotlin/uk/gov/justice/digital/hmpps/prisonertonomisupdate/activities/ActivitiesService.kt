@@ -49,13 +49,14 @@ class ActivitiesService(
         mappingService.getMappingsOrNull(event.additionalInformation.activityScheduleId)
       }
       transform {
-        activitiesApiService.getActivitySchedule(event.additionalInformation.activityScheduleId).let { activitySchedule ->
-          eventTelemetry += "description" to activitySchedule.description
+        activitiesApiService.getActivitySchedule(event.additionalInformation.activityScheduleId)
+          .let { activitySchedule ->
+            eventTelemetry += "description" to activitySchedule.description
 
-          createTransformedActivity(activitySchedule)
-            .also { eventTelemetry += "nomisCourseActivityId" to it.courseActivityId.toString() }
-            .let { nomisResponse -> buildActivityMappingDto(nomisResponse, activitySchedule) }
-        }
+            createTransformedActivity(activitySchedule)
+              .also { eventTelemetry += "nomisCourseActivityId" to it.courseActivityId.toString() }
+              .let { nomisResponse -> buildActivityMappingDto(nomisResponse, activitySchedule) }
+          }
       }
       saveMapping { mappingService.createMapping(it) }
     }
@@ -64,11 +65,12 @@ class ActivitiesService(
   private fun buildActivityMappingDto(
     nomisResponse: ActivityResponse,
     activitySchedule: ActivitySchedule,
+    existingMappings: ActivityMappingDto? = null,
     mappingType: String = "ACTIVITY_CREATED",
   ): ActivityMappingDto =
     nomisResponse.courseSchedules.map { nomisSchedule ->
       ActivityScheduleMappingDto(
-        scheduledInstanceId = activitySchedule.instances.findScheduledInstanceId(nomisSchedule),
+        scheduledInstanceId = nomisSchedule.findScheduledInstanceId(activitySchedule.instances, existingMappings),
         nomisCourseScheduleId = nomisSchedule.courseScheduleId,
         mappingType = mappingType,
       )
@@ -82,13 +84,25 @@ class ActivitiesService(
         )
       }
 
-  private fun List<ScheduledInstance>.findScheduledInstanceId(nomisSchedule: ScheduledInstanceResponse) =
-    this.find { instance ->
-      instance.date == nomisSchedule.date &&
-        instance.startTime.toLocalTime() == nomisSchedule.startTime.toLocalTime() &&
-        instance.endTime.toLocalTime() == nomisSchedule.endTime.toLocalTime()
+  private fun ScheduledInstanceResponse.findScheduledInstanceId(
+    activityScheduledInstances: List<ScheduledInstance>,
+    existingMappings: ActivityMappingDto?,
+  ) =
+    existingMappings.findScheduledInstanceId(courseScheduleId)
+      ?: let { activityScheduledInstances.findScheduledInstanceId(this) }
+      ?: throw IllegalStateException("Unable to find an Activities scheduled instance for the Nomis course schedule - this should not happen: ${this.courseScheduleId}")
+
+  private fun ActivityMappingDto?.findScheduledInstanceId(nomisCourseScheduleId: Long) =
+    this?.scheduledInstanceMappings
+      ?.find { nomisCourseScheduleId == it.nomisCourseScheduleId }
+      ?.scheduledInstanceId
+
+  private fun List<ScheduledInstance>.findScheduledInstanceId(nomisCourseSchedule: ScheduledInstanceResponse) =
+    find { instance ->
+      instance.date == nomisCourseSchedule.date &&
+        instance.startTime.toLocalTime() == nomisCourseSchedule.startTime.toLocalTime() &&
+        instance.endTime.toLocalTime() == nomisCourseSchedule.endTime.toLocalTime()
     }?.id
-      ?: throw IllegalStateException("Unable to find an Activities scheduled instance for the Nomis course schedule we just created - this should not happen: $nomisSchedule")
 
   private fun String.toLocalTime() = LocalTime.parse(this)
   private suspend fun createTransformedActivity(activitySchedule: ActivitySchedule) =
@@ -111,7 +125,7 @@ class ActivitiesService(
 
       activitySchedule.toUpdateActivityRequest(activity.pay, activity.category.code, mappings)
         .let { nomisApiService.updateActivity(mappings.nomisCourseActivityId, it) }
-        .let { nomisResponse -> buildActivityMappingDto(nomisResponse, activitySchedule, "ACTIVITY_UPDATED") }
+        .let { nomisResponse -> buildActivityMappingDto(nomisResponse, activitySchedule, mappings, "ACTIVITY_UPDATED") }
         .also { mappingRequest -> mappingService.updateMapping(mappingRequest) }
     }.onSuccess {
       telemetryClient.trackEvent("activity-amend-success", telemetryMap, null)
