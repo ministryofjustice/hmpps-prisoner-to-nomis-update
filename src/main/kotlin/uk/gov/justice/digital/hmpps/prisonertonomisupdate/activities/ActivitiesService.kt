@@ -140,7 +140,7 @@ class ActivitiesService(
       startDate = startDate,
       capacity = capacity,
       payRates = pay.toPayRateRequests(),
-      description = description,
+      description = toNomisActivityDescription(description),
       minimumIncentiveLevelCode = activity.minimumIncentiveNomisCode,
       payPerSession = toUpdatePayPerSession(),
       scheduleRules = slots.toScheduleRuleRequests(),

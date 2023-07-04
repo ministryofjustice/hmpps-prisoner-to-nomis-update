@@ -327,7 +327,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("startDate", equalTo("2023-01-20")))
             .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-23")))
             .withRequestBody(matchingJsonPath("capacity", equalTo("10")))
-            .withRequestBody(matchingJsonPath("description", equalTo("Monday AM Houseblock 3")))
+            .withRequestBody(matchingJsonPath("description", equalTo("SAA Monday AM Houseblock 3")))
             .withRequestBody(matchingJsonPath("minimumIncentiveLevelCode", equalTo("BAS")))
             .withRequestBody(matchingJsonPath("payPerSession", equalTo("F")))
             .withRequestBody(matchingJsonPath("excludeBankHolidays", equalTo("false")))
