@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAppointmentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateAppointmentRequest
@@ -192,15 +193,14 @@ class AppointmentsService(
     return comment?.take(4000)
   }
 
-  suspend fun createRetry(context: AppointmentContext) {
-    mappingService.createMapping(
-      AppointmentMappingDto(nomisEventId = context.nomisEventId, appointmentInstanceId = context.appointmentInstanceId),
-    ).also {
-      telemetryClient.trackEvent(
-        "appointment-create-mapping-retry-success",
-        mapOf("appointmentInstanceId" to context.appointmentInstanceId.toString()),
-      )
-    }
+  suspend fun createRetry(message: CreateMappingRetryMessage<AppointmentMappingDto>) {
+    mappingService.createMapping(message.mapping)
+      .also {
+        telemetryClient.trackEvent(
+          "appointment-create-mapping-retry-success",
+          message.telemetryAttributes,
+        )
+      }
   }
 
   override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())

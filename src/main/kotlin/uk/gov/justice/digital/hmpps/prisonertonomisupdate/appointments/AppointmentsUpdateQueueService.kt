@@ -18,5 +18,3 @@ class AppointmentsUpdateQueueService(
     telemetryClient = telemetryClient,
     objectMapper = objectMapper,
   )
-
-data class AppointmentContext(val nomisEventId: Long, val appointmentInstanceId: Long)

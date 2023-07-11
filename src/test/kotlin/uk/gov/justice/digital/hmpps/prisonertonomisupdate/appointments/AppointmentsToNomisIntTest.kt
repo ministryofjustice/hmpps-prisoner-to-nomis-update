@@ -356,6 +356,9 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
 
           publishAppointmentEvent("appointments.appointment-instance.created")
+
+          await untilCallTo { appointmentsApi.getCountFor("/appointment-instances/$APPOINTMENT_INSTANCE_ID") } matches { it == 1 }
+          await untilCallTo { nomisApi.postCountFor("/appointments") } matches { it == 1 }
         }
 
         @Test
@@ -375,7 +378,9 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           await untilAsserted {
             mappingServer.verify(
               2,
-              postRequestedFor(urlEqualTo("/mapping/appointments")),
+              postRequestedFor(urlEqualTo("/mapping/appointments"))
+                .withRequestBody(matchingJsonPath("appointmentInstanceId", equalTo("$APPOINTMENT_INSTANCE_ID")))
+                .withRequestBody(matchingJsonPath("nomisEventId", equalTo("$EVENT_ID"))),
             )
           }
           await untilAsserted {
