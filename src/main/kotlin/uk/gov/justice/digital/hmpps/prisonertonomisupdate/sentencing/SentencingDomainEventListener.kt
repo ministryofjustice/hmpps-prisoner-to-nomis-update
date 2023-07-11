@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.microsoft.applicationinsights.TelemetryClient
 import io.awspring.cloud.sqs.annotation.SqsListener
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.annotations.WithSpan
@@ -16,10 +17,12 @@ class SentencingDomainEventListener(
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
   private val sentencingAdjustmentsService: SentencingAdjustmentsService,
+  telemetryClient: TelemetryClient,
 ) : DomainEventListener(
   service = sentencingAdjustmentsService,
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
+  telemetryClient = telemetryClient,
 ) {
 
   private companion object {

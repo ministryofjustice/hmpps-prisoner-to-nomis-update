@@ -3,6 +3,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -27,6 +28,7 @@ internal class ActivitiesDomainEventsListenerTest {
   private val schedulesService: SchedulesService = mock()
   private val objectMapper: ObjectMapper = objectMapper()
   private val eventFeatureSwitch: EventFeatureSwitch = mock()
+  private val telemetryClient: TelemetryClient = mock()
 
   private val listener =
     ActivitiesDomainEventListener(
@@ -36,6 +38,7 @@ internal class ActivitiesDomainEventsListenerTest {
       schedulesService,
       objectMapper,
       eventFeatureSwitch,
+      telemetryClient,
     )
 
   @Nested
