@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.future
@@ -18,6 +19,7 @@ abstract class DomainEventListener(
   internal val service: CreateMappingRetryable,
   internal val objectMapper: ObjectMapper,
   internal val eventFeatureSwitch: EventFeatureSwitch,
+  internal val telemetryClient: TelemetryClient,
 ) {
 
   private companion object {
@@ -41,7 +43,15 @@ abstract class DomainEventListener(
           }
         }
 
-        RETRY_CREATE_MAPPING -> service.retryCreateMapping(sqsMessage.Message)
+        RETRY_CREATE_MAPPING -> runCatching { service.retryCreateMapping(sqsMessage.Message) }
+          .onFailure {
+            telemetryClient.trackEvent(
+              "create-mapping-retry-failure",
+              mapOf("retryMessage" to sqsMessage.Message),
+              null,
+            )
+            throw it
+          }
       }
     }
   }

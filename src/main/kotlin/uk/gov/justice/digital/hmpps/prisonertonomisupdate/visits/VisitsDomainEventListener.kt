@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.microsoft.applicationinsights.TelemetryClient
 import io.awspring.cloud.sqs.annotation.SqsListener
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.annotations.WithSpan
@@ -17,10 +18,12 @@ class VisitsDomainEventListener(
   private val visitsService: VisitsService,
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
+  telemetryClient: TelemetryClient,
 ) : DomainEventListener(
   service = visitsService,
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
+  telemetryClient = telemetryClient,
 ) {
 
   private companion object {
