@@ -14,9 +14,9 @@ generic-service:
     API_BASE_URL_MAPPING: https://nomis-sync-prisoner-mapping-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_VISITS: https://visit-scheduler-preprod.prison.service.justice.gov.uk
     API_BASE_URL_INCENTIVES: https://incentives-api-preprod.hmpps.service.justice.gov.uk
+    API_BASE_URL_ACTIVITIES: https://activities-api-preprod.prison.service.justice.gov.uk
+    API_BASE_URL_APPOINTMENTS: https://activities-api-preprod.prison.service.justice.gov.uk
     # point at self until real API exists
-    API_BASE_URL_ACTIVITIES: https://prisoner-to-nomis-update-preprod.hmpps.service.justice.gov.uk
-    API_BASE_URL_APPOINTMENTS: https://prisoner-to-nomis-update-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_SENTENCE_ADJUSTMENTS: https://prisoner-to-nomis-update-preprod.hmpps.service.justice.gov.uk
     FEATURE_EVENT_APPOINTMENTS_APPOINTMENT_INSTANCE_CREATED: false
     FEATURE_EVENT_APPOINTMENTS_APPOINTMENT_INSTANCE_UPDATED: false
