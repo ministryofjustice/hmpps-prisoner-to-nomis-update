@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityPay
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
@@ -208,9 +209,14 @@ class ActivitiesService(
   }
 
   suspend fun deleteAllActivities() {
+    // TODO: first delete migrated activities from mapping table
     mappingService.getAllMappings().forEach { mapping ->
       runCatching {
-        nomisApiService.deleteActivity(mapping.nomisCourseActivityId)
+        try {
+          nomisApiService.deleteActivity(mapping.nomisCourseActivityId)
+        } catch (e: WebClientResponseException.NotFound) {
+          log.warn("Activity with nomisCourseActivityId ${mapping.nomisCourseActivityId} not found in NOMIS - ignoring")
+        }
         mappingService.deleteMapping(mapping.activityScheduleId)
       }.onSuccess {
         telemetryClient.trackEvent(

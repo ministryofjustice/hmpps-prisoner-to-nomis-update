@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAppointmentRequest
@@ -130,9 +131,14 @@ class AppointmentsService(
   }
 
   suspend fun deleteAllAppointments() {
+    // TODO: first delete migrated appointments from mapping table
     mappingService.getAllMappings().forEach { mapping ->
       runCatching {
-        nomisApiService.deleteAppointment(mapping.nomisEventId)
+        try {
+          nomisApiService.deleteAppointment(mapping.nomisEventId)
+        } catch (e: NotFound) {
+          log.warn("Appointment with nomisEventId ${mapping.nomisEventId} not found in NOMIS - ignoring")
+        }
         mappingService.deleteMapping(mapping.appointmentInstanceId)
       }.onSuccess {
         telemetryClient.trackEvent(
