@@ -6,7 +6,7 @@ import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.2.4"
-  kotlin("plugin.spring") version "1.8.22"
+  kotlin("plugin.spring") version "1.9.0"
   id("org.openapi.generator") version "6.6.0"
 }
 
@@ -38,7 +38,7 @@ dependencies {
   testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.0")
   testImplementation("org.mockito:mockito-inline:5.2.0")
   testImplementation("org.testcontainers:localstack:1.18.3")
-  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.507")
+  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.512")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
