@@ -11,3 +11,4 @@ api.base.url:
   activities: http://localhost:8080
   appointments: http://localhost:8080
   sentence.adjustments: http://localhost:8080
+  adjudications: http://localhost:8080

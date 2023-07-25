@@ -18,6 +18,7 @@ generic-service:
     API_BASE_URL_APPOINTMENTS: https://activities-api-preprod.prison.service.justice.gov.uk
     # point at self until real API exists
     API_BASE_URL_SENTENCE_ADJUSTMENTS: https://prisoner-to-nomis-update-preprod.hmpps.service.justice.gov.uk
+    API_BASE_URL_ADJUDICATIONS: https://manage-adjudications-api-preprod.hmpps.service.justice.gov.uk
     FEATURE_EVENT_APPOINTMENTS_APPOINTMENT_INSTANCE_CREATED: false
     FEATURE_EVENT_APPOINTMENTS_APPOINTMENT_INSTANCE_UPDATED: false
     FEATURE_EVENT_APPOINTMENTS_APPOINTMENT_INSTANCE_CANCELLED: false

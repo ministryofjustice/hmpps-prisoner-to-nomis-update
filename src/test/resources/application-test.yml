@@ -53,6 +53,13 @@ hmpps.sqs:
       subscribeFilter: "{\"eventType\":[\"release-date-adjustments.adjustment.inserted\", \"release-date-adjustments.adjustment.updated\", \"release-date-adjustments.adjustment.deleted\"]}"
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
+    adjudication:
+      queueName: "adjudication-${random.uuid}"
+      dlqName: "adjudication-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: "{\"eventType\":[\"adjudication.report.created\"]}"
+      dlqMaxReceiveCount: 3
+      visibilityTimeout: 120
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}
