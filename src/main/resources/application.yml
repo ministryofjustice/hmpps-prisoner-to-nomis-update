@@ -51,6 +51,11 @@ spring:
             client-id: ${sentence.adjustments.client.id}
             client-secret: ${sentence.adjustments.client.secret}
             authorization-grant-type: client_credentials
+          adjudications-api:
+            provider: hmpps-auth
+            client-id: ${adjudications.client.id}
+            client-secret: ${adjudications.client.secret}
+            authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${api.base.url.oauth}/oauth/token

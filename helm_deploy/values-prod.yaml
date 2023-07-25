@@ -18,6 +18,7 @@ generic-service:
     API_BASE_URL_ACTIVITIES: https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk
     API_BASE_URL_APPOINTMENTS: https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk
     API_BASE_URL_SENTENCE_ADJUSTMENTS: https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk
+    API_BASE_URL_ADJUDICATIONS: https://manage-adjudications-api.hmpps.service.justice.gov.uk
     FEATURE_EVENT_ACTIVITIES_ACTIVITY_SCHEDULE_CREATED: false
     FEATURE_EVENT_ACTIVITIES_ACTIVITY_SCHEDULE_AMENDED: false
     FEATURE_EVENT_ACTIVITIES_ACTIVITY_SCHEDULE_EXTENDED: false
@@ -50,5 +51,7 @@ generic-prometheus-alerts:
     - "Digital-Prison-Services-prod-prisoner_to_nomis_appointment_dlq"
     - "Digital-Prison-Services-prod-hmpps_prisoner_to_nomis_sentencing_queue"
     - "Digital-Prison-Services-prod-hmpps_prisoner_to_nomis_sentencing_dlq"
+    - "syscon-devs-prod-hmpps_prisoner_to_nomis_adjudication_dead_letter_queue"
+    - "syscon-devs-prod-hmpps_prisoner_to_nomis_adjudication_queue"
   sqsAlertsOldestThreshold: 2
   sqsAlertsTotalMessagesThreshold: 1
