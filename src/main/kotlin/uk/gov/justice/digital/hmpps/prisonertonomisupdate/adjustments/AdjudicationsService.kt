@@ -29,7 +29,7 @@ class AdjudicationsService(
       }
       transform {
         val adjudication = adjudicationsApiService.getCharge(chargeNumber, prisonId)
-        telemetryMap["offenderNo"] = adjudication.prisonerNumber
+        telemetryMap["offenderNo"] = adjudication.reportedAdjudication.prisonerNumber
 
         "TODO return mapping dto"
       }

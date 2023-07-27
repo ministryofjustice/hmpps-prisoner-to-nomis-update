@@ -64,7 +64,7 @@ internal class AdjudicationsApiServiceTest {
 
       val adjudication = adjustmentsApiService.getCharge("1234", "MDI")
 
-      assertThat(adjudication.prisonerNumber).isEqualTo("A1234KT")
+      assertThat(adjudication.reportedAdjudication.prisonerNumber).isEqualTo("A1234KT")
     }
 
     @Test

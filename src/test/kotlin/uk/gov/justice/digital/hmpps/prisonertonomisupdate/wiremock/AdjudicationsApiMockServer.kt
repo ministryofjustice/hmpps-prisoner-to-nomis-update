@@ -51,102 +51,48 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withBody(
             """
 {
+    "reportedAdjudication": {
         "adjudicationNumber": ${chargeNumber.toLong()},
         "chargeNumber": "$chargeNumber",
         "prisonerNumber": "$offenderNo",
-        "gender": "FEMALE",
+        "gender": "MALE",
         "incidentDetails": {
-            "locationId": 27002,
-            "dateTimeOfIncident": "2023-07-26T09:00:00",
-            "dateTimeOfDiscovery": "2023-07-26T09:00:00",
-            "handoverDeadline": "2023-07-28T09:00:00"
+            "locationId": 197683,
+            "dateTimeOfIncident": "2023-07-11T09:00:00",
+            "dateTimeOfDiscovery": "2023-07-11T09:00:00",
+            "handoverDeadline": "2023-07-13T09:00:00"
         },
         "isYouthOffender": false,
         "incidentRole": {},
         "offenceDetails": {
-            "offenceCode": 24101,
+            "offenceCode": 16001,
             "offenceRule": {
-                "paragraphNumber": "24(a)",
-                "paragraphDescription": "Displays, attaches or draws on any part of a prison, or on any other property, threatening, abusive or insulting racist words, drawings, symbols or other material"
+                "paragraphNumber": "16",
+                "paragraphDescription": "Intentionally or recklessly sets fire to any part of a prison or any other property, whether or not his own"
             }
         },
         "incidentStatement": {
-            "statement": "123456",
+            "statement": "12",
             "completed": true
         },
-        "createdByUserId": "NCLAMP_GEN",
-        "createdDateTime": "2023-07-26T10:53:19.280167",
-        "status": "CHARGE_PROVED",
-        "reviewedByUserId": "NCLAMP_GEN",
+        "createdByUserId": "TWRIGHT",
+        "createdDateTime": "2023-07-25T15:19:37.476664",
+        "status": "UNSCHEDULED",
+        "reviewedByUserId": "AMARKE_GEN",
         "statusReason": "",
         "statusDetails": "",
         "damages": [],
         "evidence": [],
         "witnesses": [],
-        "hearings": [
-            {
-                "id": 532,
-                "locationId": 357596,
-                "dateTimeOfHearing": "2023-07-26T16:00:00",
-                "oicHearingType": "INAD_ADULT",
-                "outcome": {
-                    "id": 703,
-                    "adjudicator": "Jacob Marley",
-                    "code": "COMPLETE",
-                    "plea": "GUILTY"
-                },
-                "agencyId": "MDI"
-            }
-        ],
+        "hearings": [],
         "disIssueHistory": [],
-        "dateTimeOfFirstHearing": "2023-07-26T16:00:00",
-        "outcomes": [
-            {
-                "hearing": {
-                    "id": 532,
-                    "locationId": 357596,
-                    "dateTimeOfHearing": "2023-07-26T16:00:00",
-                    "oicHearingType": "INAD_ADULT",
-                    "outcome": {
-                        "id": 703,
-                        "adjudicator": "Jacob Marley",
-                        "code": "COMPLETE",
-                        "plea": "GUILTY"
-                    },
-                    "agencyId": "MDI"
-                },
-                "outcome": {
-                    "outcome": {
-                        "id": 877,
-                        "code": "CHARGE_PROVED"
-                    }
-                }
-            }
-        ],
-        "punishments": [
-            {
-                "id": 371,
-                "type": "ADDITIONAL_DAYS",
-                "schedule": {
-                    "days": 10
-                },
-                "consecutiveReportNumber": 1525851,
-                "consecutiveChargeNumber": "1525851",
-                "consecutiveReportAvailable": true
-            },
-            {
-                "id": 373,
-                "type": "ADDITIONAL_DAYS",
-                "activatedFrom": "1525853",
-                "schedule": {
-                    "days": 20
-                }
-            }
-        ],
+        "outcomes": [],
+        "punishments": [],
         "punishmentComments": [],
         "outcomeEnteredInNomis": false,
         "originatingAgencyId": "MDI"
-}
+    }
+}              
             """.trimIndent(),
           )
           .withStatus(200),
