@@ -12,6 +12,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.BootstrapWith
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.WebClientConfiguration
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension
@@ -43,6 +44,7 @@ import kotlin.annotation.AnnotationTarget.CLASS
   ActivitiesApiExtension::class,
   AppointmentsApiExtension::class,
   SentencingAdjustmentsApiExtension::class,
+  AdjudicationsApiExtension::class,
 )
 @ActiveProfiles("test")
 @SpringBootTest(classes = [JacksonAutoConfiguration::class, CodecsAutoConfiguration::class, WebClientConfiguration::class, WebClientAutoConfiguration::class, ReactiveOAuth2ClientAutoConfiguration::class, ReactiveSecurityAutoConfiguration::class])

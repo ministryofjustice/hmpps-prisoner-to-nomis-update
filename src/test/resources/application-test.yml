@@ -12,8 +12,9 @@ api.base.url:
   visits: http://localhost:8083
   incentives: http://localhost:8085
   activities: http://localhost:8086
-  appointments: http://localhost:8088
   sentence.adjustments: http://localhost:8087
+  appointments: http://localhost:8088
+  adjudications: http://localhost:8089
 
 hmpps.sqs:
   provider: localstack

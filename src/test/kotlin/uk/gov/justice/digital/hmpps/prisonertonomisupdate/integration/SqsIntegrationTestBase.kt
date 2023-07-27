@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension
@@ -34,6 +35,7 @@ import uk.gov.justice.hmpps.sqs.HmppsTopic
   ActivitiesApiExtension::class,
   AppointmentsApiExtension::class,
   SentencingAdjustmentsApiExtension::class,
+  AdjudicationsApiExtension::class,
 )
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -84,6 +86,13 @@ abstract class SqsIntegrationTestBase {
   internal val sentencingQueueUrl by lazy { sentencingQueue.queueUrl }
   internal val sentencingDlqUrl by lazy { sentencingQueue.dlqUrl }
 
+  internal val adjudicationQueue by lazy { hmppsQueueService.findByQueueId("adjudication") as HmppsQueue }
+
+  internal val awsSqsAdjudicationClient by lazy { adjudicationQueue.sqsClient }
+  internal val awsSqsAdjudicationDlqClient by lazy { adjudicationQueue.sqsDlqClient }
+  internal val adjudicationQueueUrl by lazy { adjudicationQueue.queueUrl }
+  internal val adjudicationDlqUrl by lazy { adjudicationQueue.dlqUrl }
+
   internal val awsSnsClient by lazy { topic.snsClient }
   internal val topicArn by lazy { topic.arn }
 
@@ -103,6 +112,9 @@ abstract class SqsIntegrationTestBase {
 
     awsSqsSentencingClient.purgeQueue(sentencingQueueUrl).get()
     awsSqsSentencingDlqClient?.purgeQueue(sentencingDlqUrl)?.get()
+
+    awsSqsAdjudicationClient.purgeQueue(adjudicationQueueUrl).get()
+    awsSqsAdjudicationDlqClient?.purgeQueue(adjudicationDlqUrl)?.get()
   }
 
   companion object {
