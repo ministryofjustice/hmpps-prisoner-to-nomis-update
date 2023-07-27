@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension
@@ -35,6 +36,7 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("components.visitsApi.status").isEqualTo("UP")
       .jsonPath("components.mappingApi.status").isEqualTo("UP")
       .jsonPath("components.sentenceAdjustmentsApi.status").isEqualTo("UP")
+      .jsonPath("components.adjudicationsApi.status").isEqualTo("UP")
   }
 
   @Test
@@ -101,5 +103,6 @@ class HealthCheckTest : IntegrationTestBase() {
     ActivitiesApiExtension.activitiesApi.stubHealthPing(status)
     AppointmentsApiExtension.appointmentsApi.stubHealthPing(status)
     SentencingAdjustmentsApiExtension.sentencingAdjustmentsApi.stubHealthPing(status)
+    AdjudicationsApiExtension.adjudicationsApiServer.stubHealthPing(status)
   }
 }

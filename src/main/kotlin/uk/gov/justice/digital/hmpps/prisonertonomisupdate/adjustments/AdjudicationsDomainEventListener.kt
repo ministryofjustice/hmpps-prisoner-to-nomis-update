@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture
 class AdjudicationsDomainEventListener(
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
-  adjudicationsService: AdjudicationsService,
+  private val adjudicationsService: AdjudicationsService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListener(
   service = adjudicationsService,
@@ -30,13 +30,12 @@ class AdjudicationsDomainEventListener(
   }
 
   @SqsListener("adjudication", factory = "hmppsQueueContainerFactoryProxy")
-  @WithSpan(value = "syscon-devs-dev-hmpps_prisoner_to_nomis_adjudication_queue", kind = SpanKind.SERVER)
+  @WithSpan(value = "syscon-devs-hmpps_prisoner_to_nomis_adjudication_queue", kind = SpanKind.SERVER)
   fun onMessage(
     rawMessage: String,
-  ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, _ ->
+  ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
-      "adjudication.report.created" ->
-        log.info("Ignoring adjudication.report.created event")
+      "adjudication.report.created" -> adjudicationsService.createAdjudication(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
