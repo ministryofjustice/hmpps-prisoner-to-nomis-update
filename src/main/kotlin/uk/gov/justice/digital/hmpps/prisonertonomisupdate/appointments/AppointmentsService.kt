@@ -162,7 +162,7 @@ class AppointmentsService(
     internalLocationId = if (instance.inCell) { null } else { instance.internalLocationId },
     eventDate = instance.appointmentDate,
     startTime = LocalTime.parse(instance.startTime),
-    endTime = LocalTime.parse(instance.endTime),
+    endTime = instance.endTime?.let { LocalTime.parse(it) },
     eventSubType = instance.categoryCode,
     comment = constructComment(instance),
   )
@@ -171,7 +171,7 @@ class AppointmentsService(
     internalLocationId = if (instance.inCell) { null } else { instance.internalLocationId },
     eventDate = instance.appointmentDate,
     startTime = LocalTime.parse(instance.startTime),
-    endTime = LocalTime.parse(instance.endTime),
+    endTime = instance.endTime?.let { LocalTime.parse(it) },
     eventSubType = instance.categoryCode,
     comment = constructComment(instance),
   )

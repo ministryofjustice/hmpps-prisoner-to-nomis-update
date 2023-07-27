@@ -334,7 +334,7 @@ data class CreateAppointmentRequest(
   @JsonFormat(pattern = "HH:mm")
   val startTime: LocalTime,
   @JsonFormat(pattern = "HH:mm")
-  val endTime: LocalTime,
+  val endTime: LocalTime?,
   val internalLocationId: Long? = null, // in cell if null
   val eventSubType: String,
   val comment: String? = null,
@@ -350,7 +350,7 @@ data class UpdateAppointmentRequest(
   @JsonFormat(pattern = "HH:mm")
   val startTime: LocalTime,
   @JsonFormat(pattern = "HH:mm")
-  val endTime: LocalTime,
+  val endTime: LocalTime?,
   val internalLocationId: Long? = null, // in cell if null
   val eventSubType: String,
   val comment: String? = null,

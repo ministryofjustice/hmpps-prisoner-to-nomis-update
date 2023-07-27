@@ -3,19 +3,26 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentCaptor
 import org.mockito.kotlin.any
+import org.mockito.kotlin.capture
 import org.mockito.kotlin.check
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.NOMIS_EVENT_ID
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAppointmentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateAppointmentRequest
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class AppointmentsServiceTest {
@@ -84,9 +91,52 @@ internal class AppointmentsServiceTest {
     )
   }
 
-  private suspend fun callService(appointmentDescription: String?, comment: String?) {
+  @Test
+  fun `Create End time can be null`() = runTest {
+    callService(null, null, null)
+    verify(nomisApiService).createAppointment(
+      check {
+        assertThat(it.startTime).isEqualTo("10:15")
+        assertThat(it.endTime).isNull()
+      },
+    )
+  }
+
+  @Test
+  fun `Update End time can be null`() = runTest {
     whenever(appointmentsApiService.getAppointmentInstance(APPOINTMENT_INSTANCE_ID)).thenReturn(
-      newAppointment(appointmentDescription, comment),
+      newAppointment(null, null, null),
+    )
+    whenever(appointmentsMappingService.getMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID)).thenReturn(
+      AppointmentMappingDto(APPOINTMENT_INSTANCE_ID, NOMIS_EVENT_ID),
+    )
+
+    val captor: ArgumentCaptor<UpdateAppointmentRequest> = ArgumentCaptor.forClass(UpdateAppointmentRequest::class.java)
+
+    val appointment = AppointmentDomainEvent(
+      "TYPE",
+      "version",
+      "description",
+      LocalDateTime.now(),
+      AppointmentAdditionalInformation(appointmentInstanceId = APPOINTMENT_INSTANCE_ID),
+    )
+    appointmentsService.updateAppointment(appointment)
+
+    captor.apply {
+      runBlocking {
+        verify(nomisApiService).updateAppointment(
+          eq(NOMIS_EVENT_ID),
+          capture(captor),
+        )
+      }
+      assertThat(value.startTime).isEqualTo(LocalTime.parse("10:15"))
+      assertThat(value.endTime).isNull()
+    }
+  }
+
+  private suspend fun callService(appointmentDescription: String?, comment: String?, endTime: String? = "11:42") {
+    whenever(appointmentsApiService.getAppointmentInstance(APPOINTMENT_INSTANCE_ID)).thenReturn(
+      newAppointment(appointmentDescription, comment, endTime),
     )
     whenever(nomisApiService.createAppointment(any())).thenReturn(CreateAppointmentResponse(eventId = 4567))
 
@@ -100,7 +150,7 @@ internal class AppointmentsServiceTest {
     appointmentsService.createAppointment(appointment)
   }
 
-  private fun newAppointment(appointmentDescription: String?, comment: String?): AppointmentInstance =
+  private fun newAppointment(appointmentDescription: String?, comment: String?, endTime: String?): AppointmentInstance =
     AppointmentInstance(
       id = APPOINTMENT_INSTANCE_ID,
       appointmentOccurrenceAllocationId = 12345,
@@ -111,7 +161,7 @@ internal class AppointmentsServiceTest {
       internalLocationId = 34567,
       appointmentDate = LocalDate.parse("2023-03-14"),
       startTime = "10:15",
-      endTime = "11:42",
+      endTime = endTime,
       categoryCode = "DUFF",
       prisonCode = "SKI",
       inCell = false,
