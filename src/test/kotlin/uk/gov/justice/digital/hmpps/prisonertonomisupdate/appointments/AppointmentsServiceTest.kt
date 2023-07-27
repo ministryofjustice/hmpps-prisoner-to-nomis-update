@@ -108,10 +108,10 @@ internal class AppointmentsServiceTest {
       newAppointment(null, null, null),
     )
     whenever(appointmentsMappingService.getMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID)).thenReturn(
-      AppointmentMappingDto( APPOINTMENT_INSTANCE_ID, NOMIS_EVENT_ID),
+      AppointmentMappingDto(APPOINTMENT_INSTANCE_ID, NOMIS_EVENT_ID),
     )
 
-    val captor : ArgumentCaptor<UpdateAppointmentRequest> = ArgumentCaptor.forClass(UpdateAppointmentRequest::class.java)
+    val captor: ArgumentCaptor<UpdateAppointmentRequest> = ArgumentCaptor.forClass(UpdateAppointmentRequest::class.java)
 
     val appointment = AppointmentDomainEvent(
       "TYPE",
