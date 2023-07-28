@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications
 
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -17,6 +18,7 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension.Companion.adjudicationsApiServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
 private const val CHARGE_NUMBER = "12345"
 private const val PRISON_ID = "MDI"
@@ -31,31 +33,42 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER, offenderNo = OFFENDER_NO)
+        nomisApi.stubAdjudicationCreate(OFFENDER_NO)
         publishCreateAdjudicationDomainEvent()
       }
 
       @Test
       fun `will callback back to adjudication service to get more details`() {
-        await untilAsserted {
-          adjudicationsApiServer.verify(getRequestedFor(urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
-        }
-        await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        waitForCreateAdjudicationProcessingToBeComplete()
+
+        adjudicationsApiServer.verify(getRequestedFor(urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
       }
 
       @Test
       fun `will create success telemetry`() {
-        await untilAsserted {
-          verify(telemetryClient).trackEvent(
-            eq("adjudication-create-success"),
-            check {
-              assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
-              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-              assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-            },
-            isNull(),
-          )
-        }
+        waitForCreateAdjudicationProcessingToBeComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("adjudication-create-success"),
+          check {
+            assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+          },
+          isNull(),
+        )
       }
+
+      @Test
+      fun `will call nomis api to create the adjudication`() {
+        waitForCreateAdjudicationProcessingToBeComplete()
+
+        nomisApi.verify(postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/adjudications")))
+      }
+    }
+
+    private fun waitForCreateAdjudicationProcessingToBeComplete() {
+      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
     }
   }
 

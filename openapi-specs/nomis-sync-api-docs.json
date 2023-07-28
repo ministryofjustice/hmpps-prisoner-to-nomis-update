@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-06-22.3615.a9df7c8"
+    "version": "2023-07-27.4215.d0604fd"
   },
   "servers": [
     {
@@ -1563,6 +1563,93 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/adjudications": {
+      "post": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "creates an adjudication on the latest booking of a prisoner",
+        "description": "Creates an adjudication. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "createAdjudication",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender Noms Id",
+            "required": true,
+            "schema": {
+              "pattern": "[A-Z]\\d{4}[A-Z]{2}",
+              "type": "string",
+              "description": "Offender Noms Id",
+              "example": "A1234ZZ"
+            },
+            "example": "A1234ZZ"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdjudicationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Adjudication Created Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdjudicationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prisoner does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Adjudication already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/booking-id/{bookingId}/sentences/{sentenceSequence}/adjustments": {
       "post": {
         "tags": [
@@ -2158,175 +2245,6 @@
           },
           "403": {
             "description": "Forbidden, requires role NOMIS_ACTIVITIES",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/activities/{courseActivityId}/booking/{bookingId}/attendance": {
-      "post": {
-        "tags": [
-          "activities-resource"
-        ],
-        "summary": "Creates or updates an attendance record",
-        "description": "Creates or updates an attendance for the booking and schedule. Requires role NOMIS_ACTIVITIES",
-        "operationId": "upsertAttendanceOld",
-        "parameters": [
-          {
-            "name": "courseActivityId",
-            "in": "path",
-            "description": "Course activity id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Course activity id"
-            }
-          },
-          {
-            "name": "bookingId",
-            "in": "path",
-            "description": "Booking id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Booking id"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertAttendanceRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Attendance updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UpsertAttendanceResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "deprecated": true
-      }
-    },
-    "/activities/{courseActivityId}/booking/{bookingId}/attendance-status": {
-      "post": {
-        "tags": [
-          "activities-resource"
-        ],
-        "summary": "Get Nomis attendance status",
-        "description": "Returns the current event status of a Nomis attendance record. Requires role NOMIS_ACTIVITIES",
-        "operationId": "getAttendanceStatus",
-        "parameters": [
-          {
-            "name": "courseActivityId",
-            "in": "path",
-            "description": "Course activity id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Course activity id"
-            }
-          },
-          {
-            "name": "bookingId",
-            "in": "path",
-            "description": "Booking id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Booking id"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetAttendanceStatusRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Attendance status found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetAttendanceStatusResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The attendance record does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -3174,6 +3092,93 @@
         }
       }
     },
+    "/adjudications/charges/ids": {
+      "get": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "get adjudication charge IDs by filter",
+        "description": "Retrieves a paged list of adjudication charge ids by filter. Requires ROLE_NOMIS_ADJUDICATIONS.",
+        "operationId": "getAdjudicationChargeIdsByFilter",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "description": "Filter results by adjudication charges that were created on or after the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "description": "Filter results by adjudication charges that were created on or before the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          },
+          {
+            "name": "prisonIds",
+            "in": "query",
+            "description": "Filter results by adjudication charges that were created in one of the given prisons",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "example": "MDI"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pageable list of ids are returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageAdjudicationChargeIdResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_ADJUDICATIONS not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/adjudications/adjudication-number/{adjudicationNumber}": {
       "get": {
         "tags": [
@@ -3229,6 +3234,84 @@
           },
           "404": {
             "description": "Adjudication does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/adjudications/adjudication-number/{adjudicationNumber}/charge-sequence/{chargeSequence}": {
+      "get": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "get adjudication by adjudication number and charge sequence",
+        "description": "Retrieves an adjudication by the adjudication number and charge sequence. Will only return the specified charge. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "getAdjudicationByCharge",
+        "parameters": [
+          {
+            "name": "adjudicationNumber",
+            "in": "path",
+            "description": "Adjudication number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Adjudication number",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "chargeSequence",
+            "in": "path",
+            "description": "Charge sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Charge sequence",
+              "example": 1
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Adjudication with charge information returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdjudicationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Adjudication or adjudication charge does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -4324,6 +4407,720 @@
         },
         "description": "Visit creation response"
       },
+      "AdjudicationCharge": {
+        "required": [
+          "chargeSequence",
+          "offence"
+        ],
+        "type": "object",
+        "properties": {
+          "offence": {
+            "$ref": "#/components/schemas/AdjudicationOffence"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "reportDetail": {
+            "type": "string"
+          },
+          "offenceId": {
+            "type": "string"
+          },
+          "chargeSequence": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "AdjudicationIncident": {
+        "required": [
+          "adjudicationIncidentId",
+          "incidentDate",
+          "incidentTime",
+          "incidentType",
+          "internalLocation",
+          "otherPrisonersInvolved",
+          "otherStaffInvolved",
+          "prison",
+          "prisonerVictims",
+          "prisonerWitnesses",
+          "repairs",
+          "reportedDate",
+          "reportedTime",
+          "reportingOfficers",
+          "reportingStaff",
+          "staffVictims",
+          "staffWitnesses"
+        ],
+        "type": "object",
+        "properties": {
+          "adjudicationIncidentId": {
+            "type": "integer",
+            "description": "The adjudication incident Id, part of the composite key with adjudicationSequence",
+            "format": "int64"
+          },
+          "reportingStaff": {
+            "$ref": "#/components/schemas/Staff"
+          },
+          "incidentDate": {
+            "type": "string",
+            "description": "Date of the associated incident",
+            "format": "date"
+          },
+          "incidentTime": {
+            "type": "string",
+            "description": "Date and time of the associated incident",
+            "format": "partial-time"
+          },
+          "reportedDate": {
+            "type": "string",
+            "description": "Date when the associated incident was reported",
+            "format": "date"
+          },
+          "reportedTime": {
+            "type": "string",
+            "description": "Date and time when the associated incident was reported",
+            "format": "partial-time"
+          },
+          "internalLocation": {
+            "$ref": "#/components/schemas/InternalLocation"
+          },
+          "incidentType": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "details": {
+            "type": "string",
+            "description": "Incident details"
+          },
+          "prison": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "prisonerWitnesses": {
+            "type": "array",
+            "description": "Prisoners that witnessed the incident. Rarely used in NOMIS",
+            "items": {
+              "$ref": "#/components/schemas/Prisoner"
+            }
+          },
+          "prisonerVictims": {
+            "type": "array",
+            "description": "Prisoners that were victims in the incident. Not often used in NOMIS",
+            "items": {
+              "$ref": "#/components/schemas/Prisoner"
+            }
+          },
+          "otherPrisonersInvolved": {
+            "type": "array",
+            "description": "Other suspects involved in the incident that may or may not have been placed on report",
+            "items": {
+              "$ref": "#/components/schemas/Prisoner"
+            }
+          },
+          "reportingOfficers": {
+            "type": "array",
+            "description": "The officer who reported the incident who may differ from the reporting officer. Often used in NOMIS",
+            "items": {
+              "$ref": "#/components/schemas/Staff"
+            }
+          },
+          "staffWitnesses": {
+            "type": "array",
+            "description": "Staff that witnessed the incident. Used in NOMIS in a small percentage of cases",
+            "items": {
+              "$ref": "#/components/schemas/Staff"
+            }
+          },
+          "staffVictims": {
+            "type": "array",
+            "description": "Staff that was a victim in the incident. Rarely used in NOMIS",
+            "items": {
+              "$ref": "#/components/schemas/Staff"
+            }
+          },
+          "otherStaffInvolved": {
+            "type": "array",
+            "description": "Other staff that was involved in the incident either using force or some other link. Used in NOMIS in a small percentage of cases",
+            "items": {
+              "$ref": "#/components/schemas/Staff"
+            }
+          },
+          "repairs": {
+            "type": "array",
+            "description": "The repairs required due to the damage",
+            "items": {
+              "$ref": "#/components/schemas/Repair"
+            }
+          }
+        },
+        "description": "Associated incident details"
+      },
+      "AdjudicationOffence": {
+        "required": [
+          "code",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "category": {
+            "$ref": "#/components/schemas/CodeDescription"
+          }
+        }
+      },
+      "AdjudicationResponse": {
+        "required": [
+          "adjudicationSequence",
+          "bookingId",
+          "charges",
+          "hearings",
+          "incident",
+          "investigations",
+          "offenderNo",
+          "partyAddedDate"
+        ],
+        "type": "object",
+        "properties": {
+          "adjudicationSequence": {
+            "type": "integer",
+            "description": "The adjudication/party sequence, part of the composite key with adjudicationIncidentId",
+            "format": "int32"
+          },
+          "offenderNo": {
+            "type": "string",
+            "description": "The offender number, aka nomsId, prisonerId"
+          },
+          "bookingId": {
+            "type": "integer",
+            "description": "The id of the booking associated with the adjudication",
+            "format": "int64"
+          },
+          "adjudicationNumber": {
+            "type": "integer",
+            "description": "The adjudication number (business key)",
+            "format": "int64"
+          },
+          "partyAddedDate": {
+            "type": "string",
+            "description": "Date Prisoner was added to the adjudication ????",
+            "format": "date"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Adjudication comments"
+          },
+          "incident": {
+            "$ref": "#/components/schemas/AdjudicationIncident"
+          },
+          "charges": {
+            "type": "array",
+            "description": "Charges associated with this adjudication",
+            "items": {
+              "$ref": "#/components/schemas/AdjudicationCharge"
+            }
+          },
+          "investigations": {
+            "type": "array",
+            "description": "Investigator that gathers evidence. Used in NOMIS in a small percentage of cases",
+            "items": {
+              "$ref": "#/components/schemas/Investigation"
+            }
+          },
+          "hearings": {
+            "type": "array",
+            "description": "hearings associated with this adjudication",
+            "items": {
+              "$ref": "#/components/schemas/Hearing"
+            }
+          }
+        },
+        "description": "Adjudication Information"
+      },
+      "CodeDescription": {
+        "required": [
+          "code",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "Evidence": {
+        "required": [
+          "date",
+          "detail",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "Hearing": {
+        "required": [
+          "hearingId",
+          "hearingResults"
+        ],
+        "type": "object",
+        "properties": {
+          "hearingId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "scheduleDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "scheduleTime": {
+            "type": "string",
+            "format": "partial-time"
+          },
+          "hearingDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "hearingTime": {
+            "type": "string",
+            "format": "partial-time"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "representativeText": {
+            "type": "string"
+          },
+          "hearingStaff": {
+            "$ref": "#/components/schemas/Staff"
+          },
+          "internalLocation": {
+            "$ref": "#/components/schemas/InternalLocation"
+          },
+          "eventStatus": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "hearingResults": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HearingResult"
+            }
+          },
+          "eventId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "hearings associated with this adjudication"
+      },
+      "HearingResult": {
+        "required": [
+          "charge",
+          "offence",
+          "resultAwards"
+        ],
+        "type": "object",
+        "properties": {
+          "pleaFindingType": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "findingType": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "charge": {
+            "$ref": "#/components/schemas/AdjudicationCharge"
+          },
+          "offence": {
+            "$ref": "#/components/schemas/AdjudicationOffence"
+          },
+          "resultAwards": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HearingResultAward"
+            }
+          }
+        }
+      },
+      "HearingResultAward": {
+        "required": [
+          "effectiveDate"
+        ],
+        "type": "object",
+        "properties": {
+          "sanctionType": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "sanctionStatus": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "statusDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "sanctionDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sanctionMonths": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "compensationAmount": {
+            "type": "number"
+          },
+          "consecutiveAward": {
+            "$ref": "#/components/schemas/HearingResultAward"
+          }
+        }
+      },
+      "InternalLocation": {
+        "required": [
+          "code",
+          "description",
+          "locationId"
+        ],
+        "type": "object",
+        "properties": {
+          "locationId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "Investigation": {
+        "required": [
+          "dateAssigned",
+          "evidence",
+          "investigator"
+        ],
+        "type": "object",
+        "properties": {
+          "investigator": {
+            "$ref": "#/components/schemas/Staff"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "dateAssigned": {
+            "type": "string",
+            "format": "date"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            }
+          }
+        },
+        "description": "Investigator that gathers evidence. Used in NOMIS in a small percentage of cases"
+      },
+      "Prisoner": {
+        "required": [
+          "lastName",
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderNo": {
+            "type": "string",
+            "description": "The offender number, aka nomsId, prisonerId"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "First name of prisoner"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Last name of prisoner"
+          }
+        },
+        "description": "Other suspects involved in the incident that may or may not have been placed on report"
+      },
+      "Repair": {
+        "required": [
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "cost": {
+            "type": "number"
+          }
+        },
+        "description": "The repairs required due to the damage"
+      },
+      "Staff": {
+        "required": [
+          "firstName",
+          "lastName",
+          "staffId"
+        ],
+        "type": "object",
+        "properties": {
+          "staffId": {
+            "type": "integer",
+            "description": "NOMIS staff id",
+            "format": "int64"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "First name of staff member"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Last name of staff member"
+          }
+        }
+      },
+      "ChargeToCreate": {
+        "required": [
+          "offenceCode",
+          "offenceId"
+        ],
+        "type": "object",
+        "properties": {
+          "offenceCode": {
+            "type": "string",
+            "description": "Offence code they are charged with",
+            "example": "51:1N"
+          },
+          "offenceId": {
+            "type": "string",
+            "description": "Charges associated with this adjudication (business key)",
+            "example": "1234567/1"
+          }
+        },
+        "description": "Charges associated with this adjudication"
+      },
+      "CreateAdjudicationRequest": {
+        "required": [
+          "adjudicationNumber",
+          "charges",
+          "evidence",
+          "incident"
+        ],
+        "type": "object",
+        "properties": {
+          "adjudicationNumber": {
+            "type": "integer",
+            "description": "The adjudication number (business key)",
+            "format": "int64",
+            "example": 10128828
+          },
+          "incident": {
+            "$ref": "#/components/schemas/IncidentToCreate"
+          },
+          "charges": {
+            "type": "array",
+            "description": "Charges associated with this adjudication",
+            "items": {
+              "$ref": "#/components/schemas/ChargeToCreate"
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "description": "The evidence records as part of the incident",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceToCreate"
+            }
+          }
+        },
+        "description": "Core Adjudication to be created"
+      },
+      "EvidenceToCreate": {
+        "required": [
+          "detail",
+          "typeCode"
+        ],
+        "type": "object",
+        "properties": {
+          "typeCode": {
+            "type": "string",
+            "description": "Type of evidence",
+            "example": "PHOTO"
+          },
+          "detail": {
+            "type": "string",
+            "description": "Description of evidence",
+            "example": "Image of damages"
+          }
+        },
+        "description": "The evidence records as part of the incident"
+      },
+      "IncidentToCreate": {
+        "required": [
+          "details",
+          "incidentDate",
+          "incidentTime",
+          "internalLocationId",
+          "prisonId",
+          "prisonerVictimsOffenderNumbers",
+          "repairs",
+          "reportedDate",
+          "reportedTime",
+          "reportingStaffUsername",
+          "staffVictimsUsernames",
+          "staffWitnessesUsernames"
+        ],
+        "type": "object",
+        "properties": {
+          "reportingStaffUsername": {
+            "type": "string",
+            "description": "Reporting staff member username",
+            "example": "JANE.BROOKES"
+          },
+          "incidentDate": {
+            "type": "string",
+            "description": "Date of the associated incident",
+            "format": "date"
+          },
+          "incidentTime": {
+            "type": "string",
+            "description": "Date and time of the associated incident",
+            "format": "partial-time",
+            "example": "12:00:00"
+          },
+          "reportedDate": {
+            "type": "string",
+            "description": "Date when the associated incident was reported",
+            "format": "date"
+          },
+          "reportedTime": {
+            "type": "string",
+            "description": "Date and time when the associated incident was reported",
+            "format": "partial-time",
+            "example": "12:00:00"
+          },
+          "internalLocationId": {
+            "type": "integer",
+            "description": "location id where incident took place",
+            "format": "int64",
+            "example": 123456
+          },
+          "details": {
+            "type": "string",
+            "description": "Incident details",
+            "example": "The details of the incident are as follows"
+          },
+          "prisonId": {
+            "type": "string",
+            "description": "Prison code where the incident took place",
+            "example": "MDI"
+          },
+          "prisonerVictimsOffenderNumbers": {
+            "type": "array",
+            "description": "Prisoners numbers that witnessed the incident",
+            "example": [
+              "A1234AA",
+              "A1234AB"
+            ],
+            "items": {
+              "type": "string",
+              "description": "Prisoners numbers that witnessed the incident",
+              "example": "[\"A1234AA\",\"A1234AB\"]"
+            }
+          },
+          "staffWitnessesUsernames": {
+            "type": "array",
+            "description": "Staff usernames that witnessed the incident",
+            "example": [
+              "A.BARNES",
+              "M.ABDULLAH"
+            ],
+            "items": {
+              "type": "string",
+              "description": "Staff usernames that witnessed the incident",
+              "example": "[\"A.BARNES\",\"M.ABDULLAH\"]"
+            }
+          },
+          "staffVictimsUsernames": {
+            "type": "array",
+            "description": "Staff usernames that were victims in the incident",
+            "example": [
+              "A.BARNES",
+              "M.ABDULLAH"
+            ],
+            "items": {
+              "type": "string",
+              "description": "Staff usernames that were victims in the incident",
+              "example": "[\"A.BARNES\",\"M.ABDULLAH\"]"
+            }
+          },
+          "repairs": {
+            "type": "array",
+            "description": "The repairs required due to the damage",
+            "items": {
+              "$ref": "#/components/schemas/RepairToCreate"
+            }
+          }
+        },
+        "description": "Associated incident details"
+      },
+      "RepairToCreate": {
+        "required": [
+          "typeCode"
+        ],
+        "type": "object",
+        "properties": {
+          "typeCode": {
+            "type": "string",
+            "description": "Type of repairs",
+            "example": "PLUM"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Optional description of repairs",
+            "example": "Damage to the plumbing"
+          },
+          "cost": {
+            "type": "number",
+            "description": "Optional cost of repairs",
+            "example": 62.12
+          }
+        },
+        "description": "The repairs required due to the damage"
+      },
       "CreateSentenceAdjustmentRequest": {
         "required": [
           "active",
@@ -4563,63 +5360,6 @@
           }
         },
         "description": "Course activity creation request"
-      },
-      "GetAttendanceStatusRequest": {
-        "required": [
-          "endTime",
-          "scheduleDate",
-          "startTime"
-        ],
-        "type": "object",
-        "properties": {
-          "scheduleDate": {
-            "type": "string",
-            "description": "The date of the course schedule",
-            "format": "date",
-            "example": "2023-04-03"
-          },
-          "startTime": {
-            "type": "string",
-            "description": "The time of the course schedule",
-            "format": "partial-time",
-            "example": "10:00"
-          },
-          "endTime": {
-            "type": "string",
-            "description": "The time the course schedule ends",
-            "format": "partial-time",
-            "example": "11:00"
-          }
-        },
-        "description": "Get attendance status request"
-      },
-      "GetAttendanceStatusResponse": {
-        "required": [
-          "eventStatus"
-        ],
-        "type": "object",
-        "properties": {
-          "eventStatus": {
-            "type": "string",
-            "description": "The event status for the attendance"
-          }
-        },
-        "description": "Attendance status response"
-      },
-      "CodeDescription": {
-        "required": [
-          "code",
-          "description"
-        ],
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        }
       },
       "LeadVisitor": {
         "required": [
@@ -5391,363 +6131,74 @@
           }
         }
       },
-      "AdjudicationCharge": {
+      "AdjudicationChargeIdResponse": {
         "required": [
+          "adjudicationNumber",
           "chargeSequence",
-          "offence"
-        ],
-        "type": "object",
-        "properties": {
-          "offence": {
-            "$ref": "#/components/schemas/AdjudicationOffence"
-          },
-          "evidence": {
-            "type": "string"
-          },
-          "reportDetail": {
-            "type": "string"
-          },
-          "offenceId": {
-            "type": "string"
-          },
-          "chargeSequence": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "description": "Charges associated with this adjudication"
-      },
-      "AdjudicationIncident": {
-        "required": [
-          "adjudicationIncidentId",
-          "incidentDate",
-          "incidentTime",
-          "incidentType",
-          "internalLocation",
-          "otherPrisonersInvolved",
-          "otherStaffInvolved",
-          "prison",
-          "prisonerVictims",
-          "prisonerWitnesses",
-          "repairs",
-          "reportedDate",
-          "reportedTime",
-          "reportingOfficers",
-          "reportingStaff",
-          "staffVictims",
-          "staffWitnesses"
-        ],
-        "type": "object",
-        "properties": {
-          "adjudicationIncidentId": {
-            "type": "integer",
-            "description": "The adjudication incident Id, part of the composite key with adjudicationSequence",
-            "format": "int64"
-          },
-          "reportingStaff": {
-            "$ref": "#/components/schemas/Staff"
-          },
-          "incidentDate": {
-            "type": "string",
-            "description": "Date of the associated incident",
-            "format": "date"
-          },
-          "incidentTime": {
-            "type": "string",
-            "description": "Date and time of the associated incident",
-            "format": "partial-time"
-          },
-          "reportedDate": {
-            "type": "string",
-            "description": "Date when the associated incident was reported",
-            "format": "date"
-          },
-          "reportedTime": {
-            "type": "string",
-            "description": "Date and time when the associated incident was reported",
-            "format": "partial-time"
-          },
-          "internalLocation": {
-            "$ref": "#/components/schemas/InternalLocation"
-          },
-          "incidentType": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "details": {
-            "type": "string",
-            "description": "Incident details"
-          },
-          "prison": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "prisonerWitnesses": {
-            "type": "array",
-            "description": "Prisoners that witnessed the incident. Rarely used in NOMIS",
-            "items": {
-              "$ref": "#/components/schemas/Prisoner"
-            }
-          },
-          "prisonerVictims": {
-            "type": "array",
-            "description": "Prisoners that were victims in the incident. Not often used in NOMIS",
-            "items": {
-              "$ref": "#/components/schemas/Prisoner"
-            }
-          },
-          "otherPrisonersInvolved": {
-            "type": "array",
-            "description": "Other suspects involved in the incident that may or may not have been placed on report",
-            "items": {
-              "$ref": "#/components/schemas/Prisoner"
-            }
-          },
-          "reportingOfficers": {
-            "type": "array",
-            "description": "The officer who reported the incident who may differ from the reporting officer. Often used in NOMIS",
-            "items": {
-              "$ref": "#/components/schemas/Staff"
-            }
-          },
-          "staffWitnesses": {
-            "type": "array",
-            "description": "Staff that witnessed the incident. Used in NOMIS in a small percentage of cases",
-            "items": {
-              "$ref": "#/components/schemas/Staff"
-            }
-          },
-          "staffVictims": {
-            "type": "array",
-            "description": "Staff that was a victim in the incident. Rarely used in NOMIS",
-            "items": {
-              "$ref": "#/components/schemas/Staff"
-            }
-          },
-          "otherStaffInvolved": {
-            "type": "array",
-            "description": "Other staff that was involved in the incident either using force or some other link. Used in NOMIS in a small percentage of cases",
-            "items": {
-              "$ref": "#/components/schemas/Staff"
-            }
-          },
-          "repairs": {
-            "type": "array",
-            "description": "The repairs required due to the damage",
-            "items": {
-              "$ref": "#/components/schemas/Repair"
-            }
-          }
-        },
-        "description": "Associated incident details"
-      },
-      "AdjudicationOffence": {
-        "required": [
-          "code",
-          "description"
-        ],
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "type": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "category": {
-            "$ref": "#/components/schemas/CodeDescription"
-          }
-        }
-      },
-      "AdjudicationResponse": {
-        "required": [
-          "adjudicationSequence",
-          "bookingId",
-          "charges",
-          "incident",
-          "investigations",
-          "offenderNo",
-          "partyAddedDate"
-        ],
-        "type": "object",
-        "properties": {
-          "adjudicationSequence": {
-            "type": "integer",
-            "description": "The adjudication/party sequence, part of the composite key with adjudicationIncidentId",
-            "format": "int32"
-          },
-          "offenderNo": {
-            "type": "string",
-            "description": "The offender number, aka nomsId, prisonerId"
-          },
-          "bookingId": {
-            "type": "integer",
-            "description": "The id of the booking associated with the adjudication",
-            "format": "int64"
-          },
-          "adjudicationNumber": {
-            "type": "integer",
-            "description": "The adjudication number (business key)",
-            "format": "int64"
-          },
-          "partyAddedDate": {
-            "type": "string",
-            "description": "Date Prisoner was added to the adjudication ????",
-            "format": "date"
-          },
-          "comment": {
-            "type": "string",
-            "description": "Adjudication comments"
-          },
-          "incident": {
-            "$ref": "#/components/schemas/AdjudicationIncident"
-          },
-          "charges": {
-            "type": "array",
-            "description": "Charges associated with this adjudication",
-            "items": {
-              "$ref": "#/components/schemas/AdjudicationCharge"
-            }
-          },
-          "investigations": {
-            "type": "array",
-            "description": "Investigator that gathers evidence. Used in NOMIS in a small percentage of cases",
-            "items": {
-              "$ref": "#/components/schemas/Investigation"
-            }
-          }
-        },
-        "description": "Adjudication Information"
-      },
-      "Evidence": {
-        "required": [
-          "date",
-          "detail",
-          "type"
-        ],
-        "type": "object",
-        "properties": {
-          "type": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "date": {
-            "type": "string",
-            "format": "date"
-          },
-          "detail": {
-            "type": "string"
-          }
-        }
-      },
-      "InternalLocation": {
-        "required": [
-          "code",
-          "description",
-          "locationId"
-        ],
-        "type": "object",
-        "properties": {
-          "locationId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "code": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        },
-        "description": "location where incident took place"
-      },
-      "Investigation": {
-        "required": [
-          "dateAssigned",
-          "evidence",
-          "investigator"
-        ],
-        "type": "object",
-        "properties": {
-          "investigator": {
-            "$ref": "#/components/schemas/Staff"
-          },
-          "comment": {
-            "type": "string"
-          },
-          "dateAssigned": {
-            "type": "string",
-            "format": "date"
-          },
-          "evidence": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Evidence"
-            }
-          }
-        },
-        "description": "Investigator that gathers evidence. Used in NOMIS in a small percentage of cases"
-      },
-      "Prisoner": {
-        "required": [
-          "lastName",
           "offenderNo"
         ],
         "type": "object",
         "properties": {
-          "offenderNo": {
-            "type": "string",
-            "description": "The offender number, aka nomsId, prisonerId"
-          },
-          "firstName": {
-            "type": "string",
-            "description": "First name of prisoner"
-          },
-          "lastName": {
-            "type": "string",
-            "description": "Last name of prisoner"
-          }
-        },
-        "description": "Other suspects involved in the incident that may or may not have been placed on report"
-      },
-      "Repair": {
-        "required": [
-          "type"
-        ],
-        "type": "object",
-        "properties": {
-          "type": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "comment": {
-            "type": "string"
-          },
-          "cost": {
-            "type": "number"
-          }
-        },
-        "description": "The repairs required due to the damage"
-      },
-      "Staff": {
-        "required": [
-          "firstName",
-          "lastName",
-          "staffId"
-        ],
-        "type": "object",
-        "properties": {
-          "staffId": {
+          "adjudicationNumber": {
             "type": "integer",
-            "description": "NOMIS staff id",
+            "description": "The adjudication number",
             "format": "int64"
           },
-          "firstName": {
-            "type": "string",
-            "description": "First name of staff member"
+          "chargeSequence": {
+            "type": "integer",
+            "description": "The adjudication charge sequence",
+            "format": "int32"
           },
-          "lastName": {
+          "offenderNo": {
             "type": "string",
-            "description": "Last name of staff member"
+            "description": "The prisoner number"
+          }
+        },
+        "description": "adjudication id"
+      },
+      "PageAdjudicationChargeIdResponse": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdjudicationChargeIdResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
           }
         }
       }

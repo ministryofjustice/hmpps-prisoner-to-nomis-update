@@ -20,8 +20,10 @@ import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ActivityResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourseScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
@@ -277,6 +279,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .awaitBodilessEntity()
   }
+
+  suspend fun createAdjudication(offenderNo: String, request: CreateAdjudicationRequest): AdjudicationResponse =
+    webClient.post()
+      .uri("/prisoners/$offenderNo/adjudications")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBody()
 }
 
 data class CreateVisitDto(
