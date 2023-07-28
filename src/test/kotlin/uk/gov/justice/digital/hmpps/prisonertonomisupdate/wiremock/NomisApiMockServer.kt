@@ -202,17 +202,6 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubScheduleInstancesUpdateWithError(nomisActivityId: Long, status: Int = 500) {
-    stubFor(
-      put("/activities/$nomisActivityId/schedules").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(ERROR_RESPONSE)
-          .withStatus(status),
-      ),
-    )
-  }
-
   fun stubScheduledInstanceUpdate(nomisActivityId: Long, response: String) {
     stubFor(
       put("/activities/$nomisActivityId/schedule").willReturn(
@@ -271,28 +260,6 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubUpsertAttendanceWithError(courseScheduleId: Long, bookingId: Long, status: Int = 500) {
     stubFor(
       put("/schedules/$courseScheduleId/booking/$bookingId/attendance").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(ERROR_RESPONSE)
-          .withStatus(status),
-      ),
-    )
-  }
-
-  fun stubGetAttendanceStatus(courseActivityId: Long, bookingId: Long, response: String) {
-    stubFor(
-      post("/activities/$courseActivityId/booking/$bookingId/attendance-status").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(response)
-          .withStatus(200),
-      ),
-    )
-  }
-
-  fun stubGetAttendanceStatusWithError(courseActivityId: Long, bookingId: Long, status: Int = 500) {
-    stubFor(
-      post("/activities/$courseActivityId/booking/$bookingId/attendance-status").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
@@ -926,19 +893,107 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  private val CREATE_VISIT_RESPONSE = """
+  fun stubAdjudicationCreate(offenderNo: String) {
+    stubFor(
+      post("/prisoners/$offenderNo/adjudications").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+{
+  "adjudicationSequence": 1,
+  "offenderNo": "$offenderNo",
+  "bookingId": 1234,
+  "adjudicationNumber": 123456,
+  "partyAddedDate": "2023-07-25",
+  "comment": "string",
+  "incident": {
+    "adjudicationIncidentId": 1234567,
+    "reportingStaff": {
+      "staffId": 7654,
+      "firstName": "string",
+      "lastName": "string"
+    },
+    "incidentDate": "2023-07-25",
+    "incidentTime": "10:00",
+    "reportedDate": "2023-07-25",
+    "reportedTime": "10:00",
+    "internalLocation": {
+      "locationId": 7654,
+      "code": "string",
+      "description": "string"
+    },
+    "incidentType": {
+      "code": "string",
+      "description": "string"
+    },
+    "details": "string",
+    "prison": {
+      "code": "MDI",
+      "description": "string"
+    },
+    "prisonerWitnesses": [],
+    "prisonerVictims": [],
+    "otherPrisonersInvolved": [],
+    "reportingOfficers": [],
+    "staffWitnesses": [],
+    "staffVictims": [],
+    "otherStaffInvolved": [],
+    "repairs": []
+  },
+  "charges": [
+    {
+      "offence": {
+        "code": "string",
+        "description": "string",
+        "type": {
+          "code": "string",
+          "description": "string"
+        },
+        "category": {
+          "code": "string",
+          "description": "string"
+        }
+      },
+      "evidence": "string",
+      "reportDetail": "string",
+      "offenceId": "string",
+      "chargeSequence": 1
+    }
+  ],
+  "investigations": [],
+  "hearings": []
+}            
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubAdjudicationCreateWithError(offenderNo: String, status: Int) {
+    stubFor(
+      post("/prisoners/$offenderNo/adjudications").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status)
+          .withBody("""{"message":"error"}"""),
+      ),
+    )
+  }
+
+  fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
+  fun putCountFor(url: String) = this.findAll(WireMock.putRequestedFor(WireMock.urlEqualTo(url))).count()
+}
+
+private const val CREATE_VISIT_RESPONSE = """
     {
       "visitId": "12345"
     }
     """
-
-  private val CREATE_INCENTIVE_RESPONSE = """
+private const val CREATE_INCENTIVE_RESPONSE = """
     {
       "bookingId": 456,
       "sequence": 1
     }
     """
-
-  fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
-  fun putCountFor(url: String) = this.findAll(WireMock.putRequestedFor(WireMock.urlEqualTo(url))).count()
-}
