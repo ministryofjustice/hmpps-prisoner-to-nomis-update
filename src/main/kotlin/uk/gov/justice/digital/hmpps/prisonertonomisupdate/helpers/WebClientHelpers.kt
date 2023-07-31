@@ -26,5 +26,5 @@ class DuplicateErrorResponse(
 
 data class DuplicateErrorContent(
   val duplicate: Map<String, *>,
-  val existing: Map<String, *>,
+  val existing: Map<String, *>? = null,
 )

@@ -102,7 +102,7 @@ class SynchroniseBuilder<MAPPING_DTO>(
 
 private fun DuplicateErrorContent.asTelemetry(): Map<String, String> =
   this.duplicate.entries.associate { it.asPrefixTelemetry("duplicate") } +
-    this.existing.entries.associate { it.asPrefixTelemetry("existing") }
+    (this.existing?.entries?.associate { it.asPrefixTelemetry("existing") } ?: emptyMap())
 
 private fun Map.Entry<String, *>.asPrefixTelemetry(prefix: String) = "$prefix${key.replaceFirstChar { it.titlecase() }}" to value.toString()
 
