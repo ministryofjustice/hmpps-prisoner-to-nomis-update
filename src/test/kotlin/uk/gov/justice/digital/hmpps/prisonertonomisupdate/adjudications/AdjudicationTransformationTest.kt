@@ -103,6 +103,64 @@ class AdjudicationTransformationTest {
   }
 
   @Test
+  fun `will use the withOther offence code if this adjudication is the other prisoner in an incident`() {
+    val dpsAdjudication = dpsAdjudication().copy(
+      reportedAdjudication = dpsAdjudication().reportedAdjudication.copy(
+        incidentRole = IncidentRoleDto(
+          roleCode = "25c",
+          offenceRule = OffenceRuleDetailsDto(
+            paragraphNumber = "25(c)",
+            paragraphDescription = "Assists another prisoner to commit, or to attempt to commit, any of the foregoing offences:",
+          ),
+          associatedPrisonersName = "A4323ZA",
+        ),
+        offenceDetails = OffenceDto(
+          offenceCode = 1002,
+          offenceRule = OffenceRuleDto(
+            paragraphNumber = "1",
+            paragraphDescription = "Commits any assault",
+            nomisCode = "51:1B",
+            withOthersNomisCode = "51:25D",
+          ),
+          victimPrisonersNumber = "A1234AA",
+        ),
+      ),
+    )
+    val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
+
+    assertThat(nomisAdjudication.charges).hasSize(1)
+    assertThat(nomisAdjudication.charges[0].offenceCode).isEqualTo("51:25D")
+    assertThat(nomisAdjudication.charges[0].offenceId).isEqualTo("2234567/1")
+  }
+
+  @Test
+  fun `assume there is a withOther offence code if this adjudication is the other prisoner in an incident`() {
+    val dpsAdjudication = dpsAdjudication().copy(
+      reportedAdjudication = dpsAdjudication().reportedAdjudication.copy(
+        incidentRole = IncidentRoleDto(
+          roleCode = "25c",
+          offenceRule = OffenceRuleDetailsDto(
+            paragraphNumber = "25(c)",
+            paragraphDescription = "Assists another prisoner to commit, or to attempt to commit, any of the foregoing offences:",
+          ),
+          associatedPrisonersName = "A4323ZA",
+        ),
+        offenceDetails = OffenceDto(
+          offenceCode = 1002,
+          offenceRule = OffenceRuleDto(
+            paragraphNumber = "1",
+            paragraphDescription = "Commits any assault",
+            nomisCode = "51:1B",
+            withOthersNomisCode = null,
+          ),
+          victimPrisonersNumber = "A1234AA",
+        ),
+      ),
+    )
+    assertThrows<NullPointerException> { dpsAdjudication.toNomisAdjudication() }
+  }
+
+  @Test
   fun `evidence is copied and mapped`() {
     val dpsAdjudication = dpsAdjudication().copy(
       reportedAdjudication = dpsAdjudication().reportedAdjudication.copy(
@@ -215,20 +273,14 @@ private fun dpsAdjudication() = ReportedAdjudicationResponseV2(
       handoverDeadline = "2023-07-30T01:12:00",
     ),
     isYouthOffender = false,
-    incidentRole = IncidentRoleDto(
-      roleCode = "25c",
-      offenceRule = OffenceRuleDetailsDto(
-        paragraphNumber = "25(c)",
-        paragraphDescription = "Assists another prisoner to commit, or to attempt to commit, any of the foregoing offences:",
-      ),
-      associatedPrisonersName = "A4323ZA",
-    ),
+    incidentRole = IncidentRoleDto(),
     offenceDetails = OffenceDto(
       offenceCode = 1002,
       offenceRule = OffenceRuleDto(
         paragraphNumber = "1",
         paragraphDescription = "Assists another prisoner to commit, or to attempt to commit, any of the foregoing offences:",
         nomisCode = "51:1B",
+        withOthersNomisCode = "51:25D",
       ),
       victimPrisonersNumber = "A8349DY",
     ),

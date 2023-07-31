@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjustments
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDtoV2
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationResponseV2
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedEvidenceDto
@@ -70,10 +71,21 @@ internal fun ReportedAdjudicationResponseV2.toNomisAdjudication() = CreateAdjudi
     repairs = reportedAdjudication.damages.map { it.toNomisRepair() },
   ),
   charges = listOf(
-    ChargeToCreate(offenceCode = reportedAdjudication.offenceDetails.offenceRule.nomisCode!!, offenceId = "${reportedAdjudication.adjudicationNumber + 1_000_000}/1"),
+    ChargeToCreate(
+      offenceCode = reportedAdjudication.getOffenceCode(),
+      offenceId = "${reportedAdjudication.adjudicationNumber + 1_000_000}/1",
+    ),
   ),
   evidence = reportedAdjudication.evidence.map { it.toNomisEvidence() },
 )
+
+private fun ReportedAdjudicationDtoV2.getOffenceCode() = if (this.didInciteOtherPrisoner()) {
+  this.offenceDetails.offenceRule.withOthersNomisCode!!
+} else {
+  this.offenceDetails.offenceRule.nomisCode!!
+}
+
+private fun ReportedAdjudicationDtoV2.didInciteOtherPrisoner() = this.incidentRole.roleCode != null
 
 private fun ReportedDamageDto.toNomisRepair() = RepairToCreate(
   typeCode = when (this.code) {
