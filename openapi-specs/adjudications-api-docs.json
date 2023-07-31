@@ -12,7 +12,7 @@
       "name": "MIT",
       "url": "https://opensource.org/license/mit-0"
     },
-    "version": "2023-07-26.6779.25fc908"
+    "version": "2023-07-31.6925.891ac5b"
   },
   "servers": [
     {
@@ -4632,6 +4632,119 @@
         }
       ]
     },
+    "/reported-adjudications/migrate": {
+      "post": {
+        "tags": [
+          "99. Migrate"
+        ],
+        "summary": "migrates a record into the adjudication service",
+        "operationId": "migrate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjudicationMigrateDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Adjudication successfully migrated",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MigrateResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Adjudication failed to update existing record",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MigrateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "unable to migrate record",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MigrateResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not able to process the request because the header “Accept” does not match with any of the content types this endpoint can handle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "Active-Caseload",
+          "in": "header",
+          "description": "Current Caseload for request",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "example": "MDI"
+        }
+      ]
+    },
     "/draft-adjudications": {
       "post": {
         "tags": [
@@ -7421,6 +7534,82 @@
           "example": "MDI"
         }
       ]
+    },
+    "/reported-adjudications/migrate/reset": {
+      "delete": {
+        "tags": [
+          "99. Migrate"
+        ],
+        "summary": "resets the migration and removes all migrated records from database",
+        "operationId": "reset",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not able to process the request because the header “Accept” does not match with any of the content types this endpoint can handle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "Active-Caseload",
+          "in": "header",
+          "description": "Current Caseload for request",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "example": "MDI"
+        }
+      ]
     }
   },
   "components": {
@@ -7777,6 +7966,14 @@
             "type": "string",
             "description": "The name relating to the paragraph description",
             "example": "Committed an assault"
+          },
+          "nomisCode": {
+            "type": "string",
+            "description": "nomis code"
+          },
+          "withOthersNomisCode": {
+            "type": "string",
+            "description": "with others nomis code"
           }
         },
         "additionalProperties": false,
@@ -9739,6 +9936,545 @@
         "additionalProperties": false,
         "description": "Request to add charge proved - hearing completed"
       },
+      "AdjudicationMigrateDto": {
+        "required": [
+          "agencyId",
+          "agencyIncidentId",
+          "associates",
+          "bookingId",
+          "createdByUsername",
+          "damages",
+          "evidence",
+          "hearings",
+          "incidentDateTime",
+          "locationId",
+          "offence",
+          "offenceSequence",
+          "oicIncidentId",
+          "prisoner",
+          "punishments",
+          "reportingOfficer",
+          "statement",
+          "victims",
+          "witnesses"
+        ],
+        "type": "object",
+        "properties": {
+          "agencyIncidentId": {
+            "type": "integer",
+            "description": "The agency incident id",
+            "format": "int64"
+          },
+          "oicIncidentId": {
+            "type": "integer",
+            "description": "The oic incident id",
+            "format": "int64"
+          },
+          "offenceSequence": {
+            "type": "integer",
+            "description": "the offence sequence",
+            "format": "int64"
+          },
+          "bookingId": {
+            "type": "integer",
+            "description": "booking id on adjudication",
+            "format": "int64"
+          },
+          "agencyId": {
+            "type": "string",
+            "description": "agency id on adjudication"
+          },
+          "incidentDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "the date and time of the incident",
+            "example": "2021-07-05T10:35:17"
+          },
+          "locationId": {
+            "type": "integer",
+            "description": "the internal location id of the incident",
+            "format": "int64"
+          },
+          "statement": {
+            "type": "string",
+            "description": "the incident statement"
+          },
+          "reportingOfficer": {
+            "$ref": "#/components/schemas/ReportingOfficer"
+          },
+          "createdByUsername": {
+            "type": "string",
+            "description": "created by username from nomis audit - to be mapped to reviewedBy"
+          },
+          "prisoner": {
+            "$ref": "#/components/schemas/MigratePrisoner"
+          },
+          "offence": {
+            "$ref": "#/components/schemas/MigrateOffence"
+          },
+          "victims": {
+            "type": "array",
+            "description": "optional victims",
+            "items": {
+              "$ref": "#/components/schemas/MigrateVictim"
+            }
+          },
+          "associates": {
+            "type": "array",
+            "description": "optional associates",
+            "items": {
+              "$ref": "#/components/schemas/MigrateAssociate"
+            }
+          },
+          "witnesses": {
+            "type": "array",
+            "description": "witnesses",
+            "items": {
+              "$ref": "#/components/schemas/MigrateWitness"
+            }
+          },
+          "damages": {
+            "type": "array",
+            "description": "damages / repairs",
+            "items": {
+              "$ref": "#/components/schemas/MigrateDamage"
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "description": "evidence",
+            "items": {
+              "$ref": "#/components/schemas/MigrateEvidence"
+            }
+          },
+          "punishments": {
+            "type": "array",
+            "description": "punishments / sanctions",
+            "items": {
+              "$ref": "#/components/schemas/MigratePunishment"
+            }
+          },
+          "hearings": {
+            "type": "array",
+            "description": "hearings",
+            "items": {
+              "$ref": "#/components/schemas/MigrateHearing"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "description": "Adjudication to migrate into service"
+      },
+      "MigrateAssociate": {
+        "type": "object",
+        "properties": {
+          "associatedPrisoner": {
+            "type": "string",
+            "description": "associate prisoner number"
+          }
+        },
+        "additionalProperties": false,
+        "description": "incident associate"
+      },
+      "MigrateDamage": {
+        "required": [
+          "createdBy",
+          "damageType"
+        ],
+        "type": "object",
+        "properties": {
+          "damageType": {
+            "type": "string",
+            "description": "damage / repair type",
+            "enum": [
+              "ELECTRICAL_REPAIR",
+              "PLUMBING_REPAIR",
+              "FURNITURE_OR_FABRIC_REPAIR",
+              "LOCK_REPAIR",
+              "REDECORATION",
+              "CLEANING",
+              "REPLACE_AN_ITEM"
+            ]
+          },
+          "details": {
+            "type": "string",
+            "description": "detail of damage - can be null as not enforced on nomis"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "created by username"
+          }
+        },
+        "additionalProperties": false,
+        "description": "damages recorded on adjudication - repair in nomis"
+      },
+      "MigrateEvidence": {
+        "required": [
+          "details",
+          "evidenceCode",
+          "reporter"
+        ],
+        "type": "object",
+        "properties": {
+          "evidenceCode": {
+            "type": "string",
+            "description": "evidence code",
+            "enum": [
+              "PHOTO",
+              "BODY_WORN_CAMERA",
+              "CCTV",
+              "BAGGED_AND_TAGGED"
+            ]
+          },
+          "details": {
+            "type": "string",
+            "description": "evidence details / statement"
+          },
+          "reporter": {
+            "type": "string",
+            "description": "this is the reporter, we could use the investigator in this field, or createdBy user"
+          }
+        },
+        "additionalProperties": false,
+        "description": "evidence related to adjudication"
+      },
+      "MigrateHearing": {
+        "required": [
+          "hearingDateTime",
+          "locationId",
+          "oicHearingId",
+          "oicHearingType"
+        ],
+        "type": "object",
+        "properties": {
+          "oicHearingId": {
+            "type": "integer",
+            "description": "oic hearing id",
+            "format": "int64"
+          },
+          "oicHearingType": {
+            "type": "string",
+            "description": "oic hearing type",
+            "enum": [
+              "GOV_ADULT",
+              "GOV_YOI",
+              "INAD_YOI",
+              "GOV",
+              "INAD_ADULT"
+            ]
+          },
+          "hearingDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "date time of hearing",
+            "example": "2021-07-05T10:35:17"
+          },
+          "locationId": {
+            "type": "integer",
+            "description": "hearing location id",
+            "format": "int64"
+          },
+          "adjudicator": {
+            "type": "string",
+            "description": "adjudicator username - nomis has this on the hearing, so will accept at this level but for our service it goes on outcome"
+          },
+          "commentText": {
+            "type": "string",
+            "description": "comment text"
+          },
+          "hearingResult": {
+            "$ref": "#/components/schemas/MigrateHearingResult"
+          }
+        },
+        "additionalProperties": false,
+        "description": "hearing and optional result"
+      },
+      "MigrateHearingResult": {
+        "required": [
+          "createdBy",
+          "createdDateTime",
+          "finding",
+          "plea"
+        ],
+        "type": "object",
+        "properties": {
+          "plea": {
+            "type": "string",
+            "description": "plea"
+          },
+          "finding": {
+            "type": "string",
+            "description": "finding"
+          },
+          "createdDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "date time created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "created by"
+          }
+        },
+        "additionalProperties": false,
+        "description": "hearing result"
+      },
+      "MigrateOffence": {
+        "required": [
+          "offenceCode"
+        ],
+        "type": "object",
+        "properties": {
+          "offenceCode": {
+            "type": "string",
+            "description": "the nomis offence code"
+          }
+        },
+        "additionalProperties": false,
+        "description": "offence details"
+      },
+      "MigratePrisoner": {
+        "required": [
+          "gender",
+          "prisonerNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "prisonerNumber": {
+            "type": "string",
+            "description": "prisoner number on adjudication"
+          },
+          "currentAgencyId": {
+            "type": "string",
+            "description": "agency the prisoner is currently residing, or null if no longer in prison"
+          },
+          "gender": {
+            "type": "string",
+            "description": "gender of the prisoner"
+          }
+        },
+        "additionalProperties": false,
+        "description": "prisoner details"
+      },
+      "MigratePunishment": {
+        "required": [
+          "effectiveDate",
+          "sanctionCode",
+          "sanctionSeq",
+          "sanctionStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "sanctionCode": {
+            "type": "string",
+            "description": "sanction code"
+          },
+          "sanctionStatus": {
+            "type": "string",
+            "description": "sanction status"
+          },
+          "sanctionSeq": {
+            "type": "integer",
+            "description": "sanction sequence",
+            "format": "int64"
+          },
+          "effectiveDate": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "effective date",
+            "example": "2021-07-05T10:35:17"
+          },
+          "comment": {
+            "type": "string",
+            "description": "comment text"
+          },
+          "compensationAmount": {
+            "type": "number",
+            "description": "compensation amount"
+          },
+          "consecutiveChargeNumber": {
+            "type": "integer",
+            "description": "consecutive charge number - for nomis this needs to be the oic_incident_id for the consecutiveOffenderBookId/consecutiveSanctionSeq",
+            "format": "int64"
+          },
+          "days": {
+            "type": "integer",
+            "description": "days applied - note we do not support months, should be converted to days if present TBC",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false,
+        "description": "punishment / sanction"
+      },
+      "MigrateVictim": {
+        "required": [
+          "isStaff",
+          "victimIdentifier"
+        ],
+        "type": "object",
+        "properties": {
+          "victimIdentifier": {
+            "type": "string",
+            "description": "victims staff username or prisoner number"
+          },
+          "isStaff": {
+            "type": "boolean",
+            "description": "flag to indicate if staff, false means prisoner"
+          }
+        },
+        "additionalProperties": false,
+        "description": "victim"
+      },
+      "MigrateWitness": {
+        "required": [
+          "createdBy",
+          "firstName",
+          "lastName",
+          "witnessType"
+        ],
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "description": "first name"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "last name"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "created by username"
+          },
+          "witnessType": {
+            "type": "string",
+            "description": "type of witness",
+            "enum": [
+              "OFFICER",
+              "STAFF",
+              "OTHER_PERSON"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "description": "witnesses"
+      },
+      "ReportingOfficer": {
+        "required": [
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "reporting officer username"
+          }
+        },
+        "additionalProperties": false,
+        "description": "reporting officer"
+      },
+      "ChargeNumberMapping": {
+        "required": [
+          "chargeNumber",
+          "chargeSequence",
+          "oicIncidentId"
+        ],
+        "type": "object",
+        "properties": {
+          "chargeNumber": {
+            "type": "string",
+            "description": "charge number created"
+          },
+          "oicIncidentId": {
+            "type": "integer",
+            "description": "oic incident id",
+            "format": "int64"
+          },
+          "chargeSequence": {
+            "type": "integer",
+            "description": "charge sequence",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false,
+        "description": "charge number mapping"
+      },
+      "HearingMapping": {
+        "required": [
+          "hearingId",
+          "oicHearingId"
+        ],
+        "type": "object",
+        "properties": {
+          "hearingId": {
+            "type": "integer",
+            "description": "hearing id",
+            "format": "int64"
+          },
+          "oicHearingId": {
+            "type": "integer",
+            "description": "oic hearing id",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false,
+        "description": "hearing mapping"
+      },
+      "MigrateResponse": {
+        "required": [
+          "chargeNumberMapping"
+        ],
+        "type": "object",
+        "properties": {
+          "chargeNumberMapping": {
+            "$ref": "#/components/schemas/ChargeNumberMapping"
+          },
+          "hearingMappings": {
+            "type": "array",
+            "description": "hearing mappings",
+            "items": {
+              "$ref": "#/components/schemas/HearingMapping"
+            }
+          },
+          "punishmentMappings": {
+            "type": "array",
+            "description": "punishment mappings",
+            "items": {
+              "$ref": "#/components/schemas/PunishmentMapping"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "description": "adjudication migrate response"
+      },
+      "PunishmentMapping": {
+        "required": [
+          "bookingId",
+          "punishmentId",
+          "sanctionSeq"
+        ],
+        "type": "object",
+        "properties": {
+          "punishmentId": {
+            "type": "integer",
+            "description": "punishment id",
+            "format": "int64"
+          },
+          "bookingId": {
+            "type": "integer",
+            "description": "offender book id",
+            "format": "int64"
+          },
+          "sanctionSeq": {
+            "type": "integer",
+            "description": "sanction sequence",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false,
+        "description": "punishment mapping"
+      },
       "NewAdjudicationRequest": {
         "required": [
           "agencyId",
@@ -10247,18 +10983,18 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "last": {
-            "type": "boolean"
-          },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
           },
-          "first": {
+          "last": {
             "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
@@ -10276,15 +11012,15 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
           "paged": {
             "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
-          },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
           },
           "pageSize": {
             "type": "integer",
@@ -10548,18 +11284,18 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "last": {
-            "type": "boolean"
-          },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
           },
-          "first": {
+          "last": {
             "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
@@ -10955,18 +11691,18 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "last": {
-            "type": "boolean"
-          },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
           },
-          "first": {
+          "last": {
             "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
           },
           "empty": {
             "type": "boolean"

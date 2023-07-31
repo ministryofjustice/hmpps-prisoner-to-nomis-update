@@ -67,8 +67,9 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         "offenceDetails": {
             "offenceCode": 16001,
             "offenceRule": {
-                "paragraphNumber": "16",
-                "paragraphDescription": "Intentionally or recklessly sets fire to any part of a prison or any other property, whether or not his own"
+                "paragraphNumber": "1",
+                "paragraphDescription": "Commits any assault",
+                "nomisCode": "51:1B"
             }
         },
         "incidentStatement": {

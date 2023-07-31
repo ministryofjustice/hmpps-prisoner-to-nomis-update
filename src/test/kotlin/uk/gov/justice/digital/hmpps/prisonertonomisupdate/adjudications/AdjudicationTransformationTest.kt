@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentDetailsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentRoleDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentStatementDto
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Re
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedEvidenceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjustments.toNomisAdjudication
+import java.lang.NullPointerException
 
 class AdjudicationTransformationTest {
   @Test
@@ -37,6 +39,7 @@ class AdjudicationTransformationTest {
           handoverDeadline = "2023-07-30T01:12:00",
         ),
         createdByUserId = "GBROWN",
+        createdDateTime = "2023-07-29T12:01:15.94454",
         originatingAgencyId = "WWI",
         incidentStatement = IncidentStatementDto(
           statement = "A fight broke out and there was damage",
@@ -47,13 +50,56 @@ class AdjudicationTransformationTest {
     val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
 
     assertThat(nomisAdjudication.incident.reportingStaffUsername).isEqualTo("GBROWN")
-    assertThat(nomisAdjudication.incident.incidentDate).isEqualTo("2023-07-27")
-    assertThat(nomisAdjudication.incident.incidentTime).isEqualTo("23:30")
-    assertThat(nomisAdjudication.incident.reportedDate).isEqualTo("2023-07-28")
-    assertThat(nomisAdjudication.incident.reportedTime).isEqualTo("01:12")
+    assertThat(nomisAdjudication.incident.incidentDate).isEqualTo("2023-07-28")
+    assertThat(nomisAdjudication.incident.incidentTime).isEqualTo("01:12")
+    assertThat(nomisAdjudication.incident.reportedDate).isEqualTo("2023-07-29")
+    assertThat(nomisAdjudication.incident.reportedTime).isEqualTo("12:01")
     assertThat(nomisAdjudication.incident.internalLocationId).isEqualTo(543311)
     assertThat(nomisAdjudication.incident.prisonId).isEqualTo("WWI")
     assertThat(nomisAdjudication.incident.details).isEqualTo("A fight broke out and there was damage")
+  }
+
+  @Test
+  fun `will copy charge details`() {
+    val dpsAdjudication = dpsAdjudication().copy(
+      reportedAdjudication = dpsAdjudication().reportedAdjudication.copy(
+        offenceDetails = OffenceDto(
+          offenceCode = 1002,
+          offenceRule = OffenceRuleDto(
+            paragraphNumber = "1",
+            paragraphDescription = "Commits any assault",
+            nomisCode = "51:1B",
+            withOthersNomisCode = "51:25D",
+          ),
+          victimPrisonersNumber = "A1234AA",
+        ),
+      ),
+    )
+    val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
+
+    assertThat(nomisAdjudication.charges).hasSize(1)
+    assertThat(nomisAdjudication.charges[0].offenceCode).isEqualTo("51:1B")
+    assertThat(nomisAdjudication.charges[0].offenceId).isEqualTo("2234567/1")
+  }
+
+  @Test
+  fun `a charge with no code would be rejected`() {
+    val dpsAdjudication = dpsAdjudication().copy(
+      reportedAdjudication = dpsAdjudication().reportedAdjudication.copy(
+        offenceDetails = OffenceDto(
+          offenceCode = 1002,
+          offenceRule = OffenceRuleDto(
+            paragraphNumber = "1",
+            paragraphDescription = "Commits any assault",
+            nomisCode = null,
+          ),
+        ),
+      ),
+    )
+
+    assertThrows<NullPointerException> {
+      dpsAdjudication.toNomisAdjudication()
+    }
   }
 
   @Test
@@ -124,6 +170,7 @@ class AdjudicationTransformationTest {
           offenceRule = OffenceRuleDto(
             paragraphNumber = "1",
             paragraphDescription = "Assists another prisoner to commit, or to attempt to commit, any of the foregoing offences:",
+            nomisCode = "51:1B",
           ),
           victimPrisonersNumber = "A1234AA",
         ),
@@ -143,6 +190,7 @@ class AdjudicationTransformationTest {
           offenceRule = OffenceRuleDto(
             paragraphNumber = "1",
             paragraphDescription = "Assists another prisoner to commit, or to attempt to commit, any of the foregoing offences:",
+            nomisCode = "51:1B",
           ),
           victimStaffUsername = "J.SMITH",
         ),
@@ -180,6 +228,7 @@ private fun dpsAdjudication() = ReportedAdjudicationResponseV2(
       offenceRule = OffenceRuleDto(
         paragraphNumber = "1",
         paragraphDescription = "Assists another prisoner to commit, or to attempt to commit, any of the foregoing offences:",
+        nomisCode = "51:1B",
       ),
       victimPrisonersNumber = "A8349DY",
     ),
