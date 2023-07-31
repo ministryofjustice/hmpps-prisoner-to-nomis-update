@@ -64,9 +64,9 @@ internal fun ReportedAdjudicationResponseV2.toNomisAdjudication() = CreateAdjudi
     internalLocationId = reportedAdjudication.incidentDetails.locationId,
     details = reportedAdjudication.incidentStatement.statement,
     prisonId = reportedAdjudication.originatingAgencyId,
-    prisonerVictimsOffenderNumbers = reportedAdjudication.offenceDetails.victimPrisonersNumber?.let { listOf(it) } ?: emptyList(),
+    prisonerVictimsOffenderNumbers = listOfNotNull(reportedAdjudication.offenceDetails.victimPrisonersNumber),
     staffWitnessesUsernames = emptyList(), // TODO since username not in API  possibly not stored
-    staffVictimsUsernames = reportedAdjudication.offenceDetails.victimStaffUsername?.let { listOf(it) } ?: emptyList(),
+    staffVictimsUsernames = listOfNotNull(reportedAdjudication.offenceDetails.victimStaffUsername),
     repairs = reportedAdjudication.damages.map { it.toNomisRepair() },
   ),
   charges = listOf(
