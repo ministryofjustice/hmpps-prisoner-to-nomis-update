@@ -57,10 +57,10 @@ internal fun ReportedAdjudicationResponseV2.toNomisAdjudication() = CreateAdjudi
   adjudicationNumber = reportedAdjudication.adjudicationNumber + 1_000_000, // So we can test basic skeleton in T3 a cheeky hack to ensure number is way out of range of the sequence
   incident = IncidentToCreate(
     reportingStaffUsername = reportedAdjudication.createdByUserId,
-    incidentDate = reportedAdjudication.incidentDetails.dateTimeOfIncident.toLocalDate(),
-    incidentTime = reportedAdjudication.incidentDetails.dateTimeOfIncident.toLocalTime().toString(),
-    reportedDate = reportedAdjudication.incidentDetails.dateTimeOfDiscovery.toLocalDate(),
-    reportedTime = reportedAdjudication.incidentDetails.dateTimeOfDiscovery.toLocalTime().toString(),
+    incidentDate = reportedAdjudication.incidentDetails.dateTimeOfDiscovery.toLocalDate(),
+    incidentTime = reportedAdjudication.incidentDetails.dateTimeOfDiscovery.toLocalTimeAtMinute().toString(),
+    reportedDate = reportedAdjudication.createdDateTime.toLocalDate(),
+    reportedTime = reportedAdjudication.createdDateTime.toLocalTimeAtMinute().toString(),
     internalLocationId = reportedAdjudication.incidentDetails.locationId,
     details = reportedAdjudication.incidentStatement.statement,
     prisonId = reportedAdjudication.originatingAgencyId,
@@ -70,8 +70,7 @@ internal fun ReportedAdjudicationResponseV2.toNomisAdjudication() = CreateAdjudi
     repairs = reportedAdjudication.damages.map { it.toNomisRepair() },
   ),
   charges = listOf(
-    // TODO convert charges
-    ChargeToCreate(offenceCode = "51:25C", offenceId = "${reportedAdjudication.adjudicationNumber + 1_000_000}/1"),
+    ChargeToCreate(offenceCode = reportedAdjudication.offenceDetails.offenceRule.nomisCode!!, offenceId = "${reportedAdjudication.adjudicationNumber + 1_000_000}/1"),
   ),
   evidence = reportedAdjudication.evidence.map { it.toNomisEvidence() },
 )
@@ -100,7 +99,7 @@ private fun ReportedEvidenceDto.toNomisEvidence() = EvidenceToCreate(
 )
 
 private fun String.toLocalDate() = LocalDateTime.parse(this).toLocalDate()
-private fun String.toLocalTime() = LocalDateTime.parse(this).toLocalTime()
+private fun String.toLocalTimeAtMinute() = LocalDateTime.parse(this).toLocalTime().withSecond(0).withNano(0)
 
 data class AdjudicationAdditionalInformation(
   val chargeNumber: String,
