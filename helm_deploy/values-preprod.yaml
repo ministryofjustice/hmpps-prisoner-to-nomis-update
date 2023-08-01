@@ -39,5 +39,7 @@ generic-prometheus-alerts:
     - "Digital-Prison-Services-preprod-prisoner_to_nomis_appointment_dlq"
     - "Digital-Prison-Services-preprod-hmpps_prisoner_to_nomis_sentencing_queue"
     - "Digital-Prison-Services-preprod-hmpps_prisoner_to_nomis_sentencing_dlq"
+    - "syscon-devs-preprod-hmpps_prisoner_to_nomis_adjudication_queue"
+    - "syscon-devs-preprod-hmpps_prisoner_to_nomis_adjudication_dead_letter_queue"
   sqsAlertsOldestThreshold: 2
   sqsAlertsTotalMessagesThreshold: 1
