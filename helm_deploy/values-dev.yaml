@@ -22,6 +22,7 @@ generic-service:
     FEATURE_EVENT_INCENTIVES_LEVELS_REORDERED: true
     FEATURE_EVENT_INCENTIVES_PRISON_LEVEL_CHANGED: true
     FEATURE_EVENT_DELETEALL: true
+    FEATURE_EVENT_ADJUDICATION_REPORT_CREATED: true
 
 generic-prometheus-alerts:
   businessHoursOnly: true

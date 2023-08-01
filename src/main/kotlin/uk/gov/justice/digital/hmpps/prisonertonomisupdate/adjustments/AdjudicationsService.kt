@@ -55,7 +55,7 @@ class AdjudicationsService(
 }
 
 internal fun ReportedAdjudicationResponseV2.toNomisAdjudication() = CreateAdjudicationRequest(
-  adjudicationNumber = reportedAdjudication.adjudicationNumber + 1_000_000, // So we can test basic skeleton in T3 a cheeky hack to ensure number is way out of range of the sequence
+  adjudicationNumber = reportedAdjudication.adjudicationNumber,
   incident = IncidentToCreate(
     reportingStaffUsername = reportedAdjudication.createdByUserId,
     incidentDate = reportedAdjudication.incidentDetails.dateTimeOfDiscovery.toLocalDate(),
@@ -66,14 +66,14 @@ internal fun ReportedAdjudicationResponseV2.toNomisAdjudication() = CreateAdjudi
     details = reportedAdjudication.incidentStatement.statement,
     prisonId = reportedAdjudication.originatingAgencyId,
     prisonerVictimsOffenderNumbers = reportedAdjudication.offenceDetails.victimPrisonersNumber?.let { listOf(it) } ?: emptyList(),
-    staffWitnessesUsernames = emptyList(), // TODO since username not in API  possibly not stored
+    staffWitnessesUsernames = emptyList(), // Not stored in DPS so can not be synchronised
     staffVictimsUsernames = reportedAdjudication.offenceDetails.victimStaffUsername?.let { listOf(it) } ?: emptyList(),
     repairs = reportedAdjudication.damages.map { it.toNomisRepair() },
   ),
   charges = listOf(
     ChargeToCreate(
       offenceCode = reportedAdjudication.getOffenceCode(),
-      offenceId = "${reportedAdjudication.adjudicationNumber + 1_000_000}/1",
+      offenceId = "${reportedAdjudication.adjudicationNumber}/1",
     ),
   ),
   evidence = reportedAdjudication.evidence.map { it.toNomisEvidence() },
