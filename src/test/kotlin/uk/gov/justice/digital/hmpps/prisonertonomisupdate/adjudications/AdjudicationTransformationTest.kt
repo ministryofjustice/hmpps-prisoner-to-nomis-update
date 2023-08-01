@@ -18,20 +18,10 @@ import java.lang.NullPointerException
 
 class AdjudicationTransformationTest {
   @Test
-  fun `adjudication is changed to make it easier to test in T3 next week 😄`() {
-    val dpsAdjudication = dpsAdjudication().copy(
-      reportedAdjudication = dpsAdjudication().reportedAdjudication.copy(adjudicationNumber = 1234567),
-    )
-
-    val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
-
-    assertThat(nomisAdjudication.adjudicationNumber).isEqualTo(2234567)
-  }
-
-  @Test
   fun `will copy core incident details`() {
     val dpsAdjudication = dpsAdjudication().copy(
       reportedAdjudication = dpsAdjudication().reportedAdjudication.copy(
+        adjudicationNumber = 1234567,
         incidentDetails = IncidentDetailsDto(
           locationId = 543311,
           dateTimeOfIncident = "2023-07-27T23:30:00",
@@ -49,6 +39,7 @@ class AdjudicationTransformationTest {
     )
     val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
 
+    assertThat(nomisAdjudication.adjudicationNumber).isEqualTo(1234567)
     assertThat(nomisAdjudication.incident.reportingStaffUsername).isEqualTo("GBROWN")
     assertThat(nomisAdjudication.incident.incidentDate).isEqualTo("2023-07-28")
     assertThat(nomisAdjudication.incident.incidentTime).isEqualTo("01:12")
@@ -79,7 +70,7 @@ class AdjudicationTransformationTest {
 
     assertThat(nomisAdjudication.charges).hasSize(1)
     assertThat(nomisAdjudication.charges[0].offenceCode).isEqualTo("51:1B")
-    assertThat(nomisAdjudication.charges[0].offenceId).isEqualTo("2234567/1")
+    assertThat(nomisAdjudication.charges[0].offenceId).isEqualTo("1234567/1")
   }
 
   @Test
@@ -130,7 +121,7 @@ class AdjudicationTransformationTest {
 
     assertThat(nomisAdjudication.charges).hasSize(1)
     assertThat(nomisAdjudication.charges[0].offenceCode).isEqualTo("51:25D")
-    assertThat(nomisAdjudication.charges[0].offenceId).isEqualTo("2234567/1")
+    assertThat(nomisAdjudication.charges[0].offenceId).isEqualTo("1234567/1")
   }
 
   @Test
