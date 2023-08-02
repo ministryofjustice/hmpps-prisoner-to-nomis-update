@@ -36,18 +36,16 @@ class AdjudicationsService(
       retryQueueService = adjudicationRetryQueueService
       eventTelemetry = telemetryMap
 
-      checkMappingDoesNotExist {
-        null
-      }
       transform {
         val adjudication = adjudicationsApiService.getCharge(chargeNumber, prisonId)
         val offenderNo = adjudication.reportedAdjudication.prisonerNumber
         telemetryMap["offenderNo"] = offenderNo
         nomisApiService.createAdjudication(offenderNo, adjudication.toNomisAdjudication())
-
-        "TODO return mapping dto"
       }
-      saveMapping { }
+      saveMapping {
+        // for now no mapping required since it is a shared business key
+        // and all records will be migrated due to need of a merge of NOMIS and DPS data
+      }
     }
   }
 
