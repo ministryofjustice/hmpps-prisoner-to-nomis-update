@@ -85,7 +85,7 @@ class SynchroniseBuilder<MAPPING_DTO>(
     }
   }
 
-  fun checkMappingDoesNotExist(fetchMapping: suspend () -> Any?): SynchroniseBuilder<MAPPING_DTO> {
+  fun checkMappingDoesNotExist(fetchMapping: suspend () -> Any? = { false }): SynchroniseBuilder<MAPPING_DTO> {
     this.fetchMapping = fetchMapping
     return this
   }
