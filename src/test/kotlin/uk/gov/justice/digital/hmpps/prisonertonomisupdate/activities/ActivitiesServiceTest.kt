@@ -417,11 +417,13 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
     activityState = ActivityLite.ActivityState.LIVE,
     allocated = 5,
     capacity = 10,
+    onWing = false,
   ),
   slots = emptyList(),
   startDate = LocalDate.now(),
   endDate = endDate,
   runsOnBankHoliday = true,
+  scheduleWeeks = 1,
 )
 
 private fun newActivity(): Activity = Activity(
@@ -441,7 +443,6 @@ private fun newActivity(): Activity = Activity(
   payPerSession = Activity.PayPerSession.H,
   eligibilityRules = emptyList(),
   schedules = emptyList(),
-  waitingList = emptyList(),
   pay = listOf(
     ActivityPay(
       id = 1,
@@ -466,4 +467,5 @@ private fun newActivity(): Activity = Activity(
       studyAreaDescription = "English language",
     ),
   ),
+  onWing = false,
 )

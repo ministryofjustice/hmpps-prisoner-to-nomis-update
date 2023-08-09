@@ -221,6 +221,7 @@ private fun newScheduledInstance() = ActivityScheduleInstance(
     capacity = 10,
     slots = listOf(),
     startDate = LocalDate.parse("2023-02-01"),
+    scheduleWeeks = 1,
     activity =
     ActivityLite(
       id = ACTIVITY_ID,
@@ -246,6 +247,7 @@ private fun newScheduledInstance() = ActivityScheduleInstance(
       activityState = ActivityLite.ActivityState.LIVE,
       allocated = 5,
       capacity = 10,
+      onWing = false,
     ),
   ),
 )

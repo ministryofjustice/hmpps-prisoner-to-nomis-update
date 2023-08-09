@@ -67,6 +67,7 @@ tasks {
 
 tasks.register("buildActivityApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
+  skipValidateSpec.set(true) // TODO - turn this back on when the spec is valid again!
   inputSpec.set("openapi-specs/activities-api-docs.json")
   // remoteInputSpec.set("https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs")
   outputDir.set("$buildDir/generated")
