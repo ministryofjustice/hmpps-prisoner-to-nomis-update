@@ -21,7 +21,7 @@ class AdjudicationTransformationTest {
   fun `will copy core incident details`() {
     val dpsAdjudication = dpsAdjudication().copy(
       reportedAdjudication = dpsAdjudication().reportedAdjudication.copy(
-        adjudicationNumber = 1234567,
+        chargeNumber = "1234567",
         incidentDetails = IncidentDetailsDto(
           locationId = 543311,
           dateTimeOfIncident = "2023-07-27T23:30:00",
@@ -253,7 +253,6 @@ class AdjudicationTransformationTest {
 
 private fun dpsAdjudication() = ReportedAdjudicationResponseV2(
   reportedAdjudication = ReportedAdjudicationDtoV2(
-    adjudicationNumber = 1234567,
     chargeNumber = "1234567",
     prisonerNumber = "A1234AK",
     gender = ReportedAdjudicationDtoV2.Gender.FEMALE,

@@ -12,7 +12,7 @@
       "name": "MIT",
       "url": "https://opensource.org/license/mit-0"
     },
-    "version": "2023-07-31.6925.891ac5b"
+    "version": "2023-08-10.7206.e920bb0"
   },
   "servers": [
     {
@@ -5762,6 +5762,14 @@
                 "DAMAGES_OWED"
               ]
             }
+          },
+          {
+            "name": "chargeNumber",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -7629,7 +7637,9 @@
             "enum": [
               "OFFICER",
               "STAFF",
-              "OTHER_PERSON"
+              "OTHER_PERSON",
+              "VICTIM",
+              "PRISONER"
             ]
           },
           "firstName": {
@@ -7969,11 +7979,11 @@
           },
           "nomisCode": {
             "type": "string",
-            "description": "nomis code"
+            "description": "nomis code - not set if migrated data"
           },
           "withOthersNomisCode": {
             "type": "string",
-            "description": "with others nomis code"
+            "description": "with others nomis code, not set if migrated data"
           }
         },
         "additionalProperties": false,
@@ -8461,7 +8471,8 @@
               "PHOTO",
               "BODY_WORN_CAMERA",
               "CCTV",
-              "BAGGED_AND_TAGGED"
+              "BAGGED_AND_TAGGED",
+              "OTHER"
             ]
           },
           "identifier": {
@@ -8499,7 +8510,9 @@
             "enum": [
               "OFFICER",
               "STAFF",
-              "OTHER_PERSON"
+              "OTHER_PERSON",
+              "VICTIM",
+              "PRISONER"
             ]
           },
           "firstName": {
@@ -9077,7 +9090,8 @@
               "PHOTO",
               "BODY_WORN_CAMERA",
               "CCTV",
-              "BAGGED_AND_TAGGED"
+              "BAGGED_AND_TAGGED",
+              "OTHER"
             ]
           },
           "identifier": {
@@ -9272,7 +9286,7 @@
           },
           "gender": {
             "type": "string",
-            "description": "Gender applied for adjuducation rules",
+            "description": "Gender applied for adjudication rules",
             "example": "MALE",
             "enum": [
               "MALE",
@@ -9373,7 +9387,8 @@
               "PHOTO",
               "BODY_WORN_CAMERA",
               "CCTV",
-              "BAGGED_AND_TAGGED"
+              "BAGGED_AND_TAGGED",
+              "OTHER"
             ]
           },
           "identifier": {
@@ -9446,7 +9461,9 @@
             "enum": [
               "OFFICER",
               "STAFF",
-              "OTHER_PERSON"
+              "OTHER_PERSON",
+              "VICTIM",
+              "PRISONER"
             ]
           },
           "firstName": {
@@ -9940,7 +9957,6 @@
         "required": [
           "agencyId",
           "agencyIncidentId",
-          "associates",
           "bookingId",
           "createdByUsername",
           "damages",
@@ -9953,9 +9969,9 @@
           "oicIncidentId",
           "prisoner",
           "punishments",
+          "reportedDateTime",
           "reportingOfficer",
           "statement",
-          "victims",
           "witnesses"
         ],
         "type": "object",
@@ -9990,6 +10006,12 @@
             "description": "the date and time of the incident",
             "example": "2021-07-05T10:35:17"
           },
+          "reportedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "the reported dated time",
+            "example": "2021-07-05T10:35:17"
+          },
           "locationId": {
             "type": "integer",
             "description": "the internal location id of the incident",
@@ -10011,20 +10033,6 @@
           },
           "offence": {
             "$ref": "#/components/schemas/MigrateOffence"
-          },
-          "victims": {
-            "type": "array",
-            "description": "optional victims",
-            "items": {
-              "$ref": "#/components/schemas/MigrateVictim"
-            }
-          },
-          "associates": {
-            "type": "array",
-            "description": "optional associates",
-            "items": {
-              "$ref": "#/components/schemas/MigrateAssociate"
-            }
           },
           "witnesses": {
             "type": "array",
@@ -10064,17 +10072,6 @@
         },
         "additionalProperties": false,
         "description": "Adjudication to migrate into service"
-      },
-      "MigrateAssociate": {
-        "type": "object",
-        "properties": {
-          "associatedPrisoner": {
-            "type": "string",
-            "description": "associate prisoner number"
-          }
-        },
-        "additionalProperties": false,
-        "description": "incident associate"
       },
       "MigrateDamage": {
         "required": [
@@ -10123,7 +10120,8 @@
               "PHOTO",
               "BODY_WORN_CAMERA",
               "CCTV",
-              "BAGGED_AND_TAGGED"
+              "BAGGED_AND_TAGGED",
+              "OTHER"
             ]
           },
           "details": {
@@ -10222,13 +10220,18 @@
       },
       "MigrateOffence": {
         "required": [
-          "offenceCode"
+          "offenceCode",
+          "offenceDescription"
         ],
         "type": "object",
         "properties": {
           "offenceCode": {
             "type": "string",
             "description": "the nomis offence code"
+          },
+          "offenceDescription": {
+            "type": "string",
+            "description": "the nomis offence description, ie rule, paragraph as displayed in nomis"
           }
         },
         "additionalProperties": false,
@@ -10280,10 +10283,9 @@
             "format": "int64"
           },
           "effectiveDate": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
             "description": "effective date",
-            "example": "2021-07-05T10:35:17"
+            "format": "date"
           },
           "comment": {
             "type": "string",
@@ -10294,9 +10296,8 @@
             "description": "compensation amount"
           },
           "consecutiveChargeNumber": {
-            "type": "integer",
-            "description": "consecutive charge number - for nomis this needs to be the oic_incident_id for the consecutiveOffenderBookId/consecutiveSanctionSeq",
-            "format": "int64"
+            "type": "string",
+            "description": "consecutive charge number - for nomis this needs to be the oic_incident_id for the consecutiveOffenderBookId/consecutiveSanctionSeq. Note,  this will also need to include the chargeSequence, ie oic_incident_id-charge_seq"
           },
           "days": {
             "type": "integer",
@@ -10306,25 +10307,6 @@
         },
         "additionalProperties": false,
         "description": "punishment / sanction"
-      },
-      "MigrateVictim": {
-        "required": [
-          "isStaff",
-          "victimIdentifier"
-        ],
-        "type": "object",
-        "properties": {
-          "victimIdentifier": {
-            "type": "string",
-            "description": "victims staff username or prisoner number"
-          },
-          "isStaff": {
-            "type": "boolean",
-            "description": "flag to indicate if staff, false means prisoner"
-          }
-        },
-        "additionalProperties": false,
-        "description": "victim"
       },
       "MigrateWitness": {
         "required": [
@@ -10353,12 +10335,14 @@
             "enum": [
               "OFFICER",
               "STAFF",
-              "OTHER_PERSON"
+              "OTHER_PERSON",
+              "VICTIM",
+              "PRISONER"
             ]
           }
         },
         "additionalProperties": false,
-        "description": "witnesses"
+        "description": "witnesses -these can include victims and associates"
       },
       "ReportingOfficer": {
         "required": [
@@ -10377,7 +10361,7 @@
       "ChargeNumberMapping": {
         "required": [
           "chargeNumber",
-          "chargeSequence",
+          "offenceSequence",
           "oicIncidentId"
         ],
         "type": "object",
@@ -10391,9 +10375,9 @@
             "description": "oic incident id",
             "format": "int64"
           },
-          "chargeSequence": {
+          "offenceSequence": {
             "type": "integer",
-            "description": "charge sequence",
+            "description": "offence sequence",
             "format": "int64"
           }
         },
@@ -10711,7 +10695,7 @@
             "type": "boolean",
             "description": "optional consecutive report number is available to view in adjudications service"
           },
-          "amount": {
+          "damagesOwedAmount": {
             "type": "number",
             "description": "optional amount - money being recovered for damages",
             "format": "double"
@@ -10722,7 +10706,6 @@
       },
       "ReportedAdjudicationDtoV2": {
         "required": [
-          "adjudicationNumber",
           "chargeNumber",
           "createdByUserId",
           "createdDateTime",
@@ -10747,11 +10730,6 @@
         ],
         "type": "object",
         "properties": {
-          "adjudicationNumber": {
-            "type": "integer",
-            "description": "The number for the reported adjudication",
-            "format": "int64"
-          },
           "chargeNumber": {
             "type": "string",
             "description": "The charge number for the reported adjudication"
@@ -10983,18 +10961,18 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "last": {
+            "type": "boolean"
+          },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
           },
-          "last": {
+          "first": {
             "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "first": {
-            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
@@ -11012,15 +10990,15 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
           "paged": {
             "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
           },
           "pageSize": {
             "type": "integer",
@@ -11284,18 +11262,18 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "last": {
+            "type": "boolean"
+          },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
           },
-          "last": {
+          "first": {
             "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "first": {
-            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
@@ -11691,18 +11669,18 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "last": {
+            "type": "boolean"
+          },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
           },
-          "last": {
+          "first": {
             "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "first": {
-            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
