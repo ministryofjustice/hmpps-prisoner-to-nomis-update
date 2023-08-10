@@ -52,7 +52,6 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             """
 {
     "reportedAdjudication": {
-        "adjudicationNumber": ${chargeNumber.toLong()},
         "chargeNumber": "$chargeNumber",
         "prisonerNumber": "$offenderNo",
         "gender": "MALE",
