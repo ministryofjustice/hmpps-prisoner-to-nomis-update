@@ -54,7 +54,7 @@ class AdjudicationsService(
           nomisApiService.createAdjudication(offenderNo, adjudication.toNomisAdjudication())
 
         AdjudicationMappingDto(
-          adjudicationNumber = nomisAdjudicationResponse.adjudicationNumber!!,
+          adjudicationNumber = nomisAdjudicationResponse.adjudicationNumber,
           chargeSequence = nomisAdjudicationResponse.adjudicationSequence,
           chargeNumber = createEvent.additionalInformation.chargeNumber,
         )
