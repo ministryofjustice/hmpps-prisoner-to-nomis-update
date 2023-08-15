@@ -1,16 +1,20 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjustments
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDtoV2
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationResponseV2
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedEvidenceDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ChargeToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.EvidenceToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.IncidentToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToCreate
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
@@ -20,8 +24,10 @@ import java.time.LocalDateTime
 class AdjudicationsService(
   private val telemetryClient: TelemetryClient,
   private val adjudicationRetryQueueService: AdjudicationsRetryQueueService,
+  private val adjudicationMappingService: AdjudicationsMappingService,
   private val adjudicationsApiService: AdjudicationsApiService,
   private val nomisApiService: NomisApiService,
+  private val objectMapper: ObjectMapper,
 ) : CreateMappingRetryable {
   suspend fun createAdjudication(createEvent: AdjudicationCreatedEvent) {
     val chargeNumber = createEvent.additionalInformation.chargeNumber
@@ -36,20 +42,41 @@ class AdjudicationsService(
       retryQueueService = adjudicationRetryQueueService
       eventTelemetry = telemetryMap
 
+      checkMappingDoesNotExist {
+        adjudicationMappingService.getMappingGivenChargeNumberOrNull(createEvent.additionalInformation.chargeNumber)
+      }
+
       transform {
         val adjudication = adjudicationsApiService.getCharge(chargeNumber, prisonId)
         val offenderNo = adjudication.reportedAdjudication.prisonerNumber
         telemetryMap["offenderNo"] = offenderNo
-        nomisApiService.createAdjudication(offenderNo, adjudication.toNomisAdjudication())
+        val nomisAdjudicationResponse =
+          nomisApiService.createAdjudication(offenderNo, adjudication.toNomisAdjudication())
+
+        AdjudicationMappingDto(
+          adjudicationNumber = nomisAdjudicationResponse.adjudicationNumber!!,
+          chargeSequence = nomisAdjudicationResponse.adjudicationSequence,
+          chargeNumber = createEvent.additionalInformation.chargeNumber,
+        )
       }
-      saveMapping {
-        // for now no mapping required since it is a shared business key
-        // and all records will be migrated due to need of a merge of NOMIS and DPS data
-      }
+      saveMapping { adjudicationMappingService.createMapping(it) }
     }
   }
 
-  override suspend fun retryCreateMapping(message: String) {}
+  suspend fun createRetry(message: CreateMappingRetryMessage<AdjudicationMappingDto>) {
+    adjudicationMappingService.createMapping(message.mapping)
+      .also {
+        telemetryClient.trackEvent(
+          "adjudication-create-mapping-retry-success",
+          message.telemetryAttributes,
+        )
+      }
+  }
+
+  override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
+
+  private inline fun <reified T> String.fromJson(): T =
+    objectMapper.readValue(this)
 }
 
 internal fun ReportedAdjudicationResponseV2.toNomisAdjudication() = CreateAdjudicationRequest(
@@ -63,7 +90,8 @@ internal fun ReportedAdjudicationResponseV2.toNomisAdjudication() = CreateAdjudi
     internalLocationId = reportedAdjudication.incidentDetails.locationId,
     details = reportedAdjudication.incidentStatement.statement,
     prisonId = reportedAdjudication.originatingAgencyId,
-    prisonerVictimsOffenderNumbers = reportedAdjudication.offenceDetails.victimPrisonersNumber?.let { listOf(it) } ?: emptyList(),
+    prisonerVictimsOffenderNumbers = reportedAdjudication.offenceDetails.victimPrisonersNumber?.let { listOf(it) }
+      ?: emptyList(),
     staffWitnessesUsernames = emptyList(), // Not stored in DPS so can not be synchronised
     staffVictimsUsernames = reportedAdjudication.offenceDetails.victimStaffUsername?.let { listOf(it) } ?: emptyList(),
     repairs = reportedAdjudication.damages.map { it.toNomisRepair() },

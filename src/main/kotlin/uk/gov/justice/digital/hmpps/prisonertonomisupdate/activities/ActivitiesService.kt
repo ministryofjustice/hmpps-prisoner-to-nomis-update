@@ -11,11 +11,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ActivityResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateScheduledInstanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PayRateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ScheduleRuleRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ScheduledInstanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
@@ -63,7 +63,7 @@ class ActivitiesService(
   }
 
   private fun buildActivityMappingDto(
-    nomisResponse: ActivityResponse,
+    nomisResponse: CreateActivityResponse,
     activitySchedule: ActivitySchedule,
     existingMappings: ActivityMappingDto? = null,
     mappingType: String = "ACTIVITY_CREATED",
@@ -84,7 +84,7 @@ class ActivitiesService(
         )
       }
 
-  private fun ScheduledInstanceResponse.findScheduledInstanceId(
+  private fun CreateScheduledInstanceResponse.findScheduledInstanceId(
     activityScheduledInstances: List<ScheduledInstance>,
     existingMappings: ActivityMappingDto?,
   ) =
@@ -97,7 +97,7 @@ class ActivitiesService(
       ?.find { nomisCourseScheduleId == it.nomisCourseScheduleId }
       ?.scheduledInstanceId
 
-  private fun List<ScheduledInstance>.findScheduledInstanceId(nomisCourseSchedule: ScheduledInstanceResponse) =
+  private fun List<ScheduledInstance>.findScheduledInstanceId(nomisCourseSchedule: CreateScheduledInstanceResponse) =
     find { instance ->
       instance.date == nomisCourseSchedule.date &&
         instance.startTime.toLocalTime() == nomisCourseSchedule.startTime.toLocalTime() &&

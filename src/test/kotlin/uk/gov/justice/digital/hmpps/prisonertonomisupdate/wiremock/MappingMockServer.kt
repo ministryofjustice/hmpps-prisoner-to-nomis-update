@@ -617,4 +617,78 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+
+  fun stubCreateAdjudication() {
+    stubFor(
+      post("/mapping/adjudications").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubGetByChargeNumberWithError(chargeNumber: String, status: Int) {
+    stubFor(
+      get("/mapping/adjudications/charge-number/$chargeNumber").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              { 
+                "userMessage": "some error"
+              }""",
+          )
+          .withStatus(status),
+      ),
+    )
+  }
+  fun stubGetByChargeNumber(
+    chargeNumber: String,
+  ) {
+    stubFor(
+      get("/mapping/adjudications/charge-number/$chargeNumber").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            { 
+            "chargeSequence": 1,  
+            "chargeNumber": "$chargeNumber",  
+            "adjudicationNumber": $chargeNumber,  
+            "mappingType": "ADJUDICATION_CREATED",  
+            "whenCreated": "2020-01-01T00:00:00"
+              }""",
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubCreateAdjudicationWithErrorFollowedBySlowSuccess() {
+    stubFor(
+      post("/mapping/adjudications")
+        .inScenario("Retry Mapping Adjudication Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause Mapping Adjudication Success"),
+    )
+
+    stubFor(
+      post("/mapping/adjudications")
+        .inScenario("Retry Mapping Adjudication Scenario")
+        .whenScenarioStateIs("Cause Mapping Adjudication Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201)
+            .withFixedDelay(1500),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
 }

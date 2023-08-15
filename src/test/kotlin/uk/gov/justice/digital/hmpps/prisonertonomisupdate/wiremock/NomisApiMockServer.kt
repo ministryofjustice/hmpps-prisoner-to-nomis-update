@@ -893,7 +893,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubAdjudicationCreate(offenderNo: String) {
+  fun stubAdjudicationCreate(offenderNo: String, adjudicationNumber: Long = 123456, chargeSeq: Int = 1) {
     stubFor(
       post("/prisoners/$offenderNo/adjudications").willReturn(
         aResponse()
@@ -904,7 +904,11 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   "adjudicationSequence": 1,
   "offenderNo": "$offenderNo",
   "bookingId": 1234,
-  "adjudicationNumber": 123456,
+  "gender": {
+     "code": "M",
+     "description": "Male"
+  },
+  "adjudicationNumber": $adjudicationNumber,
   "partyAddedDate": "2023-07-25",
   "comment": "string",
   "incident": {
@@ -912,7 +916,9 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     "reportingStaff": {
       "staffId": 7654,
       "firstName": "string",
-      "lastName": "string"
+      "lastName": "string",
+      "username": "user1",
+      "createdByUsername": "user2"
     },
     "incidentDate": "2023-07-25",
     "incidentTime": "10:00",
@@ -939,6 +945,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     "staffWitnesses": [],
     "staffVictims": [],
     "otherStaffInvolved": [],
+    "createdByUsername": "user2",
+    "createdDateTime": "2023-02-24T13:14:23",
     "repairs": []
   },
   "charges": [
@@ -958,7 +966,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       "evidence": "string",
       "reportDetail": "string",
       "offenceId": "string",
-      "chargeSequence": 1
+      "chargeSequence": $chargeSeq
     }
   ],
   "investigations": [],
