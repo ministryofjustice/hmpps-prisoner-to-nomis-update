@@ -19,10 +19,10 @@ import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ActivityResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourseScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
@@ -76,14 +76,14 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .awaitBodilessEntity()
   }
 
-  suspend fun createActivity(request: CreateActivityRequest): ActivityResponse =
+  suspend fun createActivity(request: CreateActivityRequest): CreateActivityResponse =
     webClient.post()
       .uri("/activities")
       .bodyValue(request)
       .retrieve()
       .awaitBody()
 
-  suspend fun updateActivity(courseActivityId: Long, request: UpdateActivityRequest): ActivityResponse =
+  suspend fun updateActivity(courseActivityId: Long, request: UpdateActivityRequest): CreateActivityResponse =
     webClient.put()
       .uri("/activities/$courseActivityId")
       .bodyValue(request)
