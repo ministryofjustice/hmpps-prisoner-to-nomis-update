@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.ErrorResponse
@@ -31,7 +32,7 @@ class ActivitiesResource(
     description = "A manual method for synchronising a new DPS Activity to Nomis. Performs in the same way as the automated message based solution - intended for use as a workaround when things go wrong. Requires role <b>NOMIS_ACTIVITIES</b>",
     responses = [
       ApiResponse(
-        responseCode = "200",
+        responseCode = "201",
         description = "The DPS Activity was synchronised",
       ),
       ApiResponse(
@@ -51,6 +52,35 @@ class ActivitiesResource(
   ) {
     telemetryClient.trackEvent("activity-create-requested", mapOf("dpsActivityScheduleId" to activityScheduleId.toString()))
     activitiesService.createActivity(activityScheduleId)
+  }
+
+  @PreAuthorize("hasRole('ROLE_NOMIS_ACTIVITIES')")
+  @PutMapping("/activities/{activityScheduleId}")
+  @Operation(
+    summary = "Synchronises an existing DPS Activity",
+    description = "A manual method for synchronising an existing DPS Activity to Nomis. Performs in the same way as the automated message based solution - intended for use as a workaround when things go wrong. Requires role <b>NOMIS_ACTIVITIES</b>",
+    responses = [
+      ApiResponse(
+        responseCode = "200",
+        description = "The DPS Activity was synchronised",
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized to access this endpoint",
+        content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Incorrect permissions to start migration",
+        content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  suspend fun synchroniseUpdatectivity(
+    @Schema(description = "DPS Activity id", required = true) @PathVariable activityScheduleId: Long,
+  ) {
+    telemetryClient.trackEvent("activity-amend-requested", mapOf("dpsActivityScheduleId" to activityScheduleId.toString()))
+    activitiesService.updateActivity(activityScheduleId)
   }
 
   /**

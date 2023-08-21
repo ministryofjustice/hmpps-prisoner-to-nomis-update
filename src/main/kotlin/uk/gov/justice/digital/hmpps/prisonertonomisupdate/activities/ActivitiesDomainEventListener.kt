@@ -37,7 +37,7 @@ class ActivitiesDomainEventListener(
   fun onMessage(rawMessage: String): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "activities.activity-schedule.created" -> activitiesService.createActivityEvent(message.fromJson())
-      "activities.activity-schedule.amended" -> activitiesService.updateActivity(message.fromJson())
+      "activities.activity-schedule.amended" -> activitiesService.updateActivityEvent(message.fromJson())
       "activities.scheduled-instance.amended" -> schedulesService.updateScheduledInstance(message.fromJson())
       "activities.prisoner.allocated" -> allocationService.upsertAllocation(message.fromJson())
       "activities.prisoner.allocation-amended" -> allocationService.upsertAllocation(message.fromJson())

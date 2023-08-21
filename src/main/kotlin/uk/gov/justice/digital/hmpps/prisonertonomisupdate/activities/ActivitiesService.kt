@@ -114,8 +114,11 @@ class ActivitiesService(
       nomisApiService.createActivity(toCreateActivityRequest(activitySchedule, it))
     }
 
-  suspend fun updateActivity(event: ScheduleDomainEvent) {
-    val activityScheduleId = event.additionalInformation.activityScheduleId
+  suspend fun updateActivityEvent(event: ScheduleDomainEvent) {
+    updateActivity(event.additionalInformation.activityScheduleId)
+  }
+
+  suspend fun updateActivity(activityScheduleId: Long) {
     val telemetryMap = mutableMapOf("dpsActivityScheduleId" to activityScheduleId.toString())
 
     runCatching {
