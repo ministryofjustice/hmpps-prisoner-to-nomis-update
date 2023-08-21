@@ -245,6 +245,72 @@ class ActivityResourceIntTest : IntegrationTestBase() {
   }
 
   @Nested
+  inner class SynchroniseUpsertAttendance {
+    @Test
+    fun `access forbidden when no authority`() {
+      webTestClient.put().uri("/attendances/1")
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
+
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient.put().uri("/attendances/1")
+        .headers(setAuthorisation(roles = listOf()))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden with wrong role`() {
+      webTestClient.put().uri("/attendances/1")
+        .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `will synchronise an attendance`() = runTest {
+      activitiesApi.stubGetAttendanceSync(ATTENDANCE_ID, buildGetAttendanceSyncResponse())
+      mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      nomisApi.stubUpsertAttendance(NOMIS_CRS_SCH_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
+
+      webTestClient.put().uri("/attendances/$ATTENDANCE_ID")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .exchange()
+        .expectStatus().isOk
+
+      nomisApi.verify(
+        putRequestedFor(urlEqualTo("/schedules/$NOMIS_CRS_SCH_ID/booking/$NOMIS_BOOKING_ID/attendance")),
+      )
+
+      verify(telemetryClient).trackEvent("activity-attendance-requested", mapOf("dpsAttendanceId" to ATTENDANCE_ID.toString()), null)
+      verify(telemetryClient).trackEvent(
+        eq("activity-attendance-update-success"),
+        check { assertThat(it).containsEntry("dpsAttendanceId", ATTENDANCE_ID.toString()) },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will return error if anything fails`() = runTest {
+      activitiesApi.stubGetAttendanceSyncWithError(ATTENDANCE_ID)
+
+      webTestClient.put().uri("/attendances/$ATTENDANCE_ID")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .exchange()
+        .expectStatus().is5xxServerError
+
+      verify(telemetryClient).trackEvent("activity-attendance-requested", mapOf("dpsAttendanceId" to ATTENDANCE_ID.toString()), null)
+      verify(telemetryClient).trackEvent(
+        eq("activity-attendance-update-failed"),
+        check { assertThat(it).containsEntry("dpsAttendanceId", ATTENDANCE_ID.toString()) },
+        isNull(),
+      )
+    }
+  }
+
+  @Nested
   inner class DeleteAll {
     @Test
     fun `access forbidden when no authority`() {

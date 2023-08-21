@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeature
 class ActivitiesResource(
   private val activitiesService: ActivitiesService,
   private val allocationService: AllocationService,
+  private val attendanceService: AttendanceService,
   private val eventFeatureSwitch: EventFeatureSwitch,
   private val telemetryClient: TelemetryClient,
 ) {
@@ -111,6 +112,35 @@ class ActivitiesResource(
   ) {
     telemetryClient.trackEvent("activity-allocation-requested", mapOf("dpsAllocationId" to allocationId.toString()))
     allocationService.upsertAllocation(allocationId)
+  }
+
+  @PreAuthorize("hasRole('ROLE_NOMIS_ACTIVITIES')")
+  @PutMapping("/attendances/{attendanceId}")
+  @Operation(
+    summary = "Synchronises a DPS Attendance",
+    description = "A manual method for synchronising a DPS Attenance to Nomis (whether new or not - performs an upsert). Performs in the same way as the automated message based solution - intended for use as a workaround when things go wrong. Requires role <b>NOMIS_ACTIVITIES</b>",
+    responses = [
+      ApiResponse(
+        responseCode = "200",
+        description = "The DPS Attendance was synchronised",
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized to access this endpoint",
+        content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Incorrect permissions to start migration",
+        content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  suspend fun synchroniseUpsertAttendance(
+    @Schema(description = "DPS Attendance id", required = true) @PathVariable attendanceId: Long,
+  ) {
+    telemetryClient.trackEvent("activity-attendance-requested", mapOf("dpsAttendanceId" to attendanceId.toString()))
+    attendanceService.upsertAttendance(attendanceId)
   }
 
   /**
