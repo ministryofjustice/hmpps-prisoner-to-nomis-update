@@ -48,7 +48,7 @@ class AllocationServiceTest {
         UpsertAllocationResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID, created = true),
       )
 
-      allocationService.upsertAllocation(
+      allocationService.upsertAllocationEvent(
         AllocationDomainEvent(
           eventType = "dummy",
           version = "1.0",
@@ -86,7 +86,7 @@ class AllocationServiceTest {
 
       assertThat(
         assertThrows<RuntimeException> {
-          allocationService.upsertAllocation(
+          allocationService.upsertAllocationEvent(
             AllocationDomainEvent(
               eventType = "dummy",
               version = "1.0",

@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeature
 @RestController
 class ActivitiesResource(
   private val activitiesService: ActivitiesService,
+  private val allocationService: AllocationService,
   private val eventFeatureSwitch: EventFeatureSwitch,
   private val telemetryClient: TelemetryClient,
 ) {
@@ -76,11 +77,40 @@ class ActivitiesResource(
       ),
     ],
   )
-  suspend fun synchroniseUpdatectivity(
+  suspend fun synchroniseUpdateActivity(
     @Schema(description = "DPS Activity id", required = true) @PathVariable activityScheduleId: Long,
   ) {
     telemetryClient.trackEvent("activity-amend-requested", mapOf("dpsActivityScheduleId" to activityScheduleId.toString()))
     activitiesService.updateActivity(activityScheduleId)
+  }
+
+  @PreAuthorize("hasRole('ROLE_NOMIS_ACTIVITIES')")
+  @PutMapping("/allocations/{allocationId}")
+  @Operation(
+    summary = "Synchronises a DPS Allocation",
+    description = "A manual method for synchronising a DPS Allocation to Nomis (whether new or not - performs an upsert). Performs in the same way as the automated message based solution - intended for use as a workaround when things go wrong. Requires role <b>NOMIS_ACTIVITIES</b>",
+    responses = [
+      ApiResponse(
+        responseCode = "200",
+        description = "The DPS Allocation was synchronised",
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized to access this endpoint",
+        content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Incorrect permissions to start migration",
+        content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  suspend fun synchroniseUpsertAllocation(
+    @Schema(description = "DPS Allocation id", required = true) @PathVariable allocationId: Long,
+  ) {
+    telemetryClient.trackEvent("activity-allocation-requested", mapOf("dpsAllocationId" to allocationId.toString()))
+    allocationService.upsertAllocation(allocationId)
   }
 
   /**

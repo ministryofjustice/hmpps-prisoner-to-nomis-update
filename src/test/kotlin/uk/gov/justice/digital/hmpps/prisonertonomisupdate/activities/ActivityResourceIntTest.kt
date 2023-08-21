@@ -179,6 +179,72 @@ class ActivityResourceIntTest : IntegrationTestBase() {
   }
 
   @Nested
+  inner class SynchroniseUpsertAllocation {
+    @Test
+    fun `access forbidden when no authority`() {
+      webTestClient.put().uri("/allocations/1")
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
+
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient.put().uri("/allocations/1")
+        .headers(setAuthorisation(roles = listOf()))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden with wrong role`() {
+      webTestClient.put().uri("/allocations/1")
+        .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `will synchronise an allocation`() = runTest {
+      activitiesApi.stubGetAllocation(ALLOCATION_ID, buildApiAllocationDtoJsonResponse())
+      mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      nomisApi.stubAllocationUpsert(NOMIS_CRS_ACTY_ID)
+
+      webTestClient.put().uri("/allocations/$ALLOCATION_ID")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .exchange()
+        .expectStatus().isOk
+
+      nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/allocation")),
+      )
+
+      verify(telemetryClient).trackEvent("activity-allocation-requested", mapOf("dpsAllocationId" to ALLOCATION_ID.toString()), null)
+      verify(telemetryClient).trackEvent(
+        eq("activity-allocation-success"),
+        check { assertThat(it).containsEntry("dpsAllocationId", ALLOCATION_ID.toString()) },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will return error if anything fails`() = runTest {
+      activitiesApi.stubGetAllocationWithError(ALLOCATION_ID)
+
+      webTestClient.put().uri("/allocations/$ALLOCATION_ID")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .exchange()
+        .expectStatus().is5xxServerError
+
+      verify(telemetryClient).trackEvent("activity-allocation-requested", mapOf("dpsAllocationId" to ALLOCATION_ID.toString()), null)
+      verify(telemetryClient).trackEvent(
+        eq("activity-allocation-failed"),
+        check { assertThat(it).containsEntry("dpsAllocationId", ALLOCATION_ID.toString()) },
+        isNull(),
+      )
+    }
+  }
+
+  @Nested
   inner class DeleteAll {
     @Test
     fun `access forbidden when no authority`() {
