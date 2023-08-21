@@ -309,7 +309,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetMappings(activityScheduleId: Long, response: String) {
+  fun
+  stubGetMappings(activityScheduleId: Long, response: String) {
     stubFor(
       get("/mapping/activities/activity-schedule-id/$activityScheduleId").willReturn(
         aResponse()

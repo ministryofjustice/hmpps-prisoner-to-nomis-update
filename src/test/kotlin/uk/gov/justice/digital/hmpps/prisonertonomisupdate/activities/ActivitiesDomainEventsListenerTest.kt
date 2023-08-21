@@ -54,7 +54,7 @@ internal class ActivitiesDomainEventsListenerTest {
       fun `will call service with create data`() = runTest {
         listener.onMessage(rawMessage = activityCreatedMessage(123L)).join()
 
-        verify(activitiesService).createActivity(
+        verify(activitiesService).createActivityEvent(
           check {
             assertThat(it.additionalInformation.activityScheduleId).isEqualTo(123L)
           },

@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-08-14.4435.ee7a49e"
+    "version": "2023-08-17.4465.3288c26"
   },
   "servers": [
     {
@@ -3593,6 +3593,16 @@
               "type": "string",
               "description": "Exclude program codes"
             }
+          },
+          {
+            "name": "courseActivityId",
+            "in": "query",
+            "description": "Course Activity ID",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Course Activity ID"
+            }
           }
         ],
         "responses": {
@@ -3989,6 +3999,16 @@
             "schema": {
               "type": "string",
               "description": "Exclude program codes"
+            }
+          },
+          {
+            "name": "courseActivityId",
+            "in": "query",
+            "description": "Course Activity ID",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Course Activity ID"
             }
           }
         ],
@@ -5597,6 +5617,7 @@
       },
       "HearingResultAward": {
         "required": [
+          "chargeSequence",
           "effectiveDate",
           "sequence"
         ],
@@ -5637,6 +5658,10 @@
           },
           "consecutiveAward": {
             "$ref": "#/components/schemas/HearingResultAward"
+          },
+          "chargeSequence": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -6443,11 +6468,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "last": {
-            "type": "boolean"
-          },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
+          },
+          "last": {
+            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
@@ -6464,6 +6489,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "paged": {
+            "type": "boolean"
+          },
+          "unpaged": {
+            "type": "boolean"
+          },
           "pageSize": {
             "type": "integer",
             "format": "int32"
@@ -6471,12 +6502,6 @@
           "pageNumber": {
             "type": "integer",
             "format": "int32"
-          },
-          "paged": {
-            "type": "boolean"
-          },
-          "unpaged": {
-            "type": "boolean"
           }
         }
       },
@@ -6633,11 +6658,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "last": {
-            "type": "boolean"
-          },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
+          },
+          "last": {
+            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
@@ -6713,11 +6738,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "last": {
-            "type": "boolean"
-          },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
+          },
+          "last": {
+            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
@@ -6838,11 +6863,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "last": {
-            "type": "boolean"
-          },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
+          },
+          "last": {
+            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
@@ -6979,11 +7004,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "last": {
-            "type": "boolean"
-          },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
+          },
+          "last": {
+            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
@@ -6993,12 +7018,25 @@
       "GetAllocationResponse": {
         "required": [
           "bookingId",
+          "courseActivityId",
           "nomisId",
+          "prisonId",
           "startDate",
           "suspended"
         ],
         "type": "object",
         "properties": {
+          "prisonId": {
+            "type": "string",
+            "description": "Prison ID",
+            "example": "BXI"
+          },
+          "courseActivityId": {
+            "type": "integer",
+            "description": "Nomis Course Activity ID",
+            "format": "int64",
+            "example": 1234
+          },
           "nomisId": {
             "type": "string",
             "description": "Nomis ID",
@@ -7119,11 +7157,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "last": {
-            "type": "boolean"
-          },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
+          },
+          "last": {
+            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
@@ -7190,11 +7228,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "last": {
-            "type": "boolean"
-          },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
+          },
+          "last": {
+            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
