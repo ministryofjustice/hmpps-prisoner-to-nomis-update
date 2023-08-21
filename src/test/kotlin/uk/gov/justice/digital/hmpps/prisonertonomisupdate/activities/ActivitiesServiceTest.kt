@@ -77,7 +77,7 @@ internal class ActivitiesServiceTest {
         CreateActivityResponse(courseActivityId = NOMIS_CRS_ACTY_ID, courseSchedules = listOf()),
       )
 
-      activitiesService.createActivity(aDomainEvent())
+      activitiesService.createActivityEvent(aDomainEvent())
 
       verify(telemetryClient).trackEvent(
         eq("activity-create-success"),
@@ -102,7 +102,7 @@ internal class ActivitiesServiceTest {
         CreateActivityResponse(courseActivityId = NOMIS_CRS_ACTY_ID, courseSchedules = listOf()),
       )
 
-      activitiesService.createActivity(aDomainEvent())
+      activitiesService.createActivityEvent(aDomainEvent())
 
       verify(nomisApiService).createActivity(
         check {
@@ -126,7 +126,7 @@ internal class ActivitiesServiceTest {
         ),
       )
 
-      activitiesService.createActivity(aDomainEvent())
+      activitiesService.createActivityEvent(aDomainEvent())
 
       verifyNoInteractions(nomisApiService)
     }
@@ -142,7 +142,7 @@ internal class ActivitiesServiceTest {
       )
       whenever(mappingService.createMapping(any())).thenThrow(RuntimeException("test"))
 
-      activitiesService.createActivity(aDomainEvent())
+      activitiesService.createActivityEvent(aDomainEvent())
 
       verify(telemetryClient).trackEvent(
         eq("activity-mapping-create-failed"),

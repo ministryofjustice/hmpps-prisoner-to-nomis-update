@@ -36,20 +36,24 @@ class ActivitiesService(
   private val objectMapper: ObjectMapper,
 ) : CreateMappingRetryable {
 
-  suspend fun createActivity(event: ScheduleDomainEvent) {
+  suspend fun createActivityEvent(event: ScheduleDomainEvent) {
+    createActivity(event.additionalInformation.activityScheduleId)
+  }
+
+  suspend fun createActivity(activityScheduleId: Long) {
     synchronise {
       name = "activity"
       telemetryClient = this@ActivitiesService.telemetryClient
       retryQueueService = activitiesRetryQueueService
       eventTelemetry = mapOf(
-        "dpsActivityScheduleId" to event.additionalInformation.activityScheduleId.toString(),
+        "dpsActivityScheduleId" to activityScheduleId.toString(),
       )
 
       checkMappingDoesNotExist {
-        mappingService.getMappingsOrNull(event.additionalInformation.activityScheduleId)
+        mappingService.getMappingsOrNull(activityScheduleId)
       }
       transform {
-        activitiesApiService.getActivitySchedule(event.additionalInformation.activityScheduleId)
+        activitiesApiService.getActivitySchedule(activityScheduleId)
           .let { activitySchedule ->
             eventTelemetry += "description" to activitySchedule.description
 
