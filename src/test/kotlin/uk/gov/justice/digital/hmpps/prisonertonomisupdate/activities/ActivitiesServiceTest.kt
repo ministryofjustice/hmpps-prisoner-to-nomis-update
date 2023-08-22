@@ -183,7 +183,7 @@ internal class ActivitiesServiceTest {
         .thenThrow(NotFound::class.java)
 
       assertThrows<NotFound> {
-        activitiesService.updateActivity(aDomainEvent())
+        activitiesService.updateActivityEvent(aDomainEvent())
       }
 
       verify(activitiesApiService).getActivitySchedule(ACTIVITY_SCHEDULE_ID)
@@ -212,7 +212,7 @@ internal class ActivitiesServiceTest {
         .thenThrow(NotFound::class.java)
 
       assertThrows<NotFound> {
-        activitiesService.updateActivity(aDomainEvent())
+        activitiesService.updateActivityEvent(aDomainEvent())
       }
 
       verify(activitiesApiService).getActivity(ACTIVITY_ID)
@@ -234,7 +234,7 @@ internal class ActivitiesServiceTest {
         .thenThrow(NotFound::class.java)
 
       assertThrows<NotFound> {
-        activitiesService.updateActivity(aDomainEvent())
+        activitiesService.updateActivityEvent(aDomainEvent())
       }
 
       verify(mappingService).getMappings(ACTIVITY_SCHEDULE_ID)
@@ -268,7 +268,7 @@ internal class ActivitiesServiceTest {
         .thenThrow(ServiceUnavailable::class.java)
 
       assertThrows<ServiceUnavailable> {
-        activitiesService.updateActivity(aDomainEvent())
+        activitiesService.updateActivityEvent(aDomainEvent())
       }
 
       verify(nomisApiService).updateActivity(eq(NOMIS_CRS_ACTY_ID), any())
@@ -302,7 +302,7 @@ internal class ActivitiesServiceTest {
         ),
       )
 
-      activitiesService.updateActivity(aDomainEvent())
+      activitiesService.updateActivityEvent(aDomainEvent())
 
       verify(nomisApiService).updateActivity(
         eq(NOMIS_CRS_ACTY_ID),

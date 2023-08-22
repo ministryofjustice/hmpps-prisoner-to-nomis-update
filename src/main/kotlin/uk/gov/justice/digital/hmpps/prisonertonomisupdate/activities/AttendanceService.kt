@@ -19,10 +19,13 @@ class AttendanceService(
   private val telemetryClient: TelemetryClient,
 ) {
 
-  suspend fun upsertAttendance(attendanceEvent: AttendanceDomainEvent) {
-    val attendanceId = attendanceEvent.additionalInformation.attendanceId
+  suspend fun upsertAttendanceEvent(attendanceEvent: AttendanceDomainEvent) {
+    upsertAttendance(attendanceEvent.additionalInformation.attendanceId, attendanceEvent.eventType.contains("created"))
+  }
+
+  suspend fun upsertAttendance(attendanceId: Long, createRequest: Boolean = false) {
     val telemetryMap = mutableMapOf("dpsAttendanceId" to attendanceId.toString())
-    val upsertType = if (attendanceEvent.eventType.contains("created")) "create" else "update"
+    val upsertType = if (createRequest) "create" else "update"
 
     runCatching {
       val attendanceSync = activitiesApiService.getAttendanceSync(attendanceId)

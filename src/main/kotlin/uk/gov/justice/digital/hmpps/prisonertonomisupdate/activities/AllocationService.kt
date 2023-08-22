@@ -22,12 +22,16 @@ class AllocationService(
 
   private val humanTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
-  suspend fun upsertAllocation(allocationEvent: AllocationDomainEvent) {
+  suspend fun upsertAllocationEvent(allocationEvent: AllocationDomainEvent) {
+    upsertAllocation(allocationEvent.additionalInformation.allocationId)
+  }
+
+  suspend fun upsertAllocation(allocationId: Long) {
     val telemetryMap = mutableMapOf(
-      "dpsAllocationId" to allocationEvent.additionalInformation.allocationId.toString(),
+      "dpsAllocationId" to allocationId.toString(),
     )
     runCatching {
-      activitiesApiService.getAllocation(allocationEvent.additionalInformation.allocationId).let { allocation ->
+      activitiesApiService.getAllocation(allocationId).let { allocation ->
         telemetryMap["offenderNo"] = allocation.prisonerNumber
         telemetryMap["bookingId"] = allocation.bookingId.toString()
         telemetryMap["dpsActivityScheduleId"] = allocation.scheduleId.toString()

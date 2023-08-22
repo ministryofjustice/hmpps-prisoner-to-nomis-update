@@ -50,7 +50,7 @@ class AttendanceServiceTest {
       whenever(activitiesApiService.getAttendanceSync(anyLong())).thenThrow(BadGateway::class.java)
 
       assertThrows<BadGateway> {
-        attendanceService.upsertAttendance(attendanceEvent())
+        attendanceService.upsertAttendanceEvent(attendanceEvent())
       }
 
       verify(activitiesApiService).getAttendanceSync(ATTENDANCE_ID)
@@ -69,7 +69,7 @@ class AttendanceServiceTest {
       whenever(mappingService.getMappings(anyLong())).thenThrow(Forbidden::class.java)
 
       assertThrows<Forbidden> {
-        attendanceService.upsertAttendance(attendanceEvent())
+        attendanceService.upsertAttendanceEvent(attendanceEvent())
       }
 
       verify(mappingService).getMappings(ACTIVITY_SCHEDULE_ID)
@@ -99,7 +99,7 @@ class AttendanceServiceTest {
       whenever(nomisApiService.upsertAttendance(anyLong(), anyLong(), any())).thenThrow(BadRequest::class.java)
 
       assertThrows<BadRequest> {
-        attendanceService.upsertAttendance(attendanceEvent())
+        attendanceService.upsertAttendanceEvent(attendanceEvent())
       }
 
       verify(nomisApiService).upsertAttendance(eq(NOMIS_CRS_SCH_ID), eq(NOMIS_BOOKING_ID), any())
@@ -122,7 +122,7 @@ class AttendanceServiceTest {
       whenever(mappingService.getMappings(anyLong())).thenReturn(activityMappingDto())
 
       assertThrows<InvalidAttendanceStatusException> {
-        attendanceService.upsertAttendance(attendanceEvent())
+        attendanceService.upsertAttendanceEvent(attendanceEvent())
       }.also {
         assertThat(it.message).contains("INVALID")
       }
@@ -156,7 +156,7 @@ class AttendanceServiceTest {
       whenever(mappingService.getMappings(anyLong())).thenReturn(activityMappingDto())
 
       assertThrows<InvalidAttendanceReasonException> {
-        attendanceService.upsertAttendance(attendanceEvent())
+        attendanceService.upsertAttendanceEvent(attendanceEvent())
       }.also {
         assertThat(it.message).contains("INVALID")
       }
@@ -191,7 +191,7 @@ class AttendanceServiceTest {
       whenever(nomisApiService.upsertAttendance(anyLong(), anyLong(), any())).thenReturn(upsertAttendanceResponse())
 
       assertDoesNotThrow {
-        attendanceService.upsertAttendance(attendanceEvent())
+        attendanceService.upsertAttendanceEvent(attendanceEvent())
       }
 
       verify(nomisApiService).upsertAttendance(
@@ -241,7 +241,7 @@ class AttendanceServiceTest {
       whenever(nomisApiService.upsertAttendance(anyLong(), anyLong(), any())).thenReturn(upsertAttendanceResponse(created = false))
 
       assertDoesNotThrow {
-        attendanceService.upsertAttendance(attendanceEvent("activities.prisoner.attendance-amended"))
+        attendanceService.upsertAttendanceEvent(attendanceEvent("activities.prisoner.attendance-amended"))
       }
 
       verify(nomisApiService).upsertAttendance(

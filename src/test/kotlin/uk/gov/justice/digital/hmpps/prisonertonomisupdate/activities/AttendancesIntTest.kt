@@ -28,7 +28,7 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
     fun `will consume a create attendance message`() {
       ActivitiesApiExtension.activitiesApi.stubGetAttendanceSync(ATTENDANCE_ID, buildGetAttendanceSyncResponse())
       MappingExtension.mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
-      NomisApiExtension.nomisApi.stubUpsertAttendance(NOMIS_CRS_ACTY_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
+      NomisApiExtension.nomisApi.stubUpsertAttendance(NOMIS_CRS_SCH_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
 
       awsSnsClient.publish(
         PublishRequest.builder().topicArn(topicArn)

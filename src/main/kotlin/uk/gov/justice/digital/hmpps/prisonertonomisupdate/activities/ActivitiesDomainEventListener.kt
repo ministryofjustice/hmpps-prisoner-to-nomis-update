@@ -37,13 +37,13 @@ class ActivitiesDomainEventListener(
   fun onMessage(rawMessage: String): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "activities.activity-schedule.created" -> activitiesService.createActivityEvent(message.fromJson())
-      "activities.activity-schedule.amended" -> activitiesService.updateActivity(message.fromJson())
+      "activities.activity-schedule.amended" -> activitiesService.updateActivityEvent(message.fromJson())
       "activities.scheduled-instance.amended" -> schedulesService.updateScheduledInstance(message.fromJson())
-      "activities.prisoner.allocated" -> allocationService.upsertAllocation(message.fromJson())
-      "activities.prisoner.allocation-amended" -> allocationService.upsertAllocation(message.fromJson())
-      "activities.prisoner.attendance-created" -> attendanceService.upsertAttendance(message.fromJson())
-      "activities.prisoner.attendance-amended" -> attendanceService.upsertAttendance(message.fromJson())
-      "activities.prisoner.attendance-expired" -> attendanceService.upsertAttendance(message.fromJson())
+      "activities.prisoner.allocated" -> allocationService.upsertAllocationEvent(message.fromJson())
+      "activities.prisoner.allocation-amended" -> allocationService.upsertAllocationEvent(message.fromJson())
+      "activities.prisoner.attendance-created" -> attendanceService.upsertAttendanceEvent(message.fromJson())
+      "activities.prisoner.attendance-amended" -> attendanceService.upsertAttendanceEvent(message.fromJson())
+      "activities.prisoner.attendance-expired" -> attendanceService.upsertAttendanceEvent(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }

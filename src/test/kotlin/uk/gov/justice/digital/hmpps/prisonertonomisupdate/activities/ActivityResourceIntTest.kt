@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -99,6 +100,211 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       verify(telemetryClient).trackEvent(
         eq("activity-create-failed"),
         check { assertThat(it).containsEntry("dpsActivityScheduleId", ACTIVITY_SCHEDULE_ID.toString()) },
+        isNull(),
+      )
+    }
+  }
+
+  @Nested
+  inner class SynchroniseUpdateActivity {
+    @Test
+    fun `access forbidden when no authority`() {
+      webTestClient.put().uri("/activities/1")
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
+
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient.put().uri("/activities/1")
+        .headers(setAuthorisation(roles = listOf()))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden with wrong role`() {
+      webTestClient.put().uri("/activities/1")
+        .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `will synchronise the activity`() = runTest {
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
+      activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
+      mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      nomisApi.stubActivityUpdate(NOMIS_CRS_ACTY_ID, buildNomisActivityResponse())
+      mappingServer.stubUpdateActivity()
+
+      webTestClient.put().uri("/activities/$ACTIVITY_SCHEDULE_ID")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .exchange()
+        .expectStatus().isOk
+
+      nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID")),
+      )
+      mappingServer.verify(
+        putRequestedFor(urlEqualTo("/mapping/activities"))
+          .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$NOMIS_CRS_ACTY_ID")))
+          .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
+          .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_UPDATED"))),
+      )
+      verify(telemetryClient).trackEvent("activity-amend-requested", mapOf("dpsActivityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()), null)
+      verify(telemetryClient).trackEvent(
+        eq("activity-amend-success"),
+        check { assertThat(it).containsEntry("dpsActivityScheduleId", ACTIVITY_SCHEDULE_ID.toString()) },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will return error if anything fails`() = runTest {
+      activitiesApi.stubGetScheduleWithError(ACTIVITY_SCHEDULE_ID)
+
+      webTestClient.put().uri("/activities/$ACTIVITY_SCHEDULE_ID")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .exchange()
+        .expectStatus().is5xxServerError
+
+      verify(telemetryClient).trackEvent("activity-amend-requested", mapOf("dpsActivityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()), null)
+      verify(telemetryClient).trackEvent(
+        eq("activity-amend-failed"),
+        check { assertThat(it).containsEntry("dpsActivityScheduleId", ACTIVITY_SCHEDULE_ID.toString()) },
+        isNull(),
+      )
+    }
+  }
+
+  @Nested
+  inner class SynchroniseUpsertAllocation {
+    @Test
+    fun `access forbidden when no authority`() {
+      webTestClient.put().uri("/allocations/1")
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
+
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient.put().uri("/allocations/1")
+        .headers(setAuthorisation(roles = listOf()))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden with wrong role`() {
+      webTestClient.put().uri("/allocations/1")
+        .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `will synchronise an allocation`() = runTest {
+      activitiesApi.stubGetAllocation(ALLOCATION_ID, buildApiAllocationDtoJsonResponse())
+      mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      nomisApi.stubAllocationUpsert(NOMIS_CRS_ACTY_ID)
+
+      webTestClient.put().uri("/allocations/$ALLOCATION_ID")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .exchange()
+        .expectStatus().isOk
+
+      nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/allocation")),
+      )
+
+      verify(telemetryClient).trackEvent("activity-allocation-requested", mapOf("dpsAllocationId" to ALLOCATION_ID.toString()), null)
+      verify(telemetryClient).trackEvent(
+        eq("activity-allocation-success"),
+        check { assertThat(it).containsEntry("dpsAllocationId", ALLOCATION_ID.toString()) },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will return error if anything fails`() = runTest {
+      activitiesApi.stubGetAllocationWithError(ALLOCATION_ID)
+
+      webTestClient.put().uri("/allocations/$ALLOCATION_ID")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .exchange()
+        .expectStatus().is5xxServerError
+
+      verify(telemetryClient).trackEvent("activity-allocation-requested", mapOf("dpsAllocationId" to ALLOCATION_ID.toString()), null)
+      verify(telemetryClient).trackEvent(
+        eq("activity-allocation-failed"),
+        check { assertThat(it).containsEntry("dpsAllocationId", ALLOCATION_ID.toString()) },
+        isNull(),
+      )
+    }
+  }
+
+  @Nested
+  inner class SynchroniseUpsertAttendance {
+    @Test
+    fun `access forbidden when no authority`() {
+      webTestClient.put().uri("/attendances/1")
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
+
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient.put().uri("/attendances/1")
+        .headers(setAuthorisation(roles = listOf()))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden with wrong role`() {
+      webTestClient.put().uri("/attendances/1")
+        .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `will synchronise an attendance`() = runTest {
+      activitiesApi.stubGetAttendanceSync(ATTENDANCE_ID, buildGetAttendanceSyncResponse())
+      mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      nomisApi.stubUpsertAttendance(NOMIS_CRS_SCH_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
+
+      webTestClient.put().uri("/attendances/$ATTENDANCE_ID")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .exchange()
+        .expectStatus().isOk
+
+      nomisApi.verify(
+        putRequestedFor(urlEqualTo("/schedules/$NOMIS_CRS_SCH_ID/booking/$NOMIS_BOOKING_ID/attendance")),
+      )
+
+      verify(telemetryClient).trackEvent("activity-attendance-requested", mapOf("dpsAttendanceId" to ATTENDANCE_ID.toString()), null)
+      verify(telemetryClient).trackEvent(
+        eq("activity-attendance-update-success"),
+        check { assertThat(it).containsEntry("dpsAttendanceId", ATTENDANCE_ID.toString()) },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will return error if anything fails`() = runTest {
+      activitiesApi.stubGetAttendanceSyncWithError(ATTENDANCE_ID)
+
+      webTestClient.put().uri("/attendances/$ATTENDANCE_ID")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .exchange()
+        .expectStatus().is5xxServerError
+
+      verify(telemetryClient).trackEvent("activity-attendance-requested", mapOf("dpsAttendanceId" to ATTENDANCE_ID.toString()), null)
+      verify(telemetryClient).trackEvent(
+        eq("activity-attendance-update-failed"),
+        check { assertThat(it).containsEntry("dpsAttendanceId", ATTENDANCE_ID.toString()) },
         isNull(),
       )
     }
