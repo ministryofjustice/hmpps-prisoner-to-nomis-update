@@ -21,6 +21,11 @@ hmpps.sqs:
       dlqName: hmpps_prisoner_to_nomis_appointment_dlq
       subscribeTopicId: domainevents
       subscribeFilter: "{\"eventType\":[\"appointments.appointment-instance.created\", \"appointments.appointment-instance.updated\", \"appointments.appointment-instance.cancelled\", \"appointments.appointment-instance.deleted\"]}"
+    nonassociation:
+      queueName: hmpps_prisoner_to_nomis_nonassociation_queue
+      dlqName: hmpps_prisoner_to_nomis_nonassociation_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: "{\"eventType\":[\"non-associations.created\", \"non-associations.deleted\", \"non-associations.amended\", \"non-associations.closed\"]}"
     sentencing:
       queueName: hmpps_prisoner_to_nomis_sentencing_queue
       dlqName: hmpps_prisoner_to_nomis_sentencing_dlq

@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NonAssociationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension
 import java.time.LocalDateTime
@@ -37,6 +38,7 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("components.mappingApi.status").isEqualTo("UP")
       .jsonPath("components.sentenceAdjustmentsApi.status").isEqualTo("UP")
       .jsonPath("components.adjudicationsApi.status").isEqualTo("UP")
+      .jsonPath("components.nonAssociationsApi.status").isEqualTo("UP")
   }
 
   @Test
@@ -104,5 +106,6 @@ class HealthCheckTest : IntegrationTestBase() {
     AppointmentsApiExtension.appointmentsApi.stubHealthPing(status)
     SentencingAdjustmentsApiExtension.sentencingAdjustmentsApi.stubHealthPing(status)
     AdjudicationsApiExtension.adjudicationsApiServer.stubHealthPing(status)
+    NonAssociationsApiExtension.nonAssociationsApiServer.stubHealthPing(status)
   }
 }

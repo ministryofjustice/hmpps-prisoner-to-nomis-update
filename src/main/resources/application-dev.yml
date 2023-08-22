@@ -12,3 +12,4 @@ api.base.url:
   appointments: http://localhost:8080
   sentence.adjustments: http://localhost:8080
   adjudications: http://localhost:8080
+  nonAssociations: http://localhost:8080
