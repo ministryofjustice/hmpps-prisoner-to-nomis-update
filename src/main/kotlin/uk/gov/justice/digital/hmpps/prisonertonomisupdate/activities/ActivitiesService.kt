@@ -130,7 +130,7 @@ class ActivitiesService(
       val activity = activitiesApiService.getActivity(activitySchedule.activity.id)
         .also { telemetryMap["dpsActivityId"] = it.id.toString() }
 
-      activitySchedule.toUpdateActivityRequest(activity.pay, activity.category.code, mappings)
+      activitySchedule.toUpdateActivityRequest(activity.pay, activity.category.code, activity.outsideWork, mappings)
         .let { nomisApiService.updateActivity(mappings.nomisCourseActivityId, it) }
         .let { nomisResponse -> buildActivityMappingDto(nomisResponse, activitySchedule, mappings, "ACTIVITY_UPDATED") }
         .also { mappingRequest -> mappingService.updateMapping(mappingRequest) }
@@ -142,7 +142,7 @@ class ActivitiesService(
     }
   }
 
-  private fun ActivitySchedule.toUpdateActivityRequest(pay: List<ActivityPay>, categoryCode: String, mappings: ActivityMappingDto) =
+  private fun ActivitySchedule.toUpdateActivityRequest(pay: List<ActivityPay>, categoryCode: String, outsideWork: Boolean, mappings: ActivityMappingDto) =
     UpdateActivityRequest(
       startDate = startDate,
       capacity = capacity,
@@ -153,6 +153,7 @@ class ActivitiesService(
       scheduleRules = slots.toScheduleRuleRequests(),
       schedules = instances.toCourseScheduleRequests(mappings.scheduledInstanceMappings),
       excludeBankHolidays = !runsOnBankHoliday,
+      outsideWork = outsideWork,
       endDate = endDate,
       internalLocationId = internalLocation?.id?.toLong(),
       programCode = categoryCode,
@@ -174,6 +175,7 @@ class ActivitiesService(
       schedules = schedule.instances.toCourseScheduleRequests(),
       scheduleRules = schedule.slots.toScheduleRuleRequests(),
       excludeBankHolidays = !schedule.runsOnBankHoliday, // Nomis models the negative (exclude) and Activities models the positive (runs on)
+      outsideWork = activity.outsideWork,
     )
   }
 
