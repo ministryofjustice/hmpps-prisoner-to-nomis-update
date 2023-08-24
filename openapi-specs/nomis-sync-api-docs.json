@@ -11,7 +11,7 @@
   },
   "servers": [
     {
-      "url": "https://nomis-prsner-dev.aks-dev-1.studio-hosting.service.justice.gov.uk",
+      "url": "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
       "description": "Development"
     },
     {
