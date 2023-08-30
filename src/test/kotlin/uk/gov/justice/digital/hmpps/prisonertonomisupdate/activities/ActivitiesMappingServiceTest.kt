@@ -75,6 +75,7 @@ internal class ActivitiesMappingServiceTest {
         response = """{
           "nomisCourseActivityId": 456,
           "activityScheduleId": 1234,
+          "activityId": 2345,
           "mappingType": "TYPE"
         }
         """.trimMargin(),
@@ -95,6 +96,7 @@ internal class ActivitiesMappingServiceTest {
         response = """{
           "nomisCourseActivityId": 456,
           "activityScheduleId": 1234,
+          "activityId": 2345,
           "mappingType": "A_TYPE"
         }
         """.trimMargin(),
@@ -123,5 +125,5 @@ internal class ActivitiesMappingServiceTest {
   }
 
   private fun newMapping() =
-    ActivityMappingDto(nomisCourseActivityId = 456L, activityScheduleId = 1234L, mappingType = "A_TYPE")
+    ActivityMappingDto(nomisCourseActivityId = 456L, activityScheduleId = 1234L, activityId = 2345L, mappingType = "A_TYPE")
 }

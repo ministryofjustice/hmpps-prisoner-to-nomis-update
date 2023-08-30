@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-08-24.4581.6fd4c69"
+    "version": "2023-08-30.4661.d769fac"
   },
   "servers": [
     {
@@ -1426,6 +1426,82 @@
         }
       }
     },
+    "/adjudications/adjudication-number/{adjudicationNumber}/repairs": {
+      "put": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "Updates repairs (aka damages) for a given adjudication",
+        "description": "List of repairs are refreshed so this operation may result in any combinations of inserts, updates or deletes. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "updateRepairs",
+        "parameters": [
+          {
+            "name": "adjudicationNumber",
+            "in": "path",
+            "description": "Adjudication number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Adjudication number",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRepairsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Repairs updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateRepairsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Adjudication does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/activities/{courseActivityId}": {
       "get": {
         "tags": [
@@ -1727,6 +1803,16 @@
             "schema": {
               "type": "string",
               "description": "Course activity id"
+            }
+          },
+          {
+            "name": "endComment",
+            "in": "query",
+            "description": "End comment",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "End comment"
             }
           }
         ],
@@ -2603,6 +2689,82 @@
           },
           "403": {
             "description": "Forbidden, requires role NOMIS_APPOINTMENTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/adjudications/adjudication-number/{adjudicationNumber}/hearings": {
+      "post": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "creates a hearing for a given adjudication",
+        "description": "Creates an hearing for a given adjudication. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "createHearing",
+        "parameters": [
+          {
+            "name": "adjudicationNumber",
+            "in": "path",
+            "description": "Adjudication number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Adjudication number",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHearingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Hearing Created Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateHearingResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Adjudication does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -3839,6 +4001,72 @@
         }
       }
     },
+    "/adjudications/hearings/{hearingId}": {
+      "get": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "get adjudication by adjudication number",
+        "description": "Retrieves an adjudication by the adjudication number. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "getAdjudicationHearing",
+        "parameters": [
+          {
+            "name": "hearingId",
+            "in": "path",
+            "description": "NOMIS Hearing Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS Hearing Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Hearing Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdjudicationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Hearing does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/adjudications/charges/ids": {
       "get": {
         "tags": [
@@ -4847,6 +5075,100 @@
         },
         "description": "Offender individual schedule creation request"
       },
+      "CodeDescription": {
+        "required": [
+          "code",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "Repair": {
+        "required": [
+          "createdByUsername",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "cost": {
+            "type": "number"
+          },
+          "createdByUsername": {
+            "type": "string",
+            "description": "Username of person who created the record in NOMIS"
+          }
+        },
+        "description": "The repairs required due to the damage"
+      },
+      "UpdateRepairsResponse": {
+        "required": [
+          "repairs"
+        ],
+        "type": "object",
+        "properties": {
+          "repairs": {
+            "type": "array",
+            "description": "The repairs required due to the damage",
+            "items": {
+              "$ref": "#/components/schemas/Repair"
+            }
+          }
+        }
+      },
+      "RepairToUpdateOrAdd": {
+        "required": [
+          "typeCode"
+        ],
+        "type": "object",
+        "properties": {
+          "typeCode": {
+            "type": "string",
+            "description": "NOMIS repair type code",
+            "enum": [
+              "CLEA",
+              "DECO",
+              "ELEC",
+              "FABR",
+              "LOCK",
+              "PLUM"
+            ]
+          },
+          "comment": {
+            "type": "string",
+            "description": "Description of repair required by damage"
+          }
+        },
+        "description": "Current list of repairs required due to damage"
+      },
+      "UpdateRepairsRequest": {
+        "required": [
+          "repairs"
+        ],
+        "type": "object",
+        "properties": {
+          "repairs": {
+            "type": "array",
+            "description": "Current list of repairs required due to damage",
+            "items": {
+              "$ref": "#/components/schemas/RepairToUpdateOrAdd"
+            }
+          }
+        },
+        "description": "Repairs required due to damage. Any items not in this list will be removed from the Adjudication in NOMIS"
+      },
       "CourseScheduleRequest": {
         "required": [
           "cancelled",
@@ -5562,21 +5884,6 @@
         },
         "description": "Adjudication Information"
       },
-      "CodeDescription": {
-        "required": [
-          "code",
-          "description"
-        ],
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        }
-      },
       "Evidence": {
         "required": [
           "createdByUsername",
@@ -5847,29 +6154,6 @@
           }
         },
         "description": "Other suspects involved in the incident that may or may not have been placed on report"
-      },
-      "Repair": {
-        "required": [
-          "createdByUsername",
-          "type"
-        ],
-        "type": "object",
-        "properties": {
-          "type": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "comment": {
-            "type": "string"
-          },
-          "cost": {
-            "type": "number"
-          },
-          "createdByUsername": {
-            "type": "string",
-            "description": "Username of person who created the record in NOMIS"
-          }
-        },
-        "description": "The repairs required due to the damage"
       },
       "Staff": {
         "required": [
@@ -6312,6 +6596,58 @@
           }
         }
       },
+      "CreateHearingResponse": {
+        "required": [
+          "hearingId"
+        ],
+        "type": "object",
+        "properties": {
+          "hearingId": {
+            "type": "integer",
+            "description": "The Id for the created Hearing",
+            "format": "int64"
+          }
+        },
+        "description": "Provides the generated hearing ID after creation"
+      },
+      "CreateHearingRequest": {
+        "required": [
+          "agencyId",
+          "hearingDate",
+          "hearingTime",
+          "hearingType",
+          "internalLocationId"
+        ],
+        "type": "object",
+        "properties": {
+          "hearingType": {
+            "type": "string",
+            "description": "Type of hearing",
+            "example": "GOV"
+          },
+          "hearingDate": {
+            "type": "string",
+            "description": "Hearing date",
+            "format": "date"
+          },
+          "hearingTime": {
+            "type": "string",
+            "description": "Hearing time",
+            "format": "partial-time"
+          },
+          "agencyId": {
+            "type": "string",
+            "description": "agency id of hearing"
+          },
+          "internalLocationId": {
+            "type": "integer",
+            "description": "location id for the hearing",
+            "format": "int64",
+            "example": 123456
+          }
+        },
+        "description": "Hearing to be created"
+      },
       "CreateActivityRequest": {
         "required": [
           "capacity",
@@ -6661,15 +6997,15 @@
             "type": "integer",
             "format": "int32"
           },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
           "paged": {
             "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
-          },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
           }
         }
       },

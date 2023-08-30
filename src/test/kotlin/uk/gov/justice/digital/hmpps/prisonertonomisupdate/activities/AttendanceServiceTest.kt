@@ -323,6 +323,7 @@ class AttendanceServiceTest {
     private fun activityMappingDto() = ActivityMappingDto(
       nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
       activityScheduleId = ACTIVITY_SCHEDULE_ID,
+      activityId = ACTIVITY_ID,
       mappingType = "ACTIVITY_CREATED",
       scheduledInstanceMappings = listOf(
         ActivityScheduleMappingDto(
