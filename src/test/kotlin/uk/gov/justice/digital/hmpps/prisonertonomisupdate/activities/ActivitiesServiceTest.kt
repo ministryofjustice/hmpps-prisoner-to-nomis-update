@@ -84,6 +84,7 @@ internal class ActivitiesServiceTest {
         check {
           assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_CRS_ACTY_ID")
           assertThat(it["dpsActivityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
+          assertThat(it["dpsActivityId"]).isEqualTo("$ACTIVITY_ID")
           assertThat(it["description"]).isEqualTo("description")
         },
         isNull(),
@@ -122,6 +123,7 @@ internal class ActivitiesServiceTest {
         ActivityMappingDto(
           nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
           activityScheduleId = ACTIVITY_SCHEDULE_ID,
+          activityId = ACTIVITY_ID,
           mappingType = "A_TYPE",
         ),
       )
@@ -149,6 +151,7 @@ internal class ActivitiesServiceTest {
         check {
           assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_CRS_ACTY_ID")
           assertThat(it["dpsActivityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
+          assertThat(it["dpsActivityId"]).isEqualTo("$ACTIVITY_ID")
           assertThat(it["description"]).isEqualTo("description")
         },
         isNull(),
@@ -174,6 +177,7 @@ internal class ActivitiesServiceTest {
         ActivityMappingDto(
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
+          ACTIVITY_ID,
           "ACTIVITY_CREATED",
           listOf(),
           LocalDateTime.now(),
@@ -202,6 +206,7 @@ internal class ActivitiesServiceTest {
         ActivityMappingDto(
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
+          ACTIVITY_ID,
           "ACTIVITY_CREATED",
           listOf(),
           LocalDateTime.now(),
@@ -221,6 +226,7 @@ internal class ActivitiesServiceTest {
         check<Map<String, String>> {
           assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_CRS_ACTY_ID")
           assertThat(it["dpsActivityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
+          assertThat(it["dpsActivityId"]).isEqualTo("$ACTIVITY_ID")
         },
         isNull(),
       )
@@ -259,6 +265,7 @@ internal class ActivitiesServiceTest {
         ActivityMappingDto(
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
+          ACTIVITY_ID,
           "ACTIVITY_CREATED",
           listOf(),
           LocalDateTime.now(),
@@ -296,6 +303,7 @@ internal class ActivitiesServiceTest {
         ActivityMappingDto(
           NOMIS_CRS_ACTY_ID,
           ACTIVITY_SCHEDULE_ID,
+          ACTIVITY_ID,
           "ACTIVITY_CREATED",
           listOf(),
           LocalDateTime.now(),
@@ -336,6 +344,7 @@ internal class ActivitiesServiceTest {
       val mappingDto = ActivityMappingDto(
         nomisCourseActivityId = NOMIS_CRS_ACTY_ID,
         activityScheduleId = ACTIVITY_SCHEDULE_ID,
+        activityId = ACTIVITY_ID,
         mappingType = "ACTIVITY_CREATED",
         scheduledInstanceMappings = listOf(
           ActivityScheduleMappingDto(

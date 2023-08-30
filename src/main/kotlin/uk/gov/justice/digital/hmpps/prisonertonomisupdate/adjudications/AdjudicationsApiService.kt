@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjustments
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications
 
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient

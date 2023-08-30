@@ -89,6 +89,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("minimumIncentiveLevelCode", equalTo("BAS")))
           .withRequestBody(matchingJsonPath("programCode", equalTo("LEISURE_SOCIAL")))
           .withRequestBody(matchingJsonPath("payPerSession", equalTo("F")))
+          .withRequestBody(matchingJsonPath("outsideWork", equalTo("true")))
           .withRequestBody(matchingJsonPath("schedules[0].id", absent()))
           .withRequestBody(matchingJsonPath("schedules[0].date", equalTo("2023-01-13")))
           .withRequestBody(matchingJsonPath("schedules[0].startTime", equalTo("09:00")))
@@ -115,6 +116,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
         postRequestedFor(urlEqualTo("/mapping/activities"))
           .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$NOMIS_CRS_ACTY_ID")))
           .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
+          .withRequestBody(matchingJsonPath("activityId", equalTo("$ACTIVITY_ID")))
           .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED")))
           .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].scheduledInstanceId", equalTo("$SCHEDULE_INSTANCE_ID")))
           .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].nomisCourseScheduleId", equalTo("$NOMIS_CRS_SCH_ID")))
@@ -153,6 +155,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           postRequestedFor(urlEqualTo("/mapping/activities"))
             .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$NOMIS_CRS_ACTY_ID")))
             .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
+            .withRequestBody(matchingJsonPath("activityId", equalTo("$ACTIVITY_ID")))
             .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED")))
             .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].scheduledInstanceId", equalTo("$SCHEDULE_INSTANCE_ID")))
             .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].nomisCourseScheduleId", equalTo("$NOMIS_CRS_SCH_ID")))
@@ -300,6 +303,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
         eq("activity-create-failed"),
         check {
           assertThat(it["dpsActivityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
+          assertThat(it["dpsActivityId"]).isEqualTo("$ACTIVITY_ID")
         },
         isNull(),
       )
@@ -330,6 +334,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("description", equalTo("SAA Monday AM Houseblock 3")))
             .withRequestBody(matchingJsonPath("minimumIncentiveLevelCode", equalTo("BAS")))
             .withRequestBody(matchingJsonPath("payPerSession", equalTo("F")))
+            .withRequestBody(matchingJsonPath("outsideWork", equalTo("true")))
             .withRequestBody(matchingJsonPath("excludeBankHolidays", equalTo("false")))
             .withRequestBody(matchingJsonPath("internalLocationId", equalTo("98877667")))
             .withRequestBody(matchingJsonPath("payRates[0].incentiveLevel", equalTo("BAS")))
@@ -359,6 +364,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           putRequestedFor(urlEqualTo("/mapping/activities"))
             .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$NOMIS_CRS_ACTY_ID")))
             .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
+            .withRequestBody(matchingJsonPath("activityId", equalTo("$ACTIVITY_ID")))
             .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_UPDATED")))
             .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].scheduledInstanceId", equalTo("$SCHEDULE_INSTANCE_ID")))
             .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].nomisCourseScheduleId", equalTo("$NOMIS_CRS_SCH_ID")))
@@ -407,6 +413,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           putRequestedFor(urlEqualTo("/mapping/activities"))
             .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$NOMIS_CRS_ACTY_ID")))
             .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
+            .withRequestBody(matchingJsonPath("activityId", equalTo("$ACTIVITY_ID")))
             .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_UPDATED")))
             .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].scheduledInstanceId", equalTo("$SCHEDULE_INSTANCE_ID")))
             .withRequestBody(matchingJsonPath("scheduledInstanceMappings[0].nomisCourseScheduleId", equalTo("$NOMIS_CRS_SCH_ID")))
@@ -439,7 +446,7 @@ fun buildGetActivityResponse(id: Long = ACTIVITY_ID): String =
   "attendanceRequired": false,
   "inCell": false,
   "pieceWork": false,
-  "outsideWork": false,
+  "outsideWork": true,
   "payPerSession": "F",
   "summary": "Maths level 1",
   "description": "A basic maths course suitable for introduction to the subject",
@@ -696,10 +703,12 @@ fun buildGetScheduleResponseWithMissingInstance(id: Long = ACTIVITY_SCHEDULE_ID)
 fun buildGetMappingResponse(
   nomisActivityId: Long = NOMIS_CRS_ACTY_ID,
   activityScheduleId: Long = ACTIVITY_SCHEDULE_ID,
+  activityId: Long = ACTIVITY_ID,
 ) =
   """{
           "nomisCourseActivityId": $nomisActivityId,
           "activityScheduleId": $activityScheduleId,
+          "activityId": $activityId,
           "mappingType": "TYPE",
           "scheduledInstanceMappings": [{
             "scheduledInstanceId": "$SCHEDULE_INSTANCE_ID",
