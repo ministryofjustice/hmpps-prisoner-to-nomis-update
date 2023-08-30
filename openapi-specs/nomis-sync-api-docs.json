@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-08-17.4465.3288c26"
+    "version": "2023-08-24.4581.6fd4c69"
   },
   "servers": [
     {
@@ -466,9 +466,9 @@
         "tags": [
           "non-association-resource"
         ],
-        "summary": "Get an non-association",
-        "description": "Get an non-association given the two offender numbers. Requires role NOMIS_NON_ASSOCIATIONS",
-        "operationId": "getNonAssociation",
+        "summary": "Get an open non-association",
+        "description": "Get the open non-association for the two offender numbers. Requires role NOMIS_NON_ASSOCIATIONS",
+        "operationId": "getOpenNonAssociation",
         "parameters": [
           {
             "name": "offenderNo",
@@ -476,9 +476,7 @@
             "description": "Offender",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Offender",
-              "example": "A3456GH"
+              "type": "string"
             },
             "example": "A3456GH"
           },
@@ -488,26 +486,24 @@
             "description": "Non-association offender",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Non-association offender",
-              "example": "A34578ED"
+              "type": "string"
             },
             "example": "A34578ED"
           }
         ],
         "responses": {
           "200": {
-            "description": "NonAssociation information with created id",
+            "description": "Non-association information",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateNonAssociationRequest"
+                  "$ref": "#/components/schemas/NonAssociationResponse"
                 }
               }
             }
           },
           "404": {
-            "description": "Booking, location and timestamp combination does not exist",
+            "description": "No open non-association exists for these offender numbers, or one of the offenders does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -552,9 +548,7 @@
             "description": "Offender",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Offender",
-              "example": "A3456GH"
+              "type": "string"
             },
             "example": "A3456GH"
           },
@@ -564,9 +558,7 @@
             "description": "Non-association offender",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Non-association offender",
-              "example": "A34578ED"
+              "type": "string"
             },
             "example": "A34578ED"
           }
@@ -575,7 +567,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateNonAssociationRequest"
+                "$ref": "#/components/schemas/UpdateNonAssociationRequest"
               }
             }
           },
@@ -583,13 +575,10 @@
         },
         "responses": {
           "200": {
-            "description": "Successfully updated non-association",
-            "content": {
-              "application/json": {}
-            }
+            "description": "Successfully updated non-association"
           },
           "404": {
-            "description": "Offender does not exist",
+            "description": "Non-association does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -638,7 +627,7 @@
         ],
         "summary": "Closes an existing non-association",
         "description": "Closes an existing non-association. Requires role NOMIS_NON_ASSOCIATIONS",
-        "operationId": "cancelNonAssociation",
+        "operationId": "closeNonAssociation",
         "parameters": [
           {
             "name": "offenderNo",
@@ -646,9 +635,7 @@
             "description": "Offender",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Offender",
-              "example": "A3456GH"
+              "type": "string"
             },
             "example": "A3456GH"
           },
@@ -658,26 +645,17 @@
             "description": "Non-association offender",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Non-association offender",
-              "example": "A34578ED"
+              "type": "string"
             },
             "example": "A34578ED"
           }
         ],
         "responses": {
           "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateNonAssociationRequest"
-                }
-              }
-            }
+            "description": "Success"
           },
           "404": {
-            "description": "Event id does not exist",
+            "description": "Non-association does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -1732,6 +1710,73 @@
         }
       }
     },
+    "/activities/{courseActivityId}/end": {
+      "put": {
+        "tags": [
+          "activities-resource"
+        ],
+        "summary": "End a course activity",
+        "description": "Ends a course activity and all active attendances with end date today. Requires role NOMIS_ACTIVITIES",
+        "operationId": "endActivity",
+        "parameters": [
+          {
+            "name": "courseActivityId",
+            "in": "path",
+            "description": "Course activity id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Course activity id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Activity ended"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/activities/{courseActivityId}/allocation": {
       "put": {
         "tags": [
@@ -2309,10 +2354,7 @@
         },
         "responses": {
           "201": {
-            "description": "Successfully created non-association",
-            "content": {
-              "application/json": {}
-            }
+            "description": "Successfully created non-association"
           },
           "400": {
             "description": "Invalid data such as booking or location do not exist etc.",
@@ -2945,6 +2987,83 @@
         }
       }
     },
+    "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/all": {
+      "get": {
+        "tags": [
+          "non-association-resource"
+        ],
+        "summary": "Get all non-associations for the two offender numbers",
+        "description": "Get all non-associations for the two offender numbers, including expired. Requires role NOMIS_NON_ASSOCIATIONS",
+        "operationId": "getNonAssociationDetails",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "A3456GH"
+          },
+          {
+            "name": "nsOffenderNo",
+            "in": "path",
+            "description": "Non-association offender",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "A34578ED"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of non-associations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NonAssociationResponse"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Non-association does not exist, or one of the offenders does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_NON_ASSOCIATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/non-associations/ids": {
       "get": {
         "tags": [
@@ -2961,19 +3080,6 @@
             "schema": {
               "$ref": "#/components/schemas/Pageable"
             }
-          },
-          {
-            "name": "prisonIds",
-            "in": "query",
-            "description": "Filter results by prison ids (returns all prisons if not specified)",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "example": "['MDI','LEI']"
           },
           {
             "name": "fromDate",
@@ -4395,27 +4501,15 @@
         },
         "description": "Visit cancellation"
       },
-      "CreateNonAssociationRequest": {
+      "UpdateNonAssociationRequest": {
         "required": [
           "effectiveDate",
-          "nsOffenderNo",
-          "offenderNo",
           "reason",
           "recipReason",
           "type"
         ],
         "type": "object",
         "properties": {
-          "offenderNo": {
-            "type": "string",
-            "description": "Noms id of the prisoner",
-            "example": "A1234DF"
-          },
-          "nsOffenderNo": {
-            "type": "string",
-            "description": "Noms id of the other prisoner",
-            "example": "A1234EG"
-          },
           "reason": {
             "type": "string",
             "description": "Reason code of the first prisoner, domain NON_ASSO_RSN",
@@ -4432,7 +4526,9 @@
             "example": "WING"
           },
           "authorisedBy": {
-            "type": "string"
+            "type": "string",
+            "description": "Free text name of staff member",
+            "example": "Joe Bloggs"
           },
           "effectiveDate": {
             "type": "string",
@@ -4448,7 +4544,7 @@
             "example": "Some comment"
           }
         },
-        "description": "Offender individual schedule creation request"
+        "description": "Offender NonAssociation update request"
       },
       "UpdateKeyDateAdjustmentRequest": {
         "required": [
@@ -4888,6 +4984,7 @@
           "description",
           "excludeBankHolidays",
           "minimumIncentiveLevelCode",
+          "outsideWork",
           "payPerSession",
           "payRates",
           "programCode",
@@ -4954,6 +5051,10 @@
           "excludeBankHolidays": {
             "type": "boolean",
             "description": "Exclude bank holidays?"
+          },
+          "outsideWork": {
+            "type": "boolean",
+            "description": "Outside work?"
           },
           "programCode": {
             "type": "string",
@@ -5617,6 +5718,7 @@
       },
       "HearingResultAward": {
         "required": [
+          "adjudicationNumber",
           "chargeSequence",
           "effectiveDate",
           "sequence"
@@ -5662,6 +5764,10 @@
           "chargeSequence": {
             "type": "integer",
             "format": "int32"
+          },
+          "adjudicationNumber": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -6135,6 +6241,63 @@
         },
         "description": "Key date adjustment create request"
       },
+      "CreateNonAssociationRequest": {
+        "required": [
+          "effectiveDate",
+          "nsOffenderNo",
+          "offenderNo",
+          "reason",
+          "recipReason",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderNo": {
+            "type": "string",
+            "description": "Noms id of the prisoner",
+            "example": "A1234DF"
+          },
+          "nsOffenderNo": {
+            "type": "string",
+            "description": "Noms id of the other prisoner",
+            "example": "A1234EG"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason code of the first prisoner, domain NON_ASSO_RSN",
+            "example": "VIC"
+          },
+          "recipReason": {
+            "type": "string",
+            "description": "Reason code of the other prisoner, domain NON_ASSO_RSN",
+            "example": "PER"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type code, domain NON_ASSO_TYP",
+            "example": "WING"
+          },
+          "authorisedBy": {
+            "type": "string",
+            "description": "Free text name of staff member",
+            "example": "Joe Bloggs"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "description": "Effective date",
+            "format": "date",
+            "example": "2022-08-12"
+          },
+          "comment": {
+            "maxLength": 240,
+            "minLength": 0,
+            "type": "string",
+            "description": "Comment",
+            "example": "Some comment"
+          }
+        },
+        "description": "Offender individual schedule creation request"
+      },
       "ReorderRequest": {
         "required": [
           "codeList"
@@ -6156,6 +6319,7 @@
           "description",
           "excludeBankHolidays",
           "minimumIncentiveLevelCode",
+          "outsideWork",
           "payPerSession",
           "payRates",
           "prisonId",
@@ -6242,6 +6406,10 @@
           "excludeBankHolidays": {
             "type": "boolean",
             "description": "Exclude bank holidays?"
+          },
+          "outsideWork": {
+            "type": "boolean",
+            "description": "Outside work?"
           }
         },
         "description": "Course activity creation request"
@@ -6489,15 +6657,15 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
           "paged": {
             "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
-          },
-          "pageSize": {
-            "type": "integer",
-            "format": "int32"
           },
           "pageNumber": {
             "type": "integer",
@@ -6684,6 +6852,69 @@
             "type": "string"
           }
         }
+      },
+      "NonAssociationResponse": {
+        "required": [
+          "effectiveDate",
+          "nsOffenderNo",
+          "offenderNo",
+          "reason",
+          "recipReason",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderNo": {
+            "type": "string",
+            "description": "Noms id of the prisoner",
+            "example": "A1234DF"
+          },
+          "nsOffenderNo": {
+            "type": "string",
+            "description": "Noms id of the other prisoner",
+            "example": "A1234EG"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason code of the first prisoner, domain NON_ASSO_RSN",
+            "example": "VIC"
+          },
+          "recipReason": {
+            "type": "string",
+            "description": "Reason code of the other prisoner, domain NON_ASSO_RSN",
+            "example": "PER"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type code, domain NON_ASSO_TYP",
+            "example": "WING"
+          },
+          "authorisedBy": {
+            "type": "string",
+            "description": "Free text name of staff member",
+            "example": "Joe Bloggs"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "description": "Effective date",
+            "format": "date",
+            "example": "2022-08-12"
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "Expiry date, open if null",
+            "format": "date",
+            "example": "2022-08-12"
+          },
+          "comment": {
+            "maxLength": 240,
+            "minLength": 0,
+            "type": "string",
+            "description": "Comment",
+            "example": "Some comment"
+          }
+        },
+        "description": "Appointment information"
       },
       "NonAssociationIdResponse": {
         "required": [
@@ -7318,6 +7549,7 @@
           "description",
           "excludeBankHolidays",
           "minimumIncentiveLevel",
+          "outsideWork",
           "payPerSession",
           "payRates",
           "prisonId",
@@ -7410,6 +7642,11 @@
             "items": {
               "$ref": "#/components/schemas/PayRatesResponse"
             }
+          },
+          "outsideWork": {
+            "type": "boolean",
+            "description": "Outside work flag",
+            "example": false
           }
         },
         "description": "Activity details"

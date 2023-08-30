@@ -89,6 +89,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("minimumIncentiveLevelCode", equalTo("BAS")))
           .withRequestBody(matchingJsonPath("programCode", equalTo("LEISURE_SOCIAL")))
           .withRequestBody(matchingJsonPath("payPerSession", equalTo("F")))
+          .withRequestBody(matchingJsonPath("outsideWork", equalTo("true")))
           .withRequestBody(matchingJsonPath("schedules[0].id", absent()))
           .withRequestBody(matchingJsonPath("schedules[0].date", equalTo("2023-01-13")))
           .withRequestBody(matchingJsonPath("schedules[0].startTime", equalTo("09:00")))
@@ -330,6 +331,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("description", equalTo("SAA Monday AM Houseblock 3")))
             .withRequestBody(matchingJsonPath("minimumIncentiveLevelCode", equalTo("BAS")))
             .withRequestBody(matchingJsonPath("payPerSession", equalTo("F")))
+            .withRequestBody(matchingJsonPath("outsideWork", equalTo("true")))
             .withRequestBody(matchingJsonPath("excludeBankHolidays", equalTo("false")))
             .withRequestBody(matchingJsonPath("internalLocationId", equalTo("98877667")))
             .withRequestBody(matchingJsonPath("payRates[0].incentiveLevel", equalTo("BAS")))
@@ -439,7 +441,7 @@ fun buildGetActivityResponse(id: Long = ACTIVITY_ID): String =
   "attendanceRequired": false,
   "inCell": false,
   "pieceWork": false,
-  "outsideWork": false,
+  "outsideWork": true,
   "payPerSession": "F",
   "summary": "Maths level 1",
   "description": "A basic maths course suitable for introduction to the subject",
