@@ -36,6 +36,7 @@ class AdjudicationsDomainEventListener(
   ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "adjudication.report.created" -> adjudicationsService.createAdjudication(message.fromJson())
+      "adjudication.damages.updated" -> adjudicationsService.updateAdjudicationDamages(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }

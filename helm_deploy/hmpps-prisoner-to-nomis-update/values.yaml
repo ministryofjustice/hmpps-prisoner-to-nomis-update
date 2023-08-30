@@ -61,6 +61,7 @@ generic-service:
     FEATURE_EVENT_INCENTIVES_PRISON_LEVEL_CHANGED: true
     FEATURE_EVENT_DELETEALL: false
     FEATURE_EVENT_ADJUDICATION_REPORT_CREATED: false
+    FEATURE_EVENT_ADJUDICATION_DAMAGES_UPDATED: false
     HMPPS_SQS_USE_WEB_TOKEN: true
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
