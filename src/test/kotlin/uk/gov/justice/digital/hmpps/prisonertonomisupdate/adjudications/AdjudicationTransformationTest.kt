@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Re
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationResponseV2
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedEvidenceDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjustments.toNomisAdjudication
 import java.lang.NullPointerException
 
 class AdjudicationTransformationTest {
