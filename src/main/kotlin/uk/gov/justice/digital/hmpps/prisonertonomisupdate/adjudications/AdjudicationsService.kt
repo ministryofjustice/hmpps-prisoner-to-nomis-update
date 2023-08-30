@@ -75,6 +75,21 @@ class AdjudicationsService(
 
   override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
 
+  suspend fun updateAdjudicationDamages(damagesUpdateEvent: AdjudicationDamagesUpdateEvent) {
+    val chargeNumber = damagesUpdateEvent.additionalInformation.chargeNumber
+    val prisonId: String = damagesUpdateEvent.additionalInformation.prisonId
+    val offenderNo: String = damagesUpdateEvent.additionalInformation.prisonerNumber
+    val telemetryMap = mutableMapOf(
+      "chargeNumber" to chargeNumber,
+      "prisonId" to prisonId,
+      "offenderNo" to offenderNo,
+    )
+    telemetryClient.trackEvent(
+      "adjudication-damages-updated-success",
+      telemetryMap,
+    )
+  }
+
   private inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
 }
@@ -148,8 +163,19 @@ private fun String.toLocalTimeAtMinute() = LocalDateTime.parse(this).toLocalTime
 data class AdjudicationAdditionalInformation(
   val chargeNumber: String,
   val prisonId: String,
+  val prisonerNumber: String,
 )
 
 data class AdjudicationCreatedEvent(
   val additionalInformation: AdjudicationAdditionalInformation,
+)
+
+data class AdjudicationDamagesAdditionalInformation(
+  val chargeNumber: String,
+  val prisonId: String,
+  val prisonerNumber: String,
+)
+
+data class AdjudicationDamagesUpdateEvent(
+  val additionalInformation: AdjudicationDamagesAdditionalInformation,
 )
