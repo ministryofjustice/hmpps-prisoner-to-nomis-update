@@ -56,6 +56,7 @@ class ActivitiesService(
         activitiesApiService.getActivitySchedule(activityScheduleId)
           .let { activitySchedule ->
             eventTelemetry += "description" to activitySchedule.description
+            eventTelemetry += "dpsActivityId" to activitySchedule.activity.id.toString()
 
             createTransformedActivity(activitySchedule)
               .also { eventTelemetry += "nomisCourseActivityId" to it.courseActivityId.toString() }
@@ -83,6 +84,7 @@ class ActivitiesService(
         ActivityMappingDto(
           nomisCourseActivityId = nomisResponse.courseActivityId,
           activityScheduleId = activitySchedule.id,
+          activityId = activitySchedule.activity.id,
           mappingType = mappingType,
           scheduledInstanceMappings = it,
         )
@@ -126,9 +128,9 @@ class ActivitiesService(
         .also { telemetryMap["nomisCourseActivityId"] = it.nomisCourseActivityId.toString() }
 
       val activitySchedule = activitiesApiService.getActivitySchedule(activityScheduleId)
+        .also { telemetryMap["dpsActivityId"] = it.activity.id.toString() }
 
       val activity = activitiesApiService.getActivity(activitySchedule.activity.id)
-        .also { telemetryMap["dpsActivityId"] = it.id.toString() }
 
       activitySchedule.toUpdateActivityRequest(activity.pay, activity.category.code, activity.outsideWork, mappings)
         .let { nomisApiService.updateActivity(mappings.nomisCourseActivityId, it) }
