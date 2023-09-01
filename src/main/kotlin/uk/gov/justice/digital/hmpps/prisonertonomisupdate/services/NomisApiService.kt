@@ -26,6 +26,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceRequest
@@ -283,6 +285,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
   suspend fun createAdjudication(offenderNo: String, request: CreateAdjudicationRequest): AdjudicationResponse =
     webClient.post()
       .uri("/prisoners/$offenderNo/adjudications")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBody()
+
+  suspend fun updateAdjudicationRepairs(adjudicationNumber: Long, request: UpdateRepairsRequest): UpdateRepairsResponse =
+    webClient.put()
+      .uri("/adjudications/adjudication-number/$adjudicationNumber/repairs")
       .bodyValue(request)
       .retrieve()
       .awaitBody()
