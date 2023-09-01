@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtens
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
 private const val CHARGE_NUMBER_FOR_CREATION = "12345"
+private const val CHARGE_NUMBER_FOR_UPDATE = "12345-1"
 private const val CHARGE_SEQ = 1
 private const val ADJUDICATION_NUMBER = 12345L
 private const val PRISON_ID = "MDI"
@@ -179,11 +180,41 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class UpdateAdjudicationDamages {
+    @Nested
+    inner class WhenAdjudicationMappingFound {
+      @BeforeEach
+      fun setUp() {
+        publishUpdateAdjudicationDamagesDomainEvent()
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForUpdateAdjudicationDamagesProcessingToBeComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("adjudication-damages-updated-success"),
+          check {
+            assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    private fun waitForUpdateAdjudicationDamagesProcessingToBeComplete() {
+      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+    }
+  }
+
   private fun publishCreateAdjudicationDomainEvent() {
     val eventType = "adjudication.report.created"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
-        .message(adjudicationMessagePayload(CHARGE_NUMBER_FOR_CREATION, PRISON_ID, eventType))
+        .message(adjudicationMessagePayload(CHARGE_NUMBER_FOR_CREATION, PRISON_ID, OFFENDER_NO, eventType))
         .messageAttributes(
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
@@ -193,6 +224,20 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  fun adjudicationMessagePayload(chargeNumber: String, prisonId: String, eventType: String) =
-    """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId"}}"""
+  private fun publishUpdateAdjudicationDamagesDomainEvent() {
+    val eventType = "adjudication.damages.updated"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(adjudicationMessagePayload(CHARGE_NUMBER_FOR_UPDATE, PRISON_ID, OFFENDER_NO, eventType))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  fun adjudicationMessagePayload(chargeNumber: String, prisonId: String, prisonerNumber: String, eventType: String) =
+    """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId", "prisonerNumber": "$prisonerNumber"}}"""
 }
