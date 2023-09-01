@@ -657,6 +657,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetByChargeNumber(
     chargeNumber: String,
+    adjudicationNumber: Long,
   ) {
     stubFor(
       get("/mapping/adjudications/charge-number/$chargeNumber").willReturn(
@@ -667,7 +668,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
             { 
             "chargeSequence": 1,  
             "chargeNumber": "$chargeNumber",  
-            "adjudicationNumber": $chargeNumber,  
+            "adjudicationNumber": $adjudicationNumber,  
             "mappingType": "ADJUDICATION_CREATED",  
             "whenCreated": "2020-01-01T00:00:00"
               }""",

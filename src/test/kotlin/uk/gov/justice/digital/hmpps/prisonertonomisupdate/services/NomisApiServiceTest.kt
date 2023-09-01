@@ -27,7 +27,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Course
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.IncidentToCreate
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToUpdateOrAdd
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -904,7 +906,7 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will post visit data to nomis api`() = runTest {
+    fun `will post adjudication data to nomis api`() = runTest {
       nomisApi.stubAdjudicationCreate("AB123D")
 
       nomisApiService.createAdjudication("AB123D", newAdjudication(adjudicationNumber = 1234567))
@@ -930,6 +932,65 @@ internal class NomisApiServiceTest {
 
       assertThrows<ServiceUnavailable> {
         nomisApiService.createAdjudication("AB123D", newAdjudication())
+      }
+    }
+  }
+
+  @Nested
+  inner class UpdateAdjudicationRepairs {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stubAdjudicationRepairsUpdate(1234567)
+
+      nomisApiService.updateAdjudicationRepairs(
+        1234567,
+        UpdateRepairsRequest(repairs = listOf(RepairToUpdateOrAdd(RepairToUpdateOrAdd.TypeCode.CLEA, "cleaning required"))),
+      )
+
+      nomisApi.verify(
+        putRequestedFor(urlEqualTo("/adjudications/adjudication-number/1234567/repairs"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will post repair data to nomis api`() = runTest {
+      nomisApi.stubAdjudicationRepairsUpdate(1234567)
+
+      nomisApiService.updateAdjudicationRepairs(
+        1234567,
+        UpdateRepairsRequest(repairs = listOf(RepairToUpdateOrAdd(RepairToUpdateOrAdd.TypeCode.CLEA, "cleaning required"))),
+      )
+
+      nomisApi.verify(
+        putRequestedFor(urlEqualTo("/adjudications/adjudication-number/1234567/repairs"))
+          .withRequestBody(matchingJsonPath("repairs[0].typeCode", equalTo("CLEA")))
+          .withRequestBody(matchingJsonPath("repairs[0].comment", equalTo("cleaning required"))),
+      )
+    }
+
+    @Test
+    fun `when adjudication is not found an exception is thrown`() = runTest {
+      nomisApi.stubAdjudicationRepairsUpdateWithError(1234567, 404)
+
+      assertThrows<NotFound> {
+        nomisApiService.updateAdjudicationRepairs(
+          1234567,
+          UpdateRepairsRequest(repairs = listOf(RepairToUpdateOrAdd(RepairToUpdateOrAdd.TypeCode.CLEA, "cleaning required"))),
+        )
+      }
+    }
+
+    @Test
+    fun `when any bad response is received an exception is thrown`() = runTest {
+      nomisApi.stubAdjudicationRepairsUpdateWithError(1234567, 503)
+
+      assertThrows<ServiceUnavailable> {
+        nomisApiService.updateAdjudicationRepairs(
+          1234567,
+          UpdateRepairsRequest(repairs = listOf(RepairToUpdateOrAdd(RepairToUpdateOrAdd.TypeCode.CLEA, "cleaning required"))),
+        )
       }
     }
   }
