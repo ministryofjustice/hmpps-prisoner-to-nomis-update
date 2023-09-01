@@ -52,6 +52,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  // *************************************************** Visits **********************************************
+
   fun stubVisitCreate(prisonerId: String, response: String = CREATE_VISIT_RESPONSE) {
     stubFor(
       post("/prisoners/$prisonerId/visits").willReturn(
@@ -116,6 +118,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  // *************************************************** Incentives **********************************************
+
   fun stubIncentiveCreate(bookingId: Long, response: String = CREATE_INCENTIVE_RESPONSE) {
     stubFor(
       post("/prisoners/booking-id/$bookingId/incentives").willReturn(
@@ -137,6 +141,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+
+  // *************************************************** Activities **********************************************
 
   fun stubActivityCreate(response: String) {
     stubFor(
@@ -267,6 +273,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+
+  // *************************************************** Appointments **********************************************
 
   fun stubAppointmentCreate(response: String) {
     stubFor(
@@ -442,6 +450,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  // *************************************************** Sentences **********************************************
+
   fun stubSentenceAdjustmentCreate(bookingId: Long, sentenceSequence: Long, adjustmentId: Long = 99L) {
     stubFor(
       post("/prisoners/booking-id/$bookingId/sentences/$sentenceSequence/adjustments").willReturn(
@@ -604,6 +614,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+
+  // *************************************************** Incentive levels **********************************************
 
   fun stubNomisGlobalIncentiveLevel(incentiveLevelCode: String = "STD") {
     stubFor(
@@ -893,6 +905,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  // *************************************************** Adjudications **********************************************
+
   fun stubAdjudicationCreate(offenderNo: String, adjudicationNumber: Long = 123456, chargeSeq: Int = 1) {
     stubFor(
       post("/prisoners/$offenderNo/adjudications").willReturn(
@@ -1024,6 +1038,57 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withStatus(status)
           .withBody("""{"message":"error"}"""),
       ),
+    )
+  }
+
+  // *************************************************** Non-Associations **********************************************
+
+  fun stubNonAssociationCreate(response: String) {
+    stubFor(
+      post("/non-associations").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201)
+          .withBody(response),
+      ),
+    )
+  }
+
+  fun stubNonAssociationCreateWithError(status: Int = 500) {
+    stubFor(
+      post("/non-associations").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubNonAssociationCreateWithErrorFollowedBySlowSuccess(response: String) {
+    stubFor(
+      post("/non-associations")
+        .inScenario("Retry NOMIS NonAssociations Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause NOMIS NonAssociations Success"),
+    )
+
+    stubFor(
+      post("/non-associations")
+        .inScenario("Retry NOMIS NonAssociations Scenario")
+        .whenScenarioStateIs("Cause NOMIS NonAssociations Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201)
+            .withBody(response)
+            .withFixedDelay(1500),
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 

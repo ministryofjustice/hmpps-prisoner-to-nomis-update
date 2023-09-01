@@ -15,6 +15,7 @@ api.base.url:
   sentence.adjustments: http://localhost:8087
   appointments: http://localhost:8088
   adjudications: http://localhost:8089
+  non-associations: http://localhost:8091
 
 hmpps.sqs:
   provider: localstack
@@ -45,6 +46,13 @@ hmpps.sqs:
       dlqName: "appointment-dlq-${random.uuid}"
       subscribeTopicId: domainevents
       subscribeFilter: "{\"eventType\":[\"appointments.appointment-instance.created\", \"appointments.appointment-instance.updated\", \"appointments.appointment-instance.cancelled\", \"appointments.appointment-instance.deleted\"]}"
+      dlqMaxReceiveCount: 3
+      visibilityTimeout: 120
+    nonassociation:
+      queueName: "nonassociation-${random.uuid}"
+      dlqName: "nonassociation-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: "{\"eventType\":[\"non-associations.created\", \"non-associations.deleted\", \"non-associations.amended\", \"non-associations.closed\"]}"
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
     sentencing:

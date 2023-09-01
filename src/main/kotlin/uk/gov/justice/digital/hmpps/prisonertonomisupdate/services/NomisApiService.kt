@@ -24,6 +24,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Course
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsRequest
@@ -292,6 +294,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
   suspend fun updateAdjudicationRepairs(adjudicationNumber: Long, request: UpdateRepairsRequest): UpdateRepairsResponse =
     webClient.put()
       .uri("/adjudications/adjudication-number/$adjudicationNumber/repairs")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBody()
+
+  suspend fun createNonAssociation(request: CreateNonAssociationRequest): CreateNonAssociationResponse =
+    webClient.post()
+      .uri("/non-associations")
       .bodyValue(request)
       .retrieve()
       .awaitBody()

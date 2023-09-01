@@ -374,7 +374,11 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubCreateAppointmentWithDuplicateError(appointmentInstanceId: Long, nomisEventId: Long, duplicateNomisEventId: Long) {
+  fun stubCreateAppointmentWithDuplicateError(
+    appointmentInstanceId: Long,
+    nomisEventId: Long?,
+    duplicateNomisEventId: Long,
+  ) {
     stubFor(
       post("/mapping/appointments")
         .willReturn(
@@ -387,10 +391,16 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
               "errorCode": 1409,
               "userMessage": "Conflict: Appointment mapping already exists",
               "moreInfo": {
-                "existing": {
-                  "appointmentInstanceId": $appointmentInstanceId,
-                  "nomisEventId": $nomisEventId
-                },
+                ${
+              if (nomisEventId != null) {
+                """ "existing": {
+                                  "appointmentInstanceId": $appointmentInstanceId,
+                                  "nomisEventId": $nomisEventId
+                                },"""
+              } else {
+                ""
+              }
+              }
                 "duplicate": {
                   "appointmentInstanceId": $appointmentInstanceId,
                   "nomisEventId": $duplicateNomisEventId
@@ -692,6 +702,141 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
             .withFixedDelay(1500),
 
         ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  // *************************************************** Non-Associations **********************************************
+
+  fun stubCreateNonAssociation() {
+    stubFor(
+      post("/mapping/non-associations").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCreateNonAssociationWithError(status: Int = 500) {
+    stubFor(
+      post("/mapping/non-associations").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubCreateNonAssociationWithDuplicateError(
+    nonAssociationId: Long,
+    firstOffenderNo: String,
+    secondOffenderNo: String,
+    nomisTypeSequence: Int,
+    duplicateFirstOffenderNo: String,
+    duplicateSecondOffenderNo: String,
+    duplicateNomisTypeSequence: Int,
+  ) {
+    stubFor(
+      post("/mapping/non-associations")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+            { 
+              "status": 409,
+              "errorCode": 1409,
+              "userMessage": "Conflict: NonAssociation mapping already exists",
+               "moreInfo": {
+                "existing": {
+                  "nonAssociationId": $nonAssociationId,
+                  "firstOffenderNo": "$firstOffenderNo",
+                  "secondOffenderNo": "$secondOffenderNo",
+                  "nomisTypeSequence": $nomisTypeSequence
+                  },
+                "duplicate": {
+                  "nonAssociationId": $nonAssociationId,
+                  "firstOffenderNo": "$duplicateFirstOffenderNo",
+                  "secondOffenderNo": "$duplicateSecondOffenderNo",
+                  "nomisTypeSequence": $duplicateNomisTypeSequence
+                }
+              }
+            }
+              """.trimMargin(),
+            )
+            .withStatus(409),
+        ),
+    )
+  }
+
+  fun stubGetMappingGivenNonAssociationInstanceId(id: Long, response: String) {
+    stubFor(
+      get("/mapping/non-associations/non-association-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubGetMappingGivenNonAssociationInstanceIdWithError(id: Long, status: Int = 500) {
+    stubFor(
+      get("/mapping/non-associations/non-association-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubCreateNonAssociationWithErrorFollowedBySlowSuccess() {
+    stubFor(
+      post("/mapping/non-associations")
+        .inScenario("Retry Mapping NonAssociation Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause Mapping NonAssociation Success"),
+    )
+
+    stubFor(
+      post("/mapping/non-associations")
+        .inScenario("Retry Mapping NonAssociation Scenario")
+        .whenScenarioStateIs("Cause Mapping NonAssociation Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201)
+            .withFixedDelay(1500),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetAllNonAssociationMappings(response: String) {
+    stubFor(
+      get("/mapping/non-associations").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubDeleteNonAssociationMapping(id: Long) {
+    stubFor(
+      delete("/mapping/non-associations/non-association-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
     )
   }
 }
