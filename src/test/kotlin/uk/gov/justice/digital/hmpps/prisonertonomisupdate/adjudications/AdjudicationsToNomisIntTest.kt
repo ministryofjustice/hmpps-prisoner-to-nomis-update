@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.eq
+import org.mockito.Mockito.times
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
@@ -21,8 +22,9 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension.Companion.adjudicationsApiServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
 private const val CHARGE_NUMBER_FOR_CREATION = "12345"
 private const val CHARGE_NUMBER_FOR_UPDATE = "12345-1"
@@ -41,8 +43,8 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
       fun setUp() {
         adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER_FOR_CREATION, offenderNo = OFFENDER_NO)
         nomisApi.stubAdjudicationCreate(OFFENDER_NO, ADJUDICATION_NUMBER, CHARGE_SEQ)
-        MappingExtension.mappingServer.stubGetByChargeNumberWithError(CHARGE_NUMBER_FOR_CREATION, 404)
-        MappingExtension.mappingServer.stubCreateAdjudication()
+        mappingServer.stubGetByChargeNumberWithError(CHARGE_NUMBER_FOR_CREATION, 404)
+        mappingServer.stubCreateAdjudication()
         publishCreateAdjudicationDomainEvent()
       }
 
@@ -80,7 +82,7 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
         waitForCreateAdjudicationProcessingToBeComplete()
 
         await untilAsserted {
-          MappingExtension.mappingServer.verify(
+          mappingServer.verify(
             postRequestedFor(urlEqualTo("/mapping/adjudications"))
               .withRequestBody(
                 WireMock.matchingJsonPath(
@@ -101,7 +103,7 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION)
+        mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
         publishCreateAdjudicationDomainEvent()
       }
 
@@ -129,8 +131,8 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenMappingServiceFailsOnce {
       @BeforeEach
       fun setUp() {
-        MappingExtension.mappingServer.stubGetByChargeNumberWithError(CHARGE_NUMBER_FOR_CREATION, 404)
-        MappingExtension.mappingServer.stubCreateAdjudicationWithErrorFollowedBySlowSuccess()
+        mappingServer.stubGetByChargeNumberWithError(CHARGE_NUMBER_FOR_CREATION, 404)
+        mappingServer.stubCreateAdjudicationWithErrorFollowedBySlowSuccess()
         nomisApi.stubAdjudicationCreate(OFFENDER_NO, adjudicationNumber = 12345)
         adjudicationsApiServer.stubChargeGet(chargeNumber = CHARGE_NUMBER_FOR_CREATION, offenderNo = OFFENDER_NO)
         publishCreateAdjudicationDomainEvent()
@@ -154,7 +156,7 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will eventually create a mapping after NOMIS adjudication is created`() {
         await untilAsserted {
-          MappingExtension.mappingServer.verify(
+          mappingServer.verify(
             2,
             postRequestedFor(urlEqualTo("/mapping/adjudications"))
               .withRequestBody(
@@ -186,7 +188,8 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenAdjudicationMappingFound {
       @BeforeEach
       fun setUp() {
-        publishUpdateAdjudicationDamagesDomainEvent()
+        mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_UPDATE, ADJUDICATION_NUMBER)
+        publishUpdateAdjudicationDamagesDomainEvent(chargeNumber = CHARGE_NUMBER_FOR_UPDATE)
       }
 
       @Test
@@ -202,6 +205,38 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
           },
           isNull(),
         )
+      }
+    }
+
+    @Nested
+    inner class WhenAdjudicationMappingNotFound {
+
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetByChargeNumberWithError(CHARGE_NUMBER_FOR_UPDATE, 404)
+        publishUpdateAdjudicationDamagesDomainEvent(chargeNumber = CHARGE_NUMBER_FOR_UPDATE)
+      }
+
+      @Test
+      fun `an error will lead to message being added to DLQ`() {
+        await untilCallTo {
+          awsSqsAdjudicationDlqClient!!.countAllMessagesOnQueue(adjudicationDlqUrl!!).get()
+        } matches { it == 1 }
+      }
+
+      @Test
+      fun `will track failure telemetry for each retry`() {
+        await untilAsserted {
+          verify(telemetryClient, times(3)).trackEvent(
+            eq("adjudication-damages-updated-failed"),
+            check {
+              assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            },
+            isNull(),
+          )
+        }
       }
     }
 
@@ -224,11 +259,11 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishUpdateAdjudicationDamagesDomainEvent() {
+  private fun publishUpdateAdjudicationDamagesDomainEvent(chargeNumber: String = CHARGE_NUMBER_FOR_UPDATE) {
     val eventType = "adjudication.damages.updated"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
-        .message(adjudicationMessagePayload(CHARGE_NUMBER_FOR_UPDATE, PRISON_ID, OFFENDER_NO, eventType))
+        .message(adjudicationMessagePayload(chargeNumber, PRISON_ID, OFFENDER_NO, eventType))
         .messageAttributes(
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")

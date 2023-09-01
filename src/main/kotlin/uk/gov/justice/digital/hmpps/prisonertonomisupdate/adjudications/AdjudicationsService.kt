@@ -84,10 +84,23 @@ class AdjudicationsService(
       "prisonId" to prisonId,
       "offenderNo" to offenderNo,
     )
-    telemetryClient.trackEvent(
-      "adjudication-damages-updated-success",
-      telemetryMap,
-    )
+
+    runCatching {
+      val mapping =
+        adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber)
+          .also {
+            telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
+            telemetryMap["chargeSequence"] = it.chargeSequence.toString()
+          }
+
+      telemetryClient.trackEvent(
+        "adjudication-damages-updated-success",
+        telemetryMap,
+      )
+    }.onFailure { e ->
+      telemetryClient.trackEvent("adjudication-damages-updated-failed", telemetryMap, null)
+      throw e
+    }
   }
 
   private inline fun <reified T> String.fromJson(): T =
