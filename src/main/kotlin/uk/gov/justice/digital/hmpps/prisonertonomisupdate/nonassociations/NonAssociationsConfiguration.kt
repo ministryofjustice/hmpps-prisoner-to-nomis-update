@@ -21,7 +21,7 @@ class NonAssociationsConfiguration(@Value("\${api.base.url.non-associations}") v
   @Bean
   fun nonAssociationsApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager): WebClient {
     val oauth2Client = ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).also {
-      it.setDefaultClientRegistrationId("nonAssociations-api")
+      it.setDefaultClientRegistrationId("non-associations-api")
     }
 
     return WebClient.builder()

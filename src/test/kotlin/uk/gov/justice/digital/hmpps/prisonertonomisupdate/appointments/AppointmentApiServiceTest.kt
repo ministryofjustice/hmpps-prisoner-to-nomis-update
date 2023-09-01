@@ -73,7 +73,7 @@ internal class AppointmentApiServiceTest {
     }
 
     @Test
-    fun `when schedule is not found an exception is thrown`() = runTest {
+    fun `when appointment is not found an exception is thrown`() = runTest {
       AppointmentsApiExtension.appointmentsApi.stubGetAppointmentInstanceWithError(1234, status = 404)
 
       assertThrows<NotFound> {

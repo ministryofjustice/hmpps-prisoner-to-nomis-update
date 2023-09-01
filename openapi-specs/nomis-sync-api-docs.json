@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-08-30.4661.d769fac"
+    "version": "2023-09-01.4685.1e2037c"
   },
   "servers": [
     {
@@ -1863,73 +1863,6 @@
         }
       }
     },
-    "/activities/{courseActivityId}/end": {
-      "put": {
-        "tags": [
-          "activities-resource"
-        ],
-        "summary": "End a course activity",
-        "description": "Ends a course activity and all active attendances with end date today. Requires role NOMIS_ACTIVITIES",
-        "operationId": "endActivity",
-        "parameters": [
-          {
-            "name": "courseActivityId",
-            "in": "path",
-            "description": "Course activity id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Course activity id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Activity ended"
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/activities/{courseActivityId}/allocation": {
       "put": {
         "tags": [
@@ -2507,7 +2440,14 @@
         },
         "responses": {
           "201": {
-            "description": "Successfully created non-association"
+            "description": "Successfully created non-association",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateNonAssociationResponse"
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid data such as booking or location do not exist etc.",
@@ -3355,7 +3295,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint when role NOMIS_INCENTIVES not present",
+            "description": "Forbidden to access this endpoint when role NOMIS_NON_ASSOCIATIONS not present",
             "content": {
               "application/json": {
                 "schema": {
@@ -6648,6 +6588,20 @@
           }
         },
         "description": "Offender individual schedule creation request"
+      },
+      "CreateNonAssociationResponse": {
+        "required": [
+          "typeSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "typeSequence": {
+            "type": "integer",
+            "description": "The created offender_na_details type sequence number",
+            "format": "int32"
+          }
+        },
+        "description": "Non-association creation response"
       },
       "ReorderRequest": {
         "required": [
