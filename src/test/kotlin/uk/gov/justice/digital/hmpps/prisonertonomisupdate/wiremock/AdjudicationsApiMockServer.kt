@@ -44,7 +44,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubChargeGet(chargeNumber: String, offenderNo: String = "A7937DY") {
+  fun stubChargeGet(chargeNumber: String, offenderNo: String = "A7937DY", damages: String = "[]", evidence: String = "[]") {
     stubFor(
       get("/reported-adjudications/$chargeNumber/v2").willReturn(
         aResponse()
@@ -82,8 +82,8 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         "reviewedByUserId": "AMARKE_GEN",
         "statusReason": "",
         "statusDetails": "",
-        "damages": [],
-        "evidence": [],
+        "damages": $damages,
+        "evidence": $evidence,
         "witnesses": [],
         "hearings": [],
         "disIssueHistory": [],

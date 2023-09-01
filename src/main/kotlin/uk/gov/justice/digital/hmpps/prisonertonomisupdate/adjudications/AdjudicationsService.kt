@@ -14,6 +14,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.EvidenceToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.IncidentToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToCreate
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToUpdateOrAdd
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -93,6 +95,14 @@ class AdjudicationsService(
             telemetryMap["chargeSequence"] = it.chargeSequence.toString()
           }
 
+      val dpsAdjudication = adjudicationsApiService.getCharge(chargeNumber, prisonId)
+      nomisApiService.updateAdjudicationRepairs(
+        mapping.adjudicationNumber,
+        UpdateRepairsRequest(repairs = dpsAdjudication.reportedAdjudication.damages.map { it.toNomisRepairForUpdate() }),
+      ).also {
+        telemetryMap["repairCount"] = it.repairs.size.toString()
+      }
+
       telemetryClient.trackEvent(
         "adjudication-damages-updated-success",
         telemetryMap,
@@ -122,7 +132,7 @@ internal fun ReportedAdjudicationResponseV2.toNomisAdjudication() = CreateAdjudi
       ?: emptyList(),
     staffWitnessesUsernames = emptyList(), // Not stored in DPS so can not be synchronised
     staffVictimsUsernames = reportedAdjudication.offenceDetails.victimStaffUsername?.let { listOf(it) } ?: emptyList(),
-    repairs = reportedAdjudication.damages.map { it.toNomisRepair() },
+    repairs = reportedAdjudication.damages.map { it.toNomisRepairForCreate() },
   ),
   charges = listOf(
     ChargeToCreate(
@@ -146,18 +156,25 @@ private fun ReportedAdjudicationDtoV2.getOffenceCode() = if (this.didInciteOther
 
 private fun ReportedAdjudicationDtoV2.didInciteOtherPrisoner() = this.incidentRole.roleCode != null
 
-private fun ReportedDamageDto.toNomisRepair() = RepairToCreate(
-  typeCode = when (this.code) {
-    ReportedDamageDto.Code.ELECTRICAL_REPAIR -> "ELEC"
-    ReportedDamageDto.Code.PLUMBING_REPAIR -> "PLUM"
-    ReportedDamageDto.Code.FURNITURE_OR_FABRIC_REPAIR -> "FABR"
-    ReportedDamageDto.Code.LOCK_REPAIR -> "LOCK"
-    ReportedDamageDto.Code.REDECORATION -> "DECO"
-    ReportedDamageDto.Code.CLEANING -> "CLEA"
-    ReportedDamageDto.Code.REPLACE_AN_ITEM -> "DECO" // best match possibly?
-  },
+private fun ReportedDamageDto.toNomisRepairForCreate() = RepairToCreate(
+  typeCode = this.code.toNomisEnum().name, // TODO - this API provides no enum, but should do
   comment = this.details,
 )
+
+private fun ReportedDamageDto.toNomisRepairForUpdate() = RepairToUpdateOrAdd(
+  typeCode = this.code.toNomisEnum(),
+  comment = this.details,
+)
+
+private fun ReportedDamageDto.Code.toNomisEnum(): RepairToUpdateOrAdd.TypeCode = when (this) {
+  ReportedDamageDto.Code.ELECTRICAL_REPAIR -> RepairToUpdateOrAdd.TypeCode.ELEC
+  ReportedDamageDto.Code.PLUMBING_REPAIR -> RepairToUpdateOrAdd.TypeCode.PLUM
+  ReportedDamageDto.Code.FURNITURE_OR_FABRIC_REPAIR -> RepairToUpdateOrAdd.TypeCode.FABR
+  ReportedDamageDto.Code.LOCK_REPAIR -> RepairToUpdateOrAdd.TypeCode.LOCK
+  ReportedDamageDto.Code.REDECORATION -> RepairToUpdateOrAdd.TypeCode.DECO
+  ReportedDamageDto.Code.CLEANING -> RepairToUpdateOrAdd.TypeCode.CLEA
+  ReportedDamageDto.Code.REPLACE_AN_ITEM -> RepairToUpdateOrAdd.TypeCode.DECO // best match possibly?
+}
 
 private fun ReportedEvidenceDto.toNomisEvidence() = EvidenceToCreate(
   typeCode = when (this.code) {

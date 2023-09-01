@@ -990,6 +990,43 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubAdjudicationRepairsUpdate(adjudicationNumber: Long = 123456) {
+    stubFor(
+      put("/adjudications/adjudication-number/$adjudicationNumber/repairs").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+{
+  "repairs": [
+    {
+      "type": {
+        "code": "CLEA",
+        "description": "Cleaning"
+      },
+      "comment": "Cleaning of cell required",
+      "cost": 0,
+      "createdByUsername": "PRISON_MANAGE_API"
+    }
+  ]}            
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubAdjudicationRepairsUpdateWithError(adjudicationNumber: Long = 123456, status: Int) {
+    stubFor(
+      put("/adjudications/adjudication-number/$adjudicationNumber/repairs").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status)
+          .withBody("""{"message":"error"}"""),
+      ),
+    )
+  }
+
   fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
   fun putCountFor(url: String) = this.findAll(WireMock.putRequestedFor(WireMock.urlEqualTo(url))).count()
 }

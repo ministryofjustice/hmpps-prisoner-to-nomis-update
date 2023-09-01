@@ -1,8 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications
 
-import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -85,13 +88,13 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
           mappingServer.verify(
             postRequestedFor(urlEqualTo("/mapping/adjudications"))
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "adjudicationNumber",
-                  WireMock.equalTo(ADJUDICATION_NUMBER.toString()),
+                  equalTo(ADJUDICATION_NUMBER.toString()),
                 ),
               )
-              .withRequestBody(WireMock.matchingJsonPath("chargeSequence", WireMock.equalTo(CHARGE_SEQ.toString())))
-              .withRequestBody(WireMock.matchingJsonPath("chargeNumber", WireMock.equalTo(CHARGE_NUMBER_FOR_CREATION))),
+              .withRequestBody(matchingJsonPath("chargeSequence", equalTo(CHARGE_SEQ.toString())))
+              .withRequestBody(matchingJsonPath("chargeNumber", equalTo(CHARGE_NUMBER_FOR_CREATION))),
           )
         }
         await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -160,10 +163,7 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
             2,
             postRequestedFor(urlEqualTo("/mapping/adjudications"))
               .withRequestBody(
-                WireMock.matchingJsonPath(
-                  "chargeNumber",
-                  WireMock.equalTo(CHARGE_NUMBER_FOR_CREATION),
-                ),
+                matchingJsonPath("chargeNumber", equalTo(CHARGE_NUMBER_FOR_CREATION)),
               ),
           )
         }
@@ -189,7 +189,68 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_UPDATE, ADJUDICATION_NUMBER)
+        adjudicationsApiServer.stubChargeGet(
+          CHARGE_NUMBER_FOR_UPDATE,
+          offenderNo = OFFENDER_NO,
+          damages =
+          // language=json
+          """
+          [
+            {
+                "code": "ELECTRICAL_REPAIR",
+                "details": "light switch",
+                "reporter": "QT1234T"
+            },
+            {
+                "code": "LOCK_REPAIR",
+                "details": "lock broken",
+                "reporter": "QT1234T"
+            },
+            {
+                "code": "CLEANING",
+                "details": "dirty carpets",
+                "reporter": "QT1234T"
+            }
+        ]
+          """.trimIndent(),
+        )
+
+        nomisApi.stubAdjudicationRepairsUpdate(ADJUDICATION_NUMBER)
+
         publishUpdateAdjudicationDamagesDomainEvent(chargeNumber = CHARGE_NUMBER_FOR_UPDATE)
+      }
+
+      @Test
+      fun `will retrieve the damages from the adjudication service`() {
+        await untilAsserted {
+          adjudicationsApiServer.verify(
+            getRequestedFor(urlEqualTo("/reported-adjudications/$CHARGE_NUMBER_FOR_UPDATE/v2")),
+          )
+        }
+      }
+
+      @Test
+      fun `will update NOMIS with the repairs`() {
+        await untilAsserted {
+          nomisApi.verify(
+            putRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/repairs")),
+          )
+        }
+      }
+
+      @Test
+      fun `will transform DPS damages to NOMIS repairs`() {
+        await untilAsserted {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBody(matchingJsonPath("repairs[0].typeCode", equalTo("ELEC")))
+              .withRequestBody(matchingJsonPath("repairs[0].comment", equalTo("light switch")))
+              .withRequestBody(matchingJsonPath("repairs[1].typeCode", equalTo("LOCK")))
+              .withRequestBody(matchingJsonPath("repairs[1].comment", equalTo("lock broken")))
+              .withRequestBody(matchingJsonPath("repairs[2].typeCode", equalTo("CLEA")))
+              .withRequestBody(matchingJsonPath("repairs[2].comment", equalTo("dirty carpets"))),
+          )
+        }
       }
 
       @Test
@@ -202,6 +263,7 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
             assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            assertThat(it["repairCount"]).isNotNull()
           },
           isNull(),
         )
@@ -209,33 +271,104 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
-    inner class WhenAdjudicationMappingNotFound {
+    inner class ErrorScenarios {
+      @Nested
+      inner class WhenAdjudicationMappingNotFound {
 
-      @BeforeEach
-      fun setUp() {
-        mappingServer.stubGetByChargeNumberWithError(CHARGE_NUMBER_FOR_UPDATE, 404)
-        publishUpdateAdjudicationDamagesDomainEvent(chargeNumber = CHARGE_NUMBER_FOR_UPDATE)
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByChargeNumberWithError(CHARGE_NUMBER_FOR_UPDATE, 404)
+          publishUpdateAdjudicationDamagesDomainEvent(chargeNumber = CHARGE_NUMBER_FOR_UPDATE)
+        }
+
+        @Test
+        fun `an error will lead to message being added to DLQ`() {
+          await untilCallTo {
+            awsSqsAdjudicationDlqClient!!.countAllMessagesOnQueue(adjudicationDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+
+        @Test
+        fun `will track failure telemetry for each retry`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              eq("adjudication-damages-updated-failed"),
+              check {
+                assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+                assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              },
+              isNull(),
+            )
+          }
+        }
       }
 
-      @Test
-      fun `an error will lead to message being added to DLQ`() {
-        await untilCallTo {
-          awsSqsAdjudicationDlqClient!!.countAllMessagesOnQueue(adjudicationDlqUrl!!).get()
-        } matches { it == 1 }
+      @Nested
+      inner class WhenDpsChargeNotFound {
+
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_UPDATE, ADJUDICATION_NUMBER)
+          adjudicationsApiServer.stubChargeGetWithError(CHARGE_NUMBER_FOR_UPDATE, 404)
+          publishUpdateAdjudicationDamagesDomainEvent(chargeNumber = CHARGE_NUMBER_FOR_UPDATE)
+        }
+
+        @Test
+        fun `an error will lead to message being added to DLQ`() {
+          await untilCallTo {
+            awsSqsAdjudicationDlqClient!!.countAllMessagesOnQueue(adjudicationDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+
+        @Test
+        fun `will track failure telemetry for each retry`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              eq("adjudication-damages-updated-failed"),
+              check {
+                assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+                assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              },
+              isNull(),
+            )
+          }
+        }
       }
 
-      @Test
-      fun `will track failure telemetry for each retry`() {
-        await untilAsserted {
-          verify(telemetryClient, times(3)).trackEvent(
-            eq("adjudication-damages-updated-failed"),
-            check {
-              assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
-              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-              assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-            },
-            isNull(),
-          )
+      @Nested
+      inner class WhenNomisAdjudicationNotFound {
+
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_UPDATE, ADJUDICATION_NUMBER)
+          adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER_FOR_UPDATE, offenderNo = OFFENDER_NO)
+          nomisApi.stubAdjudicationRepairsUpdateWithError(ADJUDICATION_NUMBER, 404)
+
+          publishUpdateAdjudicationDamagesDomainEvent(chargeNumber = CHARGE_NUMBER_FOR_UPDATE)
+        }
+
+        @Test
+        fun `an error will lead to message being added to DLQ`() {
+          await untilCallTo {
+            awsSqsAdjudicationDlqClient!!.countAllMessagesOnQueue(adjudicationDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+
+        @Test
+        fun `will track failure telemetry for each retry`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              eq("adjudication-damages-updated-failed"),
+              check {
+                assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+                assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              },
+              isNull(),
+            )
+          }
         }
       }
     }
