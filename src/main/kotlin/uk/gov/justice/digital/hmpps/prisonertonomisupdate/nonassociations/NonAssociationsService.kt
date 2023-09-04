@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Service
 class NonAssociationsService(
@@ -60,7 +60,7 @@ class NonAssociationsService(
     reason = instance.reasonCode.value,
     recipReason = instance.offenderNonAssociation.reasonCode.value,
     type = instance.typeCode.value,
-    effectiveDate = LocalDate.parse(instance.effectiveDate),
+    effectiveDate = LocalDateTime.parse(instance.effectiveDate).toLocalDate(),
     authorisedBy = instance.authorisedBy,
     comment = instance.comments,
   )

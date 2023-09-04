@@ -34,7 +34,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       "reasonDescription": "Victim",
       "typeCode": "WING",
       "typeDescription": "Do Not Locate on Same Wing",
-      "effectiveDate": "2021-07-05",
+      "effectiveDate": "2021-07-05T10:55:04",
       "authorisedBy": "Officer Alice B.",
       "comments": "Mr. Bloggs assaulted Mr. Hall",
       "offenderNonAssociation": {
