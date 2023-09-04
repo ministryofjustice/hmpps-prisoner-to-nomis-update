@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Service
 class NonAssociationsService(
@@ -89,7 +88,6 @@ data class NonAssociationDomainEvent(
   val eventType: String,
   val version: String,
   val description: String,
-  val occurredAt: LocalDateTime,
   val additionalInformation: NonAssociationAdditionalInformation,
 )
 
