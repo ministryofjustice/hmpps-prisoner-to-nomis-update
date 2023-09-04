@@ -212,5 +212,5 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   fun nonAssociationMessagePayload(nonAssociationId: Long, eventType: String) =
-    """{"eventType":"$eventType", "additionalInformation": {"id":"$nonAssociationId"}, "version": "1.0", "description": "description", "occurredAt": "2023-02-05T11:23:56.031Z"}"""
+    """{"eventType":"$eventType", "additionalInformation": {"id":"$nonAssociationId"}, "version": "1.0", "description": "description", "occurredAt": "2023-09-01T17:09:56.199944267+01:00"}"""
 }

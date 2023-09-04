@@ -111,9 +111,9 @@ generic-service:
     sqs-nomis-update-appointment-dlq-secret:
       HMPPS_SQS_QUEUES_APPOINTMENT_DLQ_NAME: "sqs_queue_name"
     sqs-nomis-update-nonassociation-secret:
-      HMPPS_SQS_QUEUES_NON_ASSOCIATION_QUEUE_NAME: "sqs_queue_name"
+      HMPPS_SQS_QUEUES_NONASSOCIATION_QUEUE_NAME: "sqs_queue_name"
     sqs-nomis-update-nonassociation-dlq-secret:
-      HMPPS_SQS_QUEUES_NON_ASSOCIATION_DLQ_NAME: "sqs_queue_name"
+      HMPPS_SQS_QUEUES_NONASSOCIATION_DLQ_NAME: "sqs_queue_name"
     sqs-nomis-update-sentencing-secret:
       HMPPS_SQS_QUEUES_SENTENCING_QUEUE_NAME: "sqs_queue_name"
     sqs-nomis-update-sentencing-dlq-secret:
