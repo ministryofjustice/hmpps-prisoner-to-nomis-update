@@ -36,6 +36,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenHearingHasBeenCreatedInDPS {
       @BeforeEach
       fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
         AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER_FOR_CREATION, offenderNo = OFFENDER_NO)
         NomisApiExtension.nomisApi.stubHearingCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
         MappingExtension.mappingServer.stubGetByDpsHearingIdWithError(DPS_HEARING_ID, 404)
@@ -94,6 +95,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
         MappingExtension.mappingServer.stubGetByDpsHearingId(dpsHearingId = DPS_HEARING_ID, nomisHearingId = NOMIS_HEARING_ID)
         publishCreateHearingDomainEvent()
       }
@@ -124,7 +126,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenMappingServiceFailsOnce {
       @BeforeEach
       fun setUp() {
-        MappingExtension.mappingServer.stubGetByChargeNumberWithError(CHARGE_NUMBER_FOR_CREATION, 404)
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
         MappingExtension.mappingServer.stubCreateHearingWithErrorFollowedBySlowSuccess()
         NomisApiExtension.nomisApi.stubHearingCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
         AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(chargeNumber = CHARGE_NUMBER_FOR_CREATION, offenderNo = OFFENDER_NO)

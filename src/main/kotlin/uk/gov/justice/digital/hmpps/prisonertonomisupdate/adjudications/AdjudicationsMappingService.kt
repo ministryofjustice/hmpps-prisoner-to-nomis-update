@@ -41,8 +41,12 @@ class AdjudicationsMappingService(
 }
 
 open class BaseAdjudicationMappingDto(
-  val type: String,
+  val mappingEntity: AdjudicationMappingEntity,
 )
+
+enum class AdjudicationMappingEntity {
+  HEARING, ADJUDICATION
+}
 
 class AdjudicationMappingDto(
   val adjudicationNumber: Long,
@@ -51,5 +55,5 @@ class AdjudicationMappingDto(
   val label: String? = null,
   val mappingType: String = "ADJUDICATION_CREATED",
   val whenCreated: LocalDateTime? = null,
-  type: String = "ADJUDICATION",
-) : BaseAdjudicationMappingDto(type)
+  mappingEntity: AdjudicationMappingEntity = AdjudicationMappingEntity.ADJUDICATION,
+) : BaseAdjudicationMappingDto(mappingEntity)

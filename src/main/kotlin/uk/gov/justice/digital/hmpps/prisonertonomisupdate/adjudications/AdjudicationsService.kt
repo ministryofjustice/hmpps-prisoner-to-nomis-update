@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDto
@@ -34,6 +36,10 @@ class AdjudicationsService(
   private val nomisApiService: NomisApiService,
   private val objectMapper: ObjectMapper,
 ) : CreateMappingRetryable {
+
+  private companion object {
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
   suspend fun createAdjudication(createEvent: AdjudicationCreatedEvent) {
     val chargeNumber = createEvent.additionalInformation.chargeNumber
     val prisonId: String = createEvent.additionalInformation.prisonId
@@ -90,9 +96,9 @@ class AdjudicationsService(
 
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<BaseAdjudicationMappingDto> = message.fromJson()
-    when (baseMapping.mapping.type) { // type enum
-      "ADJUDICATION" -> createRetry(message.fromJson())
-      "HEARING" -> createHearingRetry(message.fromJson())
+    when (baseMapping.mapping.mappingEntity) {
+      AdjudicationMappingEntity.ADJUDICATION -> createRetry(message.fromJson())
+      AdjudicationMappingEntity.HEARING -> createHearingRetry(message.fromJson())
     }
   }
 
@@ -154,6 +160,12 @@ class AdjudicationsService(
       }
 
       transform {
+        val adjudicationNumber =
+          adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber).adjudicationNumber
+            .also {
+              telemetryMap["adjudicationNumber"] = it.toString()
+            }
+        log.info("Hearing: $dpsHearingId with charge number: $chargeNumber has adjudication number: $adjudicationNumber")
         val hearing = adjudicationsApiService.getCharge(
           chargeNumber,
           prisonId,
@@ -161,7 +173,7 @@ class AdjudicationsService(
           "Hearing $dpsHearingId not found for DPS adjudication with charge no $chargeNumber",
         )
         val nomisAdjudicationResponse =
-          nomisApiService.createHearing(chargeNumber.toNomisAdjudicationNumber(), hearing.toNomisHearing())
+          nomisApiService.createHearing(adjudicationNumber, hearing.toNomisHearing())
 
         telemetryMap["nomisHearingId"] = nomisAdjudicationResponse.hearingId.toString()
 
