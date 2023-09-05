@@ -46,5 +46,5 @@ class AdjudicationHearingMappingDto(
   val label: String? = null,
   val mappingType: String = "ADJUDICATION_CREATED",
   val whenCreated: LocalDateTime? = null,
-  type: String = "HEARING",
-) : BaseAdjudicationMappingDto(type)
+  mappingEntity: AdjudicationMappingEntity = AdjudicationMappingEntity.HEARING,
+) : BaseAdjudicationMappingDto(mappingEntity)
