@@ -45,14 +45,14 @@ dependencies {
 }
 
 java {
-  toolchain.languageVersion.set(JavaLanguageVersion.of(19))
+  toolchain.languageVersion.set(JavaLanguageVersion.of(20))
 }
 
 tasks {
   withType<KotlinCompile> {
     dependsOn("buildActivityApiModel", "buildNomisSyncApiModel", "buildAdjudicationApiModel", "buildNonAssociationApiModel")
     kotlinOptions {
-      jvmTarget = "19"
+      jvmTarget = "20"
     }
   }
   withType<KtLintCheckTask> {
