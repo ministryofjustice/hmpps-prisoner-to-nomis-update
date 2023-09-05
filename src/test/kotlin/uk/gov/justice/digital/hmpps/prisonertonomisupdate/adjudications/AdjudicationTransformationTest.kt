@@ -9,11 +9,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.In
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OffenceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OffenceRuleDetailsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OffenceRuleDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDtoV2
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationResponseV2
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedEvidenceDto
-import java.lang.NullPointerException
 
 class AdjudicationTransformationTest {
   @Test
@@ -250,11 +249,11 @@ class AdjudicationTransformationTest {
   }
 }
 
-private fun dpsAdjudication() = ReportedAdjudicationResponseV2(
-  reportedAdjudication = ReportedAdjudicationDtoV2(
+private fun dpsAdjudication() = ReportedAdjudicationResponse(
+  reportedAdjudication = ReportedAdjudicationDto(
     chargeNumber = "1234567",
     prisonerNumber = "A1234AK",
-    gender = ReportedAdjudicationDtoV2.Gender.FEMALE,
+    gender = ReportedAdjudicationDto.Gender.FEMALE,
     incidentDetails = IncidentDetailsDto(
       locationId = 543311,
       dateTimeOfIncident = "2023-07-27T23:30:00",
@@ -279,7 +278,7 @@ private fun dpsAdjudication() = ReportedAdjudicationResponseV2(
     ),
     createdByUserId = "ABARTLETT",
     createdDateTime = "2023-07-28T12:00:15.94454",
-    status = ReportedAdjudicationDtoV2.Status.UNSCHEDULED,
+    status = ReportedAdjudicationDto.Status.UNSCHEDULED,
     damages = emptyList(),
     evidence = emptyList(),
     witnesses = emptyList(),
