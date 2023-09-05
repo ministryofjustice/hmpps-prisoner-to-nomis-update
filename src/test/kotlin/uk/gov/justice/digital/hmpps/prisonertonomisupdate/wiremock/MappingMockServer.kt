@@ -704,6 +704,77 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         ).willSetStateTo(Scenario.STARTED),
     )
   }
+  fun stubCreateHearing() {
+    stubFor(
+      post("/mapping/hearings").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubGetByDpsHearingIdWithError(hearingId: String, status: Int) {
+    stubFor(
+      get("/mapping/hearings/dps/$hearingId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              { 
+                "userMessage": "some error"
+              }""",
+          )
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubGetByDpsHearingId(dpsHearingId: String, nomisHearingId: Long) {
+    stubFor(
+      get("/mapping/hearings/dps/$dpsHearingId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            { 
+            "dpsHearingId": $dpsHearingId,  
+            "nomisHearingId": $nomisHearingId,  
+            "mappingType": "ADJUDICATION_CREATED",  
+            "whenCreated": "2020-01-01T00:00:00"
+              }""",
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubCreateHearingWithErrorFollowedBySlowSuccess() {
+    stubFor(
+      post("/mapping/hearings")
+        .inScenario("Retry Mapping Hearing Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause Mapping Hearing Success"),
+    )
+
+    stubFor(
+      post("/mapping/hearings")
+        .inScenario("Retry Mapping Hearing Scenario")
+        .whenScenarioStateIs("Cause Mapping Hearing Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201)
+            .withFixedDelay(1500),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
 
   // *************************************************** Non-Associations **********************************************
 
