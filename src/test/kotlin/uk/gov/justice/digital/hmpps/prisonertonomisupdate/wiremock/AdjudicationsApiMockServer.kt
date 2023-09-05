@@ -85,7 +85,13 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         "damages": $damages,
         "evidence": $evidence,
         "witnesses": [],
-        "hearings": [],
+        "hearings": [{
+                "id": 345,
+                "locationId": 27187,
+                "dateTimeOfHearing": "2023-08-23T14:25:00",
+                "oicHearingType": "GOV_ADULT",
+                "agencyId": "MDI"
+            }],
         "disIssueHistory": [],
         "outcomes": [],
         "punishments": [],

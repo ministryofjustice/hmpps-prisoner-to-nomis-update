@@ -9,47 +9,42 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNot
 import java.time.LocalDateTime
 
 @Service
-class AdjudicationsMappingService(
+class HearingsMappingService(
   @Qualifier("mappingWebClient") private val webClient: WebClient,
 ) {
 
-  suspend fun createMapping(request: AdjudicationMappingDto) {
+  suspend fun createMapping(request: AdjudicationHearingMappingDto) {
     webClient.post()
-      .uri("/mapping/adjudications")
+      .uri("/mapping/hearings")
       .bodyValue(request)
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
-  suspend fun getMappingGivenChargeNumberOrNull(chargeNumber: String): AdjudicationMappingDto? =
+  suspend fun getMappingGivenDpsHearingIdOrNull(dpsHearingId: String): AdjudicationHearingMappingDto? =
     webClient.get()
-      .uri("/mapping/adjudications/charge-number/$chargeNumber")
+      .uri("/mapping/hearings/dps/$dpsHearingId")
       .retrieve()
       .awaitBodyOrNotFound()
 
-  suspend fun getMappingGivenChargeNumber(chargeNumber: String): AdjudicationMappingDto =
+  suspend fun getMappingGivenDpsHearingId(dpsHearingId: String): AdjudicationHearingMappingDto =
     webClient.get()
-      .uri("/mapping/adjudications/charge-number/$chargeNumber")
+      .uri("/mapping/hearings/dps/$dpsHearingId")
       .retrieve()
       .awaitBody()
 
-  suspend fun deleteMappingGivenChargeNumber(chargeNumber: String): Unit =
+  suspend fun deleteMappingGivenDpsHearingId(dpsHearingId: String): Unit =
     webClient.delete()
-      .uri("/mapping/adjudications/charge-number/$chargeNumber")
+      .uri("/mapping/hearings/dps/$dpsHearingId")
       .retrieve()
       .awaitBody()
 }
 
-open class BaseAdjudicationMappingDto(
-  val type: String,
-)
-
-class AdjudicationMappingDto(
-  val adjudicationNumber: Long,
-  val chargeSequence: Int,
-  val chargeNumber: String,
+class AdjudicationHearingMappingDto(
+  val nomisHearingId: Long,
+  val dpsHearingId: String,
   val label: String? = null,
   val mappingType: String = "ADJUDICATION_CREATED",
   val whenCreated: LocalDateTime? = null,
-  type: String = "ADJUDICATION",
+  type: String = "HEARING",
 ) : BaseAdjudicationMappingDto(type)
