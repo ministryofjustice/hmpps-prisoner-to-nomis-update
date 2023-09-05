@@ -68,14 +68,14 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will call nomis api to create the adjudication`() {
+      fun `will call nomis api to create the hearing`() {
         waitForCreateHearingProcessingToBeComplete()
 
         NomisApiExtension.nomisApi.verify(WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings")))
       }
 
       @Test
-      fun `will create a mapping between the two adjudications`() {
+      fun `will create a mapping between the two hearings`() {
         waitForCreateHearingProcessingToBeComplete()
 
         await untilAsserted {
@@ -90,7 +90,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
-    inner class WhenMappingAlreadyCreatedForAdjudication {
+    inner class WhenMappingAlreadyCreatedForHearing {
 
       @BeforeEach
       fun setUp() {
@@ -99,7 +99,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will not create an adjudication in NOMIS`() {
+      fun `will not create an hearing in NOMIS`() {
         waitForCreateHearingProcessingToBeComplete()
 
         verify(telemetryClient).trackEvent(

@@ -207,7 +207,7 @@ internal fun ReportedAdjudicationResponse.toNomisAdjudication() = CreateAdjudica
 // DPS charge number are either "12345" or "12345-1" - but for new ones it will always
 // be just "12345" so we can just convert to long for now without parsing
 // Once we tackle updates on migrated records this code will need changing to parse the number
-internal fun String.toNomisAdjudicationNumber(): Long = this.toLong()
+private fun String.toNomisAdjudicationNumber(): Long = this.toLong()
 
 private fun ReportedAdjudicationDto.getOffenceCode() = if (this.didInciteOtherPrisoner()) {
   this.offenceDetails.offenceRule.withOthersNomisCode!!
@@ -248,8 +248,8 @@ private fun ReportedEvidenceDto.toNomisEvidence() = EvidenceToCreate(
   detail = this.details,
 )
 
-internal fun String.toLocalDate() = LocalDateTime.parse(this).toLocalDate()
-internal fun String.toLocalTimeAtMinute() = LocalDateTime.parse(this).toLocalTime().withSecond(0).withNano(0)
+private fun String.toLocalDate() = LocalDateTime.parse(this).toLocalDate()
+private fun String.toLocalTimeAtMinute() = LocalDateTime.parse(this).toLocalTime().withSecond(0).withNano(0)
 
 data class AdjudicationAdditionalInformation(
   val chargeNumber: String,
