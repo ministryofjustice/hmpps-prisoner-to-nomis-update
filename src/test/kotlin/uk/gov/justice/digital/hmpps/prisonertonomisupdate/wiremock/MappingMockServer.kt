@@ -841,7 +841,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetMappingGivenNonAssociationInstanceId(id: Long, response: String) {
+  fun stubGetMappingGivenNonAssociationId(id: Long, response: String) {
     stubFor(
       get("/mapping/non-associations/non-association-id/$id").willReturn(
         aResponse()
@@ -852,7 +852,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetMappingGivenNonAssociationInstanceIdWithError(id: Long, status: Int = 500) {
+  fun stubGetMappingGivenNonAssociationIdWithError(id: Long, status: Int = 500) {
     stubFor(
       get("/mapping/non-associations/non-association-id/$id").willReturn(
         aResponse()

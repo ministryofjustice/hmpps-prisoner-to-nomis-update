@@ -313,6 +313,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyValue(request)
       .retrieve()
       .awaitBody()
+
+  suspend fun closeNonAssociation(offenderNo1: String, offenderNo2: String, sequence: Int) {
+    webClient.put()
+      .uri("/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/sequence/{sequence}/close", offenderNo1, offenderNo2, sequence)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 }
 
 data class CreateVisitDto(

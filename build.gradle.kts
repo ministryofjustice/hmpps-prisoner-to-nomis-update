@@ -71,12 +71,14 @@ val configValues = mapOf(
   "enumPropertyNaming" to "original"
 )
 
+val buildDirectory: Directory = layout.buildDirectory.get()
+
 tasks.register("buildActivityApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
   skipValidateSpec.set(true) // TODO - turn this back on when the spec is valid again!
   inputSpec.set("openapi-specs/activities-api-docs.json")
   // remoteInputSpec.set("https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs")
-  outputDir.set("$buildDir/generated")
+  outputDir.set("$buildDirectory/generated")
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.api")
   configOptions.set(configValues)
@@ -87,7 +89,7 @@ tasks.register("buildAdjudicationApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
   skipValidateSpec.set(true)
   inputSpec.set("openapi-specs/adjudications-api-docs.json")
-  outputDir.set("$buildDir/generated")
+  outputDir.set("$buildDirectory/generated")
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.api")
   configOptions.set(configValues)
@@ -97,7 +99,7 @@ tasks.register("buildAdjudicationApiModel", GenerateTask::class) {
 tasks.register("buildNonAssociationApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
   inputSpec.set("openapi-specs/non-associations-api-docs.json")
-  outputDir.set("$buildDir/generated")
+  outputDir.set("$buildDirectory/generated")
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.api")
   configOptions.set(configValues)
@@ -108,7 +110,7 @@ tasks.register("buildNomisSyncApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
   inputSpec.set("openapi-specs/nomis-sync-api-docs.json")
   // remoteInputSpec.set("https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/v3/api-docs")
-  outputDir.set("$buildDir/generated")
+  outputDir.set("$buildDirectory/generated")
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.api")
   configOptions.set(configValues)
@@ -117,7 +119,7 @@ tasks.register("buildNomisSyncApiModel", GenerateTask::class) {
 
 kotlin {
   sourceSets["main"].apply {
-    kotlin.srcDir("$buildDir/generated/src/main/kotlin")
+    kotlin.srcDir("$buildDirectory/generated/src/main/kotlin")
   }
 }
 
