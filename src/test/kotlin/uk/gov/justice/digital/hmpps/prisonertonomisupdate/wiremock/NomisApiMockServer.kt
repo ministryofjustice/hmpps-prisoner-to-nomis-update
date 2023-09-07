@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.ok
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
@@ -1041,6 +1042,23 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubHearingCreate(adjudicationNumber: Long = 123456, nomisHearingId: Long = 345) {
+    stubFor(
+      post("/adjudications/adjudication-number/$adjudicationNumber/hearings").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            {
+              "hearingId": $nomisHearingId
+            }
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
   // *************************************************** Non-Associations **********************************************
 
   fun stubNonAssociationCreate(response: String) {
@@ -1092,20 +1110,46 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubHearingCreate(adjudicationNumber: Long = 123456, nomisHearingId: Long = 345) {
+  fun stubNonAssociationClose(offenderNo1: String, offenderNo2: String) {
     stubFor(
-      post("/adjudications/adjudication-number/$adjudicationNumber/hearings").willReturn(
+      put("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/1/close").willReturn(ok()),
+    )
+  }
+
+  fun stubNonAssociationCloseWithError(offenderNo1: String, offenderNo2: String, status: Int = 500) {
+    stubFor(
+      put("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/1/close").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(
-            """
-            {
-              "hearingId": $nomisHearingId
-            }
-            """.trimIndent(),
-          )
-          .withStatus(200),
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status),
       ),
+    )
+  }
+
+  fun stubNonAssociationCloseWithErrorFollowedBySlowSuccess(offenderNo1: String, offenderNo2: String) {
+    stubFor(
+      put("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/1/close")
+        .inScenario("Retry NOMIS NonAssociations close Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause NOMIS NonAssociations close Success"),
+    )
+
+    stubFor(
+      put("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/1/close")
+        .inScenario("Retry NOMIS NonAssociations close Scenario")
+        .whenScenarioStateIs("Cause NOMIS NonAssociations close Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(200)
+            .withFixedDelay(1500),
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 

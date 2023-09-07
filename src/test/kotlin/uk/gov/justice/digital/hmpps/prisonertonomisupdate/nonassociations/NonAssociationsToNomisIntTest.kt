@@ -9,7 +9,9 @@ import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito
 import org.mockito.kotlin.any
+import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
@@ -19,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegra
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NonAssociationsApiExtension.Companion.nonAssociationsApiServer
+import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
 private const val NON_ASSOCIATION_ID = 12345L
 private const val OFFENDER_NO_1 = "A1234AA"
@@ -63,9 +66,9 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       fun setUp() {
         nonAssociationsApiServer.stubGetNonAssociation(NON_ASSOCIATION_ID, nonAssociationApiResponse)
         NomisApiExtension.nomisApi.stubNonAssociationCreate("""{ "typeSequence": 1 }""")
-        MappingExtension.mappingServer.stubGetMappingGivenNonAssociationInstanceIdWithError(NON_ASSOCIATION_ID, 404)
+        MappingExtension.mappingServer.stubGetMappingGivenNonAssociationIdWithError(NON_ASSOCIATION_ID, 404)
         MappingExtension.mappingServer.stubCreateNonAssociation()
-        publishCreateNonAssociationDomainEvent()
+        publishNonAssociationDomainEvent("non-associations.created")
       }
 
       @Test
@@ -121,8 +124,8 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        MappingExtension.mappingServer.stubGetMappingGivenNonAssociationInstanceId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
-        publishCreateNonAssociationDomainEvent()
+        MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
+        publishNonAssociationDomainEvent("non-associations.created")
       }
 
       @Test
@@ -148,11 +151,11 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenMappingServiceFailsOnce {
       @BeforeEach
       fun setUp() {
-        MappingExtension.mappingServer.stubGetMappingGivenNonAssociationInstanceIdWithError(NON_ASSOCIATION_ID, 404)
+        MappingExtension.mappingServer.stubGetMappingGivenNonAssociationIdWithError(NON_ASSOCIATION_ID, 404)
         MappingExtension.mappingServer.stubCreateNonAssociationWithErrorFollowedBySlowSuccess()
         NomisApiExtension.nomisApi.stubNonAssociationCreate("""{ "typeSequence": 1 }""")
         nonAssociationsApiServer.stubGetNonAssociation(NON_ASSOCIATION_ID, nonAssociationApiResponse)
-        publishCreateNonAssociationDomainEvent()
+        publishNonAssociationDomainEvent("non-associations.created")
 
         await untilCallTo { nonAssociationsApiServer.getCountFor("/legacy/api/non-associations/$NON_ASSOCIATION_ID") } matches { it == 1 }
         await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/non-associations") } matches { it == 1 }
@@ -200,8 +203,116 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
-  private fun publishCreateNonAssociationDomainEvent() {
-    val eventType = "non-associations.created"
+  @Nested
+  inner class CloseNonAssociation {
+    @Nested
+    inner class WhenNonAssociationHasJustBeenClosedByNonAssociationService {
+
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
+        NomisApiExtension.nomisApi.stubNonAssociationClose(OFFENDER_NO_1, OFFENDER_NO_2)
+        publishNonAssociationDomainEvent("non-associations.closed")
+      }
+
+      @Test
+      fun `will close an non-association in NOMIS`() {
+        await untilAsserted {
+          NomisApiExtension.nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1/close")))
+        }
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            Mockito.eq("nonAssociation-close-success"),
+            org.mockito.kotlin.check {
+              assertThat(it["nonAssociationId"]).isEqualTo(NON_ASSOCIATION_ID.toString())
+              assertThat(it["offender1"]).isEqualTo(OFFENDER_NO_1)
+              assertThat(it["offender2"]).isEqualTo(OFFENDER_NO_2)
+              assertThat(it["sequence"]).isEqualTo("1")
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+
+    @Nested
+    inner class Exceptions {
+
+      @Nested
+      inner class WhenServiceFailsOnce {
+
+        @BeforeEach
+        fun setUp() {
+          MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
+          NomisApiExtension.nomisApi.stubNonAssociationCloseWithErrorFollowedBySlowSuccess(OFFENDER_NO_1, OFFENDER_NO_2)
+          publishNonAssociationDomainEvent("non-associations.closed")
+        }
+
+        @Test
+        fun `will callback back to mapping service twice to get more details`() {
+          await untilAsserted {
+            MappingExtension.mappingServer.verify(2, WireMock.getRequestedFor(WireMock.urlEqualTo("/mapping/non-associations/non-association-id/$NON_ASSOCIATION_ID")))
+          }
+        }
+
+        @Test
+        fun `will eventually close the non-association in NOMIS`() {
+          await untilAsserted {
+            NomisApiExtension.nomisApi.verify(2, WireMock.putRequestedFor(WireMock.urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1/close")))
+            verify(telemetryClient).trackEvent(Mockito.eq("nonAssociation-close-failed"), any(), isNull())
+            verify(telemetryClient).trackEvent(Mockito.eq("nonAssociation-close-success"), any(), isNull())
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenServiceKeepsFailing {
+        @BeforeEach
+        fun setUp() {
+          nonAssociationsApiServer.stubGetNonAssociation(id = NON_ASSOCIATION_ID, response = nonAssociationApiResponse)
+          MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
+          NomisApiExtension.nomisApi.stubNonAssociationCloseWithError(OFFENDER_NO_1, OFFENDER_NO_2, 503)
+          publishNonAssociationDomainEvent("non-associations.closed")
+        }
+
+        @Test
+        fun `will callback back to mapping service 3 times before given up`() {
+          await untilAsserted {
+            MappingExtension.mappingServer.verify(3, WireMock.getRequestedFor(WireMock.urlEqualTo("/mapping/non-associations/non-association-id/$NON_ASSOCIATION_ID")))
+          }
+        }
+
+        @Test
+        fun `will create failure telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient, atLeast(3)).trackEvent(
+              Mockito.eq("nonAssociation-close-failed"),
+              org.mockito.kotlin.check {
+                assertThat(it["nonAssociationId"]).isEqualTo(NON_ASSOCIATION_ID.toString())
+                assertThat(it["offender1"]).isEqualTo(OFFENDER_NO_1)
+                assertThat(it["offender2"]).isEqualTo(OFFENDER_NO_2)
+                assertThat(it["sequence"]).isEqualTo("1")
+              },
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will add message to dead letter queue`() {
+          await untilCallTo {
+            awsSqsNonAssociationDlqClient!!.countAllMessagesOnQueue(nonAssociationDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+      }
+    }
+  }
+
+  private fun publishNonAssociationDomainEvent(eventType: String) {
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(nonAssociationMessagePayload(NON_ASSOCIATION_ID, eventType))

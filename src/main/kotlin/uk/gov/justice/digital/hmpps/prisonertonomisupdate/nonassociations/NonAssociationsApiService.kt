@@ -14,3 +14,8 @@ class NonAssociationsApiService(private val nonAssociationsApiWebClient: WebClie
       .retrieve()
       .awaitBody()
 }
+
+enum class CreatingSystem {
+  NOMIS,
+  DPS,
+}

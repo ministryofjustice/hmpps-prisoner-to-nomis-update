@@ -25,32 +25,60 @@ class NonAssociationsService(
 ) : CreateMappingRetryable {
 
   suspend fun createNonAssociation(event: NonAssociationDomainEvent) {
-    synchronise {
-      name = "nonAssociation"
-      telemetryClient = this@NonAssociationsService.telemetryClient
-      retryQueueService = nonAssociationsUpdateQueueService
-      eventTelemetry = mapOf("nonAssociationId" to event.additionalInformation.id.toString())
+    val telemetryMap = mapOf("nonAssociationId" to event.additionalInformation.id.toString())
+    if (isDpsCreated(event.additionalInformation)) {
+      synchronise {
+        name = "nonAssociation"
+        telemetryClient = this@NonAssociationsService.telemetryClient
+        retryQueueService = nonAssociationsUpdateQueueService
+        eventTelemetry = telemetryMap
 
-      checkMappingDoesNotExist {
-        mappingService.getMappingGivenNonAssociationIdOrNull(event.additionalInformation.id)
-      }
-      transform {
-        nonAssociationsApiService.getNonAssociation(event.additionalInformation.id).run {
-          val request = toCreateNonAssociationRequest(this)
-
-          eventTelemetry += "offenderNo" to request.offenderNo
-          eventTelemetry += "nsOffenderNo" to request.nsOffenderNo
-
-          NonAssociationMappingDto(
-            firstOffenderNo = request.offenderNo,
-            secondOffenderNo = request.nsOffenderNo,
-            nomisTypeSequence = nomisApiService.createNonAssociation(request).typeSequence,
-            nonAssociationId = id,
-            mappingType = "NON_ASSOCIATION_CREATED",
-          )
+        checkMappingDoesNotExist {
+          mappingService.getMappingGivenNonAssociationIdOrNull(event.additionalInformation.id)
         }
+        transform {
+          nonAssociationsApiService.getNonAssociation(event.additionalInformation.id).run {
+            val request = toCreateNonAssociationRequest(this)
+
+            eventTelemetry += "offenderNo" to request.offenderNo
+            eventTelemetry += "nsOffenderNo" to request.nsOffenderNo
+
+            NonAssociationMappingDto(
+              firstOffenderNo = if (request.offenderNo < request.nsOffenderNo) request.offenderNo else request.nsOffenderNo,
+              secondOffenderNo = if (request.offenderNo < request.nsOffenderNo) request.nsOffenderNo else request.offenderNo,
+              nomisTypeSequence = nomisApiService.createNonAssociation(request).typeSequence,
+              nonAssociationId = id,
+              mappingType = "NON_ASSOCIATION_CREATED",
+            )
+          }
+        }
+        saveMapping { mappingService.createMapping(it) }
       }
-      saveMapping { mappingService.createMapping(it) }
+    } else {
+      telemetryClient.trackEvent("nonAssociation-create-ignored", telemetryMap)
+    }
+  }
+
+  private fun isDpsCreated(additionalInformation: NonAssociationAdditionalInformation) =
+    additionalInformation.source != CreatingSystem.NOMIS.name
+
+  suspend fun closeNonAssociation(event: NonAssociationDomainEvent) {
+    val telemetryMap =
+      mutableMapOf("nonAssociationId" to event.additionalInformation.id.toString())
+
+    runCatching {
+      mappingService.getMappingGivenNonAssociationId(event.additionalInformation.id)
+        .apply {
+          telemetryMap["offender1"] = firstOffenderNo
+          telemetryMap["offender2"] = secondOffenderNo
+          telemetryMap["sequence"] = nomisTypeSequence.toString()
+          nomisApiService.closeNonAssociation(firstOffenderNo, secondOffenderNo, nomisTypeSequence)
+        }
+    }.onSuccess {
+      telemetryClient.trackEvent("nonAssociation-close-success", telemetryMap)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("nonAssociation-close-failed", telemetryMap)
+      throw e
     }
   }
 
@@ -93,4 +121,5 @@ data class NonAssociationDomainEvent(
 
 data class NonAssociationAdditionalInformation(
   val id: Long,
+  val source: String? = null,
 )

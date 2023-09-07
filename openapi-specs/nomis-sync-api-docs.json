@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-09-01.4685.1e2037c"
+    "version": "2023-09-05.4773.65c452a"
   },
   "servers": [
     {
@@ -468,7 +468,7 @@
         ],
         "summary": "Get an open non-association",
         "description": "Get the open non-association for the two offender numbers. Requires role NOMIS_NON_ASSOCIATIONS",
-        "operationId": "getOpenNonAssociation",
+        "operationId": "getNonAssociation",
         "parameters": [
           {
             "name": "offenderNo",
@@ -489,6 +489,17 @@
               "type": "string"
             },
             "example": "A34578ED"
+          },
+          {
+            "name": "typeSequence",
+            "in": "query",
+            "description": "Sequence number. If present, get this detail record, otherwise get the open record if there is one.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "example": 2
           }
         ],
         "responses": {
@@ -620,7 +631,7 @@
         }
       }
     },
-    "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/close": {
+    "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/sequence/{typeSequence}/close": {
       "put": {
         "tags": [
           "non-association-resource"
@@ -648,6 +659,17 @@
               "type": "string"
             },
             "example": "A34578ED"
+          },
+          {
+            "name": "typeSequence",
+            "in": "path",
+            "description": "Sequence number. Close this specific detail record",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "example": 2
           }
         ],
         "responses": {
@@ -656,6 +678,16 @@
           },
           "404": {
             "description": "Non-association does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Non-association is already closed",
             "content": {
               "application/json": {
                 "schema": {
@@ -6969,6 +7001,9 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -6986,15 +7021,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "last": {
             "type": "boolean"
@@ -7159,6 +7191,9 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -7176,15 +7211,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "last": {
             "type": "boolean"
@@ -7217,7 +7249,8 @@
           "offenderNo",
           "reason",
           "recipReason",
-          "type"
+          "type",
+          "typeSequence"
         ],
         "type": "object",
         "properties": {
@@ -7230,6 +7263,12 @@
             "type": "string",
             "description": "Noms id of the other prisoner",
             "example": "A1234EG"
+          },
+          "typeSequence": {
+            "type": "integer",
+            "description": "Sequence number",
+            "format": "int32",
+            "example": 1
           },
           "reason": {
             "type": "string",
@@ -7302,6 +7341,9 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -7319,15 +7361,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "last": {
             "type": "boolean"
@@ -7427,6 +7466,9 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -7444,15 +7486,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "last": {
             "type": "boolean"
@@ -7568,6 +7607,9 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -7585,15 +7627,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "last": {
             "type": "boolean"
@@ -7721,6 +7760,9 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -7738,15 +7780,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "last": {
             "type": "boolean"
@@ -7792,6 +7831,9 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -7809,15 +7851,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "first": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "last": {
             "type": "boolean"

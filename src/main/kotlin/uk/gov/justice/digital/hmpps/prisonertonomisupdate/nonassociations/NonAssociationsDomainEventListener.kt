@@ -35,7 +35,7 @@ class NonAssociationsDomainEventListener(
     when (eventType) {
       "non-associations.created" -> nonAssociationsService.createNonAssociation(message.fromJson())
       "non-associations.amended" -> null // TODO nonAssociationsService.updateNonAssociation(message.fromJson())
-      "non-associations.closed" -> null // nonAssociationsService.closeNonAssociation(message.fromJson())
+      "non-associations.closed" -> nonAssociationsService.closeNonAssociation(message.fromJson())
       "non-associations.deleted" -> null // nonAssociationsService.deleteNonAssociation(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
