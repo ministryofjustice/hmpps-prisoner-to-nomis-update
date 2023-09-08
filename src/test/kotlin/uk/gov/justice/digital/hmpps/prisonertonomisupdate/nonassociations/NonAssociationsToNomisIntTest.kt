@@ -1,6 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations
 
-import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -14,12 +19,14 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NonAssociationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NonAssociationsApiExtension.Companion.nonAssociationsApiServer
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
@@ -75,7 +82,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will callback back to non-association service to get more details`() {
         waitForCreateProcessingToBeComplete()
 
-        nonAssociationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/legacy/api/non-associations/$NON_ASSOCIATION_ID")))
+        nonAssociationsApiServer.verify(getRequestedFor(urlEqualTo("/legacy/api/non-associations/$NON_ASSOCIATION_ID")))
       }
 
       @Test
@@ -99,7 +106,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to create the non-association`() {
         waitForCreateProcessingToBeComplete()
 
-        NomisApiExtension.nomisApi.verify(WireMock.postRequestedFor(WireMock.urlEqualTo("/non-associations")))
+        NomisApiExtension.nomisApi.verify(postRequestedFor(urlEqualTo("/non-associations")))
       }
 
       @Test
@@ -108,11 +115,11 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
         await untilAsserted {
           MappingExtension.mappingServer.verify(
-            WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/non-associations"))
-              .withRequestBody(WireMock.matchingJsonPath("nonAssociationId", WireMock.equalTo(NON_ASSOCIATION_ID.toString())))
-              .withRequestBody(WireMock.matchingJsonPath("firstOffenderNo", WireMock.equalTo(OFFENDER_NO_1)))
-              .withRequestBody(WireMock.matchingJsonPath("secondOffenderNo", WireMock.equalTo(OFFENDER_NO_2)))
-              .withRequestBody(WireMock.matchingJsonPath("nomisTypeSequence", WireMock.equalTo("1"))),
+            postRequestedFor(urlEqualTo("/mapping/non-associations"))
+              .withRequestBody(matchingJsonPath("nonAssociationId", equalTo(NON_ASSOCIATION_ID.toString())))
+              .withRequestBody(matchingJsonPath("firstOffenderNo", equalTo(OFFENDER_NO_1)))
+              .withRequestBody(matchingJsonPath("secondOffenderNo", equalTo(OFFENDER_NO_2)))
+              .withRequestBody(matchingJsonPath("nomisTypeSequence", equalTo("1"))),
           )
         }
         await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -142,7 +149,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
         NomisApiExtension.nomisApi.verify(
           0,
-          WireMock.postRequestedFor(WireMock.urlEqualTo("/non-associations")),
+          postRequestedFor(urlEqualTo("/non-associations")),
         )
       }
     }
@@ -172,7 +179,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         }
         NomisApiExtension.nomisApi.verify(
           1,
-          WireMock.postRequestedFor(WireMock.urlEqualTo("/non-associations")),
+          postRequestedFor(urlEqualTo("/non-associations")),
         )
       }
 
@@ -181,11 +188,11 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           MappingExtension.mappingServer.verify(
             2,
-            WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/non-associations"))
-              .withRequestBody(WireMock.matchingJsonPath("nonAssociationId", WireMock.equalTo("$NON_ASSOCIATION_ID")))
-              .withRequestBody(WireMock.matchingJsonPath("firstOffenderNo", WireMock.equalTo(OFFENDER_NO_1)))
-              .withRequestBody(WireMock.matchingJsonPath("secondOffenderNo", WireMock.equalTo(OFFENDER_NO_2)))
-              .withRequestBody(WireMock.matchingJsonPath("nomisTypeSequence", WireMock.equalTo("1"))),
+            postRequestedFor(urlEqualTo("/mapping/non-associations"))
+              .withRequestBody(matchingJsonPath("nonAssociationId", equalTo("$NON_ASSOCIATION_ID")))
+              .withRequestBody(matchingJsonPath("firstOffenderNo", equalTo(OFFENDER_NO_1)))
+              .withRequestBody(matchingJsonPath("secondOffenderNo", equalTo(OFFENDER_NO_2)))
+              .withRequestBody(matchingJsonPath("nomisTypeSequence", equalTo("1"))),
           )
         }
         await untilAsserted {
@@ -204,6 +211,138 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  inner class Update {
+
+    @Nested
+    inner class WhenNonAssociationHasJustBeenUpdatedByNonAssociationService {
+
+      @BeforeEach
+      fun setUp() {
+        NonAssociationsApiExtension.nonAssociationsApiServer.stubGetNonAssociation(id = NON_ASSOCIATION_ID, response = nonAssociationApiResponse)
+        MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
+        NomisApiExtension.nomisApi.stubNonAssociationAmend(OFFENDER_NO_1, OFFENDER_NO_2)
+        publishNonAssociationDomainEvent("non-associations.amended")
+      }
+
+      @Test
+      fun `will callback back to nonAssociation service to get more details`() {
+        await untilAsserted {
+          NonAssociationsApiExtension.nonAssociationsApiServer.verify(getRequestedFor(urlEqualTo("/legacy/api/non-associations/$NON_ASSOCIATION_ID")))
+        }
+      }
+
+      @Test
+      fun `will update an nonAssociation in NOMIS`() {
+        await untilAsserted {
+          NomisApiExtension.nomisApi.verify(
+            putRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1"))
+              .withRequestBody(matchingJsonPath("reason", equalTo("VIC")))
+              .withRequestBody(matchingJsonPath("recipReason", equalTo("PER")))
+              .withRequestBody(matchingJsonPath("type", equalTo("WING")))
+              .withRequestBody(matchingJsonPath("effectiveDate", equalTo("2021-07-05")))
+              .withRequestBody(matchingJsonPath("authorisedBy", equalTo("Officer Alice B.")))
+              .withRequestBody(matchingJsonPath("comment", equalTo("Mr. Bloggs assaulted Mr. Hall"))),
+          )
+        }
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            Mockito.eq("nonAssociation-amend-success"),
+            org.mockito.kotlin.check {
+              assertThat(it["nonAssociationId"]).isEqualTo(NON_ASSOCIATION_ID.toString())
+              assertThat(it["offender1"]).isEqualTo(OFFENDER_NO_1)
+              assertThat(it["offender2"]).isEqualTo(OFFENDER_NO_2)
+              assertThat(it["sequence"]).isEqualTo("1")
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+
+    @Nested
+    inner class Exceptions {
+
+      @Nested
+      inner class WhenServiceFailsOnce {
+
+        @BeforeEach
+        fun setUp() {
+          NonAssociationsApiExtension.nonAssociationsApiServer.stubGetNonAssociationWithErrorFollowedBySlowSuccess(
+            id = NON_ASSOCIATION_ID,
+            response = nonAssociationApiResponse,
+          )
+          MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
+          NomisApiExtension.nomisApi.stubNonAssociationAmend(OFFENDER_NO_1, OFFENDER_NO_2)
+          publishNonAssociationDomainEvent("non-associations.amended")
+        }
+
+        @Test
+        fun `will callback back to nonAssociation service twice to get more details`() {
+          await untilAsserted {
+            NonAssociationsApiExtension.nonAssociationsApiServer.verify(2, getRequestedFor(urlEqualTo("/legacy/api/non-associations/$NON_ASSOCIATION_ID")))
+            verify(telemetryClient).trackEvent(Mockito.eq("nonAssociation-amend-success"), any(), isNull())
+          }
+        }
+
+        @Test
+        fun `will eventually update the nonAssociation in NOMIS`() {
+          await untilAsserted {
+            NomisApiExtension.nomisApi.verify(1, putRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1")))
+            verify(telemetryClient).trackEvent(Mockito.eq("nonAssociation-amend-failed"), any(), isNull())
+            verify(telemetryClient).trackEvent(Mockito.eq("nonAssociation-amend-success"), any(), isNull())
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenServiceKeepsFailing {
+
+        @BeforeEach
+        fun setUp() {
+          NonAssociationsApiExtension.nonAssociationsApiServer.stubGetNonAssociation(id = NON_ASSOCIATION_ID, response = nonAssociationApiResponse)
+          MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
+          NomisApiExtension.nomisApi.stubNonAssociationAmendWithError(OFFENDER_NO_1, OFFENDER_NO_2, 503)
+          publishNonAssociationDomainEvent("non-associations.amended")
+        }
+
+        @Test
+        fun `will callback back to nonAssociation service 3 times before given up`() {
+          await untilAsserted {
+            NonAssociationsApiExtension.nonAssociationsApiServer.verify(3, getRequestedFor(urlEqualTo("/legacy/api/non-associations/$NON_ASSOCIATION_ID")))
+          }
+        }
+
+        @Test
+        fun `will create failure telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              Mockito.eq("nonAssociation-amend-failed"),
+              org.mockito.kotlin.check {
+                assertThat(it["nonAssociationId"]).isEqualTo(NON_ASSOCIATION_ID.toString())
+                assertThat(it["offender1"]).isEqualTo(OFFENDER_NO_1)
+                assertThat(it["offender2"]).isEqualTo(OFFENDER_NO_2)
+                assertThat(it["sequence"]).isEqualTo("1")
+              },
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will add message to dead letter queue`() {
+          await untilCallTo {
+            awsSqsNonAssociationDlqClient!!.countAllMessagesOnQueue(nonAssociationDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+      }
+    }
+  }
+
+  @Nested
   inner class CloseNonAssociation {
     @Nested
     inner class WhenNonAssociationHasJustBeenClosedByNonAssociationService {
@@ -218,7 +357,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will close an non-association in NOMIS`() {
         await untilAsserted {
-          NomisApiExtension.nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1/close")))
+          NomisApiExtension.nomisApi.verify(putRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1/close")))
         }
       }
 
@@ -255,14 +394,14 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to mapping service twice to get more details`() {
           await untilAsserted {
-            MappingExtension.mappingServer.verify(2, WireMock.getRequestedFor(WireMock.urlEqualTo("/mapping/non-associations/non-association-id/$NON_ASSOCIATION_ID")))
+            MappingExtension.mappingServer.verify(2, getRequestedFor(urlEqualTo("/mapping/non-associations/non-association-id/$NON_ASSOCIATION_ID")))
           }
         }
 
         @Test
         fun `will eventually close the non-association in NOMIS`() {
           await untilAsserted {
-            NomisApiExtension.nomisApi.verify(2, WireMock.putRequestedFor(WireMock.urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1/close")))
+            NomisApiExtension.nomisApi.verify(2, putRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1/close")))
             verify(telemetryClient).trackEvent(Mockito.eq("nonAssociation-close-failed"), any(), isNull())
             verify(telemetryClient).trackEvent(Mockito.eq("nonAssociation-close-success"), any(), isNull())
           }
@@ -282,7 +421,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to mapping service 3 times before given up`() {
           await untilAsserted {
-            MappingExtension.mappingServer.verify(3, WireMock.getRequestedFor(WireMock.urlEqualTo("/mapping/non-associations/non-association-id/$NON_ASSOCIATION_ID")))
+            MappingExtension.mappingServer.verify(3, getRequestedFor(urlEqualTo("/mapping/non-associations/non-association-id/$NON_ASSOCIATION_ID")))
           }
         }
 

@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
@@ -313,6 +314,14 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyValue(request)
       .retrieve()
       .awaitBody()
+
+  suspend fun amendNonAssociation(offenderNo1: String, offenderNo2: String, sequence: Int, request: UpdateNonAssociationRequest) {
+    webClient.put()
+      .uri("/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/sequence/{sequence}", offenderNo1, offenderNo2, sequence)
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 
   suspend fun closeNonAssociation(offenderNo1: String, offenderNo2: String, sequence: Int) {
     webClient.put()

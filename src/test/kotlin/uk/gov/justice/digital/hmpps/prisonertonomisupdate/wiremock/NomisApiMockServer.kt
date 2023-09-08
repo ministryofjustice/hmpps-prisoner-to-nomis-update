@@ -1110,6 +1110,49 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubNonAssociationAmend(offenderNo1: String, offenderNo2: String) {
+    stubFor(
+      put("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/1").willReturn(ok()),
+    )
+  }
+
+  fun stubNonAssociationAmendWithError(offenderNo1: String, offenderNo2: String, status: Int = 500) {
+    stubFor(
+      put("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/1").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubNonAssociationAmendWithErrorFollowedBySlowSuccess(offenderNo1: String, offenderNo2: String) {
+    stubFor(
+      put("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/1")
+        .inScenario("Retry NOMIS NonAssociations amend Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause NOMIS NonAssociations amend Success"),
+    )
+
+    stubFor(
+      put("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/1")
+        .inScenario("Retry NOMIS NonAssociations amend Scenario")
+        .whenScenarioStateIs("Cause NOMIS NonAssociations amend Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(200)
+            .withFixedDelay(1500),
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
   fun stubNonAssociationClose(offenderNo1: String, offenderNo2: String) {
     stubFor(
       put("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/1/close").willReturn(ok()),

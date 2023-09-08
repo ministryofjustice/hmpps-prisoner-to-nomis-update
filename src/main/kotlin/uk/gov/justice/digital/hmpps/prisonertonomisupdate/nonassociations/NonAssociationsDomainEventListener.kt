@@ -34,7 +34,7 @@ class NonAssociationsDomainEventListener(
   fun onMessage(rawMessage: String): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "non-associations.created" -> nonAssociationsService.createNonAssociation(message.fromJson())
-      "non-associations.amended" -> null // TODO nonAssociationsService.updateNonAssociation(message.fromJson())
+      "non-associations.amended" -> nonAssociationsService.amendNonAssociation(message.fromJson())
       "non-associations.closed" -> nonAssociationsService.closeNonAssociation(message.fromJson())
       "non-associations.deleted" -> null // nonAssociationsService.deleteNonAssociation(message.fromJson())
 
