@@ -28,8 +28,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Hearing
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateHearingRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsResponse
@@ -304,6 +306,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
   suspend fun createHearing(adjudicationNumber: Long, request: CreateHearingRequest): CreateHearingResponse =
     webClient.post()
       .uri("/adjudications/adjudication-number/$adjudicationNumber/hearings")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBody()
+
+  suspend fun updateHearing(adjudicationNumber: Long, hearingId: Long, request: UpdateHearingRequest): Hearing =
+    webClient.put()
+      .uri("/adjudications/adjudication-number/$adjudicationNumber/hearings/$hearingId")
       .bodyValue(request)
       .retrieve()
       .awaitBody()
