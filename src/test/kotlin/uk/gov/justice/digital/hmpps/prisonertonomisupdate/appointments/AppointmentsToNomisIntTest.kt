@@ -504,7 +504,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will create success telemetry`() {
         await untilAsserted {
           verify(telemetryClient).trackEvent(
-            eq("appointment-update-success"),
+            eq("appointment-amend-success"),
             check {
               assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
               assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
@@ -536,7 +536,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will callback back to appointment service twice to get more details`() {
           await untilAsserted {
             appointmentsApi.verify(2, getRequestedFor(urlEqualTo("/appointment-instances/$APPOINTMENT_INSTANCE_ID")))
-            verify(telemetryClient).trackEvent(eq("appointment-update-success"), any(), isNull())
+            verify(telemetryClient).trackEvent(eq("appointment-amend-success"), any(), isNull())
           }
         }
 
@@ -544,8 +544,8 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will eventually update the appointment in NOMIS`() {
           await untilAsserted {
             nomisApi.verify(1, putRequestedFor(urlEqualTo("/appointments/$EVENT_ID")))
-            verify(telemetryClient).trackEvent(eq("appointment-update-failed"), any(), isNull())
-            verify(telemetryClient).trackEvent(eq("appointment-update-success"), any(), isNull())
+            verify(telemetryClient).trackEvent(eq("appointment-amend-failed"), any(), isNull())
+            verify(telemetryClient).trackEvent(eq("appointment-amend-success"), any(), isNull())
           }
         }
       }
@@ -572,7 +572,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will create failure telemetry`() {
           await untilAsserted {
             verify(telemetryClient, times(3)).trackEvent(
-              eq("appointment-update-failed"),
+              eq("appointment-amend-failed"),
               check {
                 assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
                 assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
@@ -697,6 +697,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
   inner class UncancelAppointment {
     @Nested
     inner class WhenAppointmentHasJustBeenUncancelledByAppointmentService {

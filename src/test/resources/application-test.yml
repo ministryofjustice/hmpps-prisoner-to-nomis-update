@@ -45,7 +45,7 @@ hmpps.sqs:
       queueName: "appointment-${random.uuid}"
       dlqName: "appointment-dlq-${random.uuid}"
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"appointments.appointment-instance.created\", \"appointments.appointment-instance.updated\", \"appointments.appointment-instance.cancelled\", \"appointments.appointment-instance.deleted\"]}"
+      subscribeFilter: "{\"eventType\":[\"appointments.appointment-instance.created\", \"appointments.appointment-instance.updated\", \"appointments.appointment-instance.cancelled\", \"appointments.appointment-instance.uncancelled\", \"appointments.appointment-instance.deleted\"]}"
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
     nonassociation:

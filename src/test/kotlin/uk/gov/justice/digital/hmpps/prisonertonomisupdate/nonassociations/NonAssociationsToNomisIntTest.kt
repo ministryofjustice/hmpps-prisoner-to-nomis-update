@@ -26,7 +26,6 @@ import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NonAssociationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NonAssociationsApiExtension.Companion.nonAssociationsApiServer
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
@@ -218,7 +217,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        NonAssociationsApiExtension.nonAssociationsApiServer.stubGetNonAssociation(id = NON_ASSOCIATION_ID, response = nonAssociationApiResponse)
+        nonAssociationsApiServer.stubGetNonAssociation(id = NON_ASSOCIATION_ID, response = nonAssociationApiResponse)
         MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
         NomisApiExtension.nomisApi.stubNonAssociationAmend(OFFENDER_NO_1, OFFENDER_NO_2)
         publishNonAssociationDomainEvent("non-associations.amended")
@@ -227,7 +226,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to nonAssociation service to get more details`() {
         await untilAsserted {
-          NonAssociationsApiExtension.nonAssociationsApiServer.verify(getRequestedFor(urlEqualTo("/legacy/api/non-associations/$NON_ASSOCIATION_ID")))
+          nonAssociationsApiServer.verify(getRequestedFor(urlEqualTo("/legacy/api/non-associations/$NON_ASSOCIATION_ID")))
         }
       }
 
@@ -271,7 +270,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          NonAssociationsApiExtension.nonAssociationsApiServer.stubGetNonAssociationWithErrorFollowedBySlowSuccess(
+          nonAssociationsApiServer.stubGetNonAssociationWithErrorFollowedBySlowSuccess(
             id = NON_ASSOCIATION_ID,
             response = nonAssociationApiResponse,
           )
@@ -283,7 +282,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to nonAssociation service twice to get more details`() {
           await untilAsserted {
-            NonAssociationsApiExtension.nonAssociationsApiServer.verify(2, getRequestedFor(urlEqualTo("/legacy/api/non-associations/$NON_ASSOCIATION_ID")))
+            nonAssociationsApiServer.verify(2, getRequestedFor(urlEqualTo("/legacy/api/non-associations/$NON_ASSOCIATION_ID")))
             verify(telemetryClient).trackEvent(Mockito.eq("nonAssociation-amend-success"), any(), isNull())
           }
         }
@@ -303,7 +302,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          NonAssociationsApiExtension.nonAssociationsApiServer.stubGetNonAssociation(id = NON_ASSOCIATION_ID, response = nonAssociationApiResponse)
+          nonAssociationsApiServer.stubGetNonAssociation(id = NON_ASSOCIATION_ID, response = nonAssociationApiResponse)
           MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
           NomisApiExtension.nomisApi.stubNonAssociationAmendWithError(OFFENDER_NO_1, OFFENDER_NO_2, 503)
           publishNonAssociationDomainEvent("non-associations.amended")
@@ -312,7 +311,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to nonAssociation service 3 times before given up`() {
           await untilAsserted {
-            NonAssociationsApiExtension.nonAssociationsApiServer.verify(3, getRequestedFor(urlEqualTo("/legacy/api/non-associations/$NON_ASSOCIATION_ID")))
+            nonAssociationsApiServer.verify(3, getRequestedFor(urlEqualTo("/legacy/api/non-associations/$NON_ASSOCIATION_ID")))
           }
         }
 
