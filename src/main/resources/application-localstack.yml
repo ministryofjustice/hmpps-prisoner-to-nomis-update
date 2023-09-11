@@ -35,7 +35,7 @@ hmpps.sqs:
       queueName: hmpps_prisoner_to_nomis_adjudication_queue
       dlqName: hmpps_prisoner_to_nomis_adjudication_dlq
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"adjudication.report.created\", \"adjudication.hearing.created\"]}"
+      subscribeFilter: "{\"eventType\":[\"adjudication.report.created\", \"adjudication.hearing.created\", \"adjudication.hearing.updated\"]}"
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:hmpps_domain_events

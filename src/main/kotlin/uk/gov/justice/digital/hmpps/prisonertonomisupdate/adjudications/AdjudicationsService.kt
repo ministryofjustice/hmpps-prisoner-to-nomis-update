@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Eviden
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.IncidentToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToUpdateOrAdd
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateHearingRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
@@ -40,6 +41,7 @@ class AdjudicationsService(
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
+
   suspend fun createAdjudication(createEvent: AdjudicationCreatedEvent) {
     val chargeNumber = createEvent.additionalInformation.chargeNumber
     val prisonId: String = createEvent.additionalInformation.prisonId
@@ -138,7 +140,7 @@ class AdjudicationsService(
     }
   }
 
-  suspend fun createHearing(createEvent: HearingCreatedEvent) {
+  suspend fun createHearing(createEvent: HearingEvent) {
     val chargeNumber = createEvent.additionalInformation.chargeNumber
     val prisonId: String = createEvent.additionalInformation.prisonId
     val prisonerNumber: String = createEvent.additionalInformation.prisonerNumber
@@ -173,7 +175,7 @@ class AdjudicationsService(
           "Hearing $dpsHearingId not found for DPS adjudication with charge no $chargeNumber",
         )
         val nomisAdjudicationResponse =
-          nomisApiService.createHearing(adjudicationNumber, hearing.toNomisHearing())
+          nomisApiService.createHearing(adjudicationNumber, hearing.toNomisCreateHearing())
 
         telemetryMap["nomisHearingId"] = nomisAdjudicationResponse.hearingId.toString()
 
@@ -186,9 +188,53 @@ class AdjudicationsService(
     }
   }
 
+  suspend fun updateHearing(updateEvent: HearingEvent) {
+    val chargeNumber = updateEvent.additionalInformation.chargeNumber
+    val prisonId: String = updateEvent.additionalInformation.prisonId
+    val prisonerNumber: String = updateEvent.additionalInformation.prisonerNumber
+    val dpsHearingId: String = updateEvent.additionalInformation.hearingId
+    val telemetryMap = mutableMapOf(
+      "chargeNumber" to chargeNumber,
+      "prisonId" to prisonId,
+      "prisonerNumber" to prisonerNumber,
+      "dpsHearingId" to dpsHearingId,
+    )
+
+    runCatching {
+      val adjudicationNumber =
+        adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber).adjudicationNumber
+          .also {
+            telemetryMap["adjudicationNumber"] = it.toString()
+          }
+      val nomisHearingId =
+        hearingMappingService.getMappingGivenDpsHearingId(dpsHearingId).nomisHearingId
+          .also { telemetryMap["nomisHearingId"] = it.toString() }
+
+      adjudicationsApiService.getCharge(
+        chargeNumber,
+        prisonId,
+      ).reportedAdjudication.hearings.firstOrNull { it.id.toString() == dpsHearingId }?.let {
+        nomisApiService.updateHearing(adjudicationNumber, nomisHearingId, it.toNomisUpdateHearing())
+        telemetryClient.trackEvent("hearing-updated-success", telemetryMap, null)
+      } ?: throw IllegalStateException(
+        "Hearing $dpsHearingId not found for DPS adjudication with charge no $chargeNumber",
+      )
+    }.onFailure { e ->
+      telemetryClient.trackEvent("hearing-updated-failed", telemetryMap, null)
+      throw e
+    }
+  }
+
   private inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
 }
+
+private fun HearingDto.toNomisUpdateHearing(): UpdateHearingRequest = UpdateHearingRequest(
+  hearingType = this.oicHearingType.name,
+  hearingDate = this.dateTimeOfHearing.toLocalDate(),
+  hearingTime = this.dateTimeOfHearing.toLocalTimeAtMinute().toString(),
+  internalLocationId = this.locationId,
+)
 
 internal fun ReportedAdjudicationResponse.toNomisAdjudication() = CreateAdjudicationRequest(
   adjudicationNumber = reportedAdjudication.chargeNumber.toNomisAdjudicationNumber(),
@@ -283,7 +329,7 @@ data class AdjudicationDamagesUpdateEvent(
   val additionalInformation: AdjudicationDamagesAdditionalInformation,
 )
 
-private fun HearingDto.toNomisHearing() = CreateHearingRequest(
+private fun HearingDto.toNomisCreateHearing() = CreateHearingRequest(
   hearingType = this.oicHearingType.name,
   hearingDate = this.dateTimeOfHearing.toLocalDate(),
   hearingTime = this.dateTimeOfHearing.toLocalTimeAtMinute().toString(),
@@ -298,6 +344,6 @@ data class HearingAdditionalInformation(
   val hearingId: String,
 )
 
-data class HearingCreatedEvent(
+data class HearingEvent(
   val additionalInformation: HearingAdditionalInformation,
 )

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
@@ -177,11 +178,107 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class UpdateHearing {
+    @Nested
+    inner class WhenHearingHasBeenUpdatedInDPS {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_UPDATE, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER_FOR_UPDATE, offenderNo = OFFENDER_NO)
+        NomisApiExtension.nomisApi.stubHearingUpdate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        publishUpdateHearingDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to adjudication service to get more details`() {
+        waitForHearingProcessingToBeComplete()
+
+        AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER_FOR_UPDATE/v2")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForHearingProcessingToBeComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("hearing-updated-success"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
+            Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+            Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to update the hearing`() {
+        waitForHearingProcessingToBeComplete()
+
+        NomisApiExtension.nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID")))
+      }
+    }
+
+    @Nested
+    inner class WhenNoMappingExistsForHearing {
+
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_UPDATE, ADJUDICATION_NUMBER)
+        MappingExtension.mappingServer.stubGetByDpsHearingIdWithError(hearingId = DPS_HEARING_ID, 404)
+        publishUpdateHearingDomainEvent()
+      }
+
+      @Test
+      fun `will not update an hearing in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(3)).trackEvent(
+            eq("hearing-updated-failed"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
+            },
+            isNull(),
+          )
+        }
+
+        NomisApiExtension.nomisApi.verify(
+          0,
+          WireMock.putRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID")),
+        )
+      }
+    }
+
+    private fun waitForHearingProcessingToBeComplete() {
+      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+    }
+  }
+
   private fun publishCreateHearingDomainEvent() {
     val eventType = "adjudication.hearing.created"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(hearingMessagePayload(DPS_HEARING_ID, CHARGE_NUMBER_FOR_CREATION, PRISON_ID, OFFENDER_NO, eventType))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishUpdateHearingDomainEvent() {
+    val eventType = "adjudication.hearing.updated"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(hearingMessagePayload(DPS_HEARING_ID, CHARGE_NUMBER_FOR_UPDATE, PRISON_ID, OFFENDER_NO, eventType))
         .messageAttributes(
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
