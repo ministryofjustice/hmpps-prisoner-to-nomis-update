@@ -68,9 +68,9 @@ class AppointmentsService(
 
       nomisApiService.updateAppointment(nomisEventId, toUpdateAppointmentRequest(appointmentInstance))
     }.onSuccess {
-      telemetryClient.trackEvent("appointment-update-success", telemetryMap, null)
+      telemetryClient.trackEvent("appointment-amend-success", telemetryMap, null)
     }.onFailure { e ->
-      telemetryClient.trackEvent("appointment-update-failed", telemetryMap, null)
+      telemetryClient.trackEvent("appointment-amend-failed", telemetryMap, null)
       throw e
     }
   }

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.model.LegacyNonAssociation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
@@ -59,12 +60,33 @@ class NonAssociationsService(
     }
   }
 
-  private fun isDpsCreated(additionalInformation: NonAssociationAdditionalInformation) =
-    additionalInformation.source != CreatingSystem.NOMIS.name
+  suspend fun amendNonAssociation(event: NonAssociationDomainEvent) {
+    val telemetryMap = mutableMapOf("nonAssociationId" to event.additionalInformation.id.toString())
+
+    if (isDpsCreated(event.additionalInformation)) {
+      runCatching {
+        val nonAssociation = nonAssociationsApiService.getNonAssociation(event.additionalInformation.id)
+
+        mappingService.getMappingGivenNonAssociationId(event.additionalInformation.id)
+          .apply {
+            telemetryMap["offender1"] = firstOffenderNo
+            telemetryMap["offender2"] = secondOffenderNo
+            telemetryMap["sequence"] = nomisTypeSequence.toString()
+            nomisApiService.amendNonAssociation(firstOffenderNo, secondOffenderNo, nomisTypeSequence, toUpdateNonAssociationRequest(nonAssociation))
+          }
+      }.onSuccess {
+        telemetryClient.trackEvent("nonAssociation-amend-success", telemetryMap)
+      }.onFailure { e ->
+        telemetryClient.trackEvent("nonAssociation-amend-failed", telemetryMap)
+        throw e
+      }
+    } else {
+      telemetryClient.trackEvent("nonAssociation-amend-ignored", telemetryMap)
+    }
+  }
 
   suspend fun closeNonAssociation(event: NonAssociationDomainEvent) {
-    val telemetryMap =
-      mutableMapOf("nonAssociationId" to event.additionalInformation.id.toString())
+    val telemetryMap = mutableMapOf("nonAssociationId" to event.additionalInformation.id.toString())
 
     runCatching {
       mappingService.getMappingGivenNonAssociationId(event.additionalInformation.id)
@@ -92,6 +114,18 @@ class NonAssociationsService(
     authorisedBy = instance.authorisedBy,
     comment = instance.comments,
   )
+
+  private fun toUpdateNonAssociationRequest(instance: LegacyNonAssociation) = UpdateNonAssociationRequest(
+    reason = instance.reasonCode.value,
+    recipReason = instance.offenderNonAssociation.reasonCode.value,
+    type = instance.typeCode.value,
+    effectiveDate = LocalDateTime.parse(instance.effectiveDate).toLocalDate(),
+    authorisedBy = instance.authorisedBy,
+    comment = instance.comments,
+  )
+
+  private fun isDpsCreated(additionalInformation: NonAssociationAdditionalInformation) =
+    additionalInformation.source != CreatingSystem.NOMIS.name
 
   suspend fun createRetry(message: CreateMappingRetryMessage<NonAssociationMappingDto>) {
     mappingService.createMapping(message.mapping)

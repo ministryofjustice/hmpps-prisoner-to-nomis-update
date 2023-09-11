@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-09-05.4773.65c452a"
+    "version": "2023-09-08.4839.283aed7"
   },
   "servers": [
     {
@@ -461,90 +461,7 @@
         }
       }
     },
-    "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}": {
-      "get": {
-        "tags": [
-          "non-association-resource"
-        ],
-        "summary": "Get an open non-association",
-        "description": "Get the open non-association for the two offender numbers. Requires role NOMIS_NON_ASSOCIATIONS",
-        "operationId": "getNonAssociation",
-        "parameters": [
-          {
-            "name": "offenderNo",
-            "in": "path",
-            "description": "Offender",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "example": "A3456GH"
-          },
-          {
-            "name": "nsOffenderNo",
-            "in": "path",
-            "description": "Non-association offender",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "example": "A34578ED"
-          },
-          {
-            "name": "typeSequence",
-            "in": "query",
-            "description": "Sequence number. If present, get this detail record, otherwise get the open record if there is one.",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "example": 2
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Non-association information",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NonAssociationResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "No open non-association exists for these offender numbers, or one of the offenders does not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires role NOMIS_NON_ASSOCIATIONS",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
+    "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/sequence/{typeSequence}": {
       "put": {
         "tags": [
           "non-association-resource"
@@ -572,6 +489,17 @@
               "type": "string"
             },
             "example": "A34578ED"
+          },
+          {
+            "name": "typeSequence",
+            "in": "path",
+            "description": "Sequence number. Amend this specific detail record",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "example": 1
           }
         ],
         "requestBody": {
@@ -586,7 +514,7 @@
         },
         "responses": {
           "200": {
-            "description": "Successfully updated non-association"
+            "description": "Successfully amended non-association"
           },
           "404": {
             "description": "Non-association does not exist",
@@ -1523,6 +1451,94 @@
           },
           "404": {
             "description": "Adjudication does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}": {
+      "put": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "Updates a hearing",
+        "description": "Updates an hearing for a given adjudication and hearing Id. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "updateHearing",
+        "parameters": [
+          {
+            "name": "adjudicationNumber",
+            "in": "path",
+            "description": "Adjudication number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Adjudication number",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "hearingId",
+            "in": "path",
+            "description": "Hearing Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Hearing Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHearingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated Hearing Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateHearingRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Hearing does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -3177,6 +3193,91 @@
           },
           "403": {
             "description": "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}": {
+      "get": {
+        "tags": [
+          "non-association-resource"
+        ],
+        "summary": "Get an open non-association",
+        "description": "Get the open non-association for the two offender numbers. Requires role NOMIS_NON_ASSOCIATIONS",
+        "operationId": "getNonAssociation",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "A3456GH"
+          },
+          {
+            "name": "nsOffenderNo",
+            "in": "path",
+            "description": "Non-association offender",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "A34578ED"
+          },
+          {
+            "name": "typeSequence",
+            "in": "query",
+            "description": "Sequence number. If present, get this detail record, otherwise get the open record if there is one.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "example": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Non-association information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NonAssociationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No open non-association exists for these offender numbers, or one of the offenders does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_NON_ASSOCIATIONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -5208,6 +5309,39 @@
         },
         "description": "Repairs required due to damage. Any items not in this list will be removed from the Adjudication in NOMIS"
       },
+      "UpdateHearingRequest": {
+        "required": [
+          "hearingDate",
+          "hearingTime",
+          "hearingType",
+          "internalLocationId"
+        ],
+        "type": "object",
+        "properties": {
+          "hearingType": {
+            "type": "string",
+            "description": "Type of hearing",
+            "example": "GOV"
+          },
+          "hearingDate": {
+            "type": "string",
+            "description": "Hearing date",
+            "format": "date"
+          },
+          "hearingTime": {
+            "type": "string",
+            "description": "Hearing time",
+            "format": "partial-time"
+          },
+          "internalLocationId": {
+            "type": "integer",
+            "description": "location id for the hearing",
+            "format": "int64",
+            "example": 123456
+          }
+        },
+        "description": "Hearing update fields"
+      },
       "CourseScheduleRequest": {
         "required": [
           "cancelled",
@@ -5953,7 +6087,8 @@
           "createdByUsername",
           "createdDateTime",
           "hearingId",
-          "hearingResults"
+          "hearingResults",
+          "notifications"
         ],
         "type": "object",
         "properties": {
@@ -6018,9 +6153,44 @@
           "createdByUsername": {
             "type": "string",
             "description": "Username of person who created the record in NOMIS"
+          },
+          "notifications": {
+            "type": "array",
+            "description": "List of hearing notifications",
+            "items": {
+              "$ref": "#/components/schemas/HearingNotification"
+            }
           }
         },
         "description": "hearings associated with this adjudication"
+      },
+      "HearingNotification": {
+        "required": [
+          "deliveryDate",
+          "deliveryTime",
+          "notifiedStaff"
+        ],
+        "type": "object",
+        "properties": {
+          "deliveryDate": {
+            "type": "string",
+            "description": "Hearing notification date",
+            "format": "date"
+          },
+          "deliveryTime": {
+            "type": "string",
+            "description": "Hearing notification time",
+            "format": "partial-time"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Notification comment"
+          },
+          "notifiedStaff": {
+            "$ref": "#/components/schemas/Staff"
+          }
+        },
+        "description": "List of hearing notifications"
       },
       "HearingResult": {
         "required": [
@@ -6170,6 +6340,7 @@
       "Prisoner": {
         "required": [
           "createdByUsername",
+          "dateAddedToIncident",
           "lastName",
           "offenderNo"
         ],
@@ -6190,13 +6361,21 @@
           "createdByUsername": {
             "type": "string",
             "description": "Username of person who created the record in NOMIS where this prisoner is used"
+          },
+          "dateAddedToIncident": {
+            "type": "string",
+            "description": "date added in NOMIS to the adjudication incident",
+            "format": "date"
+          },
+          "comment": {
+            "type": "string",
+            "description": "comment about why they were added to the adjudication incident"
           }
         },
         "description": "Other suspects involved in the incident that may or may not have been placed on report"
       },
       "Staff": {
         "required": [
-          "createdByUsername",
           "firstName",
           "lastName",
           "staffId",
@@ -6224,8 +6403,18 @@
           "createdByUsername": {
             "type": "string",
             "description": "Username of person who created the record in NOMIS where this staff is used"
+          },
+          "dateAddedToIncident": {
+            "type": "string",
+            "description": "date added in NOMIS to the adjudication incident",
+            "format": "date"
+          },
+          "comment": {
+            "type": "string",
+            "description": "comment about why they were added to the adjudication incident"
           }
-        }
+        },
+        "description": "Staff notified"
       },
       "ChargeToCreate": {
         "required": [
@@ -7021,12 +7210,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "last": {
             "type": "boolean"
@@ -7211,12 +7400,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "last": {
             "type": "boolean"
@@ -7361,12 +7550,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "last": {
             "type": "boolean"
@@ -7486,12 +7675,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "last": {
             "type": "boolean"
@@ -7627,12 +7816,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "last": {
             "type": "boolean"
@@ -7780,12 +7969,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "last": {
             "type": "boolean"
@@ -7851,12 +8040,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "last": {
             "type": "boolean"

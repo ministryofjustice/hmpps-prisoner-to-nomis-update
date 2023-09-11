@@ -20,7 +20,7 @@ hmpps.sqs:
       queueName: hmpps_prisoner_to_nomis_appointment_queue
       dlqName: hmpps_prisoner_to_nomis_appointment_dlq
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"appointments.appointment-instance.created\", \"appointments.appointment-instance.updated\", \"appointments.appointment-instance.cancelled\", \"appointments.appointment-instance.deleted\"]}"
+      subscribeFilter: "{\"eventType\":[\"appointments.appointment-instance.created\", \"appointments.appointment-instance.updated\", \"appointments.appointment-instance.cancelled\", \"appointments.appointment-instance.uncancelled\", \"appointments.appointment-instance.deleted\"]}"
     nonassociation:
       queueName: hmpps_prisoner_to_nomis_nonassociation_queue
       dlqName: hmpps_prisoner_to_nomis_nonassociation_dlq
