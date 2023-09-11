@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
@@ -233,23 +234,23 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will not create an hearing in NOMIS`() {
-        waitForHearingProcessingToBeComplete()
-
-        verify(telemetryClient).trackEvent(
-          eq("hearing-updated-failed"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
-            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-            Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
-          },
-          isNull(),
-        )
+      fun `will not update an hearing in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(3)).trackEvent(
+            eq("hearing-updated-failed"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
+            },
+            isNull(),
+          )
+        }
 
         NomisApiExtension.nomisApi.verify(
           0,
-          WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID")),
+          WireMock.putRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID")),
         )
       }
     }
