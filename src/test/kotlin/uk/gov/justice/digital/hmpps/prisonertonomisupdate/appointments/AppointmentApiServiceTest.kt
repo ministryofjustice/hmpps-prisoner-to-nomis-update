@@ -40,7 +40,7 @@ internal class AppointmentApiServiceTest {
       "inCell": false,
       "prisonerNumber": "A1234BC",
       "cancelled": false,
-      "created": "2021-03-14T10:15:00",
+      "createdTime": "2021-03-14T10:15:00",
       "createdBy": "user1"
     }
     """.trimIndent()
