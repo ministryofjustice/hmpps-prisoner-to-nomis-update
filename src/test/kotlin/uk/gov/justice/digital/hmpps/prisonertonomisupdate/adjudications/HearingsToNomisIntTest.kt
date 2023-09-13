@@ -22,7 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtens
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 
 private const val CHARGE_NUMBER_FOR_CREATION = "12345"
-private const val CHARGE_NUMBER_FOR_UPDATE = "12345-1"
+private const val CHARGE_NUMBER = "12345-1"
 private const val ADJUDICATION_NUMBER = 12345L
 private const val PRISON_ID = "MDI"
 private const val OFFENDER_NO = "A1234AA"
@@ -184,8 +184,8 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenHearingHasBeenUpdatedInDPS {
       @BeforeEach
       fun setUp() {
-        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_UPDATE, ADJUDICATION_NUMBER)
-        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER_FOR_UPDATE, offenderNo = OFFENDER_NO)
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER, offenderNo = OFFENDER_NO)
         NomisApiExtension.nomisApi.stubHearingUpdate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
         MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
         publishUpdateHearingDomainEvent()
@@ -195,7 +195,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will callback back to adjudication service to get more details`() {
         waitForHearingProcessingToBeComplete()
 
-        AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER_FOR_UPDATE/v2")))
+        AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
       }
 
       @Test
@@ -205,7 +205,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
         verify(telemetryClient).trackEvent(
           eq("hearing-updated-success"),
           org.mockito.kotlin.check {
-            Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
+            Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
             Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
             Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
@@ -228,7 +228,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_UPDATE, ADJUDICATION_NUMBER)
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
         MappingExtension.mappingServer.stubGetByDpsHearingIdWithError(hearingId = DPS_HEARING_ID, 404)
         publishUpdateHearingDomainEvent()
       }
@@ -242,7 +242,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
               Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
               Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
               Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
-              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
             },
             isNull(),
           )
@@ -251,6 +251,85 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
         NomisApiExtension.nomisApi.verify(
           0,
           WireMock.putRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID")),
+        )
+      }
+    }
+
+    private fun waitForHearingProcessingToBeComplete() {
+      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+    }
+  }
+
+  @Nested
+  inner class DeleteHearing {
+    @Nested
+    inner class WhenHearingHasBeenUpdatedInDPS {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        NomisApiExtension.nomisApi.stubHearingDelete(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubHearingDeleteByDpsHearingId(DPS_HEARING_ID)
+        publishDeleteHearingDomainEvent()
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForHearingProcessingToBeComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("hearing-deleted-success"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+            Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to delete the hearing`() {
+        waitForHearingProcessingToBeComplete()
+        NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID")))
+      }
+
+      @Test
+      fun `will call the mapping service to delete the mapping`() {
+        waitForHearingProcessingToBeComplete()
+        MappingExtension.mappingServer.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/mapping/hearings/dps/$DPS_HEARING_ID")))
+      }
+    }
+
+    @Nested
+    inner class WhenNoMappingExistsForHearing {
+
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        MappingExtension.mappingServer.stubGetByDpsHearingIdWithError(hearingId = DPS_HEARING_ID, 404)
+        publishDeleteHearingDomainEvent()
+      }
+
+      @Test
+      fun `will not attempt to delete a hearing in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(3)).trackEvent(
+            eq("hearing-deleted-failed"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+            },
+            isNull(),
+          )
+        }
+
+        NomisApiExtension.nomisApi.verify(
+          0,
+          WireMock.deleteRequestedFor(WireMock.anyUrl()),
         )
       }
     }
@@ -278,7 +357,21 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
     val eventType = "adjudication.hearing.updated"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
-        .message(hearingMessagePayload(DPS_HEARING_ID, CHARGE_NUMBER_FOR_UPDATE, PRISON_ID, OFFENDER_NO, eventType))
+        .message(hearingMessagePayload(DPS_HEARING_ID, CHARGE_NUMBER, PRISON_ID, OFFENDER_NO, eventType))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishDeleteHearingDomainEvent() {
+    val eventType = "adjudication.hearing.deleted"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(hearingMessagePayload(DPS_HEARING_ID, CHARGE_NUMBER, PRISON_ID, OFFENDER_NO, eventType))
         .messageAttributes(
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")

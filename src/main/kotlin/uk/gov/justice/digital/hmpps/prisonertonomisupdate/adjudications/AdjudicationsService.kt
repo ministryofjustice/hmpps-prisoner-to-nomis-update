@@ -189,38 +189,55 @@ class AdjudicationsService(
   }
 
   suspend fun updateHearing(updateEvent: HearingEvent) {
-    val chargeNumber = updateEvent.additionalInformation.chargeNumber
-    val prisonId: String = updateEvent.additionalInformation.prisonId
-    val prisonerNumber: String = updateEvent.additionalInformation.prisonerNumber
-    val dpsHearingId: String = updateEvent.additionalInformation.hearingId
-    val telemetryMap = mutableMapOf(
-      "chargeNumber" to chargeNumber,
-      "prisonId" to prisonId,
-      "prisonerNumber" to prisonerNumber,
-      "dpsHearingId" to dpsHearingId,
-    )
+    val eventData: HearingAdditionalInformation = updateEvent.additionalInformation
+    val telemetryMap = updateEvent.additionalInformation.toTelemetryMap()
 
     runCatching {
       val adjudicationNumber =
-        adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber).adjudicationNumber
+        adjudicationMappingService.getMappingGivenChargeNumber(eventData.chargeNumber).adjudicationNumber
           .also {
             telemetryMap["adjudicationNumber"] = it.toString()
           }
       val nomisHearingId =
-        hearingMappingService.getMappingGivenDpsHearingId(dpsHearingId).nomisHearingId
+        hearingMappingService.getMappingGivenDpsHearingId(eventData.hearingId).nomisHearingId
           .also { telemetryMap["nomisHearingId"] = it.toString() }
 
       adjudicationsApiService.getCharge(
-        chargeNumber,
-        prisonId,
-      ).reportedAdjudication.hearings.firstOrNull { it.id.toString() == dpsHearingId }?.let {
+        eventData.chargeNumber,
+        eventData.prisonId,
+      ).reportedAdjudication.hearings.firstOrNull { it.id.toString() == eventData.hearingId }?.let {
         nomisApiService.updateHearing(adjudicationNumber, nomisHearingId, it.toNomisUpdateHearing())
         telemetryClient.trackEvent("hearing-updated-success", telemetryMap, null)
       } ?: throw IllegalStateException(
-        "Hearing $dpsHearingId not found for DPS adjudication with charge no $chargeNumber",
+        "Hearing ${eventData.hearingId} not found for DPS adjudication with charge no ${eventData.chargeNumber}",
       )
     }.onFailure { e ->
       telemetryClient.trackEvent("hearing-updated-failed", telemetryMap, null)
+      throw e
+    }
+  }
+
+  suspend fun deleteHearing(deleteEvent: HearingEvent) {
+    val eventData: HearingAdditionalInformation = deleteEvent.additionalInformation
+    val telemetryMap = deleteEvent.additionalInformation.toTelemetryMap()
+
+    runCatching {
+      val adjudicationNumber =
+        adjudicationMappingService.getMappingGivenChargeNumber(eventData.chargeNumber).adjudicationNumber
+          .also {
+            telemetryMap["adjudicationNumber"] = it.toString()
+          }
+      val nomisHearingId =
+        hearingMappingService.getMappingGivenDpsHearingId(eventData.hearingId).nomisHearingId
+          .also { telemetryMap["nomisHearingId"] = it.toString() }
+
+      nomisApiService.deleteHearing(adjudicationNumber, nomisHearingId).also {
+        hearingMappingService.deleteMappingGivenDpsHearingId(eventData.hearingId)
+      }
+    }.onSuccess {
+      telemetryClient.trackEvent("hearing-deleted-success", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("hearing-deleted-failed", telemetryMap, null)
       throw e
     }
   }
@@ -234,6 +251,13 @@ private fun HearingDto.toNomisUpdateHearing(): UpdateHearingRequest = UpdateHear
   hearingDate = this.dateTimeOfHearing.toLocalDate(),
   hearingTime = this.dateTimeOfHearing.toLocalTimeAtMinute().toString(),
   internalLocationId = this.locationId,
+)
+
+private fun HearingAdditionalInformation.toTelemetryMap(): MutableMap<String, String> = mutableMapOf(
+  "chargeNumber" to this.chargeNumber,
+  "prisonId" to this.prisonId,
+  "prisonerNumber" to this.prisonerNumber,
+  "dpsHearingId" to this.hearingId,
 )
 
 internal fun ReportedAdjudicationResponse.toNomisAdjudication() = CreateAdjudicationRequest(

@@ -776,6 +776,16 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubHearingDeleteByDpsHearingId(dpsHearingId: String) {
+    stubFor(
+      delete("/mapping/hearings/dps/$dpsHearingId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
+
   // *************************************************** Non-Associations **********************************************
 
   fun stubCreateNonAssociation() {
