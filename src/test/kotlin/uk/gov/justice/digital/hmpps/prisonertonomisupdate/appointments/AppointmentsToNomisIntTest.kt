@@ -50,8 +50,8 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
       "inCell": false,
       "prisonerNumber": "A1234BC",
       "cancelled": false,
-      "comment": "Some comment",
-      "created": "2021-03-14T10:15:00",
+      "extraInformation": "Some comment",
+      "createdTime": "2021-03-14T10:15:00",
       "createdBy": "user1"
     }
   """.trimIndent()

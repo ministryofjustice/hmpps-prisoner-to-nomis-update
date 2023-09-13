@@ -177,17 +177,17 @@ class AppointmentsService(
   )
 
   private fun constructComment(instance: AppointmentInstance): String? {
-    val comment = if (instance.appointmentDescription.isNullOrBlank()) {
-      if (instance.comment.isNullOrBlank()) {
+    val comment = if (instance.customName.isNullOrBlank()) {
+      if (instance.extraInformation.isNullOrBlank()) {
         null
       } else {
-        instance.comment
+        instance.extraInformation
       }
     } else {
-      if (instance.comment.isNullOrBlank()) {
-        instance.appointmentDescription
+      if (instance.extraInformation.isNullOrBlank()) {
+        instance.customName
       } else {
-        "${instance.appointmentDescription} - ${instance.comment}"
+        "${instance.customName} - ${instance.extraInformation}"
       }
     }
     return comment?.take(4000)

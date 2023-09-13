@@ -1266,6 +1266,12 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubNonAssociationDelete(offenderNo1: String, offenderNo2: String) {
+    stubFor(
+      delete("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/1").willReturn(ok()),
+    )
+  }
+
   fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
   fun putCountFor(url: String) = this.findAll(WireMock.putRequestedFor(WireMock.urlEqualTo(url))).count()
 }

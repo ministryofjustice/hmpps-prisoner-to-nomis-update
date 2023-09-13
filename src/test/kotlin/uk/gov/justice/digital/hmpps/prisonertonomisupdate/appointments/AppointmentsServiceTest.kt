@@ -105,7 +105,7 @@ internal class AppointmentsServiceTest {
   @Test
   fun `Update End time can be null`() = runTest {
     whenever(appointmentsApiService.getAppointmentInstance(APPOINTMENT_INSTANCE_ID)).thenReturn(
-      newAppointment(null, null, null),
+      newAppointmentInstance(null, null, null),
     )
     whenever(appointmentsMappingService.getMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID)).thenReturn(
       AppointmentMappingDto(APPOINTMENT_INSTANCE_ID, NOMIS_EVENT_ID),
@@ -136,7 +136,7 @@ internal class AppointmentsServiceTest {
 
   private suspend fun callService(appointmentDescription: String?, comment: String?, endTime: String? = "11:42") {
     whenever(appointmentsApiService.getAppointmentInstance(APPOINTMENT_INSTANCE_ID)).thenReturn(
-      newAppointment(appointmentDescription, comment, endTime),
+      newAppointmentInstance(appointmentDescription, comment, endTime),
     )
     whenever(nomisApiService.createAppointment(any())).thenReturn(CreateAppointmentResponse(eventId = 4567))
 
@@ -150,12 +150,12 @@ internal class AppointmentsServiceTest {
     appointmentsService.createAppointment(appointment)
   }
 
-  private fun newAppointment(appointmentDescription: String?, comment: String?, endTime: String?): AppointmentInstance =
+  private fun newAppointmentInstance(customName: String?, extraInformation: String?, endTime: String?): AppointmentInstance =
     AppointmentInstance(
       id = APPOINTMENT_INSTANCE_ID,
-      appointmentOccurrenceAllocationId = 12345,
-      appointmentOccurrenceId = 1234,
-      appointmentId = 123,
+      appointmentSeriesId = 123,
+      appointmentId = 1234,
+      appointmentAttendeeId = APPOINTMENT_INSTANCE_ID,
       appointmentType = AppointmentInstance.AppointmentType.INDIVIDUAL,
       bookingId = 12345,
       internalLocationId = 34567,
@@ -166,9 +166,9 @@ internal class AppointmentsServiceTest {
       prisonCode = "SKI",
       inCell = false,
       prisonerNumber = "A1234BC",
-      created = LocalDateTime.parse("2021-03-14T10:15:00"),
+      createdTime = LocalDateTime.parse("2021-03-14T10:15:00"),
       createdBy = "user1",
-      appointmentDescription = appointmentDescription,
-      comment = comment,
+      customName = customName,
+      extraInformation = extraInformation,
     )
 }

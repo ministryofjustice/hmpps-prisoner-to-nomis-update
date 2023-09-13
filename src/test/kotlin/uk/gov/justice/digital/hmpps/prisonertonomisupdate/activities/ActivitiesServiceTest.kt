@@ -427,6 +427,7 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
     allocated = 5,
     capacity = 10,
     onWing = false,
+    offWing = false,
   ),
   slots = emptyList(),
   startDate = LocalDate.now(),
@@ -477,4 +478,5 @@ private fun newActivity(): Activity = Activity(
     ),
   ),
   onWing = false,
+  offWing = false,
 )
