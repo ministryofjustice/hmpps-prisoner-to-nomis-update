@@ -317,6 +317,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .awaitBody()
 
+  suspend fun deleteHearing(adjudicationNumber: Long, hearingId: Long) {
+    webClient.delete()
+      .uri("/adjudications/adjudication-number/$adjudicationNumber/hearings/$hearingId")
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
   suspend fun createNonAssociation(request: CreateNonAssociationRequest): CreateNonAssociationResponse =
     webClient.post()
       .uri("/non-associations")

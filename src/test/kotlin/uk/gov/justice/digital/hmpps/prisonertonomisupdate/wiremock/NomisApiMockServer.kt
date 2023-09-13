@@ -1059,6 +1059,76 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubHearingUpdate(adjudicationNumber: Long = 123456, nomisHearingId: Long = 345) {
+    stubFor(
+      put("/adjudications/adjudication-number/$adjudicationNumber/hearings/$nomisHearingId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            {
+            "hearingId": $nomisHearingId,
+            "type": {
+                "code": "GOV_ADULT",
+                "description": "Governor's Hearing Adult"
+            },
+            "scheduleDate": "2023-09-06",
+            "scheduleTime": "13:29:13",
+            "hearingDate": "2023-09-09",
+            "hearingTime": "10:00:00",
+            "internalLocation": {
+                "locationId": 775,
+                "code": "ESTAB",
+                "description": "MDI-ESTAB"
+            },
+            "hearingResults": [],
+            "eventId": 514306417,
+            "createdDateTime": "2023-09-06T13:29:13.465687577",
+            "createdByUsername": "PRISONER_MANAGER_API",
+            "notifications": []
+        }
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubHearingDelete(adjudicationNumber: Long = 123456, nomisHearingId: Long = 345) {
+    stubFor(
+      delete("/adjudications/adjudication-number/$adjudicationNumber/hearings/$nomisHearingId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            {
+            "hearingId": $nomisHearingId,
+            "type": {
+                "code": "GOV_ADULT",
+                "description": "Governor's Hearing Adult"
+            },
+            "scheduleDate": "2023-09-06",
+            "scheduleTime": "13:29:13",
+            "hearingDate": "2023-09-09",
+            "hearingTime": "10:00:00",
+            "internalLocation": {
+                "locationId": 775,
+                "code": "ESTAB",
+                "description": "MDI-ESTAB"
+            },
+            "hearingResults": [],
+            "eventId": 514306417,
+            "createdDateTime": "2023-09-06T13:29:13.465687577",
+            "createdByUsername": "PRISONER_MANAGER_API",
+            "notifications": []
+        }
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
   // *************************************************** Non-Associations **********************************************
 
   fun stubNonAssociationCreate(response: String) {
@@ -1199,41 +1269,6 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubNonAssociationDelete(offenderNo1: String, offenderNo2: String) {
     stubFor(
       delete("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/1").willReturn(ok()),
-    )
-  }
-
-  fun stubHearingUpdate(adjudicationNumber: Long = 123456, nomisHearingId: Long = 345) {
-    stubFor(
-      put("/adjudications/adjudication-number/$adjudicationNumber/hearings/$nomisHearingId").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(
-            """
-            {
-            "hearingId": $nomisHearingId,
-            "type": {
-                "code": "GOV_ADULT",
-                "description": "Governor's Hearing Adult"
-            },
-            "scheduleDate": "2023-09-06",
-            "scheduleTime": "13:29:13",
-            "hearingDate": "2023-09-09",
-            "hearingTime": "10:00:00",
-            "internalLocation": {
-                "locationId": 775,
-                "code": "ESTAB",
-                "description": "MDI-ESTAB"
-            },
-            "hearingResults": [],
-            "eventId": 514306417,
-            "createdDateTime": "2023-09-06T13:29:13.465687577",
-            "createdByUsername": "PRISONER_MANAGER_API",
-            "notifications": []
-        }
-            """.trimIndent(),
-          )
-          .withStatus(200),
-      ),
     )
   }
 

@@ -39,6 +39,7 @@ class AdjudicationsDomainEventListener(
       "adjudication.damages.updated" -> adjudicationsService.updateAdjudicationDamages(message.fromJson())
       "adjudication.hearing.created" -> adjudicationsService.createHearing(message.fromJson())
       "adjudication.hearing.updated" -> adjudicationsService.updateHearing(message.fromJson())
+      "adjudication.hearing.deleted" -> adjudicationsService.deleteHearing(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
