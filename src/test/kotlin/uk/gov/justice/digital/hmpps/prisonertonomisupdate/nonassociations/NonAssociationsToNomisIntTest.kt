@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations
 
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
@@ -231,7 +232,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will update an nonAssociation in NOMIS`() {
+      fun `will update a nonAssociation in NOMIS`() {
         await untilAsserted {
           NomisApiExtension.nomisApi.verify(
             putRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1"))
@@ -354,7 +355,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will close an non-association in NOMIS`() {
+      fun `will close a non-association in NOMIS`() {
         await untilAsserted {
           NomisApiExtension.nomisApi.verify(putRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1/close")))
         }
@@ -445,6 +446,51 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
           await untilCallTo {
             awsSqsNonAssociationDlqClient!!.countAllMessagesOnQueue(nonAssociationDlqUrl!!).get()
           } matches { it == 1 }
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class DeleteNonAssociation {
+    @Nested
+    inner class WhenNonAssociationHasJustBeenDeletedByNonAssociationService {
+
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
+        NomisApiExtension.nomisApi.stubNonAssociationDelete(OFFENDER_NO_1, OFFENDER_NO_2)
+        MappingExtension.mappingServer.stubDeleteNonAssociationMapping(NON_ASSOCIATION_ID)
+        publishNonAssociationDomainEvent("non-associations.deleted")
+      }
+
+      @Test
+      fun `will delete the non-association in NOMIS`() {
+        await untilAsserted {
+          NomisApiExtension.nomisApi.verify(deleteRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1")))
+        }
+      }
+
+      @Test
+      fun `will delete the mapping`() {
+        await untilAsserted {
+          MappingExtension.mappingServer.verify(deleteRequestedFor(urlEqualTo("/mapping/non-associations/non-association-id/$NON_ASSOCIATION_ID")))
+        }
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            Mockito.eq("nonAssociation-delete-success"),
+            org.mockito.kotlin.check {
+              assertThat(it["nonAssociationId"]).isEqualTo(NON_ASSOCIATION_ID.toString())
+              assertThat(it["offender1"]).isEqualTo(OFFENDER_NO_1)
+              assertThat(it["offender2"]).isEqualTo(OFFENDER_NO_2)
+              assertThat(it["sequence"]).isEqualTo("1")
+            },
+            isNull(),
+          )
         }
       }
     }

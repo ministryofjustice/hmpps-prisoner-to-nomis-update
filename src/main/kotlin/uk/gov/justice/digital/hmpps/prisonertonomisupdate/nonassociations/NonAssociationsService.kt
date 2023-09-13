@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationRequest
@@ -88,19 +87,47 @@ class NonAssociationsService(
   suspend fun closeNonAssociation(event: NonAssociationDomainEvent) {
     val telemetryMap = mutableMapOf("nonAssociationId" to event.additionalInformation.id.toString())
 
-    runCatching {
-      mappingService.getMappingGivenNonAssociationId(event.additionalInformation.id)
-        .apply {
-          telemetryMap["offender1"] = firstOffenderNo
-          telemetryMap["offender2"] = secondOffenderNo
-          telemetryMap["sequence"] = nomisTypeSequence.toString()
-          nomisApiService.closeNonAssociation(firstOffenderNo, secondOffenderNo, nomisTypeSequence)
-        }
-    }.onSuccess {
-      telemetryClient.trackEvent("nonAssociation-close-success", telemetryMap)
-    }.onFailure { e ->
-      telemetryClient.trackEvent("nonAssociation-close-failed", telemetryMap)
-      throw e
+    if (isDpsCreated(event.additionalInformation)) {
+      runCatching {
+        mappingService.getMappingGivenNonAssociationId(event.additionalInformation.id)
+          .apply {
+            telemetryMap["offender1"] = firstOffenderNo
+            telemetryMap["offender2"] = secondOffenderNo
+            telemetryMap["sequence"] = nomisTypeSequence.toString()
+            nomisApiService.closeNonAssociation(firstOffenderNo, secondOffenderNo, nomisTypeSequence)
+          }
+      }.onSuccess {
+        telemetryClient.trackEvent("nonAssociation-close-success", telemetryMap)
+      }.onFailure { e ->
+        telemetryClient.trackEvent("nonAssociation-close-failed", telemetryMap)
+        throw e
+      }
+    } else {
+      telemetryClient.trackEvent("nonAssociation-close-ignored", telemetryMap)
+    }
+  }
+
+  suspend fun deleteNonAssociation(event: NonAssociationDomainEvent) {
+    val telemetryMap = mutableMapOf("nonAssociationId" to event.additionalInformation.id.toString())
+
+    if (isDpsCreated(event.additionalInformation)) {
+      runCatching {
+        mappingService.getMappingGivenNonAssociationId(event.additionalInformation.id)
+          .apply {
+            telemetryMap["offender1"] = firstOffenderNo
+            telemetryMap["offender2"] = secondOffenderNo
+            telemetryMap["sequence"] = nomisTypeSequence.toString()
+            nomisApiService.deleteNonAssociation(firstOffenderNo, secondOffenderNo, nomisTypeSequence)
+            mappingService.deleteNonAssociation(nonAssociationId)
+          }
+      }.onSuccess {
+        telemetryClient.trackEvent("nonAssociation-delete-success", telemetryMap)
+      }.onFailure { e ->
+        telemetryClient.trackEvent("nonAssociation-delete-failed", telemetryMap)
+        throw e
+      }
+    } else {
+      telemetryClient.trackEvent("nonAssociation-delete-ignored", telemetryMap)
     }
   }
 
@@ -140,10 +167,6 @@ class NonAssociationsService(
   override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
 
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
-
-  companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
-  }
 }
 
 data class NonAssociationDomainEvent(
