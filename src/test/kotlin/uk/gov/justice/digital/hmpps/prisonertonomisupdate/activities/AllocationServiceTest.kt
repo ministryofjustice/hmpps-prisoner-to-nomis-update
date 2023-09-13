@@ -120,6 +120,7 @@ private fun newAllocation(): Allocation {
     id = ALLOCATION_ID,
     prisonerNumber = OFFENDER_NO,
     activitySummary = "summary",
+    activityId = ACTIVITY_ID,
     bookingId = NOMIS_BOOKING_ID,
     startDate = LocalDate.parse("2023-01-12"),
     endDate = LocalDate.parse("2023-01-13"),
