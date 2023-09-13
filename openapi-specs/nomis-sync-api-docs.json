@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-09-08.4839.283aed7"
+    "version": "2023-09-13.4873.2a3d5ae"
   },
   "servers": [
     {
@@ -528,6 +528,82 @@
           },
           "400": {
             "description": "Invalid data such as reason or type do not exist etc.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_NON_ASSOCIATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "non-association-resource"
+        ],
+        "summary": "Deletes a non-association",
+        "description": "Deletes the specified non-association detail record. if there was only one, the parent NA record is deleted too. Requires role NOMIS_NON_ASSOCIATIONS",
+        "operationId": "deleteNonAssociation",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "A3456GH"
+          },
+          {
+            "name": "nsOffenderNo",
+            "in": "path",
+            "description": "Non-association offender",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "A34578ED"
+          },
+          {
+            "name": "typeSequence",
+            "in": "path",
+            "description": "Sequence number. Close this specific detail record",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "example": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "404": {
+            "description": "Non-association does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -1468,7 +1544,7 @@
           "adjudication-resource"
         ],
         "summary": "Updates a hearing",
-        "description": "Updates an hearing for a given adjudication and hearing Id. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "description": "Updates a hearing for a given adjudication and hearing Id. Requires ROLE_NOMIS_ADJUDICATIONS",
         "operationId": "updateHearing",
         "parameters": [
           {
@@ -1539,6 +1615,75 @@
           },
           "404": {
             "description": "Hearing does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "Deletes a hearing",
+        "description": "Deletes a hearing for a given adjudication and hearing Id. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "deleteHearing",
+        "parameters": [
+          {
+            "name": "adjudicationNumber",
+            "in": "path",
+            "description": "Adjudication number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Adjudication number",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "hearingId",
+            "in": "path",
+            "description": "Hearing Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Hearing Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Hearing deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Adjudication does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -2761,7 +2906,7 @@
           "adjudication-resource"
         ],
         "summary": "creates a hearing for a given adjudication",
-        "description": "Creates an hearing for a given adjudication. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "description": "Creates a hearing for a given adjudication. Requires ROLE_NOMIS_ADJUDICATIONS",
         "operationId": "createHearing",
         "parameters": [
           {

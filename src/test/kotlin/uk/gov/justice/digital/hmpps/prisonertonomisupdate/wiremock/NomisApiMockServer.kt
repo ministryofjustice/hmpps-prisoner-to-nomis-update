@@ -1196,6 +1196,12 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubNonAssociationDelete(offenderNo1: String, offenderNo2: String) {
+    stubFor(
+      delete("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/1").willReturn(ok()),
+    )
+  }
+
   fun stubHearingUpdate(adjudicationNumber: Long = 123456, nomisHearingId: Long = 345) {
     stubFor(
       put("/adjudications/adjudication-number/$adjudicationNumber/hearings/$nomisHearingId").willReturn(
