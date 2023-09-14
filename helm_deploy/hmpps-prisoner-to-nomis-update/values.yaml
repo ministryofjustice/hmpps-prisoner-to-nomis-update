@@ -1,6 +1,7 @@
 ---
 generic-service:
   nameOverride: hmpps-prisoner-to-nomis-update
+  productId: DPS060
 
   replicaCount: 4
 
