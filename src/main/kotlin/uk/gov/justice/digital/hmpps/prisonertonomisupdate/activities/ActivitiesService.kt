@@ -182,7 +182,7 @@ class ActivitiesService(
   }
 
   private fun toNomisActivityDescription(activityDescription: String): String =
-    "SAA " + activityDescription.substring(0, min(36, activityDescription.length))
+    activityDescription.substring(0, min(40, activityDescription.length))
 
   private fun List<ActivityScheduleSlot>.toScheduleRuleRequests(): List<ScheduleRuleRequest> =
     map { slot ->
