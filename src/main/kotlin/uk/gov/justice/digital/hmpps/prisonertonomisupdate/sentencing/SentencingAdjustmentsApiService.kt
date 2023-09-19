@@ -30,8 +30,3 @@ data class AdjustmentDetails(
   val comment: String?,
   val active: Boolean,
 )
-
-enum class CreatingSystem {
-  NOMIS,
-  DPS,
-}

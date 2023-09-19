@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.config
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity
-import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
 import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.config.web.server.invoke
@@ -25,6 +24,7 @@ class ResourceServerConfiguration {
           "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
           "/queue-admin/retry-all-dlqs",
           "/incentives/reports/reconciliation",
+          "/non-associations/reports/reconciliation",
         ).forEach { authorize(it, permitAll) }
         authorize(anyExchange, authenticated)
       }

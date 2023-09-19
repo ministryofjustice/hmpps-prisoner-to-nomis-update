@@ -29,6 +29,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Hearing
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateHearingRequest
@@ -50,6 +52,8 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
+  // ////////// VISITS //////////////
+
   suspend fun createVisit(request: CreateVisitDto): CreateVisitResponseDto =
     webClient.post()
       .uri("/prisoners/${request.offenderNo}/visits")
@@ -70,13 +74,6 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .awaitSingleOrNull()
   }
 
-  suspend fun createIncentive(bookingId: Long, request: CreateIncentiveDto): CreateIncentiveResponseDto =
-    webClient.post()
-      .uri("/prisoners/booking-id/$bookingId/incentives")
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
-
   suspend fun updateVisit(offenderNo: String, nomisVisitId: String, updateVisitDto: UpdateVisitDto) {
     webClient.put()
       .uri("/prisoners/$offenderNo/visits/$nomisVisitId")
@@ -84,6 +81,23 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .awaitBodilessEntity()
   }
+
+  // ////////// INCENTIVES //////////////
+
+  suspend fun createIncentive(bookingId: Long, request: CreateIncentiveDto): CreateIncentiveResponseDto =
+    webClient.post()
+      .uri("/prisoners/booking-id/$bookingId/incentives")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBody()
+
+  suspend fun getCurrentIncentive(bookingId: Long): NomisIncentive? =
+    webClient.get()
+      .uri("/incentives/booking-id/{bookingId}/current", bookingId)
+      .retrieve()
+      .awaitBodyOrNotFound()
+
+  // ////////// ACTIVITIES //////////////
 
   suspend fun createActivity(request: CreateActivityRequest): CreateActivityResponse =
     webClient.post()
@@ -98,6 +112,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyValue(request)
       .retrieve()
       .awaitBody()
+
+  suspend fun deleteActivity(courseActivityId: Long) {
+    webClient.delete()
+      .uri("/activities/$courseActivityId")
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 
   suspend fun updateScheduledInstance(courseActivityId: Long, request: CourseScheduleRequest): UpdateCourseScheduleResponse =
     webClient.put()
@@ -126,6 +147,8 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyValue(request)
       .retrieve()
       .awaitBody()
+
+  // //////////////////// APPOINTMENTS /////////////////////////
 
   suspend fun createAppointment(request: CreateAppointmentRequest): CreateAppointmentResponse =
     webClient.post()
@@ -158,6 +181,8 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .uri("/appointments/$nomisEventId")
       .retrieve()
       .awaitBodilessEntity()
+
+  // //////////////////// SENTENCES ////////////////////////
 
   suspend fun createSentenceAdjustment(
     bookingId: Long,
@@ -212,6 +237,8 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .awaitBody()
 
+  // ////////// INCENTIVE LEVELS //////////////
+
   suspend fun getGlobalIncentiveLevel(incentiveLevel: String): ReferenceCode? =
     webClient.get()
       .uri("/incentives/reference-codes/$incentiveLevel")
@@ -256,12 +283,6 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyToMono(typeReference<RestResponsePage<ActivePrisonerId>>())
       .awaitSingle()
 
-  suspend fun getCurrentIncentive(bookingId: Long): NomisIncentive? =
-    webClient.get()
-      .uri("/incentives/booking-id/{bookingId}/current", bookingId)
-      .retrieve()
-      .awaitBodyOrNotFound()
-
   suspend fun updatePrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest) =
     webClient.put()
       .uri("/incentives/prison/$prison/code/${prisonIncentive.levelCode}")
@@ -282,12 +303,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .awaitBodyOrNotFound()
 
-  suspend fun deleteActivity(courseActivityId: Long) {
-    webClient.delete()
-      .uri("/activities/$courseActivityId")
-      .retrieve()
-      .awaitBodilessEntity()
-  }
+  // ////////// ADJUDICATIONS //////////////
 
   suspend fun createAdjudication(offenderNo: String, request: CreateAdjudicationRequest): AdjudicationResponse =
     webClient.post()
@@ -324,6 +340,8 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .awaitBodilessEntity()
   }
 
+  // ////////// NON-ASSOCIATIONS //////////////
+
   suspend fun createNonAssociation(request: CreateNonAssociationRequest): CreateNonAssociationResponse =
     webClient.post()
       .uri("/non-associations")
@@ -352,6 +370,36 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .awaitBodilessEntity()
   }
+
+  suspend fun getNonAssociations(
+    pageNumber: Long,
+    pageSize: Long,
+  ): PageImpl<NonAssociationIdResponse> =
+    webClient
+      .get()
+      .uri {
+        it.path("/non-associations/ids")
+          .queryParam("page", pageNumber)
+          .queryParam("size", pageSize)
+          .build()
+      }
+      .retrieve()
+      .bodyToMono(typeReference<RestResponsePage<NonAssociationIdResponse>>())
+      .awaitSingle()
+
+  suspend fun getNonAssociationDetails(
+    offender1: String,
+    offender2: String,
+  ): List<NonAssociationResponse> =
+    webClient
+      .get()
+      .uri(
+        "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/all",
+        offender1,
+        offender2,
+      )
+      .retrieve()
+      .awaitBody()
 }
 
 data class CreateVisitDto(
