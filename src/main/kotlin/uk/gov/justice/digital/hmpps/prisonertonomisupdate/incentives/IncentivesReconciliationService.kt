@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
 import com.microsoft.applicationinsights.TelemetryClient
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -13,6 +12,8 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 
 @Service
 class IncentivesReconciliationService(
@@ -27,7 +28,7 @@ class IncentivesReconciliationService(
   }
 
   suspend fun generateReconciliationReport(activePrisonersCount: Long): List<MismatchIncentiveLevel> {
-    return activePrisonersCount.asPages().flatMap { page ->
+    return activePrisonersCount.asPages(pageSize).flatMap { page ->
       val activePrisoners = getActivePrisonersForPage(page)
 
       withContext(Dispatchers.Unconfined) {
@@ -46,10 +47,12 @@ class IncentivesReconciliationService(
           ),
         )
         log.error("Unable to match entire page of prisoners: $page", it)
-      }.getOrElse { emptyList() }.also { log.info("Page requested: $page, with ${it.size} active prisoners") }
+      }
+      .getOrElse { emptyList() }
+      .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
   private suspend fun checkBookingIncentiveMatch(prisonerId: ActivePrisonerId): MismatchIncentiveLevel? = runCatching {
-    log.debug("Checking booking: ${prisonerId.bookingId}")
+    // log.debug("Checking booking: ${prisonerId.bookingId}")
     val (nomisIncentiveLevel, dpsIncentiveLevel) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getCurrentIncentive(prisonerId.bookingId) } to
         async { incentivesApiService.getCurrentIncentive(prisonerId.bookingId) }
@@ -81,11 +84,6 @@ class IncentivesReconciliationService(
       ),
     )
   }.getOrNull()
-
-  private fun Long.asPages(): Array<Pair<Long, Long>> =
-    (0..(this / pageSize)).map { it to pageSize }.toTypedArray()
 }
 
 data class MismatchIncentiveLevel(val prisonerId: ActivePrisonerId, val nomisIncentiveLevel: String?, val dpsIncentiveLevel: String?)
-
-private suspend fun <A, B> Pair<Deferred<A>, Deferred<B>>.awaitBoth(): Pair<A, B> = this.first.await() to this.second.await()

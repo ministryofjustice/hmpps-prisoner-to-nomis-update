@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.microsoft.applicationinsights.TelemetryClient
+import kotlinx.coroutines.Deferred
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.DuplicateErrorContent
@@ -116,4 +117,14 @@ fun Any.asMap(): Map<String, String> {
   return this::class.memberProperties
     .filter { it.getter.call(this) != null }
     .associate { it.name to it.getter.call(this).toString() }
+}
+
+suspend fun <A, B> Pair<Deferred<A>, Deferred<B>>.awaitBoth(): Pair<A, B> = this.first.await() to this.second.await()
+
+fun Long.asPages(pageSize: Long): Array<Pair<Long, Long>> =
+  (0..(this / pageSize)).map { it to pageSize }.toTypedArray()
+
+enum class CreatingSystem {
+  NOMIS,
+  DPS,
 }

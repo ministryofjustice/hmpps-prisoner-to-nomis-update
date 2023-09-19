@@ -113,3 +113,6 @@ reports:
   incentives:
     reconciliation:
       page-size: 20
+  non-associations:
+    reconciliation:
+      page-size: 20
