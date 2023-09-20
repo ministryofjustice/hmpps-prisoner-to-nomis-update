@@ -48,7 +48,7 @@ class NonAssociationsResource(
   suspend fun generateReconciliationReport() {
     val nonAssociationsCount = nomisApiService.getNonAssociations(0, 1).totalElements
 
-    telemetryClient.trackEvent("non-associations-reports-reconciliation-requested", mapOf("non-associations-total" to nonAssociationsCount.toString()))
+    telemetryClient.trackEvent("non-associations-reports-reconciliation-requested", mapOf("non-associations-nomis-total" to nonAssociationsCount.toString()))
     log.info("Non-associations reconciliation report requested for $nonAssociationsCount non-associations")
 
     reportScope.launch {
@@ -56,13 +56,13 @@ class NonAssociationsResource(
         .onSuccess { listOfLists ->
           val results = listOfLists.flatten()
           log.info("Non-associations reconciliation report completed with ${results.size} mismatches")
-          val map = mapOf("mismatch-count" to results.size.toString(), "success" to "true") +
+          val map = mapOf("mismatch-count" to results.size.toString()) +
             results.associate { "${it.id}" to "nomis=${it.nomisNonAssociation}, dps=${it.dpsNonAssociation}" }
-          telemetryClient.trackEvent("non-associations-reports-reconciliation-report", map)
+          telemetryClient.trackEvent("non-associations-reports-reconciliation-success", map)
           log.info("Non-associations reconciliation report logged")
         }
         .onFailure {
-          telemetryClient.trackEvent("non-associations-reports-reconciliation-report", mapOf("success" to "false"))
+          telemetryClient.trackEvent("non-associations-reports-reconciliation-failed")
           log.error("Non-associations reconciliation report failed", it)
         }
     }

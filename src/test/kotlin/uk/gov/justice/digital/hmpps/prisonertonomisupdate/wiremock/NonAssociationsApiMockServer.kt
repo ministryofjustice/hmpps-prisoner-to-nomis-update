@@ -118,5 +118,14 @@ class NonAssociationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetNonAssociationsPage(pageNumber: Long, pageSize: Long = 100, response: String) {
+    stubFor(
+      get(urlPathEqualTo("/non-associations"))
+        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
+        .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
+        .willReturn(okJson(response)),
+    )
+  }
+
   fun getCountFor(url: String) = this.findAll(WireMock.getRequestedFor(WireMock.urlEqualTo(url))).count()
 }

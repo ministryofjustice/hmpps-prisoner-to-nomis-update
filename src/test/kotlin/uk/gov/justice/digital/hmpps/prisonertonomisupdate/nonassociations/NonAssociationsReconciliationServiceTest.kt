@@ -44,7 +44,15 @@ class NonAssociationsReconciliationServiceTest {
       MismatchNonAssociation(
         NonAssociationIdResponse(OFFENDER1, OFFENDER2),
         null,
-        NonAssociationReportDetail(type = "LANDING", createdDate = "2022-01-01T10:00:00"),
+        NonAssociationReportDetail(
+          type = "LANDING",
+          createdDate = "2022-01-01T10:00:00",
+          closed = true,
+          roleReason = "NOT_RELEVANT",
+          roleReason2 = "NOT_RELEVANT",
+          dpsReason = "BULLYING",
+          comment = "comment",
+        ),
       ),
     )
   }
@@ -64,7 +72,12 @@ class NonAssociationsReconciliationServiceTest {
     assertThat(mismatch).asList().containsExactly(
       MismatchNonAssociation(
         NonAssociationIdResponse(OFFENDER1, OFFENDER2),
-        NonAssociationReportDetail(type = "LAND", createdDate = "2022-01-01"),
+        NonAssociationReportDetail(
+          type = "LAND",
+          createdDate = "2022-01-01",
+          roleReason = "VIC",
+          roleReason2 = "PER",
+        ),
         null,
       ),
     )
@@ -74,8 +87,8 @@ class NonAssociationsReconciliationServiceTest {
     OFFENDER1,
     OFFENDER2,
     typeSequence,
-    "reason",
-    "recipReason",
+    "VIC",
+    "PER",
     "LAND",
     effectiveDate = LocalDate.parse("2022-01-01"),
     expiryDate = expiryDate,
