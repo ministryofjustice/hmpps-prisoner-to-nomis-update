@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "app.fullname" . }}-reports
+  name: {{ include "app.fullname" . }}-report-incentives
   labels:
     {{- include "app.labels" . | nindent 4 }}
 spec:

@@ -1059,75 +1059,6 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetNonAssociationsInitialCount(response: String) {
-    stubFor(
-      get(urlPathEqualTo("/non-associations/ids"))
-        .withQueryParam("page", WireMock.equalTo("0"))
-        .withQueryParam("size", WireMock.equalTo("1"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(HttpStatus.OK.value())
-            .withBody(response),
-        ),
-    )
-  }
-
-  fun stubGetNonAssociationsPage(pageNumber: Long, pageSize: Long = 10, response: String) {
-    stubFor(
-      get(urlPathEqualTo("/non-associations/ids"))
-        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
-        .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(HttpStatus.OK.value())
-            .withFixedDelay(500)
-            .withBody(response),
-        ),
-    )
-  }
-
-  fun stubGetNonAssociationsPageWithError(pageNumber: Long, responseCode: Int) {
-    stubFor(
-      get(urlPathEqualTo("/non-associations/ids"))
-        .withQueryParam("page", WireMock.equalTo(pageNumber.toString())).willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(responseCode)
-            .withBody("""{"message":"Error"}"""),
-        ),
-    )
-  }
-
-  fun stubGetNonAssociationsAll(offenderNo1: String, offenderNo2: String, response: String) {
-    stubFor(
-      get(
-        urlPathEqualTo("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/all"),
-      )
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(HttpStatus.OK.value())
-            .withBody(response),
-        ),
-    )
-  }
-
-  fun stubGetNonAssociationsAllWithError(offenderNo1: String, offenderNo2: String, responseCode: Int) {
-    stubFor(
-      get(
-        urlPathEqualTo("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/all"),
-      )
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(responseCode)
-            .withBody("""{"message":"Error"}"""),
-        ),
-    )
-  }
-
   fun stubHearingUpdate(adjudicationNumber: Long = 123456, nomisHearingId: Long = 345) {
     stubFor(
       put("/adjudications/adjudication-number/$adjudicationNumber/hearings/$nomisHearingId").willReturn(
@@ -1338,6 +1269,75 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubNonAssociationDelete(offenderNo1: String, offenderNo2: String) {
     stubFor(
       delete("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/1").willReturn(ok()),
+    )
+  }
+
+  fun stubGetNonAssociationsInitialCount(response: String) {
+    stubFor(
+      get(urlPathEqualTo("/non-associations/ids"))
+        .withQueryParam("page", WireMock.equalTo("0"))
+        .withQueryParam("size", WireMock.equalTo("1"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(response),
+        ),
+    )
+  }
+
+  fun stubGetNonAssociationsPage(pageNumber: Long, pageSize: Long = 10, response: String) {
+    stubFor(
+      get(urlPathEqualTo("/non-associations/ids"))
+        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
+        .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withFixedDelay(500)
+            .withBody(response),
+        ),
+    )
+  }
+
+  fun stubGetNonAssociationsPageWithError(pageNumber: Long, responseCode: Int) {
+    stubFor(
+      get(urlPathEqualTo("/non-associations/ids"))
+        .withQueryParam("page", WireMock.equalTo(pageNumber.toString())).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(responseCode)
+            .withBody("""{"message":"Error"}"""),
+        ),
+    )
+  }
+
+  fun stubGetNonAssociationsAll(offenderNo1: String, offenderNo2: String, response: String) {
+    stubFor(
+      get(
+        urlPathEqualTo("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/all"),
+      )
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(response),
+        ),
+    )
+  }
+
+  fun stubGetNonAssociationsAllWithError(offenderNo1: String, offenderNo2: String, responseCode: Int) {
+    stubFor(
+      get(
+        urlPathEqualTo("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/all"),
+      )
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(responseCode)
+            .withBody("""{"message":"Error"}"""),
+        ),
     )
   }
 

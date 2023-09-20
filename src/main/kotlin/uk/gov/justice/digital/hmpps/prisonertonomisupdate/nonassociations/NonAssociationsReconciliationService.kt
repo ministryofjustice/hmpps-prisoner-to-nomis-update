@@ -11,9 +11,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.model.NonAssociation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
+import java.time.LocalDate
+
+private const val NO_COMMENT_PROVIDED = "No comment provided"
 
 @Service
 class NonAssociationsReconciliationService(
@@ -42,8 +47,6 @@ class NonAssociationsReconciliationService(
   }
 
   internal suspend fun checkForMissingDpsRecords(allNomisIds: Set<NonAssociationIdResponse>): List<MismatchNonAssociation> {
-    return emptyList()
-    // TODO: Re-enable this when we have a way to get all DPS records
     val allDpsIds = nonAssociationsApiService.getAllNonAssociations(0, 1).totalElements
     if (allDpsIds.toInt() != allNomisIds.size) {
       log.info("Total no of NAs does not match: DPS=$allDpsIds, Nomis=${allNomisIds.size}")
@@ -51,7 +54,7 @@ class NonAssociationsReconciliationService(
         "non-associations-reports-reconciliation-mismatch",
         mapOf("missing-dps-records" to "true", "dps-total" to allDpsIds.toString(), "nomis-total" to allNomisIds.size.toString()),
       )
-      return allDpsIds.asPages(1000).flatMap { page ->
+      return allDpsIds.asPages(100).flatMap { page ->
         val dpsPage = nonAssociationsApiService.getAllNonAssociations(page.first, page.second).content
         dpsPage
           .filterNot {
@@ -76,7 +79,16 @@ class NonAssociationsReconciliationService(
             MismatchNonAssociation(
               NonAssociationIdResponse(it.firstPrisonerNumber, it.secondPrisonerNumber),
               null,
-              NonAssociationReportDetail("MISSING", "MISSING"),
+              NonAssociationReportDetail(
+                it.restrictionType.name,
+                it.whenCreated,
+                "",
+                it.isClosed,
+                it.firstPrisonerRole.name,
+                it.secondPrisonerRole.name,
+                it.reason.name,
+                it.comment,
+              ),
             )
           }
       }
@@ -114,7 +126,20 @@ class NonAssociationsReconciliationService(
       // log.info("Extra Nomis details found for ${id.offenderNo1}, ${id.offenderNo2}")
       (dpsList.size..<nomisList.size)
         .map { index ->
-          MismatchNonAssociation(id, NonAssociationReportDetail(nomisList[index].type, nomisList[index].effectiveDate.toString()), null)
+          MismatchNonAssociation(
+            id,
+            NonAssociationReportDetail(
+              nomisList[index].type,
+              nomisList[index].effectiveDate.toString(),
+              nomisList[index].expiryDate?.toString(),
+              null,
+              nomisList[index].reason,
+              nomisList[index].recipReason,
+              null,
+              nomisList[index].comment,
+            ),
+            null,
+          )
             .also { mismatch ->
               log.info("NonAssociation Mismatch found $mismatch")
               telemetryClient.trackEvent(
@@ -131,7 +156,20 @@ class NonAssociationsReconciliationService(
       // log.info("Extra DPS details found for ${id.offenderNo1}, ${id.offenderNo2}")
       (nomisList.size..<dpsList.size)
         .map { index ->
-          MismatchNonAssociation(id, null, NonAssociationReportDetail(dpsList[index].restrictionType.name, dpsList[index].whenCreated))
+          MismatchNonAssociation(
+            id,
+            null,
+            NonAssociationReportDetail(
+              dpsList[index].restrictionType.name,
+              dpsList[index].whenCreated,
+              null,
+              dpsList[index].isClosed,
+              dpsList[index].firstPrisonerRole.name,
+              dpsList[index].secondPrisonerRole.name,
+              dpsList[index].reason.name,
+              dpsList[index].comment,
+            ),
+          )
             .also { mismatch ->
               log.info("NonAssociation Mismatch found $mismatch")
               telemetryClient.trackEvent(
@@ -145,17 +183,31 @@ class NonAssociationsReconciliationService(
         }
     } else {
       dpsList.indices
-        .filter {
-          val nomis = nomisList[it]
-          val dps = dpsList[it]
-          nomis.type != dps.restrictionType.name.take(4) || nomis.effectiveDate.toString() != dps.whenCreated.take(10)
-        }
-        .map {
+        .filter { doesNotMatch(nomisList[it], dpsList[it]) }
+        .map { index ->
           val mismatch =
             MismatchNonAssociation(
               id,
-              NonAssociationReportDetail(nomisList[it].type, nomisList[it].effectiveDate.toString()),
-              NonAssociationReportDetail(dpsList[it].restrictionType.name, dpsList[it].whenCreated),
+              NonAssociationReportDetail(
+                nomisList[index].type,
+                nomisList[index].effectiveDate.toString(),
+                nomisList[index].expiryDate?.toString(),
+                null,
+                nomisList[index].reason,
+                nomisList[index].recipReason,
+                "",
+                nomisList[index].comment,
+              ),
+              NonAssociationReportDetail(
+                dpsList[index].restrictionType.name,
+                dpsList[index].whenCreated,
+                "",
+                dpsList[index].isClosed,
+                dpsList[index].firstPrisonerRole.name,
+                dpsList[index].secondPrisonerRole.name,
+                dpsList[index].reason.name,
+                dpsList[index].comment,
+              ),
             )
           log.info("NonAssociation Mismatch found $mismatch")
           telemetryClient.trackEvent(
@@ -182,7 +234,100 @@ class NonAssociationsReconciliationService(
       ),
     )
   }.getOrDefault(emptyList())
+
+  private fun doesNotMatch(
+    nomis: NonAssociationResponse,
+    dps: NonAssociation,
+  ): Boolean {
+    val today = LocalDate.now()
+    return typeDoesNotMatch(nomis.type, dps.restrictionType) ||
+      (!nomis.effectiveDate.isAfter(today) && nomis.effectiveDate.toString() != dps.whenCreated.take(10)) ||
+      ((nomis.expiryDate != null && nomis.expiryDate.isBefore(today)) xor dps.isClosed) ||
+      reasonDoesNotMatch(nomis.reason, nomis.recipReason, dps.firstPrisonerRole, dps.secondPrisonerRole, dps.reason) ||
+      (nomis.comment == null && dps.comment != NO_COMMENT_PROVIDED) || (nomis.comment != null && nomis.comment != dps.comment)
+  }
+
+  private fun typeDoesNotMatch(
+    nomisType: String,
+    dpsType: NonAssociation.RestrictionType,
+  ) = when (nomisType) {
+    "NONEX", "TNA", "WING" -> dpsType != NonAssociation.RestrictionType.WING
+    else -> nomisType != dpsType.name.take(4)
+  }
+
+  private fun reasonDoesNotMatch(
+    reason: String,
+    recipReason: String,
+    role1: NonAssociation.FirstPrisonerRole,
+    role2: NonAssociation.SecondPrisonerRole,
+    dpsReasonEnum: NonAssociation.Reason,
+  ): Boolean {
+    val t = translateToRolesAndReason(reason, recipReason)
+    return t.first != role1 || t.second != role2 || ((reason == "BUL" || reason == "RIV") && t.third != dpsReasonEnum)
+  }
+
+  // NOTE this is a copy of the code in SyncAndMigrateService
+  fun translateToRolesAndReason(firstPrisonerReason: String, secondPrisonerReason: String): Triple<NonAssociation.FirstPrisonerRole, NonAssociation.SecondPrisonerRole, NonAssociation.Reason> {
+    var firstPrisonerRole = NonAssociation.FirstPrisonerRole.UNKNOWN
+    var secondPrisonerRole = NonAssociation.SecondPrisonerRole.UNKNOWN
+    var reason = NonAssociation.Reason.OTHER
+
+    if (firstPrisonerReason == "BUL") {
+      firstPrisonerRole = NonAssociation.FirstPrisonerRole.UNKNOWN
+      reason = NonAssociation.Reason.BULLYING
+    }
+    if (secondPrisonerReason == "BUL") {
+      secondPrisonerRole = NonAssociation.SecondPrisonerRole.UNKNOWN
+      reason = NonAssociation.Reason.BULLYING
+    }
+
+    if (firstPrisonerReason == "RIV") {
+      firstPrisonerRole = NonAssociation.FirstPrisonerRole.NOT_RELEVANT
+      reason = NonAssociation.Reason.GANG_RELATED
+    }
+    if (secondPrisonerReason == "RIV") {
+      secondPrisonerRole = NonAssociation.SecondPrisonerRole.NOT_RELEVANT
+      reason = NonAssociation.Reason.GANG_RELATED
+    }
+
+    if (firstPrisonerReason == "VIC") {
+      firstPrisonerRole = NonAssociation.FirstPrisonerRole.VICTIM
+    }
+    if (secondPrisonerReason == "VIC") {
+      secondPrisonerRole = NonAssociation.SecondPrisonerRole.VICTIM
+    }
+
+    if (firstPrisonerReason == "PER") {
+      firstPrisonerRole = NonAssociation.FirstPrisonerRole.PERPETRATOR
+    }
+    if (secondPrisonerReason == "PER") {
+      secondPrisonerRole = NonAssociation.SecondPrisonerRole.PERPETRATOR
+    }
+
+    if (firstPrisonerReason == "NOT_REL") {
+      firstPrisonerRole = NonAssociation.FirstPrisonerRole.NOT_RELEVANT
+    }
+    if (secondPrisonerReason == "NOT_REL") {
+      secondPrisonerRole = NonAssociation.SecondPrisonerRole.NOT_RELEVANT
+    }
+
+    return Triple(firstPrisonerRole, secondPrisonerRole, reason)
+  }
 }
 
-data class NonAssociationReportDetail(val type: String, val createdDate: String)
-data class MismatchNonAssociation(val id: NonAssociationIdResponse, val nomisNonAssociation: NonAssociationReportDetail?, val dpsNonAssociation: NonAssociationReportDetail?)
+data class NonAssociationReportDetail(
+  val type: String,
+  val createdDate: String,
+  val expiryDate: String? = null,
+  val closed: Boolean? = null,
+  val roleReason: String,
+  val roleReason2: String,
+  val dpsReason: String? = null,
+  val comment: String? = null,
+)
+
+data class MismatchNonAssociation(
+  val id: NonAssociationIdResponse,
+  val nomisNonAssociation: NonAssociationReportDetail?,
+  val dpsNonAssociation: NonAssociationReportDetail?,
+)

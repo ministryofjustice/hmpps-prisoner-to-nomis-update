@@ -33,7 +33,7 @@ class NonAssociationsApiService(private val nonAssociationsApiWebClient: WebClie
     nonAssociationsApiWebClient
       .get()
       .uri {
-        it.path("/non-associations/TODO")
+        it.path("/non-associations")
           .queryParam("page", pageNumber)
           .queryParam("size", pageSize)
           .build()
