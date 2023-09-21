@@ -110,6 +110,9 @@ class NonAssociationsReconciliationService(
 
   internal suspend fun checkMatch(id: NonAssociationIdResponse): List<MismatchNonAssociation> = runCatching {
     // log.debug("Checking NA: ${id.offenderNo1}, ${id.offenderNo2}")
+
+    val today = LocalDate.now()
+
     val (nomisListUnsorted, dpsListUnsorted) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getNonAssociationDetails(id.offenderNo1, id.offenderNo2) } to
         async { nonAssociationsApiService.getNonAssociationsBetween(id.offenderNo1, id.offenderNo2) }
@@ -117,7 +120,7 @@ class NonAssociationsReconciliationService(
 
     val nomisListSortedBySequence = nomisListUnsorted.sortedBy { it.typeSequence }
     // Ignore old open records
-    val closedPlusOpenLists = nomisListSortedBySequence.partition { it.expiryDate != null }
+    val closedPlusOpenLists = nomisListSortedBySequence.partition { closedInNomis(it, today) }
     val nomisList = (closedPlusOpenLists.first + closedPlusOpenLists.second.takeLast(1))
       // needed to change sort order to date to compare against matching DPS records
       .sortedBy { it.effectiveDate }
