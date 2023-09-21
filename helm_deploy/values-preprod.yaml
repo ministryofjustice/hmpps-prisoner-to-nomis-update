@@ -20,10 +20,6 @@ generic-service:
     API_BASE_URL_SENTENCE_ADJUSTMENTS: https://prisoner-to-nomis-update-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_ADJUDICATIONS: https://manage-adjudications-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_NON_ASSOCIATIONS: https://non-associations-api-preprod.hmpps.service.justice.gov.uk
-    FEATURE_EVENT_NON_ASSOCIATIONS_CREATED: false
-    FEATURE_EVENT_NON_ASSOCIATIONS_AMENDED: false
-    FEATURE_EVENT_NON_ASSOCIATIONS_CLOSED: false
-    FEATURE_EVENT_NON_ASSOCIATIONS_DELETED: false
     FEATURE_EVENT_RELEASE_DATE_ADJUSTMENTS_ADJUSTMENT_INSERTED: false
     FEATURE_EVENT_RELEASE_DATE_ADJUSTMENTS_ADJUSTMENT_UPDATED: false
     FEATURE_EVENT_RELEASE_DATE_ADJUSTMENTS_ADJUSTMENT_DELETED: false
