@@ -115,10 +115,12 @@ class NonAssociationsReconciliationService(
         async { nonAssociationsApiService.getNonAssociationsBetween(id.offenderNo1, id.offenderNo2) }
     }.awaitBoth()
 
-    val nomisListSorted = nomisListUnsorted.sortedBy { it.effectiveDate }
+    val nomisListSortedBySequence = nomisListUnsorted.sortedBy { it.typeSequence }
     // Ignore old open records
-    val closedPlusOpenLists = nomisListSorted.partition { it.expiryDate != null }
-    val nomisList = closedPlusOpenLists.first + closedPlusOpenLists.second.takeLast(1)
+    val closedPlusOpenLists = nomisListSortedBySequence.partition { it.expiryDate != null }
+    val nomisList = (closedPlusOpenLists.first + closedPlusOpenLists.second.takeLast(1))
+      // needed to change sort order to date to compare against matching DPS records
+      .sortedBy { it.effectiveDate }
 
     val dpsList = dpsListUnsorted.sortedBy { it.whenCreated }
 
@@ -242,10 +244,13 @@ class NonAssociationsReconciliationService(
     val today = LocalDate.now()
     return typeDoesNotMatch(nomis.type, dps.restrictionType) ||
       (!nomis.effectiveDate.isAfter(today) && nomis.effectiveDate.toString() != dps.whenCreated.take(10)) ||
-      ((nomis.expiryDate != null && nomis.expiryDate.isBefore(today)) xor dps.isClosed) ||
+      (closedInNomis(nomis, today) xor dps.isClosed) ||
       reasonDoesNotMatch(nomis.reason, nomis.recipReason, dps.firstPrisonerRole, dps.secondPrisonerRole, dps.reason) ||
       (nomis.comment == null && dps.comment != NO_COMMENT_PROVIDED) || (nomis.comment != null && nomis.comment != dps.comment)
   }
+
+  private fun closedInNomis(nomis: NonAssociationResponse, today: LocalDate?) =
+    (nomis.expiryDate != null && nomis.expiryDate.isBefore(today)) || nomis.effectiveDate.isAfter(today)
 
   private fun typeDoesNotMatch(
     nomisType: String,

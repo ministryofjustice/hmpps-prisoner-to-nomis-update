@@ -54,9 +54,10 @@ class NonAssociationsResource(
     reportScope.launch {
       runCatching { nonAssociationsReconciliationService.generateReconciliationReport(nonAssociationsCount) }
         .onSuccess { listOfLists ->
-          val results = listOfLists.flatten()
-          log.info("Non-associations reconciliation report completed with ${results.size} mismatches")
-          val map = mapOf("mismatch-count" to results.size.toString()) +
+          val fullResults = listOfLists.flatten()
+          log.info("Non-associations reconciliation report completed with ${fullResults.size} mismatches")
+          val results = fullResults.take(10) // Only log the first 10 to avoid an insights error with too much data
+          val map = mapOf("mismatch-count" to fullResults.size.toString()) +
             results.associate { "${it.id}" to "nomis=${it.nomisNonAssociation}, dps=${it.dpsNonAssociation}" }
           telemetryClient.trackEvent("non-associations-reports-reconciliation-success", map)
           log.info("Non-associations reconciliation report logged")
