@@ -26,7 +26,7 @@ class NonAssociationsReconciliationService(
   private val nomisApiService: NomisApiService,
   private val nonAssociationsApiService: NonAssociationsApiService,
   @Value("\${reports.non-associations.reconciliation.page-size}")
-  private val pageSize: Long = 20,
+  private val pageSize: Long,
 ) {
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
