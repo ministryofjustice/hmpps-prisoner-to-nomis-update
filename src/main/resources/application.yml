@@ -115,4 +115,4 @@ reports:
       page-size: 20
   non-associations:
     reconciliation:
-      page-size: 200
+      page-size: 500
