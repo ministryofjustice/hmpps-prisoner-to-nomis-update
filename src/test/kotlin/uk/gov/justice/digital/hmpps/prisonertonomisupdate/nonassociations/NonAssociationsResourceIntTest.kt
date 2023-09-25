@@ -38,7 +38,8 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
     pageSize: Long = 10,
     pageNumber: Long = 0,
   ): String {
-    val nonAssociationId = (1..numberOfElements).map { it + (pageNumber * pageSize) }
+    val nonAssociationId = (1..numberOfElements)
+      .map { it + (pageNumber * pageSize) }
       .map {
         NonAssociationIdResponse(
           offenderNo1 = index1ToNomsId(it),
@@ -53,11 +54,16 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
 
   private fun nonAssociationsDpsPagedResponse(
     totalElements: Long = 10,
-    numberOfElements: Long = 10,
+    numberOfElements: Int = 10,
     pageSize: Long = 10,
     pageNumber: Long = 0,
   ): String {
-    return pagedResponse("", pageSize, pageNumber, totalElements, 0)
+    val content =
+      (1..numberOfElements)
+        .map { it + (pageNumber * pageSize) }
+        .map { nonAssociationJson("CELL", first = index1ToNomsId(it), second = index2ToNomsId(it)) }
+        .joinToString { it }
+    return pagedResponse(content, pageSize, pageNumber, totalElements, numberOfElements)
   }
 
   private fun pagedResponse(
@@ -122,14 +128,15 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
 ]
   """.trimIndent()
 
-  private fun nonAssociationApiResponse(type: String) = """
-[
+  private fun nonAssociationApiResponse(type: String) = "[ ${nonAssociationJson(type)} ]"
+
+  private fun nonAssociationJson(type: String, first: String = "dummy1", second: String = "dummy2") = """
   {
     "id": 999,
-    "firstPrisonerNumber": "dummy1",
+    "firstPrisonerNumber": "$first",
     "firstPrisonerRole": "VICTIM",
     "firstPrisonerRoleDescription": "Victim",
-    "secondPrisonerNumber": "dummy2",
+    "secondPrisonerNumber": "$second",
     "secondPrisonerRole": "PERPETRATOR",
     "secondPrisonerRoleDescription": "Perpetrator",
     "reason": "BULLYING",
@@ -145,7 +152,6 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
     "closedReason": "null",
     "isOpen": true
   }
-]
   """.trimIndent()
 
   @DisplayName("PUT /non-associations/reports/reconciliation")
@@ -157,17 +163,21 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
 
       val numberOfNonAssociations = 34L
       nomisApi.stubGetNonAssociationsInitialCount(nonAssociationsNomisPagedResponse(totalElements = numberOfNonAssociations, pageSize = 1))
-      nomisApi.stubGetNonAssociationsPage(0, 10, nonAssociationsNomisPagedResponse(totalElements = numberOfNonAssociations, numberOfElements = 10, pageNumber = 0, pageSize = 10))
-      nomisApi.stubGetNonAssociationsPage(1, 10, nonAssociationsNomisPagedResponse(totalElements = numberOfNonAssociations, numberOfElements = 10, pageNumber = 1, pageSize = 10))
-      nomisApi.stubGetNonAssociationsPage(2, 10, nonAssociationsNomisPagedResponse(totalElements = numberOfNonAssociations, numberOfElements = 10, pageNumber = 2, pageSize = 10))
-      nomisApi.stubGetNonAssociationsPage(3, 10, nonAssociationsNomisPagedResponse(totalElements = numberOfNonAssociations, numberOfElements = 4, pageNumber = 3, pageSize = 10))
+      nomisApi.stubGetNonAssociationsPage(0, 10, nonAssociationsNomisPagedResponse(numberOfNonAssociations, 10, pageNumber = 0, pageSize = 10))
+      nomisApi.stubGetNonAssociationsPage(1, 10, nonAssociationsNomisPagedResponse(numberOfNonAssociations, 10, pageNumber = 1, pageSize = 10))
+      nomisApi.stubGetNonAssociationsPage(2, 10, nonAssociationsNomisPagedResponse(numberOfNonAssociations, 10, pageNumber = 2, pageSize = 10))
+      nomisApi.stubGetNonAssociationsPage(3, 10, nonAssociationsNomisPagedResponse(numberOfNonAssociations, 4, pageNumber = 3, pageSize = 10))
       (1..numberOfNonAssociations).forEach {
         val offenderNo1 = index1ToNomsId(it)
         val offenderNo2 = index2ToNomsId(it)
         nomisApi.stubGetNonAssociationsAll(offenderNo1, offenderNo2, nonAssociationNomisResponse(offenderNo1, offenderNo2))
-        nonAssociationsApiServer.stubGetNonAssociationsBetween(offenderNo1, offenderNo2, nonAssociationApiResponse(if (it.toInt() % 10 == 0) "WING" else "LANDING")) // // every 10th prisoner has an WING type
+        nonAssociationsApiServer.stubGetNonAssociationsBetween(offenderNo1, offenderNo2, nonAssociationApiResponse(if (it.toInt() % 10 == 0) "WING" else "LANDING")) // // every 10th prisoner has a WING type
       }
-      nonAssociationsApiServer.stubGetNonAssociationsPage(0, 1, nonAssociationsDpsPagedResponse(34))
+      nonAssociationsApiServer.stubGetNonAssociationsPage(0, 1, nonAssociationsDpsPagedResponse(37, 37)) // some extra in DPS
+      nonAssociationsApiServer.stubGetNonAssociationsPage(0, 10, nonAssociationsDpsPagedResponse(37, 10, 10, 0))
+      nonAssociationsApiServer.stubGetNonAssociationsPage(1, 10, nonAssociationsDpsPagedResponse(37, 10, 10, 1))
+      nonAssociationsApiServer.stubGetNonAssociationsPage(2, 10, nonAssociationsDpsPagedResponse(37, 10, 10, 2))
+      nonAssociationsApiServer.stubGetNonAssociationsPage(3, 10, nonAssociationsDpsPagedResponse(37, 7, 10, 3))
     }
 
     @Test
@@ -218,7 +228,7 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
       verify(telemetryClient).trackEvent(
         eq("non-associations-reports-reconciliation-success"),
         check {
-          assertThat(it).containsEntry("mismatch-count", "3")
+          assertThat(it).containsEntry("mismatch-count", "6")
           assertThat(it).containsEntry(
             "NonAssociationIdResponse(offenderNo1=A0010TY, offenderNo2=B0010TZ)",
             "nomis=NonAssociationReportDetail(type=LAND, createdDate=2023-08-25, expiryDate=2023-10-26, closed=null, roleReason=VIC, roleReason2=PER, dpsReason=, comment=Fight on Wing C)," +
@@ -234,11 +244,26 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
             "nomis=NonAssociationReportDetail(type=LAND, createdDate=2023-08-25, expiryDate=2023-10-26, closed=null, roleReason=VIC, roleReason2=PER, dpsReason=, comment=Fight on Wing C)," +
               " dps=NonAssociationReportDetail(type=WING, createdDate=2023-08-25T10:55:04, expiryDate=, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
           )
+          assertThat(it).containsEntry(
+            "NonAssociationIdResponse(offenderNo1=A0035TY, offenderNo2=B0035TZ)",
+            "nomis=null," +
+              " dps=NonAssociationReportDetail(type=CELL, createdDate=2023-08-25T10:55:04, expiryDate=, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+          )
+          assertThat(it).containsEntry(
+            "NonAssociationIdResponse(offenderNo1=A0036TY, offenderNo2=B0036TZ)",
+            "nomis=null," +
+              " dps=NonAssociationReportDetail(type=CELL, createdDate=2023-08-25T10:55:04, expiryDate=, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+          )
+          assertThat(it).containsEntry(
+            "NonAssociationIdResponse(offenderNo1=A0037TY, offenderNo2=B0037TZ)",
+            "nomis=null," +
+              " dps=NonAssociationReportDetail(type=CELL, createdDate=2023-08-25T10:55:04, expiryDate=, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+          )
         },
         isNull(),
       )
 
-      verify(telemetryClient, times(3)).trackEvent(
+      verify(telemetryClient, times(6)).trackEvent(
         eq("non-associations-reports-reconciliation-mismatch"),
         telemetryCaptor.capture(),
         isNull(),
@@ -280,6 +305,31 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
           "NonAssociationReportDetail(type=WING, createdDate=2023-08-25T10:55:04, expiryDate=, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
         )
       }
+      with(telemetryCaptor.allValues[3]) {
+        assertThat(this).containsEntry("offenderNo1", "A0035TY")
+        assertThat(this).containsEntry("offenderNo2", "B0035TZ")
+        assertThat(this).doesNotContainKey("nomis")
+        assertThat(this).containsEntry(
+          "dps",
+          "NonAssociation(id=999, firstPrisonerNumber=A0035TY, firstPrisonerRole=VICTIM, firstPrisonerRoleDescription=Victim, secondPrisonerNumber=B0035TZ, secondPrisonerRole=PERPETRATOR, secondPrisonerRoleDescription=Perpetrator, reason=BULLYING, reasonDescription=Bullying, restrictionType=CELL, restrictionTypeDescription=Cell only, comment=Fight on Wing C, whenCreated=2023-08-25T10:55:04, whenUpdated=2023-08-25T10:55:04, updatedBy=OFF3_GEN, isClosed=false, isOpen=true, closedBy=null, closedReason=null, closedAt=null)",
+        )
+      }
+      with(telemetryCaptor.allValues[4]) {
+        assertThat(this).containsEntry("offenderNo1", "A0036TY")
+        assertThat(this).containsEntry("offenderNo2", "B0036TZ")
+        assertThat(this).containsEntry(
+          "dps",
+          "NonAssociation(id=999, firstPrisonerNumber=A0036TY, firstPrisonerRole=VICTIM, firstPrisonerRoleDescription=Victim, secondPrisonerNumber=B0036TZ, secondPrisonerRole=PERPETRATOR, secondPrisonerRoleDescription=Perpetrator, reason=BULLYING, reasonDescription=Bullying, restrictionType=CELL, restrictionTypeDescription=Cell only, comment=Fight on Wing C, whenCreated=2023-08-25T10:55:04, whenUpdated=2023-08-25T10:55:04, updatedBy=OFF3_GEN, isClosed=false, isOpen=true, closedBy=null, closedReason=null, closedAt=null)",
+        )
+      }
+      with(telemetryCaptor.allValues[5]) {
+        assertThat(this).containsEntry("offenderNo1", "A0037TY")
+        assertThat(this).containsEntry("offenderNo2", "B0037TZ")
+        assertThat(this).containsEntry(
+          "dps",
+          "NonAssociation(id=999, firstPrisonerNumber=A0037TY, firstPrisonerRole=VICTIM, firstPrisonerRoleDescription=Victim, secondPrisonerNumber=B0037TZ, secondPrisonerRole=PERPETRATOR, secondPrisonerRoleDescription=Perpetrator, reason=BULLYING, reasonDescription=Bullying, restrictionType=CELL, restrictionTypeDescription=Cell only, comment=Fight on Wing C, whenCreated=2023-08-25T10:55:04, whenUpdated=2023-08-25T10:55:04, updatedBy=OFF3_GEN, isClosed=false, isOpen=true, closedBy=null, closedReason=null, closedAt=null)",
+        )
+      }
     }
 
     @Test
@@ -302,7 +352,7 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
       verify(telemetryClient).trackEvent(
         eq("non-associations-reports-reconciliation-success"),
         check {
-          assertThat(it).containsEntry("mismatch-count", "2")
+          assertThat(it).containsEntry("mismatch-count", "5")
           assertThat(it).containsEntry(
             "NonAssociationIdResponse(offenderNo1=A0010TY, offenderNo2=B0010TZ)",
             "nomis=NonAssociationReportDetail(type=LAND, createdDate=2023-08-25, expiryDate=2023-10-26, closed=null, roleReason=VIC, roleReason2=PER, dpsReason=, comment=Fight on Wing C)," +
@@ -328,9 +378,9 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will attempt to complete a report even if whole pages of the checks fail`() {
+    fun `will attempt to complete a report even if whole pages of the Nomis and DPS checks fail`() {
       nomisApi.stubGetNonAssociationsPageWithError(2, 500)
-      nonAssociationsApiServer.stubGetNonAssociationsPage(0, 1, nonAssociationsDpsPagedResponse(24))
+      nonAssociationsApiServer.stubGetNonAssociationsPageWithError(2, 10)
 
       webTestClient.put().uri("/non-associations/reports/reconciliation")
         .exchange()
@@ -338,7 +388,7 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
 
       awaitReportFinished()
 
-      verify(telemetryClient).trackEvent(
+      verify(telemetryClient, times(2)).trackEvent(
         eq("non-associations-reports-reconciliation-mismatch-page-error"),
         any(),
         isNull(),
@@ -347,7 +397,7 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
       verify(telemetryClient).trackEvent(
         eq("non-associations-reports-reconciliation-success"),
         check {
-          assertThat(it).containsEntry("mismatch-count", "2")
+          assertThat(it).containsEntry("mismatch-count", "5")
           assertThat(it).containsEntry(
             "NonAssociationIdResponse(offenderNo1=A0010TY, offenderNo2=B0010TZ)",
             "nomis=NonAssociationReportDetail(type=LAND, createdDate=2023-08-25, expiryDate=2023-10-26, closed=null, roleReason=VIC, roleReason2=PER, dpsReason=, comment=Fight on Wing C)," +

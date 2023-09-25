@@ -35,7 +35,7 @@ class NonAssociationsReconciliationService(
   suspend fun generateReconciliationReport(nonAssociationsCount: Long): List<List<MismatchNonAssociation>> {
     val allNomisIds = mutableSetOf<NonAssociationIdResponse>()
     val results = nonAssociationsCount.asPages(pageSize).flatMap { page ->
-      val nonAssociations = getNonAssociationsForPage(page)
+      val nonAssociations = getNomisNonAssociationsForPage(page)
 
       allNomisIds.addAll(nonAssociations)
 
@@ -48,65 +48,76 @@ class NonAssociationsReconciliationService(
 
   internal suspend fun checkForMissingDpsRecords(allNomisIds: Set<NonAssociationIdResponse>): List<MismatchNonAssociation> {
     val allDpsIds = nonAssociationsApiService.getAllNonAssociations(0, 1).totalElements
-    if (allDpsIds.toInt() != allNomisIds.size) {
-      log.info("Total no of NAs does not match: DPS=$allDpsIds, Nomis=${allNomisIds.size}")
-      telemetryClient.trackEvent(
-        "non-associations-reports-reconciliation-mismatch",
-        mapOf("missing-dps-records" to "true", "dps-total" to allDpsIds.toString(), "nomis-total" to allNomisIds.size.toString()),
-      )
-      return allDpsIds.asPages(100).flatMap { page ->
-        val dpsPage = nonAssociationsApiService.getAllNonAssociations(page.first, page.second).content
-        dpsPage
-          .filterNot {
-            val dpsId = if (it.firstPrisonerNumber < it.secondPrisonerNumber) {
-              NonAssociationIdResponse(it.firstPrisonerNumber, it.secondPrisonerNumber)
-            } else {
-              NonAssociationIdResponse(it.secondPrisonerNumber, it.firstPrisonerNumber)
-            }
-            allNomisIds.contains(dpsId)
-          }
-          .map {
-            log.info("NonAssociation Mismatch found $it")
-            telemetryClient.trackEvent(
-              "non-associations-reports-reconciliation-mismatch",
-              mapOf(
-                "offenderNo1" to it.firstPrisonerNumber,
-                "offenderNo2" to it.secondPrisonerNumber,
-                "dps" to it.toString(),
-              ),
-            )
-
-            MismatchNonAssociation(
-              NonAssociationIdResponse(it.firstPrisonerNumber, it.secondPrisonerNumber),
-              null,
-              NonAssociationReportDetail(
-                it.restrictionType.name,
-                it.whenCreated,
-                "",
-                it.isClosed,
-                it.firstPrisonerRole.name,
-                it.secondPrisonerRole.name,
-                it.reason.name,
-                it.comment,
-              ),
-            )
-          }
-      }
+    if (allDpsIds.toInt() == allNomisIds.size) {
+      return emptyList()
     }
-    return emptyList()
+    log.info("Total no of NAs does not match: DPS=$allDpsIds, Nomis=${allNomisIds.size}")
+    telemetryClient.trackEvent(
+      "non-associations-reports-reconciliation-mismatch-missing-dps-records",
+      mapOf("dps-total" to allDpsIds.toString(), "nomis-total" to allNomisIds.size.toString()),
+    )
+    return allDpsIds.asPages(pageSize).flatMap { page ->
+      getDpsNonAssociationsForPage(page)
+        .filterNot {
+          val dpsId = if (it.firstPrisonerNumber < it.secondPrisonerNumber) {
+            NonAssociationIdResponse(it.firstPrisonerNumber, it.secondPrisonerNumber)
+          } else {
+            NonAssociationIdResponse(it.secondPrisonerNumber, it.firstPrisonerNumber)
+          }
+          allNomisIds.contains(dpsId)
+        }
+        .map {
+          log.info("NonAssociation Mismatch found $it")
+          telemetryClient.trackEvent(
+            "non-associations-reports-reconciliation-mismatch",
+            mapOf(
+              "offenderNo1" to it.firstPrisonerNumber,
+              "offenderNo2" to it.secondPrisonerNumber,
+              "dps" to it.toString(),
+            ),
+          )
+
+          MismatchNonAssociation(
+            NonAssociationIdResponse(it.firstPrisonerNumber, it.secondPrisonerNumber),
+            null,
+            NonAssociationReportDetail(
+              it.restrictionType.name,
+              it.whenCreated,
+              "",
+              it.isClosed,
+              it.firstPrisonerRole.name,
+              it.secondPrisonerRole.name,
+              it.reason.name,
+              it.comment,
+            ),
+          )
+        }
+    }
   }
 
-  internal suspend fun getNonAssociationsForPage(page: Pair<Long, Long>) =
+  internal suspend fun getNomisNonAssociationsForPage(page: Pair<Long, Long>) =
     runCatching { nomisApiService.getNonAssociations(page.first, page.second).content }
       .onFailure {
         telemetryClient.trackEvent(
           "non-associations-reports-reconciliation-mismatch-page-error",
           mapOf("page" to page.first.toString()),
         )
-        log.error("Unable to match entire page of prisoners: $page", it)
+        log.error("Unable to match entire Nomis page of prisoners: $page", it)
       }
       .getOrElse { emptyList() }
-      .also { log.info("Page requested: $page, with ${it.size} non-associations") }
+      .also { log.info("Nomis Page requested: $page, with ${it.size} non-associations") }
+
+  internal suspend fun getDpsNonAssociationsForPage(page: Pair<Long, Long>): List<NonAssociation> =
+    runCatching { nonAssociationsApiService.getAllNonAssociations(page.first, page.second).content }
+      .onFailure {
+        telemetryClient.trackEvent(
+          "non-associations-reports-reconciliation-mismatch-page-error",
+          mapOf("page" to page.first.toString()),
+        )
+        log.error("Unable to match entire DPS page of prisoners: $page", it)
+      }
+      .getOrElse { emptyList() }
+      .also { log.info("DPS Page requested: $page, with ${it.size} non-associations") }
 
   internal suspend fun checkMatch(id: NonAssociationIdResponse): List<MismatchNonAssociation> = runCatching {
     // log.debug("Checking NA: ${id.offenderNo1}, ${id.offenderNo2}")
@@ -188,7 +199,7 @@ class NonAssociationsReconciliationService(
         }
     } else {
       dpsList.indices
-        .filter { doesNotMatch(nomisList[it], dpsList[it]) }
+        .filter { doesNotMatch(nomisList[it], dpsList[it]) && (dpsList.size != 2 || doesNotMatch(nomisList[0], dpsList[1]))  }
         .map { index ->
           val mismatch =
             MismatchNonAssociation(
@@ -200,13 +211,13 @@ class NonAssociationsReconciliationService(
                 null,
                 nomisList[index].reason,
                 nomisList[index].recipReason,
-                "",
+                null,
                 nomisList[index].comment,
               ),
               NonAssociationReportDetail(
                 dpsList[index].restrictionType.name,
                 dpsList[index].whenCreated,
-                "",
+                null,
                 dpsList[index].isClosed,
                 dpsList[index].firstPrisonerRole.name,
                 dpsList[index].secondPrisonerRole.name,
@@ -271,7 +282,7 @@ class NonAssociationsReconciliationService(
     dpsReasonEnum: NonAssociation.Reason,
   ): Boolean {
     val t = translateToRolesAndReason(reason, recipReason)
-    return t.first != role1 || t.second != role2 || ((reason == "BUL" || reason == "RIV") && t.third != dpsReasonEnum)
+    return t.first != role1 || t.second != role2 // too strict: || ((reason == "BUL" || reason == "RIV") && t.third != dpsReasonEnum)
   }
 
   // NOTE this is a copy of the code in SyncAndMigrateService
