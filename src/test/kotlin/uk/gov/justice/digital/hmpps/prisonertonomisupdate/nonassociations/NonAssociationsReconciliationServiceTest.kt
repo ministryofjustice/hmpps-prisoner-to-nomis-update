@@ -123,47 +123,46 @@ class NonAssociationsReconciliationServiceTest {
       .isEmpty()
   }
 
-    @Test
-    fun `will report mismatch where 2 NA details have a difference`() = runTest {
-      whenever(nomisApiService.getNonAssociationDetails(OFFENDER1, OFFENDER2)).thenReturn(
-        listOf(
-          nomisResponse(1, EXP, "comment1"),
-          nomisResponse(2, EXP, "comment2"),
-        ),
-      )
+  @Test
+  fun `will report mismatch where 2 NA details have a difference`() = runTest {
+    whenever(nomisApiService.getNonAssociationDetails(OFFENDER1, OFFENDER2)).thenReturn(
+      listOf(
+        nomisResponse(1, EXP, "comment1"),
+        nomisResponse(2, EXP, "comment2"),
+      ),
+    )
 
-      whenever(nonAssociationsApiService.getNonAssociationsBetween(OFFENDER1, OFFENDER2)).thenReturn(
-        listOf(
-          dpsResponse(1L, "comment1"),
-          dpsResponse(2L, "comment3"),
-        ),
-      )
+    whenever(nonAssociationsApiService.getNonAssociationsBetween(OFFENDER1, OFFENDER2)).thenReturn(
+      listOf(
+        dpsResponse(1L, "comment1"),
+        dpsResponse(2L, "comment3"),
+      ),
+    )
 
-      assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)))
-        .asList()
-        .containsExactly(
-          MismatchNonAssociation(
-            NonAssociationIdResponse(OFFENDER1, OFFENDER2),
-            NonAssociationReportDetail(
-              type = "LAND",
-              createdDate = "2022-01-01",
-              expiryDate = "2022-01-01",
-              roleReason = "VIC",
-              roleReason2 = "PER",
-              comment = "comment2",
-            ),
-            NonAssociationReportDetail(
-              type = "LANDING",
-              createdDate = "2022-01-01T10:00:00",
-              closed = true,
-              roleReason = "VICTIM",
-              roleReason2 = "PERPETRATOR",
-              dpsReason = "BULLYING",
-              comment = "comment3",
-            ),
+    assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)))
+      .asList()
+      .containsExactly(
+        MismatchNonAssociation(
+          NonAssociationIdResponse(OFFENDER1, OFFENDER2),
+          NonAssociationReportDetail(
+            type = "LAND",
+            createdDate = "2022-01-01",
+            expiryDate = "2022-01-01",
+            roleReason = "VIC",
+            roleReason2 = "PER",
+            comment = "comment2",
           ),
-        )
-
+          NonAssociationReportDetail(
+            type = "LANDING",
+            createdDate = "2022-01-01T10:00:00",
+            closed = true,
+            roleReason = "VICTIM",
+            roleReason2 = "PERPETRATOR",
+            dpsReason = "BULLYING",
+            comment = "comment3",
+          ),
+        ),
+      )
   }
 
   private fun nomisResponse(typeSequence: Int, expiryDate: LocalDate?, comment: String? = null) = NonAssociationResponse(

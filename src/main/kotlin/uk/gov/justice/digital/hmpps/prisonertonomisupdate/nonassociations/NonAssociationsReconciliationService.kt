@@ -200,7 +200,7 @@ class NonAssociationsReconciliationService(
         }
     } else {
       dpsList.indices
-        .filter { doesNotMatch(nomisList[it], dpsList[it]) && (dpsList.size != 2 || doesNotMatch(nomisList[0], dpsList[1]))  }
+        .filter { doesNotMatch(nomisList[it], dpsList[it]) && (dpsList.size != 2 || doesNotMatch(nomisList[0], dpsList[1])) }
         .map { index ->
           val mismatch =
             MismatchNonAssociation(

@@ -98,7 +98,7 @@ class NonAssociationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       post(urlPathEqualTo("/non-associations/between"))
         .withRequestBody(WireMock.equalToJson("""["$offender1","$offender2"]"""))
         .willReturn(jsonResponse("""{ "error": "some error" }""", status)),
-      )
+    )
   }
 
   fun stubGetNonAssociationsPage(pageNumber: Long, pageSize: Long = 100, response: String) {
