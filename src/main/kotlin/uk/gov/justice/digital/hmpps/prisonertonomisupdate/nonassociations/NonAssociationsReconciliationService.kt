@@ -49,6 +49,7 @@ class NonAssociationsReconciliationService(
   internal suspend fun checkForMissingDpsRecords(allNomisIds: Set<NonAssociationIdResponse>): List<MismatchNonAssociation> {
     val allDpsIds = nonAssociationsApiService.getAllNonAssociations(0, 1).totalElements
     if (allDpsIds.toInt() == allNomisIds.size) {
+      log.info("Total no of NAs matches: DPS=$allDpsIds, Nomis=${allNomisIds.size}")
       return emptyList()
     }
     log.info("Total no of NAs does not match: DPS=$allDpsIds, Nomis=${allNomisIds.size}")
@@ -67,23 +68,13 @@ class NonAssociationsReconciliationService(
           allNomisIds.contains(dpsId)
         }
         .map {
-          log.info("NonAssociation Mismatch found $it")
-          telemetryClient.trackEvent(
-            "non-associations-reports-reconciliation-mismatch",
-            mapOf(
-              "offenderNo1" to it.firstPrisonerNumber,
-              "offenderNo2" to it.secondPrisonerNumber,
-              "dps" to it.toString(),
-            ),
-          )
-
-          MismatchNonAssociation(
+          val mismatch = MismatchNonAssociation(
             NonAssociationIdResponse(it.firstPrisonerNumber, it.secondPrisonerNumber),
             null,
             NonAssociationReportDetail(
               it.restrictionType.name,
               it.whenCreated,
-              "",
+              null,
               it.isClosed,
               it.firstPrisonerRole.name,
               it.secondPrisonerRole.name,
@@ -91,6 +82,16 @@ class NonAssociationsReconciliationService(
               it.comment,
             ),
           )
+          log.info("NonAssociation Mismatch found extra DPS NA $it")
+          telemetryClient.trackEvent(
+            "non-associations-reports-reconciliation-dps-only",
+            mapOf(
+              "offenderNo1" to it.firstPrisonerNumber,
+              "offenderNo2" to it.secondPrisonerNumber,
+              "dps" to mismatch.dpsNonAssociation.toString(),
+            ),
+          )
+          mismatch
         }
     }
   }
