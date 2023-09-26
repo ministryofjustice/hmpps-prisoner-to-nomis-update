@@ -48,8 +48,8 @@ class NonAssociationsReconciliationServiceTest {
           type = "LANDING",
           createdDate = "2022-01-01T10:00:00",
           closed = true,
-          roleReason = "NOT_RELEVANT",
-          roleReason2 = "NOT_RELEVANT",
+          roleReason = "VICTIM",
+          roleReason2 = "PERPETRATOR",
           dpsReason = "BULLYING",
           comment = "comment",
         ),
@@ -83,7 +83,89 @@ class NonAssociationsReconciliationServiceTest {
     )
   }
 
-  private fun nomisResponse(typeSequence: Int, expiryDate: LocalDate?) = NonAssociationResponse(
+  @Test
+  fun `will not report mismatch where NA details match`() = runTest {
+    whenever(nomisApiService.getNonAssociationDetails(OFFENDER1, OFFENDER2)).thenReturn(
+      listOf(nomisResponse(1, EXP, "comment1")),
+    )
+
+    whenever(nonAssociationsApiService.getNonAssociationsBetween(OFFENDER1, OFFENDER2)).thenReturn(
+      listOf(dpsResponse(1L, "comment1")),
+    )
+
+    assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)))
+      .asList()
+      .isEmpty()
+  }
+  /*
+  nomisNonAssociation=NonAssociationReportDetail(type=LAND, createdDate=2022-01-01, expiryDate=2022-01-01, closed=null, roleReason=VIC, roleReason2=PER, dpsReason=, comment=comment1),
+  dpsNonAssociation=NonAssociationReportDetail(type=LANDING, createdDate=2022-01-01T10:00:00, expiryDate=, closed=true, roleReason=NOT_RELEVANT, roleReason2=NOT_RELEVANT, dpsReason=BULLYING, comment=comment1))]
+   */
+
+  @Test
+  fun `will not report mismatch where 2 NA details are swapped`() = runTest {
+    whenever(nomisApiService.getNonAssociationDetails(OFFENDER1, OFFENDER2)).thenReturn(
+      listOf(
+        nomisResponse(1, EXP, "comment1"),
+        nomisResponse(2, EXP, "comment2"),
+      ),
+    )
+
+    whenever(nonAssociationsApiService.getNonAssociationsBetween(OFFENDER1, OFFENDER2)).thenReturn(
+      listOf(
+        dpsResponse(1L, "comment2"),
+        dpsResponse(2L, "comment1"),
+      ),
+    )
+
+    assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)))
+      .asList()
+      .isEmpty()
+  }
+
+  @Test
+  fun `will report mismatch where 2 NA details have a difference`() = runTest {
+    whenever(nomisApiService.getNonAssociationDetails(OFFENDER1, OFFENDER2)).thenReturn(
+      listOf(
+        nomisResponse(1, EXP, "comment1"),
+        nomisResponse(2, EXP, "comment2"),
+      ),
+    )
+
+    whenever(nonAssociationsApiService.getNonAssociationsBetween(OFFENDER1, OFFENDER2)).thenReturn(
+      listOf(
+        dpsResponse(1L, "comment1"),
+        dpsResponse(2L, "comment3"),
+      ),
+    )
+
+    assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)))
+      .asList()
+      .containsExactly(
+        MismatchNonAssociation(
+          NonAssociationIdResponse(OFFENDER1, OFFENDER2),
+          NonAssociationReportDetail(
+            type = "LAND",
+            createdDate = "2022-01-01",
+            expiryDate = "2022-01-01",
+            roleReason = "VIC",
+            roleReason2 = "PER",
+            comment = "comment2",
+          ),
+          NonAssociationReportDetail(
+            type = "LANDING",
+            createdDate = "2022-01-01T10:00:00",
+            closed = true,
+            roleReason = "VICTIM",
+            roleReason2 = "PERPETRATOR",
+            dpsReason = "BULLYING",
+            comment = "comment3",
+          ),
+        ),
+      )
+  }
+
+  private fun nomisResponse(typeSequence: Int, expiryDate: LocalDate?, comment: String? = null) = NonAssociationResponse(
     OFFENDER1,
     OFFENDER2,
     typeSequence,
@@ -92,21 +174,22 @@ class NonAssociationsReconciliationServiceTest {
     "LAND",
     effectiveDate = LocalDate.parse("2022-01-01"),
     expiryDate = expiryDate,
+    comment = comment,
   )
 
-  private fun dpsResponse(id: Long) = NonAssociation(
+  private fun dpsResponse(id: Long, comment: String = "comment") = NonAssociation(
     id,
     OFFENDER1,
-    NonAssociation.FirstPrisonerRole.NOT_RELEVANT,
+    NonAssociation.FirstPrisonerRole.VICTIM,
     "roledesc",
     OFFENDER2,
-    NonAssociation.SecondPrisonerRole.NOT_RELEVANT,
+    NonAssociation.SecondPrisonerRole.PERPETRATOR,
     "roledesc",
     NonAssociation.Reason.BULLYING,
     "reasondesc",
     NonAssociation.RestrictionType.LANDING,
     "typedesc",
-    comment = "comment",
+    comment = comment,
     whenCreated = "2022-01-01T10:00:00",
     whenUpdated = "2022-01-01T10:00:00",
     updatedBy = "me",

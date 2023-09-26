@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.jsonResponse
 import com.github.tomakehurst.wiremock.client.WireMock.okJson
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
@@ -39,33 +40,20 @@ class NonAssociationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubHealthPing(status: Int) {
     stubFor(
-      get("/health/ping").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(if (status == 200) "pong" else "some error")
-          .withStatus(status),
-      ),
+      get("/health/ping").willReturn(okJson(if (status == 200) "pong" else "some error")),
     )
   }
 
   fun stubGetNonAssociation(id: Long, response: String) {
     stubFor(
-      get("/legacy/api/non-associations/$id").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(response)
-          .withStatus(200),
-      ),
+      get("/legacy/api/non-associations/$id").willReturn(okJson(response)),
     )
   }
 
   fun stubGetNonAssociationWithError(id: Long, status: Int = 500) {
     stubFor(
       get("/legacy/api/non-associations/$id").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody("""{ "error": "some error" }""")
-          .withStatus(status),
+        jsonResponse("""{ "error": "some error" }""", status),
       ),
     )
   }
@@ -109,12 +97,7 @@ class NonAssociationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     stubFor(
       post(urlPathEqualTo("/non-associations/between"))
         .withRequestBody(WireMock.equalToJson("""["$offender1","$offender2"]"""))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody("""{ "error": "some error" }""")
-            .withStatus(status),
-        ),
+        .willReturn(jsonResponse("""{ "error": "some error" }""", status)),
     )
   }
 
@@ -125,6 +108,16 @@ class NonAssociationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
         .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
         .willReturn(okJson(response)),
+    )
+  }
+
+  fun stubGetNonAssociationsPageWithError(pageNumber: Long, pageSize: Long = 100, status: Int = 500) {
+    stubFor(
+      get(urlPathEqualTo("/non-associations"))
+        .withQueryParam("includeClosed", WireMock.equalTo("true"))
+        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
+        .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
+        .willReturn(jsonResponse("""{ "error": "some error" }""", status)),
     )
   }
 
