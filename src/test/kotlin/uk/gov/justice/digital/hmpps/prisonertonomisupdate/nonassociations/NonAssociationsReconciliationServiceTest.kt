@@ -97,10 +97,6 @@ class NonAssociationsReconciliationServiceTest {
       .asList()
       .isEmpty()
   }
-  /*
-  nomisNonAssociation=NonAssociationReportDetail(type=LAND, createdDate=2022-01-01, expiryDate=2022-01-01, closed=null, roleReason=VIC, roleReason2=PER, dpsReason=, comment=comment1),
-  dpsNonAssociation=NonAssociationReportDetail(type=LANDING, createdDate=2022-01-01T10:00:00, expiryDate=, closed=true, roleReason=NOT_RELEVANT, roleReason2=NOT_RELEVANT, dpsReason=BULLYING, comment=comment1))]
-   */
 
   @Test
   fun `will not report mismatch where 2 NA details are swapped`() = runTest {

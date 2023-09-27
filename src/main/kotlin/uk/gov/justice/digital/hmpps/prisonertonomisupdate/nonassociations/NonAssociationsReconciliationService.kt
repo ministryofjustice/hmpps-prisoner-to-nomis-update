@@ -28,12 +28,16 @@ class NonAssociationsReconciliationService(
   @Value("\${reports.non-associations.reconciliation.page-size}")
   private val pageSize: Long,
 ) {
+
+  var nomisTotalDetails = 0
+
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
   suspend fun generateReconciliationReport(nonAssociationsCount: Long): List<List<MismatchNonAssociation>> {
     val allNomisIds = mutableSetOf<NonAssociationIdResponse>()
+    nomisTotalDetails = 0
     val results = nonAssociationsCount.asPages(pageSize).flatMap { page ->
       val nonAssociations = getNomisNonAssociationsForPage(page)
 
@@ -48,14 +52,14 @@ class NonAssociationsReconciliationService(
 
   internal suspend fun checkForMissingDpsRecords(allNomisIds: Set<NonAssociationIdResponse>): List<MismatchNonAssociation> {
     val allDpsIds = nonAssociationsApiService.getAllNonAssociations(0, 1).totalElements
-    if (allDpsIds.toInt() == allNomisIds.size) {
-      log.info("Total no of NAs matches: DPS=$allDpsIds, Nomis=${allNomisIds.size}")
+    if (allDpsIds.toInt() == nomisTotalDetails) {
+      log.info("Total no of NAs matches: DPS=$allDpsIds, Nomis=$nomisTotalDetails")
       return emptyList()
     }
-    log.info("Total no of NAs does not match: DPS=$allDpsIds, Nomis=${allNomisIds.size}")
+    log.info("Total no of NAs does not match: DPS=$allDpsIds, Nomis=$nomisTotalDetails")
     telemetryClient.trackEvent(
       "non-associations-reports-reconciliation-mismatch-missing-dps-records",
-      mapOf("dps-total" to allDpsIds.toString(), "nomis-total" to allNomisIds.size.toString()),
+      mapOf("dps-total" to allDpsIds.toString(), "nomis-total" to nomisTotalDetails.toString()),
     )
     return allDpsIds.asPages(pageSize).flatMap { page ->
       getDpsNonAssociationsForPage(page)
@@ -97,7 +101,7 @@ class NonAssociationsReconciliationService(
   }
 
   internal suspend fun getNomisNonAssociationsForPage(page: Pair<Long, Long>) =
-    runCatching { nomisApiService.getNonAssociations(page.first, page.second).content }
+    runCatching { doApiCallWithRetry { nomisApiService.getNonAssociations(page.first, page.second).content } }
       .onFailure {
         telemetryClient.trackEvent(
           "non-associations-reports-reconciliation-mismatch-page-error",
@@ -109,7 +113,7 @@ class NonAssociationsReconciliationService(
       .also { log.info("Nomis Page requested: $page, with ${it.size} non-associations") }
 
   internal suspend fun getDpsNonAssociationsForPage(page: Pair<Long, Long>): List<NonAssociation> =
-    runCatching { nonAssociationsApiService.getAllNonAssociations(page.first, page.second).content }
+    runCatching { doApiCallWithRetry { nonAssociationsApiService.getAllNonAssociations(page.first, page.second).content } }
       .onFailure {
         telemetryClient.trackEvent(
           "non-associations-reports-reconciliation-mismatch-page-error",
@@ -126,8 +130,8 @@ class NonAssociationsReconciliationService(
     val today = LocalDate.now()
 
     val (nomisListUnsorted, dpsListUnsorted) = withContext(Dispatchers.Unconfined) {
-      async { nomisApiService.getNonAssociationDetails(id.offenderNo1, id.offenderNo2) } to
-        async { nonAssociationsApiService.getNonAssociationsBetween(id.offenderNo1, id.offenderNo2) }
+      async { doApiCallWithRetry { nomisApiService.getNonAssociationDetails(id.offenderNo1, id.offenderNo2) } } to
+        async { doApiCallWithRetry { nonAssociationsApiService.getNonAssociationsBetween(id.offenderNo1, id.offenderNo2) } }
     }.awaitBoth()
 
     val nomisListSortedBySequence = nomisListUnsorted.sortedBy { it.typeSequence }
@@ -136,6 +140,8 @@ class NonAssociationsReconciliationService(
     val nomisList = (closedPlusOpenLists.first + closedPlusOpenLists.second.takeLast(1))
       // needed to change sort order to date to compare against matching DPS records
       .sortedBy { it.effectiveDate }
+
+    nomisTotalDetails += nomisList.size
 
     val dpsList = dpsListUnsorted.sortedBy { it.whenCreated }
 
@@ -332,6 +338,13 @@ class NonAssociationsReconciliationService(
     }
 
     return Triple(firstPrisonerRole, secondPrisonerRole, reason)
+  }
+
+  private suspend fun <T> doApiCallWithRetry(apiFun: suspend () -> T) = try {
+    apiFun()
+  } catch (e: RuntimeException) {
+    log.warn("Retrying API call", e)
+    apiFun()
   }
 }
 

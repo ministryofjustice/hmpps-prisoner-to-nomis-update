@@ -61,7 +61,6 @@ class NonAssociationsResource(
             results.associate { "${it.id}" to "nomis=${it.nomisNonAssociation}, dps=${it.dpsNonAssociation}" }
           telemetryClient.trackEvent("non-associations-reports-reconciliation-success", map)
           log.info("Non-associations reconciliation report logged")
-          log.info("Non-associations reconciliation temp map = $map")
         }
         .onFailure {
           telemetryClient.trackEvent("non-associations-reports-reconciliation-failed")
