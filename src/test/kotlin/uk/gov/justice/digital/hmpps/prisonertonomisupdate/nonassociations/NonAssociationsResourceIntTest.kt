@@ -198,7 +198,7 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
 
           else -> {
             nomisApi.stubGetNonAssociationsAll(offenderNo1, offenderNo2, nonAssociationNomisResponse(offenderNo1, offenderNo2))
-            nonAssociationsApiServer.stubGetNonAssociationsBetween(offenderNo1, offenderNo2, nonAssociationApiResponse(if (it % 10 == 0) "WING" else "LANDING")) // // every 10th prisoner has a WING type
+            nonAssociationsApiServer.stubGetNonAssociationsBetween(offenderNo1, offenderNo2, nonAssociationApiResponse(if (it % 10 == 0) "WING" else "LANDING")) // every 10th prisoner has a WING type
           }
         }
       }

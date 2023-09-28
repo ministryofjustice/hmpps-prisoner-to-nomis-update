@@ -44,10 +44,18 @@ class NonAssociationsReconciliationService(
       allNomisIds.addAll(nonAssociations)
 
       withContext(Dispatchers.Unconfined) {
-        nonAssociations.map { async { checkMatch(it) } }
+        nonAssociations.map { async { checkMatch(correctNomsIdOrder(it)) } }
       }.awaitAll().filterNot { it.isEmpty() }
     }
     return results + listOf(checkForMissingDpsRecords(allNomisIds))
+  }
+
+  private fun correctNomsIdOrder(id: NonAssociationIdResponse): NonAssociationIdResponse {
+    return if (id.offenderNo1 < id.offenderNo2) {
+      id
+    } else {
+      NonAssociationIdResponse(id.offenderNo2, id.offenderNo1)
+    }
   }
 
   internal suspend fun checkForMissingDpsRecords(allNomisIds: Set<NonAssociationIdResponse>): List<MismatchNonAssociation> {
@@ -266,7 +274,7 @@ class NonAssociationsReconciliationService(
     return typeDoesNotMatch(nomis.type, dps.restrictionType) ||
       (!nomis.effectiveDate.isAfter(today) && nomis.effectiveDate.toString() != dps.whenCreated.take(10)) ||
       (closedInNomis(nomis, today) xor dps.isClosed) ||
-      reasonDoesNotMatch(nomis.reason, nomis.recipReason, dps.firstPrisonerRole, dps.secondPrisonerRole, dps.reason) ||
+      // reasonDoesNotMatch(nomis.reason, nomis.recipReason, dps.firstPrisonerRole, dps.secondPrisonerRole, dps.reason) ||
       (nomis.comment == null && dps.comment != NO_COMMENT_PROVIDED) || (nomis.comment != null && nomis.comment != dps.comment)
   }
 
