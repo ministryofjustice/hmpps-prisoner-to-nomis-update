@@ -72,12 +72,8 @@ class NonAssociationsReconciliationService(
     return allDpsIds.asPages(pageSize).flatMap { page ->
       getDpsNonAssociationsForPage(page)
         .filterNot {
-          val dpsId = if (it.firstPrisonerNumber < it.secondPrisonerNumber) {
-            NonAssociationIdResponse(it.firstPrisonerNumber, it.secondPrisonerNumber)
-          } else {
-            NonAssociationIdResponse(it.secondPrisonerNumber, it.firstPrisonerNumber)
-          }
-          allNomisIds.contains(dpsId)
+          allNomisIds.contains(NonAssociationIdResponse(it.firstPrisonerNumber, it.secondPrisonerNumber)) ||
+            allNomisIds.contains(NonAssociationIdResponse(it.secondPrisonerNumber, it.firstPrisonerNumber))
         }
         .map {
           val mismatch = MismatchNonAssociation(
