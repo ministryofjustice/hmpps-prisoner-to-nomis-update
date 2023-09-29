@@ -26,6 +26,7 @@ private const val OFFENDER_NO = "A1234AA"
 private const val DPS_HEARING_ID = "345"
 private const val NOMIS_HEARING_ID = 2345L
 private const val CHARGE_SEQUENCE = 1
+
 class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
   @Nested
@@ -115,19 +116,19 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will create success telemetry`() {
-        waitForHearingProcessingToBeComplete()
-
-        verify(telemetryClient).trackEvent(
-          eq("hearing-result-deleted-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
-            Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-            Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
-            Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
-          },
-          isNull(),
-        )
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("hearing-result-deleted-success"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+              Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
+            },
+            isNull(),
+          )
+        }
       }
 
       @Test
@@ -202,6 +203,12 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  fun hearingMessagePayload(hearingId: String, chargeNumber: String, prisonId: String, prisonerNumber: String, eventType: String) =
+  fun hearingMessagePayload(
+    hearingId: String,
+    chargeNumber: String,
+    prisonId: String,
+    prisonerNumber: String,
+    eventType: String,
+  ) =
     """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId", "hearingId": "$hearingId", "prisonerNumber": "$prisonerNumber"}}"""
 }
