@@ -7,7 +7,6 @@ import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
@@ -28,11 +27,6 @@ private const val DPS_HEARING_ID = "345"
 private const val NOMIS_HEARING_ID = 2345L
 private const val CHARGE_SEQUENCE = 1
 class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
-
-  @BeforeEach
-  fun setup() {
-    Mockito.reset(telemetryClient)
-  }
 
   @Nested
   inner class CreateHearingCompleted {
@@ -87,7 +81,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
           WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings")),
         )
 
-        verify(telemetryClient).trackEvent(
+        verify(telemetryClient, times(3)).trackEvent(
           eq("hearing-result-created-failed"),
           org.mockito.kotlin.check {
             Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)

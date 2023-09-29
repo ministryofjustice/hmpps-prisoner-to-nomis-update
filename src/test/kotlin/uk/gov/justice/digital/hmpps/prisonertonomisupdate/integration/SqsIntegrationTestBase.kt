@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration
 import com.microsoft.applicationinsights.TelemetryClient
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.SpyBean
@@ -107,6 +108,7 @@ abstract class SqsIntegrationTestBase {
 
   @BeforeEach
   fun cleanQueue() {
+    Mockito.reset(telemetryClient)
     awsSqsVisitClient.purgeQueue(visitQueueUrl).get()
     awsSqsVisitDlqClient?.purgeQueue(visitDlqUrl)?.get()
 
