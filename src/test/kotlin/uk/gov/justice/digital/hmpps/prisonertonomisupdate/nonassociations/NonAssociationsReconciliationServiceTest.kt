@@ -171,6 +171,7 @@ class NonAssociationsReconciliationServiceTest {
     effectiveDate = LocalDate.parse("2022-01-01"),
     expiryDate = expiryDate,
     comment = comment,
+    updatedBy = "M_HALMA",
   )
 
   private fun dpsResponse(id: Long, comment: String = "comment") = NonAssociation(
