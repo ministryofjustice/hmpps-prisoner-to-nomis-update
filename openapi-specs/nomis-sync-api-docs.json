@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-09-13.4873.2a3d5ae"
+    "version": "2023-09-28.5037.c317620"
   },
   "servers": [
     {
@@ -2976,6 +2976,275 @@
         }
       }
     },
+    "/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}/charge/{chargeSequence}/result": {
+      "post": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "creates a hearing result for a given hearing",
+        "description": "Creates a hearing result for a given hearing. DPS only supports 1 result per hearing. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "createHearingResult",
+        "parameters": [
+          {
+            "name": "adjudicationNumber",
+            "in": "path",
+            "description": "Adjudication number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Adjudication number",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "hearingId",
+            "in": "path",
+            "description": "Nomis Hearing Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Nomis Hearing Id",
+              "example": 123
+            },
+            "example": 123
+          },
+          {
+            "name": "chargeSequence",
+            "in": "path",
+            "description": "Nomis charge sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Nomis charge sequence",
+              "example": 1
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHearingResultRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Hearing result created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateHearingResultResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Hearing does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "Deletes a hearing result",
+        "description": "Deletes a hearing result for a given adjudication and hearing Id. The result sequence is always 1 for synchronising DPS migrated/created data. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "deleteHearingResult",
+        "parameters": [
+          {
+            "name": "adjudicationNumber",
+            "in": "path",
+            "description": "Adjudication number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Adjudication number",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "hearingId",
+            "in": "path",
+            "description": "Hearing Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Hearing Id",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "chargeSequence",
+            "in": "path",
+            "description": "Nomis charge sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Nomis charge sequence",
+              "example": 1
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Hearing result deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Adjudication does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/awards": {
+      "post": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "creates a hearing result award for a given adjudication",
+        "description": "Creates a hearing result award. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "createHearingResultAward",
+        "parameters": [
+          {
+            "name": "adjudicationNumber",
+            "in": "path",
+            "description": "Adjudication number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Adjudication number",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "chargeSequence",
+            "in": "path",
+            "description": "Nomis charge sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Nomis charge sequence",
+              "example": 1
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHearingResultAwardRequests"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Hearing result award created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateHearingResultAwardResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Charge does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/activities": {
       "post": {
         "tags": [
@@ -3349,6 +3618,84 @@
         }
       }
     },
+    "/prisoners/booking-id/{bookingId}/awards/{sanctionSequence}": {
+      "get": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "get hearing result award by Id ",
+        "description": "Retrieves a hearing result by the Id (bookingId and sanctionSequence). Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "getAdjudicationHearingResultAward",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "NOMIS booking Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS booking Id",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "sanctionSequence",
+            "in": "path",
+            "description": "Nomis sanction sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Nomis sanction sequence",
+              "example": 1
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Hearing result award Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdjudicationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Hearing result award does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}": {
       "get": {
         "tags": [
@@ -3517,7 +3864,7 @@
           "non-association-resource"
         ],
         "summary": "get non-associations by filter",
-        "description": "Retrieves a paged list of incentive composite ids by filter. Requires ROLE_NOMIS_NON_ASSOCIATIONS.",
+        "description": "Retrieves a paged list of composite ids by filter. Requires ROLE_NOMIS_NON_ASSOCIATIONS.",
         "operationId": "getNonAssociationsByFilter",
         "parameters": [
           {
@@ -3527,28 +3874,6 @@
             "schema": {
               "$ref": "#/components/schemas/Pageable"
             }
-          },
-          {
-            "name": "fromDate",
-            "in": "query",
-            "description": "Filter results by non-associations that were created on or after the given date",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            },
-            "example": "2021-11-03"
-          },
-          {
-            "name": "toDate",
-            "in": "query",
-            "description": "Filter results by non-associations that were created on or before the given date",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            },
-            "example": "2022-04-11"
           }
         ],
         "responses": {
@@ -4153,7 +4478,7 @@
             "description": "Course Activity ID",
             "required": false,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Course Activity ID"
             }
           }
@@ -4164,7 +4489,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FindActiveAllocationIdsResponse"
+                  "$ref": "#/components/schemas/PageFindActiveAllocationIdsResponse"
                 }
               }
             }
@@ -4291,8 +4616,8 @@
         "tags": [
           "adjudication-resource"
         ],
-        "summary": "get adjudication by adjudication number",
-        "description": "Retrieves an adjudication by the adjudication number. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "summary": "get hearing by hearing Id",
+        "description": "Retrieves a hearing by the hearing Id. Requires ROLE_NOMIS_ADJUDICATIONS",
         "operationId": "getAdjudicationHearing",
         "parameters": [
           {
@@ -4341,6 +4666,84 @@
           },
           "404": {
             "description": "Hearing does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/adjudications/hearings/{hearingId}/charge/{chargeSequence}/result": {
+      "get": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "get hearing result by hearing id",
+        "description": "Retrieves a hearing result by the nomis hearing id. DPS migrated and synchronised hearing results always have a result sequence of 1 Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "getAdjudicationHearingResult",
+        "parameters": [
+          {
+            "name": "hearingId",
+            "in": "path",
+            "description": "NOMIS Hearing Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS Hearing Id",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "chargeSequence",
+            "in": "path",
+            "description": "Nomis charge sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Nomis charge sequence",
+              "example": 1
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Hearing Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdjudicationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Hearing result does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -4626,7 +5029,7 @@
             "description": "Course Activity ID",
             "required": false,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Course Activity ID"
             }
           }
@@ -4637,7 +5040,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FindActiveActivityIdsResponse"
+                  "$ref": "#/components/schemas/PageFindActiveActivityIdsResponse"
                 }
               }
             }
@@ -7035,6 +7438,124 @@
         },
         "description": "Hearing to be created"
       },
+      "CreateHearingResultResponse": {
+        "required": [
+          "hearingId",
+          "resultSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "hearingId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "resultSequence": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "Provides the generated hearing result composite ID after creation"
+      },
+      "CreateHearingResultRequest": {
+        "required": [
+          "findingCode",
+          "pleaFindingCode"
+        ],
+        "type": "object",
+        "properties": {
+          "adjudicatorUsername": {
+            "type": "string",
+            "description": "adjudicator username for the hearing record",
+            "example": "ASMITH_GEN"
+          },
+          "pleaFindingCode": {
+            "type": "string",
+            "description": "The offender's plea code on this charge",
+            "example": "NOT_GUILTY"
+          },
+          "findingCode": {
+            "type": "string",
+            "description": "Finding code",
+            "example": "GUILTY"
+          }
+        },
+        "description": "Hearing result to be created"
+      },
+      "CreateHearingResultAwardResponse": {
+        "required": [
+          "bookingId",
+          "sanctionSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sanctionSequence": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "Provides the generated Hearing Result Award composite ID after creation"
+      },
+      "CreateHearingResultAwardRequest": {
+        "required": [
+          "effectiveDate",
+          "sanctionStatus",
+          "sanctionType"
+        ],
+        "type": "object",
+        "properties": {
+          "sanctionType": {
+            "type": "string",
+            "description": "The type of award",
+            "example": "CAUTION"
+          },
+          "sanctionStatus": {
+            "type": "string",
+            "description": "The status of the award",
+            "example": "IMMEDIATE"
+          },
+          "commentText": {
+            "type": "string",
+            "description": "Award comment",
+            "example": "GUILTY"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "description": "Award effective date",
+            "format": "date"
+          },
+          "compensationAmount": {
+            "type": "number",
+            "description": "optional compensation amount",
+            "example": 0.5
+          },
+          "sanctionDays": {
+            "type": "integer",
+            "description": "the duration  of the award, in days",
+            "format": "int32"
+          }
+        },
+        "description": "Hearing result award (aka punishment) to be created"
+      },
+      "CreateHearingResultAwardRequests": {
+        "required": [
+          "awardRequests"
+        ],
+        "type": "object",
+        "properties": {
+          "awardRequests": {
+            "type": "array",
+            "description": "a list of award requests",
+            "items": {
+              "$ref": "#/components/schemas/CreateHearingResultAwardRequest"
+            }
+          }
+        },
+        "description": "A list of Hearing result awards (aka punishment) to be created"
+      },
       "CreateActivityRequest": {
         "required": [
           "capacity",
@@ -7584,7 +8105,8 @@
           "reason",
           "recipReason",
           "type",
-          "typeSequence"
+          "typeSequence",
+          "updatedBy"
         ],
         "type": "object",
         "properties": {
@@ -7623,6 +8145,11 @@
             "type": "string",
             "description": "Free text name of staff member",
             "example": "Joe Bloggs"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "Last updated by",
+            "example": "JSMITH_GEN"
           },
           "effectiveDate": {
             "type": "string",
@@ -8064,6 +8591,52 @@
         },
         "description": "Find active allocation ids response"
       },
+      "PageFindActiveAllocationIdsResponse": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FindActiveAllocationIdsResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
       "AdjustmentIdResponse": {
         "required": [
           "adjustmentCategory",
@@ -8485,6 +9058,52 @@
           }
         },
         "description": "Find active activity ids response"
+      },
+      "PageFindActiveActivityIdsResponse": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FindActiveActivityIdsResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
       }
     },
     "securitySchemes": {
