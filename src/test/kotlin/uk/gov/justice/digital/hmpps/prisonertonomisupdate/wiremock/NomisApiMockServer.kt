@@ -713,7 +713,12 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetActivePrisonersPage(totalElements: Long, pageNumber: Long, numberOfElements: Long = 10, pageSize: Long = 10) {
+  fun stubGetActivePrisonersPage(
+    totalElements: Long,
+    pageNumber: Long,
+    numberOfElements: Long = 10,
+    pageSize: Long = 10,
+  ) {
     stubFor(
       get(
         urlPathEqualTo("/prisoners/ids"),
@@ -725,7 +730,14 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.OK.value())
             .withFixedDelay(500)
-            .withBody(activePrisonersPagedResponse(totalElements = totalElements, numberOfElements = numberOfElements, pageNumber = pageNumber, pageSize = pageSize)),
+            .withBody(
+              activePrisonersPagedResponse(
+                totalElements = totalElements,
+                numberOfElements = numberOfElements,
+                pageNumber = pageNumber,
+                pageSize = pageSize,
+              ),
+            ),
         ),
     )
   }
@@ -773,8 +785,10 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     pageSize: Long = 10,
     pageNumber: Long = 0,
   ): String {
-    val activePrisonerId = (1..numberOfElements).map { it + (pageNumber * pageSize) }.map { ActivePrisonerId(bookingId = it, offenderNo = "A${it.toString().padStart(4, '0')}TZ") }
-    val content = activePrisonerId.map { """{ "bookingId": ${it.bookingId}, "offenderNo": "${it.offenderNo}" }""" }.joinToString { it }
+    val activePrisonerId = (1..numberOfElements).map { it + (pageNumber * pageSize) }
+      .map { ActivePrisonerId(bookingId = it, offenderNo = "A${it.toString().padStart(4, '0')}TZ") }
+    val content = activePrisonerId.map { """{ "bookingId": ${it.bookingId}, "offenderNo": "${it.offenderNo}" }""" }
+      .joinToString { it }
     return """
 {
     "content": [
@@ -1099,31 +1113,41 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       delete("/adjudications/adjudication-number/$adjudicationNumber/hearings/$nomisHearingId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubHearingResultCreate(
+    adjudicationNumber: Long = 123456,
+    nomisHearingId: Long = 345,
+    chargeSequence: Int = 1,
+    plea: String = "NOT_GUILTY",
+    finding: String = "GUILTY",
+  ) {
+    stubFor(
+      post("/adjudications/adjudication-number/$adjudicationNumber/hearings/$nomisHearingId/charge/$chargeSequence/result").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
           .withBody(
             """
             {
-            "hearingId": $nomisHearingId,
-            "type": {
-                "code": "GOV_ADULT",
-                "description": "Governor's Hearing Adult"
-            },
-            "scheduleDate": "2023-09-06",
-            "scheduleTime": "13:29:13",
-            "hearingDate": "2023-09-09",
-            "hearingTime": "10:00:00",
-            "internalLocation": {
-                "locationId": 775,
-                "code": "ESTAB",
-                "description": "MDI-ESTAB"
-            },
-            "hearingResults": [],
-            "eventId": 514306417,
-            "createdDateTime": "2023-09-06T13:29:13.465687577",
-            "createdByUsername": "PRISONER_MANAGER_API",
-            "notifications": []
-        }
+              "pleaFindingCode": "$plea",
+              "findingCode": "$finding",
+              "adjudicatorUsername": "DBULL_GEN"
+            }
             """.trimIndent(),
           )
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubHearingResultDelete(adjudicationNumber: Long = 123456, nomisHearingId: Long = 345, chargeSequence: Int = 1) {
+    stubFor(
+      delete("/adjudications/adjudication-number/$adjudicationNumber/hearings/$nomisHearingId/charge/$chargeSequence/result").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
           .withStatus(200),
       ),
     )

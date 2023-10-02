@@ -66,7 +66,7 @@ hmpps.sqs:
       queueName: "adjudication-${random.uuid}"
       dlqName: "adjudication-dlq-${random.uuid}"
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"adjudication.report.created\", \"adjudication.damages.updated\", \"adjudication.hearing.created\", \"adjudication.hearing.updated\", \"adjudication.hearing.deleted\"]}"
+      subscribeFilter: "{\"eventType\":[\"adjudication.report.created\", \"adjudication.damages.updated\", \"adjudication.evidence.updated\", \"adjudication.hearing.created\", \"adjudication.hearing.updated\", \"adjudication.hearing.deleted\", \"adjudication.hearingCompleted.created\", \"adjudication.hearingCompleted.deleted\"]}"
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
   topics:

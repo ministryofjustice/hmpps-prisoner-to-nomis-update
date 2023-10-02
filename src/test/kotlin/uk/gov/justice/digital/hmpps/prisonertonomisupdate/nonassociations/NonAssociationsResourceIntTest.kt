@@ -121,7 +121,8 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
     "authorisedBy": "Jim Smith",
     "effectiveDate": "2023-08-25",
     "expiryDate": "${if (open) "2053-10-26" else "2023-09-15"}",
-    "comment": "Fight on Wing C"
+    "comment": "Fight on Wing C",
+    "updatedBy": "del_gen"
   }
   """.trimIndent()
 

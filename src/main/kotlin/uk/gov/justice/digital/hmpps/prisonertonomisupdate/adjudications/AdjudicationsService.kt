@@ -7,6 +7,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingOutcomeDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
@@ -15,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ChargeToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.EvidenceToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.IncidentToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToCreate
@@ -242,6 +244,78 @@ class AdjudicationsService(
     }
   }
 
+  suspend fun createHearingCompleted(createEvent: HearingEvent) {
+    val event = createEvent.additionalInformation
+    val telemetryMap = event.toTelemetryMap()
+
+    runCatching {
+      val adjudicationMapping =
+        adjudicationMappingService.getMappingGivenChargeNumber(event.chargeNumber)
+          .also {
+            telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
+            telemetryMap["chargeSequence"] = it.chargeSequence.toString()
+          }
+
+      val hearingMapping =
+        hearingMappingService.getMappingGivenDpsHearingIdOrNull(dpsHearingId = event.hearingId.toString())
+          ?.also { telemetryMap["nomisHearingId"] = it.nomisHearingId.toString() }
+          ?: throw IllegalStateException(
+            "Hearing mapping for dps hearing id: ${event.hearingId} not found for DPS adjudication with charge no ${event.chargeNumber}",
+          )
+
+      val hearing = adjudicationsApiService.getCharge(
+        event.chargeNumber,
+        event.prisonId,
+      ).reportedAdjudication.hearings.firstOrNull { it.id.toString() == event.hearingId }
+        ?: throw IllegalStateException(
+          "Hearing ${event.hearingId} not found for DPS adjudication with charge no ${event.chargeNumber}",
+        )
+
+      val outcome = hearing.outcome ?: throw IllegalStateException(
+        "Outcome not found for Hearing ${event.hearingId} in DPS adjudication with charge no ${event.chargeNumber}",
+      )
+
+      nomisApiService.createHearingResult(
+        adjudicationNumber = adjudicationMapping.adjudicationNumber,
+        hearingId = hearingMapping.nomisHearingId,
+        chargeSequence = adjudicationMapping.chargeSequence,
+        request = outcome.toNomisCreateHearingResult(),
+      )
+    }.onSuccess {
+      telemetryClient.trackEvent("hearing-result-created-success", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("hearing-result-created-failed", telemetryMap, null)
+      throw e
+    }
+  }
+
+  suspend fun deleteHearingCompleted(deleteEvent: HearingEvent) {
+    val eventData: HearingAdditionalInformation = deleteEvent.additionalInformation
+    val telemetryMap = deleteEvent.additionalInformation.toTelemetryMap()
+
+    runCatching {
+      val adjudicationMapping =
+        adjudicationMappingService.getMappingGivenChargeNumber(eventData.chargeNumber)
+          .also {
+            telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
+          }
+      val hearingMapping =
+        hearingMappingService.getMappingGivenDpsHearingId(eventData.hearingId)
+          .also { telemetryMap["nomisHearingId"] = it.nomisHearingId.toString() }
+
+      nomisApiService.deleteHearingResult(
+        adjudicationMapping.adjudicationNumber,
+        hearingMapping.nomisHearingId,
+        adjudicationMapping.chargeSequence,
+      )
+    }.onSuccess {
+      telemetryClient.trackEvent("hearing-result-deleted-success", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("hearing-result-deleted-failed", telemetryMap, null)
+      throw e
+    }
+  }
+
   private inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
 }
@@ -251,6 +325,12 @@ private fun HearingDto.toNomisUpdateHearing(): UpdateHearingRequest = UpdateHear
   hearingDate = this.dateTimeOfHearing.toLocalDate(),
   hearingTime = this.dateTimeOfHearing.toLocalTimeAtMinute().toString(),
   internalLocationId = this.locationId,
+)
+
+private fun HearingOutcomeDto.toNomisCreateHearingResult(): CreateHearingResultRequest = CreateHearingResultRequest(
+  pleaFindingCode = this.plea!!.name,
+  findingCode = this.code.name,
+  adjudicatorUsername = this.adjudicator,
 )
 
 private fun HearingAdditionalInformation.toTelemetryMap(): MutableMap<String, String> = mutableMapOf(
@@ -300,16 +380,16 @@ private fun ReportedAdjudicationDto.getOffenceCode() = if (this.didInciteOtherPr
 private fun ReportedAdjudicationDto.didInciteOtherPrisoner() = this.incidentRole.roleCode != null
 
 private fun ReportedDamageDto.toNomisRepairForCreate() = RepairToCreate(
-  typeCode = this.code.toNomisEnum().name, // TODO - this API provides no enum, but should do
+  typeCode = this.code.toNomisCreateEnum(),
   comment = this.details,
 )
 
 private fun ReportedDamageDto.toNomisRepairForUpdate() = RepairToUpdateOrAdd(
-  typeCode = this.code.toNomisEnum(),
+  typeCode = this.code.toNomisUpdateEnum(),
   comment = this.details,
 )
 
-private fun ReportedDamageDto.Code.toNomisEnum(): RepairToUpdateOrAdd.TypeCode = when (this) {
+private fun ReportedDamageDto.Code.toNomisUpdateEnum(): RepairToUpdateOrAdd.TypeCode = when (this) {
   ReportedDamageDto.Code.ELECTRICAL_REPAIR -> RepairToUpdateOrAdd.TypeCode.ELEC
   ReportedDamageDto.Code.PLUMBING_REPAIR -> RepairToUpdateOrAdd.TypeCode.PLUM
   ReportedDamageDto.Code.FURNITURE_OR_FABRIC_REPAIR -> RepairToUpdateOrAdd.TypeCode.FABR
@@ -318,14 +398,23 @@ private fun ReportedDamageDto.Code.toNomisEnum(): RepairToUpdateOrAdd.TypeCode =
   ReportedDamageDto.Code.CLEANING -> RepairToUpdateOrAdd.TypeCode.CLEA
   ReportedDamageDto.Code.REPLACE_AN_ITEM -> RepairToUpdateOrAdd.TypeCode.DECO // best match possibly?
 }
+private fun ReportedDamageDto.Code.toNomisCreateEnum(): RepairToCreate.TypeCode = when (this) {
+  ReportedDamageDto.Code.ELECTRICAL_REPAIR -> RepairToCreate.TypeCode.ELEC
+  ReportedDamageDto.Code.PLUMBING_REPAIR -> RepairToCreate.TypeCode.PLUM
+  ReportedDamageDto.Code.FURNITURE_OR_FABRIC_REPAIR -> RepairToCreate.TypeCode.FABR
+  ReportedDamageDto.Code.LOCK_REPAIR -> RepairToCreate.TypeCode.LOCK
+  ReportedDamageDto.Code.REDECORATION -> RepairToCreate.TypeCode.DECO
+  ReportedDamageDto.Code.CLEANING -> RepairToCreate.TypeCode.CLEA
+  ReportedDamageDto.Code.REPLACE_AN_ITEM -> RepairToCreate.TypeCode.DECO
+}
 
 private fun ReportedEvidenceDto.toNomisEvidence() = EvidenceToCreate(
   typeCode = when (this.code) {
-    ReportedEvidenceDto.Code.PHOTO -> "PHOTO"
-    ReportedEvidenceDto.Code.BODY_WORN_CAMERA -> "OTHER" // maybe PHOTO ?
-    ReportedEvidenceDto.Code.CCTV -> "OTHER" // maybe PHOTO ?
-    ReportedEvidenceDto.Code.BAGGED_AND_TAGGED -> "EVI_BAG"
-    ReportedEvidenceDto.Code.OTHER -> "OTHER"
+    ReportedEvidenceDto.Code.PHOTO -> EvidenceToCreate.TypeCode.PHOTO
+    ReportedEvidenceDto.Code.BODY_WORN_CAMERA -> EvidenceToCreate.TypeCode.OTHER
+    ReportedEvidenceDto.Code.CCTV -> EvidenceToCreate.TypeCode.OTHER
+    ReportedEvidenceDto.Code.BAGGED_AND_TAGGED -> EvidenceToCreate.TypeCode.EVI_BAG
+    ReportedEvidenceDto.Code.OTHER -> EvidenceToCreate.TypeCode.OTHER
   },
   detail = this.details,
 )

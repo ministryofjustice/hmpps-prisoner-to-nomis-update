@@ -90,7 +90,13 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "locationId": 27187,
                 "dateTimeOfHearing": "2023-08-23T14:25:00",
                 "oicHearingType": "GOV_ADULT",
-                "agencyId": "MDI"
+                "agencyId": "MDI",
+                  "outcome": {
+                        "id": 962,
+                        "adjudicator": "JBULLENGEN",
+                        "code": "COMPLETE",
+                        "plea": "GUILTY"
+                    }
             }],
         "disIssueHistory": [],
         "outcomes": [],

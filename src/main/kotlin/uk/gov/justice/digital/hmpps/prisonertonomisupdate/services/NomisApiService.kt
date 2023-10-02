@@ -26,6 +26,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Hearing
@@ -120,7 +122,10 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .awaitBodilessEntity()
   }
 
-  suspend fun updateScheduledInstance(courseActivityId: Long, request: CourseScheduleRequest): UpdateCourseScheduleResponse =
+  suspend fun updateScheduledInstance(
+    courseActivityId: Long,
+    request: CourseScheduleRequest,
+  ): UpdateCourseScheduleResponse =
     webClient.put()
       .uri("/activities/$courseActivityId/schedule")
       .bodyValue(request)
@@ -312,7 +317,10 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .awaitBody()
 
-  suspend fun updateAdjudicationRepairs(adjudicationNumber: Long, request: UpdateRepairsRequest): UpdateRepairsResponse =
+  suspend fun updateAdjudicationRepairs(
+    adjudicationNumber: Long,
+    request: UpdateRepairsRequest,
+  ): UpdateRepairsResponse =
     webClient.put()
       .uri("/adjudications/adjudication-number/$adjudicationNumber/repairs")
       .bodyValue(request)
@@ -340,6 +348,25 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .awaitBodilessEntity()
   }
 
+  suspend fun createHearingResult(
+    adjudicationNumber: Long,
+    hearingId: Long,
+    chargeSequence: Int,
+    request: CreateHearingResultRequest,
+  ): CreateHearingResultResponse =
+    webClient.post()
+      .uri("/adjudications/adjudication-number/$adjudicationNumber/hearings/$hearingId/charge/$chargeSequence/result")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBody()
+
+  suspend fun deleteHearingResult(adjudicationNumber: Long, hearingId: Long, chargeSequence: Int) {
+    webClient.delete()
+      .uri("/adjudications/adjudication-number/$adjudicationNumber/hearings/$hearingId/charge/$chargeSequence/result")
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
   // ////////// NON-ASSOCIATIONS //////////////
 
   suspend fun createNonAssociation(request: CreateNonAssociationRequest): CreateNonAssociationResponse =
@@ -349,9 +376,19 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .awaitBody()
 
-  suspend fun amendNonAssociation(offenderNo1: String, offenderNo2: String, sequence: Int, request: UpdateNonAssociationRequest) {
+  suspend fun amendNonAssociation(
+    offenderNo1: String,
+    offenderNo2: String,
+    sequence: Int,
+    request: UpdateNonAssociationRequest,
+  ) {
     webClient.put()
-      .uri("/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/sequence/{sequence}", offenderNo1, offenderNo2, sequence)
+      .uri(
+        "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/sequence/{sequence}",
+        offenderNo1,
+        offenderNo2,
+        sequence,
+      )
       .bodyValue(request)
       .retrieve()
       .awaitBodilessEntity()
@@ -359,14 +396,24 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   suspend fun closeNonAssociation(offenderNo1: String, offenderNo2: String, sequence: Int) {
     webClient.put()
-      .uri("/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/sequence/{sequence}/close", offenderNo1, offenderNo2, sequence)
+      .uri(
+        "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/sequence/{sequence}/close",
+        offenderNo1,
+        offenderNo2,
+        sequence,
+      )
       .retrieve()
       .awaitBodilessEntity()
   }
 
   suspend fun deleteNonAssociation(offenderNo1: String, offenderNo2: String, sequence: Int) {
     webClient.delete()
-      .uri("/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/sequence/{sequence}", offenderNo1, offenderNo2, sequence)
+      .uri(
+        "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/sequence/{sequence}",
+        offenderNo1,
+        offenderNo2,
+        sequence,
+      )
       .retrieve()
       .awaitBodilessEntity()
   }
