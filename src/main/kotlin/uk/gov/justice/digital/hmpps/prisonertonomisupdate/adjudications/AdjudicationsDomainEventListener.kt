@@ -37,6 +37,7 @@ class AdjudicationsDomainEventListener(
     when (eventType) {
       "adjudication.report.created" -> adjudicationsService.createAdjudication(message.fromJson())
       "adjudication.damages.updated" -> adjudicationsService.updateAdjudicationDamages(message.fromJson())
+      "adjudication.evidence.updated" -> log.info("Received a message that hasn't been wired up yet: {}", eventType)
       "adjudication.hearing.created" -> adjudicationsService.createHearing(message.fromJson())
       "adjudication.hearing.updated" -> adjudicationsService.updateHearing(message.fromJson())
       "adjudication.hearing.deleted" -> adjudicationsService.deleteHearing(message.fromJson())

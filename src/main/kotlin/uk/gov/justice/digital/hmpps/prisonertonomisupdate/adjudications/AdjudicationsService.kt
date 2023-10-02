@@ -380,16 +380,16 @@ private fun ReportedAdjudicationDto.getOffenceCode() = if (this.didInciteOtherPr
 private fun ReportedAdjudicationDto.didInciteOtherPrisoner() = this.incidentRole.roleCode != null
 
 private fun ReportedDamageDto.toNomisRepairForCreate() = RepairToCreate(
-  typeCode = this.code.toNomisEnum().name, // TODO - this API provides no enum, but should do
+  typeCode = this.code.toNomisCreateEnum(),
   comment = this.details,
 )
 
 private fun ReportedDamageDto.toNomisRepairForUpdate() = RepairToUpdateOrAdd(
-  typeCode = this.code.toNomisEnum(),
+  typeCode = this.code.toNomisUpdateEnum(),
   comment = this.details,
 )
 
-private fun ReportedDamageDto.Code.toNomisEnum(): RepairToUpdateOrAdd.TypeCode = when (this) {
+private fun ReportedDamageDto.Code.toNomisUpdateEnum(): RepairToUpdateOrAdd.TypeCode = when (this) {
   ReportedDamageDto.Code.ELECTRICAL_REPAIR -> RepairToUpdateOrAdd.TypeCode.ELEC
   ReportedDamageDto.Code.PLUMBING_REPAIR -> RepairToUpdateOrAdd.TypeCode.PLUM
   ReportedDamageDto.Code.FURNITURE_OR_FABRIC_REPAIR -> RepairToUpdateOrAdd.TypeCode.FABR
@@ -398,14 +398,23 @@ private fun ReportedDamageDto.Code.toNomisEnum(): RepairToUpdateOrAdd.TypeCode =
   ReportedDamageDto.Code.CLEANING -> RepairToUpdateOrAdd.TypeCode.CLEA
   ReportedDamageDto.Code.REPLACE_AN_ITEM -> RepairToUpdateOrAdd.TypeCode.DECO // best match possibly?
 }
+private fun ReportedDamageDto.Code.toNomisCreateEnum(): RepairToCreate.TypeCode = when (this) {
+  ReportedDamageDto.Code.ELECTRICAL_REPAIR -> RepairToCreate.TypeCode.ELEC
+  ReportedDamageDto.Code.PLUMBING_REPAIR -> RepairToCreate.TypeCode.PLUM
+  ReportedDamageDto.Code.FURNITURE_OR_FABRIC_REPAIR -> RepairToCreate.TypeCode.FABR
+  ReportedDamageDto.Code.LOCK_REPAIR -> RepairToCreate.TypeCode.LOCK
+  ReportedDamageDto.Code.REDECORATION -> RepairToCreate.TypeCode.DECO
+  ReportedDamageDto.Code.CLEANING -> RepairToCreate.TypeCode.CLEA
+  ReportedDamageDto.Code.REPLACE_AN_ITEM -> RepairToCreate.TypeCode.DECO
+}
 
 private fun ReportedEvidenceDto.toNomisEvidence() = EvidenceToCreate(
   typeCode = when (this.code) {
-    ReportedEvidenceDto.Code.PHOTO -> "PHOTO"
-    ReportedEvidenceDto.Code.BODY_WORN_CAMERA -> "OTHER" // maybe PHOTO ?
-    ReportedEvidenceDto.Code.CCTV -> "OTHER" // maybe PHOTO ?
-    ReportedEvidenceDto.Code.BAGGED_AND_TAGGED -> "EVI_BAG"
-    ReportedEvidenceDto.Code.OTHER -> "OTHER"
+    ReportedEvidenceDto.Code.PHOTO -> EvidenceToCreate.TypeCode.PHOTO
+    ReportedEvidenceDto.Code.BODY_WORN_CAMERA -> EvidenceToCreate.TypeCode.OTHER
+    ReportedEvidenceDto.Code.CCTV -> EvidenceToCreate.TypeCode.OTHER
+    ReportedEvidenceDto.Code.BAGGED_AND_TAGGED -> EvidenceToCreate.TypeCode.EVI_BAG
+    ReportedEvidenceDto.Code.OTHER -> EvidenceToCreate.TypeCode.OTHER
   },
   detail = this.details,
 )
