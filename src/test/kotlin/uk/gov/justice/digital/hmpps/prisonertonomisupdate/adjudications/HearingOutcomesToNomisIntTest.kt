@@ -75,25 +75,25 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will not create a hearing result in NOMIS`() {
-        waitForCreateHearingProcessingToBeComplete()
+        await untilAsserted {
+          verify(telemetryClient, times(3)).trackEvent(
+            eq("hearing-result-created-failed"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+              Assertions.assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
+              Assertions.assertThat(it["chargeSequence"]).isEqualTo(CHARGE_SEQUENCE.toString())
+            },
+            isNull(),
+          )
 
-        NomisApiExtension.nomisApi.verify(
-          0,
-          WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings")),
-        )
-
-        verify(telemetryClient, times(3)).trackEvent(
-          eq("hearing-result-created-failed"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
-            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-            Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
-            Assertions.assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
-            Assertions.assertThat(it["chargeSequence"]).isEqualTo(CHARGE_SEQUENCE.toString())
-          },
-          isNull(),
-        )
+          NomisApiExtension.nomisApi.verify(
+            0,
+            WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings")),
+          )
+        }
       }
     }
 
