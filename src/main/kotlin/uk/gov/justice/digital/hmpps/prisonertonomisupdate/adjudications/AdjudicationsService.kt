@@ -318,7 +318,10 @@ class AdjudicationsService(
         adjudicationNumber = adjudicationMapping.adjudicationNumber,
         hearingId = hearingMapping.nomisHearingId,
         chargeSequence = adjudicationMapping.chargeSequence,
-        request = outcome.toNomisCreateHearingResult(adjudicationStatus = charge.reportedAdjudication.status.name),
+        request = outcome.toNomisCreateHearingResult(
+          adjudicationStatus = charge.reportedAdjudication.status.name,
+          hearingType = hearing.oicHearingType,
+        ),
       )
     }.onSuccess {
       telemetryClient.trackEvent("hearing-result-created-success", telemetryMap, null)
@@ -366,15 +369,26 @@ private fun HearingDto.toNomisUpdateHearing(): UpdateHearingRequest = UpdateHear
   internalLocationId = this.locationId,
 )
 
-private fun HearingOutcomeDto.toNomisCreateHearingResult(adjudicationStatus: String): CreateHearingResultRequest =
+private fun HearingOutcomeDto.toNomisCreateHearingResult(
+  adjudicationStatus: String,
+  hearingType: HearingDto.OicHearingType,
+): CreateHearingResultRequest =
   CreateHearingResultRequest(
     pleaFindingCode = this.plea!!.name,
-    findingCode = when (adjudicationStatus) {
-      "CHARGE_PROVED" -> "PROVED"
-      else -> adjudicationStatus
-    },
-    adjudicatorUsername = this.adjudicator,
+    findingCode = toNomisFindingCode(adjudicationStatus),
+    adjudicatorUsername = getAdjudicatorUsernameWhenAppropriateHearingType(hearingType),
   )
+
+private fun toNomisFindingCode(adjudicationStatus: String) = when (adjudicationStatus) {
+  "CHARGE_PROVED" -> "PROVED"
+  else -> adjudicationStatus
+}
+
+private fun HearingOutcomeDto.getAdjudicatorUsernameWhenAppropriateHearingType(hearingType: HearingDto.OicHearingType) =
+  when (hearingType) {
+    HearingDto.OicHearingType.INAD_ADULT, HearingDto.OicHearingType.INAD_YOI -> null
+    else -> this.adjudicator
+  }
 
 private fun HearingAdditionalInformation.toTelemetryMap(): MutableMap<String, String> = mutableMapOf(
   "chargeNumber" to this.chargeNumber,
