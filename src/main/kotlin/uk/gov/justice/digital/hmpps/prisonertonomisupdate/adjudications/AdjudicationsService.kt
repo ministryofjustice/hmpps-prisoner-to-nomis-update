@@ -376,7 +376,7 @@ private fun HearingOutcomeDto.toNomisCreateHearingResult(
   CreateHearingResultRequest(
     pleaFindingCode = this.plea!!.name,
     findingCode = toNomisFindingCode(adjudicationStatus),
-    adjudicatorUsername = getAdjudicatorUsernameWhenAppropriateHearingType(hearingType),
+    adjudicatorUsername = getAdjudicatorUsernameForInternalHearingOnly(hearingType),
   )
 
 private fun toNomisFindingCode(adjudicationStatus: String) = when (adjudicationStatus) {
@@ -384,7 +384,7 @@ private fun toNomisFindingCode(adjudicationStatus: String) = when (adjudicationS
   else -> adjudicationStatus
 }
 
-private fun HearingOutcomeDto.getAdjudicatorUsernameWhenAppropriateHearingType(hearingType: HearingDto.OicHearingType) =
+private fun HearingOutcomeDto.getAdjudicatorUsernameForInternalHearingOnly(hearingType: HearingDto.OicHearingType) =
   when (hearingType) {
     HearingDto.OicHearingType.INAD_ADULT, HearingDto.OicHearingType.INAD_YOI -> null
     else -> this.adjudicator
