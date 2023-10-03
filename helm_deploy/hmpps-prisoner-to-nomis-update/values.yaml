@@ -149,3 +149,4 @@ generic-service:
 generic-prometheus-alerts:
   targetApplication: hmpps-prisoner-to-nomis-update
   alertSeverity: syscon
+  cronjobTargetOverride: "hmpps-prisoner-to-nomis-update-queue-.*"

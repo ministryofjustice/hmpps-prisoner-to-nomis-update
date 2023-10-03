@@ -35,7 +35,7 @@ class NonAssociationsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeE
 
 class NonAssociationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   companion object {
-    private const val WIREMOCK_PORT = 8091
+    private const val WIREMOCK_PORT = 8092
   }
 
   fun stubHealthPing(status: Int) {
