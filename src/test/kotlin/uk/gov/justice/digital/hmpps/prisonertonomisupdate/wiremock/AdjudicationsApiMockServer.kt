@@ -44,7 +44,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubChargeGet(chargeNumber: String, offenderNo: String = "A7937DY", damages: String = "[]", evidence: String = "[]") {
+  fun stubChargeGet(chargeNumber: String, offenderNo: String = "A7937DY", damages: String = "[]", evidence: String = "[]", outcome: String = "UNSCHEDULED") {
     stubFor(
       get("/reported-adjudications/$chargeNumber/v2").willReturn(
         aResponse()
@@ -78,7 +78,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         },
         "createdByUserId": "TWRIGHT",
         "createdDateTime": "2023-07-25T15:19:37.476664",
-        "status": "UNSCHEDULED",
+        "status": "$outcome",
         "reviewedByUserId": "AMARKE_GEN",
         "statusReason": "",
         "statusDetails": "",

@@ -248,7 +248,17 @@ class AdjudicationsService(
     val event = createEvent.additionalInformation
     val telemetryMap = event.toTelemetryMap()
 
+    val charge = adjudicationsApiService.getCharge(
+      event.chargeNumber,
+      event.prisonId,
+    )
+
     runCatching {
+      val hearing = charge.reportedAdjudication.hearings.firstOrNull { it.id.toString() == event.hearingId }
+        ?: throw IllegalStateException(
+          "Hearing ${event.hearingId} not found for DPS adjudication with charge no ${event.chargeNumber}",
+        )
+
       val adjudicationMapping =
         adjudicationMappingService.getMappingGivenChargeNumber(event.chargeNumber)
           .also {
@@ -263,14 +273,6 @@ class AdjudicationsService(
             "Hearing mapping for dps hearing id: ${event.hearingId} not found for DPS adjudication with charge no ${event.chargeNumber}",
           )
 
-      val hearing = adjudicationsApiService.getCharge(
-        event.chargeNumber,
-        event.prisonId,
-      ).reportedAdjudication.hearings.firstOrNull { it.id.toString() == event.hearingId }
-        ?: throw IllegalStateException(
-          "Hearing ${event.hearingId} not found for DPS adjudication with charge no ${event.chargeNumber}",
-        )
-
       val outcome = hearing.outcome ?: throw IllegalStateException(
         "Outcome not found for Hearing ${event.hearingId} in DPS adjudication with charge no ${event.chargeNumber}",
       )
@@ -279,7 +281,7 @@ class AdjudicationsService(
         adjudicationNumber = adjudicationMapping.adjudicationNumber,
         hearingId = hearingMapping.nomisHearingId,
         chargeSequence = adjudicationMapping.chargeSequence,
-        request = outcome.toNomisCreateHearingResult(),
+        request = outcome.toNomisCreateHearingResult(adjudicationStatus = charge.reportedAdjudication.status.name),
       )
     }.onSuccess {
       telemetryClient.trackEvent("hearing-result-created-success", telemetryMap, null)
@@ -327,11 +329,15 @@ private fun HearingDto.toNomisUpdateHearing(): UpdateHearingRequest = UpdateHear
   internalLocationId = this.locationId,
 )
 
-private fun HearingOutcomeDto.toNomisCreateHearingResult(): CreateHearingResultRequest = CreateHearingResultRequest(
-  pleaFindingCode = this.plea!!.name,
-  findingCode = this.code.name,
-  adjudicatorUsername = this.adjudicator,
-)
+private fun HearingOutcomeDto.toNomisCreateHearingResult(adjudicationStatus: String): CreateHearingResultRequest =
+  CreateHearingResultRequest(
+    pleaFindingCode = this.plea!!.name,
+    findingCode = when (adjudicationStatus) {
+      "CHARGE_PROVED" -> "PROVED"
+      else -> adjudicationStatus
+    },
+    adjudicatorUsername = this.adjudicator,
+  )
 
 private fun HearingAdditionalInformation.toTelemetryMap(): MutableMap<String, String> = mutableMapOf(
   "chargeNumber" to this.chargeNumber,
@@ -398,6 +404,7 @@ private fun ReportedDamageDto.Code.toNomisUpdateEnum(): RepairToUpdateOrAdd.Type
   ReportedDamageDto.Code.CLEANING -> RepairToUpdateOrAdd.TypeCode.CLEA
   ReportedDamageDto.Code.REPLACE_AN_ITEM -> RepairToUpdateOrAdd.TypeCode.DECO // best match possibly?
 }
+
 private fun ReportedDamageDto.Code.toNomisCreateEnum(): RepairToCreate.TypeCode = when (this) {
   ReportedDamageDto.Code.ELECTRICAL_REPAIR -> RepairToCreate.TypeCode.ELEC
   ReportedDamageDto.Code.PLUMBING_REPAIR -> RepairToCreate.TypeCode.PLUM
