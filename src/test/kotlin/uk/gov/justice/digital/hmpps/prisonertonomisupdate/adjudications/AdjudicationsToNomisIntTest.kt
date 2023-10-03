@@ -378,6 +378,196 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class UpdateAdjudicationEvidence {
+    @Nested
+    inner class WhenAdjudicationMappingFound {
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_UPDATE, ADJUDICATION_NUMBER)
+        adjudicationsApiServer.stubChargeGet(
+          CHARGE_NUMBER_FOR_UPDATE,
+          offenderNo = OFFENDER_NO,
+          evidence =
+          // language=json
+          """
+            [
+                {
+                    "code": "BAGGED_AND_TAGGED",
+                    "identifier": "24242",
+                    "details": "drugs",
+                    "reporter": "AMARKE_GEN"
+                },
+                {
+                    "code": "CCTV",
+                    "details": "Image of fight",
+                    "reporter": "AMARKE_GEN"
+                }
+            ]
+          """.trimIndent(),
+        )
+
+        nomisApi.stubAdjudicationEvidenceUpdate(ADJUDICATION_NUMBER)
+
+        publishUpdateAdjudicationEvidenceDomainEvent(chargeNumber = CHARGE_NUMBER_FOR_UPDATE)
+      }
+
+      @Test
+      fun `will retrieve the evidence data from the adjudication service`() {
+        await untilAsserted {
+          adjudicationsApiServer.verify(
+            getRequestedFor(urlEqualTo("/reported-adjudications/$CHARGE_NUMBER_FOR_UPDATE/v2")),
+          )
+        }
+      }
+
+      @Test
+      fun `will update NOMIS with the evidence`() {
+        await untilAsserted {
+          nomisApi.verify(
+            putRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/evidence")),
+          )
+        }
+      }
+
+      @Test
+      fun `will transform DPS evidence to NOMIS evidence`() {
+        await untilAsserted {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBody(matchingJsonPath("evidence[0].typeCode", equalTo("EVI_BAG")))
+              .withRequestBody(matchingJsonPath("evidence[0].detail", equalTo("drugs")))
+              .withRequestBody(matchingJsonPath("evidence[1].typeCode", equalTo("OTHER")))
+              .withRequestBody(matchingJsonPath("evidence[1].detail", equalTo("Image of fight"))),
+          )
+        }
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForUpdateAdjudicationEvidenceProcessingToBeComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("adjudication-evidence-updated-success"),
+          check {
+            assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            assertThat(it["evidenceCount"]).isNotNull()
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class ErrorScenarios {
+      @Nested
+      inner class WhenAdjudicationMappingNotFound {
+
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByChargeNumberWithError(CHARGE_NUMBER_FOR_UPDATE, 404)
+          publishUpdateAdjudicationEvidenceDomainEvent(chargeNumber = CHARGE_NUMBER_FOR_UPDATE)
+        }
+
+        @Test
+        fun `an error will lead to message being added to DLQ`() {
+          await untilCallTo {
+            awsSqsAdjudicationDlqClient!!.countAllMessagesOnQueue(adjudicationDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+
+        @Test
+        fun `will track failure telemetry for each retry`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              eq("adjudication-evidence-updated-failed"),
+              check {
+                assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+                assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              },
+              isNull(),
+            )
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenDpsChargeNotFound {
+
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_UPDATE, ADJUDICATION_NUMBER)
+          adjudicationsApiServer.stubChargeGetWithError(CHARGE_NUMBER_FOR_UPDATE, 404)
+          publishUpdateAdjudicationEvidenceDomainEvent(chargeNumber = CHARGE_NUMBER_FOR_UPDATE)
+        }
+
+        @Test
+        fun `an error will lead to message being added to DLQ`() {
+          await untilCallTo {
+            awsSqsAdjudicationDlqClient!!.countAllMessagesOnQueue(adjudicationDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+
+        @Test
+        fun `will track failure telemetry for each retry`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              eq("adjudication-evidence-updated-failed"),
+              check {
+                assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+                assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              },
+              isNull(),
+            )
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenNomisAdjudicationNotFound {
+
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_UPDATE, ADJUDICATION_NUMBER)
+          adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER_FOR_UPDATE, offenderNo = OFFENDER_NO)
+          nomisApi.stubAdjudicationEvidenceUpdateWithError(ADJUDICATION_NUMBER, 404)
+
+          publishUpdateAdjudicationEvidenceDomainEvent(chargeNumber = CHARGE_NUMBER_FOR_UPDATE)
+        }
+
+        @Test
+        fun `an error will lead to message being added to DLQ`() {
+          await untilCallTo {
+            awsSqsAdjudicationDlqClient!!.countAllMessagesOnQueue(adjudicationDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+
+        @Test
+        fun `will track failure telemetry for each retry`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              eq("adjudication-evidence-updated-failed"),
+              check {
+                assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_UPDATE)
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+                assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              },
+              isNull(),
+            )
+          }
+        }
+      }
+    }
+
+    private fun waitForUpdateAdjudicationEvidenceProcessingToBeComplete() {
+      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+    }
+  }
+
   private fun publishCreateAdjudicationDomainEvent() {
     val eventType = "adjudication.report.created"
     awsSnsClient.publish(
@@ -394,6 +584,20 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
 
   private fun publishUpdateAdjudicationDamagesDomainEvent(chargeNumber: String = CHARGE_NUMBER_FOR_UPDATE) {
     val eventType = "adjudication.damages.updated"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(adjudicationMessagePayload(chargeNumber, PRISON_ID, OFFENDER_NO, eventType))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishUpdateAdjudicationEvidenceDomainEvent(chargeNumber: String = CHARGE_NUMBER_FOR_UPDATE) {
+    val eventType = "adjudication.evidence.updated"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(adjudicationMessagePayload(chargeNumber, PRISON_ID, OFFENDER_NO, eventType))
