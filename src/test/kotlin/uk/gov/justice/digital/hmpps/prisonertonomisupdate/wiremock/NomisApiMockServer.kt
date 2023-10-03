@@ -1056,6 +1056,44 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubAdjudicationEvidenceUpdate(adjudicationNumber: Long = 123456) {
+    stubFor(
+      put("/adjudications/adjudication-number/$adjudicationNumber/evidence").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              {
+                "evidence": [
+                    {
+                        "type": {
+                            "code": "PHOTO",
+                            "description": "Photographic Evidence"
+                        },
+                        "date": "2023-10-03",
+                        "detail": "smashed light bulb",
+                        "createdByUsername": "PRISONER_MANAGER_API"
+                    }
+                ]
+              }
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubAdjudicationEvidenceUpdateWithError(adjudicationNumber: Long = 123456, status: Int) {
+    stubFor(
+      put("/adjudications/adjudication-number/$adjudicationNumber/evidence").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status)
+          .withBody("""{"message":"error"}"""),
+      ),
+    )
+  }
+
   fun stubHearingCreate(adjudicationNumber: Long = 123456, nomisHearingId: Long = 345) {
     stubFor(
       post("/adjudications/adjudication-number/$adjudicationNumber/hearings").willReturn(

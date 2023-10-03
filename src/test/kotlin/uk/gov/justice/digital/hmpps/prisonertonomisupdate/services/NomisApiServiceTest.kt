@@ -26,9 +26,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Charge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourseScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.EvidenceToUpdateOrAdd
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.IncidentToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToUpdateOrAdd
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateEvidenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceRequest
@@ -990,6 +992,65 @@ internal class NomisApiServiceTest {
         nomisApiService.updateAdjudicationRepairs(
           1234567,
           UpdateRepairsRequest(repairs = listOf(RepairToUpdateOrAdd(RepairToUpdateOrAdd.TypeCode.CLEA, "cleaning required"))),
+        )
+      }
+    }
+  }
+
+  @Nested
+  inner class UpdateAdjudicationEvidence {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stubAdjudicationEvidenceUpdate(1234567)
+
+      nomisApiService.updateAdjudicationEvidence(
+        1234567,
+        UpdateEvidenceRequest(evidence = listOf(EvidenceToUpdateOrAdd(EvidenceToUpdateOrAdd.TypeCode.PHOTO, "picture of knife"))),
+      )
+
+      nomisApi.verify(
+        putRequestedFor(urlEqualTo("/adjudications/adjudication-number/1234567/evidence"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will post evidence data to nomis api`() = runTest {
+      nomisApi.stubAdjudicationEvidenceUpdate(1234567)
+
+      nomisApiService.updateAdjudicationEvidence(
+        1234567,
+        UpdateEvidenceRequest(evidence = listOf(EvidenceToUpdateOrAdd(EvidenceToUpdateOrAdd.TypeCode.PHOTO, "picture of knife"))),
+      )
+
+      nomisApi.verify(
+        putRequestedFor(urlEqualTo("/adjudications/adjudication-number/1234567/evidence"))
+          .withRequestBody(matchingJsonPath("evidence[0].typeCode", equalTo("PHOTO")))
+          .withRequestBody(matchingJsonPath("evidence[0].detail", equalTo("picture of knife"))),
+      )
+    }
+
+    @Test
+    fun `when adjudication is not found an exception is thrown`() = runTest {
+      nomisApi.stubAdjudicationEvidenceUpdateWithError(1234567, 404)
+
+      assertThrows<NotFound> {
+        nomisApiService.updateAdjudicationEvidence(
+          1234567,
+          UpdateEvidenceRequest(evidence = listOf(EvidenceToUpdateOrAdd(EvidenceToUpdateOrAdd.TypeCode.PHOTO, "picture of knife"))),
+        )
+      }
+    }
+
+    @Test
+    fun `when any bad response is received an exception is thrown`() = runTest {
+      nomisApi.stubAdjudicationEvidenceUpdateWithError(1234567, 503)
+
+      assertThrows<ServiceUnavailable> {
+        nomisApiService.updateAdjudicationEvidence(
+          1234567,
+          UpdateEvidenceRequest(evidence = listOf(EvidenceToUpdateOrAdd(EvidenceToUpdateOrAdd.TypeCode.PHOTO, "picture of knife"))),
         )
       }
     }

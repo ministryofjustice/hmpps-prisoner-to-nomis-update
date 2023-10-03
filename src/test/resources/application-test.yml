@@ -15,7 +15,7 @@ api.base.url:
   sentence.adjustments: http://localhost:8087
   appointments: http://localhost:8088
   adjudications: http://localhost:8089
-  non-associations: http://localhost:8091
+  non-associations: http://localhost:8092
 
 hmpps.sqs:
   provider: localstack
