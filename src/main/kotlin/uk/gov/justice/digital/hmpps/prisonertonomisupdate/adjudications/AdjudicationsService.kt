@@ -18,9 +18,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.EvidenceToCreate
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.EvidenceToUpdateOrAdd
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.IncidentToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToUpdateOrAdd
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateEvidenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateHearingRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
@@ -138,6 +140,41 @@ class AdjudicationsService(
       )
     }.onFailure { e ->
       telemetryClient.trackEvent("adjudication-damages-updated-failed", telemetryMap, null)
+      throw e
+    }
+  }
+  suspend fun updateAdjudicationEvidence(evidenceUpdateEvent: AdjudicationEvidenceUpdateEvent) {
+    val chargeNumber = evidenceUpdateEvent.additionalInformation.chargeNumber
+    val prisonId: String = evidenceUpdateEvent.additionalInformation.prisonId
+    val offenderNo: String = evidenceUpdateEvent.additionalInformation.prisonerNumber
+    val telemetryMap = mutableMapOf(
+      "chargeNumber" to chargeNumber,
+      "prisonId" to prisonId,
+      "offenderNo" to offenderNo,
+    )
+
+    runCatching {
+      val mapping =
+        adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber)
+          .also {
+            telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
+            telemetryMap["chargeSequence"] = it.chargeSequence.toString()
+          }
+
+      val dpsAdjudication = adjudicationsApiService.getCharge(chargeNumber, prisonId)
+      nomisApiService.updateAdjudicationEvidence(
+        mapping.adjudicationNumber,
+        UpdateEvidenceRequest(evidence = dpsAdjudication.reportedAdjudication.evidence.map { it.toNomisUpdateEvidence() }),
+      ).also {
+        telemetryMap["evidenceCount"] = it.evidence.size.toString()
+      }
+
+      telemetryClient.trackEvent(
+        "adjudication-evidence-updated-success",
+        telemetryMap,
+      )
+    }.onFailure { e ->
+      telemetryClient.trackEvent("adjudication-evidence-updated-failed", telemetryMap, null)
       throw e
     }
   }
@@ -369,7 +406,7 @@ internal fun ReportedAdjudicationResponse.toNomisAdjudication() = CreateAdjudica
       offenceId = "${reportedAdjudication.chargeNumber.toNomisAdjudicationNumber()}/1",
     ),
   ),
-  evidence = reportedAdjudication.evidence.map { it.toNomisEvidence() },
+  evidence = reportedAdjudication.evidence.map { it.toNomisCreateEvidence() },
 )
 
 // DPS charge number are either "12345" or "12345-1" - but for new ones it will always
@@ -415,13 +452,23 @@ private fun ReportedDamageDto.Code.toNomisCreateEnum(): RepairToCreate.TypeCode 
   ReportedDamageDto.Code.REPLACE_AN_ITEM -> RepairToCreate.TypeCode.DECO
 }
 
-private fun ReportedEvidenceDto.toNomisEvidence() = EvidenceToCreate(
+private fun ReportedEvidenceDto.toNomisCreateEvidence() = EvidenceToCreate(
   typeCode = when (this.code) {
     ReportedEvidenceDto.Code.PHOTO -> EvidenceToCreate.TypeCode.PHOTO
     ReportedEvidenceDto.Code.BODY_WORN_CAMERA -> EvidenceToCreate.TypeCode.OTHER
     ReportedEvidenceDto.Code.CCTV -> EvidenceToCreate.TypeCode.OTHER
     ReportedEvidenceDto.Code.BAGGED_AND_TAGGED -> EvidenceToCreate.TypeCode.EVI_BAG
     ReportedEvidenceDto.Code.OTHER -> EvidenceToCreate.TypeCode.OTHER
+  },
+  detail = this.details,
+)
+private fun ReportedEvidenceDto.toNomisUpdateEvidence() = EvidenceToUpdateOrAdd(
+  typeCode = when (this.code) {
+    ReportedEvidenceDto.Code.PHOTO -> EvidenceToUpdateOrAdd.TypeCode.PHOTO
+    ReportedEvidenceDto.Code.BODY_WORN_CAMERA -> EvidenceToUpdateOrAdd.TypeCode.OTHER
+    ReportedEvidenceDto.Code.CCTV -> EvidenceToUpdateOrAdd.TypeCode.OTHER
+    ReportedEvidenceDto.Code.BAGGED_AND_TAGGED -> EvidenceToUpdateOrAdd.TypeCode.EVI_BAG
+    ReportedEvidenceDto.Code.OTHER -> EvidenceToUpdateOrAdd.TypeCode.OTHER
   },
   detail = this.details,
 )
@@ -439,14 +486,12 @@ data class AdjudicationCreatedEvent(
   val additionalInformation: AdjudicationAdditionalInformation,
 )
 
-data class AdjudicationDamagesAdditionalInformation(
-  val chargeNumber: String,
-  val prisonId: String,
-  val prisonerNumber: String,
+data class AdjudicationDamagesUpdateEvent(
+  val additionalInformation: AdjudicationAdditionalInformation,
 )
 
-data class AdjudicationDamagesUpdateEvent(
-  val additionalInformation: AdjudicationDamagesAdditionalInformation,
+data class AdjudicationEvidenceUpdateEvent(
+  val additionalInformation: AdjudicationAdditionalInformation,
 )
 
 private fun HearingDto.toNomisCreateHearing() = CreateHearingRequest(
