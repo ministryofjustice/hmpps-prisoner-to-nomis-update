@@ -262,7 +262,7 @@ class NonAssociationsReconciliationService(
     )
   }.getOrDefault(emptyList())
 
-  private fun doesNotMatch(
+  internal fun doesNotMatch(
     nomis: NonAssociationResponse,
     dps: NonAssociation,
   ): Boolean {
@@ -274,8 +274,8 @@ class NonAssociationsReconciliationService(
       (nomis.comment == null && dps.comment != NO_COMMENT_PROVIDED) || (nomis.comment != null && nomis.comment != dps.comment)
   }
 
-  private fun closedInNomis(nomis: NonAssociationResponse, today: LocalDate?) =
-    (nomis.expiryDate != null && nomis.expiryDate.isBefore(today)) || nomis.effectiveDate.isAfter(today)
+  internal fun closedInNomis(nomis: NonAssociationResponse, today: LocalDate?) =
+    (nomis.expiryDate != null && !nomis.expiryDate.isAfter(today)) || nomis.effectiveDate.isAfter(today)
 
   private fun typeDoesNotMatch(
     nomisType: String,
