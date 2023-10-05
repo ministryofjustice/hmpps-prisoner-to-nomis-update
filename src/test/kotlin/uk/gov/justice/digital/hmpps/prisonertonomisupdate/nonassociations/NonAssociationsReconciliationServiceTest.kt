@@ -161,6 +161,15 @@ class NonAssociationsReconciliationServiceTest {
       )
   }
 
+  @Test
+  fun `correctly identifies whether nomis is closed`() = runTest {
+    val today = LocalDate.now()
+    assertThat(nonAssociationsReconciliationService.closedInNomis(nomisResponse(1, null), today)).isFalse()
+    assertThat(nonAssociationsReconciliationService.closedInNomis(nomisResponse(1, today), today)).isTrue()
+    assertThat(nonAssociationsReconciliationService.closedInNomis(nomisResponse(1, today.minusDays(1)), today)).isTrue()
+    assertThat(nonAssociationsReconciliationService.closedInNomis(nomisResponse(1, today.plusDays(1)), today)).isFalse()
+  }
+
   private fun nomisResponse(typeSequence: Int, expiryDate: LocalDate?, comment: String? = null) = NonAssociationResponse(
     OFFENDER1,
     OFFENDER2,
