@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.In
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentStatementDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OffenceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OffenceRuleDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeHistoryDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -138,7 +139,22 @@ internal class AdjudicationsServiceTest {
             ),
           ),
         ),
-        outcomes = emptyList(),
+        outcomes = listOf(
+          OutcomeHistoryDto(
+            hearing = HearingDto(
+              id = dpsHearingId.toLong(),
+              locationId = 123,
+              dateTimeOfHearing = "",
+              oicHearingType = oicHearingType,
+              agencyId = "MDI",
+              outcome = HearingOutcomeDto(
+                adjudicator = "an adjudicator",
+                code = HearingOutcomeDto.Code.COMPLETE,
+                plea = HearingOutcomeDto.Plea.GUILTY,
+              ),
+            ),
+          ),
+        ),
         disIssueHistory = emptyList(),
         punishments = emptyList(),
         punishmentComments = emptyList(),
