@@ -44,7 +44,14 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubChargeGet(chargeNumber: String, offenderNo: String = "A7937DY", damages: String = "[]", evidence: String = "[]", outcome: String = "UNSCHEDULED") {
+  fun stubChargeGet(
+    chargeNumber: String,
+    offenderNo: String = "A7937DY",
+    outcomes: String = "[]",
+    damages: String = "[]",
+    evidence: String = "[]",
+    status: String = "UNSCHEDULED",
+  ) {
     stubFor(
       get("/reported-adjudications/$chargeNumber/v2").willReturn(
         aResponse()
@@ -78,7 +85,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         },
         "createdByUserId": "TWRIGHT",
         "createdDateTime": "2023-07-25T15:19:37.476664",
-        "status": "$outcome",
+        "status": "$status",
         "reviewedByUserId": "AMARKE_GEN",
         "statusReason": "",
         "statusDetails": "",
@@ -99,7 +106,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
                     }
             }],
         "disIssueHistory": [],
-        "outcomes": [],
+        "outcomes": $outcomes,
         "punishments": [],
         "punishmentComments": [],
         "outcomeEnteredInNomis": false,
@@ -111,6 +118,99 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withStatus(200),
       ),
     )
+  }
+
+  fun stubChargeGetWithCompletedOutcome(hearingId: Long = 123, chargeNumber: String, offenderNo: String = "A7937DY") {
+    val outcomes = """
+        [
+            {
+                "hearing": {
+                    "id": $hearingId,
+                    "locationId": 27187,
+                    "dateTimeOfHearing": "2023-04-27T17:45:00",
+                    "oicHearingType": "GOV_ADULT",
+                    "outcome": {
+                        "id": 407,
+                        "adjudicator": "SWATSON_GEN",
+                        "code": "COMPLETE",
+                        "plea": "GUILTY"
+                    },
+                    "agencyId": "MDI"
+                },
+                "outcome": {
+                    "outcome": {
+                        "id": 591,
+                        "code": "CHARGE_PROVED"
+                    }
+                }
+            }
+        ]
+    """.trimIndent()
+    stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
+  }
+
+  fun stubChargeGetWithReferIndependentAdjudicatorOutcome(hearingId: Long = 123, chargeNumber: String, offenderNo: String = "A7937DY") {
+    stubChargeGetWithReferralOutcome(hearingId = hearingId, referralOutcomeCode = "REFER_INAD", chargeNumber = chargeNumber, offenderNo = offenderNo)
+  }
+
+  fun stubChargeGetWithReferPoliceOutcome(hearingId: Long = 123, chargeNumber: String, offenderNo: String = "A7937DY") {
+    stubChargeGetWithReferralOutcome(hearingId = hearingId, referralOutcomeCode = "REFER_POLICE", chargeNumber = chargeNumber, offenderNo = offenderNo)
+  }
+
+  private fun stubChargeGetWithReferralOutcome(referralOutcomeCode: String, hearingId: Long = 123, chargeNumber: String, offenderNo: String = "A7937DY") {
+    val outcomes = """
+     [
+      {
+          "hearing": {
+            "id": $hearingId,
+            "locationId": 27187,
+            "dateTimeOfHearing": "2023-10-04T13:20:00",
+            "oicHearingType": "GOV_ADULT",
+            "outcome": {
+              "id": 975,
+              "adjudicator": "JBULLENGEN",
+              "code": "$referralOutcomeCode",
+              "details": "pdfs"
+              },
+            "agencyId": "MDI"
+          },
+          "outcome": {
+              "outcome": {
+              "id": 1238,
+              "code": "$referralOutcomeCode",
+              "details": "pdfs"
+            }
+          }
+      }
+  ]
+    """.trimIndent()
+    stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
+  }
+
+  // no separate outcome block for Adjourn
+  fun stubChargeGetWithAdjournOutcome(hearingId: Long = 123, chargeNumber: String, offenderNo: String = "A7937DY") {
+    val outcomes = """
+     [
+            {
+                "hearing": {
+                    "id": $hearingId,
+                    "locationId": 27187,
+                    "dateTimeOfHearing": "2023-10-04T13:20:00",
+                    "oicHearingType": "GOV_ADULT",
+                    "outcome": {
+                        "id": 976,
+                        "adjudicator": "JBULLENGEN",
+                        "code": "ADJOURN",
+                        "reason": "RO_ATTEND",
+                        "details": "cxvcx",
+                        "plea": "UNFIT"
+                    },
+                    "agencyId": "MDI"
+                }
+            }
+        ]
+    """.trimIndent()
+    stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
   }
 
   fun stubChargeGetWithError(chargeNumber: String, status: Int) {

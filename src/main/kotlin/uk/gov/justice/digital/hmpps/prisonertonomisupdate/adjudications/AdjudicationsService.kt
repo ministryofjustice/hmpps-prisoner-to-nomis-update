@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingOutcomeDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeHistoryDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
@@ -143,6 +145,7 @@ class AdjudicationsService(
       throw e
     }
   }
+
   suspend fun updateAdjudicationEvidence(evidenceUpdateEvent: AdjudicationEvidenceUpdateEvent) {
     val chargeNumber = evidenceUpdateEvent.additionalInformation.chargeNumber
     val prisonId: String = evidenceUpdateEvent.additionalInformation.prisonId
@@ -291,9 +294,9 @@ class AdjudicationsService(
     )
 
     runCatching {
-      val hearing = charge.reportedAdjudication.hearings.firstOrNull { it.id.toString() == event.hearingId }
+      val outcome = charge.reportedAdjudication.outcomes.firstOrNull { it.hearing?.id.toString() == event.hearingId }
         ?: throw IllegalStateException(
-          "Hearing ${event.hearingId} not found for DPS adjudication with charge no ${event.chargeNumber}",
+          "Outcome not found for Hearing ${event.hearingId} in DPS adjudication with charge no ${event.chargeNumber}",
         )
 
       val adjudicationMapping =
@@ -310,18 +313,11 @@ class AdjudicationsService(
             "Hearing mapping for dps hearing id: ${event.hearingId} not found for DPS adjudication with charge no ${event.chargeNumber}",
           )
 
-      val outcome = hearing.outcome ?: throw IllegalStateException(
-        "Outcome not found for Hearing ${event.hearingId} in DPS adjudication with charge no ${event.chargeNumber}",
-      )
-
       nomisApiService.createHearingResult(
         adjudicationNumber = adjudicationMapping.adjudicationNumber,
         hearingId = hearingMapping.nomisHearingId,
         chargeSequence = adjudicationMapping.chargeSequence,
-        request = outcome.toNomisCreateHearingResult(
-          adjudicationStatus = charge.reportedAdjudication.status.name,
-          hearingType = hearing.oicHearingType,
-        ),
+        request = outcome.toNomisCreateHearingResult(),
       )
     }.onSuccess {
       telemetryClient.trackEvent("hearing-result-created-success", telemetryMap, null)
@@ -369,25 +365,36 @@ private fun HearingDto.toNomisUpdateHearing(): UpdateHearingRequest = UpdateHear
   internalLocationId = this.locationId,
 )
 
-private fun HearingOutcomeDto.toNomisCreateHearingResult(
-  adjudicationStatus: String,
-  hearingType: HearingDto.OicHearingType,
-): CreateHearingResultRequest =
-  CreateHearingResultRequest(
-    pleaFindingCode = this.plea!!.name,
-    findingCode = toNomisFindingCode(adjudicationStatus),
-    adjudicatorUsername = getAdjudicatorUsernameForInternalHearingOnly(hearingType),
-  )
+// logic for determining the NOMIS findingCode:
+// If separate outcome block exists use code, else use code from hearing.outcome
+private fun OutcomeHistoryDto.toNomisCreateHearingResult(): CreateHearingResultRequest {
+  val separateOutcome: OutcomeDto? = this.outcome?.outcome
+  val hearing = this.hearing!!
+  val findingCode = separateOutcome?.code?.name ?: hearing.outcome!!.code.name
 
-private fun toNomisFindingCode(adjudicationStatus: String) = when (adjudicationStatus) {
-  "CHARGE_PROVED" -> "PROVED"
-  else -> adjudicationStatus
+  return CreateHearingResultRequest(
+    pleaFindingCode = hearing.outcome!!.plea?.name ?: HearingOutcomeDto.Plea.NOT_ASKED.name,
+    findingCode = toNomisFindingCode(findingCode),
+    adjudicatorUsername = getAdjudicatorUsernameForInternalHearingOnly(
+      hearing.oicHearingType.name,
+      hearing.outcome.adjudicator,
+    ),
+  )
 }
 
-private fun HearingOutcomeDto.getAdjudicatorUsernameForInternalHearingOnly(hearingType: HearingDto.OicHearingType) =
+private fun toNomisFindingCode(outcome: String) = when (outcome) {
+  "CHARGE_PROVED" -> "PROVED"
+  "ADJOURN" -> "S"
+  "DISMISSED" -> "D" // TODO confirm they still want to map to D
+  "REFER_POLICE" -> "REF_POLICE"
+  "REFER_INAD" -> "REF_INAD" // TODO confirm behaviour with john
+  else -> outcome
+}
+
+private fun getAdjudicatorUsernameForInternalHearingOnly(hearingType: String, adjudicator: String) =
   when (hearingType) {
-    HearingDto.OicHearingType.INAD_ADULT, HearingDto.OicHearingType.INAD_YOI -> null
-    else -> this.adjudicator
+    HearingDto.OicHearingType.INAD_ADULT.name, HearingDto.OicHearingType.INAD_YOI.name -> null
+    else -> adjudicator
   }
 
 private fun HearingAdditionalInformation.toTelemetryMap(): MutableMap<String, String> = mutableMapOf(
@@ -476,6 +483,7 @@ private fun ReportedEvidenceDto.toNomisCreateEvidence() = EvidenceToCreate(
   },
   detail = this.details,
 )
+
 private fun ReportedEvidenceDto.toNomisUpdateEvidence() = EvidenceToUpdateOrAdd(
   typeCode = when (this.code) {
     ReportedEvidenceDto.Code.PHOTO -> EvidenceToUpdateOrAdd.TypeCode.PHOTO
