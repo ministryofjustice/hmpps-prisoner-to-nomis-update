@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Hearing
@@ -365,12 +364,11 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     hearingId: Long,
     chargeSequence: Int,
     request: CreateHearingResultRequest,
-  ): CreateHearingResultResponse =
-    webClient.post()
-      .uri("/adjudications/adjudication-number/$adjudicationNumber/hearings/$hearingId/charge/$chargeSequence/result")
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  ) = webClient.post()
+    .uri("/adjudications/adjudication-number/$adjudicationNumber/hearings/$hearingId/charge/$chargeSequence/result")
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
 
   suspend fun deleteHearingResult(adjudicationNumber: Long, hearingId: Long, chargeSequence: Int) {
     webClient.delete()
