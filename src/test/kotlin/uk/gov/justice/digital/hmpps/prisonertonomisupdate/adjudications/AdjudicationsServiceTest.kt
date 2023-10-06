@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OffenceRuleDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 
 private const val dpsHearingId = "123"
@@ -86,12 +85,6 @@ internal class AdjudicationsServiceTest {
 
     whenever(hearingMappingService.getMappingGivenDpsHearingIdOrNull(any())).thenReturn(
       AdjudicationHearingMappingDto(nomisHearingId = nomisHearingId, dpsHearingId = dpsHearingId),
-    )
-    whenever(nomisApiService.createHearingResult(any(), any(), any(), any())).thenReturn(
-      CreateHearingResultResponse(
-        hearingId = nomisHearingId,
-        2,
-      ),
     )
 
     adjudicationsService.createHearingCompleted(
