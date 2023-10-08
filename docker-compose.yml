@@ -66,10 +66,10 @@ services:
       - API_BASE_URL_OAUTH=http:/hmpps-auth:8080/auth
 
   localstack:
-    image: localstack/localstack:1.3
+    image: localstack/localstack:2.3
     networks:
       - hmpps
-    container_name: localstack
+    container_name: localstack-internal
     environment:
       - SERVICES=sqs,sns
       - DEFAULT_REGION=eu-west-2
@@ -79,7 +79,7 @@ services:
 
 
   localstack-external:
-    image: localstack/localstack:1.3
+    image: localstack/localstack:2.3
     networks:
       - hmpps
     container_name: localstack-external
@@ -95,7 +95,7 @@ services:
     image: postgres
     networks:
       - hmpps
-    container_name: mapping-db
+    container_name: mapping-db-to-nomis
     restart: unless-stopped
     ports:
       - "5432:5432"
