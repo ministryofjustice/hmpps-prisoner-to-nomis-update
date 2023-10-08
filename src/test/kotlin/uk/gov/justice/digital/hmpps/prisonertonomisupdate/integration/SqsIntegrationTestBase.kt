@@ -11,7 +11,7 @@ import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
 
-abstract class SqsIntegrationTestBase: IntegrationTestBase() {
+abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   @SpyBean
   lateinit var telemetryClient: TelemetryClient
 
