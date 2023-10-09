@@ -373,7 +373,7 @@ private fun OutcomeHistoryDto.toNomisCreateHearingResult(): CreateHearingResultR
   val findingCode = separateOutcome?.code?.name ?: hearing.outcome!!.code.name
 
   return CreateHearingResultRequest(
-    pleaFindingCode = hearing.outcome!!.plea?.name ?: HearingOutcomeDto.Plea.NOT_ASKED.name,
+    pleaFindingCode = hearing.outcome!!.plea?.let { toNomisPleaCode(it) } ?: HearingOutcomeDto.Plea.NOT_ASKED.name,
     findingCode = toNomisFindingCode(findingCode),
     adjudicatorUsername = getAdjudicatorUsernameForInternalHearingOnly(
       hearing.oicHearingType.name,
@@ -389,6 +389,14 @@ private fun toNomisFindingCode(outcome: String) = when (outcome) {
   "REFER_POLICE" -> "REF_POLICE"
   "REFER_INAD" -> "REF_INAD" // TODO confirm behaviour with john
   else -> outcome
+}
+
+private fun toNomisPleaCode(plea: HearingOutcomeDto.Plea) = when (plea) {
+  HearingOutcomeDto.Plea.UNFIT -> "UNFIT"
+  HearingOutcomeDto.Plea.ABSTAIN -> "REFUSED"
+  HearingOutcomeDto.Plea.GUILTY -> "GUILTY"
+  HearingOutcomeDto.Plea.NOT_GUILTY -> "NOT_GUILTY"
+  HearingOutcomeDto.Plea.NOT_ASKED -> "NOT_ASKED"
 }
 
 private fun getAdjudicatorUsernameForInternalHearingOnly(hearingType: String, adjudicator: String) =
