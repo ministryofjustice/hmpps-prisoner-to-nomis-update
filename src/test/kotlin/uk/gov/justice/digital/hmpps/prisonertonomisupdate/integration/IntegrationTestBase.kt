@@ -6,6 +6,8 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import org.springframework.http.HttpHeaders
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.JwtAuthHelper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
@@ -46,4 +48,14 @@ abstract class IntegrationTestBase {
     roles: List<String> = listOf(),
     scopes: List<String> = listOf(),
   ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisation(user, roles, scopes)
+
+  companion object {
+    private val localStackContainer = LocalStackContainer.instance
+
+    @JvmStatic
+    @DynamicPropertySource
+    fun testcontainers(registry: DynamicPropertyRegistry) {
+      localStackContainer?.also { LocalStackContainer.setLocalStackProperties(it, registry) }
+    }
+  }
 }

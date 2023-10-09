@@ -2,52 +2,18 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.SpyBean
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.DynamicPropertyRegistry
-import org.springframework.test.context.DynamicPropertySource
-import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.LocalStackContainer.setLocalStackProperties
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NonAssociationsApiExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
 
-@ExtendWith(
-  NomisApiExtension::class,
-  MappingExtension::class,
-  HmppsAuthApiExtension::class,
-  VisitsApiExtension::class,
-  IncentivesApiExtension::class,
-  ActivitiesApiExtension::class,
-  AppointmentsApiExtension::class,
-  SentencingAdjustmentsApiExtension::class,
-  AdjudicationsApiExtension::class,
-  NonAssociationsApiExtension::class,
-)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-abstract class SqsIntegrationTestBase {
+abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   @SpyBean
   lateinit var telemetryClient: TelemetryClient
-
-  @Autowired
-  lateinit var webTestClient: WebTestClient
 
   @Autowired
   private lateinit var hmppsQueueService: HmppsQueueService
@@ -129,16 +95,6 @@ abstract class SqsIntegrationTestBase {
 
     awsSqsAdjudicationClient.purgeQueue(adjudicationQueueUrl).get()
     awsSqsAdjudicationDlqClient?.purgeQueue(adjudicationDlqUrl)?.get()
-  }
-
-  companion object {
-    private val localStackContainer = LocalStackContainer.instance
-
-    @JvmStatic
-    @DynamicPropertySource
-    fun testcontainers(registry: DynamicPropertyRegistry) {
-      localStackContainer?.also { setLocalStackProperties(it, registry) }
-    }
   }
 }
 

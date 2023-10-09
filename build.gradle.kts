@@ -22,7 +22,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("org.springframework.data:spring-data-commons:3.1.4")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.1.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.1.1")
 
   implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.2.0")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
