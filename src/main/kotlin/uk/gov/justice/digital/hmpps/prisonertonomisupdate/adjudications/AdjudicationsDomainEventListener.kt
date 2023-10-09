@@ -41,8 +41,13 @@ class AdjudicationsDomainEventListener(
       "adjudication.hearing.created" -> adjudicationsService.createHearing(message.fromJson())
       "adjudication.hearing.updated" -> adjudicationsService.updateHearing(message.fromJson())
       "adjudication.hearing.deleted" -> adjudicationsService.deleteHearing(message.fromJson())
-      "adjudication.hearingCompleted.created" -> adjudicationsService.createHearingCompleted(message.fromJson())
-      "adjudication.hearingCompleted.deleted" -> adjudicationsService.deleteHearingCompleted(message.fromJson())
+      "adjudication.hearingCompleted.created", "adjudication.hearingAdjourn.created", "adjudication.hearingReferral.created" -> adjudicationsService.createHearingCompleted(
+        message.fromJson(),
+      )
+
+      "adjudication.hearingCompleted.deleted", "adjudication.hearingAdjourn.deleted", "adjudication.hearingReferral.deleted" -> adjudicationsService.deleteHearingCompleted(
+        message.fromJson(),
+      )
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
