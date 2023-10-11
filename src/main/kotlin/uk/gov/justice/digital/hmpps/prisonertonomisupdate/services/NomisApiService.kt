@@ -20,6 +20,7 @@ import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourseScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityResponse
@@ -151,6 +152,12 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     webClient.put()
       .uri("/schedules/$courseScheduleId/booking/$bookingId/attendance")
       .bodyValue(request)
+      .retrieve()
+      .awaitBody()
+
+  suspend fun getAllocationReconciliation(prisonId: String): AllocationReconciliationResponse =
+    webClient.get()
+      .uri("/allocations/reconciliation/$prisonId")
       .retrieve()
       .awaitBody()
 

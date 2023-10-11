@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivitySchedule
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AllocationReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
 
 @Service
@@ -44,6 +45,13 @@ class ActivitiesApiService(@Qualifier("activitiesApiWebClient") private val webC
   suspend fun getScheduledInstance(scheduledInstanceId: Long): ActivityScheduleInstance {
     return webClient.get()
       .uri("/scheduled-instances/$scheduledInstanceId")
+      .retrieve()
+      .awaitBody()
+  }
+
+  suspend fun getAllocationReconciliation(prisonCode: String): AllocationReconciliationResponse {
+    return webClient.get()
+      .uri("/synchronisation/reconciliation/allocations/$prisonCode")
       .retrieve()
       .awaitBody()
   }

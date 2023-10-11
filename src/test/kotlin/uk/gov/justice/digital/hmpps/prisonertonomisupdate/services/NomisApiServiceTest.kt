@@ -5,6 +5,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -490,6 +491,62 @@ internal class NomisApiServiceTest {
 
       assertThrows<BadRequest> {
         nomisApiService.upsertAttendance(11, 22, newAttendance())
+      }
+    }
+  }
+
+  @Nested
+  inner class AllocationReconciliation {
+
+    private fun jsonResponse(prisonId: String = "BXI") = """
+      {
+        "prisonId": "$prisonId",
+        "bookings": [
+          {
+            "bookingId": 1234,
+            "count": 2
+          },
+          {
+            "bookingId": 1235,
+            "count": 1
+          }
+        ]
+      }
+    """.trimIndent()
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stubAllocationReconciliation("BXI", jsonResponse())
+
+      nomisApiService.getAllocationReconciliation("BXI")
+
+      nomisApi.verify(
+        getRequestedFor(urlEqualTo("/allocations/reconciliation/BXI"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should parse response`() = runTest {
+      nomisApi.stubAllocationReconciliation("BXI", jsonResponse())
+
+      val response = nomisApiService.getAllocationReconciliation("BXI")
+
+      with(response) {
+        assertThat(prisonId).isEqualTo("BXI")
+        assertThat(bookings[0].bookingId).isEqualTo(1234)
+        assertThat(bookings[0].count).isEqualTo(2)
+        assertThat(bookings[1].bookingId).isEqualTo(1235)
+        assertThat(bookings[1].count).isEqualTo(1)
+      }
+    }
+
+    @Test
+    fun `should throw exception on error`() = runTest {
+      nomisApi.stubAllocationReconciliationWithError("BXI", 400)
+
+      assertThrows<BadRequest> {
+        nomisApiService.getAllocationReconciliation("BXI")
       }
     }
   }
