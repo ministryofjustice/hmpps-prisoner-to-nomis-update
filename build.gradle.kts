@@ -63,11 +63,6 @@ tasks {
     // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
     mustRunAfter("buildActivityApiModel", "buildNomisSyncApiModel", "buildAdjudicationApiModel", "buildNonAssociationApiModel")
   }
-
-  test {
-    // required for jjwt 0.12 - see https://github.com/jwtk/jjwt/issues/849
-    jvmArgs("--add-exports", "java.base/sun.security.util=ALL-UNNAMED")
-  }
 }
 
 val configValues = mapOf(
