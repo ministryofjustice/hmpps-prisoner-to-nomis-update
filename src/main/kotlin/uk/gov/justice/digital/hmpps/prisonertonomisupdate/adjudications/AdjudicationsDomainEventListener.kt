@@ -49,6 +49,8 @@ class AdjudicationsDomainEventListener(
         message.fromJson(),
       )
 
+      "adjudication.punishments.created" -> log.info("Ignoring event: {}", eventType)
+
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
