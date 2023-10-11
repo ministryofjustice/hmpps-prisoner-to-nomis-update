@@ -26,6 +26,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardRequests
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardResponses
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationResponse
@@ -376,6 +378,16 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .awaitBodilessEntity()
   }
+
+  suspend fun createAdjudicationAwards(
+    adjudicationNumber: Long,
+    chargeSequence: Int,
+    request: CreateHearingResultAwardRequests,
+  ): CreateHearingResultAwardResponses = webClient.post()
+    .uri("/adjudications/adjudication-number/$adjudicationNumber/charge/$chargeSequence/awards")
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
   // ////////// NON-ASSOCIATIONS //////////////
 
