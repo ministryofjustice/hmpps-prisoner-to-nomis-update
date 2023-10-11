@@ -170,6 +170,29 @@ class NonAssociationsReconciliationServiceTest {
     assertThat(nonAssociationsReconciliationService.closedInNomis(nomisResponse(1, today.plusDays(1)), today)).isFalse()
   }
 
+  @Test
+  fun `will correctly sort NAs with same start date`() = runTest {
+    whenever(nomisApiService.getNonAssociationDetails(OFFENDER1, OFFENDER2)).thenReturn(
+      listOf(
+        nomisResponse(1, EXP, "comment1"),
+        nomisResponse(3, EXP, "comment3"),
+        nomisResponse(2, EXP, "comment2"),
+      ),
+    )
+
+    whenever(nonAssociationsApiService.getNonAssociationsBetween(OFFENDER1, OFFENDER2)).thenReturn(
+      listOf(
+        dpsResponse(3L, "comment3"),
+        dpsResponse(2L, "comment2"),
+        dpsResponse(1L, "comment1"),
+      ),
+    )
+
+    assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)))
+      .asList()
+      .isEmpty()
+  }
+
   private fun nomisResponse(typeSequence: Int, expiryDate: LocalDate?, comment: String? = null) = NonAssociationResponse(
     OFFENDER1,
     OFFENDER2,
