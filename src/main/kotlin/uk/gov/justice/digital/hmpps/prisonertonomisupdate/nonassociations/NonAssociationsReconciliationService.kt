@@ -143,11 +143,12 @@ class NonAssociationsReconciliationService(
     val closedPlusOpenLists = nomisListSortedBySequence.partition { closedInNomis(it, today) }
     val nomisList = (closedPlusOpenLists.first + closedPlusOpenLists.second.takeLast(1))
       // needed to change sort order to date to compare against matching DPS records
-      .sortedBy { it.effectiveDate }
+      // when dates are the same then sort by typeSequence or id which should reflect the order they were created
+      .sortedWith(compareBy(NonAssociationResponse::effectiveDate, NonAssociationResponse::typeSequence))
 
     nomisTotalDetails += nomisList.size
 
-    val dpsList = dpsListUnsorted.sortedBy { it.whenCreated }
+    val dpsList = dpsListUnsorted.sortedWith(compareBy(NonAssociation::whenCreated, NonAssociation::id))
 
     return if (nomisList.size > dpsList.size) {
       // log.info("Extra Nomis details found for ${id.offenderNo1}, ${id.offenderNo2}")

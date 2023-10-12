@@ -5,6 +5,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -26,6 +27,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Charge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourseScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardRequests
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.EvidenceToUpdateOrAdd
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.IncidentToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToUpdateOrAdd
@@ -490,6 +493,62 @@ internal class NomisApiServiceTest {
 
       assertThrows<BadRequest> {
         nomisApiService.upsertAttendance(11, 22, newAttendance())
+      }
+    }
+  }
+
+  @Nested
+  inner class AllocationReconciliation {
+
+    private fun jsonResponse(prisonId: String = "BXI") = """
+      {
+        "prisonId": "$prisonId",
+        "bookings": [
+          {
+            "bookingId": 1234,
+            "count": 2
+          },
+          {
+            "bookingId": 1235,
+            "count": 1
+          }
+        ]
+      }
+    """.trimIndent()
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stubAllocationReconciliation("BXI", jsonResponse())
+
+      nomisApiService.getAllocationReconciliation("BXI")
+
+      nomisApi.verify(
+        getRequestedFor(urlEqualTo("/allocations/reconciliation/BXI"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should parse response`() = runTest {
+      nomisApi.stubAllocationReconciliation("BXI", jsonResponse())
+
+      val response = nomisApiService.getAllocationReconciliation("BXI")
+
+      with(response) {
+        assertThat(prisonId).isEqualTo("BXI")
+        assertThat(bookings[0].bookingId).isEqualTo(1234)
+        assertThat(bookings[0].count).isEqualTo(2)
+        assertThat(bookings[1].bookingId).isEqualTo(1235)
+        assertThat(bookings[1].count).isEqualTo(1)
+      }
+    }
+
+    @Test
+    fun `should throw exception on error`() = runTest {
+      nomisApi.stubAllocationReconciliationWithError("BXI", 400)
+
+      assertThrows<BadRequest> {
+        nomisApiService.getAllocationReconciliation("BXI")
       }
     }
   }
@@ -1051,6 +1110,106 @@ internal class NomisApiServiceTest {
         nomisApiService.updateAdjudicationEvidence(
           1234567,
           UpdateEvidenceRequest(evidence = listOf(EvidenceToUpdateOrAdd(EvidenceToUpdateOrAdd.TypeCode.PHOTO, "picture of knife"))),
+        )
+      }
+    }
+  }
+
+  @Nested
+  inner class CreateAdjudicationAwards {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stubAdjudicationAwardsCreate(1234567, 1)
+
+      val result = nomisApiService.createAdjudicationAwards(
+        adjudicationNumber = 1234567,
+        chargeSequence = 1,
+        request = CreateHearingResultAwardRequests(
+          awardRequests = listOf(
+            CreateHearingResultAwardRequest(
+              sanctionType = CreateHearingResultAwardRequest.SanctionType.ADA,
+              sanctionStatus = CreateHearingResultAwardRequest.SanctionStatus.IMMEDIATE,
+              effectiveDate = LocalDate.parse("2020-07-19"),
+            ),
+          ),
+        ),
+      )
+
+      assertThat(result).isNotNull
+
+      nomisApi.verify(
+        postRequestedFor(urlEqualTo("/adjudications/adjudication-number/1234567/charge/1/awards"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will post evidence data to nomis api`() = runTest {
+      nomisApi.stubAdjudicationAwardsCreate(1234567, 1)
+
+      nomisApiService.createAdjudicationAwards(
+        adjudicationNumber = 1234567,
+        chargeSequence = 1,
+        request = CreateHearingResultAwardRequests(
+          awardRequests = listOf(
+            CreateHearingResultAwardRequest(
+              sanctionType = CreateHearingResultAwardRequest.SanctionType.ADA,
+              sanctionStatus = CreateHearingResultAwardRequest.SanctionStatus.IMMEDIATE,
+              sanctionDays = 28,
+              effectiveDate = LocalDate.parse("2020-07-19"),
+            ),
+          ),
+        ),
+      )
+
+      nomisApi.verify(
+        postRequestedFor(urlEqualTo("/adjudications/adjudication-number/1234567/charge/1/awards"))
+          .withRequestBody(matchingJsonPath("awardRequests[0].sanctionType", equalTo("ADA")))
+          .withRequestBody(matchingJsonPath("awardRequests[0].sanctionStatus", equalTo("IMMEDIATE")))
+          .withRequestBody(matchingJsonPath("awardRequests[0].sanctionDays", equalTo("28")))
+          .withRequestBody(matchingJsonPath("awardRequests[0].effectiveDate", equalTo("2020-07-19"))),
+      )
+    }
+
+    @Test
+    fun `when adjudication is not found an exception is thrown`() = runTest {
+      nomisApi.stubAdjudicationAwardsCreateWithError(adjudicationNumber = 1234567, chargeSequence = 1, status = 404)
+
+      assertThrows<NotFound> {
+        nomisApiService.createAdjudicationAwards(
+          adjudicationNumber = 1234567,
+          chargeSequence = 1,
+          request = CreateHearingResultAwardRequests(
+            awardRequests = listOf(
+              CreateHearingResultAwardRequest(
+                sanctionType = CreateHearingResultAwardRequest.SanctionType.ADA,
+                sanctionStatus = CreateHearingResultAwardRequest.SanctionStatus.IMMEDIATE,
+                effectiveDate = LocalDate.parse("2020-07-19"),
+              ),
+            ),
+          ),
+        )
+      }
+    }
+
+    @Test
+    fun `when any bad response is received an exception is thrown`() = runTest {
+      nomisApi.stubAdjudicationAwardsCreateWithError(adjudicationNumber = 1234567, chargeSequence = 1, status = 503)
+
+      assertThrows<ServiceUnavailable> {
+        nomisApiService.createAdjudicationAwards(
+          adjudicationNumber = 1234567,
+          chargeSequence = 1,
+          request = CreateHearingResultAwardRequests(
+            awardRequests = listOf(
+              CreateHearingResultAwardRequest(
+                sanctionType = CreateHearingResultAwardRequest.SanctionType.ADA,
+                sanctionStatus = CreateHearingResultAwardRequest.SanctionStatus.IMMEDIATE,
+                effectiveDate = LocalDate.parse("2020-07-19"),
+              ),
+            ),
+          ),
         )
       }
     }

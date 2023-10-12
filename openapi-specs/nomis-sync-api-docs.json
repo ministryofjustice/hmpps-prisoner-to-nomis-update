@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-10-04.5106.56cb875"
+    "version": "2023-10-11.5168.b9c1ae9"
   },
   "servers": [
     {
@@ -3344,11 +3344,11 @@
         },
         "responses": {
           "201": {
-            "description": "Hearing result award created",
+            "description": "Hearing result award IDs created",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateHearingResultAwardResponse"
+                  "$ref": "#/components/schemas/CreateHearingResultAwardResponses"
                 }
               }
             }
@@ -4565,6 +4565,70 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/allocations/reconciliation/{prisonId}": {
+      "get": {
+        "tags": [
+          "activities-resource"
+        ],
+        "summary": "Get data for an allocation sync reconciliation",
+        "description": "Gets the number of active allocations for each booking in the prison",
+        "operationId": "getAllocationReconciliationSummary",
+        "parameters": [
+          {
+            "name": "prisonId",
+            "in": "path",
+            "description": "Prison id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Prison id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reconciliation data returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationReconciliationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
             "content": {
               "application/json": {
                 "schema": {
@@ -7741,6 +7805,22 @@
         },
         "description": "Provides the generated Hearing Result Award composite ID after creation"
       },
+      "CreateHearingResultAwardResponses": {
+        "required": [
+          "awardResponses"
+        ],
+        "type": "object",
+        "properties": {
+          "awardResponses": {
+            "type": "array",
+            "description": "an ordered list of award response, the order matching the request order",
+            "items": {
+              "$ref": "#/components/schemas/CreateHearingResultAwardResponse"
+            }
+          }
+        },
+        "description": "A list of Hearing result awards created (aka punishment)"
+      },
       "CreateHearingResultAwardRequest": {
         "required": [
           "effectiveDate",
@@ -7752,12 +7832,37 @@
           "sanctionType": {
             "type": "string",
             "description": "The type of award",
-            "example": "CAUTION"
+            "example": "CAUTION",
+            "enum": [
+              "ADA",
+              "CAUTION",
+              "CC",
+              "EXTRA_WORK",
+              "EXTW",
+              "FORFEIT",
+              "OTHER",
+              "REMACT",
+              "REMWIN",
+              "STOP_EARN",
+              "STOP_PCT"
+            ]
           },
           "sanctionStatus": {
             "type": "string",
             "description": "The status of the award",
-            "example": "IMMEDIATE"
+            "example": "IMMEDIATE",
+            "enum": [
+              "AS_AWARDED",
+              "AWARD_RED",
+              "IMMEDIATE",
+              "PROSPECTIVE",
+              "QUASHED",
+              "REDAPP",
+              "SUSPENDED",
+              "SUSPEN_EXT",
+              "SUSPEN_RED",
+              "SUSP_PROSP"
+            ]
           },
           "commentText": {
             "type": "string",
@@ -8122,11 +8227,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -8143,6 +8248,9 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "paged": {
+            "type": "boolean"
+          },
           "pageSize": {
             "type": "integer",
             "format": "int32"
@@ -8150,9 +8258,6 @@
           "pageNumber": {
             "type": "integer",
             "format": "int32"
-          },
-          "paged": {
-            "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
@@ -8312,11 +8417,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -8468,11 +8573,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -8593,11 +8698,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -8734,11 +8839,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -8818,6 +8923,52 @@
         },
         "description": "Allocation to an activity"
       },
+      "AllocationReconciliationResponse": {
+        "required": [
+          "bookings",
+          "prisonId"
+        ],
+        "type": "object",
+        "properties": {
+          "prisonId": {
+            "type": "string",
+            "description": "The prison we checked the allocations for",
+            "example": "BXI"
+          },
+          "bookings": {
+            "type": "array",
+            "description": "All active bookings and their allocation count",
+            "example": "[ { bookingId: 1234567, count: 2 } ]",
+            "items": {
+              "$ref": "#/components/schemas/BookingCount"
+            }
+          }
+        },
+        "description": "Allocation reconciliation check response"
+      },
+      "BookingCount": {
+        "required": [
+          "bookingId",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "The offender booking id",
+            "format": "int64",
+            "example": 1234567
+          },
+          "count": {
+            "type": "integer",
+            "description": "The count for the offender booking",
+            "format": "int64",
+            "example": 2
+          }
+        },
+        "description": "A count for an offender booking",
+        "example": "[ { bookingId: 1234567, count: 2 } ]"
+      },
       "FindActiveAllocationIdsResponse": {
         "required": [
           "allocationId"
@@ -8868,11 +9019,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -8933,11 +9084,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -9004,11 +9155,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -9336,11 +9487,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
