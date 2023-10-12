@@ -19,10 +19,10 @@ open class RetryQueueService(
   private val sqsClient by lazy { queue.sqsClient }
   private val queueUrl by lazy { queue.queueUrl }
 
-  suspend fun sendMessage(mapping: Any, telemetryAttributes: Map<String, String>) {
+  suspend fun sendMessage(mapping: Any, telemetryAttributes: Map<String, String>, entityName: String) {
     val sqsMessage = SQSMessage(
       Type = RETRY_CREATE_MAPPING,
-      Message = CreateMappingRetryMessage(mapping, telemetryAttributes).toJson(),
+      Message = CreateMappingRetryMessage(mapping, telemetryAttributes, entityName).toJson(),
     )
     val result = sqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(queueUrl).messageBody(sqsMessage.toJson()).build(),
@@ -43,4 +43,5 @@ open class RetryQueueService(
 data class CreateMappingRetryMessage<T>(
   val mapping: T,
   val telemetryAttributes: Map<String, String>,
+  val entityName: String,
 )

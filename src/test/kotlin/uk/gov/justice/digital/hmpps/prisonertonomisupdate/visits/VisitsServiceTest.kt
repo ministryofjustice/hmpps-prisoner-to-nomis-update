@@ -130,6 +130,7 @@ internal class VisitsServiceTest {
               "nomisId": "AB123D",
               "vsipId": "24"
             }, 
+            "entityName": "visit",
             "telemetryAttributes": {}
           }
         """.trimIndent(),

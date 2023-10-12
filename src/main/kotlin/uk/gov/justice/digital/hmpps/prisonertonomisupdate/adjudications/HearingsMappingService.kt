@@ -6,7 +6,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
-import java.time.LocalDateTime
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationHearingMappingDto
 
 @Service
 class HearingsMappingService(
@@ -39,12 +39,3 @@ class HearingsMappingService(
       .retrieve()
       .awaitBody()
 }
-
-class AdjudicationHearingMappingDto(
-  val nomisHearingId: Long,
-  val dpsHearingId: String,
-  val label: String? = null,
-  val mappingType: String = "ADJUDICATION_CREATED",
-  val whenCreated: LocalDateTime? = null,
-  mappingEntity: AdjudicationMappingEntity = AdjudicationMappingEntity.HEARING,
-) : BaseAdjudicationMappingDto(mappingEntity)

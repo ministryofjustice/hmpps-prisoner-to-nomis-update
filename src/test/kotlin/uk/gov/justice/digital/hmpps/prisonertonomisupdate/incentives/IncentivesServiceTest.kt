@@ -138,6 +138,7 @@ internal class IncentivesServiceTest {
               "nomisIncentiveSequence": 1,
               "incentiveId": 1234
             }, 
+            "entityName": "incentive",
             "telemetryAttributes": {}
           }
         """.trimIndent(),
