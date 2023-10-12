@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Re
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedEvidenceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationHearingMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ChargeToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingRequest
@@ -48,6 +50,10 @@ class AdjudicationsService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
+  enum class EntityType(val displayName: String) {
+    HEARING("hearing"), ADJUDICATION("adjudication")
+  }
+
   suspend fun createAdjudication(createEvent: AdjudicationCreatedEvent) {
     val chargeNumber = createEvent.additionalInformation.chargeNumber
     val prisonId: String = createEvent.additionalInformation.prisonId
@@ -56,7 +62,7 @@ class AdjudicationsService(
       "prisonId" to prisonId,
     )
     synchronise {
-      name = "adjudication"
+      name = EntityType.ADJUDICATION.displayName
       telemetryClient = this@AdjudicationsService.telemetryClient
       retryQueueService = adjudicationRetryQueueService
       eventTelemetry = telemetryMap
@@ -103,10 +109,10 @@ class AdjudicationsService(
   }
 
   override suspend fun retryCreateMapping(message: String) {
-    val baseMapping: CreateMappingRetryMessage<BaseAdjudicationMappingDto> = message.fromJson()
-    when (baseMapping.mapping.mappingEntity) {
-      AdjudicationMappingEntity.ADJUDICATION -> createRetry(message.fromJson())
-      AdjudicationMappingEntity.HEARING -> createHearingRetry(message.fromJson())
+    val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
+    when (baseMapping.entityName) {
+      EntityType.ADJUDICATION.displayName -> createRetry(message.fromJson())
+      EntityType.HEARING.displayName -> createHearingRetry(message.fromJson())
     }
   }
 
@@ -194,7 +200,7 @@ class AdjudicationsService(
       "dpsHearingId" to dpsHearingId,
     )
     synchronise {
-      name = "hearing"
+      name = EntityType.HEARING.displayName
       telemetryClient = this@AdjudicationsService.telemetryClient
       retryQueueService = adjudicationRetryQueueService
       eventTelemetry = telemetryMap

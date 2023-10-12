@@ -358,6 +358,7 @@ internal class ActivitiesServiceTest {
         CreateMappingRetryMessage(
           mapping = mappingDto,
           telemetryAttributes = mapOf(),
+          entityName = "activity",
         ),
       )
 

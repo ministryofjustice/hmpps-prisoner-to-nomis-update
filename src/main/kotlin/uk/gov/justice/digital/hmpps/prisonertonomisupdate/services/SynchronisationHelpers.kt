@@ -62,7 +62,7 @@ class SynchroniseBuilder<MAPPING_DTO>(
                   }
 
                   else -> {
-                    retryQueueService?.sendMessage(mapping, telemetryAttributes)
+                    retryQueueService?.sendMessage(mapping, telemetryAttributes, name)
                     log.error("Failed to create $name mapping", e)
                   }
                 }

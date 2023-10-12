@@ -6,7 +6,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
-import java.time.LocalDateTime
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationMappingDto
 
 @Service
 class AdjudicationsMappingService(
@@ -39,21 +39,3 @@ class AdjudicationsMappingService(
       .retrieve()
       .awaitBody()
 }
-
-open class BaseAdjudicationMappingDto(
-  val mappingEntity: AdjudicationMappingEntity,
-)
-
-enum class AdjudicationMappingEntity {
-  HEARING, ADJUDICATION
-}
-
-class AdjudicationMappingDto(
-  val adjudicationNumber: Long,
-  val chargeSequence: Int,
-  val chargeNumber: String,
-  val label: String? = null,
-  val mappingType: String = "ADJUDICATION_CREATED",
-  val whenCreated: LocalDateTime? = null,
-  mappingEntity: AdjudicationMappingEntity = AdjudicationMappingEntity.ADJUDICATION,
-) : BaseAdjudicationMappingDto(mappingEntity)
