@@ -11,6 +11,7 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.CombinedOutcomeDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingOutcomeDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentDetailsDto
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.In
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentStatementDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OffenceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OffenceRuleDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeHistoryDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationResponse
@@ -153,6 +155,7 @@ internal class AdjudicationsServiceTest {
                 plea = HearingOutcomeDto.Plea.GUILTY,
               ),
             ),
+            outcome = CombinedOutcomeDto(outcome = OutcomeDto(code = OutcomeDto.Code.CHARGE_PROVED)),
           ),
         ),
         disIssueHistory = emptyList(),
