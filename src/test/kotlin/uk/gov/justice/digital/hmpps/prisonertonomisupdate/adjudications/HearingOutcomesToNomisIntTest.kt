@@ -7,6 +7,7 @@ import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
@@ -14,6 +15,7 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
@@ -54,7 +56,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
         NomisApiExtension.nomisApi.verify(
           WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result"))
             .withRequestBody(WireMock.matchingJsonPath("$.pleaFindingCode", WireMock.equalTo("UNFIT")))
-            .withRequestBody(WireMock.matchingJsonPath("$.findingCode", WireMock.equalTo("S"))) // S mapping TBC
+            .withRequestBody(WireMock.matchingJsonPath("$.findingCode", WireMock.equalTo("ADJOURNED")))
             .withRequestBody(WireMock.matchingJsonPath("$.adjudicatorUsername", WireMock.equalTo("JBULLENGEN"))),
         )
 
@@ -152,6 +154,39 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
         )
 
         verifyHearingResultCreatedSuccessCustomEvent()
+      }
+    }
+
+    @Nested
+    inner class invalidFindingCodeFromDPS {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithCompletedOutcome(
+          hearingId = DPS_HEARING_ID.toLong(),
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+          outcomeFindingCode = OutcomeDto.Code.SCHEDULE_HEARING.name,
+        )
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        publishCreateHearingCompletedDomainEvent()
+      }
+
+      @Test
+      fun `invalid finding code is rejected`() {
+        await untilAsserted {
+          verify(telemetryClient, Mockito.times(3)).trackEvent(
+            eq("hearing-result-created-failed"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+              Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
+            },
+            isNull(),
+          )
+        }
       }
     }
 

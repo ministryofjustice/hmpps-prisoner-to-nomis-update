@@ -382,13 +382,17 @@ private fun OutcomeHistoryDto.toNomisCreateHearingResult(): CreateHearingResultR
   )
 }
 
-private fun toNomisFindingCode(outcome: String) = when (outcome) {
-  "CHARGE_PROVED" -> "PROVED"
-  "ADJOURN" -> "S"
-  "DISMISSED" -> "D" // TODO confirm they still want to map to D
-  "REFER_POLICE" -> "REF_POLICE"
-  "REFER_INAD" -> "REF_INAD" // TODO confirm behaviour with john
-  else -> outcome
+private fun toNomisFindingCode(code: String) = when (code) {
+  OutcomeDto.Code.REFER_POLICE.name -> "REF_POLICE"
+  OutcomeDto.Code.REFER_INAD.name -> "REF_INAD"
+  OutcomeDto.Code.REFER_GOV.name -> "ADJOURNED" // TODO from John/Tim - to confirm
+  OutcomeDto.Code.NOT_PROCEED.name -> "NOT_PROCEED"
+  OutcomeDto.Code.DISMISSED.name -> "D"
+  OutcomeDto.Code.PROSECUTION.name -> "PROSECUTED"
+  OutcomeDto.Code.CHARGE_PROVED.name -> "PROVED"
+  OutcomeDto.Code.QUASHED.name -> "QUASHED"
+  HearingOutcomeDto.Code.ADJOURN.name -> "ADJOURNED"
+  else -> throw InvalidFindingCodeException("DPS Outcome code $code does not map to a NOMIS finding code")
 }
 
 private fun toNomisPleaCode(plea: HearingOutcomeDto.Plea) = when (plea) {
@@ -542,3 +546,5 @@ data class HearingAdditionalInformation(
 data class HearingEvent(
   val additionalInformation: HearingAdditionalInformation,
 )
+
+class InvalidFindingCodeException(message: String) : IllegalStateException(message)

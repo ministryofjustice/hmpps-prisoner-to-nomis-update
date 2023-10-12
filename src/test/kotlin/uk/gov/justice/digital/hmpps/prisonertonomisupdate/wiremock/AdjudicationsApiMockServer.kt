@@ -120,7 +120,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubChargeGetWithCompletedOutcome(hearingId: Long = 123, chargeNumber: String, offenderNo: String = "A7937DY") {
+  fun stubChargeGetWithCompletedOutcome(hearingId: Long = 123, chargeNumber: String, offenderNo: String = "A7937DY", outcomeFindingCode: String = "CHARGE_PROVED") {
     val outcomes = """
         [
             {
@@ -140,7 +140,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "outcome": {
                     "outcome": {
                         "id": 591,
-                        "code": "CHARGE_PROVED"
+                        "code": "$outcomeFindingCode"
                     }
                 }
             }
