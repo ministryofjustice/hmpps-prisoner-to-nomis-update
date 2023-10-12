@@ -112,4 +112,11 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun getCountFor(url: String) = this.findAll(getRequestedFor(urlEqualTo(url))).count()
+
+  fun stubAllocationReconciliation(prisonId: String, response: String) =
+    stubGet("/synchronisation/reconciliation/allocations/$prisonId", response)
+
+  fun stubAllocationReconciliationWithError(prisonId: String, status: Int = 500) {
+    stubGetWithError("/synchronisation/reconciliation/allocations/$prisonId", status)
+  }
 }

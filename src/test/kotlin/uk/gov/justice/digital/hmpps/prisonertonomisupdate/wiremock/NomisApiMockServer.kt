@@ -275,6 +275,30 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubAllocationReconciliation(prisonId: String, response: String) {
+    stubFor(
+      get("/allocations/reconciliation/$prisonId")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-type", "application/json")
+            .withBody(response)
+            .withStatus(200),
+        ),
+    )
+  }
+
+  fun stubAllocationReconciliationWithError(prisonId: String, status: Int = 500) {
+    stubFor(
+      get("/allocations/reconciliation/$prisonId")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-type", "application/json")
+            .withBody(ERROR_RESPONSE)
+            .withStatus(status),
+        ),
+    )
+  }
+
   // *************************************************** Appointments **********************************************
 
   fun stubAppointmentCreate(response: String) {
