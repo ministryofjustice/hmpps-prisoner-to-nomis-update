@@ -44,12 +44,11 @@ class AdjudicationsDomainEventListener(
       "adjudication.hearingCompleted.created", "adjudication.hearingAdjourn.created", "adjudication.hearingReferral.created" -> adjudicationsService.createHearingCompleted(
         message.fromJson(),
       )
-
       "adjudication.hearingCompleted.deleted", "adjudication.hearingAdjourn.deleted", "adjudication.hearingReferral.deleted" -> adjudicationsService.deleteHearingCompleted(
         message.fromJson(),
       )
-
       "adjudication.punishments.created" -> log.info("Ignoring event: {}", eventType)
+      "adjudication.referral.outcome.prosecution", "adjudication.referral.outcome.notProceed" -> adjudicationsService.createHearingCompleted(message.fromJson(), referralOutcome = true)
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }

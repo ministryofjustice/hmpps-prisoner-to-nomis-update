@@ -55,12 +55,9 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
         AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
         NomisApiExtension.nomisApi.verify(
           WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result"))
-            .withRequestBody(WireMock.matchingJsonPath("$.pleaFindingCode", WireMock.equalTo("UNFIT")))
-            .withRequestBody(WireMock.matchingJsonPath("$.findingCode", WireMock.equalTo("ADJOURNED")))
             .withRequestBody(WireMock.matchingJsonPath("$.adjudicatorUsername", WireMock.equalTo("JBULLENGEN"))),
         )
-
-        verifyHearingResultCreatedSuccessCustomEvent()
+        verifyHearingResultCreatedSuccessCustomEvent(findingCode = "ADJOURNED", plea = "UNFIT")
       }
     }
 
@@ -91,7 +88,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(WireMock.matchingJsonPath("$.adjudicatorUsername", WireMock.equalTo("JBULLENGEN"))),
         )
 
-        verifyHearingResultCreatedSuccessCustomEvent()
+        verifyHearingResultCreatedSuccessCustomEvent(findingCode = "REF_POLICE", plea = "NOT_ASKED")
       }
     }
 
@@ -117,12 +114,75 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
         AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
         NomisApiExtension.nomisApi.verify(
           WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result"))
-            .withRequestBody(WireMock.matchingJsonPath("$.pleaFindingCode", WireMock.equalTo("NOT_ASKED")))
-            .withRequestBody(WireMock.matchingJsonPath("$.findingCode", WireMock.equalTo("REF_INAD")))
             .withRequestBody(WireMock.matchingJsonPath("$.adjudicatorUsername", WireMock.equalTo("JBULLENGEN"))),
         )
 
-        verifyHearingResultCreatedSuccessCustomEvent()
+        verifyHearingResultCreatedSuccessCustomEvent(findingCode = "ADJOURNED", plea = "NOT_ASKED")
+      }
+    }
+
+    @Nested
+    inner class WhenHearingHasAReferralOutcomeOfProsecuted {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithReferralOutcome(
+          outcomeCode = OutcomeDto.Code.REFER_POLICE.name,
+          referralOutcomeCode = OutcomeDto.Code.PROSECUTION.name,
+          hearingId = DPS_HEARING_ID.toLong(),
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
+        NomisApiExtension.nomisApi.stubHearingResultCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        publishCreateHearingReferralProsecutionDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to adjudication service, post the create and track success`() {
+        waitForCreateHearingProcessingToBeComplete()
+
+        AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
+        NomisApiExtension.nomisApi.verify(
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result"))
+            .withRequestBody(WireMock.matchingJsonPath("$.pleaFindingCode", WireMock.equalTo("NOT_ASKED")))
+            .withRequestBody(WireMock.matchingJsonPath("$.findingCode", WireMock.equalTo("PROSECUTED")))
+            .withRequestBody(WireMock.matchingJsonPath("$.adjudicatorUsername", WireMock.absent())),
+        )
+
+        verifyHearingResultCreatedSuccessCustomEvent(plea = "NOT_ASKED", findingCode = "PROSECUTED")
+      }
+    }
+
+    @Nested
+    inner class WhenHearingHasAReferralOutcomeOfNotProceed {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithReferralOutcome(
+          outcomeCode = OutcomeDto.Code.REFER_POLICE.name,
+          referralOutcomeCode = OutcomeDto.Code.NOT_PROCEED.name,
+          hearingId = DPS_HEARING_ID.toLong(),
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+          hearingType = "GOV_ADULT",
+        )
+        NomisApiExtension.nomisApi.stubHearingResultCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        publishCreateHearingReferralNotProceedDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to adjudication service, post the create and track success`() {
+        waitForCreateHearingProcessingToBeComplete()
+
+        AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
+        NomisApiExtension.nomisApi.verify(
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result"))
+            .withRequestBody(WireMock.matchingJsonPath("$.adjudicatorUsername", WireMock.equalTo("jack_b"))),
+        )
+
+        verifyHearingResultCreatedSuccessCustomEvent(plea = "NOT_ASKED", findingCode = "NOT_PROCEED")
       }
     }
 
@@ -148,12 +208,10 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
         AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
         NomisApiExtension.nomisApi.verify(
           WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result"))
-            .withRequestBody(WireMock.matchingJsonPath("$.pleaFindingCode", WireMock.equalTo("GUILTY")))
-            .withRequestBody(WireMock.matchingJsonPath("$.findingCode", WireMock.equalTo("PROVED")))
             .withRequestBody(WireMock.matchingJsonPath("$.adjudicatorUsername", WireMock.equalTo("SWATSON_GEN"))),
         )
 
-        verifyHearingResultCreatedSuccessCustomEvent()
+        verifyHearingResultCreatedSuccessCustomEvent(findingCode = "PROVED", plea = "GUILTY")
       }
     }
 
@@ -190,7 +248,10 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
       }
     }
 
-    private fun verifyHearingResultCreatedSuccessCustomEvent() {
+    private fun verifyHearingResultCreatedSuccessCustomEvent(
+      findingCode: String = "CHARGE_PROVEN",
+      plea: String = "NOT_GUILTY",
+    ) {
       verify(telemetryClient).trackEvent(
         eq("hearing-result-created-success"),
         org.mockito.kotlin.check {
@@ -198,7 +259,8 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
           Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
           Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
           Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
-          Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
+          Assertions.assertThat(it["findingCode"]).isEqualTo(findingCode)
+          Assertions.assertThat(it["plea"]).isEqualTo(plea)
         },
         isNull(),
       )
@@ -445,6 +507,34 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
+  private fun publishCreateHearingReferralProsecutionDomainEvent() {
+    val eventType = "adjudication.referral.outcome.prosecution"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(hearingMessagePayload(DPS_HEARING_ID, CHARGE_NUMBER, PRISON_ID, OFFENDER_NO, eventType))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishCreateHearingReferralNotProceedDomainEvent() {
+    val eventType = "adjudication.referral.outcome.notProceed"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(hearingMessagePayload(DPS_HEARING_ID, CHARGE_NUMBER, PRISON_ID, OFFENDER_NO, eventType))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
   private fun publishDeleteHearingCompletedDomainEvent() {
     val eventType = "adjudication.hearingCompleted.deleted"
     awsSnsClient.publish(
@@ -493,6 +583,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
     prisonId: String,
     prisonerNumber: String,
     eventType: String,
+    status: String = "REFER_POLICE",
   ) =
-    """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId", "hearingId": "$hearingId", "prisonerNumber": "$prisonerNumber"}}"""
+    """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId", "hearingId": "$hearingId", "prisonerNumber": "$prisonerNumber", "status": "$status"}}"""
 }

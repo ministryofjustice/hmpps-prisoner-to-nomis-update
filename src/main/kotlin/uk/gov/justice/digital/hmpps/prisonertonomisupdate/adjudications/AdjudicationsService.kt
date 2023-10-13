@@ -290,7 +290,7 @@ class AdjudicationsService(
     }
   }
 
-  suspend fun createHearingCompleted(createEvent: HearingEvent) {
+  suspend fun createHearingCompleted(createEvent: HearingEvent, referralOutcome: Boolean = false) {
     val event = createEvent.additionalInformation
     val telemetryMap = event.toTelemetryMap()
 
@@ -319,12 +319,16 @@ class AdjudicationsService(
             "Hearing mapping for dps hearing id: ${event.hearingId} not found for DPS adjudication with charge no ${event.chargeNumber}",
           )
 
+      val nomisRequest = if (referralOutcome) outcome.toNomisCreateHearingResultForReferralOutcome() else outcome.toNomisCreateHearingResult()
       nomisApiService.createHearingResult(
         adjudicationNumber = adjudicationMapping.adjudicationNumber,
         hearingId = hearingMapping.nomisHearingId,
         chargeSequence = adjudicationMapping.chargeSequence,
-        request = outcome.toNomisCreateHearingResult(),
-      )
+        request = nomisRequest,
+      ).also {
+        telemetryMap["findingCode"] = nomisRequest.findingCode
+        telemetryMap["plea"] = nomisRequest.pleaFindingCode
+      }
     }.onSuccess {
       telemetryClient.trackEvent("hearing-result-created-success", telemetryMap, null)
     }.onFailure { e ->
@@ -371,8 +375,7 @@ private fun HearingDto.toNomisUpdateHearing(): UpdateHearingRequest = UpdateHear
   internalLocationId = this.locationId,
 )
 
-// logic for determining the NOMIS findingCode:
-// If separate outcome block exists use code, else use code from hearing.outcome
+// If OutcomeDto exists use code, else use code from hearingOutcomeDto
 private fun OutcomeHistoryDto.toNomisCreateHearingResult(): CreateHearingResultRequest {
   val separateOutcome: OutcomeDto? = this.outcome?.outcome
   val hearing = this.hearing!!
@@ -388,9 +391,22 @@ private fun OutcomeHistoryDto.toNomisCreateHearingResult(): CreateHearingResultR
   )
 }
 
+private fun OutcomeHistoryDto.toNomisCreateHearingResultForReferralOutcome(): CreateHearingResultRequest {
+  val hearing = this.hearing!!
+  val findingCode = this.outcome!!.referralOutcome!!.code.name
+  return CreateHearingResultRequest(
+    pleaFindingCode = "NOT_ASKED",
+    findingCode = toNomisFindingCode(findingCode),
+    adjudicatorUsername = getAdjudicatorUsernameForInternalHearingOnly(
+      hearing.oicHearingType.name,
+      hearing.outcome!!.adjudicator,
+    ),
+  )
+}
+
 private fun toNomisFindingCode(code: String) = when (code) {
   OutcomeDto.Code.REFER_POLICE.name -> "REF_POLICE"
-  OutcomeDto.Code.REFER_INAD.name -> "REF_INAD"
+  OutcomeDto.Code.REFER_INAD.name -> "ADJOURNED" // TODO from John/Tim - to confirm
   OutcomeDto.Code.REFER_GOV.name -> "ADJOURNED" // TODO from John/Tim - to confirm
   OutcomeDto.Code.NOT_PROCEED.name -> "NOT_PROCEED"
   OutcomeDto.Code.DISMISSED.name -> "D"
