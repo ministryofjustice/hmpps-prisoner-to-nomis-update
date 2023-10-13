@@ -253,7 +253,7 @@ It is likely to have the wrong level for one of these two reasons:
 - For the missing `prisoner-offender-search.prisoner.received` event, this can be triggered manually using an endpoint in `prisoner-offender-search`. The endpoint requires client credentials with the role `EVENTS_ADMIN`. Example request is 
 ```bash
 
-  curl --location --request PUT 'https://prisoner-offender-search.prison.service.justice.gov.uk/events/prisoner/received/A9999AR' \
+  curl --location --request PUT 'https://prisoner-search.prison.service.justice.gov.uk/events/prisoner/received/A9999AR' \
 --header 'Authorization: Bearer <token with ROLE_EVENTS_ADMIN>' \
 --header 'Content-Type: application/json' \
 --data '{
