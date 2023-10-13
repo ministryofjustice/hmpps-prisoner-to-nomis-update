@@ -120,7 +120,12 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubChargeGetWithCompletedOutcome(hearingId: Long = 123, chargeNumber: String, offenderNo: String = "A7937DY", outcomeFindingCode: String = "CHARGE_PROVED") {
+  fun stubChargeGetWithCompletedOutcome(
+    hearingId: Long = 123,
+    chargeNumber: String,
+    offenderNo: String = "A7937DY",
+    outcomeFindingCode: String = "CHARGE_PROVED",
+  ) {
     val outcomes = """
         [
             {
@@ -149,15 +154,34 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
   }
 
-  fun stubChargeGetWithReferIndependentAdjudicatorOutcome(hearingId: Long = 123, chargeNumber: String, offenderNo: String = "A7937DY") {
-    stubChargeGetWithReferralOutcome(hearingId = hearingId, referralOutcomeCode = "REFER_INAD", chargeNumber = chargeNumber, offenderNo = offenderNo)
+  fun stubChargeGetWithReferIndependentAdjudicatorOutcome(
+    hearingId: Long = 123,
+    chargeNumber: String,
+    offenderNo: String = "A7937DY",
+  ) {
+    stubChargeGetWithSeparateOutcomeBlock(
+      hearingId = hearingId,
+      outcomeCode = "REFER_INAD",
+      chargeNumber = chargeNumber,
+      offenderNo = offenderNo,
+    )
   }
 
   fun stubChargeGetWithReferPoliceOutcome(hearingId: Long = 123, chargeNumber: String, offenderNo: String = "A7937DY") {
-    stubChargeGetWithReferralOutcome(hearingId = hearingId, referralOutcomeCode = "REFER_POLICE", chargeNumber = chargeNumber, offenderNo = offenderNo)
+    stubChargeGetWithSeparateOutcomeBlock(
+      hearingId = hearingId,
+      outcomeCode = "REFER_POLICE",
+      chargeNumber = chargeNumber,
+      offenderNo = offenderNo,
+    )
   }
 
-  private fun stubChargeGetWithReferralOutcome(referralOutcomeCode: String, hearingId: Long = 123, chargeNumber: String, offenderNo: String = "A7937DY") {
+  private fun stubChargeGetWithSeparateOutcomeBlock(
+    outcomeCode: String,
+    hearingId: Long = 123,
+    chargeNumber: String,
+    offenderNo: String = "A7937DY",
+  ) {
     val outcomes = """
      [
       {
@@ -169,7 +193,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             "outcome": {
               "id": 975,
               "adjudicator": "JBULLENGEN",
-              "code": "$referralOutcomeCode",
+              "code": "$outcomeCode",
               "details": "pdfs"
               },
             "agencyId": "MDI"
@@ -177,12 +201,53 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           "outcome": {
               "outcome": {
               "id": 1238,
-              "code": "$referralOutcomeCode",
+              "code": "$outcomeCode",
               "details": "pdfs"
             }
           }
       }
   ]
+    """.trimIndent()
+    stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
+  }
+
+  fun stubChargeGetWithReferralOutcome(
+    outcomeCode: String = "REFER_POLICE",
+    referralOutcomeCode: String = "PROSECUTION",
+    hearingId: Long = 123,
+    chargeNumber: String,
+    offenderNo: String = "A7937DY",
+    hearingType: String = "INAD_ADULT",
+  ) {
+    val outcomes = """
+     [
+            {
+                "hearing": {
+                    "id": $hearingId,
+                    "locationId": 357596,
+                    "dateTimeOfHearing": "2023-10-12T14:00:00",
+                    "oicHearingType": "$hearingType",
+                    "outcome": {
+                        "id": 1031,
+                        "adjudicator": "jack_b",
+                        "code": "$outcomeCode",
+                        "details": "yuiuy"
+                    },
+                    "agencyId": "MDI"
+                },
+                "outcome": {
+                    "outcome": {
+                        "id": 1319,
+                        "code": "REFER_POLICE",
+                        "details": "yuiuy"
+                    },
+                    "referralOutcome": {
+                        "id": 1320,
+                        "code": "$referralOutcomeCode"
+                    }
+                }
+            }
+        ]
     """.trimIndent()
     stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
   }

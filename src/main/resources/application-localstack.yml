@@ -35,7 +35,7 @@ hmpps.sqs:
       queueName: hmpps_prisoner_to_nomis_adjudication_queue
       dlqName: hmpps_prisoner_to_nomis_adjudication_dlq
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"adjudication.report.created\", \"adjudication.damages.updated\", \"adjudication.evidence.updated\", \"adjudication.hearing.created\", \"adjudication.hearing.updated\", \"adjudication.hearing.deleted\" , \"adjudication.hearingCompleted.created\", \"adjudication.hearingCompleted.deleted\", \"adjudication.hearingReferral.created\", \"adjudication.hearingReferral.deleted\", \"adjudication.hearingAdjourn.created\", \"adjudication.hearingAdjourn.deleted\", \"adjudication.punishments.created\"]}"
+      subscribeFilter: "{\"eventType\":[\"adjudication.report.created\", \"adjudication.damages.updated\", \"adjudication.evidence.updated\", \"adjudication.hearing.created\", \"adjudication.hearing.updated\", \"adjudication.hearing.deleted\" , \"adjudication.hearingCompleted.created\", \"adjudication.hearingCompleted.deleted\", \"adjudication.hearingReferral.created\", \"adjudication.hearingReferral.deleted\", \"adjudication.hearingAdjourn.created\", \"adjudication.hearingAdjourn.deleted\", \"adjudication.punishments.created\", \"adjudication.referral.outcome.prosecution\", \"adjudication.referral.outcome.notProceed\"]}"
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:hmpps_domain_events
