@@ -786,6 +786,93 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubCreatePunishments() {
+    stubFor(
+      post("/mapping/punishments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCreatePunishmentsWithError(status: Int = 500) {
+    stubFor(
+      post("/mapping/punishments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "all gone wrong" }""")
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubCreatePunishmentsWithDuplicateError(
+    dpsPunishmentId: String,
+    nomisBookingId: Long,
+    nomisSanctionSequence: Int,
+    duplicateDpsPunishmentId: String,
+    duplicateNomisBookingId: Long,
+    duplicateNomisSanctionSequence: Int,
+  ) {
+    stubFor(
+      post("/mapping/punishments")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+            { 
+              "status": 409,
+              "errorCode": 1409,
+              "userMessage": "Conflict: Punishment mapping already exists",
+               "moreInfo": {
+                "existing": {
+                  "dpsPunishmentId": $dpsPunishmentId,
+                  "nomisBookingId": "$nomisBookingId",
+                  "nomisSanctionSequence": "$nomisSanctionSequence"
+                  },
+                "duplicate": {
+                  "dpsPunishmentId": $duplicateDpsPunishmentId,
+                  "nomisBookingId": "$duplicateNomisBookingId",
+                  "nomisSanctionSequence": "$duplicateNomisSanctionSequence"
+                }
+              }
+            }
+              """.trimMargin(),
+            )
+            .withStatus(409),
+        ),
+    )
+  }
+
+  fun stubCreatePunishmentsWithErrorFollowedBySuccess() {
+    stubFor(
+      post("/mapping/punishments")
+        .inScenario("Retry Mapping Adjudication Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause Mapping Adjudication Success"),
+    )
+
+    stubFor(
+      post("/mapping/punishments")
+        .inScenario("Retry Mapping Adjudication Scenario")
+        .whenScenarioStateIs("Cause Mapping Adjudication Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201)
+            .withFixedDelay(1500),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
   // *************************************************** Non-Associations **********************************************
 
   fun stubCreateNonAssociation() {
