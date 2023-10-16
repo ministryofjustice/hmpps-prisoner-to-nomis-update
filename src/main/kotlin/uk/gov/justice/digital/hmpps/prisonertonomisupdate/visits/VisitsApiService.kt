@@ -11,7 +11,7 @@ class VisitsApiService(@Qualifier("visitsApiWebClient") private val webClient: W
 
   suspend fun getVisit(visitId: String): VisitDto {
     return webClient.get()
-      .uri("/visits/$visitId")
+      .uri("/visits/{visitId}", visitId)
       .retrieve()
       .awaitBody()
   }

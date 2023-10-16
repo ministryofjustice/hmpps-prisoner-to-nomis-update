@@ -13,21 +13,21 @@ class IncentivesApiService(@Qualifier("incentivesApiWebClient") private val webC
 
   suspend fun getIncentive(incentiveId: Long): IepDetail {
     return webClient.get()
-      .uri("/iep/reviews/id/$incentiveId")
+      .uri("/iep/reviews/id/{incentiveId}", incentiveId)
       .retrieve()
       .awaitBody()
   }
 
   suspend fun getCurrentIncentive(bookingId: Long): IepSummary? {
     return webClient.get()
-      .uri("/iep/reviews/booking/$bookingId?with-details=false")
+      .uri("/iep/reviews/booking/{bookingId}?with-details=false", bookingId)
       .retrieve()
       .awaitBodyOrNotFound()
   }
 
   suspend fun getGlobalIncentiveLevel(incentiveLevelCode: String): IncentiveLevel {
     return webClient.get()
-      .uri("/incentive/levels/$incentiveLevelCode?with-inactive=true")
+      .uri("/incentive/levels/{incentiveLevelCode}?with-inactive=true", incentiveLevelCode)
       .retrieve()
       .awaitBody()
   }
@@ -41,7 +41,7 @@ class IncentivesApiService(@Qualifier("incentivesApiWebClient") private val webC
 
   suspend fun getPrisonIncentiveLevel(prisonId: String, incentiveLevelCode: String): PrisonIncentiveLevel {
     return webClient.get()
-      .uri("/incentive/prison-levels/$prisonId/level/$incentiveLevelCode")
+      .uri("/incentive/prison-levels/{prisonId}/level/{incentiveLevelCode}", prisonId, incentiveLevelCode)
       .retrieve()
       .awaitBody()
   }

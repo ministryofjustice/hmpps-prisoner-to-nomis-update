@@ -24,13 +24,13 @@ class AppointmentMappingService(
 
   suspend fun getMappingGivenAppointmentInstanceIdOrNull(id: Long): AppointmentMappingDto? =
     webClient.get()
-      .uri("/mapping/appointments/appointment-instance-id/$id")
+      .uri("/mapping/appointments/appointment-instance-id/{id}", id)
       .retrieve()
       .awaitBodyOrNotFound()
 
   suspend fun getMappingGivenAppointmentInstanceId(id: Long): AppointmentMappingDto =
     webClient.get()
-      .uri("/mapping/appointments/appointment-instance-id/$id")
+      .uri("/mapping/appointments/appointment-instance-id/{id}", id)
       .retrieve()
       .bodyToMono(AppointmentMappingDto::class.java)
       .awaitSingle()
@@ -43,7 +43,7 @@ class AppointmentMappingService(
 
   suspend fun deleteMapping(appointmentInstanceId: Long) {
     webClient.delete()
-      .uri("/mapping/appointments/appointment-instance-id/$appointmentInstanceId")
+      .uri("/mapping/appointments/appointment-instance-id/{appointmentInstanceId}", appointmentInstanceId)
       .retrieve()
       .awaitBodilessEntity()
   }

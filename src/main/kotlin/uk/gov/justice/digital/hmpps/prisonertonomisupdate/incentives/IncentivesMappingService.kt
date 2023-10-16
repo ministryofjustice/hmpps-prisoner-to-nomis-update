@@ -22,7 +22,7 @@ class IncentivesMappingService(
 
   suspend fun getMappingGivenIncentiveIdOrNull(incentiveId: Long): IncentiveMappingDto? =
     webClient.get()
-      .uri("/mapping/incentives/incentive-id/$incentiveId")
+      .uri("/mapping/incentives/incentive-id/{incentiveId}", incentiveId)
       .retrieve()
       .awaitBodyOrNotFound()
 }

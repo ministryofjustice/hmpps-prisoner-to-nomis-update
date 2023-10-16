@@ -23,19 +23,19 @@ class HearingsMappingService(
 
   suspend fun getMappingGivenDpsHearingIdOrNull(dpsHearingId: String): AdjudicationHearingMappingDto? =
     webClient.get()
-      .uri("/mapping/hearings/dps/$dpsHearingId")
+      .uri("/mapping/hearings/dps/{dpsHearingId}", dpsHearingId)
       .retrieve()
       .awaitBodyOrNotFound()
 
   suspend fun getMappingGivenDpsHearingId(dpsHearingId: String): AdjudicationHearingMappingDto =
     webClient.get()
-      .uri("/mapping/hearings/dps/$dpsHearingId")
+      .uri("/mapping/hearings/dps/{dpsHearingId}", dpsHearingId)
       .retrieve()
       .awaitBody()
 
   suspend fun deleteMappingGivenDpsHearingId(dpsHearingId: String): Unit =
     webClient.delete()
-      .uri("/mapping/hearings/dps/$dpsHearingId")
+      .uri("/mapping/hearings/dps/{dpsHearingId}", dpsHearingId)
       .retrieve()
       .awaitBody()
 }
