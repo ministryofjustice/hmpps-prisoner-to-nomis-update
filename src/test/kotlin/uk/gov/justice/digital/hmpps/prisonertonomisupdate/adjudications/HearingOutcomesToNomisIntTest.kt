@@ -187,6 +187,38 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
+    inner class WhenHearingHasAReferralOutcomeOfReferGov {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithReferralOutcome(
+          outcomeCode = OutcomeDto.Code.REFER_INAD.name,
+          referralOutcomeCode = OutcomeDto.Code.REFER_GOV.name,
+          hearingId = DPS_HEARING_ID.toLong(),
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+          hearingType = "GOV_ADULT",
+        )
+        NomisApiExtension.nomisApi.stubHearingResultCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        publishCreateHearingReferralReferGovDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to adjudication service, post the create and track success`() {
+        waitForCreateHearingProcessingToBeComplete()
+
+        AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
+        NomisApiExtension.nomisApi.verify(
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result"))
+            .withRequestBody(WireMock.matchingJsonPath("$.adjudicatorUsername", WireMock.equalTo("jack_b"))),
+        )
+
+        verifyHearingResultCreatedSuccessCustomEvent(plea = "NOT_ASKED", findingCode = "ADJOURNED")
+      }
+    }
+
+    @Nested
     inner class WhenHearingHasAnOutcomeOfCompleted {
       @BeforeEach
       fun setUp() {
@@ -465,6 +497,47 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class DeleteHearingReferralOutcome {
+    @Nested
+    inner class WhenHearingResultHasBeenDeletedInDPS {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        NomisApiExtension.nomisApi.stubHearingResultDelete(ADJUDICATION_NUMBER, NOMIS_HEARING_ID, CHARGE_SEQUENCE)
+        publishDeleteHearingReferralOutcomeDomainEvent()
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("hearing-result-deleted-success"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+              Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Test
+      fun `will call nomis api to delete the hearing result`() {
+        waitForHearingProcessingToBeComplete()
+        NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result")))
+      }
+    }
+
+    private fun waitForHearingProcessingToBeComplete() {
+      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+    }
+  }
+
   private fun publishCreateHearingCompletedDomainEvent() {
     val eventType = "adjudication.hearingCompleted.created"
     awsSnsClient.publish(
@@ -523,6 +596,34 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
   private fun publishCreateHearingReferralNotProceedDomainEvent() {
     val eventType = "adjudication.referral.outcome.notProceed"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(hearingMessagePayload(DPS_HEARING_ID, CHARGE_NUMBER, PRISON_ID, OFFENDER_NO, eventType))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishCreateHearingReferralReferGovDomainEvent() {
+    val eventType = "adjudication.referral.outcome.referGov"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(hearingMessagePayload(DPS_HEARING_ID, CHARGE_NUMBER, PRISON_ID, OFFENDER_NO, eventType))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishDeleteHearingReferralOutcomeDomainEvent() {
+    val eventType = "adjudication.referral.outcome.deleted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(hearingMessagePayload(DPS_HEARING_ID, CHARGE_NUMBER, PRISON_ID, OFFENDER_NO, eventType))
