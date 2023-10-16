@@ -15,7 +15,7 @@ class NonAssociationsApiService(private val nonAssociationsApiWebClient: WebClie
 
   suspend fun getNonAssociation(id: Long): LegacyNonAssociation =
     nonAssociationsApiWebClient.get()
-      .uri("/legacy/api/non-associations/$id")
+      .uri("/legacy/api/non-associations/{id}", id)
       .retrieve()
       .awaitBody()
 

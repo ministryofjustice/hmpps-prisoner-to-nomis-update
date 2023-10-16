@@ -16,42 +16,42 @@ class ActivitiesApiService(@Qualifier("activitiesApiWebClient") private val webC
 
   suspend fun getActivitySchedule(activityScheduleId: Long): ActivitySchedule {
     return webClient.get()
-      .uri("/schedules/$activityScheduleId")
+      .uri("/schedules/{activityScheduleId}", activityScheduleId)
       .retrieve()
       .awaitBody()
   }
 
   suspend fun getActivity(activityId: Long): Activity {
     return webClient.get()
-      .uri("/activities/$activityId")
+      .uri("/activities/{activityId}", activityId)
       .retrieve()
       .awaitBody()
   }
 
   suspend fun getAllocation(allocationId: Long): Allocation {
     return webClient.get()
-      .uri("/allocations/id/$allocationId")
+      .uri("/allocations/id/{allocationId}", allocationId)
       .retrieve()
       .awaitBody()
   }
 
   suspend fun getAttendanceSync(attendanceId: Long): AttendanceSync {
     return webClient.get()
-      .uri("/synchronisation/attendance/$attendanceId")
+      .uri("/synchronisation/attendance/{attendanceId}", attendanceId)
       .retrieve()
       .awaitBody()
   }
 
   suspend fun getScheduledInstance(scheduledInstanceId: Long): ActivityScheduleInstance {
     return webClient.get()
-      .uri("/scheduled-instances/$scheduledInstanceId")
+      .uri("/scheduled-instances/{scheduledInstanceId}", scheduledInstanceId)
       .retrieve()
       .awaitBody()
   }
 
   suspend fun getAllocationReconciliation(prisonCode: String): AllocationReconciliationResponse {
     return webClient.get()
-      .uri("/synchronisation/reconciliation/allocations/$prisonCode")
+      .uri("/synchronisation/reconciliation/allocations/{prisonCode}", prisonCode)
       .retrieve()
       .awaitBody()
   }

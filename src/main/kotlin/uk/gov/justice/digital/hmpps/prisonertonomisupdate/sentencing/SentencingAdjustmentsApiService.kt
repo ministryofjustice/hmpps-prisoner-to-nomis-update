@@ -13,7 +13,7 @@ class SentencingAdjustmentsApiService(private val sentenceAdjustmentsApiWebClien
 
   suspend fun getAdjustment(adjustmentId: String): AdjustmentDetails {
     return sentenceAdjustmentsApiWebClient.get()
-      .uri("/legacy/adjustments/$adjustmentId")
+      .uri("/legacy/adjustments/{adjustmentId}", adjustmentId)
       .header("Content-Type", LEGACY_CONTENT_TYPE)
       .retrieve()
       .awaitBody()

@@ -23,19 +23,19 @@ class SentencingAdjustmentsMappingService(
 
   suspend fun getMappingGivenAdjustmentIdOrNull(adjustmentId: String): SentencingAdjustmentMappingDto? =
     webClient.get()
-      .uri("/mapping/sentencing/adjustments/adjustment-id/$adjustmentId")
+      .uri("/mapping/sentencing/adjustments/adjustment-id/{adjustmentId}", adjustmentId)
       .retrieve()
       .awaitBodyOrNotFound()
 
   suspend fun getMappingGivenAdjustmentId(adjustmentId: String): SentencingAdjustmentMappingDto =
     webClient.get()
-      .uri("/mapping/sentencing/adjustments/adjustment-id/$adjustmentId")
+      .uri("/mapping/sentencing/adjustments/adjustment-id/{adjustmentId}", adjustmentId)
       .retrieve()
       .awaitBody()
 
   suspend fun deleteMappingGivenAdjustmentId(adjustmentId: String): Unit =
     webClient.delete()
-      .uri("/mapping/sentencing/adjustments/adjustment-id/$adjustmentId")
+      .uri("/mapping/sentencing/adjustments/adjustment-id/{adjustmentId}", adjustmentId)
       .retrieve()
       .awaitBody()
 }

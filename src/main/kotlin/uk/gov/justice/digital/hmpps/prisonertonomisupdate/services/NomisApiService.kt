@@ -62,14 +62,14 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   suspend fun createVisit(request: CreateVisitDto): CreateVisitResponseDto =
     webClient.post()
-      .uri("/prisoners/${request.offenderNo}/visits")
+      .uri("/prisoners/{offenderNo}/visits", request.offenderNo)
       .bodyValue(request)
       .retrieve()
       .awaitBody()
 
   suspend fun cancelVisit(request: CancelVisitDto) {
     webClient.put()
-      .uri("/prisoners/${request.offenderNo}/visits/${request.nomisVisitId}/cancel")
+      .uri("/prisoners/{offenderNo}/visits/{nomisVisitId}/cancel", request.offenderNo, request.nomisVisitId)
       .bodyValue(request)
       .retrieve()
       .bodyToMono(Unit::class.java)
@@ -82,7 +82,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   suspend fun updateVisit(offenderNo: String, nomisVisitId: String, updateVisitDto: UpdateVisitDto) {
     webClient.put()
-      .uri("/prisoners/$offenderNo/visits/$nomisVisitId")
+      .uri("/prisoners/{offenderNo}/visits/{nomisVisitId}", offenderNo, nomisVisitId)
       .bodyValue(updateVisitDto)
       .retrieve()
       .awaitBodilessEntity()
@@ -92,7 +92,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   suspend fun createIncentive(bookingId: Long, request: CreateIncentiveDto): CreateIncentiveResponseDto =
     webClient.post()
-      .uri("/prisoners/booking-id/$bookingId/incentives")
+      .uri("/prisoners/booking-id/{bookingId}/incentives", bookingId)
       .bodyValue(request)
       .retrieve()
       .awaitBody()
@@ -114,14 +114,14 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   suspend fun updateActivity(courseActivityId: Long, request: UpdateActivityRequest): CreateActivityResponse =
     webClient.put()
-      .uri("/activities/$courseActivityId")
+      .uri("/activities/{courseActivityId}", courseActivityId)
       .bodyValue(request)
       .retrieve()
       .awaitBody()
 
   suspend fun deleteActivity(courseActivityId: Long) {
     webClient.delete()
-      .uri("/activities/$courseActivityId")
+      .uri("/activities/{courseActivityId}", courseActivityId)
       .retrieve()
       .awaitBodilessEntity()
   }
@@ -131,7 +131,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     request: CourseScheduleRequest,
   ): UpdateCourseScheduleResponse =
     webClient.put()
-      .uri("/activities/$courseActivityId/schedule")
+      .uri("/activities/{courseActivityId}/schedule", courseActivityId)
       .bodyValue(request)
       .retrieve()
       .awaitBody()
@@ -141,7 +141,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     request: UpsertAllocationRequest,
   ): UpsertAllocationResponse =
     webClient.put()
-      .uri("/activities/$courseActivityId/allocation")
+      .uri("/activities/{courseActivityId}/allocation", courseActivityId)
       .bodyValue(request)
       .retrieve()
       .awaitBody()
@@ -152,14 +152,14 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     request: UpsertAttendanceRequest,
   ): UpsertAttendanceResponse =
     webClient.put()
-      .uri("/schedules/$courseScheduleId/booking/$bookingId/attendance")
+      .uri("/schedules/{courseScheduleId}/booking/{bookingId}/attendance", courseScheduleId, bookingId)
       .bodyValue(request)
       .retrieve()
       .awaitBody()
 
   suspend fun getAllocationReconciliation(prisonId: String): AllocationReconciliationResponse =
     webClient.get()
-      .uri("/allocations/reconciliation/$prisonId")
+      .uri("/allocations/reconciliation/{prisonId}", prisonId)
       .retrieve()
       .awaitBody()
 
@@ -174,26 +174,26 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   suspend fun updateAppointment(nomisEventId: Long, request: UpdateAppointmentRequest) =
     webClient.put()
-      .uri("/appointments/$nomisEventId")
+      .uri("/appointments/{nomisEventId}", nomisEventId)
       .bodyValue(request)
       .retrieve()
       .awaitBodilessEntity()
 
   suspend fun cancelAppointment(nomisEventId: Long) =
     webClient.put()
-      .uri("/appointments/$nomisEventId/cancel")
+      .uri("/appointments/{nomisEventId}/cancel", nomisEventId)
       .retrieve()
       .awaitBodilessEntity()
 
   suspend fun uncancelAppointment(nomisEventId: Long) =
     webClient.put()
-      .uri("/appointments/$nomisEventId/uncancel")
+      .uri("/appointments/{nomisEventId}/uncancel", nomisEventId)
       .retrieve()
       .awaitBodilessEntity()
 
   suspend fun deleteAppointment(nomisEventId: Long) =
     webClient.delete()
-      .uri("/appointments/$nomisEventId")
+      .uri("/appointments/{nomisEventId}", nomisEventId)
       .retrieve()
       .awaitBodilessEntity()
 
@@ -205,7 +205,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     request: CreateSentencingAdjustmentRequest,
   ): CreateSentencingAdjustmentResponse =
     webClient.post()
-      .uri("/prisoners/booking-id/$bookingId/sentences/$sentenceSequence/adjustments")
+      .uri("/prisoners/booking-id/{bookingId}/sentences/{sentenceSequence}/adjustments", bookingId, sentenceSequence)
       .bodyValue(request)
       .retrieve()
       .awaitBody()
@@ -215,7 +215,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     request: UpdateSentencingAdjustmentRequest,
   ): Unit =
     webClient.put()
-      .uri("/sentence-adjustments/$adjustmentId")
+      .uri("/sentence-adjustments/{adjustmentId}", adjustmentId)
       .bodyValue(request)
       .retrieve()
       .awaitBody()
@@ -225,7 +225,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     request: CreateSentencingAdjustmentRequest,
   ): CreateSentencingAdjustmentResponse =
     webClient.post()
-      .uri("/prisoners/booking-id/$bookingId/adjustments")
+      .uri("/prisoners/booking-id/{bookingId}/adjustments", bookingId)
       .bodyValue(request)
       .retrieve()
       .awaitBody()
@@ -235,20 +235,20 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     request: UpdateSentencingAdjustmentRequest,
   ): Unit =
     webClient.put()
-      .uri("/key-date-adjustments/$adjustmentId")
+      .uri("/key-date-adjustments/{adjustmentId}", adjustmentId)
       .bodyValue(request)
       .retrieve()
       .awaitBody()
 
   suspend fun deleteSentenceAdjustment(adjustmentId: Long): Unit =
     webClient.delete()
-      .uri("/sentence-adjustments/$adjustmentId")
+      .uri("/sentence-adjustments/{adjustmentId}", adjustmentId)
       .retrieve()
       .awaitBody()
 
   suspend fun deleteKeyDateAdjustment(adjustmentId: Long): Unit =
     webClient.delete()
-      .uri("/key-date-adjustments/$adjustmentId")
+      .uri("/key-date-adjustments/{adjustmentId}", adjustmentId)
       .retrieve()
       .awaitBody()
 
@@ -256,13 +256,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   suspend fun getGlobalIncentiveLevel(incentiveLevel: String): ReferenceCode? =
     webClient.get()
-      .uri("/incentives/reference-codes/$incentiveLevel")
+      .uri("/incentives/reference-codes/{incentiveLevel}", incentiveLevel)
       .retrieve()
       .awaitBodyOrNotFound()
 
   suspend fun updateGlobalIncentiveLevel(incentiveLevel: ReferenceCode) {
     webClient.put()
-      .uri("/incentives/reference-codes/${incentiveLevel.code}")
+      .uri("/incentives/reference-codes/{code}", incentiveLevel.code)
       .bodyValue(incentiveLevel)
       .retrieve()
       .awaitBodilessEntity()
@@ -300,21 +300,21 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   suspend fun updatePrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest) =
     webClient.put()
-      .uri("/incentives/prison/$prison/code/${prisonIncentive.levelCode}")
+      .uri("/incentives/prison/{prison}/code/{levelCode}", prison, prisonIncentive.levelCode)
       .bodyValue(prisonIncentive)
       .retrieve()
       .awaitBodilessEntity()
 
   suspend fun createPrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest) =
     webClient.post()
-      .uri("/incentives/prison/$prison")
+      .uri("/incentives/prison/{prison}", prison)
       .bodyValue(prisonIncentive)
       .retrieve()
       .awaitBodilessEntity()
 
   suspend fun getPrisonIncentiveLevel(prison: String, code: String): PrisonIncentiveLevel? =
     webClient.get()
-      .uri("/incentives/prison/$prison/code/$code")
+      .uri("/incentives/prison/{prison}/code/{code}", prison, code)
       .retrieve()
       .awaitBodyOrNotFound()
 
@@ -322,7 +322,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   suspend fun createAdjudication(offenderNo: String, request: CreateAdjudicationRequest): AdjudicationResponse =
     webClient.post()
-      .uri("/prisoners/$offenderNo/adjudications")
+      .uri("/prisoners/{offenderNo}/adjudications", offenderNo)
       .bodyValue(request)
       .retrieve()
       .awaitBody()
@@ -332,7 +332,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     request: UpdateRepairsRequest,
   ): UpdateRepairsResponse =
     webClient.put()
-      .uri("/adjudications/adjudication-number/$adjudicationNumber/repairs")
+      .uri("/adjudications/adjudication-number/{adjudicationNumber}/repairs", adjudicationNumber)
       .bodyValue(request)
       .retrieve()
       .awaitBody()
@@ -342,28 +342,28 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     request: UpdateEvidenceRequest,
   ): UpdateEvidenceResponse =
     webClient.put()
-      .uri("/adjudications/adjudication-number/$adjudicationNumber/evidence")
+      .uri("/adjudications/adjudication-number/{adjudicationNumber}/evidence", adjudicationNumber)
       .bodyValue(request)
       .retrieve()
       .awaitBody()
 
   suspend fun createHearing(adjudicationNumber: Long, request: CreateHearingRequest): CreateHearingResponse =
     webClient.post()
-      .uri("/adjudications/adjudication-number/$adjudicationNumber/hearings")
+      .uri("/adjudications/adjudication-number/{adjudicationNumber}/hearings", adjudicationNumber)
       .bodyValue(request)
       .retrieve()
       .awaitBody()
 
   suspend fun updateHearing(adjudicationNumber: Long, hearingId: Long, request: UpdateHearingRequest): Hearing =
     webClient.put()
-      .uri("/adjudications/adjudication-number/$adjudicationNumber/hearings/$hearingId")
+      .uri("/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}", adjudicationNumber, hearingId)
       .bodyValue(request)
       .retrieve()
       .awaitBody()
 
   suspend fun deleteHearing(adjudicationNumber: Long, hearingId: Long) {
     webClient.delete()
-      .uri("/adjudications/adjudication-number/$adjudicationNumber/hearings/$hearingId")
+      .uri("/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}", adjudicationNumber, hearingId)
       .retrieve()
       .awaitBodilessEntity()
   }
@@ -374,14 +374,14 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     chargeSequence: Int,
     request: CreateHearingResultRequest,
   ) = webClient.post()
-    .uri("/adjudications/adjudication-number/$adjudicationNumber/hearings/$hearingId/charge/$chargeSequence/result")
+    .uri("/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}/charge/{chargeSequence}/result", adjudicationNumber, hearingId, chargeSequence)
     .bodyValue(request)
     .retrieve()
     .awaitBodilessEntity()
 
   suspend fun deleteHearingResult(adjudicationNumber: Long, hearingId: Long, chargeSequence: Int) {
     webClient.delete()
-      .uri("/adjudications/adjudication-number/$adjudicationNumber/hearings/$hearingId/charge/$chargeSequence/result")
+      .uri("/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}/charge/{chargeSequence}/result", adjudicationNumber, hearingId, chargeSequence)
       .retrieve()
       .awaitBodilessEntity()
   }
@@ -391,7 +391,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     chargeSequence: Int,
     request: CreateHearingResultAwardRequests,
   ): CreateHearingResultAwardResponses = webClient.post()
-    .uri("/adjudications/adjudication-number/$adjudicationNumber/charge/$chargeSequence/awards")
+    .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/awards", adjudicationNumber, chargeSequence)
     .bodyValue(request)
     .retrieve()
     .awaitBody()

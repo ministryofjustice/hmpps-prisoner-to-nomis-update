@@ -32,13 +32,13 @@ class ActivitiesMappingService(
 
   suspend fun getMappingsOrNull(activityScheduleId: Long): ActivityMappingDto? =
     webClient.get()
-      .uri("/mapping/activities/activity-schedule-id/$activityScheduleId")
+      .uri("/mapping/activities/activity-schedule-id/{activityScheduleId}", activityScheduleId)
       .retrieve()
       .awaitBodyOrNotFound()
 
   suspend fun getMappings(activityScheduleId: Long): ActivityMappingDto =
     webClient.get()
-      .uri("/mapping/activities/activity-schedule-id/$activityScheduleId")
+      .uri("/mapping/activities/activity-schedule-id/{activityScheduleId}", activityScheduleId)
       .retrieve()
       .awaitBody()
 
@@ -50,7 +50,7 @@ class ActivitiesMappingService(
 
   suspend fun deleteMapping(activityScheduleId: Long) {
     webClient.delete()
-      .uri("/mapping/activities/activity-schedule-id/$activityScheduleId")
+      .uri("/mapping/activities/activity-schedule-id/{activityScheduleId}", activityScheduleId)
       .retrieve()
       .awaitBodilessEntity()
   }

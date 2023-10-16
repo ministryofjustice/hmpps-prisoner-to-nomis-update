@@ -10,7 +10,7 @@ class AdjudicationsApiService(private val adjudicationsApiWebClient: WebClient) 
 
   suspend fun getCharge(chargeNumber: String, prisonId: String): ReportedAdjudicationResponse {
     return adjudicationsApiWebClient.get()
-      .uri("/reported-adjudications/$chargeNumber/v2")
+      .uri("/reported-adjudications/{chargeNumber}/v2", chargeNumber)
       .header("Active-Caseload", prisonId)
       .retrieve()
       .awaitBody()
