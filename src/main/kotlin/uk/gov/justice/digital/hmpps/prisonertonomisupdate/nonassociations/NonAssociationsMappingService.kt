@@ -23,20 +23,20 @@ class NonAssociationMappingService(
 
   suspend fun getMappingGivenNonAssociationIdOrNull(id: Long): NonAssociationMappingDto? =
     webClient.get()
-      .uri("/mapping/non-associations/non-association-id/$id")
+      .uri("/mapping/non-associations/non-association-id/{id}", id)
       .retrieve()
       .awaitBodyOrNotFound()
 
   suspend fun getMappingGivenNonAssociationId(id: Long): NonAssociationMappingDto =
     webClient.get()
-      .uri("/mapping/non-associations/non-association-id/$id")
+      .uri("/mapping/non-associations/non-association-id/{id}", id)
       .retrieve()
       .bodyToMono(NonAssociationMappingDto::class.java)
       .awaitSingle()
 
   suspend fun deleteNonAssociation(id: Long) {
     webClient.delete()
-      .uri("/mapping/non-associations/non-association-id/$id")
+      .uri("/mapping/non-associations/non-association-id/{id}", id)
       .retrieve()
       .awaitBodilessEntity()
   }

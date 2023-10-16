@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Appoi
 class AppointmentsApiService(@Qualifier("appointmentsApiWebClient") private val webClient: WebClient) {
   suspend fun getAppointmentInstance(id: Long): AppointmentInstance {
     return webClient.get()
-      .uri("/appointment-instances/$id")
+      .uri("/appointment-instances/{id}", id)
       .retrieve()
       .bodyToMono(AppointmentInstance::class.java)
       .awaitSingle()
