@@ -40,18 +40,20 @@ internal class AdjudicationsServiceTest {
   private val nomisApiService: NomisApiService = mock()
   private val adjudicationsMappingService: AdjudicationsMappingService = mock()
   private val hearingMappingService: HearingsMappingService = mock()
+  private val punishmentMappingService: PunishmentsMappingService = mock()
   private val adjudicationsRetryQueueService: AdjudicationsRetryQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()
   private val objectMapper: ObjectMapper = mock()
 
   private val adjudicationsService = AdjudicationsService(
-    telemetryClient,
-    adjudicationsRetryQueueService,
-    adjudicationsMappingService,
-    hearingMappingService,
-    adjudicationsApiService,
-    nomisApiService,
-    objectMapper,
+    telemetryClient = telemetryClient,
+    adjudicationRetryQueueService = adjudicationsRetryQueueService,
+    adjudicationMappingService = adjudicationsMappingService,
+    hearingMappingService = hearingMappingService,
+    adjudicationsApiService = adjudicationsApiService,
+    punishmentsMappingService = punishmentMappingService,
+    nomisApiService = nomisApiService,
+    objectMapper = objectMapper,
   )
 
   @Test

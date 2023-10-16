@@ -50,6 +50,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     outcomes: String = "[]",
     damages: String = "[]",
     evidence: String = "[]",
+    punishments: String = "[]",
     status: String = "UNSCHEDULED",
   ) {
     stubFor(
@@ -107,7 +108,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             }],
         "disIssueHistory": [],
         "outcomes": $outcomes,
-        "punishments": [],
+        "punishments": $punishments,
         "punishmentComments": [],
         "outcomeEnteredInNomis": false,
         "originatingAgencyId": "MDI"

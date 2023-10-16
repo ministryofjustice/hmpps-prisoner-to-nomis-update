@@ -10,6 +10,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.He
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingOutcomeDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeHistoryDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentDto.Type
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
@@ -17,9 +19,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Re
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationHearingMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationPunishmentBatchMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationPunishmentMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ChargeToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardRequest.SanctionStatus
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardRequest.SanctionType.FORFEIT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardRequests
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.EvidenceToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.EvidenceToUpdateOrAdd
@@ -33,6 +41,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Service
@@ -42,6 +51,7 @@ class AdjudicationsService(
   private val adjudicationMappingService: AdjudicationsMappingService,
   private val hearingMappingService: HearingsMappingService,
   private val adjudicationsApiService: AdjudicationsApiService,
+  private val punishmentsMappingService: PunishmentsMappingService,
   private val nomisApiService: NomisApiService,
   private val objectMapper: ObjectMapper,
 ) : CreateMappingRetryable {
@@ -51,7 +61,7 @@ class AdjudicationsService(
   }
 
   enum class EntityType(val displayName: String) {
-    HEARING("hearing"), ADJUDICATION("adjudication")
+    HEARING("hearing"), ADJUDICATION("adjudication"), PUNISHMENT("punishment")
   }
 
   suspend fun createAdjudication(createEvent: AdjudicationCreatedEvent) {
@@ -108,11 +118,23 @@ class AdjudicationsService(
       }
   }
 
+  suspend fun createPunishmentRetry(message: CreateMappingRetryMessage<AdjudicationPunishmentBatchMappingDto>) {
+    punishmentsMappingService.createMapping(message.mapping)
+      .also {
+        telemetryClient.trackEvent(
+          "punishment-create-mapping-retry-success",
+          message.telemetryAttributes,
+        )
+      }
+  }
+
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (baseMapping.entityName) {
       EntityType.ADJUDICATION.displayName -> createRetry(message.fromJson())
       EntityType.HEARING.displayName -> createHearingRetry(message.fromJson())
+      EntityType.PUNISHMENT.displayName -> createPunishmentRetry(message.fromJson())
+      else -> throw IllegalArgumentException("Unknown entity type: ${baseMapping.entityName}")
     }
   }
 
@@ -313,7 +335,7 @@ class AdjudicationsService(
           }
 
       val hearingMapping =
-        hearingMappingService.getMappingGivenDpsHearingIdOrNull(dpsHearingId = event.hearingId.toString())
+        hearingMappingService.getMappingGivenDpsHearingIdOrNull(dpsHearingId = event.hearingId)
           ?.also { telemetryMap["nomisHearingId"] = it.nomisHearingId.toString() }
           ?: throw IllegalStateException(
             "Hearing mapping for dps hearing id: ${event.hearingId} not found for DPS adjudication with charge no ${event.chargeNumber}",
@@ -364,9 +386,111 @@ class AdjudicationsService(
     }
   }
 
+  suspend fun createPunishments(punishmentEvent: PunishmentEvent) {
+    val chargeNumber = punishmentEvent.additionalInformation.chargeNumber
+    val prisonId: String = punishmentEvent.additionalInformation.prisonId
+    val prisonerNumber: String = punishmentEvent.additionalInformation.prisonerNumber
+    val telemetryMap = mutableMapOf(
+      "chargeNumber" to chargeNumber,
+      "prisonId" to prisonId,
+      "offenderNo" to prisonerNumber,
+    )
+
+    synchronise {
+      name = EntityType.PUNISHMENT.displayName
+      telemetryClient = this@AdjudicationsService.telemetryClient
+      retryQueueService = adjudicationRetryQueueService
+      eventTelemetry = telemetryMap
+
+      transform {
+        val mapping =
+          adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber)
+            .also {
+              telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
+              telemetryMap["chargeSequence"] = it.chargeSequence.toString()
+            }
+
+        val adjudicationNumber = mapping.adjudicationNumber
+        val chargeSequence = mapping.chargeSequence
+
+        val punishments = adjudicationsApiService.getCharge(
+          chargeNumber,
+          prisonId,
+        ).reportedAdjudication.punishments
+
+        val nomisAwardsResponse =
+          nomisApiService.createAdjudicationAwards(adjudicationNumber, chargeSequence, CreateHearingResultAwardRequests(awardRequests = punishments.map { it.toNomisAward() }))
+            .also { telemetryMap["punishmentsCount"] = it.awardResponses.size.toString() }
+
+        AdjudicationPunishmentBatchMappingDto(
+          punishments = punishments.zip(nomisAwardsResponse.awardResponses) { punishment, awardResponse ->
+            AdjudicationPunishmentMappingDto(
+              dpsPunishmentId = punishment.id.toString(),
+              nomisBookingId = awardResponse.bookingId,
+              nomisSanctionSequence = awardResponse.sanctionSequence,
+            )
+          },
+        )
+      }
+      saveMapping { punishmentsMappingService.createMapping(it) }
+    }
+  }
+
   private inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
 }
+
+private fun PunishmentDto.toNomisAward() = CreateHearingResultAwardRequest(
+  sanctionType = this.type.toNomisSanctionType(),
+  sanctionStatus = this.toNomisSanctionStatus(),
+  effectiveDate = this.schedule.startDate ?: this.schedule.suspendedUntil ?: LocalDate.now(),
+  sanctionDays = this.schedule.days,
+  compensationAmount = this.damagesOwedAmount?.toBigDecimal() ?: stoppagePercentage?.toBigDecimal(),
+  commentText = this.toComment(),
+  // TODO consecutive adjudication
+)
+
+private fun PunishmentDto.toComment(): String? =
+  // copy of existing logic from prison-api
+  when (this.type) {
+    Type.PRIVILEGE ->
+      when (this.privilegeType) {
+        PunishmentDto.PrivilegeType.OTHER -> "Loss of ${this.otherPrivilege}"
+        else -> "Loss of ${this.privilegeType}"
+      }
+
+    Type.DAMAGES_OWED -> "OTHER - Damages owed £${String.format("%.2f", this.damagesOwedAmount!!)}"
+    else -> null
+  }
+
+private fun PunishmentDto.toNomisSanctionStatus(): SanctionStatus {
+  // copy of existing logic from prison-api
+  val prospectiveDays = type == Type.PROSPECTIVE_DAYS
+
+  return when (this.schedule.startDate) {
+    null -> when (this.schedule.suspendedUntil) {
+      null -> if (prospectiveDays) SanctionStatus.PROSPECTIVE else SanctionStatus.IMMEDIATE
+      else -> if (prospectiveDays) SanctionStatus.SUSP_PROSP else SanctionStatus.SUSPENDED
+    }
+
+    else -> SanctionStatus.IMMEDIATE
+  }
+}
+
+private fun Type.toNomisSanctionType(): CreateHearingResultAwardRequest.SanctionType =
+  when (this) {
+    Type.PRIVILEGE -> FORFEIT
+    Type.EARNINGS -> CreateHearingResultAwardRequest.SanctionType.STOP_PCT
+    Type.CONFINEMENT -> CreateHearingResultAwardRequest.SanctionType.CC
+    Type.REMOVAL_ACTIVITY -> CreateHearingResultAwardRequest.SanctionType.REMACT
+    Type.EXCLUSION_WORK -> CreateHearingResultAwardRequest.SanctionType.EXTRA_WORK // yes, this mapping is correct
+    Type.EXTRA_WORK -> CreateHearingResultAwardRequest.SanctionType.EXTW
+    Type.REMOVAL_WING -> CreateHearingResultAwardRequest.SanctionType.REMWIN
+    Type.ADDITIONAL_DAYS -> CreateHearingResultAwardRequest.SanctionType.ADA
+    Type.PROSPECTIVE_DAYS -> CreateHearingResultAwardRequest.SanctionType.ADA
+    Type.CAUTION -> CreateHearingResultAwardRequest.SanctionType.CAUTION
+    Type.DAMAGES_OWED -> CreateHearingResultAwardRequest.SanctionType.OTHER
+  }
 
 private fun HearingDto.toNomisUpdateHearing(): UpdateHearingRequest = UpdateHearingRequest(
   hearingType = this.oicHearingType.name,
@@ -570,3 +694,13 @@ data class HearingEvent(
 )
 
 class InvalidFindingCodeException(message: String) : IllegalStateException(message)
+
+data class PunishmentsAdditionalInformation(
+  val chargeNumber: String,
+  val prisonId: String,
+  val prisonerNumber: String,
+)
+
+data class PunishmentEvent(
+  val additionalInformation: PunishmentsAdditionalInformation,
+)
