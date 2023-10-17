@@ -239,7 +239,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "outcome": {
                     "outcome": {
                         "id": 1319,
-                        "code": "REFER_POLICE",
+                        "code": "$outcomeCode",
                         "details": "yuiuy"
                     },
                     "referralOutcome": {

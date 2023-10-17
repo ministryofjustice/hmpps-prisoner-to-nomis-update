@@ -11,6 +11,7 @@ import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
@@ -185,6 +186,47 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
         )
       }
       assertThat(awsSqsActivityDlqClient.countMessagesOnQueue(activityDlqUrl).get()).isEqualTo(0)
+    }
+
+    @Test
+    fun `will reject the event where an attendance is paid after the schedule date`() {
+      ActivitiesApiExtension.activitiesApi.stubGetAttendanceSync(
+        ATTENDANCE_ID,
+        buildGetAttendanceSyncResponse(LocalDate.now().minusDays(1)),
+      )
+      MappingExtension.mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      NomisApiExtension.nomisApi.stubUpsertAttendanceWithError(
+        courseScheduleId = NOMIS_CRS_SCH_ID,
+        bookingId = NOMIS_BOOKING_ID,
+        status = 400,
+        body = """
+          {
+            "status": 400,
+            "errorCode": 1001,
+            "userMessage": "Bad request: Attendance 1234 cannot be changed after it has already been paid"
+          }
+        """.trimIndent(),
+      )
+
+      awsSnsClient.publish(
+        PublishRequest.builder().topicArn(topicArn)
+          .message(attendanceMessagePayload("activities.prisoner.attendance-amended", ATTENDANCE_ID))
+          .messageAttributes(
+            mapOf(
+              "eventType" to MessageAttributeValue.builder().dataType("String")
+                .stringValue("activities.prisoner.attendance-amended").build(),
+            ),
+          ).build(),
+      ).get()
+
+      await untilCallTo { ActivitiesApiExtension.activitiesApi.getCountFor("/synchronisation/attendance/$ATTENDANCE_ID") } matches { it == 1 }
+      await untilCallTo { NomisApiExtension.nomisApi.putCountFor("/schedules/$NOMIS_CRS_SCH_ID/booking/$NOMIS_BOOKING_ID/attendance") } matches { it == 1 }
+
+      // We now have a DLQ message and telemetry is raised
+      await untilAsserted {
+        verify(telemetryClient).trackEvent(eq("activity-attendance-update-failed"), any<Map<String, String>>(), isNull())
+      }
+      assertThat(awsSqsActivityDlqClient.countMessagesOnQueue(activityDlqUrl).get()).isEqualTo(1)
     }
   }
 }
