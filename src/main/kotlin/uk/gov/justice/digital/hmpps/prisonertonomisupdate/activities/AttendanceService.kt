@@ -4,6 +4,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.AttendancePaidException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.math.BigDecimal
@@ -26,9 +27,10 @@ class AttendanceService(
   suspend fun upsertAttendance(attendanceId: Long, createRequest: Boolean = false) {
     val telemetryMap = mutableMapOf("dpsAttendanceId" to attendanceId.toString())
     val upsertType = if (createRequest) "create" else "update"
+    lateinit var attendanceSync: AttendanceSync
 
     runCatching {
-      val attendanceSync = activitiesApiService.getAttendanceSync(attendanceId)
+      attendanceSync = activitiesApiService.getAttendanceSync(attendanceId)
         .also { telemetryMap.putAll(it.toTelemetry()) }
 
       val mappings = mappingService.getMappings(attendanceSync.activityScheduleId)
@@ -50,8 +52,14 @@ class AttendanceService(
     }.onSuccess {
       telemetryClient.trackEvent("activity-attendance-$upsertType-success", telemetryMap, null)
     }.onFailure { e ->
-      telemetryClient.trackEvent("activity-attendance-$upsertType-failed", telemetryMap, null)
-      throw e
+      // Do not error if the prisoner was paid today - bespoke processes such as Discharge Balance Calculation that pay before the overnight payroll can be ignored
+      if (e is AttendancePaidException && attendanceSync.sessionDate == LocalDate.now()) {
+        telemetryMap["reason"] = "Attendance update ignored as already paid session on ${attendanceSync.sessionDate} at ${attendanceSync.sessionStartTime}"
+        telemetryClient.trackEvent("activity-attendance-$upsertType-ignored", telemetryMap, null)
+      } else {
+        telemetryClient.trackEvent("activity-attendance-$upsertType-failed", telemetryMap, null)
+        throw e
+      }
     }
   }
 

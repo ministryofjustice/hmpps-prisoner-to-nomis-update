@@ -2,14 +2,19 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
-import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.check
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
+import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.attendanceMessagePayload
@@ -131,8 +136,55 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
       await untilCallTo { awsSqsActivityDlqClient.countMessagesOnQueue(activityDlqUrl).get() } matches { it == 1 }
       NomisApiExtension.nomisApi.verify(
         0,
-        postRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/booking/$NOMIS_BOOKING_ID/attendance")),
+        putRequestedFor(urlEqualTo("/schedules/$NOMIS_CRS_SCH_ID/booking/$NOMIS_BOOKING_ID/attendance")),
       )
+    }
+
+    @Test
+    fun `will ignore a bad request where the attendance is paid on the same day as the schedule`() {
+      ActivitiesApiExtension.activitiesApi.stubGetAttendanceSync(
+        ATTENDANCE_ID,
+        buildGetAttendanceSyncResponse(LocalDate.now()),
+      )
+      MappingExtension.mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      NomisApiExtension.nomisApi.stubUpsertAttendanceWithError(
+        courseScheduleId = NOMIS_CRS_SCH_ID,
+        bookingId = NOMIS_BOOKING_ID,
+        status = 400,
+        body = """
+          {
+            "status": 400,
+            "errorCode": 1001,
+            "userMessage": "Bad request: Attendance 1234 cannot be changed after it has already been paid"
+          }
+        """.trimIndent(),
+      )
+
+      awsSnsClient.publish(
+        PublishRequest.builder().topicArn(topicArn)
+          .message(attendanceMessagePayload("activities.prisoner.attendance-amended", ATTENDANCE_ID))
+          .messageAttributes(
+            mapOf(
+              "eventType" to MessageAttributeValue.builder().dataType("String")
+                .stringValue("activities.prisoner.attendance-amended").build(),
+            ),
+          ).build(),
+      ).get()
+
+      await untilCallTo { ActivitiesApiExtension.activitiesApi.getCountFor("/synchronisation/attendance/$ATTENDANCE_ID") } matches { it == 1 }
+      await untilCallTo { NomisApiExtension.nomisApi.putCountFor("/schedules/$NOMIS_CRS_SCH_ID/booking/$NOMIS_BOOKING_ID/attendance") } matches { it == 1 }
+
+      // No DLQ message but telemetry is raised
+      await untilAsserted {
+        verify(telemetryClient).trackEvent(
+          eq("activity-attendance-update-ignored"),
+          check<Map<String, String>> {
+            assertThat(it["reason"]).isEqualTo("Attendance update ignored as already paid session on ${LocalDate.now()} at 10:00")
+          },
+          isNull(),
+        )
+      }
+      assertThat(awsSqsActivityDlqClient.countMessagesOnQueue(activityDlqUrl).get()).isEqualTo(0)
     }
   }
 }
