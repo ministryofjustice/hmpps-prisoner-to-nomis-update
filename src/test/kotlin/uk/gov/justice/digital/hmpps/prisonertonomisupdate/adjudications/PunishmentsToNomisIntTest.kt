@@ -220,6 +220,156 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           )
         }
       }
+
+      @Nested
+      inner class CommentForAward {
+        @BeforeEach
+        fun setUp() {
+          adjudicationsApiServer.stubChargeGet(
+            CHARGE_NUMBER_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            punishments =
+            // language=json
+            """
+          [
+            {
+                "id": 1,
+                "type": "PRIVILEGE",
+                "privilegeType": "ASSOCIATION",
+                "schedule": {
+                    "days": 3,
+                    "startDate": "2023-10-04",
+                    "endDate": "2023-10-06"
+                }
+            },
+            {
+                "id": 2,
+                "type": "PRIVILEGE",
+                "privilegeType": "OTHER",
+                "otherPrivilege": "Daily walk",
+                "schedule": {
+                    "days": 3,
+                    "startDate": "2023-10-04",
+                    "endDate": "2023-10-06"
+                }
+            },
+            {
+                "id": 3,
+                "type": "CONFINEMENT",
+                "schedule": {
+                    "days": 3,
+                    "startDate": "2023-10-04",
+                    "endDate": "2023-10-06"
+                }
+            },
+            {
+                "id": 4,
+                "type": "DAMAGES_OWED",
+                "damagesOwedAmount": 45.1,
+                "schedule": {
+                    "days": 3,
+                    "startDate": "2023-10-04",
+                    "endDate": "2023-10-06"
+                }
+            }
+          ]
+            """.trimIndent(),
+          )
+        }
+
+        @Test
+        fun `comment will represent the punishment`() {
+          waitForCreatePunishmentProcessingToBeComplete()
+
+          nomisApi.verify(
+            postRequestedFor(anyUrl())
+              .withRequestBody(matchingJsonPath("awardRequests[0].commentText", equalTo("Added by DPS: Loss of ASSOCIATION")))
+              .withRequestBody(matchingJsonPath("awardRequests[1].commentText", equalTo("Added by DPS: Loss of Daily walk")))
+              .withRequestBody(matchingJsonPath("awardRequests[2].commentText", equalTo("Added by DPS")))
+              .withRequestBody(matchingJsonPath("awardRequests[3].commentText", equalTo("Added by DPS: OTHER - Damages owed £45.10"))),
+
+          )
+        }
+      }
+
+      @Nested
+      inner class StatusForAward {
+        @BeforeEach
+        fun setUp() {
+          adjudicationsApiServer.stubChargeGet(
+            CHARGE_NUMBER_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            punishments =
+            // language=json
+            """
+          [
+            {
+                "id": 1,
+                "type": "PROSPECTIVE_DAYS",
+                "schedule": {
+                    "days": 3,
+                    "suspendedUntil": "2023-10-06"
+                }
+            },
+            {
+                "id": 2,
+                "type": "PROSPECTIVE_DAYS",
+                "schedule": {
+                    "days": 3
+                }
+            },
+            {
+                "id": 3,
+                "type": "PROSPECTIVE_DAYS",
+                "schedule": {
+                    "days": 3,
+                    "startDate": "2023-10-06"
+                }
+            },
+            {
+                "id": 4,
+                "type": "ADDITIONAL_DAYS",
+                "schedule": {
+                    "days": 3,
+                    "suspendedUntil": "2023-10-06"
+                }
+            },
+            {
+                "id": 5,
+                "type": "ADDITIONAL_DAYS",
+                "schedule": {
+                    "days": 3
+                }
+            },
+            {
+                "id": 6,
+                "type": "ADDITIONAL_DAYS",
+                "schedule": {
+                    "days": 3,
+                    "startDate": "2023-10-06"
+                }
+            }
+          ]
+            """.trimIndent(),
+          )
+        }
+
+        @Test
+        fun `for additional days the status is determined for the DPS type along with the schedule`() {
+          waitForCreatePunishmentProcessingToBeComplete()
+
+          nomisApi.verify(
+            postRequestedFor(anyUrl())
+              .withRequestBody(matchingJsonPath("awardRequests[0].sanctionStatus", equalTo("SUSP_PROSP")))
+              .withRequestBody(matchingJsonPath("awardRequests[1].sanctionStatus", equalTo("PROSPECTIVE")))
+              .withRequestBody(matchingJsonPath("awardRequests[2].sanctionStatus", equalTo("IMMEDIATE")))
+              .withRequestBody(matchingJsonPath("awardRequests[3].sanctionStatus", equalTo("SUSPENDED")))
+              .withRequestBody(matchingJsonPath("awardRequests[4].sanctionStatus", equalTo("IMMEDIATE")))
+              .withRequestBody(matchingJsonPath("awardRequests[5].sanctionStatus", equalTo("IMMEDIATE"))),
+
+          )
+        }
+      }
     }
 
     @Nested
