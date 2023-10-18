@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Ad
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationPunishmentBatchMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationPunishmentMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationChargeId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ChargeToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingRequest
@@ -438,17 +439,19 @@ class AdjudicationsService(
 
   private inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
-}
 
-private fun PunishmentDto.toNomisAward() = CreateHearingResultAwardRequest(
-  sanctionType = this.type.toNomisSanctionType(),
-  sanctionStatus = this.toNomisSanctionStatus(),
-  effectiveDate = this.schedule.startDate ?: this.schedule.suspendedUntil ?: LocalDate.now(),
-  sanctionDays = this.schedule.days,
-  compensationAmount = this.damagesOwedAmount?.toBigDecimal() ?: stoppagePercentage?.toBigDecimal(),
-  commentText = this.toComment(),
-  // TODO consecutive adjudication
-)
+  private suspend fun PunishmentDto.toNomisAward() = CreateHearingResultAwardRequest(
+    sanctionType = this.type.toNomisSanctionType(),
+    sanctionStatus = this.toNomisSanctionStatus(),
+    effectiveDate = this.schedule.startDate ?: this.schedule.suspendedUntil ?: LocalDate.now(),
+    sanctionDays = this.schedule.days,
+    compensationAmount = this.damagesOwedAmount?.toBigDecimal() ?: stoppagePercentage?.toBigDecimal(),
+    commentText = this.toComment(),
+    consecutiveCharge = this.consecutiveChargeNumber?.let { chargeNumber ->
+      adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber).let { AdjudicationChargeId(it.adjudicationNumber, it.chargeSequence) }
+    },
+  )
+}
 
 private fun PunishmentDto.toComment(): String? =
   // copy of existing logic from prison-api

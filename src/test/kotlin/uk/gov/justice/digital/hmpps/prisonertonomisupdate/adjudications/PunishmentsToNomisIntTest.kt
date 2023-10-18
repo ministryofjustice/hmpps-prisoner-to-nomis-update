@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -26,10 +27,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.Adjudications
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 private const val CHARGE_NUMBER_FOR_CREATION = "12345-1"
 private const val CHARGE_SEQ = 1
 private const val ADJUDICATION_NUMBER = 12345L
+private const val CONSECUTIVE_CHARGE_NUMBER = "987654-2"
+private const val CONSECUTIVE_CHARGE_SEQ = 2
+private const val CONSECUTIVE_ADJUDICATION_NUMBER = 12345L
 private const val PRISON_ID = "MDI"
 private const val OFFENDER_NO = "A1234AA"
 
@@ -137,6 +143,80 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBody(matchingJsonPath("punishments[1].nomisBookingId", equalTo("12345")))
               .withRequestBody(matchingJsonPath("punishments[1].nomisSanctionSequence", equalTo("11")))
               .withRequestBody(matchingJsonPath("punishments[1].dpsPunishmentId", equalTo("667"))),
+          )
+        }
+      }
+
+      @Nested
+      inner class ConsecutivePunishments {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByChargeNumber(
+            chargeNumber = CHARGE_NUMBER_FOR_CREATION,
+            adjudicationNumber = ADJUDICATION_NUMBER,
+          )
+          mappingServer.stubGetByChargeNumber(
+            chargeNumber = CONSECUTIVE_CHARGE_NUMBER,
+            adjudicationNumber = CONSECUTIVE_ADJUDICATION_NUMBER,
+            chargeSequence = CONSECUTIVE_CHARGE_SEQ,
+          )
+          adjudicationsApiServer.stubChargeGet(
+            CHARGE_NUMBER_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            punishments =
+            // language=json
+            """
+          [
+            {
+                "id": 634,
+                "type": "CONFINEMENT",
+                "schedule": {
+                    "days": 3,
+                    "startDate": "2023-10-04",
+                    "endDate": "2023-10-06"
+                }
+            },
+            {
+                "id": 689,
+                "type": "ADDITIONAL_DAYS",
+                "schedule": {
+                    "days": 2
+                },
+                "consecutiveChargeNumber": "$CONSECUTIVE_CHARGE_NUMBER",
+                "consecutiveReportAvailable": true
+            }        
+          ]
+            """.trimIndent(),
+          )
+        }
+
+        @Test
+        fun `will find mapping for both charges`() {
+          waitForCreatePunishmentProcessingToBeComplete()
+          mappingServer.verify(
+            getRequestedFor(urlEqualTo("/mapping/adjudications/charge-number/$CHARGE_NUMBER_FOR_CREATION")),
+          )
+          mappingServer.verify(
+            getRequestedFor(urlEqualTo("/mapping/adjudications/charge-number/$CONSECUTIVE_CHARGE_NUMBER")),
+          )
+        }
+
+        @Test
+        fun `will map DPS punishments to NOMIS awards`() {
+          waitForCreatePunishmentProcessingToBeComplete()
+
+          nomisApi.verify(
+            postRequestedFor(anyUrl())
+              .withRequestBody(matchingJsonPath("awardRequests[0].sanctionType", equalTo("CC")))
+              .withRequestBody(matchingJsonPath("awardRequests[0].sanctionStatus", equalTo("IMMEDIATE")))
+              .withRequestBody(matchingJsonPath("awardRequests[0].effectiveDate", equalTo("2023-10-04")))
+              .withRequestBody(matchingJsonPath("awardRequests[0].sanctionDays", equalTo("3")))
+              .withRequestBody(matchingJsonPath("awardRequests[1].sanctionType", equalTo("ADA")))
+              .withRequestBody(matchingJsonPath("awardRequests[1].sanctionStatus", equalTo("IMMEDIATE")))
+              .withRequestBody(matchingJsonPath("awardRequests[1].effectiveDate", equalTo(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE))))
+              .withRequestBody(matchingJsonPath("awardRequests[1].sanctionDays", equalTo("2")))
+              .withRequestBody(matchingJsonPath("awardRequests[1].consecutiveCharge.adjudicationNumber", equalTo("$CONSECUTIVE_ADJUDICATION_NUMBER")))
+              .withRequestBody(matchingJsonPath("awardRequests[1].consecutiveCharge.chargeSequence", equalTo("$CONSECUTIVE_CHARGE_SEQ"))),
           )
         }
       }
