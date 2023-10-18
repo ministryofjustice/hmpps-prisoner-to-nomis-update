@@ -453,17 +453,17 @@ class AdjudicationsService(
   )
 }
 
-private fun PunishmentDto.toComment(): String? =
+private fun PunishmentDto.toComment(): String =
   // copy of existing logic from prison-api
   when (this.type) {
     Type.PRIVILEGE ->
       when (this.privilegeType) {
-        PunishmentDto.PrivilegeType.OTHER -> "Loss of ${this.otherPrivilege}"
-        else -> "Loss of ${this.privilegeType}"
+        PunishmentDto.PrivilegeType.OTHER -> "Added by DPS: Loss of ${this.otherPrivilege}"
+        else -> "Added by DPS: Loss of ${this.privilegeType}"
       }
 
-    Type.DAMAGES_OWED -> "OTHER - Damages owed £${String.format("%.2f", this.damagesOwedAmount!!)}"
-    else -> null
+    Type.DAMAGES_OWED -> "Added by DPS: OTHER - Damages owed £${String.format("%.2f", this.damagesOwedAmount!!)}"
+    else -> "Added by DPS"
   }
 
 private fun PunishmentDto.toNomisSanctionStatus(): SanctionStatus {
