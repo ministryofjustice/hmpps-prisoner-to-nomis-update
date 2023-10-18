@@ -299,6 +299,30 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetServicePrisons(serviceCode: String, response: String) {
+    stubFor(
+      get("/service-prisons/$serviceCode")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-type", "application/json")
+            .withBody(response)
+            .withStatus(200),
+        ),
+    )
+  }
+
+  fun stubGetServicePrisonsWithError(serviceCode: String, status: Int = 500) {
+    stubFor(
+      get("/service-prisons/$serviceCode")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-type", "application/json")
+            .withBody(ERROR_RESPONSE)
+            .withStatus(status),
+        ),
+    )
+  }
+
   // *************************************************** Appointments **********************************************
 
   fun stubAppointmentCreate(response: String) {

@@ -554,6 +554,57 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
+  inner class GetServicePrisons {
+
+    private fun jsonResponse() = """
+      [
+        {
+          "prisonId": "BXI",
+          "name": "Brixton"
+        },
+        {
+          "prisonId": "MDI",
+          "name": "Moorland"
+        }
+      ]
+    """.trimIndent()
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stubGetServicePrisons("ACTIVITY", jsonResponse())
+
+      nomisApiService.getServicePrisons("ACTIVITY")
+
+      nomisApi.verify(
+        getRequestedFor(urlEqualTo("/service-prisons/ACTIVITY"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should parse response`() = runTest {
+      nomisApi.stubGetServicePrisons("ACTIVITY", jsonResponse())
+
+      val response = nomisApiService.getServicePrisons("ACTIVITY")
+
+      assertThat(response.size).isEqualTo(2)
+      assertThat(response[0].prisonId).isEqualTo("BXI")
+      assertThat(response[0].name).isEqualTo("Brixton")
+      assertThat(response[1].prisonId).isEqualTo("MDI")
+      assertThat(response[1].name).isEqualTo("Moorland")
+    }
+
+    @Test
+    fun `should throw exception on error`() = runTest {
+      nomisApi.stubGetServicePrisonsWithError("ACTIVITY", 400)
+
+      assertThrows<BadRequest> {
+        nomisApiService.getServicePrisons("ACTIVITY")
+      }
+    }
+  }
+
+  @Nested
   inner class CreateAppointment {
 
     @Test
