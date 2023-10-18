@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Hearing
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateEvidenceRequest
@@ -161,6 +162,12 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
   suspend fun getAllocationReconciliation(prisonId: String): AllocationReconciliationResponse =
     webClient.get()
       .uri("/allocations/reconciliation/{prisonId}", prisonId)
+      .retrieve()
+      .awaitBody()
+
+  suspend fun getServicePrisons(serviceCode: String): List<PrisonDetails> =
+    webClient.get()
+      .uri("/service-prisons/{serviceCode}", serviceCode)
       .retrieve()
       .awaitBody()
 
