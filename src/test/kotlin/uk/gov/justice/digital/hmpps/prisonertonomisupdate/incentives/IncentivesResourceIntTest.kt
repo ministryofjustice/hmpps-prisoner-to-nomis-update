@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
-import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
@@ -19,14 +18,11 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
-import org.springframework.boot.test.mock.mockito.MockBean
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
 class IncentivesResourceIntTest : IntegrationTestBase() {
-  @MockBean
-  lateinit var telemetryClient: TelemetryClient
 
   @Captor
   lateinit var telemetryCaptor: ArgumentCaptor<Map<String, String>>

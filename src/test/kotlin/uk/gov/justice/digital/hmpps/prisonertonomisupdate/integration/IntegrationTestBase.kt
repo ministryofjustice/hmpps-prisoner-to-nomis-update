@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration
 
+import com.microsoft.applicationinsights.TelemetryClient
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.HttpHeaders
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -36,6 +38,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExte
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
 abstract class IntegrationTestBase {
+
+  @SpyBean
+  lateinit var telemetryClient: TelemetryClient
 
   @Autowired
   lateinit var webTestClient: WebTestClient
