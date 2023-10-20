@@ -23,6 +23,7 @@ class ActivitiesResource(
   private val activitiesService: ActivitiesService,
   private val allocationService: AllocationService,
   private val attendanceService: AttendanceService,
+  private val activitiesReconService: ActivitiesReconService,
   private val eventFeatureSwitch: EventFeatureSwitch,
   private val telemetryClient: TelemetryClient,
 ) {
@@ -118,7 +119,7 @@ class ActivitiesResource(
   @PutMapping("/attendances/{attendanceId}")
   @Operation(
     summary = "Synchronises a DPS Attendance",
-    description = "A manual method for synchronising a DPS Attenance to Nomis (whether new or not - performs an upsert). Performs in the same way as the automated message based solution - intended for use as a workaround when things go wrong. Requires role <b>NOMIS_ACTIVITIES</b>",
+    description = "A manual method for synchronising a DPS Attendance to Nomis (whether new or not - performs an upsert). Performs in the same way as the automated message based solution - intended for use as a workaround when things go wrong. Requires role <b>NOMIS_ACTIVITIES</b>",
     responses = [
       ApiResponse(
         responseCode = "200",
@@ -142,6 +143,10 @@ class ActivitiesResource(
     telemetryClient.trackEvent("activity-attendance-requested", mapOf("dpsAttendanceId" to attendanceId.toString()))
     attendanceService.upsertAttendance(attendanceId)
   }
+
+  @PostMapping("/allocations/reports/reconciliation")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  suspend fun allocationsReconciliation() = activitiesReconService.allocationReconciliationReport()
 
   /**
    * For dev environment only - delete all activities and courses, for when activities environment is reset

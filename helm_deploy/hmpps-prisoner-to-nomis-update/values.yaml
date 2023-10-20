@@ -28,6 +28,10 @@ generic-service:
         location /non-associations/reports/reconciliation {
           deny all;
           return 401;
+        }        
+        location /allocations/reports/reconciliation {
+          deny all;
+          return 401;
         }
     host: app-hostname.local    # override per environment
     tlsSecretName: prisoner-to-nomis-cert

@@ -1,10 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration
 
-import com.microsoft.applicationinsights.TelemetryClient
 import org.junit.jupiter.api.BeforeEach
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.mock.mockito.SpyBean
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import uk.gov.justice.hmpps.sqs.HmppsQueue
@@ -12,8 +10,6 @@ import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
 
 abstract class SqsIntegrationTestBase : IntegrationTestBase() {
-  @SpyBean
-  lateinit var telemetryClient: TelemetryClient
 
   @Autowired
   private lateinit var hmppsQueueService: HmppsQueueService

@@ -25,6 +25,7 @@ class ResourceServerConfiguration {
           "/queue-admin/retry-all-dlqs",
           "/incentives/reports/reconciliation",
           "/non-associations/reports/reconciliation",
+          "/allocations/reports/reconciliation",
         ).forEach { authorize(it, permitAll) }
         authorize(anyExchange, authenticated)
       }
