@@ -41,19 +41,29 @@ class AdjudicationsDomainEventListener(
       "adjudication.hearing.created" -> adjudicationsService.createHearing(message.fromJson())
       "adjudication.hearing.updated" -> adjudicationsService.updateHearing(message.fromJson())
       "adjudication.hearing.deleted" -> adjudicationsService.deleteHearing(message.fromJson())
-      "adjudication.hearingCompleted.created", "adjudication.hearingAdjourn.created", "adjudication.hearingReferral.created" -> adjudicationsService.createHearingCompleted(
+      "adjudication.hearingCompleted.created",
+      "adjudication.hearingAdjourn.created",
+      "adjudication.hearingReferral.created",
+      -> adjudicationsService.createHearingCompleted(message.fromJson())
+
+      "adjudication.hearingCompleted.deleted",
+      "adjudication.hearingAdjourn.deleted",
+      "adjudication.hearingReferral.deleted",
+      "adjudication.referral.outcome.deleted",
+      -> adjudicationsService.deleteHearingCompleted(message.fromJson())
+
+      "adjudication.outcome.referPolice",
+      "adjudication.outcome.notProceed",
+      -> adjudicationsService.createReferral(
         message.fromJson(),
       )
 
-      "adjudication.hearingCompleted.deleted", "adjudication.hearingAdjourn.deleted", "adjudication.hearingReferral.deleted", "adjudication.referral.outcome.deleted" -> adjudicationsService.deleteHearingCompleted(
-        message.fromJson(),
-      )
+      "adjudication.referral.outcome.prosecution",
+      "adjudication.referral.outcome.notProceed",
+      "adjudication.referral.outcome.referGov",
+      -> adjudicationsService.createOutcome(message.fromJson(), referralOutcome = true)
 
       "adjudication.punishments.created" -> adjudicationsService.createPunishments(message.fromJson())
-      "adjudication.referral.outcome.prosecution", "adjudication.referral.outcome.notProceed", "adjudication.referral.outcome.referGov" -> adjudicationsService.createHearingCompleted(
-        message.fromJson(),
-        referralOutcome = true,
-      )
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }

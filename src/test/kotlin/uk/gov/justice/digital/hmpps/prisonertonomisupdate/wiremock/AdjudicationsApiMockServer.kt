@@ -279,6 +279,41 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
   }
 
+  fun stubChargeGetWithPoliceReferral(chargeNumber: String, offenderNo: String = "A7937DY") {
+    val outcomes = """
+     [
+         {
+             "outcome": {
+                 "outcome": {
+                     "id": 1411,
+                     "code": "REFER_POLICE",
+                     "details": "eewr"
+                 }
+             }
+         }
+     ]
+    """.trimIndent()
+    stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
+  }
+
+  fun stubChargeGetWithNotProceedReferral(chargeNumber: String, offenderNo: String = "A7937DY") {
+    val outcomes = """
+     [
+           {
+               "outcome": {
+                   "outcome": {
+                       "id": 1412,
+                       "code": "NOT_PROCEED",
+                       "details": "dssds",
+                       "reason": "EXPIRED_NOTICE"
+                   }
+               }
+           }
+       ]
+    """.trimIndent()
+    stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
+  }
+
   fun stubChargeGetWithError(chargeNumber: String, status: Int) {
     stubFor(
       get("/reported-adjudications/$chargeNumber/v2").willReturn(
