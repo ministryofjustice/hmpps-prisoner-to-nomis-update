@@ -28,6 +28,10 @@ generic-service:
         location /non-associations/reports/reconciliation {
           deny all;
           return 401;
+        }        
+        location /allocations/reports/reconciliation {
+          deny all;
+          return 401;
         }
     host: app-hostname.local    # override per environment
     tlsSecretName: prisoner-to-nomis-cert
@@ -86,6 +90,8 @@ generic-service:
     FEATURE_EVENT_ADJUDICATION_REFERRAL_OUTCOME_PROSECUTION: false
     FEATURE_EVENT_ADJUDICATION_REFERRAL_OUTCOME_REFERGOV: false
     FEATURE_EVENT_ADJUDICATION_REFERRAL_OUTCOME_DELETED: false
+    FEATURE_EVENT_ADJUDICATION_OUTCOME_NOTPROCEED: false
+    FEATURE_EVENT_ADJUDICATION_OUTCOME_REFERPOLICE: false
     HMPPS_SQS_USE_WEB_TOKEN: true
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.

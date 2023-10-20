@@ -404,6 +404,16 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     .retrieve()
     .awaitBody()
 
+  suspend fun createReferral(
+    adjudicationNumber: Long,
+    chargeSequence: Int,
+    request: CreateHearingResultRequest,
+  ) = webClient.post()
+    .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/result", adjudicationNumber, chargeSequence)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
+
   // ////////// NON-ASSOCIATIONS //////////////
 
   suspend fun createNonAssociation(request: CreateNonAssociationRequest): CreateNonAssociationResponse =

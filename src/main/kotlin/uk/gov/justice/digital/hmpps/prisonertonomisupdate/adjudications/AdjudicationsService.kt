@@ -313,6 +313,16 @@ class AdjudicationsService(
     }
   }
 
+  suspend fun createOutcome(createEvent: OutcomeEvent, referralOutcome: Boolean = false) {
+    createEvent.additionalInformation.hearingId?.let {
+      createHearingCompleted(
+        createEvent.toHearingEvent(),
+        referralOutcome = referralOutcome,
+      )
+    }
+      ?: let { createReferral(createEvent.toReferralEvent()) }
+  }
+
   suspend fun createHearingCompleted(createEvent: HearingEvent, referralOutcome: Boolean = false) {
     val event = createEvent.additionalInformation
     val telemetryMap = event.toTelemetryMap()
@@ -342,7 +352,8 @@ class AdjudicationsService(
             "Hearing mapping for dps hearing id: ${event.hearingId} not found for DPS adjudication with charge no ${event.chargeNumber}",
           )
 
-      val nomisRequest = if (referralOutcome) outcome.toNomisCreateHearingResultForReferralOutcome() else outcome.toNomisCreateHearingResult()
+      val nomisRequest =
+        if (referralOutcome) outcome.toNomisCreateHearingResultForReferralOutcome() else outcome.toNomisCreateHearingResult()
       nomisApiService.createHearingResult(
         adjudicationNumber = adjudicationMapping.adjudicationNumber,
         hearingId = hearingMapping.nomisHearingId,
@@ -420,7 +431,11 @@ class AdjudicationsService(
         ).reportedAdjudication.punishments
 
         val nomisAwardsResponse =
-          nomisApiService.createAdjudicationAwards(adjudicationNumber, chargeSequence, CreateHearingResultAwardRequests(awardRequests = punishments.map { it.toNomisAward() }))
+          nomisApiService.createAdjudicationAwards(
+            adjudicationNumber,
+            chargeSequence,
+            CreateHearingResultAwardRequests(awardRequests = punishments.map { it.toNomisAward() }),
+          )
             .also { telemetryMap["punishmentsCount"] = it.awardResponses.size.toString() }
 
         AdjudicationPunishmentBatchMappingDto(
@@ -437,6 +452,46 @@ class AdjudicationsService(
     }
   }
 
+  // referral without a hearing
+  suspend fun createReferral(createEvent: ReferralEvent, referralOutcome: Boolean = false) {
+    val event = createEvent.additionalInformation
+    val telemetryMap = event.toTelemetryMap()
+
+    runCatching {
+      val charge = adjudicationsApiService.getCharge(
+        event.chargeNumber,
+        event.prisonId,
+      )
+      val outcome = charge.reportedAdjudication.outcomes.firstOrNull()
+        ?: throw IllegalStateException(
+          "Referral not found in DPS adjudication with charge no ${event.chargeNumber}",
+        )
+
+      val adjudicationMapping =
+        adjudicationMappingService.getMappingGivenChargeNumber(event.chargeNumber)
+          .also {
+            telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
+            telemetryMap["chargeSequence"] = it.chargeSequence.toString()
+          }
+
+      val nomisRequest =
+        if (referralOutcome) outcome.toNomisCreateReferralForReferralOutcome() else outcome.toNomisCreateReferral()
+      nomisApiService.createReferral(
+        adjudicationNumber = adjudicationMapping.adjudicationNumber,
+        chargeSequence = adjudicationMapping.chargeSequence,
+        request = nomisRequest,
+      ).also {
+        telemetryMap["findingCode"] = nomisRequest.findingCode
+        telemetryMap["plea"] = nomisRequest.pleaFindingCode
+      }
+    }.onSuccess {
+      telemetryClient.trackEvent("adjudication-referral-created-success", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("adjudication-referral-created-failed", telemetryMap, null)
+      throw e
+    }
+  }
+
   private inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
 
@@ -448,10 +503,30 @@ class AdjudicationsService(
     compensationAmount = this.damagesOwedAmount?.toBigDecimal() ?: stoppagePercentage?.toBigDecimal(),
     commentText = this.toComment(),
     consecutiveCharge = this.consecutiveChargeNumber?.let { chargeNumber ->
-      adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber).let { AdjudicationChargeId(it.adjudicationNumber, it.chargeSequence) }
+      adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber)
+        .let { AdjudicationChargeId(it.adjudicationNumber, it.chargeSequence) }
     },
   )
 }
+
+private fun OutcomeEvent.toHearingEvent(): HearingEvent =
+  HearingEvent(
+    HearingAdditionalInformation(
+      chargeNumber = this.additionalInformation.chargeNumber,
+      prisonerNumber = this.additionalInformation.prisonerNumber,
+      prisonId = this.additionalInformation.prisonId,
+      hearingId = this.additionalInformation.hearingId!!,
+    ),
+  )
+
+private fun OutcomeEvent.toReferralEvent(): ReferralEvent =
+  ReferralEvent(
+    ReferralAdditionalInformation(
+      chargeNumber = this.additionalInformation.chargeNumber,
+      prisonerNumber = this.additionalInformation.prisonerNumber,
+      prisonId = this.additionalInformation.prisonId,
+    ),
+  )
 
 private fun PunishmentDto.toComment(): String =
   // copy of existing logic from prison-api
@@ -531,6 +606,22 @@ private fun OutcomeHistoryDto.toNomisCreateHearingResultForReferralOutcome(): Cr
   )
 }
 
+private fun OutcomeHistoryDto.toNomisCreateReferral(): CreateHearingResultRequest {
+  val findingCode = this.outcome!!.outcome.code.name
+  return CreateHearingResultRequest(
+    pleaFindingCode = "NOT_ASKED",
+    findingCode = toNomisFindingCode(findingCode),
+  )
+}
+
+private fun OutcomeHistoryDto.toNomisCreateReferralForReferralOutcome(): CreateHearingResultRequest {
+  val findingCode = this.outcome!!.referralOutcome!!.code.name
+  return CreateHearingResultRequest(
+    pleaFindingCode = "NOT_ASKED",
+    findingCode = toNomisFindingCode(findingCode),
+  )
+}
+
 private fun toNomisFindingCode(code: String) = when (code) {
   OutcomeDto.Code.REFER_POLICE.name -> "REF_POLICE"
   OutcomeDto.Code.REFER_INAD.name -> "ADJOURNED" // TODO from John/Tim - to confirm
@@ -563,6 +654,12 @@ private fun HearingAdditionalInformation.toTelemetryMap(): MutableMap<String, St
   "prisonId" to this.prisonId,
   "prisonerNumber" to this.prisonerNumber,
   "dpsHearingId" to this.hearingId,
+)
+
+private fun ReferralAdditionalInformation.toTelemetryMap(): MutableMap<String, String> = mutableMapOf(
+  "chargeNumber" to this.chargeNumber,
+  "prisonId" to this.prisonId,
+  "prisonerNumber" to this.prisonerNumber,
 )
 
 internal fun ReportedAdjudicationResponse.toNomisAdjudication() = CreateAdjudicationRequest(
@@ -694,6 +791,27 @@ data class HearingAdditionalInformation(
 
 data class HearingEvent(
   val additionalInformation: HearingAdditionalInformation,
+)
+
+data class ReferralAdditionalInformation(
+  val chargeNumber: String,
+  val prisonId: String,
+  val prisonerNumber: String,
+)
+
+data class ReferralEvent(
+  val additionalInformation: ReferralAdditionalInformation,
+)
+
+data class OutcomeEvent(
+  val additionalInformation: OutcomeAdditionalInformation,
+)
+
+data class OutcomeAdditionalInformation(
+  val chargeNumber: String,
+  val prisonId: String,
+  val prisonerNumber: String,
+  val hearingId: String?,
 )
 
 class InvalidFindingCodeException(message: String) : IllegalStateException(message)
