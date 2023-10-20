@@ -1239,6 +1239,29 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubReferralCreate(
+    adjudicationNumber: Long = 123456,
+    chargeSequence: Int = 1,
+    plea: String = "NOT_ASKED",
+    finding: String = "REF_POLICE",
+  ) {
+    stubFor(
+      post("/adjudications/adjudication-number/$adjudicationNumber/charge/$chargeSequence/result").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            {
+              "pleaFindingCode": "$plea",
+              "findingCode": "$finding"
+            }
+            """.trimIndent(),
+          )
+          .withStatus(201),
+      ),
+    )
+  }
+
   fun stubAdjudicationAwardsCreate(adjudicationNumber: Long = 123456, chargeSequence: Int = 1, awardIds: List<Pair<Long, Int>> = listOf(1201050L to 3)) {
     stubFor(
       post("/adjudications/adjudication-number/$adjudicationNumber/charge/$chargeSequence/awards").willReturn(
