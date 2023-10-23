@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-10-23.5289.6eb0d33"
+    "version": "2023-10-23.5302.ee907ac"
   },
   "servers": [
     {
@@ -2598,6 +2598,62 @@
           },
           "409": {
             "description": "Adjudication already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/bookings": {
+      "post": {
+        "tags": [
+          "prisoners-resource"
+        ],
+        "summary": "Gets prisoner details for a list of bookings",
+        "description": "Requires role SYNCHRONISATION_REPORTING.",
+        "operationId": "getPrisonerBookings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "description": "A list of prisoner details"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "list of prisoner details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PrisonerDetails"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING not present",
             "content": {
               "application/json": {
                 "schema": {
@@ -7953,6 +8009,33 @@
           }
         },
         "description": "The repairs required due to the damage"
+      },
+      "PrisonerDetails": {
+        "required": [
+          "bookingId",
+          "location",
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderNo": {
+            "type": "string",
+            "description": "The NOMIS reference",
+            "example": "A1234AA"
+          },
+          "bookingId": {
+            "type": "integer",
+            "description": "The NOMIS booking ID",
+            "format": "int64",
+            "example": 1234567
+          },
+          "location": {
+            "type": "string",
+            "description": "The prisoner's current location",
+            "example": "BXI, OUT"
+          }
+        },
+        "description": "Details of a prisoner booking"
       },
       "CreateSentenceAdjustmentRequest": {
         "required": [
