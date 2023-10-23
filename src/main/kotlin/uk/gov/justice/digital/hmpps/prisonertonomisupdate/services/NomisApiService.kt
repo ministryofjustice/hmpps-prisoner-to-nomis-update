@@ -28,7 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardRequests
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardResponses
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationRequest
@@ -42,6 +42,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Update
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateEvidenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateEvidenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateHearingRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateHearingResultAwardRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateHearingResultAwardResponses
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsResponse
@@ -397,8 +399,18 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
   suspend fun createAdjudicationAwards(
     adjudicationNumber: Long,
     chargeSequence: Int,
-    request: CreateHearingResultAwardRequests,
+    request: CreateHearingResultAwardRequest,
   ): CreateHearingResultAwardResponses = webClient.post()
+    .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/awards", adjudicationNumber, chargeSequence)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun updateAdjudicationAwards(
+    adjudicationNumber: Long,
+    chargeSequence: Int,
+    request: UpdateHearingResultAwardRequest,
+  ): UpdateHearingResultAwardResponses = webClient.put()
     .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/awards", adjudicationNumber, chargeSequence)
     .bodyValue(request)
     .retrieve()

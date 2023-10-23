@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-10-18.5241.dadc39c"
+    "version": "2023-10-23.5289.6eb0d33"
   },
   "servers": [
     {
@@ -1771,6 +1771,180 @@
         }
       }
     },
+    "/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/awards": {
+      "put": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "updates a batch of hearing result awards for a given adjudication",
+        "description": "Creates a hearing result awards that have been added, updates those that have changed and deletes ones that are absent for the booking associated with the adjudication. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "updateCreateAndDeleteHearingResultAwards",
+        "parameters": [
+          {
+            "name": "adjudicationNumber",
+            "in": "path",
+            "description": "Adjudication number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Adjudication number",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "chargeSequence",
+            "in": "path",
+            "description": "Nomis charge sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Nomis charge sequence",
+              "example": 1
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHearingResultAwardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Hearing result award IDs created and awards deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateHearingResultAwardResponses"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Charge does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "creates a hearing result award for a given adjudication",
+        "description": "Creates a hearing result award. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "createHearingResultAward",
+        "parameters": [
+          {
+            "name": "adjudicationNumber",
+            "in": "path",
+            "description": "Adjudication number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Adjudication number",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "chargeSequence",
+            "in": "path",
+            "description": "Nomis charge sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Nomis charge sequence",
+              "example": 1
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHearingResultAwardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Hearing result award IDs created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateHearingResultAwardResponses"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Charge does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/activities/{courseActivityId}": {
       "get": {
         "tags": [
@@ -3377,16 +3551,14 @@
             }
           }
         }
-      }
-    },
-    "/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/awards": {
-      "post": {
+      },
+      "delete": {
         "tags": [
           "adjudication-resource"
         ],
-        "summary": "creates a hearing result award for a given adjudication",
-        "description": "Creates a hearing result award. Requires ROLE_NOMIS_ADJUDICATIONS",
-        "operationId": "createHearingResultAward",
+        "summary": "Deletes a result",
+        "description": "Deletes a result for a given adjudication and charge sequence. The result will be associated with a dummy hearing used by DPS to record referrals. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "deleteResult",
         "parameters": [
           {
             "name": "adjudicationNumber",
@@ -3413,26 +3585,9 @@
             "example": 1
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateHearingResultAwardRequests"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
-          "201": {
-            "description": "Hearing result award IDs created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateHearingResultAwardResponses"
-                }
-              }
-            }
+          "200": {
+            "description": "result deleted"
           },
           "401": {
             "description": "Unauthorized to access this endpoint",
@@ -3455,7 +3610,7 @@
             }
           },
           "404": {
-            "description": "Charge does not exist",
+            "description": "Adjudication does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -6329,6 +6484,179 @@
         },
         "description": "Evidence associated with adjudication incident. Any items not in this list will be removed from the Adjudication in NOMIS"
       },
+      "HearingResultAwardResponse": {
+        "required": [
+          "bookingId",
+          "sanctionSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sanctionSequence": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "Provides the generated Hearing Result Award composite ID after creation"
+      },
+      "UpdateHearingResultAwardResponses": {
+        "required": [
+          "awardResponsesCreated",
+          "awardsDeleted"
+        ],
+        "type": "object",
+        "properties": {
+          "awardResponsesCreated": {
+            "type": "array",
+            "description": "an ordered list of award response, the order matching the request order for awardRequestsToCreate",
+            "items": {
+              "$ref": "#/components/schemas/HearingResultAwardResponse"
+            }
+          },
+          "awardsDeleted": {
+            "type": "array",
+            "description": "a list of awards that were deleted due to this update",
+            "items": {
+              "$ref": "#/components/schemas/HearingResultAwardResponse"
+            }
+          }
+        },
+        "description": "A list of Hearing result awards created (aka punishment)"
+      },
+      "AdjudicationChargeId": {
+        "required": [
+          "adjudicationNumber",
+          "chargeSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "adjudicationNumber": {
+            "type": "integer",
+            "description": "adjudication number",
+            "format": "int64"
+          },
+          "chargeSequence": {
+            "type": "integer",
+            "description": "charge sequence within the adjudication",
+            "format": "int32"
+          }
+        },
+        "description": "adjudication that contains the matching award that this award is consecutive to"
+      },
+      "ExistingHearingResultAwardRequest": {
+        "required": [
+          "awardRequests",
+          "sanctionSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "awardRequests": {
+            "$ref": "#/components/schemas/HearingResultAwardRequest"
+          },
+          "sanctionSequence": {
+            "type": "integer",
+            "description": "sanction sequence for the booking associated with the adjudication",
+            "format": "int32"
+          }
+        },
+        "description": "Hearing result award (aka punishment) to be created"
+      },
+      "HearingResultAwardRequest": {
+        "required": [
+          "effectiveDate",
+          "sanctionStatus",
+          "sanctionType"
+        ],
+        "type": "object",
+        "properties": {
+          "sanctionType": {
+            "type": "string",
+            "description": "The type of award",
+            "example": "CAUTION",
+            "enum": [
+              "ADA",
+              "CAUTION",
+              "CC",
+              "EXTRA_WORK",
+              "EXTW",
+              "FORFEIT",
+              "OTHER",
+              "REMACT",
+              "REMWIN",
+              "STOP_EARN",
+              "STOP_PCT"
+            ]
+          },
+          "sanctionStatus": {
+            "type": "string",
+            "description": "The status of the award",
+            "example": "IMMEDIATE",
+            "enum": [
+              "AS_AWARDED",
+              "AWARD_RED",
+              "IMMEDIATE",
+              "PROSPECTIVE",
+              "QUASHED",
+              "REDAPP",
+              "SUSPENDED",
+              "SUSPEN_EXT",
+              "SUSPEN_RED",
+              "SUSP_PROSP"
+            ]
+          },
+          "commentText": {
+            "type": "string",
+            "description": "Award comment",
+            "example": "GUILTY"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "description": "Award effective date",
+            "format": "date"
+          },
+          "compensationAmount": {
+            "type": "number",
+            "description": "optional compensation amount",
+            "example": 0.5
+          },
+          "sanctionDays": {
+            "type": "integer",
+            "description": "the duration  of the award, in days",
+            "format": "int32"
+          },
+          "consecutiveCharge": {
+            "$ref": "#/components/schemas/AdjudicationChargeId"
+          }
+        },
+        "description": "Hearing result award (aka punishment) to be created"
+      },
+      "UpdateHearingResultAwardRequest": {
+        "required": [
+          "awardRequestsToCreate",
+          "awardRequestsToUpdate"
+        ],
+        "type": "object",
+        "properties": {
+          "awardRequestsToCreate": {
+            "type": "array",
+            "description": "a list of award requests to create",
+            "items": {
+              "$ref": "#/components/schemas/HearingResultAwardRequest"
+            }
+          },
+          "awardRequestsToUpdate": {
+            "type": "array",
+            "description": "a list of award requests to update",
+            "items": {
+              "$ref": "#/components/schemas/ExistingHearingResultAwardRequest"
+            }
+          }
+        },
+        "description": "A list of Hearing result awards (aka punishment) to be created and updated"
+      },
       "CourseScheduleRequest": {
         "required": [
           "cancelled",
@@ -7969,96 +8297,7 @@
         },
         "description": "A list of Hearing result awards created (aka punishment)"
       },
-      "AdjudicationChargeId": {
-        "required": [
-          "adjudicationNumber",
-          "chargeSequence"
-        ],
-        "type": "object",
-        "properties": {
-          "adjudicationNumber": {
-            "type": "integer",
-            "description": "adjudication number",
-            "format": "int64"
-          },
-          "chargeSequence": {
-            "type": "integer",
-            "description": "charge sequence within the adjudication",
-            "format": "int32"
-          }
-        },
-        "description": "adjudication that contains the matching award that this award is consecutive to"
-      },
       "CreateHearingResultAwardRequest": {
-        "required": [
-          "effectiveDate",
-          "sanctionStatus",
-          "sanctionType"
-        ],
-        "type": "object",
-        "properties": {
-          "sanctionType": {
-            "type": "string",
-            "description": "The type of award",
-            "example": "CAUTION",
-            "enum": [
-              "ADA",
-              "CAUTION",
-              "CC",
-              "EXTRA_WORK",
-              "EXTW",
-              "FORFEIT",
-              "OTHER",
-              "REMACT",
-              "REMWIN",
-              "STOP_EARN",
-              "STOP_PCT"
-            ]
-          },
-          "sanctionStatus": {
-            "type": "string",
-            "description": "The status of the award",
-            "example": "IMMEDIATE",
-            "enum": [
-              "AS_AWARDED",
-              "AWARD_RED",
-              "IMMEDIATE",
-              "PROSPECTIVE",
-              "QUASHED",
-              "REDAPP",
-              "SUSPENDED",
-              "SUSPEN_EXT",
-              "SUSPEN_RED",
-              "SUSP_PROSP"
-            ]
-          },
-          "commentText": {
-            "type": "string",
-            "description": "Award comment",
-            "example": "GUILTY"
-          },
-          "effectiveDate": {
-            "type": "string",
-            "description": "Award effective date",
-            "format": "date"
-          },
-          "compensationAmount": {
-            "type": "number",
-            "description": "optional compensation amount",
-            "example": 0.5
-          },
-          "sanctionDays": {
-            "type": "integer",
-            "description": "the duration  of the award, in days",
-            "format": "int32"
-          },
-          "consecutiveCharge": {
-            "$ref": "#/components/schemas/AdjudicationChargeId"
-          }
-        },
-        "description": "Hearing result award (aka punishment) to be created"
-      },
-      "CreateHearingResultAwardRequests": {
         "required": [
           "awardRequests"
         ],
@@ -8068,7 +8307,7 @@
             "type": "array",
             "description": "a list of award requests",
             "items": {
-              "$ref": "#/components/schemas/CreateHearingResultAwardRequest"
+              "$ref": "#/components/schemas/HearingResultAwardRequest"
             }
           }
         },
