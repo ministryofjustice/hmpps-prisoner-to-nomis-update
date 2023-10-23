@@ -606,6 +606,74 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
+  inner class GetPrisonerDetails {
+
+    private fun jsonResponse() = """
+      [
+        {
+          "bookingId": 1,
+          "offenderNo": "A1234AA",
+          "location": "BXI"
+        },
+        {
+          "bookingId": 2,
+          "offenderNo": "A1234BB",
+          "location": "OUT"
+        }
+      ]
+    """.trimIndent()
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stubGetPrisonerDetails(jsonResponse())
+
+      nomisApiService.getPrisonerDetails(listOf(1, 2))
+
+      nomisApi.verify(
+        postRequestedFor(urlEqualTo("/prisoners/bookings"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should pass booking ids in body`() = runTest {
+      nomisApi.stubGetPrisonerDetails(jsonResponse())
+
+      nomisApiService.getPrisonerDetails(listOf(1, 2))
+
+      nomisApi.verify(
+        postRequestedFor(urlEqualTo("/prisoners/bookings"))
+          .withRequestBody(matchingJsonPath("$[0]", equalTo("1")))
+          .withRequestBody(matchingJsonPath("$[1]", equalTo("2"))),
+      )
+    }
+
+    @Test
+    fun `should parse response`() = runTest {
+      nomisApi.stubGetPrisonerDetails(jsonResponse())
+
+      val response = nomisApiService.getPrisonerDetails(listOf(1, 2))
+
+      assertThat(response.size).isEqualTo(2)
+      assertThat(response[0].bookingId).isEqualTo(1)
+      assertThat(response[0].offenderNo).isEqualTo("A1234AA")
+      assertThat(response[0].location).isEqualTo("BXI")
+      assertThat(response[1].bookingId).isEqualTo(2)
+      assertThat(response[1].offenderNo).isEqualTo("A1234BB")
+      assertThat(response[1].location).isEqualTo("OUT")
+    }
+
+    @Test
+    fun `should throw exception on error`() = runTest {
+      nomisApi.stubGetPrisonerDetailsWithError(400)
+
+      assertThrows<BadRequest> {
+        nomisApiService.getPrisonerDetails(listOf(1, 2))
+      }
+    }
+  }
+
+  @Nested
   inner class CreateAppointment {
 
     @Test
