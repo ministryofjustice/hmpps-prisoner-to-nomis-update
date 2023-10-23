@@ -1292,6 +1292,44 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubAdjudicationAwardsUpdate(
+    adjudicationNumber: Long = 123456,
+    chargeSequence: Int = 1,
+    createdAwardIds: List<Pair<Long, Int>> = listOf(1201050L to 3),
+    deletedAwardIds: List<Pair<Long, Int>> = listOf(1201050L to 1),
+  ) {
+    stubFor(
+      put("/adjudications/adjudication-number/$adjudicationNumber/charge/$chargeSequence/awards").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            {
+                "awardResponsesCreated": [
+                    ${createdAwardIds.joinToString { """{"bookingId": ${it.first}, "sanctionSequence": ${it.second}}""" }}
+                ],
+                "awardsDeleted": [
+                    ${deletedAwardIds.joinToString { """{"bookingId": ${it.first}, "sanctionSequence": ${it.second}}""" }}
+                ]
+            }            
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubAdjudicationAwardsUpdateWithError(adjudicationNumber: Long = 123456, chargeSequence: Int = 1, status: Int) {
+    stubFor(
+      put("/adjudications/adjudication-number/$adjudicationNumber/charge/$chargeSequence/awards").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status)
+          .withBody("""{"message":"error"}"""),
+      ),
+    )
+  }
+
   // *************************************************** Non-Associations **********************************************
 
   fun stubNonAssociationCreate(response: String) {

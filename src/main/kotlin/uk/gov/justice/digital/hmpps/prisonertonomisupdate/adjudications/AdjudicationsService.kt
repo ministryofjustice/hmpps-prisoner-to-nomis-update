@@ -26,12 +26,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Charge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardRequest.SanctionStatus
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardRequest.SanctionType.FORFEIT
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardRequests
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.EvidenceToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.EvidenceToUpdateOrAdd
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.HearingResultAwardRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.HearingResultAwardRequest.SanctionStatus
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.HearingResultAwardRequest.SanctionType.FORFEIT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.IncidentToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToUpdateOrAdd
@@ -434,7 +434,7 @@ class AdjudicationsService(
           nomisApiService.createAdjudicationAwards(
             adjudicationNumber,
             chargeSequence,
-            CreateHearingResultAwardRequests(awardRequests = punishments.map { it.toNomisAward() }),
+            CreateHearingResultAwardRequest(awardRequests = punishments.map { it.toNomisAward() }),
           )
             .also { telemetryMap["punishmentsCount"] = it.awardResponses.size.toString() }
 
@@ -495,7 +495,7 @@ class AdjudicationsService(
   private inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
 
-  private suspend fun PunishmentDto.toNomisAward() = CreateHearingResultAwardRequest(
+  private suspend fun PunishmentDto.toNomisAward() = HearingResultAwardRequest(
     sanctionType = this.type.toNomisSanctionType(),
     sanctionStatus = this.toNomisSanctionStatus(),
     effectiveDate = this.schedule.startDate ?: this.schedule.suspendedUntil ?: LocalDate.now(),
@@ -555,19 +555,19 @@ private fun PunishmentDto.toNomisSanctionStatus(): SanctionStatus {
   }
 }
 
-private fun Type.toNomisSanctionType(): CreateHearingResultAwardRequest.SanctionType =
+private fun Type.toNomisSanctionType(): HearingResultAwardRequest.SanctionType =
   when (this) {
     Type.PRIVILEGE -> FORFEIT
-    Type.EARNINGS -> CreateHearingResultAwardRequest.SanctionType.STOP_PCT
-    Type.CONFINEMENT -> CreateHearingResultAwardRequest.SanctionType.CC
-    Type.REMOVAL_ACTIVITY -> CreateHearingResultAwardRequest.SanctionType.REMACT
-    Type.EXCLUSION_WORK -> CreateHearingResultAwardRequest.SanctionType.EXTRA_WORK // yes, this mapping is correct
-    Type.EXTRA_WORK -> CreateHearingResultAwardRequest.SanctionType.EXTW
-    Type.REMOVAL_WING -> CreateHearingResultAwardRequest.SanctionType.REMWIN
-    Type.ADDITIONAL_DAYS -> CreateHearingResultAwardRequest.SanctionType.ADA
-    Type.PROSPECTIVE_DAYS -> CreateHearingResultAwardRequest.SanctionType.ADA
-    Type.CAUTION -> CreateHearingResultAwardRequest.SanctionType.CAUTION
-    Type.DAMAGES_OWED -> CreateHearingResultAwardRequest.SanctionType.OTHER
+    Type.EARNINGS -> HearingResultAwardRequest.SanctionType.STOP_PCT
+    Type.CONFINEMENT -> HearingResultAwardRequest.SanctionType.CC
+    Type.REMOVAL_ACTIVITY -> HearingResultAwardRequest.SanctionType.REMACT
+    Type.EXCLUSION_WORK -> HearingResultAwardRequest.SanctionType.EXTRA_WORK // yes, this mapping is correct
+    Type.EXTRA_WORK -> HearingResultAwardRequest.SanctionType.EXTW
+    Type.REMOVAL_WING -> HearingResultAwardRequest.SanctionType.REMWIN
+    Type.ADDITIONAL_DAYS -> HearingResultAwardRequest.SanctionType.ADA
+    Type.PROSPECTIVE_DAYS -> HearingResultAwardRequest.SanctionType.ADA
+    Type.CAUTION -> HearingResultAwardRequest.SanctionType.CAUTION
+    Type.DAMAGES_OWED -> HearingResultAwardRequest.SanctionType.OTHER
   }
 
 private fun HearingDto.toNomisUpdateHearing(): UpdateHearingRequest = UpdateHearingRequest(
