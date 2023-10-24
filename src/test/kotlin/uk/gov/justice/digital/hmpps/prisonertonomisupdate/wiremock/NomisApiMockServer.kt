@@ -1304,7 +1304,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withBody(
             """
             {
-                "awardResponses": [
+                "awardsCreated": [
                     ${awardIds.joinToString { """{"bookingId": ${it.first}, "sanctionSequence": ${it.second}}""" }}
                 ]
             }            
@@ -1339,7 +1339,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withBody(
             """
             {
-                "awardResponsesCreated": [
+                "awardsCreated": [
                     ${createdAwardIds.joinToString { """{"bookingId": ${it.first}, "sanctionSequence": ${it.second}}""" }}
                 ],
                 "awardsDeleted": [

@@ -499,12 +499,12 @@ class AdjudicationsService(
           nomisApiService.createAdjudicationAwards(
             adjudicationNumber,
             chargeSequence,
-            CreateHearingResultAwardRequest(awardRequests = punishments.map { it.toNomisAward() }),
+            CreateHearingResultAwardRequest(awards = punishments.map { it.toNomisAward() }),
           )
-            .also { telemetryMap["punishmentsCount"] = it.awardResponses.size.toString() }
+            .also { telemetryMap["punishmentsCount"] = it.awardsCreated.size.toString() }
 
         AdjudicationPunishmentBatchMappingDto(
-          punishments = punishments.zip(nomisAwardsResponse.awardResponses) { punishment, awardResponse ->
+          punishments = punishments.zip(nomisAwardsResponse.awardsCreated) { punishment, awardResponse ->
             AdjudicationPunishmentMappingDto(
               dpsPunishmentId = punishment.id.toString(),
               nomisBookingId = awardResponse.bookingId,

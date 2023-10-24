@@ -1246,7 +1246,7 @@ internal class NomisApiServiceTest {
         adjudicationNumber = 1234567,
         chargeSequence = 1,
         request = CreateHearingResultAwardRequest(
-          awardRequests = listOf(
+          awards = listOf(
             HearingResultAwardRequest(
               sanctionType = HearingResultAwardRequest.SanctionType.ADA,
               sanctionStatus = HearingResultAwardRequest.SanctionStatus.IMMEDIATE,
@@ -1272,7 +1272,7 @@ internal class NomisApiServiceTest {
         adjudicationNumber = 1234567,
         chargeSequence = 1,
         request = CreateHearingResultAwardRequest(
-          awardRequests = listOf(
+          awards = listOf(
             HearingResultAwardRequest(
               sanctionType = HearingResultAwardRequest.SanctionType.ADA,
               sanctionStatus = HearingResultAwardRequest.SanctionStatus.IMMEDIATE,
@@ -1285,10 +1285,10 @@ internal class NomisApiServiceTest {
 
       nomisApi.verify(
         postRequestedFor(urlEqualTo("/adjudications/adjudication-number/1234567/charge/1/awards"))
-          .withRequestBody(matchingJsonPath("awardRequests[0].sanctionType", equalTo("ADA")))
-          .withRequestBody(matchingJsonPath("awardRequests[0].sanctionStatus", equalTo("IMMEDIATE")))
-          .withRequestBody(matchingJsonPath("awardRequests[0].sanctionDays", equalTo("28")))
-          .withRequestBody(matchingJsonPath("awardRequests[0].effectiveDate", equalTo("2020-07-19"))),
+          .withRequestBody(matchingJsonPath("awards[0].sanctionType", equalTo("ADA")))
+          .withRequestBody(matchingJsonPath("awards[0].sanctionStatus", equalTo("IMMEDIATE")))
+          .withRequestBody(matchingJsonPath("awards[0].sanctionDays", equalTo("28")))
+          .withRequestBody(matchingJsonPath("awards[0].effectiveDate", equalTo("2020-07-19"))),
       )
     }
 
@@ -1301,7 +1301,7 @@ internal class NomisApiServiceTest {
           adjudicationNumber = 1234567,
           chargeSequence = 1,
           request = CreateHearingResultAwardRequest(
-            awardRequests = listOf(
+            awards = listOf(
               HearingResultAwardRequest(
                 sanctionType = HearingResultAwardRequest.SanctionType.ADA,
                 sanctionStatus = HearingResultAwardRequest.SanctionStatus.IMMEDIATE,
@@ -1322,7 +1322,7 @@ internal class NomisApiServiceTest {
           adjudicationNumber = 1234567,
           chargeSequence = 1,
           request = CreateHearingResultAwardRequest(
-            awardRequests = listOf(
+            awards = listOf(
               HearingResultAwardRequest(
                 sanctionType = HearingResultAwardRequest.SanctionType.ADA,
                 sanctionStatus = HearingResultAwardRequest.SanctionStatus.IMMEDIATE,
@@ -1346,14 +1346,14 @@ internal class NomisApiServiceTest {
         adjudicationNumber = 1234567,
         chargeSequence = 1,
         request = UpdateHearingResultAwardRequest(
-          awardRequestsToCreate = listOf(
+          awardsToCreate = listOf(
             HearingResultAwardRequest(
               sanctionType = HearingResultAwardRequest.SanctionType.ADA,
               sanctionStatus = HearingResultAwardRequest.SanctionStatus.IMMEDIATE,
               effectiveDate = LocalDate.parse("2020-07-19"),
             ),
           ),
-          awardRequestsToUpdate = emptyList(),
+          awardsToUpdate = emptyList(),
         ),
       )
 
@@ -1373,7 +1373,7 @@ internal class NomisApiServiceTest {
         adjudicationNumber = 1234567,
         chargeSequence = 1,
         request = UpdateHearingResultAwardRequest(
-          awardRequestsToCreate = listOf(
+          awardsToCreate = listOf(
             HearingResultAwardRequest(
               sanctionType = HearingResultAwardRequest.SanctionType.ADA,
               sanctionStatus = HearingResultAwardRequest.SanctionStatus.IMMEDIATE,
@@ -1381,9 +1381,9 @@ internal class NomisApiServiceTest {
               effectiveDate = LocalDate.parse("2020-07-19"),
             ),
           ),
-          awardRequestsToUpdate = listOf(
+          awardsToUpdate = listOf(
             ExistingHearingResultAwardRequest(
-              awardRequests =
+              award =
               HearingResultAwardRequest(
                 sanctionType = HearingResultAwardRequest.SanctionType.ADA,
                 sanctionStatus = HearingResultAwardRequest.SanctionStatus.IMMEDIATE,
@@ -1398,15 +1398,15 @@ internal class NomisApiServiceTest {
 
       nomisApi.verify(
         putRequestedFor(urlEqualTo("/adjudications/adjudication-number/1234567/charge/1/awards"))
-          .withRequestBody(matchingJsonPath("awardRequestsToCreate[0].sanctionType", equalTo("ADA")))
-          .withRequestBody(matchingJsonPath("awardRequestsToCreate[0].sanctionStatus", equalTo("IMMEDIATE")))
-          .withRequestBody(matchingJsonPath("awardRequestsToCreate[0].sanctionDays", equalTo("28")))
-          .withRequestBody(matchingJsonPath("awardRequestsToCreate[0].effectiveDate", equalTo("2020-07-19")))
-          .withRequestBody(matchingJsonPath("awardRequestsToUpdate[0].sanctionSequence", equalTo("1")))
-          .withRequestBody(matchingJsonPath("awardRequestsToUpdate[0].awardRequests.sanctionType", equalTo("ADA")))
-          .withRequestBody(matchingJsonPath("awardRequestsToUpdate[0].awardRequests.sanctionStatus", equalTo("IMMEDIATE")))
-          .withRequestBody(matchingJsonPath("awardRequestsToUpdate[0].awardRequests.sanctionDays", equalTo("28")))
-          .withRequestBody(matchingJsonPath("awardRequestsToUpdate[0].awardRequests.effectiveDate", equalTo("2020-07-19"))),
+          .withRequestBody(matchingJsonPath("awardsToCreate[0].sanctionType", equalTo("ADA")))
+          .withRequestBody(matchingJsonPath("awardsToCreate[0].sanctionStatus", equalTo("IMMEDIATE")))
+          .withRequestBody(matchingJsonPath("awardsToCreate[0].sanctionDays", equalTo("28")))
+          .withRequestBody(matchingJsonPath("awardsToCreate[0].effectiveDate", equalTo("2020-07-19")))
+          .withRequestBody(matchingJsonPath("awardsToUpdate[0].sanctionSequence", equalTo("1")))
+          .withRequestBody(matchingJsonPath("awardsToUpdate[0].award.sanctionType", equalTo("ADA")))
+          .withRequestBody(matchingJsonPath("awardsToUpdate[0].award.sanctionStatus", equalTo("IMMEDIATE")))
+          .withRequestBody(matchingJsonPath("awardsToUpdate[0].award.sanctionDays", equalTo("28")))
+          .withRequestBody(matchingJsonPath("awardsToUpdate[0].award.effectiveDate", equalTo("2020-07-19"))),
       )
     }
 
@@ -1419,8 +1419,8 @@ internal class NomisApiServiceTest {
           adjudicationNumber = 1234567,
           chargeSequence = 1,
           request = UpdateHearingResultAwardRequest(
-            awardRequestsToCreate = emptyList(),
-            awardRequestsToUpdate = emptyList(),
+            awardsToCreate = emptyList(),
+            awardsToUpdate = emptyList(),
           ),
         )
       }
@@ -1435,8 +1435,8 @@ internal class NomisApiServiceTest {
           adjudicationNumber = 1234567,
           chargeSequence = 1,
           request = UpdateHearingResultAwardRequest(
-            awardRequestsToCreate = emptyList(),
-            awardRequestsToUpdate = emptyList(),
+            awardsToCreate = emptyList(),
+            awardsToUpdate = emptyList(),
           ),
         )
       }

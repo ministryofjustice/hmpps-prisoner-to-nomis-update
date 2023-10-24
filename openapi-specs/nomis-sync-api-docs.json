@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-10-23.5302.ee907ac"
+    "version": "2023-10-24.5325.07640d8"
   },
   "servers": [
     {
@@ -6560,14 +6560,14 @@
       },
       "UpdateHearingResultAwardResponses": {
         "required": [
-          "awardResponsesCreated",
+          "awardsCreated",
           "awardsDeleted"
         ],
         "type": "object",
         "properties": {
-          "awardResponsesCreated": {
+          "awardsCreated": {
             "type": "array",
-            "description": "an ordered list of award response, the order matching the request order for awardRequestsToCreate",
+            "description": "an ordered list of awards created, the order matching the request order for awardRequestsToCreate",
             "items": {
               "$ref": "#/components/schemas/HearingResultAwardResponse"
             }
@@ -6604,12 +6604,12 @@
       },
       "ExistingHearingResultAwardRequest": {
         "required": [
-          "awardRequests",
+          "award",
           "sanctionSequence"
         ],
         "type": "object",
         "properties": {
-          "awardRequests": {
+          "award": {
             "$ref": "#/components/schemas/HearingResultAwardRequest"
           },
           "sanctionSequence": {
@@ -6691,19 +6691,19 @@
       },
       "UpdateHearingResultAwardRequest": {
         "required": [
-          "awardRequestsToCreate",
-          "awardRequestsToUpdate"
+          "awardsToCreate",
+          "awardsToUpdate"
         ],
         "type": "object",
         "properties": {
-          "awardRequestsToCreate": {
+          "awardsToCreate": {
             "type": "array",
             "description": "a list of award requests to create",
             "items": {
               "$ref": "#/components/schemas/HearingResultAwardRequest"
             }
           },
-          "awardRequestsToUpdate": {
+          "awardsToUpdate": {
             "type": "array",
             "description": "a list of award requests to update",
             "items": {
@@ -8346,35 +8346,17 @@
         },
         "description": "Hearing result to be created"
       },
-      "CreateHearingResultAwardResponse": {
-        "required": [
-          "bookingId",
-          "sanctionSequence"
-        ],
-        "type": "object",
-        "properties": {
-          "bookingId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "sanctionSequence": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "description": "Provides the generated Hearing Result Award composite ID after creation"
-      },
       "CreateHearingResultAwardResponses": {
         "required": [
-          "awardResponses"
+          "awardsCreated"
         ],
         "type": "object",
         "properties": {
-          "awardResponses": {
+          "awardsCreated": {
             "type": "array",
             "description": "an ordered list of award response, the order matching the request order",
             "items": {
-              "$ref": "#/components/schemas/CreateHearingResultAwardResponse"
+              "$ref": "#/components/schemas/HearingResultAwardResponse"
             }
           }
         },
@@ -8382,11 +8364,11 @@
       },
       "CreateHearingResultAwardRequest": {
         "required": [
-          "awardRequests"
+          "awards"
         ],
         "type": "object",
         "properties": {
-          "awardRequests": {
+          "awards": {
             "type": "array",
             "description": "a list of award requests",
             "items": {

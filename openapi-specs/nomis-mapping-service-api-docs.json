@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-10-12.3089.f71a6eb"
+    "version": "2023-10-24.3134.7f5f727"
   },
   "servers": [
     {
@@ -36,6 +36,80 @@
     }
   ],
   "paths": {
+    "/mapping/punishments": {
+      "put": {
+        "tags": [
+          "punishments-mapping-resource"
+        ],
+        "summary": "Creates a new set of adjudication punishment mapping and deletes ones no longer required",
+        "description": "Creates a record of a DPS punishment id and NOMIS bookingId and sanction sequence. The ones that require deleting are removed NOMIS id. Requires NOMIS_ADJUDICATIONS",
+        "operationId": "updatePunishmentBatchMappings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjudicationPunishmentBatchUpdateMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping entries created"
+          },
+          "409": {
+            "description": "One of the punishment mappings already exist"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "punishments-mapping-resource"
+        ],
+        "summary": "Creates a new set of adjudication punishment mapping",
+        "description": "Creates a record of a DPS punishment id and NOMIS bookingId and sanction sequence. Requires NOMIS_ADJUDICATIONS",
+        "operationId": "createPunishmentBatchMappings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjudicationPunishmentBatchMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping entries created"
+          },
+          "409": {
+            "description": "One of the punishment mappings already exist"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/activities": {
       "get": {
         "tags": [
@@ -462,44 +536,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mapping/punishments": {
-      "post": {
-        "tags": [
-          "punishments-mapping-resource"
-        ],
-        "summary": "Creates a new set of adjudication punishment mapping",
-        "description": "Creates a record of a DPS punishment id and NOMIS bookingId and sanction sequence. Requires NOMIS_ADJUDICATIONS",
-        "operationId": "createPunishmentBatchMappings",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AdjudicationPunishmentBatchMappingDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Mapping entries created"
-          },
-          "409": {
-            "description": "One of the punishment mappings already exist"
           },
           "401": {
             "description": "Unauthorized to access this endpoint",
@@ -3472,6 +3508,124 @@
   },
   "components": {
     "schemas": {
+      "AdjudicationPunishmentBatchUpdateMappingDto": {
+        "required": [
+          "punishmentsToCreate",
+          "punishmentsToDelete"
+        ],
+        "type": "object",
+        "properties": {
+          "punishmentsToCreate": {
+            "type": "array",
+            "description": "Adjudication punishment mapping",
+            "items": {
+              "$ref": "#/components/schemas/AdjudicationPunishmentMappingDto"
+            }
+          },
+          "punishmentsToDelete": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdjudicationPunishmentNomisIdDto"
+            }
+          }
+        },
+        "description": "Batch of Adjudication punishment (aka award) mappings to create and delete"
+      },
+      "AdjudicationPunishmentMappingDto": {
+        "required": [
+          "dpsPunishmentId",
+          "nomisBookingId",
+          "nomisSanctionSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisBookingId": {
+            "type": "integer",
+            "description": "NOMIS booking id",
+            "format": "int64",
+            "example": 123456
+          },
+          "nomisSanctionSequence": {
+            "type": "integer",
+            "description": "NOMIS sanction sequence",
+            "format": "int32",
+            "example": 4
+          },
+          "dpsPunishmentId": {
+            "type": "string",
+            "description": "DPS punishment id",
+            "example": "123456"
+          },
+          "label": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "Mapping type",
+            "default": "ADJUDICATION_CREATED",
+            "enum": [
+              "MIGRATED",
+              "ADJUDICATION_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date-time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "Adjudication punishment (aka award) mapping"
+      },
+      "AdjudicationPunishmentNomisIdDto": {
+        "required": [
+          "nomisBookingId",
+          "nomisSanctionSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisBookingId": {
+            "type": "integer",
+            "description": "NOMIS booking id",
+            "format": "int64",
+            "example": 123456
+          },
+          "nomisSanctionSequence": {
+            "type": "integer",
+            "description": "NOMIS sanction sequence",
+            "format": "int32",
+            "example": 4
+          }
+        },
+        "description": "ID of mapping identified by the NOMIS id for an adjudication punishment (aka award) mapping"
+      },
+      "ErrorResponse": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "userMessage": {
+            "type": "string"
+          },
+          "developerMessage": {
+            "type": "string"
+          }
+        }
+      },
       "ActivityMappingDto": {
         "required": [
           "activityScheduleId",
@@ -3558,28 +3712,6 @@
           }
         },
         "description": "NOMIS to Activity schedule mapping"
-      },
-      "ErrorResponse": {
-        "required": [
-          "status"
-        ],
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "errorCode": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "userMessage": {
-            "type": "string"
-          },
-          "developerMessage": {
-            "type": "string"
-          }
-        }
       },
       "CreateRoomMappingDto": {
         "required": [
@@ -3755,57 +3887,6 @@
           }
         },
         "description": "Batch of Adjudication punishment (aka award) mappings"
-      },
-      "AdjudicationPunishmentMappingDto": {
-        "required": [
-          "dpsPunishmentId",
-          "nomisBookingId",
-          "nomisSanctionSequence"
-        ],
-        "type": "object",
-        "properties": {
-          "nomisBookingId": {
-            "type": "integer",
-            "description": "NOMIS booking id",
-            "format": "int64",
-            "example": 123456
-          },
-          "nomisSanctionSequence": {
-            "type": "integer",
-            "description": "NOMIS sanction sequence",
-            "format": "int32",
-            "example": 4
-          },
-          "dpsPunishmentId": {
-            "type": "string",
-            "description": "DPS punishment id",
-            "example": "123456"
-          },
-          "label": {
-            "maxLength": 20,
-            "minLength": 0,
-            "type": "string",
-            "description": "Label (a timestamp for migrated ids)"
-          },
-          "mappingType": {
-            "maxLength": 20,
-            "minLength": 0,
-            "type": "string",
-            "description": "Mapping type",
-            "default": "ADJUDICATION_CREATED",
-            "enum": [
-              "MIGRATED",
-              "ADJUDICATION_CREATED"
-            ]
-          },
-          "whenCreated": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Date-time the mapping was created",
-            "example": "2021-07-05T10:35:17"
-          }
-        },
-        "description": "Adjudication punishment (aka award) mapping"
       },
       "NonAssociationMappingDto": {
         "required": [
