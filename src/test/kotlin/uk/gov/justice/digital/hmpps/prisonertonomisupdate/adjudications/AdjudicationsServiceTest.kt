@@ -59,7 +59,7 @@ internal class AdjudicationsServiceTest {
   @Test
   fun `External adjudicator name is not sent to nomis for hearing completed`() = runTest {
     callService(hearingType = HearingDto.OicHearingType.INAD_ADULT)
-    verify(nomisApiService).createHearingResult(
+    verify(nomisApiService).upsertHearingResult(
       any(),
       any(),
       any(),
@@ -70,7 +70,7 @@ internal class AdjudicationsServiceTest {
   @Test
   fun `Internal adjudicator name is sent to nomis for hearing completed`() = runTest {
     callService(hearingType = HearingDto.OicHearingType.GOV_ADULT)
-    verify(nomisApiService).createHearingResult(
+    verify(nomisApiService).upsertHearingResult(
       any(),
       any(),
       any(),

@@ -356,7 +356,7 @@ class AdjudicationsService(
       val nomisRequest =
         referralOutcome?.let { outcome.toNomisCreateHearingResultForReferralOutcome() }
           ?: let { outcome.toNomisCreateHearingResult() }
-      nomisApiService.createHearingResult(
+      nomisApiService.upsertHearingResult(
         adjudicationNumber = adjudicationMapping.adjudicationNumber,
         hearingId = hearingMapping.nomisHearingId,
         chargeSequence = adjudicationMapping.chargeSequence,
@@ -396,11 +396,27 @@ class AdjudicationsService(
         hearingMappingService.getMappingGivenDpsHearingId(eventData.hearingId)
           .also { telemetryMap["nomisHearingId"] = it.nomisHearingId.toString() }
 
-      nomisApiService.deleteHearingResult(
-        adjudicationMapping.adjudicationNumber,
-        hearingMapping.nomisHearingId,
-        adjudicationMapping.chargeSequence,
-      )
+      val outcome = adjudicationsApiService.getCharge(
+        eventData.chargeNumber,
+        eventData.prisonId,
+      ).reportedAdjudication.outcomes.firstOrNull()
+
+      // If no adjudication outcome exists - delete on NOMIS
+      // if outcome exists - update NOMIS with current state
+      outcome?.getOutcome()?.let {
+        nomisApiService.upsertHearingResult(
+          adjudicationNumber = adjudicationMapping.adjudicationNumber,
+          hearingId = hearingMapping.nomisHearingId,
+          chargeSequence = adjudicationMapping.chargeSequence,
+          request = outcome.toNomisCreateHearingResult(),
+        )
+      } ?: let {
+        nomisApiService.deleteHearingResult(
+          adjudicationNumber = adjudicationMapping.adjudicationNumber,
+          hearingId = hearingMapping.nomisHearingId,
+          chargeSequence = adjudicationMapping.chargeSequence,
+        )
+      }
     }.onSuccess {
       telemetryClient.trackEvent("hearing-result-deleted-success", telemetryMap, null)
     }.onFailure { e ->
@@ -420,12 +436,10 @@ class AdjudicationsService(
             telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
           }
 
-      val charge = adjudicationsApiService.getCharge(
+      val outcome = adjudicationsApiService.getCharge(
         eventData.chargeNumber,
         eventData.prisonId,
-      )
-
-      val outcome = charge.reportedAdjudication.outcomes.firstOrNull()
+      ).reportedAdjudication.outcomes.firstOrNull()
 
       // If no adjudication outcome exists - delete on NOMIS
       // if outcome exists - update NOMIS with current state

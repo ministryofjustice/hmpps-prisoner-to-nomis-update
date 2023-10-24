@@ -386,7 +386,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .awaitBodilessEntity()
   }
 
-  suspend fun createHearingResult(
+  suspend fun upsertHearingResult(
     adjudicationNumber: Long,
     hearingId: Long,
     chargeSequence: Int,
