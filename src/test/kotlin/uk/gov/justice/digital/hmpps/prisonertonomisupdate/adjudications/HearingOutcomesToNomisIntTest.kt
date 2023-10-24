@@ -43,7 +43,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
           chargeNumber = CHARGE_NUMBER,
           offenderNo = OFFENDER_NO,
         )
-        NomisApiExtension.nomisApi.stubHearingResultCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        NomisApiExtension.nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
         MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
         publishCreateHearingAdjournedDomainEvent()
       }
@@ -71,7 +71,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
           chargeNumber = CHARGE_NUMBER,
           offenderNo = OFFENDER_NO,
         )
-        NomisApiExtension.nomisApi.stubHearingResultCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        NomisApiExtension.nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
         MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
         publishCreateHearingReferredDomainEvent()
       }
@@ -102,7 +102,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
           chargeNumber = CHARGE_NUMBER,
           offenderNo = OFFENDER_NO,
         )
-        NomisApiExtension.nomisApi.stubHearingResultCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        NomisApiExtension.nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
         MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
         publishCreateHearingReferredDomainEvent()
       }
@@ -133,7 +133,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
           chargeNumber = CHARGE_NUMBER,
           offenderNo = OFFENDER_NO,
         )
-        NomisApiExtension.nomisApi.stubHearingResultCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        NomisApiExtension.nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
         MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
         publishCreateHearingReferralProsecutionDomainEvent()
       }
@@ -167,7 +167,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
           offenderNo = OFFENDER_NO,
           hearingType = "GOV_ADULT",
         )
-        NomisApiExtension.nomisApi.stubHearingResultCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        NomisApiExtension.nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
         MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
         publishCreateHearingReferralNotProceedDomainEvent()
       }
@@ -199,7 +199,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
           offenderNo = OFFENDER_NO,
           hearingType = "GOV_ADULT",
         )
-        NomisApiExtension.nomisApi.stubHearingResultCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        NomisApiExtension.nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
         MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
         publishCreateHearingReferralReferGovDomainEvent()
       }
@@ -228,7 +228,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
           chargeNumber = CHARGE_NUMBER,
           offenderNo = OFFENDER_NO,
         )
-        NomisApiExtension.nomisApi.stubHearingResultCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        NomisApiExtension.nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
         MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
         publishCreateHearingCompletedDomainEvent()
       }
@@ -350,6 +350,10 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
       fun setUp() {
         MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
         MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
         NomisApiExtension.nomisApi.stubHearingResultDelete(ADJUDICATION_NUMBER, NOMIS_HEARING_ID, CHARGE_SEQUENCE)
         publishDeleteHearingCompletedDomainEvent()
       }
@@ -423,6 +427,10 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
       fun setUp() {
         MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
         MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
         NomisApiExtension.nomisApi.stubHearingResultDelete(ADJUDICATION_NUMBER, NOMIS_HEARING_ID, CHARGE_SEQUENCE)
         publishDeleteHearingAdjournedDomainEvent()
       }
@@ -500,12 +508,17 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
   @Nested
   inner class DeleteHearingReferralOutcome {
     @Nested
-    inner class WhenHearingResultHasBeenDeletedInDPS {
+    inner class WhenHearingReferralOutcomeHasBeenDeletedInDPS {
       @BeforeEach
       fun setUp() {
         MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
         MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
-        NomisApiExtension.nomisApi.stubHearingResultDelete(ADJUDICATION_NUMBER, NOMIS_HEARING_ID, CHARGE_SEQUENCE)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithReferPoliceOutcome(
+          hearingId = DPS_HEARING_ID.toLong(),
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
+        NomisApiExtension.nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, NOMIS_HEARING_ID, CHARGE_SEQUENCE)
         publishDeleteHearingReferralOutcomeDomainEvent()
       }
 
@@ -527,9 +540,12 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will call nomis api to delete the hearing result`() {
+      fun `will call nomis api to amend the hearing result (roll back to ref_police outcome)`() {
         waitForHearingProcessingToBeComplete()
-        NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result")))
+        NomisApiExtension.nomisApi.verify(
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result"))
+            .withRequestBody(WireMock.matchingJsonPath("$.findingCode", WireMock.equalTo("REF_POLICE"))),
+        )
       }
     }
 

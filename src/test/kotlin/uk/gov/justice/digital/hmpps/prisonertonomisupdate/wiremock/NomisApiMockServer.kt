@@ -1228,7 +1228,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubHearingResultCreate(
+  fun stubHearingResultUpsert(
     adjudicationNumber: Long = 123456,
     nomisHearingId: Long = 345,
     chargeSequence: Int = 1,
