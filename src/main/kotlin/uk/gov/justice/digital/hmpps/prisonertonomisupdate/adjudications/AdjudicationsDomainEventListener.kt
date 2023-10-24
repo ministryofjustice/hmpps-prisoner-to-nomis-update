@@ -56,6 +56,7 @@ class AdjudicationsDomainEventListener(
       "adjudication.hearingReferral.deleted",
       "adjudication.referral.outcome.deleted",
       "adjudication.referral.deleted",
+      "adjudication.outcome.notProceed.deleted",
       -> adjudicationsService.deleteOutcome(message.fromJson())
 
       "adjudication.punishments.created" -> adjudicationsService.createPunishments(message.fromJson())

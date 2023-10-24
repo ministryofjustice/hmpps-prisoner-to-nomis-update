@@ -43,7 +43,7 @@ class ReferralOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will callback back to adjudication service, post the create and track success`() {
-        waitForProcessingToBeComplete()
+        waitForOutcomeProcessingToBeComplete()
 
         AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
         NomisApiExtension.nomisApi.verify(
@@ -68,7 +68,7 @@ class ReferralOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will callback back to adjudication service, post the create and track success`() {
-        waitForProcessingToBeComplete()
+        waitForOutcomeProcessingToBeComplete()
 
         AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
         NomisApiExtension.nomisApi.verify(
@@ -93,10 +93,6 @@ class ReferralOutcomesToNomisIntTest : SqsIntegrationTestBase() {
         },
         isNull(),
       )
-    }
-
-    private fun waitForProcessingToBeComplete() {
-      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
     }
   }
 
@@ -131,19 +127,53 @@ class ReferralOutcomesToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will call nomis api to delete the hearing result`() {
-        waitForHearingProcessingToBeComplete()
+      fun `will call nomis api to delete the result`() {
+        waitForOutcomeProcessingToBeComplete()
         NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQUENCE/result")))
       }
-    }
-
-    private fun waitForHearingProcessingToBeComplete() {
-      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
     }
   }
 
   @Nested
-  inner class DeleteHearingReferralOutcome {
+  inner class DeleteNotProceed {
+    @Nested
+    inner class WhenReferralHasBeenDeletedInDPS {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
+        NomisApiExtension.nomisApi.stubReferralDelete(ADJUDICATION_NUMBER, CHARGE_SEQUENCE)
+        publishDeleteNotProceedDomainEvent()
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("hearing-result-deleted-success"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Test
+      fun `will call nomis api to delete the result`() {
+        waitForOutcomeProcessingToBeComplete()
+        NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQUENCE/result")))
+      }
+    }
+  }
+
+  @Nested
+  inner class DeleteReferralOutcome {
     @Nested
     inner class WhenReferralResultHasBeenDeletedInDPS {
       @BeforeEach
@@ -174,16 +204,12 @@ class ReferralOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will call nomis api to update the referral outcome (rolling back to referral state)`() {
-        waitForHearingProcessingToBeComplete()
+        waitForOutcomeProcessingToBeComplete()
         NomisApiExtension.nomisApi.verify(
           WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQUENCE/result"))
             .withRequestBody(WireMock.matchingJsonPath("$.findingCode", WireMock.equalTo("REF_POLICE"))),
         )
       }
-    }
-
-    private fun waitForHearingProcessingToBeComplete() {
-      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
     }
   }
 
@@ -241,6 +267,24 @@ class ReferralOutcomesToNomisIntTest : SqsIntegrationTestBase() {
           ),
         ).build(),
     ).get()
+  }
+
+  private fun publishDeleteNotProceedDomainEvent() {
+    val eventType = "adjudication.outcome.notProceed.deleted"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(referralMessagePayload(CHARGE_NUMBER, PRISON_ID, OFFENDER_NO, eventType))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun waitForOutcomeProcessingToBeComplete() {
+    await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
   }
 
   fun referralMessagePayload(
