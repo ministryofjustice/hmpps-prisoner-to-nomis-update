@@ -44,24 +44,19 @@ class AdjudicationsDomainEventListener(
       "adjudication.hearingCompleted.created",
       "adjudication.hearingAdjourn.created",
       "adjudication.hearingReferral.created",
-      -> adjudicationsService.createHearingCompleted(message.fromJson())
+      "adjudication.referral.outcome.prosecution",
+      "adjudication.referral.outcome.notProceed",
+      "adjudication.referral.outcome.referGov",
+      "adjudication.outcome.referPolice",
+      "adjudication.outcome.notProceed",
+      -> adjudicationsService.createOutcome(message.fromJson())
 
       "adjudication.hearingCompleted.deleted",
       "adjudication.hearingAdjourn.deleted",
       "adjudication.hearingReferral.deleted",
       "adjudication.referral.outcome.deleted",
-      -> adjudicationsService.deleteHearingCompleted(message.fromJson())
-
-      "adjudication.outcome.referPolice",
-      "adjudication.outcome.notProceed",
-      -> adjudicationsService.createReferral(
-        message.fromJson(),
-      )
-
-      "adjudication.referral.outcome.prosecution",
-      "adjudication.referral.outcome.notProceed",
-      "adjudication.referral.outcome.referGov",
-      -> adjudicationsService.createOutcome(message.fromJson(), referralOutcome = true)
+      "adjudication.referral.deleted",
+      -> adjudicationsService.deleteOutcome(message.fromJson())
 
       "adjudication.punishments.created" -> adjudicationsService.createPunishments(message.fromJson())
 

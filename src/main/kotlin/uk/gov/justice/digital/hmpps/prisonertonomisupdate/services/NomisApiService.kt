@@ -404,6 +404,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .awaitBodilessEntity()
   }
 
+  suspend fun deleteReferralResult(adjudicationNumber: Long, chargeSequence: Int) {
+    webClient.delete()
+      .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/result", adjudicationNumber, chargeSequence)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
   suspend fun createAdjudicationAwards(
     adjudicationNumber: Long,
     chargeSequence: Int,
@@ -424,7 +431,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     .retrieve()
     .awaitBody()
 
-  suspend fun createReferral(
+  suspend fun upsertReferral(
     adjudicationNumber: Long,
     chargeSequence: Int,
     request: CreateHearingResultRequest,

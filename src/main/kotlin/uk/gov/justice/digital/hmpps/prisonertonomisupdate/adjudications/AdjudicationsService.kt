@@ -313,17 +313,16 @@ class AdjudicationsService(
     }
   }
 
-  suspend fun createOutcome(createEvent: OutcomeEvent, referralOutcome: Boolean = false) {
+  suspend fun createOutcome(createEvent: OutcomeEvent) {
     createEvent.additionalInformation.hearingId?.let {
       createHearingCompleted(
         createEvent.toHearingEvent(),
-        referralOutcome = referralOutcome,
       )
     }
       ?: let { createReferral(createEvent.toReferralEvent()) }
   }
 
-  suspend fun createHearingCompleted(createEvent: HearingEvent, referralOutcome: Boolean = false) {
+  suspend fun createHearingCompleted(createEvent: HearingEvent) {
     val event = createEvent.additionalInformation
     val telemetryMap = event.toTelemetryMap()
 
@@ -337,6 +336,8 @@ class AdjudicationsService(
         ?: throw IllegalStateException(
           "Outcome not found for Hearing ${event.hearingId} in DPS adjudication with charge no ${event.chargeNumber}",
         )
+
+      val referralOutcome = outcome.getReferralOutcome()
 
       val adjudicationMapping =
         adjudicationMappingService.getMappingGivenChargeNumber(event.chargeNumber)
@@ -353,7 +354,8 @@ class AdjudicationsService(
           )
 
       val nomisRequest =
-        if (referralOutcome) outcome.toNomisCreateHearingResultForReferralOutcome() else outcome.toNomisCreateHearingResult()
+        referralOutcome?.let { outcome.toNomisCreateHearingResultForReferralOutcome() }
+          ?: let { outcome.toNomisCreateHearingResult() }
       nomisApiService.createHearingResult(
         adjudicationNumber = adjudicationMapping.adjudicationNumber,
         hearingId = hearingMapping.nomisHearingId,
@@ -369,6 +371,15 @@ class AdjudicationsService(
       telemetryClient.trackEvent("hearing-result-created-failed", telemetryMap, null)
       throw e
     }
+  }
+
+  suspend fun deleteOutcome(deleteEvent: OutcomeEvent) {
+    deleteEvent.additionalInformation.hearingId?.let {
+      deleteHearingCompleted(
+        deleteEvent.toHearingEvent(),
+      )
+    }
+      ?: let { deleteReferral(deleteEvent.toReferralEvent()) }
   }
 
   suspend fun deleteHearingCompleted(deleteEvent: HearingEvent) {
@@ -390,6 +401,46 @@ class AdjudicationsService(
         hearingMapping.nomisHearingId,
         adjudicationMapping.chargeSequence,
       )
+    }.onSuccess {
+      telemetryClient.trackEvent("hearing-result-deleted-success", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("hearing-result-deleted-failed", telemetryMap, null)
+      throw e
+    }
+  }
+
+  suspend fun deleteReferral(deleteEvent: ReferralEvent) {
+    val eventData: ReferralAdditionalInformation = deleteEvent.additionalInformation
+    val telemetryMap = deleteEvent.additionalInformation.toTelemetryMap()
+
+    runCatching {
+      val adjudicationMapping =
+        adjudicationMappingService.getMappingGivenChargeNumber(eventData.chargeNumber)
+          .also {
+            telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
+          }
+
+      val charge = adjudicationsApiService.getCharge(
+        eventData.chargeNumber,
+        eventData.prisonId,
+      )
+
+      val outcome = charge.reportedAdjudication.outcomes.firstOrNull()
+
+      // If no adjudication outcome exists - delete on NOMIS
+      // if outcome exists - update NOMIS with current state
+      outcome?.getOutcome()?.let {
+        nomisApiService.upsertReferral(
+          adjudicationMapping.adjudicationNumber,
+          adjudicationMapping.chargeSequence,
+          outcome.toNomisCreateReferral(),
+        )
+      } ?: let {
+        nomisApiService.deleteReferralResult(
+          adjudicationMapping.adjudicationNumber,
+          adjudicationMapping.chargeSequence,
+        )
+      }
     }.onSuccess {
       telemetryClient.trackEvent("hearing-result-deleted-success", telemetryMap, null)
     }.onFailure { e ->
@@ -453,7 +504,7 @@ class AdjudicationsService(
   }
 
   // referral without a hearing
-  suspend fun createReferral(createEvent: ReferralEvent, referralOutcome: Boolean = false) {
+  suspend fun createReferral(createEvent: ReferralEvent) {
     val event = createEvent.additionalInformation
     val telemetryMap = event.toTelemetryMap()
 
@@ -475,8 +526,9 @@ class AdjudicationsService(
           }
 
       val nomisRequest =
-        if (referralOutcome) outcome.toNomisCreateReferralForReferralOutcome() else outcome.toNomisCreateReferral()
-      nomisApiService.createReferral(
+        outcome.getReferralOutcome()?.let { outcome.toNomisCreateReferralForReferralOutcome() }
+          ?: let { outcome.toNomisCreateReferral() }
+      nomisApiService.upsertReferral(
         adjudicationNumber = adjudicationMapping.adjudicationNumber,
         chargeSequence = adjudicationMapping.chargeSequence,
         request = nomisRequest,
@@ -621,6 +673,10 @@ private fun OutcomeHistoryDto.toNomisCreateReferralForReferralOutcome(): CreateH
     findingCode = toNomisFindingCode(findingCode),
   )
 }
+
+private fun OutcomeHistoryDto.getReferralOutcome(): String? = this.outcome?.referralOutcome?.code?.name
+
+private fun OutcomeHistoryDto.getOutcome(): String? = this.outcome?.outcome?.code?.name
 
 private fun toNomisFindingCode(code: String) = when (code) {
   OutcomeDto.Code.REFER_POLICE.name -> "REF_POLICE"

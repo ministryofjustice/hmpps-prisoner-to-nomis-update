@@ -1263,7 +1263,17 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubReferralCreate(
+  fun stubReferralDelete(adjudicationNumber: Long = 123456, chargeSequence: Int = 1) {
+    stubFor(
+      delete("/adjudications/adjudication-number/$adjudicationNumber/charge/$chargeSequence/result").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubReferralUpsert(
     adjudicationNumber: Long = 123456,
     chargeSequence: Int = 1,
     plea: String = "NOT_ASKED",

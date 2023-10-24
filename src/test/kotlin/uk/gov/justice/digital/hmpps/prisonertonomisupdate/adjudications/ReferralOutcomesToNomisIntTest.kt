@@ -37,7 +37,7 @@ class ReferralOutcomesToNomisIntTest : SqsIntegrationTestBase() {
           chargeNumber = CHARGE_NUMBER,
           offenderNo = OFFENDER_NO,
         )
-        NomisApiExtension.nomisApi.stubReferralCreate(ADJUDICATION_NUMBER)
+        NomisApiExtension.nomisApi.stubReferralUpsert(ADJUDICATION_NUMBER)
         publishCreatePoliceReferralDomainEvent()
       }
 
@@ -62,7 +62,7 @@ class ReferralOutcomesToNomisIntTest : SqsIntegrationTestBase() {
           chargeNumber = CHARGE_NUMBER,
           offenderNo = OFFENDER_NO,
         )
-        NomisApiExtension.nomisApi.stubReferralCreate(ADJUDICATION_NUMBER, finding = "NOT_PROCEED")
+        NomisApiExtension.nomisApi.stubReferralUpsert(ADJUDICATION_NUMBER, finding = "NOT_PROCEED")
         publishCreateNotProceedReferralDomainEvent()
       }
 
@@ -100,6 +100,93 @@ class ReferralOutcomesToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class DeleteReferral {
+    @Nested
+    inner class WhenReferralHasBeenDeletedInDPS {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
+        NomisApiExtension.nomisApi.stubReferralDelete(ADJUDICATION_NUMBER, CHARGE_SEQUENCE)
+        publishDeleteReferralDomainEvent()
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("hearing-result-deleted-success"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Test
+      fun `will call nomis api to delete the hearing result`() {
+        waitForHearingProcessingToBeComplete()
+        NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQUENCE/result")))
+      }
+    }
+
+    private fun waitForHearingProcessingToBeComplete() {
+      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+    }
+  }
+
+  @Nested
+  inner class DeleteHearingReferralOutcome {
+    @Nested
+    inner class WhenReferralResultHasBeenDeletedInDPS {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithPoliceReferral(
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
+        NomisApiExtension.nomisApi.stubReferralUpsert(ADJUDICATION_NUMBER, CHARGE_SEQUENCE)
+        publishDeleteReferralOutcomeDomainEvent()
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("hearing-result-deleted-success"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Test
+      fun `will call nomis api to update the referral outcome (rolling back to referral state)`() {
+        waitForHearingProcessingToBeComplete()
+        NomisApiExtension.nomisApi.verify(
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQUENCE/result"))
+            .withRequestBody(WireMock.matchingJsonPath("$.findingCode", WireMock.equalTo("REF_POLICE"))),
+        )
+      }
+    }
+
+    private fun waitForHearingProcessingToBeComplete() {
+      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+    }
+  }
+
   private fun publishCreatePoliceReferralDomainEvent() {
     val eventType = "adjudication.outcome.referPolice"
     awsSnsClient.publish(
@@ -116,6 +203,34 @@ class ReferralOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
   private fun publishCreateNotProceedReferralDomainEvent() {
     val eventType = "adjudication.outcome.notProceed"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(referralMessagePayload(CHARGE_NUMBER, PRISON_ID, OFFENDER_NO, eventType))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishDeleteReferralDomainEvent() {
+    val eventType = "adjudication.referral.deleted"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(referralMessagePayload(CHARGE_NUMBER, PRISON_ID, OFFENDER_NO, eventType))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishDeleteReferralOutcomeDomainEvent() {
+    val eventType = "adjudication.referral.outcome.deleted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(referralMessagePayload(CHARGE_NUMBER, PRISON_ID, OFFENDER_NO, eventType))
