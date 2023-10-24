@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications
 
-import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -33,7 +32,9 @@ import java.time.format.DateTimeFormatter
 private const val CHARGE_NUMBER_FOR_CREATION = "12345-1"
 private const val CHARGE_SEQ = 1
 private const val ADJUDICATION_NUMBER = 12345L
-private const val CONSECUTIVE_CHARGE_NUMBER = "987654-2"
+private const val CONSECUTIVE_CHARGE_NUMBER =
+  // language=text
+  "987654-2"
 private const val CONSECUTIVE_CHARGE_SEQ = 2
 private const val CONSECUTIVE_ADJUDICATION_NUMBER = 12345L
 private const val PRISON_ID = "MDI"
@@ -85,7 +86,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will callback back to adjudication service to get more details`() {
         waitForCreatePunishmentProcessingToBeComplete()
 
-        adjudicationsApiServer.verify(WireMock.getRequestedFor(urlEqualTo("/reported-adjudications/$CHARGE_NUMBER_FOR_CREATION/v2")))
+        adjudicationsApiServer.verify(getRequestedFor(urlEqualTo("/reported-adjudications/$CHARGE_NUMBER_FOR_CREATION/v2")))
       }
 
       @Test
@@ -119,14 +120,14 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
 
         nomisApi.verify(
           postRequestedFor(anyUrl())
-            .withRequestBody(matchingJsonPath("awardRequests[0].sanctionType", equalTo("CC")))
-            .withRequestBody(matchingJsonPath("awardRequests[0].sanctionStatus", equalTo("IMMEDIATE")))
-            .withRequestBody(matchingJsonPath("awardRequests[0].effectiveDate", equalTo("2023-10-04")))
-            .withRequestBody(matchingJsonPath("awardRequests[0].sanctionDays", equalTo("3")))
-            .withRequestBody(matchingJsonPath("awardRequests[1].sanctionType", equalTo("EXTW")))
-            .withRequestBody(matchingJsonPath("awardRequests[1].sanctionStatus", equalTo("SUSPENDED")))
-            .withRequestBody(matchingJsonPath("awardRequests[1].effectiveDate", equalTo("2023-10-18")))
-            .withRequestBody(matchingJsonPath("awardRequests[1].sanctionDays", equalTo("12"))),
+            .withRequestBody(matchingJsonPath("awards[0].sanctionType", equalTo("CC")))
+            .withRequestBody(matchingJsonPath("awards[0].sanctionStatus", equalTo("IMMEDIATE")))
+            .withRequestBody(matchingJsonPath("awards[0].effectiveDate", equalTo("2023-10-04")))
+            .withRequestBody(matchingJsonPath("awards[0].sanctionDays", equalTo("3")))
+            .withRequestBody(matchingJsonPath("awards[1].sanctionType", equalTo("EXTW")))
+            .withRequestBody(matchingJsonPath("awards[1].sanctionStatus", equalTo("SUSPENDED")))
+            .withRequestBody(matchingJsonPath("awards[1].effectiveDate", equalTo("2023-10-18")))
+            .withRequestBody(matchingJsonPath("awards[1].sanctionDays", equalTo("12"))),
         )
       }
 
@@ -207,16 +208,16 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
 
           nomisApi.verify(
             postRequestedFor(anyUrl())
-              .withRequestBody(matchingJsonPath("awardRequests[0].sanctionType", equalTo("CC")))
-              .withRequestBody(matchingJsonPath("awardRequests[0].sanctionStatus", equalTo("IMMEDIATE")))
-              .withRequestBody(matchingJsonPath("awardRequests[0].effectiveDate", equalTo("2023-10-04")))
-              .withRequestBody(matchingJsonPath("awardRequests[0].sanctionDays", equalTo("3")))
-              .withRequestBody(matchingJsonPath("awardRequests[1].sanctionType", equalTo("ADA")))
-              .withRequestBody(matchingJsonPath("awardRequests[1].sanctionStatus", equalTo("IMMEDIATE")))
-              .withRequestBody(matchingJsonPath("awardRequests[1].effectiveDate", equalTo(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE))))
-              .withRequestBody(matchingJsonPath("awardRequests[1].sanctionDays", equalTo("2")))
-              .withRequestBody(matchingJsonPath("awardRequests[1].consecutiveCharge.adjudicationNumber", equalTo("$CONSECUTIVE_ADJUDICATION_NUMBER")))
-              .withRequestBody(matchingJsonPath("awardRequests[1].consecutiveCharge.chargeSequence", equalTo("$CONSECUTIVE_CHARGE_SEQ"))),
+              .withRequestBody(matchingJsonPath("awards[0].sanctionType", equalTo("CC")))
+              .withRequestBody(matchingJsonPath("awards[0].sanctionStatus", equalTo("IMMEDIATE")))
+              .withRequestBody(matchingJsonPath("awards[0].effectiveDate", equalTo("2023-10-04")))
+              .withRequestBody(matchingJsonPath("awards[0].sanctionDays", equalTo("3")))
+              .withRequestBody(matchingJsonPath("awards[1].sanctionType", equalTo("ADA")))
+              .withRequestBody(matchingJsonPath("awards[1].sanctionStatus", equalTo("IMMEDIATE")))
+              .withRequestBody(matchingJsonPath("awards[1].effectiveDate", equalTo(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE))))
+              .withRequestBody(matchingJsonPath("awards[1].sanctionDays", equalTo("2")))
+              .withRequestBody(matchingJsonPath("awards[1].consecutiveCharge.adjudicationNumber", equalTo("$CONSECUTIVE_ADJUDICATION_NUMBER")))
+              .withRequestBody(matchingJsonPath("awards[1].consecutiveCharge.chargeSequence", equalTo("$CONSECUTIVE_CHARGE_SEQ"))),
           )
         }
       }
@@ -283,10 +284,10 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
 
           nomisApi.verify(
             postRequestedFor(anyUrl())
-              .withRequestBody(matchingJsonPath("awardRequests[0].commentText", equalTo("Added by DPS: Loss of ASSOCIATION")))
-              .withRequestBody(matchingJsonPath("awardRequests[1].commentText", equalTo("Added by DPS: Loss of Daily walk")))
-              .withRequestBody(matchingJsonPath("awardRequests[2].commentText", equalTo("Added by DPS")))
-              .withRequestBody(matchingJsonPath("awardRequests[3].commentText", equalTo("Added by DPS: OTHER - Damages owed £45.10"))),
+              .withRequestBody(matchingJsonPath("awards[0].commentText", equalTo("Added by DPS: Loss of ASSOCIATION")))
+              .withRequestBody(matchingJsonPath("awards[1].commentText", equalTo("Added by DPS: Loss of Daily walk")))
+              .withRequestBody(matchingJsonPath("awards[2].commentText", equalTo("Added by DPS")))
+              .withRequestBody(matchingJsonPath("awards[3].commentText", equalTo("Added by DPS: OTHER - Damages owed £45.10"))),
 
           )
         }
@@ -360,12 +361,12 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
 
           nomisApi.verify(
             postRequestedFor(anyUrl())
-              .withRequestBody(matchingJsonPath("awardRequests[0].sanctionStatus", equalTo("SUSP_PROSP")))
-              .withRequestBody(matchingJsonPath("awardRequests[1].sanctionStatus", equalTo("PROSPECTIVE")))
-              .withRequestBody(matchingJsonPath("awardRequests[2].sanctionStatus", equalTo("IMMEDIATE")))
-              .withRequestBody(matchingJsonPath("awardRequests[3].sanctionStatus", equalTo("SUSPENDED")))
-              .withRequestBody(matchingJsonPath("awardRequests[4].sanctionStatus", equalTo("IMMEDIATE")))
-              .withRequestBody(matchingJsonPath("awardRequests[5].sanctionStatus", equalTo("IMMEDIATE"))),
+              .withRequestBody(matchingJsonPath("awards[0].sanctionStatus", equalTo("SUSP_PROSP")))
+              .withRequestBody(matchingJsonPath("awards[1].sanctionStatus", equalTo("PROSPECTIVE")))
+              .withRequestBody(matchingJsonPath("awards[2].sanctionStatus", equalTo("IMMEDIATE")))
+              .withRequestBody(matchingJsonPath("awards[3].sanctionStatus", equalTo("SUSPENDED")))
+              .withRequestBody(matchingJsonPath("awards[4].sanctionStatus", equalTo("IMMEDIATE")))
+              .withRequestBody(matchingJsonPath("awards[5].sanctionStatus", equalTo("IMMEDIATE"))),
 
           )
         }

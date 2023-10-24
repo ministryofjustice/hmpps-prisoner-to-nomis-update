@@ -705,6 +705,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         ).willSetStateTo(Scenario.STARTED),
     )
   }
+
   fun stubCreateHearing() {
     stubFor(
       post("/mapping/hearings").willReturn(
@@ -871,6 +872,66 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
             .withFixedDelay(1500),
 
         ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubUpdatePunishments() {
+    stubFor(
+      put("/mapping/punishments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubUpdatePunishmentsWithError(status: Int = 500) {
+    stubFor(
+      put("/mapping/punishments").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "all gone wrong" }""")
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubUpdatePunishmentsWithDuplicateError(
+    dpsPunishmentId: String,
+    nomisBookingId: Long,
+    nomisSanctionSequence: Int,
+    duplicateDpsPunishmentId: String,
+    duplicateNomisBookingId: Long,
+    duplicateNomisSanctionSequence: Int,
+  ) {
+    stubFor(
+      put("/mapping/punishments")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+            { 
+              "status": 409,
+              "errorCode": 1409,
+              "userMessage": "Conflict: Punishment mapping already exists",
+               "moreInfo": {
+                "existing": {
+                  "dpsPunishmentId": $dpsPunishmentId,
+                  "nomisBookingId": "$nomisBookingId",
+                  "nomisSanctionSequence": "$nomisSanctionSequence"
+                  },
+                "duplicate": {
+                  "dpsPunishmentId": $duplicateDpsPunishmentId,
+                  "nomisBookingId": "$duplicateNomisBookingId",
+                  "nomisSanctionSequence": "$duplicateNomisSanctionSequence"
+                }
+              }
+            }
+              """.trimMargin(),
+            )
+            .withStatus(409),
+        ),
     )
   }
 
