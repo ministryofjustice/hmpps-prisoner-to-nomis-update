@@ -73,23 +73,24 @@ class ActivitiesReconService(
     prisonId: String,
     compareResults: CompareBookingsResult,
   ) {
-    val telemetryName =
-      "activity-allocation-reconciliation-report-${if (compareResults.noDifferences()) "success" else "failed"}"
     if (compareResults.noDifferences()) {
-      telemetryClient.trackEvent(telemetryName, mapOf("prison" to prisonId))
+      telemetryClient.trackEvent("activity-allocation-reconciliation-report-success", mapOf("prison" to prisonId))
+    } else {
+      nomisApiService.getPrisonerDetails(compareResults.all())
+        .sortedBy { it.bookingId }
+        .forEach {
+          telemetryClient.trackEvent(
+            "activity-allocation-reconciliation-report-failed",
+            mapOf(
+              "prison" to prisonId,
+              "type" to compareResults.differenceType(it.bookingId),
+              "bookingId" to it.bookingId.toString(),
+              "offenderNo" to it.offenderNo,
+              "location" to it.location,
+            ),
+          )
+        }
     }
-
-    val bookingDetails = nomisApiService.getPrisonerDetails(compareResults.nomisOnly + compareResults.dpsOnly + compareResults.differentCount)
-    bookingDetails
-      .sortedBy { it.bookingId }
-      .forEach {
-        val telemetryMap = mutableMapOf("prison" to prisonId)
-        telemetryMap["type"] = compareResults.differenceType(it.bookingId)
-        telemetryMap["bookingId"] = it.bookingId.toString()
-        telemetryMap["offenderNo"] = it.offenderNo
-        telemetryMap["location"] = it.location
-        telemetryClient.trackEvent(telemetryName, telemetryMap.toMap())
-      }
   }
 }
 
@@ -105,6 +106,7 @@ private data class CompareBookingsResult(
     differentCount.contains(bookingId) -> "different_count"
     else -> "no_differences"
   }
+  fun all() = nomisOnly + dpsOnly + differentCount
 }
 
 private data class BookingCounts(val id: Long, val count: Long)
