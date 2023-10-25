@@ -60,6 +60,7 @@ class AdjudicationsDomainEventListener(
       -> adjudicationsService.deleteOutcome(message.fromJson())
 
       "adjudication.punishments.created" -> adjudicationsService.createPunishments(message.fromJson())
+      "adjudication.punishments.updated" -> adjudicationsService.updatePunishments(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }

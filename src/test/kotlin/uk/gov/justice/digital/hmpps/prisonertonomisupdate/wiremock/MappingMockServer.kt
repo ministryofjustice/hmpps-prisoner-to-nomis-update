@@ -935,6 +935,67 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubUpdatePunishmentsWithErrorFollowedBySuccess() {
+    stubFor(
+      put("/mapping/punishments")
+        .inScenario("Retry Mapping Adjudication Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause Mapping Adjudication Success"),
+    )
+
+    stubFor(
+      put("/mapping/punishments")
+        .inScenario("Retry Mapping Adjudication Scenario")
+        .whenScenarioStateIs("Cause Mapping Adjudication Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201)
+            .withFixedDelay(1500),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetPunishments(dpsPunishmentId: String, nomisBookingId: Long = 1234, nomisSanctionSequence: Int = 2) {
+    stubFor(
+      get("/mapping/punishments/$dpsPunishmentId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200)
+          .withBody(
+            // language=JSON
+            """ 
+              {
+                "nomisBookingId": $nomisBookingId,
+                "nomisSanctionSequence": $nomisSanctionSequence,
+                "dpsPunishmentId": "123456",
+                "mappingType": "ADJUDICATION_CREATED",
+                "whenCreated": "2021-07-05T10:35:17"
+              }
+            
+            """.trimIndent(),
+          ),
+      ),
+    )
+  }
+
+  fun stubGetPunishmentsWithError(dpsPunishmentId: String, status: Int = 500) {
+    stubFor(
+      get("/mapping/punishments/$dpsPunishmentId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "all gone wrong" }""")
+          .withStatus(status),
+      ),
+    )
+  }
+
   // *************************************************** Non-Associations **********************************************
 
   fun stubCreateNonAssociation() {

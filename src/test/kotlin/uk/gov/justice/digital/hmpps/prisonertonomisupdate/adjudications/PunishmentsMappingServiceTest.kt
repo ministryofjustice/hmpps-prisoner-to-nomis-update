@@ -3,12 +3,14 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications
 
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -156,6 +158,49 @@ internal class PunishmentsMappingServiceTest {
 
       assertThrows<WebClientResponseException.InternalServerError> {
         mappingService.updateMapping(updateMapping())
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /mapping/punishments/:dpsPunishmentId")
+  inner class GetMapping {
+    @BeforeEach
+    internal fun setUp() {
+      mappingServer.stubGetPunishments(dpsPunishmentId = "12121", nomisBookingId = 654321, nomisSanctionSequence = 6)
+    }
+
+    @Test
+    fun `should call mapping api with OAuth2 token`() = runTest {
+      mappingService.getMapping(dpsPunishmentId = "12121")
+
+      mappingServer.verify(
+        getRequestedFor(urlEqualTo("/mapping/punishments/12121"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will get data from mapping api`() = runTest {
+      val mapping = mappingService.getMapping(dpsPunishmentId = "12121")!!
+
+      assertThat(mapping.nomisBookingId).isEqualTo(654321)
+      assertThat(mapping.nomisSanctionSequence).isEqualTo(6)
+    }
+
+    @Test
+    internal fun `404 error converted to null`() = runTest {
+      mappingServer.stubGetPunishmentsWithError(dpsPunishmentId = "12121", 404)
+
+      assertThat(mappingService.getMapping(dpsPunishmentId = "12121")).isNull()
+    }
+
+    @Test
+    internal fun `when other error a web exception is thrown`() = runTest {
+      mappingServer.stubGetPunishmentsWithError(dpsPunishmentId = "12121", 500)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        mappingService.getMapping(dpsPunishmentId = "12121")
       }
     }
   }

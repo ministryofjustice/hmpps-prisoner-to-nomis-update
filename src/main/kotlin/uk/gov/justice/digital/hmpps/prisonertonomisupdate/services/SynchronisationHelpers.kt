@@ -42,38 +42,21 @@ class SynchroniseBuilder<MAPPING_DTO>(
       }.onSuccess {
         it.also { mapping ->
           mapping?.run {
-            val telemetryAttributes = eventTelemetry + mapping.asMap()
-            kotlin.runCatching {
-              postMapping(mapping)
+            createMapping(
+              mapping = mapping,
+              telemetryClient = telemetryClient,
+              postMapping = postMapping,
+              eventTelemetry = eventTelemetry,
+              retryQueueService = retryQueueService,
+              name = name,
+              log = log,
+            ).onSuccess {
+              telemetryClient?.trackEvent(
+                "$name-create-success",
+                eventTelemetry + mapping.asMap(),
+                null,
+              )
             }
-              .onFailure { e ->
-                telemetryClient?.trackEvent(
-                  "$name-mapping-create-failed",
-                  telemetryAttributes,
-                  null,
-                )
-                when (e) {
-                  is DuplicateMappingException -> {
-                    telemetryClient?.trackEvent(
-                      "to-nomis-synch-$name-duplicate",
-                      telemetryAttributes + e.error.moreInfo.asTelemetry(),
-                      null,
-                    )
-                  }
-
-                  else -> {
-                    retryQueueService?.sendMessage(mapping, telemetryAttributes, name)
-                    log.error("Failed to create $name mapping", e)
-                  }
-                }
-              }
-              .onSuccess {
-                telemetryClient?.trackEvent(
-                  "$name-create-success",
-                  telemetryAttributes,
-                  null,
-                )
-              }
           } ?: kotlin.run {
             telemetryClient?.trackEvent(
               "$name-create-ignored",
@@ -99,6 +82,42 @@ class SynchroniseBuilder<MAPPING_DTO>(
   infix fun saveMapping(saveMapping: suspend (MAPPING_DTO) -> Unit) {
     postMapping = saveMapping
   }
+}
+
+suspend fun <MAPPING_DTO> createMapping(
+  mapping: MAPPING_DTO & Any,
+  telemetryClient: TelemetryClient?,
+  postMapping: suspend (MAPPING_DTO) -> Unit,
+  eventTelemetry: Map<String, String>,
+  retryQueueService: RetryQueueService?,
+  name: String,
+  log: Logger,
+): Result<Unit> {
+  val telemetryAttributes = eventTelemetry + mapping.asMap()
+  return runCatching {
+    postMapping(mapping)
+  }
+    .onFailure { e ->
+      telemetryClient?.trackEvent(
+        "$name-mapping-create-failed",
+        telemetryAttributes,
+        null,
+      )
+      when (e) {
+        is DuplicateMappingException -> {
+          telemetryClient?.trackEvent(
+            "to-nomis-synch-$name-duplicate",
+            telemetryAttributes + e.error.moreInfo.asTelemetry(),
+            null,
+          )
+        }
+
+        else -> {
+          retryQueueService?.sendMessage(mapping, telemetryAttributes, name)
+          log.error("Failed to create $name mapping", e)
+        }
+      }
+    }
 }
 
 private fun DuplicateErrorContent.asTelemetry(): Map<String, String> =
