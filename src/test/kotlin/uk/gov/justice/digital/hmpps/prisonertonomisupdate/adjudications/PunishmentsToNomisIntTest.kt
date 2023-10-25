@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -484,8 +485,239 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class UpdatePunishments {
+    @Nested
+    inner class HappyPath {
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
+        adjudicationsApiServer.stubChargeGet(
+          CHARGE_NUMBER_FOR_CREATION,
+          offenderNo = OFFENDER_NO,
+          punishments =
+          // language=json
+          """
+          [
+            {
+                "id": 634,
+                "type": "CONFINEMENT",
+                "schedule": {
+                    "days": 3,
+                    "startDate": "2023-10-04",
+                    "endDate": "2023-10-06"
+                }
+            },
+            {
+                "id": 667,
+                "type": "EXTRA_WORK",
+                "schedule": {
+                    "days": 12,
+                    "suspendedUntil": "2023-10-18"
+                }
+            }
+        ]
+          """.trimIndent(),
+        )
+
+        mappingServer.stubGetPunishments(dpsPunishmentId = "634", nomisBookingId = 12345, nomisSanctionSequence = 10)
+        mappingServer.stubGetPunishmentsWithError(dpsPunishmentId = "667", status = 404)
+
+        nomisApi.stubAdjudicationAwardsUpdate(ADJUDICATION_NUMBER, CHARGE_SEQ, createdAwardIds = listOf(12345L to 11), deletedAwardIds = listOf(12345L to 9, 12345L to 8))
+        mappingServer.stubUpdatePunishments()
+        publishUpdatePunishmentsDomainEvent()
+        waitForUpdatePunishmentProcessingToBeComplete()
+      }
+
+      @Test
+      fun `will callback back to adjudication service to get more details`() {
+        adjudicationsApiServer.verify(getRequestedFor(urlEqualTo("/reported-adjudications/$CHARGE_NUMBER_FOR_CREATION/v2")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("punishment-update-success"),
+          org.mockito.kotlin.check {
+            assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
+            assertThat(it["chargeSequence"]).isEqualTo(CHARGE_SEQ.toString())
+            assertThat(it["punishmentsCreatedCount"]).isEqualTo("1")
+            assertThat(it["punishmentsUpdatedCount"]).isEqualTo("1")
+            assertThat(it["punishmentsDeletedCount"]).isEqualTo("2")
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to update the awards`() {
+        nomisApi.verify(putRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQ/awards")))
+      }
+
+      @Test
+      fun `will map between DPS punishments to NOMIS awards dividing between new and existing awards`() {
+        nomisApi.verify(
+          putRequestedFor(anyUrl())
+            .withRequestBody(matchingJsonPath("awardsToCreate[0].sanctionType", equalTo("EXTW")))
+            .withRequestBody(matchingJsonPath("awardsToCreate[0].sanctionStatus", equalTo("SUSPENDED")))
+            .withRequestBody(matchingJsonPath("awardsToCreate[0].effectiveDate", equalTo("2023-10-18")))
+            .withRequestBody(matchingJsonPath("awardsToCreate[0].sanctionDays", equalTo("12")))
+            .withRequestBody(matchingJsonPath("awardsToUpdate[0].sanctionSequence", equalTo("10")))
+            .withRequestBody(matchingJsonPath("awardsToUpdate[0].award.sanctionType", equalTo("CC")))
+            .withRequestBody(matchingJsonPath("awardsToUpdate[0].award.sanctionStatus", equalTo("IMMEDIATE")))
+            .withRequestBody(matchingJsonPath("awardsToUpdate[0].award.effectiveDate", equalTo("2023-10-04")))
+            .withRequestBody(matchingJsonPath("awardsToUpdate[0].award.sanctionDays", equalTo("3"))),
+        )
+      }
+
+      @Test
+      fun `will create a mapping between the set of new punishments and awards and delete ones not referenced`() {
+        await untilAsserted {
+          mappingServer.verify(
+            putRequestedFor(urlEqualTo("/mapping/punishments"))
+              .withRequestBody(matchingJsonPath("punishmentsToCreate[0].nomisBookingId", equalTo("12345")))
+              .withRequestBody(matchingJsonPath("punishmentsToCreate[0].nomisSanctionSequence", equalTo("11")))
+              .withRequestBody(matchingJsonPath("punishmentsToCreate[0].dpsPunishmentId", equalTo("667")))
+              .withRequestBody(matchingJsonPath("punishmentsToDelete[0].nomisBookingId", equalTo("12345")))
+              .withRequestBody(matchingJsonPath("punishmentsToDelete[0].nomisSanctionSequence", equalTo("9")))
+              .withRequestBody(matchingJsonPath("punishmentsToDelete[1].nomisBookingId", equalTo("12345")))
+              .withRequestBody(matchingJsonPath("punishmentsToDelete[1].nomisSanctionSequence", equalTo("8"))),
+          )
+        }
+      }
+    }
+
+    @Nested
+    inner class ErrorScenarios {
+      @Nested
+      inner class WhenAdjudicationMappingNotFound {
+
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByChargeNumberWithError(CHARGE_NUMBER_FOR_CREATION, 404)
+          publishUpdatePunishmentsDomainEvent()
+        }
+
+        @Test
+        fun `an error will lead to message being added to DLQ`() {
+          await untilCallTo {
+            awsSqsAdjudicationDlqClient!!.countAllMessagesOnQueue(adjudicationDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+
+        @Test
+        fun `will track failure telemetry for each retry`() {
+          await untilAsserted {
+            verify(telemetryClient, Mockito.times(3)).trackEvent(
+              Mockito.eq("punishment-update-failed"),
+              org.mockito.kotlin.check {
+                assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+                assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              },
+              isNull(),
+            )
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenMappingServiceFailsOnce {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
+          adjudicationsApiServer.stubChargeGet(
+            CHARGE_NUMBER_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            punishments =
+            // language=json
+            """
+          [
+            {
+                "id": 634,
+                "type": "CONFINEMENT",
+                "schedule": {
+                    "days": 3,
+                    "startDate": "2023-10-04",
+                    "endDate": "2023-10-06"
+                }
+            },
+            {
+                "id": 667,
+                "type": "EXTRA_WORK",
+                "schedule": {
+                    "days": 12,
+                    "suspendedUntil": "2023-10-18"
+                }
+            }
+        ]
+            """.trimIndent(),
+          )
+
+          mappingServer.stubGetPunishments(dpsPunishmentId = "634", nomisBookingId = 12345, nomisSanctionSequence = 10)
+          mappingServer.stubGetPunishmentsWithError(dpsPunishmentId = "667", status = 404)
+
+          nomisApi.stubAdjudicationAwardsUpdate(ADJUDICATION_NUMBER, CHARGE_SEQ, createdAwardIds = listOf(12345L to 11), deletedAwardIds = listOf(12345L to 9, 12345L to 8))
+          mappingServer.stubUpdatePunishmentsWithErrorFollowedBySuccess()
+          publishUpdatePunishmentsDomainEvent()
+        }
+
+        @Test
+        fun `should only create the NOMIS punishments once`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("punishment-update-mapping-retry-success"),
+              any(),
+              isNull(),
+            )
+          }
+
+          nomisApi.verify(1, putRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQ/awards")))
+        }
+
+        @Test
+        fun `will eventually update mappings after NOMIS punishments are updated`() {
+          await untilAsserted {
+            mappingServer.verify(
+              2,
+              putRequestedFor(urlEqualTo("/mapping/punishments")),
+            )
+          }
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("punishment-update-mapping-retry-success"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+      }
+    }
+
+    private fun waitForUpdatePunishmentProcessingToBeComplete() {
+      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+    }
+  }
+
   private fun publishCreatePunishmentsDomainEvent() {
     val eventType = "adjudication.punishments.created"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(adjudicationPunishmentMessagePayload(CHARGE_NUMBER_FOR_CREATION, PRISON_ID, OFFENDER_NO, eventType))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishUpdatePunishmentsDomainEvent() {
+    val eventType = "adjudication.punishments.updated"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(adjudicationPunishmentMessagePayload(CHARGE_NUMBER_FOR_CREATION, PRISON_ID, OFFENDER_NO, eventType))
