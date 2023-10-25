@@ -69,19 +69,27 @@ class ActivitiesReconService(
     )
   }
 
-  private fun publishTelemetry(
+  private suspend fun publishTelemetry(
     prisonId: String,
     compareResults: CompareBookingsResult,
   ) {
     val telemetryName =
       "activity-allocation-reconciliation-report-${if (compareResults.noDifferences()) "success" else "failed"}"
-    val telemetryMap = mutableMapOf("prison" to prisonId)
+    if (compareResults.noDifferences()) {
+      telemetryClient.trackEvent(telemetryName, mapOf("prison" to prisonId))
+    }
 
-    if (compareResults.nomisOnly.isNotEmpty()) telemetryMap["NOMIS_only"] = compareResults.nomisOnly.toString()
-    if (compareResults.dpsOnly.isNotEmpty()) telemetryMap["DPS_only"] = compareResults.dpsOnly.toString()
-    if (compareResults.differentCount.isNotEmpty()) telemetryMap["different_count"] = compareResults.differentCount.toString()
-
-    telemetryClient.trackEvent(telemetryName, telemetryMap.toMap())
+    val bookingDetails = nomisApiService.getPrisonerDetails(compareResults.nomisOnly + compareResults.dpsOnly + compareResults.differentCount)
+    bookingDetails
+      .sortedBy { it.bookingId }
+      .forEach {
+        val telemetryMap = mutableMapOf("prison" to prisonId)
+        telemetryMap["type"] = compareResults.differenceType(it.bookingId)
+        telemetryMap["bookingId"] = it.bookingId.toString()
+        telemetryMap["offenderNo"] = it.offenderNo
+        telemetryMap["location"] = it.location
+        telemetryClient.trackEvent(telemetryName, telemetryMap.toMap())
+      }
   }
 }
 
@@ -91,6 +99,12 @@ private data class CompareBookingsResult(
   val differentCount: List<Long>,
 ) {
   fun noDifferences() = nomisOnly.isEmpty() && dpsOnly.isEmpty() && differentCount.isEmpty()
+  fun differenceType(bookingId: Long): String = when {
+    nomisOnly.contains(bookingId) -> "NOMIS_only"
+    dpsOnly.contains(bookingId) -> "DPS_only"
+    differentCount.contains(bookingId) -> "different_count"
+    else -> "no_differences"
+  }
 }
 
 private data class BookingCounts(val id: Long, val count: Long)
