@@ -69,19 +69,28 @@ class ActivitiesReconService(
     )
   }
 
-  private fun publishTelemetry(
+  private suspend fun publishTelemetry(
     prisonId: String,
     compareResults: CompareBookingsResult,
   ) {
-    val telemetryName =
-      "activity-allocation-reconciliation-report-${if (compareResults.noDifferences()) "success" else "failed"}"
-    val telemetryMap = mutableMapOf("prison" to prisonId)
-
-    if (compareResults.nomisOnly.isNotEmpty()) telemetryMap["NOMIS_only"] = compareResults.nomisOnly.toString()
-    if (compareResults.dpsOnly.isNotEmpty()) telemetryMap["DPS_only"] = compareResults.dpsOnly.toString()
-    if (compareResults.differentCount.isNotEmpty()) telemetryMap["different_count"] = compareResults.differentCount.toString()
-
-    telemetryClient.trackEvent(telemetryName, telemetryMap.toMap())
+    if (compareResults.noDifferences()) {
+      telemetryClient.trackEvent("activity-allocation-reconciliation-report-success", mapOf("prison" to prisonId))
+    } else {
+      nomisApiService.getPrisonerDetails(compareResults.all())
+        .sortedBy { it.bookingId }
+        .forEach {
+          telemetryClient.trackEvent(
+            "activity-allocation-reconciliation-report-failed",
+            mapOf(
+              "prison" to prisonId,
+              "type" to compareResults.differenceType(it.bookingId),
+              "bookingId" to it.bookingId.toString(),
+              "offenderNo" to it.offenderNo,
+              "location" to it.location,
+            ),
+          )
+        }
+    }
   }
 }
 
@@ -91,6 +100,13 @@ private data class CompareBookingsResult(
   val differentCount: List<Long>,
 ) {
   fun noDifferences() = nomisOnly.isEmpty() && dpsOnly.isEmpty() && differentCount.isEmpty()
+  fun differenceType(bookingId: Long): String = when {
+    nomisOnly.contains(bookingId) -> "NOMIS_only"
+    dpsOnly.contains(bookingId) -> "DPS_only"
+    differentCount.contains(bookingId) -> "different_count"
+    else -> "no_differences"
+  }
+  fun all() = nomisOnly + dpsOnly + differentCount
 }
 
 private data class BookingCounts(val id: Long, val count: Long)
