@@ -329,16 +329,16 @@ class AdjudicationsService(
     }
   }
 
-  suspend fun createOutcome(createEvent: OutcomeEvent) {
+  suspend fun upsertOutcome(createEvent: OutcomeEvent) {
     createEvent.additionalInformation.hearingId?.let {
-      createHearingCompleted(
+      createOrUpdateHearingCompleted(
         createEvent.toHearingEvent(),
       )
     }
-      ?: let { createReferral(createEvent.toReferralEvent()) }
+      ?: let { createOrUpdateReferral(createEvent.toReferralEvent()) }
   }
 
-  suspend fun createHearingCompleted(createEvent: HearingEvent) {
+  suspend fun createOrUpdateHearingCompleted(createEvent: HearingEvent) {
     val event = createEvent.additionalInformation
     val telemetryMap = event.toTelemetryMap()
 
@@ -382,9 +382,9 @@ class AdjudicationsService(
         telemetryMap["plea"] = nomisRequest.pleaFindingCode
       }
     }.onSuccess {
-      telemetryClient.trackEvent("hearing-result-created-success", telemetryMap, null)
+      telemetryClient.trackEvent("hearing-result-updated-success", telemetryMap, null)
     }.onFailure { e ->
-      telemetryClient.trackEvent("hearing-result-created-failed", telemetryMap, null)
+      telemetryClient.trackEvent("hearing-result-upserted-failed", telemetryMap, null)
       throw e
     }
   }
@@ -614,7 +614,7 @@ class AdjudicationsService(
   }
 
   // referral without a hearing
-  suspend fun createReferral(createEvent: ReferralEvent) {
+  suspend fun createOrUpdateReferral(createEvent: ReferralEvent) {
     val event = createEvent.additionalInformation
     val telemetryMap = event.toTelemetryMap()
 
@@ -647,9 +647,9 @@ class AdjudicationsService(
         telemetryMap["plea"] = nomisRequest.pleaFindingCode
       }
     }.onSuccess {
-      telemetryClient.trackEvent("adjudication-referral-created-success", telemetryMap, null)
+      telemetryClient.trackEvent("adjudication-referral-upserted-success", telemetryMap, null)
     }.onFailure { e ->
-      telemetryClient.trackEvent("adjudication-referral-created-failed", telemetryMap, null)
+      telemetryClient.trackEvent("adjudication-referral-upserted-failed", telemetryMap, null)
       throw e
     }
   }

@@ -266,7 +266,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
       fun `invalid finding code is rejected`() {
         await untilAsserted {
           verify(telemetryClient, Mockito.times(3)).trackEvent(
-            eq("hearing-result-created-failed"),
+            eq("hearing-result-upserted-failed"),
             org.mockito.kotlin.check {
               Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
               Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
@@ -285,7 +285,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
       plea: String = "NOT_GUILTY",
     ) {
       verify(telemetryClient).trackEvent(
-        eq("hearing-result-created-success"),
+        eq("hearing-result-updated-success"),
         org.mockito.kotlin.check {
           Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
           Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
@@ -317,7 +317,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will not create a hearing result in NOMIS`() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
-            eq("hearing-result-created-failed"),
+            eq("hearing-result-upserted-failed"),
             org.mockito.kotlin.check {
               Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
               Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
@@ -554,6 +554,288 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class UpdateHearingCompleted {
+    @Nested
+    inner class WhenOutcomeIsUpdatedToAdjourned {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithAdjournOutcome(
+          hearingId = DPS_HEARING_ID.toLong(),
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
+        NomisApiExtension.nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        publishUpdateHearingOutcomeDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to adjudication service, post the upsert and track success`() {
+        waitForCreateHearingProcessingToBeComplete()
+
+        AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
+        NomisApiExtension.nomisApi.verify(
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result"))
+            .withRequestBody(WireMock.matchingJsonPath("$.adjudicatorUsername", WireMock.equalTo("JBULLENGEN"))),
+        )
+        verifyHearingResultCreatedSuccessCustomEvent(findingCode = "ADJOURNED", plea = "UNFIT")
+      }
+    }
+
+    @Nested
+    inner class WhenHearingOutcomeIsChangedToReferPolice {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithReferPoliceOutcome(
+          hearingId = DPS_HEARING_ID.toLong(),
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
+        NomisApiExtension.nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        publishUpdateHearingOutcomeDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to adjudication service, post the upsert and track success`() {
+        waitForCreateHearingProcessingToBeComplete()
+
+        AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
+        NomisApiExtension.nomisApi.verify(
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result"))
+            .withRequestBody(WireMock.matchingJsonPath("$.pleaFindingCode", WireMock.equalTo("NOT_ASKED")))
+            .withRequestBody(WireMock.matchingJsonPath("$.findingCode", WireMock.equalTo("REF_POLICE")))
+            .withRequestBody(WireMock.matchingJsonPath("$.adjudicatorUsername", WireMock.equalTo("JBULLENGEN"))),
+        )
+
+        verifyHearingResultCreatedSuccessCustomEvent(findingCode = "REF_POLICE", plea = "NOT_ASKED")
+      }
+    }
+
+    @Nested
+    inner class WhenHearingHasAReferralOutcomeOfProsecuted {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithReferralOutcome(
+          outcomeCode = OutcomeDto.Code.REFER_POLICE.name,
+          referralOutcomeCode = OutcomeDto.Code.PROSECUTION.name,
+          hearingId = DPS_HEARING_ID.toLong(),
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
+        NomisApiExtension.nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        publishCreateHearingReferralProsecutionDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to adjudication service, post the create and track success`() {
+        waitForCreateHearingProcessingToBeComplete()
+
+        AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
+        NomisApiExtension.nomisApi.verify(
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result"))
+            .withRequestBody(WireMock.matchingJsonPath("$.pleaFindingCode", WireMock.equalTo("NOT_ASKED")))
+            .withRequestBody(WireMock.matchingJsonPath("$.findingCode", WireMock.equalTo("PROSECUTED")))
+            .withRequestBody(WireMock.matchingJsonPath("$.adjudicatorUsername", WireMock.absent())),
+        )
+
+        verifyHearingResultCreatedSuccessCustomEvent(plea = "NOT_ASKED", findingCode = "PROSECUTED")
+      }
+    }
+
+    @Nested
+    inner class WhenHearingHasAReferralOutcomeOfNotProceed {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithReferralOutcome(
+          outcomeCode = OutcomeDto.Code.REFER_POLICE.name,
+          referralOutcomeCode = OutcomeDto.Code.NOT_PROCEED.name,
+          hearingId = DPS_HEARING_ID.toLong(),
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+          hearingType = "GOV_ADULT",
+        )
+        NomisApiExtension.nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        publishCreateHearingReferralNotProceedDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to adjudication service, post the create and track success`() {
+        waitForCreateHearingProcessingToBeComplete()
+
+        AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
+        NomisApiExtension.nomisApi.verify(
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result"))
+            .withRequestBody(WireMock.matchingJsonPath("$.adjudicatorUsername", WireMock.equalTo("jack_b"))),
+        )
+
+        verifyHearingResultCreatedSuccessCustomEvent(plea = "NOT_ASKED", findingCode = "NOT_PROCEED")
+      }
+    }
+
+    @Nested
+    inner class WhenHearingHasAReferralOutcomeOfReferGov {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithReferralOutcome(
+          outcomeCode = OutcomeDto.Code.REFER_INAD.name,
+          referralOutcomeCode = OutcomeDto.Code.REFER_GOV.name,
+          hearingId = DPS_HEARING_ID.toLong(),
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+          hearingType = "GOV_ADULT",
+        )
+        NomisApiExtension.nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        publishCreateHearingReferralReferGovDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to adjudication service, post the create and track success`() {
+        waitForCreateHearingProcessingToBeComplete()
+
+        AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
+        NomisApiExtension.nomisApi.verify(
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result"))
+            .withRequestBody(WireMock.matchingJsonPath("$.adjudicatorUsername", WireMock.equalTo("jack_b"))),
+        )
+
+        verifyHearingResultCreatedSuccessCustomEvent(plea = "NOT_ASKED", findingCode = "ADJOURNED")
+      }
+    }
+
+    @Nested
+    inner class WhenHearingHasAnOutcomeOfCompleted {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithCompletedOutcome(
+          hearingId = DPS_HEARING_ID.toLong(),
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
+        NomisApiExtension.nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        publishCreateHearingCompletedDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to adjudication service, post the create and track success`() {
+        waitForCreateHearingProcessingToBeComplete()
+
+        AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
+        NomisApiExtension.nomisApi.verify(
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result"))
+            .withRequestBody(WireMock.matchingJsonPath("$.adjudicatorUsername", WireMock.equalTo("SWATSON_GEN"))),
+        )
+
+        verifyHearingResultCreatedSuccessCustomEvent(findingCode = "PROVED", plea = "GUILTY")
+      }
+    }
+
+    @Nested
+    inner class invalidFindingCodeFromDPS {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithCompletedOutcome(
+          hearingId = DPS_HEARING_ID.toLong(),
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+          outcomeFindingCode = OutcomeDto.Code.SCHEDULE_HEARING.name,
+        )
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        publishCreateHearingCompletedDomainEvent()
+      }
+
+      @Test
+      fun `invalid finding code is rejected`() {
+        await untilAsserted {
+          verify(telemetryClient, Mockito.times(3)).trackEvent(
+            eq("hearing-result-upserted-failed"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+              Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+
+    private fun verifyHearingResultCreatedSuccessCustomEvent(
+      findingCode: String = "CHARGE_PROVEN",
+      plea: String = "NOT_GUILTY",
+    ) {
+      verify(telemetryClient).trackEvent(
+        eq("hearing-result-updated-success"),
+        org.mockito.kotlin.check {
+          Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+          Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+          Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+          Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+          Assertions.assertThat(it["findingCode"]).isEqualTo(findingCode)
+          Assertions.assertThat(it["plea"]).isEqualTo(plea)
+        },
+        isNull(),
+      )
+    }
+
+    @Nested
+    inner class WhenHearingMappingNotFound {
+
+      @BeforeEach
+      fun setUp() {
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithCompletedOutcome(
+          hearingId = DPS_HEARING_ID.toLong(),
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        MappingExtension.mappingServer.stubGetByDpsHearingIdWithError(hearingId = DPS_HEARING_ID, 404)
+        publishCreateHearingCompletedDomainEvent()
+      }
+
+      @Test
+      fun `will not create a hearing result in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(3)).trackEvent(
+            eq("hearing-result-upserted-failed"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+              Assertions.assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
+              Assertions.assertThat(it["chargeSequence"]).isEqualTo(CHARGE_SEQUENCE.toString())
+            },
+            isNull(),
+          )
+
+          NomisApiExtension.nomisApi.verify(
+            0,
+            WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings")),
+          )
+        }
+      }
+    }
+
+    private fun waitForCreateHearingProcessingToBeComplete() {
+      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+    }
+  }
+
   private fun publishCreateHearingCompletedDomainEvent() {
     val eventType = "adjudication.hearingCompleted.created"
     awsSnsClient.publish(
@@ -626,6 +908,20 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
   private fun publishCreateHearingReferralReferGovDomainEvent() {
     val eventType = "adjudication.referral.outcome.referGov"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(hearingMessagePayload(DPS_HEARING_ID, CHARGE_NUMBER, PRISON_ID, OFFENDER_NO, eventType))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishUpdateHearingOutcomeDomainEvent() {
+    val eventType = "adjudication.hearingOutcome.updated"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(hearingMessagePayload(DPS_HEARING_ID, CHARGE_NUMBER, PRISON_ID, OFFENDER_NO, eventType))

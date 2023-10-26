@@ -95,6 +95,7 @@ generic-service:
     FEATURE_EVENT_ADJUDICATION_OUTCOME_NOTPROCEED_DELETED: false
     FEATURE_EVENT_ADJUDICATION_OUTCOME_NOTPROCEED: false
     FEATURE_EVENT_ADJUDICATION_OUTCOME_REFERPOLICE: false
+    FEATURE_EVENT_ADJUDICATION_HEARINGOUTCOME_UPDATED: false
     HMPPS_SQS_USE_WEB_TOKEN: true
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
