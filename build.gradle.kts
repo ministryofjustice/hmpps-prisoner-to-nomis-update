@@ -78,7 +78,7 @@ tasks.register("buildActivityApiModel", GenerateTask::class) {
   skipValidateSpec.set(true) // TODO - turn this back on when the spec is valid again!
   inputSpec.set("openapi-specs/activities-api-docs.json")
   // remoteInputSpec.set("https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs")
-  outputDir.set("$buildDirectory/generated")
+  outputDir.set("$buildDirectory/generated/activities")
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.api")
   configOptions.set(configValues)
@@ -89,7 +89,7 @@ tasks.register("buildAdjudicationApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
   skipValidateSpec.set(true)
   inputSpec.set("openapi-specs/adjudications-api-docs.json")
-  outputDir.set("$buildDirectory/generated")
+  outputDir.set("$buildDirectory/generated/adjudications")
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.api")
   configOptions.set(configValues)
@@ -99,7 +99,7 @@ tasks.register("buildAdjudicationApiModel", GenerateTask::class) {
 tasks.register("buildNonAssociationApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
   inputSpec.set("openapi-specs/non-associations-api-docs.json")
-  outputDir.set("$buildDirectory/generated")
+  outputDir.set("$buildDirectory/generated/nonassociations")
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.api")
   configOptions.set(configValues)
@@ -110,7 +110,7 @@ tasks.register("buildNomisSyncApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
   inputSpec.set("openapi-specs/nomis-sync-api-docs.json")
   // remoteInputSpec.set("https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/v3/api-docs")
-  outputDir.set("$buildDirectory/generated")
+  outputDir.set("$buildDirectory/generated/nomissync")
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.api")
   configOptions.set(configValues)
@@ -120,7 +120,7 @@ tasks.register("buildNomisSyncApiModel", GenerateTask::class) {
 tasks.register("buildMappingServiceApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
   inputSpec.set("openapi-specs/nomis-mapping-service-api-docs.json")
-  outputDir.set("$buildDirectory/generated")
+  outputDir.set("$buildDirectory/generated/mappings")
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api")
   configOptions.set(
@@ -133,16 +133,22 @@ tasks.register("buildMappingServiceApiModel", GenerateTask::class) {
   globalProperties.set(mapOf("models" to ""))
 }
 
+val generatedProjectDirs = listOf("activities", "adjudications", "nonassociations", "nomissync", "mappings")
+
 kotlin {
-  sourceSets["main"].apply {
-    kotlin.srcDir("$buildDirectory/generated/src/main/kotlin")
+  generatedProjectDirs.forEach { generatedProject ->
+    sourceSets["main"].apply {
+      kotlin.srcDir("$buildDirectory/generated/$generatedProject/src/main/kotlin")
+    }
   }
 }
 
 configure<KtlintExtension> {
   filter {
-    exclude {
-      it.file.path.contains("build/generated/src/main/")
+    generatedProjectDirs.forEach { generatedProject ->
+      exclude { element ->
+        element.file.path.contains("build/generated/$generatedProject/src/main/")
+      }
     }
   }
 }
