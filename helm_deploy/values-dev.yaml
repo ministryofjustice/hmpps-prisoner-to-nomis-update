@@ -65,3 +65,6 @@ generic-prometheus-alerts:
     - "syscon-devs-dev-hmpps_prisoner_to_nomis_nonassociation_dead_letter_queue"
   sqsAlertsOldestThreshold: 2
   sqsAlertsTotalMessagesThreshold: 1
+
+cron:
+  allocationReconReportSchedule: "55 7 * * *"
