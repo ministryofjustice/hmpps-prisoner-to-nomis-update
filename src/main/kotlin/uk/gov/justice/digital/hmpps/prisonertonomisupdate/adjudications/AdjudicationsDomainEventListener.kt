@@ -49,7 +49,8 @@ class AdjudicationsDomainEventListener(
       "adjudication.referral.outcome.referGov",
       "adjudication.outcome.referPolice",
       "adjudication.outcome.notProceed",
-      -> adjudicationsService.createOutcome(message.fromJson())
+      "adjudication.hearingOutcome.updated",
+      -> adjudicationsService.upsertOutcome(message.fromJson())
 
       "adjudication.hearingCompleted.deleted",
       "adjudication.hearingAdjourn.deleted",

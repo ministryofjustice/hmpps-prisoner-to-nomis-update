@@ -83,7 +83,7 @@ class ReferralOutcomesToNomisIntTest : SqsIntegrationTestBase() {
       plea: String = "NOT_GUILTY",
     ) {
       verify(telemetryClient).trackEvent(
-        eq("adjudication-referral-created-success"),
+        eq("adjudication-referral-upserted-success"),
         org.mockito.kotlin.check {
           Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
           Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)

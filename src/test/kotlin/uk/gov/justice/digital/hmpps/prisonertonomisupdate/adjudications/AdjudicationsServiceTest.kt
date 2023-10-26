@@ -94,7 +94,7 @@ internal class AdjudicationsServiceTest {
       AdjudicationHearingMappingDto(nomisHearingId = nomisHearingId, dpsHearingId = dpsHearingId),
     )
 
-    adjudicationsService.createHearingCompleted(
+    adjudicationsService.createOrUpdateHearingCompleted(
       HearingEvent(
         HearingAdditionalInformation(
           chargeNumber = dpsChargeNumber,
