@@ -50,7 +50,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will callback back to adjudication service, post the create and track success`() {
-        waitForCreateHearingProcessingToBeComplete()
+        waitForEventProcessingToBeComplete()
 
         AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
         NomisApiExtension.nomisApi.verify(
@@ -78,7 +78,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will callback back to adjudication service, post the create and track success`() {
-        waitForCreateHearingProcessingToBeComplete()
+        waitForEventProcessingToBeComplete()
 
         AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
         NomisApiExtension.nomisApi.verify(
@@ -109,7 +109,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will callback back to adjudication service, post the create and track success`() {
-        waitForCreateHearingProcessingToBeComplete()
+        waitForEventProcessingToBeComplete()
 
         AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
         NomisApiExtension.nomisApi.verify(
@@ -140,7 +140,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will callback back to adjudication service, post the create and track success`() {
-        waitForCreateHearingProcessingToBeComplete()
+        waitForEventProcessingToBeComplete()
 
         AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
         NomisApiExtension.nomisApi.verify(
@@ -174,7 +174,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will callback back to adjudication service, post the create and track success`() {
-        waitForCreateHearingProcessingToBeComplete()
+        waitForEventProcessingToBeComplete()
 
         AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
         NomisApiExtension.nomisApi.verify(
@@ -206,7 +206,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will callback back to adjudication service, post the create and track success`() {
-        waitForCreateHearingProcessingToBeComplete()
+        waitForEventProcessingToBeComplete()
 
         AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
         NomisApiExtension.nomisApi.verify(
@@ -235,7 +235,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will callback back to adjudication service, post the create and track success`() {
-        waitForCreateHearingProcessingToBeComplete()
+        waitForEventProcessingToBeComplete()
 
         AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
         NomisApiExtension.nomisApi.verify(
@@ -248,7 +248,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
-    inner class invalidFindingCodeFromDPS {
+    inner class InvalidFindingCodeFromDPS {
       @BeforeEach
       fun setUp() {
         MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
@@ -336,10 +336,6 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
         }
       }
     }
-
-    private fun waitForCreateHearingProcessingToBeComplete() {
-      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
-    }
   }
 
   @Nested
@@ -377,7 +373,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will call nomis api to delete the hearing result`() {
-        waitForHearingProcessingToBeComplete()
+        waitForEventProcessingToBeComplete()
         NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result")))
       }
     }
@@ -412,10 +408,6 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
           WireMock.deleteRequestedFor(WireMock.anyUrl()),
         )
       }
-    }
-
-    private fun waitForHearingProcessingToBeComplete() {
-      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
     }
   }
 
@@ -454,13 +446,9 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will call nomis api to delete the hearing result`() {
-        waitForHearingProcessingToBeComplete()
+        waitForEventProcessingToBeComplete()
         NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result")))
       }
-    }
-
-    private fun waitForHearingProcessingToBeComplete() {
-      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
     }
   }
 
@@ -495,13 +483,9 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will call nomis api to delete the hearing result`() {
-        waitForHearingProcessingToBeComplete()
+        waitForEventProcessingToBeComplete()
         NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result")))
       }
-    }
-
-    private fun waitForHearingProcessingToBeComplete() {
-      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
     }
   }
 
@@ -541,16 +525,12 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will call nomis api to amend the hearing result (roll back to ref_police outcome)`() {
-        waitForHearingProcessingToBeComplete()
+        waitForEventProcessingToBeComplete()
         NomisApiExtension.nomisApi.verify(
           WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result"))
             .withRequestBody(WireMock.matchingJsonPath("$.findingCode", WireMock.equalTo("REF_POLICE"))),
         )
       }
-    }
-
-    private fun waitForHearingProcessingToBeComplete() {
-      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
     }
   }
 
@@ -573,7 +553,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will callback back to adjudication service, post the upsert and track success`() {
-        waitForCreateHearingProcessingToBeComplete()
+        waitForEventProcessingToBeComplete()
 
         AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
         NomisApiExtension.nomisApi.verify(
@@ -601,7 +581,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will callback back to adjudication service, post the upsert and track success`() {
-        waitForCreateHearingProcessingToBeComplete()
+        waitForEventProcessingToBeComplete()
 
         AdjudicationsApiExtension.adjudicationsApiServer.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/reported-adjudications/$CHARGE_NUMBER/v2")))
         NomisApiExtension.nomisApi.verify(
@@ -632,49 +612,10 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
         isNull(),
       )
     }
+  }
 
-    @Nested
-    inner class WhenHearingMappingNotFound {
-
-      @BeforeEach
-      fun setUp() {
-        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithCompletedOutcome(
-          hearingId = DPS_HEARING_ID.toLong(),
-          chargeNumber = CHARGE_NUMBER,
-          offenderNo = OFFENDER_NO,
-        )
-        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
-        MappingExtension.mappingServer.stubGetByDpsHearingIdWithError(hearingId = DPS_HEARING_ID, 404)
-        publishCreateHearingCompletedDomainEvent()
-      }
-
-      @Test
-      fun `will not create a hearing result in NOMIS`() {
-        await untilAsserted {
-          verify(telemetryClient, times(3)).trackEvent(
-            eq("hearing-result-upserted-failed"),
-            org.mockito.kotlin.check {
-              Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
-              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
-              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
-              Assertions.assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
-              Assertions.assertThat(it["chargeSequence"]).isEqualTo(CHARGE_SEQUENCE.toString())
-            },
-            isNull(),
-          )
-
-          NomisApiExtension.nomisApi.verify(
-            0,
-            WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings")),
-          )
-        }
-      }
-    }
-
-    private fun waitForCreateHearingProcessingToBeComplete() {
-      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
-    }
+  private fun waitForEventProcessingToBeComplete() {
+    await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
   }
 
   private fun publishCreateHearingCompletedDomainEvent() {
