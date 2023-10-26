@@ -66,7 +66,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
-        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithReferPoliceOutcome(
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithHearingAndReferPoliceOutcome(
           hearingId = DPS_HEARING_ID.toLong(),
           chargeNumber = CHARGE_NUMBER,
           offenderNo = OFFENDER_NO,
@@ -97,7 +97,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
-        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithReferIndependentAdjudicatorOutcome(
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithHearingAndReferIndependentAdjudicatorOutcome(
           hearingId = DPS_HEARING_ID.toLong(),
           chargeNumber = CHARGE_NUMBER,
           offenderNo = OFFENDER_NO,
@@ -489,6 +489,48 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  // it is possible to generate multiple outcome blocks by chaining a referral with a hearing followed by an outcome of schedule_hearing
+  @Nested
+  inner class DeleteHearingReferralWhenMultipleOutcomesExist {
+    @Nested
+    inner class WhenHearingResultHasBeenDeletedInDPS {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithHearingFollowingReferral(
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
+        NomisApiExtension.nomisApi.stubHearingResultDelete(ADJUDICATION_NUMBER, NOMIS_HEARING_ID, CHARGE_SEQUENCE)
+        publishDeleteHearingReferralDomainEvent()
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("hearing-result-deleted-success"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+              Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Test
+      fun `will call nomis api to delete the hearing result`() {
+        waitForEventProcessingToBeComplete()
+        NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result")))
+      }
+    }
+  }
+
   @Nested
   inner class DeleteHearingReferralOutcome {
     @Nested
@@ -497,7 +539,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
       fun setUp() {
         MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
         MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
-        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithReferPoliceOutcome(
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithHearingAndReferPoliceOutcome(
           hearingId = DPS_HEARING_ID.toLong(),
           chargeNumber = CHARGE_NUMBER,
           offenderNo = OFFENDER_NO,
@@ -569,7 +611,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
-        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithReferPoliceOutcome(
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGetWithHearingAndReferPoliceOutcome(
           hearingId = DPS_HEARING_ID.toLong(),
           chargeNumber = CHARGE_NUMBER,
           offenderNo = OFFENDER_NO,

@@ -155,12 +155,12 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
   }
 
-  fun stubChargeGetWithReferIndependentAdjudicatorOutcome(
+  fun stubChargeGetWithHearingAndReferIndependentAdjudicatorOutcome(
     hearingId: Long = 123,
     chargeNumber: String,
     offenderNo: String = "A7937DY",
   ) {
-    stubChargeGetWithSeparateOutcomeBlock(
+    stubChargeGetWithHearingAndSeparateOutcomeBlock(
       hearingId = hearingId,
       outcomeCode = "REFER_INAD",
       chargeNumber = chargeNumber,
@@ -168,8 +168,8 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubChargeGetWithReferPoliceOutcome(hearingId: Long = 123, chargeNumber: String, offenderNo: String = "A7937DY") {
-    stubChargeGetWithSeparateOutcomeBlock(
+  fun stubChargeGetWithHearingAndReferPoliceOutcome(hearingId: Long = 123, chargeNumber: String, offenderNo: String = "A7937DY") {
+    stubChargeGetWithHearingAndSeparateOutcomeBlock(
       hearingId = hearingId,
       outcomeCode = "REFER_POLICE",
       chargeNumber = chargeNumber,
@@ -177,7 +177,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  private fun stubChargeGetWithSeparateOutcomeBlock(
+  private fun stubChargeGetWithHearingAndSeparateOutcomeBlock(
     outcomeCode: String,
     hearingId: Long = 123,
     chargeNumber: String,
@@ -310,6 +310,36 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
                }
            }
        ]
+    """.trimIndent()
+    stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
+  }
+
+  fun stubChargeGetWithHearingFollowingReferral(chargeNumber: String, offenderNo: String = "A7937DY") {
+    val outcomes = """
+    [
+    {
+        "outcome": {
+          "outcome": {
+          "id": 1492,
+          "code": "REFER_POLICE",
+          "details": "fdggre"
+        },
+          "referralOutcome": {
+          "id": 1493,
+          "code": "SCHEDULE_HEARING"
+        }
+      }
+    },
+    {
+        "hearing": {
+          "id": 816,
+          "locationId": 357596,
+          "dateTimeOfHearing": "2023-10-26T16:10:00",
+          "oicHearingType": "INAD_ADULT",
+          "agencyId": "MDI"
+       }
+    }
+    ]
     """.trimIndent()
     stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
   }
