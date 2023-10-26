@@ -258,7 +258,7 @@ class AdjudicationsService(
         val hearing = adjudicationsApiService.getCharge(
           chargeNumber,
           prisonId,
-        ).reportedAdjudication.hearings.firstOrNull { it.id.toString() == dpsHearingId } ?: throw IllegalStateException(
+        ).reportedAdjudication.hearings.lastOrNull { it.id.toString() == dpsHearingId } ?: throw IllegalStateException(
           "Hearing $dpsHearingId not found for DPS adjudication with charge no $chargeNumber",
         )
         val nomisAdjudicationResponse =
@@ -292,7 +292,7 @@ class AdjudicationsService(
       adjudicationsApiService.getCharge(
         eventData.chargeNumber,
         eventData.prisonId,
-      ).reportedAdjudication.hearings.firstOrNull { it.id.toString() == eventData.hearingId }?.let {
+      ).reportedAdjudication.hearings.lastOrNull { it.id.toString() == eventData.hearingId }?.let {
         nomisApiService.updateHearing(adjudicationNumber, nomisHearingId, it.toNomisUpdateHearing())
         telemetryClient.trackEvent("hearing-updated-success", telemetryMap, null)
       } ?: throw IllegalStateException(
@@ -348,7 +348,7 @@ class AdjudicationsService(
     )
 
     runCatching {
-      val outcome = charge.reportedAdjudication.outcomes.firstOrNull { it.hearing?.id.toString() == event.hearingId }
+      val outcome = charge.reportedAdjudication.outcomes.lastOrNull { it.hearing?.id.toString() == event.hearingId }
         ?: throw IllegalStateException(
           "Outcome not found for Hearing ${event.hearingId} in DPS adjudication with charge no ${event.chargeNumber}",
         )
@@ -415,7 +415,7 @@ class AdjudicationsService(
       val outcome = adjudicationsApiService.getCharge(
         eventData.chargeNumber,
         eventData.prisonId,
-      ).reportedAdjudication.outcomes.firstOrNull()
+      ).reportedAdjudication.outcomes.lastOrNull()
 
       // If no adjudication outcome exists - delete on NOMIS
       // if outcome exists - update NOMIS with current state
@@ -455,7 +455,7 @@ class AdjudicationsService(
       val outcome = adjudicationsApiService.getCharge(
         eventData.chargeNumber,
         eventData.prisonId,
-      ).reportedAdjudication.outcomes.firstOrNull()
+      ).reportedAdjudication.outcomes.lastOrNull()
 
       // If no adjudication outcome exists - delete on NOMIS
       // if outcome exists - update NOMIS with current state
@@ -623,7 +623,7 @@ class AdjudicationsService(
         event.chargeNumber,
         event.prisonId,
       )
-      val outcome = charge.reportedAdjudication.outcomes.firstOrNull()
+      val outcome = charge.reportedAdjudication.outcomes.lastOrNull()
         ?: throw IllegalStateException(
           "Referral not found in DPS adjudication with charge no ${event.chargeNumber}",
         )
