@@ -382,7 +382,7 @@ class AdjudicationsService(
         telemetryMap["plea"] = nomisRequest.pleaFindingCode
       }
     }.onSuccess {
-      telemetryClient.trackEvent("hearing-result-updated-success", telemetryMap, null)
+      telemetryClient.trackEvent("hearing-result-upserted-success", telemetryMap, null)
     }.onFailure { e ->
       telemetryClient.trackEvent("hearing-result-upserted-failed", telemetryMap, null)
       throw e
