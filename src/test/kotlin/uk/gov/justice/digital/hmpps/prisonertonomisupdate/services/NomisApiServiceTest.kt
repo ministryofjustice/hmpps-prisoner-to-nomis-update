@@ -555,6 +555,63 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
+  inner class AttendanceReconciliation {
+
+    private fun jsonResponse(prisonId: String = "BXI", date: LocalDate = LocalDate.now()) = """
+      {
+        "prisonId": "$prisonId",
+        "date": "$date",
+        "bookings": [
+          {
+            "bookingId": 1234,
+            "count": 2
+          },
+          {
+            "bookingId": 1235,
+            "count": 1
+          }
+        ]
+      }
+    """.trimIndent()
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stubAttendanceReconciliation("BXI", LocalDate.now(), jsonResponse())
+
+      nomisApiService.getAttendanceReconciliation("BXI", LocalDate.now())
+
+      nomisApi.verify(
+        getRequestedFor(urlEqualTo("/attendances/reconciliation/BXI?date=${LocalDate.now()}"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should parse response`() = runTest {
+      nomisApi.stubAttendanceReconciliation("BXI", LocalDate.now(), jsonResponse())
+
+      val response = nomisApiService.getAttendanceReconciliation("BXI", LocalDate.now())
+
+      with(response) {
+        assertThat(prisonId).isEqualTo("BXI")
+        assertThat(bookings[0].bookingId).isEqualTo(1234)
+        assertThat(bookings[0].count).isEqualTo(2)
+        assertThat(bookings[1].bookingId).isEqualTo(1235)
+        assertThat(bookings[1].count).isEqualTo(1)
+      }
+    }
+
+    @Test
+    fun `should throw exception on error`() = runTest {
+      nomisApi.stubAttendanceReconciliationWithError("BXI", LocalDate.now(), 400)
+
+      assertThrows<BadRequest> {
+        nomisApiService.getAttendanceReconciliation("BXI", LocalDate.now())
+      }
+    }
+  }
+
+  @Nested
   inner class GetServicePrisons {
 
     private fun jsonResponse() = """

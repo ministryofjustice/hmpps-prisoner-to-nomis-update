@@ -9,7 +9,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AllocationReconciliationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
+import java.time.LocalDate
 
 @Service
 class ActivitiesApiService(@Qualifier("activitiesApiWebClient") private val webClient: WebClient) {
@@ -52,6 +54,17 @@ class ActivitiesApiService(@Qualifier("activitiesApiWebClient") private val webC
   suspend fun getAllocationReconciliation(prisonCode: String): AllocationReconciliationResponse {
     return webClient.get()
       .uri("/synchronisation/reconciliation/allocations/{prisonCode}", prisonCode)
+      .retrieve()
+      .awaitBody()
+  }
+
+  suspend fun getAttendanceReconciliation(prisonCode: String, date: LocalDate): AttendanceReconciliationResponse {
+    return webClient.get()
+      .uri {
+        it.path("/synchronisation/reconciliation/attendances/{prisonCode}")
+          .queryParam("date", date)
+          .build(prisonCode)
+      }
       .retrieve()
       .awaitBody()
   }

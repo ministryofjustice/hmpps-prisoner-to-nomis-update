@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-10-24.5325.07640d8"
+    "version": "2023-10-27.5342.a1bc618"
   },
   "servers": [
     {
@@ -8702,11 +8702,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -8727,15 +8727,15 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
           "paged": {
             "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -8912,11 +8912,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -9068,11 +9068,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -9193,11 +9193,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -9285,6 +9285,59 @@
         },
         "description": "Incentive information"
       },
+      "AttendanceReconciliationResponse": {
+        "required": [
+          "bookings",
+          "date",
+          "prisonId"
+        ],
+        "type": "object",
+        "properties": {
+          "prisonId": {
+            "type": "string",
+            "description": "The prison we checked the attendance for",
+            "example": "BXI"
+          },
+          "date": {
+            "type": "string",
+            "description": "Date of the attendance check",
+            "format": "date",
+            "example": "2021-01-01"
+          },
+          "bookings": {
+            "type": "array",
+            "description": "All active bookings and their attendance count",
+            "example": "[ { bookingId: 1234567, count: 2 } ]",
+            "items": {
+              "$ref": "#/components/schemas/BookingCount"
+            }
+          }
+        },
+        "description": "Attendance reconciliation check response"
+      },
+      "BookingCount": {
+        "required": [
+          "bookingId",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "The offender booking id",
+            "format": "int64",
+            "example": 1234567
+          },
+          "count": {
+            "type": "integer",
+            "description": "The count for the offender booking",
+            "format": "int64",
+            "example": 2
+          }
+        },
+        "description": "A count for an offender booking",
+        "example": "[ { bookingId: 1234567, count: 2 } ]"
+      },
       "AppointmentIdResponse": {
         "required": [
           "eventId"
@@ -9334,11 +9387,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -9441,29 +9494,6 @@
         },
         "description": "Allocation reconciliation check response"
       },
-      "BookingCount": {
-        "required": [
-          "bookingId",
-          "count"
-        ],
-        "type": "object",
-        "properties": {
-          "bookingId": {
-            "type": "integer",
-            "description": "The offender booking id",
-            "format": "int64",
-            "example": 1234567
-          },
-          "count": {
-            "type": "integer",
-            "description": "The count for the offender booking",
-            "format": "int64",
-            "example": 2
-          }
-        },
-        "description": "A count for an offender booking",
-        "example": "[ { bookingId: 1234567, count: 2 } ]"
-      },
       "FindActiveAllocationIdsResponse": {
         "required": [
           "allocationId"
@@ -9514,11 +9544,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -9579,11 +9609,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -9650,11 +9680,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -9982,11 +10012,11 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "last": {
             "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
