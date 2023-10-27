@@ -859,4 +859,64 @@ internal class ActivitiesApiServiceTest {
       }
     }
   }
+
+  @Nested
+  inner class AttendanceReconciliation {
+    @BeforeEach
+    fun `stub attendance reconciliation`() {
+      activitiesApi.stubAttendanceReconciliation(
+        "BXI",
+        LocalDate.now(),
+        """
+          {
+            "prisonCode": "BXI",
+            "date": "${LocalDate.now()}",
+            "bookings": [
+              { 
+                "bookingId": 1234,
+                "count": 2
+              },
+              {
+                "bookingId": 1235,
+                "count": 1
+              }
+            ]
+          }
+        """.trimIndent(),
+      )
+    }
+
+    @Test
+    fun `should call API with auth token`() = runTest {
+      activitiesApiService.getAttendanceReconciliation("BXI", LocalDate.now())
+
+      activitiesApi.verify(
+        getRequestedFor(urlEqualTo("/synchronisation/reconciliation/attendances/BXI?date=${LocalDate.now()}"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should parse return data`() = runTest {
+      val response = activitiesApiService.getAttendanceReconciliation("BXI", LocalDate.now())
+
+      with(response) {
+        assertThat(prisonCode).isEqualTo("BXI")
+        assertThat(date).isEqualTo("${LocalDate.now()}")
+        assertThat(bookings[0].bookingId).isEqualTo(1234)
+        assertThat(bookings[0].count).isEqualTo(2)
+        assertThat(bookings[1].bookingId).isEqualTo(1235)
+        assertThat(bookings[1].count).isEqualTo(1)
+      }
+    }
+
+    @Test
+    fun `when any bad response is received an exception is thrown`() = runTest {
+      activitiesApi.stubAttendanceReconciliationWithError("BXI", LocalDate.now(), status = 503)
+
+      assertThrows<ServiceUnavailable> {
+        activitiesApiService.getAttendanceReconciliation("BXI", LocalDate.now())
+      }
+    }
+  }
 }

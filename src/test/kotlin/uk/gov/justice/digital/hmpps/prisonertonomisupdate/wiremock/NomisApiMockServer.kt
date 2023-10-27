@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
+import java.time.LocalDate
 
 class NomisApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
   companion object {
@@ -290,6 +291,30 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubAllocationReconciliationWithError(prisonId: String, status: Int = 500) {
     stubFor(
       get("/allocations/reconciliation/$prisonId")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-type", "application/json")
+            .withBody(ERROR_RESPONSE)
+            .withStatus(status),
+        ),
+    )
+  }
+
+  fun stubAttendanceReconciliation(prisonId: String, date: LocalDate, response: String) {
+    stubFor(
+      get("/attendances/reconciliation/$prisonId?date=$date")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-type", "application/json")
+            .withBody(response)
+            .withStatus(200),
+        ),
+    )
+  }
+
+  fun stubAttendanceReconciliationWithError(prisonId: String, date: LocalDate, status: Int = 500) {
+    stubFor(
+      get("/attendances/reconciliation/$prisonId?date=$date")
         .willReturn(
           aResponse()
             .withHeader("Content-type", "application/json")

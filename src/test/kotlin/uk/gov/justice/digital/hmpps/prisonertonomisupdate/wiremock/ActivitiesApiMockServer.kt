@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import java.time.LocalDate
 
 class ActivitiesApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
   companion object {
@@ -118,5 +119,12 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubAllocationReconciliationWithError(prisonId: String, status: Int = 500) {
     stubGetWithError("/synchronisation/reconciliation/allocations/$prisonId", status)
+  }
+
+  fun stubAttendanceReconciliation(prisonId: String, date: LocalDate, response: String) =
+    stubGet("/synchronisation/reconciliation/attendances/$prisonId?date=$date", response)
+
+  fun stubAttendanceReconciliationWithError(prisonId: String, date: LocalDate, status: Int = 500) {
+    stubGetWithError("/synchronisation/reconciliation/attendances/$prisonId?date=$date", status)
   }
 }
