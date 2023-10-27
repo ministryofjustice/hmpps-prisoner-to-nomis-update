@@ -9,8 +9,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AllocationReconciliationResponse as DpsResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationReconciliationResponse as NomisResponse
+import java.time.LocalDate
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AllocationReconciliationResponse as DpsAllocationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceReconciliationResponse as DpsAttendanceResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationReconciliationResponse as NomisAllocationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AttendanceReconciliationResponse as NomisAttendanceResponse
 
 @Service
 class ActivitiesReconService(
@@ -45,17 +48,40 @@ class ActivitiesReconService(
         val dpsBookingCounts = async { activitiesApiService.getAllocationReconciliation(prisonId) }
         val compareResults = compareBookingCounts(nomisBookingCounts.await(), dpsBookingCounts.await())
 
-        publishTelemetry(prisonId, compareResults)
+        publishTelemetry("allocation", prisonId, compareResults)
       }
     } catch (e: Exception) {
       log.error("Allocation reconciliation report failed for prison $prisonId", e)
       telemetryClient.trackEvent("activity-allocation-reconciliation-report-error", mapOf("prison" to prisonId))
     }
 
-  private suspend fun compareBookingCounts(nomisResults: NomisResponse, dpsResults: DpsResponse): CompareBookingsResult {
+  suspend fun attendancesReconciliationReport(prisonId: String, date: LocalDate) =
+    try {
+      coroutineScope {
+        val nomisBookingCounts = async { nomisApiService.getAttendanceReconciliation(prisonId, date) }
+        val dpsBookingCounts = async { activitiesApiService.getAttendanceReconciliation(prisonId, date) }
+        val compareResults = compareBookingCounts(nomisBookingCounts.await(), dpsBookingCounts.await())
+
+        publishTelemetry("attendance", prisonId, compareResults, date)
+      }
+    } catch (e: Exception) {
+      log.error("Attendance reconciliation report failed for prison $prisonId", e)
+      telemetryClient.trackEvent("activity-attendance-reconciliation-report-error", mapOf("prison" to prisonId, "date" to "$date"))
+    }
+
+  private suspend fun compareBookingCounts(nomisResults: NomisAllocationResponse, dpsResults: DpsAllocationResponse): CompareBookingsResult {
     val nomis = nomisResults.bookings.sortedBy { it.bookingId }.map { BookingCounts(it.bookingId, it.count) }
     val dps = dpsResults.bookings.sortedBy { it.bookingId }.map { BookingCounts(it.bookingId, it.count) }
+    return compareBookingCounts(nomis, dps)
+  }
 
+  private suspend fun compareBookingCounts(nomisResults: NomisAttendanceResponse, dpsResults: DpsAttendanceResponse): CompareBookingsResult {
+    val nomis = nomisResults.bookings.sortedBy { it.bookingId }.map { BookingCounts(it.bookingId, it.count) }
+    val dps = dpsResults.bookings.sortedBy { it.bookingId }.map { BookingCounts(it.bookingId, it.count) }
+    return compareBookingCounts(nomis, dps)
+  }
+
+  private suspend fun compareBookingCounts(nomis: List<BookingCounts>, dps: List<BookingCounts>): CompareBookingsResult {
     val nomisOnlyIds = nomis.map { it.id } - dps.map { it.id }.toSet()
     val dpsOnlyIds = dps.map { it.id } - nomis.map { it.id }.toSet()
 
@@ -70,24 +96,33 @@ class ActivitiesReconService(
   }
 
   private suspend fun publishTelemetry(
+    type: String,
     prisonId: String,
     compareResults: CompareBookingsResult,
+    date: LocalDate? = null,
   ) {
     if (compareResults.noDifferences()) {
-      telemetryClient.trackEvent("activity-allocation-reconciliation-report-success", mapOf("prison" to prisonId))
+      telemetryClient.trackEvent(
+        "activity-$type-reconciliation-report-success",
+        mutableMapOf("prison" to prisonId).apply {
+          date?.also { this["date"] = "$it" }
+        },
+      )
     } else {
       nomisApiService.getPrisonerDetails(compareResults.all())
         .sortedBy { it.bookingId }
         .forEach {
           telemetryClient.trackEvent(
-            "activity-allocation-reconciliation-report-failed",
-            mapOf(
+            "activity-$type-reconciliation-report-failed",
+            mutableMapOf(
               "prison" to prisonId,
               "type" to compareResults.differenceType(it.bookingId),
               "bookingId" to it.bookingId.toString(),
               "offenderNo" to it.offenderNo,
               "location" to it.location,
-            ),
+            ).apply {
+              date?.also { this["date"] = "$it" }
+            },
           )
         }
     }

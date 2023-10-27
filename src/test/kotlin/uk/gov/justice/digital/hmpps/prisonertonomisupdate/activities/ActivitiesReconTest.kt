@@ -20,11 +20,15 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyBlocking
 import org.mockito.kotlin.whenever
+import org.springframework.web.reactive.function.client.WebClientResponseException.BadGateway
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AllocationReconciliationResponse as DpsResponse
+import java.time.LocalDate
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AllocationReconciliationResponse as DpsAllocationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceReconciliationResponse as DpsAttendanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.BookingCount as DpsBookingCount
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationReconciliationResponse as NomisResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationReconciliationResponse as NomisAllocationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AttendanceReconciliationResponse as NomisAttendanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.BookingCount as NomisBookingCount
 
 class ActivitiesReconTest {
@@ -38,7 +42,6 @@ class ActivitiesReconTest {
   @Nested
   inner class AllocationReconciliationReport {
 
-    // Using check when the call being verified is inside a coroutine doesn't bubble the errors up to fail the test - so we use a captor instead
     private val telemetryCaptor = argumentCaptor<Map<String, String>>()
 
     @Test
@@ -221,6 +224,20 @@ class ActivitiesReconTest {
       )
     }
 
+    @Test
+    fun `should publish error telemetry`() = runTest {
+      stubBookingCounts(prisonId = "BXI", BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "TRN", nomisCount = 1, dpsCount = 1))
+      whenever(nomisApiService.getAllocationReconciliation(anyString())).thenThrow(BadGateway::class.java)
+
+      activitiesReconService.allocationsReconciliationReport("BXI")
+
+      verify(telemetryClient).trackEvent(
+        "activity-allocation-reconciliation-report-error",
+        mapOf("prison" to "BXI"),
+        null,
+      )
+    }
+
     private fun stubBookingCounts(prisonId: String, vararg bookingCounts: BookingDetailsStub) = runTest {
       // stub the booking allocations counts for NOMIS
       bookingCounts
@@ -228,7 +245,7 @@ class ActivitiesReconTest {
         .map { NomisBookingCount(it.bookingId, it.nomisCount!!) }
         .also {
           whenever(nomisApiService.getAllocationReconciliation(anyString()))
-            .thenReturn(NomisResponse(prisonId, it))
+            .thenReturn(NomisAllocationResponse(prisonId, it))
         }
 
       // stub the booking allocations counts for DPS
@@ -237,7 +254,138 @@ class ActivitiesReconTest {
         .map { DpsBookingCount(it.bookingId, it.dpsCount!!) }
         .also {
           whenever(activitiesApiService.getAllocationReconciliation(anyString()))
-            .thenReturn(DpsResponse(prisonId, it))
+            .thenReturn(DpsAllocationResponse(prisonId, it))
+        }
+
+      // stub the booking details calls for all will be reported on (that don't match counts)
+      bookingCounts
+        .filterNot { it.nomisCount == it.dpsCount }
+        .map { PrisonerDetails(it.offenderNo, it.bookingId, it.location) }
+        .also { whenever(nomisApiService.getPrisonerDetails(any())).thenReturn(it) }
+    }
+  }
+
+  @Nested
+  inner class AttendanceReconciliationReport {
+
+    private val telemetryCaptor = argumentCaptor<Map<String, String>>()
+    private val today = LocalDate.now()
+
+    @Test
+    fun `should publish success telemetry`() = runTest {
+      stubBookingCounts(
+        prisonId = "BXI",
+        date = today,
+        BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "TRN", nomisCount = 1, dpsCount = 1),
+      )
+
+      activitiesReconService.attendancesReconciliationReport("BXI", today)
+
+      verify(nomisApiService).getAttendanceReconciliation("BXI", today)
+      verify(activitiesApiService).getAttendanceReconciliation("BXI", today)
+      verify(telemetryClient).trackEvent(
+        "activity-attendance-reconciliation-report-success",
+        mapOf("prison" to "BXI", "date" to "$today"),
+        null,
+      )
+    }
+
+    @Test
+    fun `should publish fail telemetry`() = runTest {
+      stubBookingCounts(
+        prisonId = "BXI",
+        date = today,
+        BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 1),
+        BookingDetailsStub(12, "A1234BB", "TRN", 1, null),
+      )
+
+      activitiesReconService.attendancesReconciliationReport("BXI", today)
+
+      verifyBlocking(telemetryClient) {
+        trackEvent(
+          eq("activity-attendance-reconciliation-report-failed"),
+          telemetryCaptor.capture(),
+          isNull(),
+        )
+      }
+
+      assertThat(telemetryCaptor.firstValue).containsExactlyInAnyOrderEntriesOf(
+        mapOf(
+          "prison" to "BXI",
+          "date" to "$today",
+          "type" to "NOMIS_only",
+          "bookingId" to "12",
+          "offenderNo" to "A1234BB",
+          "location" to "TRN",
+        ),
+      )
+    }
+
+    @Test
+    fun `should publish fail telemetry for various types of failure`() = runTest {
+      stubBookingCounts(
+        prisonId = "BXI",
+        date = today,
+        BookingDetailsStub(bookingId = 19, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 2),
+        BookingDetailsStub(18, "A1234BB", "TRN", null, 1),
+        BookingDetailsStub(17, "A1234CC", "OUT", 1, null),
+        BookingDetailsStub(16, "A1234DD", "BXI", 1, 1),
+        BookingDetailsStub(15, "A1234EE", "TRN", 1, 2),
+        BookingDetailsStub(14, "A1234FF", "OUT", 1, 1),
+        BookingDetailsStub(13, "A1234GG", "BXI", null, 1),
+        BookingDetailsStub(12, "A1234HH", "TRN", 1, null),
+        BookingDetailsStub(11, "A1234II", "OUT", 1, 1),
+      )
+
+      activitiesReconService.attendancesReconciliationReport("BXI", today)
+
+      verify(telemetryClient, times(6)).trackEvent(
+        eq("activity-attendance-reconciliation-report-failed"),
+        telemetryCaptor.capture(),
+        isNull(),
+      )
+
+      assertThat(telemetryCaptor.allValues).extracting("bookingId", "type").containsExactly(
+        tuple("12", "NOMIS_only"),
+        tuple("13", "DPS_only"),
+        tuple("15", "different_count"),
+        tuple("17", "NOMIS_only"),
+        tuple("18", "DPS_only"),
+        tuple("19", "different_count"),
+      )
+    }
+
+    @Test
+    fun `should publish error telemetry`() = runTest {
+      stubBookingCounts(prisonId = "BXI", today, BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "TRN", nomisCount = 1, dpsCount = 1))
+      whenever(nomisApiService.getAttendanceReconciliation(anyString(), any())).thenThrow(BadGateway::class.java)
+
+      activitiesReconService.attendancesReconciliationReport("BXI", today)
+
+      verify(telemetryClient).trackEvent(
+        "activity-attendance-reconciliation-report-error",
+        mapOf("prison" to "BXI", "date" to "$today"),
+        null,
+      )
+    }
+
+    private fun stubBookingCounts(prisonId: String, date: LocalDate, vararg bookingCounts: BookingDetailsStub) = runTest {
+      // stub the booking attendance counts for NOMIS
+      bookingCounts
+        .filterNot { it.nomisCount == null }
+        .map { NomisBookingCount(it.bookingId, it.nomisCount!!) }
+        .also {
+          whenever(nomisApiService.getAttendanceReconciliation(anyString(), any()))
+            .thenReturn(NomisAttendanceResponse(prisonId, date, it))
+        }
+
+      // stub the booking attendance counts for DPS
+      bookingCounts
+        .filterNot { it.dpsCount == null }
+        .map { DpsBookingCount(it.bookingId, it.dpsCount!!) }
+        .also {
+          whenever(activitiesApiService.getAttendanceReconciliation(anyString(), any()))
+            .thenReturn(DpsAttendanceResponse(prisonId, date, it))
         }
 
       // stub the booking details calls for all will be reported on (that don't match counts)
