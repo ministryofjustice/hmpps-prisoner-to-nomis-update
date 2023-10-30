@@ -13,6 +13,7 @@ import org.springframework.security.oauth2.client.web.reactive.function.client.S
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.netty.http.client.HttpClient
 import java.time.Duration
+import kotlin.apply as kotlinApply
 
 @Configuration
 class WebClientConfiguration(
@@ -46,8 +47,8 @@ class WebClientConfiguration(
     registrationId: String,
     url: String,
   ): WebClient {
-    val oauth2Client = ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).also {
-      it.setDefaultClientRegistrationId(registrationId)
+    val oauth2Client = ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).kotlinApply {
+      setDefaultClientRegistrationId(registrationId)
     }
 
     return builder.baseUrl(url)
@@ -65,7 +66,7 @@ class WebClientConfiguration(
     return AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(
       clientRegistrationRepository,
       oAuth2AuthorizedClientService,
-    ).also { it.setAuthorizedClientProvider(authorizedClientProvider) }
+    ).kotlinApply { setAuthorizedClientProvider(authorizedClientProvider) }
   }
 
   private fun healthWebClient(builder: WebClient.Builder, url: String): WebClient = builder
