@@ -178,3 +178,4 @@ generic-prometheus-alerts:
 
 cron:
   allocationReconReportSchedule: "5 23 * * *"
+  attendanceReconReportSchedule: "5 1 * * *"
