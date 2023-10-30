@@ -30,7 +30,7 @@ class HmppsPrisonerToNomisUpdateExceptionHandler {
 
   @ExceptionHandler(MissingRequestValueException::class)
   fun handleMissingRequestValueException(e: Exception): ResponseEntity<ErrorResponse> {
-    log.info("Missing requests parameter exception: {}", e.message)
+    log.info("Missing request parameter exception: {}", e.message)
     return ResponseEntity
       .status(BAD_REQUEST)
       .body(
