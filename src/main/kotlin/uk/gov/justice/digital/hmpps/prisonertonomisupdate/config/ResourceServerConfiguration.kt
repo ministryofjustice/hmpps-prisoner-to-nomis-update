@@ -26,6 +26,7 @@ class ResourceServerConfiguration {
           "/incentives/reports/reconciliation",
           "/non-associations/reports/reconciliation",
           "/allocations/reports/reconciliation",
+          "/attendances/reports/reconciliation",
         ).forEach { authorize(it, permitAll) }
         authorize(anyExchange, authenticated)
       }

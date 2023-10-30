@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "app.fullname" . }}-report-attendances
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  schedule: "{{ .Values.cron.attendanceReconReportSchedule }}"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-attendances
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPOST http://hmpps-prisoner-to-nomis-update/attendances/reports/reconciliation?date=$(date -d "yesterday" "+%Y-%m-%d")
+          restartPolicy: Never

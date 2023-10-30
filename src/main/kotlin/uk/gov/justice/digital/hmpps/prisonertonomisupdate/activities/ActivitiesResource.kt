@@ -12,11 +12,13 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
+import java.time.LocalDate
 
 @RestController
 class ActivitiesResource(
@@ -147,6 +149,11 @@ class ActivitiesResource(
   @PostMapping("/allocations/reports/reconciliation")
   @ResponseStatus(HttpStatus.ACCEPTED)
   suspend fun allocationsReconciliation() = activitiesReconService.allocationReconciliationReport()
+
+  @PostMapping("/attendances/reports/reconciliation")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  suspend fun attendanceReconciliation(@Schema(description = "Date") @RequestParam date: LocalDate) =
+    activitiesReconService.attendanceReconciliationReport(date)
 
   /**
    * For dev environment only - delete all activities and courses, for when activities environment is reset

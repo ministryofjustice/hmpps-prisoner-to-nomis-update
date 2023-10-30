@@ -28,8 +28,12 @@ generic-service:
         location /non-associations/reports/reconciliation {
           deny all;
           return 401;
-        }        
+        }
         location /allocations/reports/reconciliation {
+          deny all;
+          return 401;
+        }
+        location /attendances/reports/reconciliation {
           deny all;
           return 401;
         }
@@ -172,3 +176,4 @@ generic-prometheus-alerts:
 
 cron:
   allocationReconReportSchedule: "5 23 * * *"
+  attendanceReconReportSchedule: "5 1 * * *"

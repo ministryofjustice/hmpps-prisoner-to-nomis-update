@@ -55,6 +55,23 @@ class ActivitiesReconService(
       telemetryClient.trackEvent("activity-allocation-reconciliation-report-error", mapOf("prison" to prisonId))
     }
 
+  suspend fun attendanceReconciliationReport(date: LocalDate) {
+    val prisons = try {
+      nomisApiService.getServicePrisons("ACTIVITY")
+        .also {
+          telemetryClient.trackEvent(
+            "activity-attendance-reconciliation-report-requested",
+            mapOf("prisons" to it.map { prison -> prison.prisonId }.toString(), "date" to "$date"),
+          )
+        }
+    } catch (e: Exception) {
+      telemetryClient.trackEvent("activity-attendance-reconciliation-report-error", mapOf("date" to "$date"))
+      throw e
+    }
+
+    prisons.forEach { reportScope.launch { attendancesReconciliationReport(it.prisonId, date) } }
+  }
+
   suspend fun attendancesReconciliationReport(prisonId: String, date: LocalDate) =
     try {
       coroutineScope {
