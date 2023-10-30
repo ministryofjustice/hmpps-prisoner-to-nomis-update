@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.server.MissingRequestValueException
 
 @RestControllerAdvice
 class HmppsPrisonerToNomisUpdateExceptionHandler {
@@ -22,6 +23,20 @@ class HmppsPrisonerToNomisUpdateExceptionHandler {
         ErrorResponse(
           status = BAD_REQUEST,
           userMessage = "Validation failure: ${e.message}",
+          developerMessage = e.message,
+        ),
+      )
+  }
+
+  @ExceptionHandler(MissingRequestValueException::class)
+  fun handleMissingRequestValueException(e: Exception): ResponseEntity<ErrorResponse> {
+    log.info("Missing requests parameter exception: {}", e.message)
+    return ResponseEntity
+      .status(BAD_REQUEST)
+      .body(
+        ErrorResponse(
+          status = BAD_REQUEST,
+          userMessage = "Missing request parameter: ${e.cause?.message}",
           developerMessage = e.message,
         ),
       )
