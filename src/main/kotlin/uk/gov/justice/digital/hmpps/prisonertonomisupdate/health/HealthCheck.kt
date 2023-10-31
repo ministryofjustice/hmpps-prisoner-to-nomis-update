@@ -10,29 +10,24 @@ import reactor.core.publisher.Mono
 
 abstract class HealthCheck(private val webClient: WebClient) : ReactiveHealthIndicator {
 
-  override fun health(): Mono<Health> {
-    return webClient.get()
-      .uri("/health/ping")
-      .retrieve()
-      .toEntity(String::class.java)
-      .flatMap { Mono.just(Health.up().withDetail("HttpStatus", it?.statusCode).build()) }
-      .onErrorResume(WebClientResponseException::class.java) {
-        Mono.just(
-          Health.down(it).withDetail("body", it.responseBodyAsString).withDetail("HttpStatus", it.statusCode).build(),
-        )
-      }
-      .onErrorResume(Exception::class.java) { Mono.just(Health.down(it).build()) }
-  }
+  override fun health(): Mono<Health> = webClient.get()
+    .uri("/health/ping")
+    .retrieve()
+    .toEntity(String::class.java)
+    .flatMap { Mono.just(Health.up().withDetail("HttpStatus", it?.statusCode).build()) }
+    .onErrorResume(WebClientResponseException::class.java) {
+      Mono.just(
+        Health.down(it).withDetail("body", it.responseBodyAsString).withDetail("HttpStatus", it.statusCode).build(),
+      )
+    }
+    .onErrorResume(Exception::class.java) { Mono.just(Health.down(it).build()) }
 }
 
 @Component("nomisApi")
-class NomisApiHealth
-constructor(@Qualifier("nomisApiHealthWebClient") webClient: WebClient) : HealthCheck(webClient)
+class NomisApiHealth(@Qualifier("nomisApiHealthWebClient") webClient: WebClient) : HealthCheck(webClient)
 
 @Component("hmppsAuthApi")
-class OAuthApiHealth
-constructor(@Qualifier("oauthApiHealthWebClient") webClient: WebClient) : HealthCheck(webClient)
+class OAuthApiHealth(@Qualifier("oauthApiHealthWebClient") webClient: WebClient) : HealthCheck(webClient)
 
 @Component("mappingApi")
-class MappingApiHealth
-constructor(@Qualifier("mappingHealthWebClient") webClient: WebClient) : HealthCheck(webClient)
+class MappingApiHealth(@Qualifier("mappingHealthWebClient") webClient: WebClient) : HealthCheck(webClient)
