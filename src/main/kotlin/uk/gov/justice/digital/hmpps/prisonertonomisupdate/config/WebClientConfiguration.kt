@@ -45,25 +45,26 @@ class WebClientConfiguration(
   fun authorizedClientManager(
     clientRegistrationRepository: ReactiveClientRegistrationRepository,
     oAuth2AuthorizedClientService: ReactiveOAuth2AuthorizedClientService,
-  ): ReactiveOAuth2AuthorizedClientManager {
-    val authorizedClientProvider = ReactiveOAuth2AuthorizedClientProviderBuilder.builder().clientCredentials().build()
-    return AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(
-      clientRegistrationRepository,
-      oAuth2AuthorizedClientService,
-    ).kotlinApply { setAuthorizedClientProvider(authorizedClientProvider) }
-  }
+  ): ReactiveOAuth2AuthorizedClientManager = AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(
+    clientRegistrationRepository,
+    oAuth2AuthorizedClientService,
+  ).kotlinApply { setAuthorizedClientProvider(ReactiveOAuth2AuthorizedClientProviderBuilder.builder().clientCredentials().build()) }
 }
 
-fun WebClient.Builder.authorisedWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, registrationId: String, url: String, timeout: Duration): WebClient {
-  val oauth2Client = ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).kotlinApply {
-    setDefaultClientRegistrationId(registrationId)
-  }
-
-  return baseUrl(url)
+fun WebClient.Builder.authorisedWebClient(
+  authorizedClientManager: ReactiveOAuth2AuthorizedClientManager,
+  registrationId: String,
+  url: String,
+  timeout: Duration,
+): WebClient =
+  baseUrl(url)
     .clientConnector(ReactorClientHttpConnector(HttpClient.create().responseTimeout(timeout)))
-    .filter(oauth2Client)
+    .filter(
+      ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).kotlinApply {
+        setDefaultClientRegistrationId(registrationId)
+      },
+    )
     .build()
-}
 
 fun WebClient.Builder.healthWebClient(url: String, healthTimeout: Duration): WebClient =
   baseUrl(url)
