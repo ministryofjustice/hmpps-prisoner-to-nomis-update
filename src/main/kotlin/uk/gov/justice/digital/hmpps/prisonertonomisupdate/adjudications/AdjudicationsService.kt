@@ -613,6 +613,46 @@ class AdjudicationsService(
     }
   }
 
+  suspend fun quashPunishments(punishmentEvent: PunishmentEvent) {
+    val chargeNumber = punishmentEvent.additionalInformation.chargeNumber
+    val prisonId: String = punishmentEvent.additionalInformation.prisonId
+    val prisonerNumber: String = punishmentEvent.additionalInformation.prisonerNumber
+    val telemetryMap = mutableMapOf(
+      "chargeNumber" to chargeNumber,
+      "prisonId" to prisonId,
+      "offenderNo" to prisonerNumber,
+    )
+
+    runCatching {
+      val adjudicationMapping =
+        adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber)
+          .also {
+            telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
+            telemetryMap["chargeSequence"] = it.chargeSequence.toString()
+          }
+
+      val adjudicationNumber = adjudicationMapping.adjudicationNumber
+      val chargeSequence = adjudicationMapping.chargeSequence
+
+      val finalOutcome = adjudicationsApiService.getCharge(
+        chargeNumber,
+        prisonId,
+      ).reportedAdjudication.outcomes.lastOrNull()
+
+      if (finalOutcome?.outcome?.outcome?.code == OutcomeDto.Code.QUASHED) {
+        nomisApiService.quashAdjudicationAwards(adjudicationNumber, chargeSequence)
+      } else {
+        telemetryClient.trackEvent("punishment-update-failed", telemetryMap + ("reason" to "Outcome is ${finalOutcome?.outcome?.outcome?.code}"), null)
+        throw IllegalStateException("Cannot quash punishments for charge $chargeNumber as final outcome is not quashed")
+      }
+    }.onSuccess {
+      telemetryClient.trackEvent("punishment-quash-success", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("punishment-update-failed", telemetryMap, null)
+      throw e
+    }
+  }
+
   // referral without a hearing
   suspend fun createOrUpdateReferral(createEvent: ReferralEvent) {
     val event = createEvent.additionalInformation
