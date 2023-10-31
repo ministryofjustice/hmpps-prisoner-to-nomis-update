@@ -1499,6 +1499,25 @@ internal class NomisApiServiceTest {
       }
     }
   }
+
+  @Nested
+  inner class QuashAdjudicationAwards {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stubAdjudicationSquashAwards(1234567, 1)
+
+      nomisApiService.quashAdjudicationAwards(
+        adjudicationNumber = 1234567,
+        chargeSequence = 1,
+      )
+
+      nomisApi.verify(
+        putRequestedFor(urlEqualTo("/adjudications/adjudication-number/1234567/charge/1/quash"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+  }
 }
 
 fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(

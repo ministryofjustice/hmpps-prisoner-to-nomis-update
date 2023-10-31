@@ -1389,6 +1389,19 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubAdjudicationSquashAwards(
+    adjudicationNumber: Long = 123456,
+    chargeSequence: Int = 1,
+  ) {
+    stubFor(
+      put("/adjudications/adjudication-number/$adjudicationNumber/charge/$chargeSequence/quash").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200),
+      ),
+    )
+  }
+
   // *************************************************** Non-Associations **********************************************
 
   fun stubNonAssociationCreate(response: String) {

@@ -19,6 +19,7 @@ import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
@@ -702,6 +703,193 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class QuashPunishments {
+    @Nested
+    inner class HappyPath {
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
+        adjudicationsApiServer.stubChargeGet(
+          CHARGE_NUMBER_FOR_CREATION,
+          offenderNo = OFFENDER_NO,
+          punishments =
+          // language=json
+          """
+          [
+            {
+                "id": 667,
+                "type": "EXTRA_WORK",
+                "schedule": {
+                    "days": 12,
+                    "suspendedUntil": "2023-10-18"
+                }
+            }
+          ]
+          """.trimIndent(),
+          outcomes =
+          // language=json
+          """
+          [
+            {
+                "hearing": {
+                    "id": 812,
+                    "locationId": 27187,
+                    "dateTimeOfHearing": "2023-10-26T15:30:00",
+                    "oicHearingType": "INAD_ADULT",
+                    "outcome": {
+                        "id": 1144,
+                        "adjudicator": "bobbie",
+                        "code": "COMPLETE",
+                        "plea": "GUILTY"
+                    },
+                    "agencyId": "MDI"
+                },
+                "outcome": {
+                    "outcome": {
+                        "id": 1516,
+                        "code": "CHARGE_PROVED",
+                        "canRemove": true
+                    }
+                }
+            },
+            {
+                "outcome": {
+                    "outcome": {
+                        "id": 1556,
+                        "code": "QUASHED",
+                        "details": "Due to lack of evidence",
+                        "quashedReason": "JUDICIAL_REVIEW",
+                        "canRemove": true
+                    }
+                }
+            }
+          ] 
+          """.trimIndent(),
+        )
+        nomisApi.stubAdjudicationSquashAwards(ADJUDICATION_NUMBER, CHARGE_SEQ)
+        publishQuashPunishmentsDomainEvent()
+        waitForQuashPunishmentProcessingToBeComplete()
+      }
+
+      @Test
+      fun `will callback back to adjudication service to get more details`() {
+        adjudicationsApiServer.verify(getRequestedFor(urlEqualTo("/reported-adjudications/$CHARGE_NUMBER_FOR_CREATION/v2")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("punishment-quash-success"),
+          org.mockito.kotlin.check {
+            assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
+            assertThat(it["chargeSequence"]).isEqualTo(CHARGE_SEQ.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to quash the awards`() {
+        nomisApi.verify(putRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQ/quash")))
+      }
+    }
+
+    @Nested
+    inner class ErrorScenarios {
+
+      @Nested
+      inner class OutcomeNoLongerQuashed {
+
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
+          adjudicationsApiServer.stubChargeGet(
+            CHARGE_NUMBER_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            punishments =
+            // language=json
+            """
+          [
+            {
+                "id": 667,
+                "type": "EXTRA_WORK",
+                "schedule": {
+                    "days": 12,
+                    "suspendedUntil": "2023-10-18"
+                }
+            }
+          ]
+            """.trimIndent(),
+            outcomes =
+            // language=json
+            """
+          [
+            {
+                "hearing": {
+                    "id": 812,
+                    "locationId": 27187,
+                    "dateTimeOfHearing": "2023-10-26T15:30:00",
+                    "oicHearingType": "INAD_ADULT",
+                    "outcome": {
+                        "id": 1144,
+                        "adjudicator": "bobbie",
+                        "code": "COMPLETE",
+                        "plea": "GUILTY"
+                    },
+                    "agencyId": "MDI"
+                },
+                "outcome": {
+                    "outcome": {
+                        "id": 1516,
+                        "code": "CHARGE_PROVED",
+                        "canRemove": true
+                    }
+                }
+            }
+          ] 
+            """.trimIndent(),
+          )
+          nomisApi.stubAdjudicationSquashAwards(ADJUDICATION_NUMBER, CHARGE_SEQ)
+          publishQuashPunishmentsDomainEvent()
+        }
+
+        @Test
+        fun `will record failure success telemetry and not update NOMIS`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              eq("punishment-quash-failed"),
+              org.mockito.kotlin.check {
+                assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+                assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+                assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
+                assertThat(it["chargeSequence"]).isEqualTo(CHARGE_SEQ.toString())
+                assertThat(it["reason"]).isEqualTo("Outcome is CHARGE_PROVED")
+              },
+              isNull(),
+            )
+          }
+          nomisApi.verify(0, putRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQ/quash")))
+        }
+
+        @Test
+        fun `an error will lead to message being added to DLQ`() {
+          await untilCallTo {
+            awsSqsAdjudicationDlqClient!!.countAllMessagesOnQueue(adjudicationDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+      }
+    }
+
+    private fun waitForQuashPunishmentProcessingToBeComplete() {
+      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+    }
+  }
+
   private fun publishCreatePunishmentsDomainEvent() {
     val eventType = "adjudication.punishments.created"
     awsSnsClient.publish(
@@ -730,7 +918,21 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  fun adjudicationPunishmentMessagePayload(chargeNumber: String, prisonId: String, prisonerNumber: String, eventType: String) =
+  private fun publishQuashPunishmentsDomainEvent() {
+    val eventType = "adjudication.outcome.quashed"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(adjudicationPunishmentMessagePayload(CHARGE_NUMBER_FOR_CREATION, PRISON_ID, OFFENDER_NO, eventType, status = "QUASHED"))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  fun adjudicationPunishmentMessagePayload(chargeNumber: String, prisonId: String, prisonerNumber: String, eventType: String, status: String = "CHARGE_PROVED") =
     // language=json
-    """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId", "prisonerNumber": "$prisonerNumber", "status": "CHARGE_PROVED"}}"""
+    """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId", "prisonerNumber": "$prisonerNumber", "status": "$status"}}"""
 }

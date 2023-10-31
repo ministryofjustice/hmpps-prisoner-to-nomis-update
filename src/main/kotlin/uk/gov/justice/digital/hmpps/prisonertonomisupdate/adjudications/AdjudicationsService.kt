@@ -613,6 +613,56 @@ class AdjudicationsService(
     }
   }
 
+  suspend fun quashPunishments(punishmentEvent: PunishmentEvent) {
+    val chargeNumber = punishmentEvent.additionalInformation.chargeNumber
+    val prisonId: String = punishmentEvent.additionalInformation.prisonId
+    val prisonerNumber: String = punishmentEvent.additionalInformation.prisonerNumber
+    val telemetryMap = mutableMapOf(
+      "chargeNumber" to chargeNumber,
+      "prisonId" to prisonId,
+      "offenderNo" to prisonerNumber,
+    )
+
+    runCatching {
+      val adjudicationMapping =
+        adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber)
+          .also {
+            telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
+            telemetryMap["chargeSequence"] = it.chargeSequence.toString()
+          }
+
+      val adjudicationNumber = adjudicationMapping.adjudicationNumber
+      val chargeSequence = adjudicationMapping.chargeSequence
+
+      val finalOutcome = adjudicationsApiService.getCharge(
+        chargeNumber,
+        prisonId,
+      ).reportedAdjudication.outcomes.lastOrNull()
+
+      if (finalOutcome?.outcome?.outcome?.code == OutcomeDto.Code.QUASHED) {
+        nomisApiService.quashAdjudicationAwards(adjudicationNumber, chargeSequence)
+      } else {
+        // if we find this is common and requires no further investigation we could eventually
+        // consider making this just a warning and ignoring this event. For now, be cautious and
+        // alert on DLQ events for this
+        throw AdjudicationOutcomeInWrongState(finalOutcome?.outcome?.outcome?.code)
+      }
+    }.onSuccess {
+      telemetryClient.trackEvent("punishment-quash-success", telemetryMap, null)
+    }.onFailure { e ->
+      when (e) {
+        is AdjudicationOutcomeInWrongState -> {
+          telemetryClient.trackEvent("punishment-quash-failed", telemetryMap + ("reason" to "Outcome is ${e.outcome}"), null)
+        }
+
+        else -> {
+          telemetryClient.trackEvent("punishment-quash-failed", telemetryMap, null)
+        }
+      }
+      throw e
+    }
+  }
+
   // referral without a hearing
   suspend fun createOrUpdateReferral(createEvent: ReferralEvent) {
     val event = createEvent.additionalInformation
@@ -991,3 +1041,5 @@ data class PunishmentsAdditionalInformation(
 data class PunishmentEvent(
   val additionalInformation: PunishmentsAdditionalInformation,
 )
+
+class AdjudicationOutcomeInWrongState(val outcome: OutcomeDto.Code?) : IllegalStateException("Adjudication is in the wrong state. Outcome is $outcome")
