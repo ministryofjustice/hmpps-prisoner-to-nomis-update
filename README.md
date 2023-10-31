@@ -266,6 +266,81 @@ The side effect of this event is a DPS IEP Review is created which is then writt
 
 - For duplicate NOMIS system generated IEP the only solution is for NOMIS Support Team to delete the rouge IEP records, that is the one or more records that was generated after the DPS one.
 
+### Activities Reconciliation Report Alerts (allocations and attendances)
+
+Daily jobs check each of the prisons which are feature switched on for the Activities service (in the SERVICE_AGENCY_SWITCHES table in NOMIS) and compares the number of allocations and attendances to pay in NOMIS with the number in DPS. When there is a mismatch an alert is sent to the `#sycon-alerts` channel.
+
+Clicking on the `view` button included in the alert will run a query showing all the failures for that day.
+
+#### Allocations reconciliation failures
+
+For allocations a failure indicates that some bookings have a different number of active allocations in NOMIS and DPS. This is a problem that may cause problems with unlock lists in the prison and will likely cause future synchronisation events from DPS to fail.
+
+To try and work out what's different start with the following queries:
+
+NOMIS:
+```sql
+select * from OMS_OWNER.OFFENDER_PROGRAM_PROFILES 
+where OFFENDER_BOOK_ID=<insert offender book id here> 
+and OFFENDER_PROGRAM_STATUS='ALLOC';
+```
+
+DPS:
+```sql
+select * from allocations 
+where booking_id=<insert offender book id here>
+and active=true;
+```
+
+To get an overview of what's been happening with the synchronisation events for this offender run the following query in App Insights:
+```ksql
+customEvents
+| where name startswith 'activity'
+| where customDimensions.bookingId == '<insert booking id here>'
+```
+
+Often the fix involves re-synchronising the DPS allocations which can be done with an [endpoint in the synchronisation service](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html#/activities-resource/synchroniseUpsertAllocation).
+
+##### Known issues
+
+If the prisoner has been released or transferred to a different prison then there's not much to be done. This information can be found in the `customDimensions` of the report failures found in App Insights. 
+
+#### Attendances reconciliation failures
+
+For attendances a failure indicates that some bookings have a different number of attendances to pay in NOMIS and DPS. By "attendances to pay" we mean the pay flag is true - not related to the results of the NOMIS payroll for which the rules are many and complex. However, this is a problem that might cause NOMIS to miss payments to the prisoner.
+
+To try and work out what's different start with the following queries:
+
+NOMIS:
+```sql
+select * from OMS_OWNER.OFFENDER_COURSE_ATTENDANCES 
+where OFFENDER_BOOK_ID=<insert offender book id here> 
+and event_date=to_date('<insert report date here>', 'YYYY-MM-DDD') 
+and PAID_FLAG='Y';
+```
+
+DPS:
+```sql
+select att.* from attendance att
+join scheduled_instance si on att.scheduled_instance_id = si.scheduled_instance_id
+join allocation al on al.activity_schedule_id = si.activity_schedule_id and att.prisoner_number = al.prisoner_number
+where si.session_date = '<insert report date here>'
+and att.prisoner_number = '<insert offenderNo here>';
+```
+
+To get an overview of what's been happening with the synchronisation events for this offender run the following query in App Insights:
+```ksql
+customEvents
+| where name startswith "activity"
+| where customDimensions.bookingId == '<insert booking id here>'
+```
+
+Often the fix involves re-synchronising the DPS attendances which can be done with an [endpoint in the synchronisation service](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html#/activities-resource/synchroniseUpsertAttendance).
+
+##### Known issues
+
+If the prisoner has been released or transferred to a different prison then there's not much to be done. This information can be found in the `customDimensions` of the report failures found in App Insights.
+
 ### Activities Synchronisation Error Handling
 
 When a message ends up on the Activities Dead Letter Queue (DLQ) we receive an alert. To work out what went wrong:
