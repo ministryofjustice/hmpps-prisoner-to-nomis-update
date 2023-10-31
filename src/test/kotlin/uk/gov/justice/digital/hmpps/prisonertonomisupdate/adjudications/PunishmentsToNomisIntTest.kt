@@ -19,6 +19,7 @@ import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
@@ -854,32 +855,24 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           )
           nomisApi.stubAdjudicationSquashAwards(ADJUDICATION_NUMBER, CHARGE_SEQ)
           publishQuashPunishmentsDomainEvent()
-          waitForQuashPunishmentProcessingToBeComplete()
         }
 
         @Test
-        fun `will callback back to adjudication service to get more details`() {
-          adjudicationsApiServer.verify(getRequestedFor(urlEqualTo("/reported-adjudications/$CHARGE_NUMBER_FOR_CREATION/v2")))
-        }
-
-        @Test
-        fun `will failure success telemetry`() {
-          verify(telemetryClient).trackEvent(
-            eq("punishment-quash-failed"),
-            org.mockito.kotlin.check {
-              assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
-              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-              assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-              assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
-              assertThat(it["chargeSequence"]).isEqualTo(CHARGE_SEQ.toString())
-              assertThat(it["reason"]).isEqualTo("Outcome is CHARGE_PROVED")
-            },
-            isNull(),
-          )
-        }
-
-        @Test
-        fun `will not call nomis api to quash the awards`() {
+        fun `will record failure success telemetry and not update NOMIS`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              eq("punishment-quash-failed"),
+              org.mockito.kotlin.check {
+                assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+                assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+                assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
+                assertThat(it["chargeSequence"]).isEqualTo(CHARGE_SEQ.toString())
+                assertThat(it["reason"]).isEqualTo("Outcome is CHARGE_PROVED")
+              },
+              isNull(),
+            )
+          }
           nomisApi.verify(0, putRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQ/quash")))
         }
 

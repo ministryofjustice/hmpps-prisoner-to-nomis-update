@@ -642,13 +642,23 @@ class AdjudicationsService(
       if (finalOutcome?.outcome?.outcome?.code == OutcomeDto.Code.QUASHED) {
         nomisApiService.quashAdjudicationAwards(adjudicationNumber, chargeSequence)
       } else {
-        telemetryClient.trackEvent("punishment-update-failed", telemetryMap + ("reason" to "Outcome is ${finalOutcome?.outcome?.outcome?.code}"), null)
-        throw IllegalStateException("Cannot quash punishments for charge $chargeNumber as final outcome is not quashed")
+        // if we find this is common and requires no further investigation we could eventually
+        // consider making this just a warning and ignoring this event. For now, be cautious and
+        // alert on DLQ events for this
+        throw AdjudicationOutcomeInWrongState(finalOutcome?.outcome?.outcome?.code)
       }
     }.onSuccess {
       telemetryClient.trackEvent("punishment-quash-success", telemetryMap, null)
     }.onFailure { e ->
-      telemetryClient.trackEvent("punishment-update-failed", telemetryMap, null)
+      when (e) {
+        is AdjudicationOutcomeInWrongState -> {
+          telemetryClient.trackEvent("punishment-quash-failed", telemetryMap + ("reason" to "Outcome is ${e.outcome}"), null)
+        }
+
+        else -> {
+          telemetryClient.trackEvent("punishment-quash-failed", telemetryMap, null)
+        }
+      }
       throw e
     }
   }
@@ -1031,3 +1041,5 @@ data class PunishmentsAdditionalInformation(
 data class PunishmentEvent(
   val additionalInformation: PunishmentsAdditionalInformation,
 )
+
+class AdjudicationOutcomeInWrongState(val outcome: OutcomeDto.Code?) : IllegalStateException("Adjudication is in the wrong state. Outcome is $outcome")
