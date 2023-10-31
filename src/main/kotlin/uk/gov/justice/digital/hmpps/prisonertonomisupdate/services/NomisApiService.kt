@@ -442,6 +442,14 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     .retrieve()
     .awaitBody()
 
+  suspend fun quashAdjudicationAwards(
+    adjudicationNumber: Long,
+    chargeSequence: Int,
+  ) = webClient.put()
+    .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/quash", adjudicationNumber, chargeSequence)
+    .retrieve()
+    .awaitBodilessEntity()
+
   suspend fun upsertReferral(
     adjudicationNumber: Long,
     chargeSequence: Int,
