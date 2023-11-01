@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DeleteHearingResultAwardResponses
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Hearing
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationResponse
@@ -439,6 +440,14 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
   ): UpdateHearingResultAwardResponses = webClient.put()
     .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/awards", adjudicationNumber, chargeSequence)
     .bodyValue(request)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun deleteAdjudicationAwards(
+    adjudicationNumber: Long,
+    chargeSequence: Int,
+  ): DeleteHearingResultAwardResponses = webClient.delete()
+    .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/awards", adjudicationNumber, chargeSequence)
     .retrieve()
     .awaitBody()
 

@@ -62,6 +62,7 @@ class AdjudicationsDomainEventListener(
 
       "adjudication.punishments.created" -> adjudicationsService.createPunishments(message.fromJson())
       "adjudication.punishments.updated" -> adjudicationsService.updatePunishments(message.fromJson())
+      "adjudication.punishments.deleted" -> adjudicationsService.updatePunishments(message.fromJson())
       "adjudication.outcome.quashed" -> adjudicationsService.quashPunishments(message.fromJson())
       "adjudication.outcome.unquashed" -> log.info("Ignoring adjudication.outcome.unquashed event")
 

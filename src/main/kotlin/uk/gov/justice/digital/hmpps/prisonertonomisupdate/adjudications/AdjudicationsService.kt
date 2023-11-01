@@ -613,6 +613,58 @@ class AdjudicationsService(
     }
   }
 
+  suspend fun deletePunishments(punishmentEvent: PunishmentEvent) {
+   /* val chargeNumber = punishmentEvent.additionalInformation.chargeNumber
+    val prisonId: String = punishmentEvent.additionalInformation.prisonId
+    val prisonerNumber: String = punishmentEvent.additionalInformation.prisonerNumber
+    val telemetryMap = mutableMapOf(
+      "chargeNumber" to chargeNumber,
+      "prisonId" to prisonId,
+      "offenderNo" to prisonerNumber,
+    )
+
+    runCatching {
+      val adjudicationMapping =
+        adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber)
+          .also {
+            telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
+            telemetryMap["chargeSequence"] = it.chargeSequence.toString()
+          }
+
+      val adjudicationNumber = adjudicationMapping.adjudicationNumber
+      val chargeSequence = adjudicationMapping.chargeSequence
+
+      adjudicationsApiService.getCharge(
+        chargeNumber,
+        prisonId,
+      ).reportedAdjudication.punishments.firstOrNull()?:let{
+        nomisApiService.deleteAdjudicationAwards(
+          adjudicationNumber,
+          chargeSequence,
+        )
+      }?.let{
+        throw IllegalStateException(
+          "Punishments exist in DPS for offenderNo ${} charge no ${event.chargeNumber}",
+        )
+      }
+
+      val mapping = AdjudicationPunishmentBatchUpdateMappingDto(
+        punishmentsToCreate = emptyList(),
+        punishmentsToDelete = nomisAwardsResponse.awardsDeleted.map {
+          AdjudicationPunishmentNomisIdDto(
+            nomisBookingId = it.bookingId,
+            nomisSanctionSequence = it.sanctionSequence,
+          )
+        },
+      )
+    }.onSuccess {
+      telemetryClient.trackEvent("punishment-delete-success", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("punishment-delete-failed", telemetryMap, null)
+      throw e
+    }*/
+  }
+
   suspend fun quashPunishments(punishmentEvent: PunishmentEvent) {
     val chargeNumber = punishmentEvent.additionalInformation.chargeNumber
     val prisonId: String = punishmentEvent.additionalInformation.prisonId
@@ -873,6 +925,12 @@ private fun HearingAdditionalInformation.toTelemetryMap(): MutableMap<String, St
 )
 
 private fun ReferralAdditionalInformation.toTelemetryMap(): MutableMap<String, String> = mutableMapOf(
+  "chargeNumber" to this.chargeNumber,
+  "prisonId" to this.prisonId,
+  "prisonerNumber" to this.prisonerNumber,
+)
+
+private fun PunishmentsAdditionalInformation.toTelemetryMap(): MutableMap<String, String> = mutableMapOf(
   "chargeNumber" to this.chargeNumber,
   "prisonId" to this.prisonId,
   "prisonerNumber" to this.prisonerNumber,

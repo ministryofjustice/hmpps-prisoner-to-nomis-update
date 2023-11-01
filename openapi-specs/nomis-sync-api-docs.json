@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-10-27.5342.a1bc618"
+    "version": "2023-11-01.5405.8a623d8"
   },
   "servers": [
     {
@@ -1771,6 +1771,165 @@
         }
       }
     },
+    "/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/unquash": {
+      "put": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "updates adjudication charge outcome and awards to the requested state before a quash",
+        "description": "The latest hearing result is set to back to the supplied value along with all awards associated with this charge. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "unquashHearingResultAndAwards",
+        "parameters": [
+          {
+            "name": "adjudicationNumber",
+            "in": "path",
+            "description": "Adjudication number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Adjudication number",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "chargeSequence",
+            "in": "path",
+            "description": "Nomis charge sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Nomis charge sequence",
+              "example": 1
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnquashHearingResultAwardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Hearing result award IDs created and awards deleted. These list should be empty unless there was a previous synchronisation issue that meant the NOMIS awards are not in the correct state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateHearingResultAwardResponses"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Charge does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/quash": {
+      "put": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "updates adjudication charge outcome and awards to quashed",
+        "description": "The latest hearing result is set to quashed along with all awards associated with this charge (that may be associated with other hearings). Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "quashHearingResultAndAwards",
+        "parameters": [
+          {
+            "name": "adjudicationNumber",
+            "in": "path",
+            "description": "Adjudication number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Adjudication number",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "chargeSequence",
+            "in": "path",
+            "description": "Nomis charge sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Nomis charge sequence",
+              "example": 1
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Hearing result and awards quashed"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Charge does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/awards": {
       "put": {
         "tags": [
@@ -1908,6 +2067,82 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CreateHearingResultAwardResponses"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Charge does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "Deletes hearing result awards for a given adjudication and charge sequence",
+        "description": "Deletes hearing result awards for a given adjudication and charge sequence. Returns list of deleted award keys. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "deleteHearingResultAwards",
+        "parameters": [
+          {
+            "name": "adjudicationNumber",
+            "in": "path",
+            "description": "Adjudication number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Adjudication number",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "chargeSequence",
+            "in": "path",
+            "description": "Nomis charge sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Nomis charge sequence",
+              "example": 1
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Hearing result awards deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteHearingResultAwardResponses"
                 }
               }
             }
@@ -3451,7 +3686,7 @@
           "adjudication-resource"
         ],
         "summary": "Deletes a hearing result",
-        "description": "Deletes a hearing result for a given adjudication and hearing Id. The result sequence is always 1 for synchronising DPS migrated/created data. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "description": "Deletes a hearing result for a given adjudication and hearing Id. Returns list of any deleted award Ids to allow removal of award mappings in the sync service. Requires ROLE_NOMIS_ADJUDICATIONS",
         "operationId": "deleteHearingResult",
         "parameters": [
           {
@@ -3493,7 +3728,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Hearing result deleted"
+            "description": "Hearing result deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteHearingResultResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized to access this endpoint",
@@ -3533,8 +3775,8 @@
         "tags": [
           "adjudication-resource"
         ],
-        "summary": "creates a result for a given charge. This requires a dummy hearing to be created",
-        "description": "Creates a result for a charge. DPS allows results to be created without hearings eg: Refer to Police. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "summary": "creates or updates a result for a given charge. This requires a dummy hearing to be created",
+        "description": "Creates or updates a result for a charge. DPS allows results to be created without hearings eg: Refer to Police. Requires ROLE_NOMIS_ADJUDICATIONS",
         "operationId": "createResultWithDummyHearing",
         "parameters": [
           {
@@ -4607,6 +4849,80 @@
           },
           "403": {
             "description": "Forbidden to access this endpoint when role NOMIS_INCENTIVES not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/attendances/reconciliation/{prisonId}": {
+      "get": {
+        "tags": [
+          "activities-resource"
+        ],
+        "summary": "Get data for an attendance sync reconciliation",
+        "description": "Gets the number of active attendances for each booking in the prison",
+        "operationId": "getAttendanceReconciliationSummary",
+        "parameters": [
+          {
+            "name": "prisonId",
+            "in": "path",
+            "description": "Prison id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Prison id"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Date",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reconciliation data returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceReconciliationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
             "content": {
               "application/json": {
                 "schema": {
@@ -6689,6 +7005,23 @@
         },
         "description": "Hearing result award (aka punishment) to be created"
       },
+      "UnquashHearingResultAwardRequest": {
+        "required": [
+          "awards",
+          "findingCode"
+        ],
+        "type": "object",
+        "properties": {
+          "findingCode": {
+            "type": "string",
+            "description": "Finding code",
+            "example": "PROVED"
+          },
+          "awards": {
+            "$ref": "#/components/schemas/UpdateHearingResultAwardRequest"
+          }
+        }
+      },
       "UpdateHearingResultAwardRequest": {
         "required": [
           "awardsToCreate",
@@ -8698,12 +9031,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "last": {
+            "type": "boolean"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "last": {
-            "type": "boolean"
           },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
@@ -8727,15 +9060,15 @@
             "type": "integer",
             "format": "int32"
           },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
           "paged": {
             "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
-          },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
           }
         }
       },
@@ -8908,12 +9241,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "last": {
+            "type": "boolean"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "last": {
-            "type": "boolean"
           },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
@@ -9064,12 +9397,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "last": {
+            "type": "boolean"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "last": {
-            "type": "boolean"
           },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
@@ -9189,12 +9522,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "last": {
+            "type": "boolean"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "last": {
-            "type": "boolean"
           },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
@@ -9383,12 +9716,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "last": {
+            "type": "boolean"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "last": {
-            "type": "boolean"
           },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
@@ -9540,12 +9873,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "last": {
+            "type": "boolean"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "last": {
-            "type": "boolean"
           },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
@@ -9605,12 +9938,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "last": {
+            "type": "boolean"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "last": {
-            "type": "boolean"
           },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
@@ -9676,12 +10009,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "last": {
+            "type": "boolean"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "last": {
-            "type": "boolean"
           },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
@@ -10008,12 +10341,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "last": {
+            "type": "boolean"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "last": {
-            "type": "boolean"
           },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
@@ -10022,6 +10355,38 @@
             "type": "boolean"
           }
         }
+      },
+      "DeleteHearingResultResponse": {
+        "required": [
+          "awardsDeleted"
+        ],
+        "type": "object",
+        "properties": {
+          "awardsDeleted": {
+            "type": "array",
+            "description": "a list of awards that were deleted",
+            "items": {
+              "$ref": "#/components/schemas/HearingResultAwardResponse"
+            }
+          }
+        },
+        "description": "A list of Hearing result awards deleted (aka punishment) as a side effect of deleting a hearing result"
+      },
+      "DeleteHearingResultAwardResponses": {
+        "required": [
+          "awardsDeleted"
+        ],
+        "type": "object",
+        "properties": {
+          "awardsDeleted": {
+            "type": "array",
+            "description": "a list of awards that were deleted",
+            "items": {
+              "$ref": "#/components/schemas/HearingResultAwardResponse"
+            }
+          }
+        },
+        "description": "A list of Hearing result awards deleted (aka punishment)"
       }
     },
     "securitySchemes": {
