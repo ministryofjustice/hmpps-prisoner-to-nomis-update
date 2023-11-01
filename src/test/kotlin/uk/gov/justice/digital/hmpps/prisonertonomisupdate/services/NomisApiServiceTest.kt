@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Existi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.HearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.IncidentToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToUpdateOrAdd
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UnquashHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateEvidenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateHearingResultAwardRequest
@@ -1515,6 +1516,81 @@ internal class NomisApiServiceTest {
       nomisApi.verify(
         putRequestedFor(urlEqualTo("/adjudications/adjudication-number/1234567/charge/1/quash"))
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+  }
+
+  @Nested
+  inner class UnquashAdjudicationAwards {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stubAdjudicationUnquashAwards(1234567, 1)
+
+      val result = nomisApiService.unquashAdjudicationAwards(
+        adjudicationNumber = 1234567,
+        chargeSequence = 1,
+        request = UnquashHearingResultAwardRequest(
+          findingCode = "PROVED",
+          awards = UpdateHearingResultAwardRequest(
+            awardsToUpdate = listOf(
+              ExistingHearingResultAwardRequest(
+                award = HearingResultAwardRequest(
+                  sanctionType = HearingResultAwardRequest.SanctionType.ADA,
+                  sanctionStatus = HearingResultAwardRequest.SanctionStatus.IMMEDIATE,
+                  sanctionDays = 28,
+                  effectiveDate = LocalDate.parse("2020-07-19"),
+                ),
+                sanctionSequence = 10,
+              ),
+            ),
+            awardsToCreate = emptyList(),
+          ),
+        ),
+      )
+
+      assertThat(result).isNotNull
+
+      nomisApi.verify(
+        putRequestedFor(urlEqualTo("/adjudications/adjudication-number/1234567/charge/1/unquash"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will post awards and result data to nomis api`() = runTest {
+      nomisApi.stubAdjudicationUnquashAwards(1234567, 1)
+
+      nomisApiService.unquashAdjudicationAwards(
+        adjudicationNumber = 1234567,
+        chargeSequence = 1,
+        request = UnquashHearingResultAwardRequest(
+          findingCode = "PROVED",
+          awards = UpdateHearingResultAwardRequest(
+            awardsToUpdate = listOf(
+              ExistingHearingResultAwardRequest(
+                award = HearingResultAwardRequest(
+                  sanctionType = HearingResultAwardRequest.SanctionType.ADA,
+                  sanctionStatus = HearingResultAwardRequest.SanctionStatus.IMMEDIATE,
+                  sanctionDays = 28,
+                  effectiveDate = LocalDate.parse("2020-07-19"),
+                ),
+                sanctionSequence = 10,
+              ),
+            ),
+            awardsToCreate = emptyList(),
+          ),
+        ),
+      )
+
+      nomisApi.verify(
+        putRequestedFor(urlEqualTo("/adjudications/adjudication-number/1234567/charge/1/unquash"))
+          .withRequestBody(matchingJsonPath("awards.awardsToUpdate[0].award.sanctionType", equalTo("ADA")))
+          .withRequestBody(matchingJsonPath("awards.awardsToUpdate[0].award.sanctionStatus", equalTo("IMMEDIATE")))
+          .withRequestBody(matchingJsonPath("awards.awardsToUpdate[0].award.sanctionDays", equalTo("28")))
+          .withRequestBody(matchingJsonPath("awards.awardsToUpdate[0].award.effectiveDate", equalTo("2020-07-19")))
+          .withRequestBody(matchingJsonPath("awards.awardsToUpdate[0].sanctionSequence", equalTo("10")))
+          .withRequestBody(matchingJsonPath("findingCode", equalTo("PROVED"))),
       )
     }
   }

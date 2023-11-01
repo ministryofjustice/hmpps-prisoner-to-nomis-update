@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Hearin
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.IncidentToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToUpdateOrAdd
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UnquashHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateEvidenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateHearingRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateHearingResultAwardRequest
@@ -67,7 +68,11 @@ class AdjudicationsService(
   }
 
   enum class EntityType(val displayName: String) {
-    HEARING("hearing"), ADJUDICATION("adjudication"), PUNISHMENT("punishment"), PUNISHMENT_UPDATE("punishment-update")
+    HEARING("hearing"),
+    ADJUDICATION("adjudication"),
+    PUNISHMENT("punishment"),
+    PUNISHMENT_UPDATE("punishment-update"),
+    PUNISHMENT_UNQUASH("punishment-unquash"),
   }
 
   suspend fun createAdjudication(createEvent: AdjudicationCreatedEvent) {
@@ -144,6 +149,16 @@ class AdjudicationsService(
       }
   }
 
+  suspend fun createPunishmentUnquashRetry(message: CreateMappingRetryMessage<AdjudicationPunishmentBatchUpdateMappingDto>) {
+    punishmentsMappingService.updateMapping(message.mapping)
+      .also {
+        telemetryClient.trackEvent(
+          "punishment-unquash-mapping-retry-success",
+          message.telemetryAttributes,
+        )
+      }
+  }
+
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (baseMapping.entityName) {
@@ -151,6 +166,7 @@ class AdjudicationsService(
       EntityType.HEARING.displayName -> createHearingRetry(message.fromJson())
       EntityType.PUNISHMENT.displayName -> createPunishmentRetry(message.fromJson())
       EntityType.PUNISHMENT_UPDATE.displayName -> createPunishmentUpdateRetry(message.fromJson())
+      EntityType.PUNISHMENT_UNQUASH.displayName -> createPunishmentUnquashRetry(message.fromJson())
       else -> throw IllegalArgumentException("Unknown entity type: ${baseMapping.entityName}")
     }
   }
@@ -613,6 +629,93 @@ class AdjudicationsService(
     }
   }
 
+  suspend fun unquashPunishments(punishmentEvent: PunishmentEvent) {
+    val chargeNumber = punishmentEvent.additionalInformation.chargeNumber
+    val prisonId: String = punishmentEvent.additionalInformation.prisonId
+    val prisonerNumber: String = punishmentEvent.additionalInformation.prisonerNumber
+    val telemetryMap = mutableMapOf(
+      "chargeNumber" to chargeNumber,
+      "prisonId" to prisonId,
+      "offenderNo" to prisonerNumber,
+    )
+
+    runCatching {
+      val adjudicationMapping =
+        adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber)
+          .also {
+            telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
+            telemetryMap["chargeSequence"] = it.chargeSequence.toString()
+          }
+
+      val adjudicationNumber = adjudicationMapping.adjudicationNumber
+      val chargeSequence = adjudicationMapping.chargeSequence
+
+      val adjudication = adjudicationsApiService.getCharge(
+        chargeNumber,
+        prisonId,
+      ).reportedAdjudication
+      val punishments = adjudication.punishments
+      val finalOutcome = adjudication.outcomes.last()
+
+      val punishmentsToUpdate: List<Pair<PunishmentDto, Int>> = punishments.mapNotNull { punishment ->
+        punishmentsMappingService.getMapping(punishment.id.toString())?.let {
+          punishment to it.nomisSanctionSequence
+        }
+      }
+      val punishmentsToCreate = punishments.filter { punishment -> punishmentsToUpdate.none { it.first.id == punishment.id } }
+
+      val nomisAwardsResponse =
+        nomisApiService.unquashAdjudicationAwards(
+          adjudicationNumber,
+          chargeSequence,
+          request = UnquashHearingResultAwardRequest(
+            findingCode = finalOutcome.toFindingCode(),
+            awards =
+            UpdateHearingResultAwardRequest(
+              awardsToUpdate = punishmentsToUpdate.map { ExistingHearingResultAwardRequest(award = it.first.toNomisAward(), sanctionSequence = it.second) },
+              awardsToCreate = punishmentsToCreate.map { it.toNomisAward() },
+            ),
+          ),
+        )
+          .also {
+            telemetryMap["punishmentsCreatedCount"] = punishmentsToCreate.size.toString()
+            telemetryMap["punishmentsUpdatedCount"] = punishmentsToUpdate.size.toString()
+            telemetryMap["punishmentsDeletedCount"] = it.awardsDeleted.size.toString()
+          }
+
+      AdjudicationPunishmentBatchUpdateMappingDto(
+        punishmentsToCreate = punishmentsToCreate.zip(nomisAwardsResponse.awardsCreated) { punishment, awardResponse ->
+          AdjudicationPunishmentMappingDto(
+            dpsPunishmentId = punishment.id.toString(),
+            nomisBookingId = awardResponse.bookingId,
+            nomisSanctionSequence = awardResponse.sanctionSequence,
+          )
+        },
+        punishmentsToDelete = nomisAwardsResponse.awardsDeleted.map {
+          AdjudicationPunishmentNomisIdDto(
+            nomisBookingId = it.bookingId,
+            nomisSanctionSequence = it.sanctionSequence,
+          )
+        },
+      ).takeIf { it.hasAnyMappingsToUpdate() }?.run {
+        createMapping(
+          mapping = this,
+          telemetryClient = telemetryClient,
+          retryQueueService = adjudicationRetryQueueService,
+          eventTelemetry = telemetryMap,
+          name = EntityType.PUNISHMENT_UNQUASH.displayName,
+          postMapping = { punishmentsMappingService.updateMapping(it) },
+          log = log,
+        )
+      }
+    }.onSuccess {
+      telemetryClient.trackEvent("punishment-unquash-success", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("punishment-unquash-failed", telemetryMap, null)
+      throw e
+    }
+  }
+
   suspend fun deletePunishments(punishmentEvent: PunishmentEvent) {
    /* val chargeNumber = punishmentEvent.additionalInformation.chargeNumber
     val prisonId: String = punishmentEvent.additionalInformation.prisonId
@@ -773,6 +876,8 @@ class AdjudicationsService(
   )
 }
 
+private fun AdjudicationPunishmentBatchUpdateMappingDto.hasAnyMappingsToUpdate(): Boolean = this.punishmentsToCreate.isNotEmpty() || this.punishmentsToDelete.isNotEmpty()
+
 private fun OutcomeEvent.toHearingEvent(): HearingEvent =
   HearingEvent(
     HearingAdditionalInformation(
@@ -855,6 +960,14 @@ private fun OutcomeHistoryDto.toNomisCreateHearingResult(): CreateHearingResultR
       hearing.outcome.adjudicator,
     ),
   )
+}
+
+private fun OutcomeHistoryDto.toFindingCode(): String {
+  val separateOutcome: OutcomeDto? = this.outcome?.outcome
+  val hearing = this.hearing!!
+  val findingCode = separateOutcome?.code?.name ?: hearing.outcome!!.code.name
+
+  return toNomisFindingCode(findingCode)
 }
 
 private fun OutcomeHistoryDto.toNomisCreateHearingResultForReferralOutcome(): CreateHearingResultRequest {

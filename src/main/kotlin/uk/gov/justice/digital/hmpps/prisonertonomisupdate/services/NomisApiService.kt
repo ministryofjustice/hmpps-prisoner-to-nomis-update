@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAss
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UnquashHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateEvidenceRequest
@@ -458,6 +459,16 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/quash", adjudicationNumber, chargeSequence)
     .retrieve()
     .awaitBodilessEntity()
+
+  suspend fun unquashAdjudicationAwards(
+    adjudicationNumber: Long,
+    chargeSequence: Int,
+    request: UnquashHearingResultAwardRequest,
+  ): UpdateHearingResultAwardResponses = webClient.put()
+    .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/unquash", adjudicationNumber, chargeSequence)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
   suspend fun upsertReferral(
     adjudicationNumber: Long,
