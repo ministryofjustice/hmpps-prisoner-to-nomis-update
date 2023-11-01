@@ -33,7 +33,7 @@ class ActivitiesDomainEventListener(
   }
 
   @SqsListener("activity", factory = "hmppsQueueContainerFactoryProxy")
-  @WithSpan(value = "Digital-Prison-Services-hmpps_prisoner_to_nomis_activity_queue", kind = SpanKind.SERVER)
+  @WithSpan(value = "syscon-devs-hmpps_prisoner_to_nomis_activity_queue", kind = SpanKind.SERVER)
   fun onMessage(rawMessage: String): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "activities.activity-schedule.created" -> activitiesService.createActivityEvent(message.fromJson())
