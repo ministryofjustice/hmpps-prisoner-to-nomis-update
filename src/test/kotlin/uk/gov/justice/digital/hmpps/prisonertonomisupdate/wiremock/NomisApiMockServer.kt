@@ -1402,6 +1402,33 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubAdjudicationUnquashAwards(
+    adjudicationNumber: Long = 123456,
+    chargeSequence: Int = 1,
+    createdAwardIds: List<Pair<Long, Int>> = listOf(),
+    deletedAwardIds: List<Pair<Long, Int>> = listOf(),
+  ) {
+    stubFor(
+      put("/adjudications/adjudication-number/$adjudicationNumber/charge/$chargeSequence/unquash").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            {
+                "awardsCreated": [
+                    ${createdAwardIds.joinToString { """{"bookingId": ${it.first}, "sanctionSequence": ${it.second}}""" }}
+                ],
+                "awardsDeleted": [
+                    ${deletedAwardIds.joinToString { """{"bookingId": ${it.first}, "sanctionSequence": ${it.second}}""" }}
+                ]
+            }            
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
   // *************************************************** Non-Associations **********************************************
 
   fun stubNonAssociationCreate(response: String) {
