@@ -299,6 +299,12 @@ customEvents
 | where customDimensions.bookingId == '<insert booking id here>'
 ```
 
+To get a broader overview of what's been happening with the prisoner run the following query in App Insights:
+```ksql
+customEvents
+| where (customDimensions.bookingId == '<insert booking id>' or customDimensions.offenderNo == '<insert offenderNo>' or customDimensions.nomsNumber == '<insert offenderNo>' or customDimensions.prisonerNumber == '<insert offenderNo>')
+```
+
 Often the fix involves re-synchronising the DPS allocations which can be done with an [endpoint in the synchronisation service](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html#/activities-resource/synchroniseUpsertAllocation).
 
 ##### Known issues
@@ -315,8 +321,8 @@ NOMIS:
 ```sql
 select * from OMS_OWNER.OFFENDER_COURSE_ATTENDANCES 
 where OFFENDER_BOOK_ID=<insert offender book id here> 
-and event_date=to_date('<insert report date here>', 'YYYY-MM-DDD') 
-and PAID_FLAG='Y';
+and event_date=to_date('<insert report date here>', 'YYYY-MM-DD') 
+and PAY_FLAG='Y';
 ```
 
 DPS:
@@ -333,6 +339,12 @@ To get an overview of what's been happening with the synchronisation events for 
 customEvents
 | where name startswith "activity"
 | where customDimensions.bookingId == '<insert booking id here>'
+```
+
+To get a broader overview of what's been happening with the prisoner run the following query in App Insights:
+```ksql
+customEvents
+| where (customDimensions.bookingId == '<insert booking id>' or customDimensions.offenderNo == '<insert offenderNo>' or customDimensions.nomsNumber == '<insert offenderNo>' or customDimensions.prisonerNumber == '<insert offenderNo>')
 ```
 
 Often the fix involves re-synchronising the DPS attendances which can be done with an [endpoint in the synchronisation service](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html#/activities-resource/synchroniseUpsertAttendance).
