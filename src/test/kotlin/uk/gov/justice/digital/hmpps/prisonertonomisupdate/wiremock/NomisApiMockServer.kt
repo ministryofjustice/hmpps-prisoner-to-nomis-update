@@ -1378,6 +1378,29 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubAdjudicationAwardsDelete(
+    adjudicationNumber: Long = 123456,
+    chargeSequence: Int = 1,
+    deletedAwardIds: List<Pair<Long, Int>> = listOf(1201050L to 1),
+  ) {
+    stubFor(
+      delete("/adjudications/adjudication-number/$adjudicationNumber/charge/$chargeSequence/awards").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            {
+                "awardsDeleted": [
+                    ${deletedAwardIds.joinToString { """{"bookingId": ${it.first}, "sanctionSequence": ${it.second}}""" }}
+                ]
+            }            
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
   fun stubAdjudicationAwardsUpdateWithError(adjudicationNumber: Long = 123456, chargeSequence: Int = 1, status: Int) {
     stubFor(
       put("/adjudications/adjudication-number/$adjudicationNumber/charge/$chargeSequence/awards").willReturn(

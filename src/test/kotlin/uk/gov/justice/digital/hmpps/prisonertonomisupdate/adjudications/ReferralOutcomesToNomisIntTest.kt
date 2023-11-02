@@ -86,7 +86,7 @@ class ReferralOutcomesToNomisIntTest : SqsIntegrationTestBase() {
         eq("adjudication-referral-upserted-success"),
         org.mockito.kotlin.check {
           Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
-          Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+          Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
           Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
           Assertions.assertThat(it["findingCode"]).isEqualTo(findingCode)
           Assertions.assertThat(it["plea"]).isEqualTo(plea)
@@ -118,7 +118,7 @@ class ReferralOutcomesToNomisIntTest : SqsIntegrationTestBase() {
             eq("hearing-result-deleted-success"),
             org.mockito.kotlin.check {
               Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
-              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
               Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
             },
             isNull(),
@@ -156,7 +156,7 @@ class ReferralOutcomesToNomisIntTest : SqsIntegrationTestBase() {
             eq("hearing-result-deleted-success"),
             org.mockito.kotlin.check {
               Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
-              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
               Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
             },
             isNull(),
@@ -194,7 +194,7 @@ class ReferralOutcomesToNomisIntTest : SqsIntegrationTestBase() {
             eq("hearing-result-deleted-success"),
             org.mockito.kotlin.check {
               Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
-              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
               Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
             },
             isNull(),

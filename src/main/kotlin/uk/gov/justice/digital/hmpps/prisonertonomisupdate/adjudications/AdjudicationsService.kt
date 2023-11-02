@@ -72,6 +72,7 @@ class AdjudicationsService(
     ADJUDICATION("adjudication"),
     PUNISHMENT("punishment"),
     PUNISHMENT_UPDATE("punishment-update"),
+    PUNISHMENT_DELETE("punishment-delete"),
     PUNISHMENT_UNQUASH("punishment-unquash"),
   }
 
@@ -149,6 +150,16 @@ class AdjudicationsService(
       }
   }
 
+  suspend fun createPunishmentDeleteRetry(message: CreateMappingRetryMessage<AdjudicationPunishmentBatchUpdateMappingDto>) {
+    punishmentsMappingService.updateMapping(message.mapping)
+      .also {
+        telemetryClient.trackEvent(
+          "punishment-delete-mapping-retry-success",
+          message.telemetryAttributes,
+        )
+      }
+  }
+
   suspend fun createPunishmentUnquashRetry(message: CreateMappingRetryMessage<AdjudicationPunishmentBatchUpdateMappingDto>) {
     punishmentsMappingService.updateMapping(message.mapping)
       .also {
@@ -166,6 +177,7 @@ class AdjudicationsService(
       EntityType.HEARING.displayName -> createHearingRetry(message.fromJson())
       EntityType.PUNISHMENT.displayName -> createPunishmentRetry(message.fromJson())
       EntityType.PUNISHMENT_UPDATE.displayName -> createPunishmentUpdateRetry(message.fromJson())
+      EntityType.PUNISHMENT_DELETE.displayName -> createPunishmentDeleteRetry(message.fromJson())
       EntityType.PUNISHMENT_UNQUASH.displayName -> createPunishmentUnquashRetry(message.fromJson())
       else -> throw IllegalArgumentException("Unknown entity type: ${baseMapping.entityName}")
     }
@@ -251,7 +263,7 @@ class AdjudicationsService(
     val telemetryMap = mutableMapOf(
       "chargeNumber" to chargeNumber,
       "prisonId" to prisonId,
-      "prisonerNumber" to prisonerNumber,
+      "offenderNo" to prisonerNumber,
       "dpsHearingId" to dpsHearingId,
     )
     synchronise {
@@ -496,14 +508,8 @@ class AdjudicationsService(
   }
 
   suspend fun createPunishments(punishmentEvent: PunishmentEvent) {
-    val chargeNumber = punishmentEvent.additionalInformation.chargeNumber
-    val prisonId: String = punishmentEvent.additionalInformation.prisonId
-    val prisonerNumber: String = punishmentEvent.additionalInformation.prisonerNumber
-    val telemetryMap = mutableMapOf(
-      "chargeNumber" to chargeNumber,
-      "prisonId" to prisonId,
-      "offenderNo" to prisonerNumber,
-    )
+    val eventInfo = punishmentEvent.additionalInformation
+    val telemetryMap = eventInfo.toTelemetryMap()
 
     synchronise {
       name = EntityType.PUNISHMENT.displayName
@@ -513,7 +519,7 @@ class AdjudicationsService(
 
       transform {
         val mapping =
-          adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber)
+          adjudicationMappingService.getMappingGivenChargeNumber(eventInfo.chargeNumber)
             .also {
               telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
               telemetryMap["chargeSequence"] = it.chargeSequence.toString()
@@ -523,8 +529,8 @@ class AdjudicationsService(
         val chargeSequence = mapping.chargeSequence
 
         val punishments = adjudicationsApiService.getCharge(
-          chargeNumber,
-          prisonId,
+          eventInfo.chargeNumber,
+          eventInfo.prisonId,
         ).reportedAdjudication.punishments
 
         val nomisAwardsResponse =
@@ -550,18 +556,12 @@ class AdjudicationsService(
   }
 
   suspend fun updatePunishments(punishmentEvent: PunishmentEvent) {
-    val chargeNumber = punishmentEvent.additionalInformation.chargeNumber
-    val prisonId: String = punishmentEvent.additionalInformation.prisonId
-    val prisonerNumber: String = punishmentEvent.additionalInformation.prisonerNumber
-    val telemetryMap = mutableMapOf(
-      "chargeNumber" to chargeNumber,
-      "prisonId" to prisonId,
-      "offenderNo" to prisonerNumber,
-    )
+    val eventInfo = punishmentEvent.additionalInformation
+    val telemetryMap = eventInfo.toTelemetryMap()
 
     runCatching {
       val adjudicationMapping =
-        adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber)
+        adjudicationMappingService.getMappingGivenChargeNumber(eventInfo.chargeNumber)
           .also {
             telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
             telemetryMap["chargeSequence"] = it.chargeSequence.toString()
@@ -571,8 +571,8 @@ class AdjudicationsService(
       val chargeSequence = adjudicationMapping.chargeSequence
 
       val punishments = adjudicationsApiService.getCharge(
-        chargeNumber,
-        prisonId,
+        eventInfo.chargeNumber,
+        eventInfo.prisonId,
       ).reportedAdjudication.punishments
 
       val punishmentsToUpdate: List<Pair<PunishmentDto, Int>> = punishments.mapNotNull { punishment ->
@@ -580,14 +580,20 @@ class AdjudicationsService(
           punishment to it.nomisSanctionSequence
         }
       }
-      val punishmentsToCreate = punishments.filter { punishment -> punishmentsToUpdate.none { it.first.id == punishment.id } }
+      val punishmentsToCreate =
+        punishments.filter { punishment -> punishmentsToUpdate.none { it.first.id == punishment.id } }
 
       val nomisAwardsResponse =
         nomisApiService.updateAdjudicationAwards(
           adjudicationNumber,
           chargeSequence,
           UpdateHearingResultAwardRequest(
-            awardsToUpdate = punishmentsToUpdate.map { ExistingHearingResultAwardRequest(award = it.first.toNomisAward(), sanctionSequence = it.second) },
+            awardsToUpdate = punishmentsToUpdate.map {
+              ExistingHearingResultAwardRequest(
+                award = it.first.toNomisAward(),
+                sanctionSequence = it.second,
+              )
+            },
             awardsToCreate = punishmentsToCreate.map { it.toNomisAward() },
           ),
         )
@@ -630,18 +636,12 @@ class AdjudicationsService(
   }
 
   suspend fun unquashPunishments(punishmentEvent: PunishmentEvent) {
-    val chargeNumber = punishmentEvent.additionalInformation.chargeNumber
-    val prisonId: String = punishmentEvent.additionalInformation.prisonId
-    val prisonerNumber: String = punishmentEvent.additionalInformation.prisonerNumber
-    val telemetryMap = mutableMapOf(
-      "chargeNumber" to chargeNumber,
-      "prisonId" to prisonId,
-      "offenderNo" to prisonerNumber,
-    )
+    val eventInfo = punishmentEvent.additionalInformation
+    val telemetryMap = eventInfo.toTelemetryMap()
 
     runCatching {
       val adjudicationMapping =
-        adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber)
+        adjudicationMappingService.getMappingGivenChargeNumber(eventInfo.chargeNumber)
           .also {
             telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
             telemetryMap["chargeSequence"] = it.chargeSequence.toString()
@@ -651,8 +651,8 @@ class AdjudicationsService(
       val chargeSequence = adjudicationMapping.chargeSequence
 
       val adjudication = adjudicationsApiService.getCharge(
-        chargeNumber,
-        prisonId,
+        eventInfo.chargeNumber,
+        eventInfo.prisonId,
       ).reportedAdjudication
       val punishments = adjudication.punishments
       val finalOutcome = adjudication.outcomes.last()
@@ -662,7 +662,8 @@ class AdjudicationsService(
           punishment to it.nomisSanctionSequence
         }
       }
-      val punishmentsToCreate = punishments.filter { punishment -> punishmentsToUpdate.none { it.first.id == punishment.id } }
+      val punishmentsToCreate =
+        punishments.filter { punishment -> punishmentsToUpdate.none { it.first.id == punishment.id } }
 
       val nomisAwardsResponse =
         nomisApiService.unquashAdjudicationAwards(
@@ -672,7 +673,12 @@ class AdjudicationsService(
             findingCode = finalOutcome.toFindingCode(),
             awards =
             UpdateHearingResultAwardRequest(
-              awardsToUpdate = punishmentsToUpdate.map { ExistingHearingResultAwardRequest(award = it.first.toNomisAward(), sanctionSequence = it.second) },
+              awardsToUpdate = punishmentsToUpdate.map {
+                ExistingHearingResultAwardRequest(
+                  award = it.first.toNomisAward(),
+                  sanctionSequence = it.second,
+                )
+              },
               awardsToCreate = punishmentsToCreate.map { it.toNomisAward() },
             ),
           ),
@@ -717,18 +723,12 @@ class AdjudicationsService(
   }
 
   suspend fun deletePunishments(punishmentEvent: PunishmentEvent) {
-   /* val chargeNumber = punishmentEvent.additionalInformation.chargeNumber
-    val prisonId: String = punishmentEvent.additionalInformation.prisonId
-    val prisonerNumber: String = punishmentEvent.additionalInformation.prisonerNumber
-    val telemetryMap = mutableMapOf(
-      "chargeNumber" to chargeNumber,
-      "prisonId" to prisonId,
-      "offenderNo" to prisonerNumber,
-    )
+    val eventInfo = punishmentEvent.additionalInformation
+    val telemetryMap = eventInfo.toTelemetryMap()
 
     runCatching {
       val adjudicationMapping =
-        adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber)
+        adjudicationMappingService.getMappingGivenChargeNumber(eventInfo.chargeNumber)
           .also {
             telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
             telemetryMap["chargeSequence"] = it.chargeSequence.toString()
@@ -737,35 +737,47 @@ class AdjudicationsService(
       val adjudicationNumber = adjudicationMapping.adjudicationNumber
       val chargeSequence = adjudicationMapping.chargeSequence
 
-      adjudicationsApiService.getCharge(
-        chargeNumber,
-        prisonId,
-      ).reportedAdjudication.punishments.firstOrNull()?:let{
-        nomisApiService.deleteAdjudicationAwards(
-          adjudicationNumber,
-          chargeSequence,
-        )
-      }?.let{
-        throw IllegalStateException(
-          "Punishments exist in DPS for offenderNo ${} charge no ${event.chargeNumber}",
-        )
-      }
+      val nomisAwardsDeleted = adjudicationsApiService.getCharge(
+        eventInfo.chargeNumber,
+        eventInfo.prisonId,
+      ).reportedAdjudication.punishments.let {
+        if (it.isEmpty()) {
+          nomisApiService.deleteAdjudicationAwards(
+            adjudicationNumber,
+            chargeSequence,
+          )
+        } else {
+          throw IllegalStateException(
+            "Punishments exist in DPS for offenderNo ${eventInfo.prisonerNumber} charge no ${eventInfo.chargeNumber}. Ignoring delete punishments event.",
+          )
+        }
+      }.also { telemetryMap["punishmentsDeletedCount"] = it.awardsDeleted.size.toString() }
 
-      val mapping = AdjudicationPunishmentBatchUpdateMappingDto(
+      AdjudicationPunishmentBatchUpdateMappingDto(
         punishmentsToCreate = emptyList(),
-        punishmentsToDelete = nomisAwardsResponse.awardsDeleted.map {
+        punishmentsToDelete = nomisAwardsDeleted.awardsDeleted.map {
           AdjudicationPunishmentNomisIdDto(
             nomisBookingId = it.bookingId,
             nomisSanctionSequence = it.sanctionSequence,
           )
         },
-      )
+      ).takeIf { it.hasAnyMappingsToUpdate() }?.run {
+        createMapping(
+          mapping = this,
+          telemetryClient = telemetryClient,
+          retryQueueService = adjudicationRetryQueueService,
+          eventTelemetry = telemetryMap,
+          name = EntityType.PUNISHMENT_DELETE.displayName,
+          postMapping = { punishmentsMappingService.updateMapping(this) },
+          log = log,
+        )
+      }
     }.onSuccess {
       telemetryClient.trackEvent("punishment-delete-success", telemetryMap, null)
     }.onFailure { e ->
       telemetryClient.trackEvent("punishment-delete-failed", telemetryMap, null)
       throw e
-    }*/
+    }
   }
 
   suspend fun quashPunishments(punishmentEvent: PunishmentEvent) {
@@ -807,7 +819,11 @@ class AdjudicationsService(
     }.onFailure { e ->
       when (e) {
         is AdjudicationOutcomeInWrongState -> {
-          telemetryClient.trackEvent("punishment-quash-failed", telemetryMap + ("reason" to "Outcome is ${e.outcome}"), null)
+          telemetryClient.trackEvent(
+            "punishment-quash-failed",
+            telemetryMap + ("reason" to "Outcome is ${e.outcome}"),
+            null,
+          )
         }
 
         else -> {
@@ -876,7 +892,8 @@ class AdjudicationsService(
   )
 }
 
-private fun AdjudicationPunishmentBatchUpdateMappingDto.hasAnyMappingsToUpdate(): Boolean = this.punishmentsToCreate.isNotEmpty() || this.punishmentsToDelete.isNotEmpty()
+private fun AdjudicationPunishmentBatchUpdateMappingDto.hasAnyMappingsToUpdate(): Boolean =
+  this.punishmentsToCreate.isNotEmpty() || this.punishmentsToDelete.isNotEmpty()
 
 private fun OutcomeEvent.toHearingEvent(): HearingEvent =
   HearingEvent(
@@ -1033,20 +1050,20 @@ private fun getAdjudicatorUsernameForInternalHearingOnly(hearingType: String, ad
 private fun HearingAdditionalInformation.toTelemetryMap(): MutableMap<String, String> = mutableMapOf(
   "chargeNumber" to this.chargeNumber,
   "prisonId" to this.prisonId,
-  "prisonerNumber" to this.prisonerNumber,
+  "offenderNo" to this.prisonerNumber,
   "dpsHearingId" to this.hearingId,
 )
 
 private fun ReferralAdditionalInformation.toTelemetryMap(): MutableMap<String, String> = mutableMapOf(
   "chargeNumber" to this.chargeNumber,
   "prisonId" to this.prisonId,
-  "prisonerNumber" to this.prisonerNumber,
+  "offenderNo" to this.prisonerNumber,
 )
 
 private fun PunishmentsAdditionalInformation.toTelemetryMap(): MutableMap<String, String> = mutableMapOf(
   "chargeNumber" to this.chargeNumber,
   "prisonId" to this.prisonId,
-  "prisonerNumber" to this.prisonerNumber,
+  "offenderNo" to this.prisonerNumber,
 )
 
 internal fun ReportedAdjudicationResponse.toNomisAdjudication() = CreateAdjudicationRequest(
@@ -1213,4 +1230,5 @@ data class PunishmentEvent(
   val additionalInformation: PunishmentsAdditionalInformation,
 )
 
-class AdjudicationOutcomeInWrongState(val outcome: OutcomeDto.Code?) : IllegalStateException("Adjudication is in the wrong state. Outcome is $outcome")
+class AdjudicationOutcomeInWrongState(val outcome: OutcomeDto.Code?) :
+  IllegalStateException("Adjudication is in the wrong state. Outcome is $outcome")
