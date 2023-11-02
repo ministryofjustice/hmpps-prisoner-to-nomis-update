@@ -31,7 +31,7 @@ class VisitsDomainEventListener(
   }
 
   @SqsListener("visit", factory = "hmppsQueueContainerFactoryProxy")
-  @WithSpan(value = "Digital-Prison-Services-hmpps_prisoner_to_nomis_visit_queue", kind = SpanKind.SERVER)
+  @WithSpan(value = "syscon-devs-hmpps_prisoner_to_nomis_visit_queue", kind = SpanKind.SERVER)
   fun onMessage(rawMessage: String): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "prison-visit.booked" -> visitsService.createVisit(objectMapper.readValue(message))

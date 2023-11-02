@@ -131,29 +131,29 @@ generic-service:
       SENTENCE_ADJUSTMENTS_CLIENT_SECRET: "SENTENCE_ADJUSTMENTS_CLIENT_SECRET"
       ADJUDICATIONS_CLIENT_ID: "ADJUDICATIONS_CLIENT_ID"
       ADJUDICATIONS_CLIENT_SECRET: "ADJUDICATIONS_CLIENT_SECRET"
-    sqs-nomis-update-visit-secret:
+    domain-events-sqs-nomis-update-visit:
       HMPPS_SQS_QUEUES_VISIT_QUEUE_NAME: "sqs_queue_name"
-    sqs-nomis-update-visit-dlq-secret:
+    domain-events-sqs-nomis-update-visit-dlq:
       HMPPS_SQS_QUEUES_VISIT_DLQ_NAME: "sqs_queue_name"
-    sqs-nomis-update-incentive-secret:
+    domain-events-sqs-nomis-update-incentive:
       HMPPS_SQS_QUEUES_INCENTIVE_QUEUE_NAME: "sqs_queue_name"
-    sqs-nomis-update-incentive-dlq-secret:
+    domain-events-sqs-nomis-update-incentive-dlq:
       HMPPS_SQS_QUEUES_INCENTIVE_DLQ_NAME: "sqs_queue_name"
-    sqs-nomis-update-activity-secret:
+    domain-events-sqs-nomis-update-activity:
       HMPPS_SQS_QUEUES_ACTIVITY_QUEUE_NAME: "sqs_queue_name"
-    sqs-nomis-update-activity-dlq-secret:
+    domain-events-sqs-nomis-update-activity-dlq:
       HMPPS_SQS_QUEUES_ACTIVITY_DLQ_NAME: "sqs_queue_name"
-    sqs-nomis-update-appointment-secret:
+    domain-events-sqs-nomis-update-appointment:
       HMPPS_SQS_QUEUES_APPOINTMENT_QUEUE_NAME: "sqs_queue_name"
-    sqs-nomis-update-appointment-dlq-secret:
+    domain-events-sqs-nomis-update-appointment-dlq:
       HMPPS_SQS_QUEUES_APPOINTMENT_DLQ_NAME: "sqs_queue_name"
     sqs-nomis-update-nonassociation-secret:
       HMPPS_SQS_QUEUES_NONASSOCIATION_QUEUE_NAME: "sqs_queue_name"
     sqs-nomis-update-nonassociation-dlq-secret:
       HMPPS_SQS_QUEUES_NONASSOCIATION_DLQ_NAME: "sqs_queue_name"
-    sqs-nomis-update-sentencing-secret:
+    domain-events-sqs-nomis-update-sentencing:
       HMPPS_SQS_QUEUES_SENTENCING_QUEUE_NAME: "sqs_queue_name"
-    sqs-nomis-update-sentencing-dlq-secret:
+    domain-events-sqs-nomis-update-sentencing-dlq:
       HMPPS_SQS_QUEUES_SENTENCING_DLQ_NAME: "sqs_queue_name"
     sqs-nomis-update-adjudication-secret:
       HMPPS_SQS_QUEUES_ADJUDICATION_QUEUE_NAME: "sqs_queue_name"
