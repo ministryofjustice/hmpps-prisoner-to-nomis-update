@@ -5,8 +5,8 @@ import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.7.0"
-  kotlin("plugin.spring") version "1.9.10"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.8.0"
+  kotlin("plugin.spring") version "1.9.20"
   id("org.openapi.generator") version "7.0.1"
 }
 
@@ -29,7 +29,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.30.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.31.0")
 
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.18")
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.3")
@@ -38,21 +38,21 @@ dependencies {
   testImplementation("org.wiremock:wiremock:3.2.0")
   testImplementation("org.mockito:mockito-inline:5.2.0")
   testImplementation("org.testcontainers:localstack:1.19.1")
-  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.569")
+  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.578")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
 }
 
-java {
-  toolchain.languageVersion.set(JavaLanguageVersion.of(20))
+kotlin {
+  jvmToolchain(21)
 }
 
 tasks {
   withType<KotlinCompile> {
     dependsOn("buildActivityApiModel", "buildNomisSyncApiModel", "buildAdjudicationApiModel", "buildNonAssociationApiModel", "buildMappingServiceApiModel")
     kotlinOptions {
-      jvmTarget = "20"
+      jvmTarget = "21"
     }
   }
   withType<KtLintCheckTask> {
