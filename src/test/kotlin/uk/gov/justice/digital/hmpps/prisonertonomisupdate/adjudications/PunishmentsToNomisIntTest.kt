@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
@@ -79,7 +80,11 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           """.trimIndent(),
         )
 
-        nomisApi.stubAdjudicationAwardsCreate(ADJUDICATION_NUMBER, CHARGE_SEQ, awardIds = listOf(12345L to 10, 12345L to 11))
+        nomisApi.stubAdjudicationAwardsCreate(
+          ADJUDICATION_NUMBER,
+          CHARGE_SEQ,
+          awardIds = listOf(12345L to 10, 12345L to 11),
+        )
         mappingServer.stubCreatePunishments()
         publishCreatePunishmentsDomainEvent()
       }
@@ -216,10 +221,25 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBody(matchingJsonPath("awards[0].sanctionDays", equalTo("3")))
               .withRequestBody(matchingJsonPath("awards[1].sanctionType", equalTo("ADA")))
               .withRequestBody(matchingJsonPath("awards[1].sanctionStatus", equalTo("IMMEDIATE")))
-              .withRequestBody(matchingJsonPath("awards[1].effectiveDate", equalTo(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE))))
+              .withRequestBody(
+                matchingJsonPath(
+                  "awards[1].effectiveDate",
+                  equalTo(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)),
+                ),
+              )
               .withRequestBody(matchingJsonPath("awards[1].sanctionDays", equalTo("2")))
-              .withRequestBody(matchingJsonPath("awards[1].consecutiveCharge.adjudicationNumber", equalTo("$CONSECUTIVE_ADJUDICATION_NUMBER")))
-              .withRequestBody(matchingJsonPath("awards[1].consecutiveCharge.chargeSequence", equalTo("$CONSECUTIVE_CHARGE_SEQ"))),
+              .withRequestBody(
+                matchingJsonPath(
+                  "awards[1].consecutiveCharge.adjudicationNumber",
+                  equalTo("$CONSECUTIVE_ADJUDICATION_NUMBER"),
+                ),
+              )
+              .withRequestBody(
+                matchingJsonPath(
+                  "awards[1].consecutiveCharge.chargeSequence",
+                  equalTo("$CONSECUTIVE_CHARGE_SEQ"),
+                ),
+              ),
           )
         }
       }
@@ -289,7 +309,12 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBody(matchingJsonPath("awards[0].commentText", equalTo("Added by DPS: Loss of ASSOCIATION")))
               .withRequestBody(matchingJsonPath("awards[1].commentText", equalTo("Added by DPS: Loss of Daily walk")))
               .withRequestBody(matchingJsonPath("awards[2].commentText", equalTo("Added by DPS")))
-              .withRequestBody(matchingJsonPath("awards[3].commentText", equalTo("Added by DPS: OTHER - Damages owed £45.10"))),
+              .withRequestBody(
+                matchingJsonPath(
+                  "awards[3].commentText",
+                  equalTo("Added by DPS: OTHER - Damages owed £45.10"),
+                ),
+              ),
 
           )
         }
@@ -442,7 +467,11 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             """.trimIndent(),
           )
 
-          nomisApi.stubAdjudicationAwardsCreate(ADJUDICATION_NUMBER, CHARGE_SEQ, awardIds = listOf(12345L to 10, 12345L to 11))
+          nomisApi.stubAdjudicationAwardsCreate(
+            ADJUDICATION_NUMBER,
+            CHARGE_SEQ,
+            awardIds = listOf(12345L to 10, 12345L to 11),
+          )
           mappingServer.stubCreatePunishmentsWithErrorFollowedBySuccess()
           publishCreatePunishmentsDomainEvent()
 
@@ -459,7 +488,10 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             )
           }
 
-          nomisApi.verify(1, postRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQ/awards")))
+          nomisApi.verify(
+            1,
+            postRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQ/awards")),
+          )
         }
 
         @Test
@@ -524,7 +556,12 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
         mappingServer.stubGetPunishments(dpsPunishmentId = "634", nomisBookingId = 12345, nomisSanctionSequence = 10)
         mappingServer.stubGetPunishmentsWithError(dpsPunishmentId = "667", status = 404)
 
-        nomisApi.stubAdjudicationAwardsUpdate(ADJUDICATION_NUMBER, CHARGE_SEQ, createdAwardIds = listOf(12345L to 11), deletedAwardIds = listOf(12345L to 9, 12345L to 8))
+        nomisApi.stubAdjudicationAwardsUpdate(
+          ADJUDICATION_NUMBER,
+          CHARGE_SEQ,
+          createdAwardIds = listOf(12345L to 11),
+          deletedAwardIds = listOf(12345L to 9, 12345L to 8),
+        )
         mappingServer.stubUpdatePunishments()
         publishUpdatePunishmentsDomainEvent()
         waitForUpdatePunishmentProcessingToBeComplete()
@@ -661,7 +698,12 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           mappingServer.stubGetPunishments(dpsPunishmentId = "634", nomisBookingId = 12345, nomisSanctionSequence = 10)
           mappingServer.stubGetPunishmentsWithError(dpsPunishmentId = "667", status = 404)
 
-          nomisApi.stubAdjudicationAwardsUpdate(ADJUDICATION_NUMBER, CHARGE_SEQ, createdAwardIds = listOf(12345L to 11), deletedAwardIds = listOf(12345L to 9, 12345L to 8))
+          nomisApi.stubAdjudicationAwardsUpdate(
+            ADJUDICATION_NUMBER,
+            CHARGE_SEQ,
+            createdAwardIds = listOf(12345L to 11),
+            deletedAwardIds = listOf(12345L to 9, 12345L to 8),
+          )
           mappingServer.stubUpdatePunishmentsWithErrorFollowedBySuccess()
           publishUpdatePunishmentsDomainEvent()
         }
@@ -676,7 +718,10 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             )
           }
 
-          nomisApi.verify(1, putRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQ/awards")))
+          nomisApi.verify(
+            1,
+            putRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQ/awards")),
+          )
         }
 
         @Test
@@ -700,6 +745,282 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
 
     private fun waitForUpdatePunishmentProcessingToBeComplete() {
       await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+    }
+  }
+
+  @Nested
+  inner class DeletePunishments {
+    @Nested
+    inner class HappyPath {
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
+        adjudicationsApiServer.stubChargeGet(
+          CHARGE_NUMBER_FOR_CREATION,
+          offenderNo = OFFENDER_NO,
+        )
+
+        mappingServer.stubGetPunishments(dpsPunishmentId = "634", nomisBookingId = 12345, nomisSanctionSequence = 10)
+        mappingServer.stubGetPunishmentsWithError(dpsPunishmentId = "667", status = 404)
+
+        nomisApi.stubAdjudicationAwardsDelete(
+          ADJUDICATION_NUMBER,
+          CHARGE_SEQ,
+          deletedAwardIds = listOf(12345L to 9, 12345L to 8),
+        )
+        mappingServer.stubUpdatePunishments()
+        publishDeletePunishmentsDomainEvent()
+        waitForProcessingToBeComplete()
+      }
+
+      @Test
+      fun `will callback back to adjudication service to get more details`() {
+        adjudicationsApiServer.verify(getRequestedFor(urlEqualTo("/reported-adjudications/$CHARGE_NUMBER_FOR_CREATION/v2")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("punishment-delete-success"),
+          org.mockito.kotlin.check {
+            assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
+            assertThat(it["chargeSequence"]).isEqualTo(CHARGE_SEQ.toString())
+            assertThat(it["punishmentsDeletedCount"]).isEqualTo("2")
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to delete the awards`() {
+        nomisApi.verify(deleteRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQ/awards")))
+      }
+
+      @Test
+      fun `will create a mapping between the set of new punishments and awards and delete ones not referenced`() {
+        await untilAsserted {
+          mappingServer.verify(
+            putRequestedFor(urlEqualTo("/mapping/punishments"))
+              .withRequestBody(matchingJsonPath("punishmentsToDelete[0].nomisBookingId", equalTo("12345")))
+              .withRequestBody(matchingJsonPath("punishmentsToDelete[0].nomisSanctionSequence", equalTo("9")))
+              .withRequestBody(matchingJsonPath("punishmentsToDelete[1].nomisBookingId", equalTo("12345")))
+              .withRequestBody(matchingJsonPath("punishmentsToDelete[1].nomisSanctionSequence", equalTo("8"))),
+          )
+        }
+      }
+    }
+
+    @Nested
+    inner class NoPunishmentsFoundInNomisToDelete {
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
+        adjudicationsApiServer.stubChargeGet(
+          CHARGE_NUMBER_FOR_CREATION,
+          offenderNo = OFFENDER_NO,
+        )
+
+        mappingServer.stubGetPunishments(dpsPunishmentId = "634", nomisBookingId = 12345, nomisSanctionSequence = 10)
+        mappingServer.stubGetPunishmentsWithError(dpsPunishmentId = "667", status = 404)
+
+        nomisApi.stubAdjudicationAwardsDelete(
+          ADJUDICATION_NUMBER,
+          CHARGE_SEQ,
+          deletedAwardIds = emptyList(),
+        )
+        mappingServer.stubUpdatePunishments()
+        publishDeletePunishmentsDomainEvent()
+        waitForProcessingToBeComplete()
+      }
+
+      @Test
+      fun `will callback back to adjudication service to get more details`() {
+        adjudicationsApiServer.verify(getRequestedFor(urlEqualTo("/reported-adjudications/$CHARGE_NUMBER_FOR_CREATION/v2")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("punishment-delete-success"),
+          org.mockito.kotlin.check {
+            assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
+            assertThat(it["chargeSequence"]).isEqualTo(CHARGE_SEQ.toString())
+            assertThat(it["punishmentsDeletedCount"]).isEqualTo("0")
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to delete the awards`() {
+        nomisApi.verify(deleteRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQ/awards")))
+      }
+
+      @Test
+      fun `will not need to delete any punishment mappings`() {
+        await untilAsserted {
+          mappingServer.verify(
+            0,
+            putRequestedFor(urlEqualTo("/mapping/punishments")),
+          )
+        }
+      }
+    }
+
+    @Nested
+    inner class ErrorScenarios {
+      @Nested
+      inner class WhenAdjudicationMappingNotFound {
+
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByChargeNumberWithError(CHARGE_NUMBER_FOR_CREATION, 404)
+          publishDeletePunishmentsDomainEvent()
+        }
+
+        @Test
+        fun `an error will lead to message being added to DLQ`() {
+          await untilCallTo {
+            awsSqsAdjudicationDlqClient!!.countAllMessagesOnQueue(adjudicationDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+
+        @Test
+        fun `will track failure telemetry for each retry`() {
+          await untilAsserted {
+            verify(telemetryClient, Mockito.times(3)).trackEvent(
+              Mockito.eq("punishment-delete-failed"),
+              org.mockito.kotlin.check {
+                assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+                assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              },
+              isNull(),
+            )
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenPunishmentsExistInDPS {
+
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
+          adjudicationsApiServer.stubChargeGet(
+            CHARGE_NUMBER_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            punishments =
+            // language=json
+            """
+          [
+            {
+                "id": 634,
+                "type": "CONFINEMENT",
+                "schedule": {
+                    "days": 3,
+                    "startDate": "2023-10-04",
+                    "endDate": "2023-10-06"
+                }
+            },
+            {
+                "id": 667,
+                "type": "EXTRA_WORK",
+                "schedule": {
+                    "days": 12,
+                    "suspendedUntil": "2023-10-18"
+                }
+            }
+        ]
+            """.trimIndent(),
+          )
+          publishDeletePunishmentsDomainEvent()
+        }
+
+        @Test
+        fun `an error will lead to message being added to DLQ`() {
+          await untilCallTo {
+            awsSqsAdjudicationDlqClient!!.countAllMessagesOnQueue(adjudicationDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+
+        @Test
+        fun `will track failure telemetry for each retry`() {
+          await untilAsserted {
+            verify(telemetryClient, Mockito.times(3)).trackEvent(
+              Mockito.eq("punishment-delete-failed"),
+              org.mockito.kotlin.check {
+                assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+                assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              },
+              isNull(),
+            )
+          }
+          nomisApi.verify(
+            0,
+            deleteRequestedFor(anyUrl()),
+          )
+        }
+      }
+
+      @Nested
+      inner class WhenMappingServiceFailsOnce {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
+          adjudicationsApiServer.stubChargeGet(
+            CHARGE_NUMBER_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+          )
+          nomisApi.stubAdjudicationAwardsDelete(
+            ADJUDICATION_NUMBER,
+            CHARGE_SEQ,
+            deletedAwardIds = listOf(12345L to 9, 12345L to 8),
+          )
+          mappingServer.stubUpdatePunishmentsWithErrorFollowedBySuccess()
+          publishDeletePunishmentsDomainEvent()
+        }
+
+        @Test
+        fun `should only create the NOMIS punishments once`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("punishment-delete-mapping-retry-success"),
+              any(),
+              isNull(),
+            )
+          }
+
+          nomisApi.verify(
+            1,
+            deleteRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQ/awards")),
+          )
+        }
+
+        @Test
+        fun `will eventually update mappings after NOMIS punishments are updated`() {
+          await untilAsserted {
+            mappingServer.verify(
+              2,
+              putRequestedFor(urlEqualTo("/mapping/punishments")),
+            )
+          }
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("punishment-delete-mapping-retry-success"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+      }
     }
   }
 
@@ -1072,7 +1393,12 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
         mappingServer.stubGetPunishments(dpsPunishmentId = "634", nomisBookingId = 12345, nomisSanctionSequence = 10)
         mappingServer.stubGetPunishmentsWithError(dpsPunishmentId = "667", status = 404)
 
-        nomisApi.stubAdjudicationUnquashAwards(ADJUDICATION_NUMBER, CHARGE_SEQ, createdAwardIds = listOf(12345L to 11), deletedAwardIds = listOf(12345L to 9, 12345L to 8))
+        nomisApi.stubAdjudicationUnquashAwards(
+          ADJUDICATION_NUMBER,
+          CHARGE_SEQ,
+          createdAwardIds = listOf(12345L to 11),
+          deletedAwardIds = listOf(12345L to 9, 12345L to 8),
+        )
         mappingServer.stubUpdatePunishments()
         publishUnQuashPunishmentsDomainEvent()
         waitForUnquashPunishmentProcessingToBeComplete()
@@ -1238,7 +1564,12 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           mappingServer.stubGetPunishments(dpsPunishmentId = "634", nomisBookingId = 12345, nomisSanctionSequence = 10)
           mappingServer.stubGetPunishmentsWithError(dpsPunishmentId = "667", status = 404)
 
-          nomisApi.stubAdjudicationUnquashAwards(ADJUDICATION_NUMBER, CHARGE_SEQ, createdAwardIds = listOf(12345L to 11), deletedAwardIds = listOf(12345L to 9, 12345L to 8))
+          nomisApi.stubAdjudicationUnquashAwards(
+            ADJUDICATION_NUMBER,
+            CHARGE_SEQ,
+            createdAwardIds = listOf(12345L to 11),
+            deletedAwardIds = listOf(12345L to 9, 12345L to 8),
+          )
           mappingServer.stubUpdatePunishmentsWithErrorFollowedBySuccess()
           publishUnQuashPunishmentsDomainEvent()
         }
@@ -1253,7 +1584,10 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             )
           }
 
-          nomisApi.verify(1, putRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQ/unquash")))
+          nomisApi.verify(
+            1,
+            putRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/$CHARGE_SEQ/unquash")),
+          )
         }
 
         @Test
@@ -1278,6 +1612,10 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
     private fun waitForUnquashPunishmentProcessingToBeComplete() {
       await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
     }
+  }
+
+  private fun waitForProcessingToBeComplete() {
+    await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
   }
 
   private fun publishCreatePunishmentsDomainEvent() {
@@ -1308,11 +1646,33 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
+  private fun publishDeletePunishmentsDomainEvent() {
+    val eventType = "adjudication.punishments.deleted"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(adjudicationPunishmentMessagePayload(CHARGE_NUMBER_FOR_CREATION, PRISON_ID, OFFENDER_NO, eventType))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
   private fun publishQuashPunishmentsDomainEvent() {
     val eventType = "adjudication.outcome.quashed"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
-        .message(adjudicationPunishmentMessagePayload(CHARGE_NUMBER_FOR_CREATION, PRISON_ID, OFFENDER_NO, eventType, status = "QUASHED"))
+        .message(
+          adjudicationPunishmentMessagePayload(
+            CHARGE_NUMBER_FOR_CREATION,
+            PRISON_ID,
+            OFFENDER_NO,
+            eventType,
+            status = "QUASHED",
+          ),
+        )
         .messageAttributes(
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
@@ -1326,7 +1686,15 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
     val eventType = "adjudication.outcome.unquashed"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
-        .message(adjudicationPunishmentMessagePayload(CHARGE_NUMBER_FOR_CREATION, PRISON_ID, OFFENDER_NO, eventType, status = "CHARGE_PROVED"))
+        .message(
+          adjudicationPunishmentMessagePayload(
+            CHARGE_NUMBER_FOR_CREATION,
+            PRISON_ID,
+            OFFENDER_NO,
+            eventType,
+            status = "CHARGE_PROVED",
+          ),
+        )
         .messageAttributes(
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String")
@@ -1336,7 +1704,13 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  fun adjudicationPunishmentMessagePayload(chargeNumber: String, prisonId: String, prisonerNumber: String, eventType: String, status: String = "CHARGE_PROVED") =
+  fun adjudicationPunishmentMessagePayload(
+    chargeNumber: String,
+    prisonId: String,
+    prisonerNumber: String,
+    eventType: String,
+    status: String = "CHARGE_PROVED",
+  ) =
     // language=json
     """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId", "prisonerNumber": "$prisonerNumber", "status": "$status"}}"""
 }

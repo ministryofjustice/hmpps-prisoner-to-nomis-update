@@ -60,7 +60,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
           eq("hearing-create-success"),
           org.mockito.kotlin.check {
             Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
-            Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
             Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
             Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
@@ -110,7 +110,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
           org.mockito.kotlin.check {
             Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
             Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-            Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
           },
           isNull(),
@@ -206,7 +206,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
           eq("hearing-updated-success"),
           org.mockito.kotlin.check {
             Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
-            Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
             Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
             Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
@@ -241,7 +241,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
             org.mockito.kotlin.check {
               Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
               Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
               Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
             },
             isNull(),
@@ -281,7 +281,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
           eq("hearing-deleted-success"),
           org.mockito.kotlin.check {
             Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
-            Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
             Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
           },
@@ -320,7 +320,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
             org.mockito.kotlin.check {
               Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
               Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-              Assertions.assertThat(it["prisonerNumber"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
               Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
             },
             isNull(),
