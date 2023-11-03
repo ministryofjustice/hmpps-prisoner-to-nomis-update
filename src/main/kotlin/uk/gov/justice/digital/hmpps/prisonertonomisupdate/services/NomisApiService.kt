@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DeleteHearingResultAwardResponses
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DeleteHearingResultResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Hearing
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationResponse
@@ -387,14 +388,22 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
 
   suspend fun updateHearing(adjudicationNumber: Long, hearingId: Long, request: UpdateHearingRequest): Hearing =
     webClient.put()
-      .uri("/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}", adjudicationNumber, hearingId)
+      .uri(
+        "/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}",
+        adjudicationNumber,
+        hearingId,
+      )
       .bodyValue(request)
       .retrieve()
       .awaitBody()
 
   suspend fun deleteHearing(adjudicationNumber: Long, hearingId: Long) {
     webClient.delete()
-      .uri("/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}", adjudicationNumber, hearingId)
+      .uri(
+        "/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}",
+        adjudicationNumber,
+        hearingId,
+      )
       .retrieve()
       .awaitBodilessEntity()
   }
@@ -405,21 +414,38 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     chargeSequence: Int,
     request: CreateHearingResultRequest,
   ) = webClient.post()
-    .uri("/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}/charge/{chargeSequence}/result", adjudicationNumber, hearingId, chargeSequence)
+    .uri(
+      "/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}/charge/{chargeSequence}/result",
+      adjudicationNumber,
+      hearingId,
+      chargeSequence,
+    )
     .bodyValue(request)
     .retrieve()
     .awaitBodilessEntity()
 
-  suspend fun deleteHearingResult(adjudicationNumber: Long, hearingId: Long, chargeSequence: Int) {
+  suspend fun deleteHearingResult(
+    adjudicationNumber: Long,
+    hearingId: Long,
+    chargeSequence: Int,
+  ): DeleteHearingResultResponse =
     webClient.delete()
-      .uri("/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}/charge/{chargeSequence}/result", adjudicationNumber, hearingId, chargeSequence)
+      .uri(
+        "/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}/charge/{chargeSequence}/result",
+        adjudicationNumber,
+        hearingId,
+        chargeSequence,
+      )
       .retrieve()
-      .awaitBodilessEntity()
-  }
+      .awaitBody()
 
   suspend fun deleteReferralResult(adjudicationNumber: Long, chargeSequence: Int) {
     webClient.delete()
-      .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/result", adjudicationNumber, chargeSequence)
+      .uri(
+        "/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/result",
+        adjudicationNumber,
+        chargeSequence,
+      )
       .retrieve()
       .awaitBodilessEntity()
   }
@@ -429,7 +455,11 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     chargeSequence: Int,
     request: CreateHearingResultAwardRequest,
   ): CreateHearingResultAwardResponses = webClient.post()
-    .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/awards", adjudicationNumber, chargeSequence)
+    .uri(
+      "/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/awards",
+      adjudicationNumber,
+      chargeSequence,
+    )
     .bodyValue(request)
     .retrieve()
     .awaitBody()
@@ -439,7 +469,11 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     chargeSequence: Int,
     request: UpdateHearingResultAwardRequest,
   ): UpdateHearingResultAwardResponses = webClient.put()
-    .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/awards", adjudicationNumber, chargeSequence)
+    .uri(
+      "/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/awards",
+      adjudicationNumber,
+      chargeSequence,
+    )
     .bodyValue(request)
     .retrieve()
     .awaitBody()
@@ -448,7 +482,11 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     adjudicationNumber: Long,
     chargeSequence: Int,
   ): DeleteHearingResultAwardResponses = webClient.delete()
-    .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/awards", adjudicationNumber, chargeSequence)
+    .uri(
+      "/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/awards",
+      adjudicationNumber,
+      chargeSequence,
+    )
     .retrieve()
     .awaitBody()
 
@@ -456,7 +494,11 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     adjudicationNumber: Long,
     chargeSequence: Int,
   ) = webClient.put()
-    .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/quash", adjudicationNumber, chargeSequence)
+    .uri(
+      "/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/quash",
+      adjudicationNumber,
+      chargeSequence,
+    )
     .retrieve()
     .awaitBodilessEntity()
 
@@ -465,7 +507,11 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     chargeSequence: Int,
     request: UnquashHearingResultAwardRequest,
   ): UpdateHearingResultAwardResponses = webClient.put()
-    .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/unquash", adjudicationNumber, chargeSequence)
+    .uri(
+      "/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/unquash",
+      adjudicationNumber,
+      chargeSequence,
+    )
     .bodyValue(request)
     .retrieve()
     .awaitBody()
@@ -475,7 +521,11 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     chargeSequence: Int,
     request: CreateHearingResultRequest,
   ) = webClient.post()
-    .uri("/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/result", adjudicationNumber, chargeSequence)
+    .uri(
+      "/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/result",
+      adjudicationNumber,
+      chargeSequence,
+    )
     .bodyValue(request)
     .retrieve()
     .awaitBodilessEntity()

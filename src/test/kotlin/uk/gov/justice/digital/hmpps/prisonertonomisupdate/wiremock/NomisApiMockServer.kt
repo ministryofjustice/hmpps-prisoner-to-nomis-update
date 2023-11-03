@@ -1278,11 +1278,20 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubHearingResultDelete(adjudicationNumber: Long = 123456, nomisHearingId: Long = 345, chargeSequence: Int = 1) {
+  fun stubHearingResultDelete(adjudicationNumber: Long = 123456, nomisHearingId: Long = 345, chargeSequence: Int = 1, deletedAwardIds: List<Pair<Long, Int>> = emptyList()) {
     stubFor(
       delete("/adjudications/adjudication-number/$adjudicationNumber/hearings/$nomisHearingId/charge/$chargeSequence/result").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+            {
+                "awardsDeleted": [
+                    ${deletedAwardIds.joinToString { """{"bookingId": ${it.first}, "sanctionSequence": ${it.second}}""" }}
+                ]
+            }            
+            """.trimIndent(),
+          )
           .withStatus(200),
       ),
     )
