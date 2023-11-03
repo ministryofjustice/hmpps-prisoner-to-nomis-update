@@ -42,7 +42,7 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
     ).get()
 
     await untilCallTo { awsSqsIncentiveClient.countMessagesOnQueue(incentiveQueueUrl).get() } matches { it == 0 }
-    await untilCallTo { incentivesApi.getCountFor("/iep/reviews/id/12") } matches { it == 1 }
+    await untilCallTo { incentivesApi.getCountFor("/incentive-reviews/id/12") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/prisoners/booking-id/456/incentives") } matches { it == 1 }
     nomisApi.verify(
       WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/booking-id/456/incentives"))
@@ -77,7 +77,7 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
         ).build(),
     ).get()
 
-    await untilCallTo { incentivesApi.getCountFor("/iep/reviews/id/12") } matches { it == 1 }
+    await untilCallTo { incentivesApi.getCountFor("/incentive-reviews/id/12") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/prisoners/booking-id/456/incentives") } matches { it == 1 }
 
     // the mapping call fails resulting in a retry message being queued
@@ -123,7 +123,7 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
         isNull(),
       )
     }
-    await untilCallTo { incentivesApi.getCountFor("/iep/reviews/id/12") } matches { it == 1 }
+    await untilCallTo { incentivesApi.getCountFor("/incentive-reviews/id/12") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/prisoners/booking-id/456/incentives") } matches { it == 1 }
 
     // the mapping call fails but is not queued for retry
