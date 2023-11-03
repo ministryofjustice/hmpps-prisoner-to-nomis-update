@@ -497,6 +497,56 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
         )
       }
     }
+
+    @Nested
+    inner class WhenMappingServiceFailsOnceOnPunishmentDeletion {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
+        NomisApiExtension.nomisApi.stubHearingResultDelete(
+          ADJUDICATION_NUMBER,
+          NOMIS_HEARING_ID,
+          CHARGE_SEQUENCE,
+          listOf(12345L to 10, 12345L to 11),
+        )
+        MappingExtension.mappingServer.stubUpdatePunishmentsWithErrorFollowedBySuccess()
+        publishDeleteHearingCompletedDomainEvent()
+      }
+
+      @Test
+      fun `should only delete the nomis outcome once`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("punishment-delete-mapping-retry-success"),
+            any(),
+            isNull(),
+          )
+        }
+        NomisApiExtension.nomisApi.verify(1, WireMock.deleteRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result")))
+      }
+
+      @Test
+      fun `will eventually update mappings after NOMIS punishments are deleted`() {
+        await untilAsserted {
+          MappingExtension.mappingServer.verify(
+            2,
+            WireMock.putRequestedFor(WireMock.urlEqualTo("/mapping/punishments")),
+          )
+        }
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("punishment-delete-mapping-retry-success"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+    }
   }
 
   @Nested
