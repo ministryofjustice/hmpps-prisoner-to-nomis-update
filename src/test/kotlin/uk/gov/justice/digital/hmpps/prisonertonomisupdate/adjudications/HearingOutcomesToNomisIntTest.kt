@@ -365,6 +365,7 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
               Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
               Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
               Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
+              Assertions.assertThat(it["punishmentsDeletedCount"]).isEqualTo("0")
             },
             isNull(),
           )
@@ -375,6 +376,93 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to delete the hearing result`() {
         waitForEventProcessingToBeComplete()
         NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result")))
+      }
+
+      @Test
+      fun `Will not call the mapping service as no nomis awards were deleted`() {
+        waitForEventProcessingToBeComplete()
+        MappingExtension.mappingServer.verify(
+          0,
+          WireMock.putRequestedFor(WireMock.urlEqualTo("/mapping/punishments")),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenHearingResultDeletionAlsoRemovesPunishments {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
+        NomisApiExtension.nomisApi.stubHearingResultDelete(
+          ADJUDICATION_NUMBER,
+          NOMIS_HEARING_ID,
+          CHARGE_SEQUENCE,
+          listOf(12345L to 10, 12345L to 11),
+        )
+        MappingExtension.mappingServer.stubUpdatePunishments()
+        publishDeleteHearingCompletedDomainEvent()
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("hearing-result-deleted-success"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+              Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
+              Assertions.assertThat(it["punishmentsDeletedCount"]).isEqualTo("2")
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Test
+      fun `will call nomis api to delete the hearing result`() {
+        waitForEventProcessingToBeComplete()
+        NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result")))
+      }
+
+      @Test
+      fun `will call the mapping service to remove the punishment mappings`() {
+        await untilAsserted {
+          MappingExtension.mappingServer.verify(
+            WireMock.putRequestedFor(WireMock.urlEqualTo("/mapping/punishments"))
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "punishmentsToDelete[0].nomisBookingId",
+                  WireMock.equalTo("12345"),
+                ),
+              )
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "punishmentsToDelete[0].nomisSanctionSequence",
+                  WireMock.equalTo("10"),
+                ),
+              )
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "punishmentsToDelete[1].nomisBookingId",
+                  WireMock.equalTo("12345"),
+                ),
+              )
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "punishmentsToDelete[1].nomisSanctionSequence",
+                  WireMock.equalTo("11"),
+                ),
+              ),
+          )
+        }
       }
     }
 

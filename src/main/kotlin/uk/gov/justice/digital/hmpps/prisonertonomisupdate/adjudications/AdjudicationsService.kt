@@ -459,7 +459,30 @@ class AdjudicationsService(
           adjudicationNumber = adjudicationMapping.adjudicationNumber,
           hearingId = hearingMapping.nomisHearingId,
           chargeSequence = adjudicationMapping.chargeSequence,
-        )
+        ).also {
+          telemetryMap["punishmentsDeletedCount"] = it.awardsDeleted.size.toString()
+
+          AdjudicationPunishmentBatchUpdateMappingDto(
+            punishmentsToCreate = emptyList(),
+            punishmentsToDelete = it.awardsDeleted.map {
+              AdjudicationPunishmentNomisIdDto(
+                nomisBookingId = it.bookingId,
+                nomisSanctionSequence = it.sanctionSequence,
+              )
+            },
+          ).takeIf { it.hasAnyMappingsToUpdate() }?.run {
+            // if the removal of the outcome has had the side effect of removing punishments - we delete the punishment mappings
+            createMapping(
+              mapping = this,
+              telemetryClient = telemetryClient,
+              retryQueueService = adjudicationRetryQueueService,
+              eventTelemetry = telemetryMap,
+              name = EntityType.PUNISHMENT_DELETE.displayName,
+              postMapping = { punishmentsMappingService.updateMapping(it) },
+              log = log,
+            )
+          }
+        }
       }
     }.onSuccess {
       telemetryClient.trackEvent("hearing-result-deleted-success", telemetryMap, null)
