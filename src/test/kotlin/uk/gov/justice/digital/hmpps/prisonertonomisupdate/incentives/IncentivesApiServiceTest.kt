@@ -52,7 +52,7 @@ internal class IncentivesApiServiceTest {
       incentivesApiService.getIncentive(1234)
 
       IncentivesApiExtension.incentivesApi.verify(
-        WireMock.getRequestedFor(WireMock.urlEqualTo("/iep/reviews/id/1234"))
+        WireMock.getRequestedFor(WireMock.urlEqualTo("/incentive-reviews/id/1234"))
           .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
       )
     }
@@ -101,7 +101,7 @@ internal class IncentivesApiServiceTest {
       incentivesApiService.getCurrentIncentive(99)
 
       IncentivesApiExtension.incentivesApi.verify(
-        WireMock.getRequestedFor(WireMock.urlEqualTo("/iep/reviews/booking/99?with-details=false"))
+        WireMock.getRequestedFor(WireMock.urlEqualTo("/incentive-reviews/booking/99?with-details=false"))
           .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
       )
     }

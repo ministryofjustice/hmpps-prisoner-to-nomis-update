@@ -225,7 +225,7 @@ clearly means NOMIS thinks the prisoner is on Enhanced level.
 To check DPS you can run this endpoint:
 
 ```bash
-curl --location 'https://incentives-api.hmpps.service.justice.gov.uk/iep/reviews/booking/{bookingId}}?with-details=true' \
+curl --location 'https://incentives-api.hmpps.service.justice.gov.uk/incentive-reviews/booking/{bookingId}}?with-details=true' \
 --header 'Authorization: Bearer <token with valid token>'
 ```
 This will return what DPS believes is the current IEP, for instance the snippet

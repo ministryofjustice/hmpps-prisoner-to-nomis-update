@@ -46,7 +46,7 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubIncentiveGet(id: Long, response: String) {
     stubFor(
-      get("/iep/reviews/id/$id").willReturn(
+      get("/incentive-reviews/id/$id").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(response)
@@ -57,7 +57,7 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubIncentiveGetWithError(id: Long, status: Int = 500) {
     stubFor(
-      get("/iep/reviews/id/$id").willReturn(
+      get("/incentive-reviews/id/$id").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
@@ -146,7 +146,7 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubCurrentIncentiveGet(bookingId: Long, iepCode: String) {
     stubFor(
-      get("/iep/reviews/booking/$bookingId?with-details=false").willReturn(
+      get("/incentive-reviews/booking/$bookingId?with-details=false").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{"iepCode": "$iepCode"}""")
@@ -158,7 +158,7 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubCurrentIncentiveGetWithError(bookingId: Long, responseCode: Int) {
     stubFor(
-      get("/iep/reviews/booking/$bookingId?with-details=false").willReturn(
+      get("/incentive-reviews/booking/$bookingId?with-details=false").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(responseCode)

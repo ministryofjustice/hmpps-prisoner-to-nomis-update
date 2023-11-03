@@ -13,14 +13,14 @@ class IncentivesApiService(@Qualifier("incentivesApiWebClient") private val webC
 
   suspend fun getIncentive(incentiveId: Long): IepDetail {
     return webClient.get()
-      .uri("/iep/reviews/id/{incentiveId}", incentiveId)
+      .uri("/incentive-reviews/id/{incentiveId}", incentiveId)
       .retrieve()
       .awaitBody()
   }
 
   suspend fun getCurrentIncentive(bookingId: Long): IepSummary? {
     return webClient.get()
-      .uri("/iep/reviews/booking/{bookingId}?with-details=false", bookingId)
+      .uri("/incentive-reviews/booking/{bookingId}?with-details=false", bookingId)
       .retrieve()
       .awaitBodyOrNotFound()
   }
