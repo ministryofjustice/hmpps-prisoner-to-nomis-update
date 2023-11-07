@@ -31,7 +31,10 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.31.0")
 
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.18")
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.18") {
+    exclude(group = "io.swagger.core.v3")
+  }
+  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.18")
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.3")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.3")
 
@@ -41,7 +44,6 @@ dependencies {
   testImplementation("com.amazonaws:aws-java-sdk-core:1.12.578")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-  testImplementation("javax.xml.bind:jaxb-api:2.3.1")
 }
 
 kotlin {
