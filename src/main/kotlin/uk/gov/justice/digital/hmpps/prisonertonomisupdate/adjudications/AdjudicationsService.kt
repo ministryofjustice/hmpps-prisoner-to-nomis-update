@@ -1067,7 +1067,7 @@ private fun toNomisPleaCode(plea: HearingOutcomeDto.Plea) = when (plea) {
 private fun getAdjudicatorUsernameForInternalHearingOnly(hearingType: String, adjudicator: String) =
   when (hearingType) {
     HearingDto.OicHearingType.INAD_ADULT.name, HearingDto.OicHearingType.INAD_YOI.name -> null
-    else -> adjudicator
+    else -> adjudicator.takeIf { it.isNotBlank() }
   }
 
 private fun HearingAdditionalInformation.toTelemetryMap(): MutableMap<String, String> = mutableMapOf(
