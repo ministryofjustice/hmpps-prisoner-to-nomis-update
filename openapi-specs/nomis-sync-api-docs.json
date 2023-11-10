@@ -2,12 +2,12 @@
   "openapi": "3.0.1",
   "info": {
     "title": "NOMIS Synchronisation API",
-    "description": "Controls writing Prisoner information back to NOMIS for data synchronistion (not intended for general usage)",
+    "description": "Controls writing Prisoner information back to NOMIS for data synchronisation (not intended for general usage)",
     "contact": {
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-11-01.5405.8a623d8"
+    "version": "2023-11-10.5504.c923097"
   },
   "servers": [
     {
@@ -7338,6 +7338,39 @@
         },
         "description": "Course schedule update update response"
       },
+      "AllocationExclusion": {
+        "required": [
+          "day"
+        ],
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "description": "The day of the exclusion",
+            "example": "MON",
+            "enum": [
+              "MON",
+              "TUE",
+              "WED",
+              "THU",
+              "FRI",
+              "SAT",
+              "SUN"
+            ]
+          },
+          "slot": {
+            "type": "string",
+            "description": "The session the exclusion applies to (morning, afternoon or evening). Or null for the whole day.",
+            "example": "AM",
+            "enum": [
+              "AM",
+              "PM",
+              "ED"
+            ]
+          }
+        },
+        "description": "A session to exclude from the allocation during which period attendances will not be generated"
+      },
       "UpsertAllocationRequest": {
         "required": [
           "bookingId",
@@ -7391,6 +7424,13 @@
             "type": "string",
             "description": "Offender program status from domain OFF_PRG_STS",
             "example": "ALLOC"
+          },
+          "exclusions": {
+            "type": "array",
+            "description": "Sessions excluded from the allocation during which period attendances will not be generated",
+            "items": {
+              "$ref": "#/components/schemas/AllocationExclusion"
+            }
           }
         },
         "description": "Course activity create or update allocation request"
@@ -7937,6 +7977,7 @@
         "required": [
           "adjudicationNumber",
           "chargeSequence",
+          "createdByUsername",
           "effectiveDate",
           "sequence"
         ],
@@ -7985,6 +8026,10 @@
           "adjudicationNumber": {
             "type": "integer",
             "format": "int64"
+          },
+          "createdByUsername": {
+            "type": "string",
+            "description": "Username of person who created the record in NOMIS"
           }
         }
       },
@@ -9014,6 +9059,9 @@
           "first": {
             "type": "boolean"
           },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -9030,9 +9078,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -9060,15 +9105,15 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
           "paged": {
             "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -9224,6 +9269,9 @@
           "first": {
             "type": "boolean"
           },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -9240,9 +9288,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -9380,6 +9425,9 @@
           "first": {
             "type": "boolean"
           },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -9396,9 +9444,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -9505,6 +9550,9 @@
           "first": {
             "type": "boolean"
           },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -9521,9 +9569,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -9699,6 +9744,9 @@
           "first": {
             "type": "boolean"
           },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -9716,9 +9764,6 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "last": {
-            "type": "boolean"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
@@ -9735,6 +9780,7 @@
         "required": [
           "bookingId",
           "courseActivityId",
+          "exclusions",
           "nomisId",
           "prisonId",
           "startDate",
@@ -9800,6 +9846,13 @@
             "type": "string",
             "description": "Cell description (can be null if OUT or being transferred)",
             "example": "RSI-A-1-001"
+          },
+          "exclusions": {
+            "type": "array",
+            "description": "Sessions excluded from the allocation during which period attendances will not be generated",
+            "items": {
+              "$ref": "#/components/schemas/AllocationExclusion"
+            }
           }
         },
         "description": "Allocation to an activity"
@@ -9856,6 +9909,9 @@
           "first": {
             "type": "boolean"
           },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -9872,9 +9928,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -9921,6 +9974,9 @@
           "first": {
             "type": "boolean"
           },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -9937,9 +9993,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -9992,6 +10045,9 @@
           "first": {
             "type": "boolean"
           },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -10008,9 +10064,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -10324,6 +10377,9 @@
           "first": {
             "type": "boolean"
           },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -10340,9 +10396,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
