@@ -64,8 +64,8 @@ class ActivitiesReconTest {
       stubBookingCounts(
         prisonId = "BXI",
         BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 1),
-        BookingDetailsStub(12, "A1234BB", "TRN", 1, null),
-        BookingDetailsStub(13, "A1234CC", "OUT", 1, null),
+        BookingDetailsStub(12, "A1234BB", "BXI", 1, null),
+        BookingDetailsStub(13, "A1234CC", "BXI", 1, null),
       )
 
       activitiesReconService.allocationsReconciliationReport("BXI")
@@ -84,7 +84,7 @@ class ActivitiesReconTest {
           "type" to "NOMIS_only",
           "bookingId" to "12",
           "offenderNo" to "A1234BB",
-          "location" to "TRN",
+          "location" to "BXI",
         ),
       )
       assertThat(telemetryCaptor.secondValue).containsExactlyInAnyOrderEntriesOf(
@@ -93,7 +93,7 @@ class ActivitiesReconTest {
           "type" to "NOMIS_only",
           "bookingId" to "13",
           "offenderNo" to "A1234CC",
-          "location" to "OUT",
+          "location" to "BXI",
         ),
       )
     }
@@ -103,8 +103,8 @@ class ActivitiesReconTest {
       stubBookingCounts(
         prisonId = "BXI",
         BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 1),
-        BookingDetailsStub(12, "A1234BB", "TRN", null, 1),
-        BookingDetailsStub(13, "A1234CC", "OUT", null, 1),
+        BookingDetailsStub(12, "A1234BB", "BXI", null, 1),
+        BookingDetailsStub(13, "A1234CC", "BXI", null, 1),
       )
 
       activitiesReconService.allocationsReconciliationReport("BXI")
@@ -121,7 +121,7 @@ class ActivitiesReconTest {
           "type" to "DPS_only",
           "bookingId" to "12",
           "offenderNo" to "A1234BB",
-          "location" to "TRN",
+          "location" to "BXI",
         ),
       )
       assertThat(telemetryCaptor.secondValue).containsAllEntriesOf(
@@ -130,14 +130,14 @@ class ActivitiesReconTest {
           "type" to "DPS_only",
           "bookingId" to "13",
           "offenderNo" to "A1234CC",
-          "location" to "OUT",
+          "location" to "BXI",
         ),
       )
     }
 
     @Test
     fun `should publish fail telemetry for bookings with different counts in NOMIS and DPS`() = runTest {
-      stubBookingCounts(prisonId = "BXI", BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "TRN", nomisCount = 1, dpsCount = 2))
+      stubBookingCounts(prisonId = "BXI", BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 2))
 
       activitiesReconService.allocationsReconciliationReport("BXI")
 
@@ -153,7 +153,7 @@ class ActivitiesReconTest {
           "type" to "different_count",
           "bookingId" to "11",
           "offenderNo" to "A1234AA",
-          "location" to "TRN",
+          "location" to "BXI",
         ),
       )
     }
@@ -163,14 +163,14 @@ class ActivitiesReconTest {
       stubBookingCounts(
         prisonId = "BXI",
         BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 1),
-        BookingDetailsStub(12, "A1234BB", "TRN", 1, null),
-        BookingDetailsStub(13, "A1234CC", "OUT", null, 1),
+        BookingDetailsStub(12, "A1234BB", "BXI", 1, null),
+        BookingDetailsStub(13, "A1234CC", "BXI", null, 1),
         BookingDetailsStub(14, "A1234DD", "BXI", 1, 1),
-        BookingDetailsStub(15, "A1234EE", "TRN", 1, 2),
-        BookingDetailsStub(16, "A1234FF", "OUT", 1, 1),
+        BookingDetailsStub(15, "A1234EE", "BXI", 1, 2),
+        BookingDetailsStub(16, "A1234FF", "BXI", 1, 1),
         BookingDetailsStub(17, "A1234GG", "BXI", 1, null),
-        BookingDetailsStub(18, "A1234HH", "TRN", null, 1),
-        BookingDetailsStub(19, "A1234II", "OUT", 1, 2),
+        BookingDetailsStub(18, "A1234HH", "BXI", null, 1),
+        BookingDetailsStub(19, "A1234II", "BXI", 1, 2),
       )
 
       activitiesReconService.allocationsReconciliationReport("BXI")
@@ -196,14 +196,14 @@ class ActivitiesReconTest {
       stubBookingCounts(
         prisonId = "BXI",
         BookingDetailsStub(bookingId = 19, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 2),
-        BookingDetailsStub(18, "A1234BB", "TRN", null, 1),
-        BookingDetailsStub(17, "A1234CC", "OUT", 1, null),
+        BookingDetailsStub(18, "A1234BB", "BXI", null, 1),
+        BookingDetailsStub(17, "A1234CC", "BXI", 1, null),
         BookingDetailsStub(16, "A1234DD", "BXI", 1, 1),
-        BookingDetailsStub(15, "A1234EE", "TRN", 1, 2),
-        BookingDetailsStub(14, "A1234FF", "OUT", 1, 1),
-        BookingDetailsStub(13, "A1234GG", "BCI", null, 1),
-        BookingDetailsStub(12, "A1234HH", "TRN", 1, null),
-        BookingDetailsStub(11, "A1234II", "OUT", 1, 1),
+        BookingDetailsStub(15, "A1234EE", "BXI", 1, 2),
+        BookingDetailsStub(14, "A1234FF", "BXI", 1, 1),
+        BookingDetailsStub(13, "A1234GG", "BXI", null, 1),
+        BookingDetailsStub(12, "A1234HH", "BXI", 1, null),
+        BookingDetailsStub(11, "A1234II", "BXI", 1, 1),
       )
 
       activitiesReconService.allocationsReconciliationReport("BXI")
@@ -221,6 +221,36 @@ class ActivitiesReconTest {
         tuple("17", "NOMIS_only"),
         tuple("18", "DPS_only"),
         tuple("19", "different_count"),
+      )
+    }
+
+    @Test
+    fun `should NOT publish fail telemetry if a prisoner is now in a different location`() = runTest {
+      stubBookingCounts(
+        prisonId = "BXI",
+        BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "OUT", nomisCount = 1, dpsCount = 2),
+        BookingDetailsStub(bookingId = 12, offenderNo = "A1234BB", location = "BXI", nomisCount = 1, dpsCount = 2),
+      )
+
+      activitiesReconService.allocationsReconciliationReport("BXI")
+
+      verifyBlocking(telemetryClient, times(1)) {
+        trackEvent(
+          eq("activity-allocation-reconciliation-report-failed"),
+          telemetryCaptor.capture(),
+          isNull(),
+        )
+      }
+
+      assertThat(telemetryCaptor.allValues.size).isEqualTo(1)
+      assertThat(telemetryCaptor.firstValue).containsExactlyInAnyOrderEntriesOf(
+        mapOf(
+          "prison" to "BXI",
+          "type" to "different_count",
+          "bookingId" to "12",
+          "offenderNo" to "A1234BB",
+          "location" to "BXI",
+        ),
       )
     }
 
@@ -296,7 +326,7 @@ class ActivitiesReconTest {
         prisonId = "BXI",
         date = today,
         BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 1),
-        BookingDetailsStub(12, "A1234BB", "TRN", 1, null),
+        BookingDetailsStub(12, "A1234BB", "BXI", 1, null),
       )
 
       activitiesReconService.attendancesReconciliationReport("BXI", today)
@@ -316,7 +346,7 @@ class ActivitiesReconTest {
           "type" to "NOMIS_only",
           "bookingId" to "12",
           "offenderNo" to "A1234BB",
-          "location" to "TRN",
+          "location" to "BXI",
         ),
       )
     }
@@ -327,14 +357,14 @@ class ActivitiesReconTest {
         prisonId = "BXI",
         date = today,
         BookingDetailsStub(bookingId = 19, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 2),
-        BookingDetailsStub(18, "A1234BB", "TRN", null, 1),
-        BookingDetailsStub(17, "A1234CC", "OUT", 1, null),
+        BookingDetailsStub(18, "A1234BB", "BXI", null, 1),
+        BookingDetailsStub(17, "A1234CC", "BXI", 1, null),
         BookingDetailsStub(16, "A1234DD", "BXI", 1, 1),
-        BookingDetailsStub(15, "A1234EE", "TRN", 1, 2),
-        BookingDetailsStub(14, "A1234FF", "OUT", 1, 1),
+        BookingDetailsStub(15, "A1234EE", "BXI", 1, 2),
+        BookingDetailsStub(14, "A1234FF", "BXI", 1, 1),
         BookingDetailsStub(13, "A1234GG", "BXI", null, 1),
-        BookingDetailsStub(12, "A1234HH", "TRN", 1, null),
-        BookingDetailsStub(11, "A1234II", "OUT", 1, 1),
+        BookingDetailsStub(12, "A1234HH", "BXI", 1, null),
+        BookingDetailsStub(11, "A1234II", "BXI", 1, 1),
       )
 
       activitiesReconService.attendancesReconciliationReport("BXI", today)
@@ -352,6 +382,38 @@ class ActivitiesReconTest {
         tuple("17", "NOMIS_only"),
         tuple("18", "DPS_only"),
         tuple("19", "different_count"),
+      )
+    }
+
+    @Test
+    fun `should NOT publish fail telemetry if prisoner in a different location`() = runTest {
+      stubBookingCounts(
+        prisonId = "BXI",
+        date = today,
+        BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "OUT", nomisCount = 1, dpsCount = 2),
+        BookingDetailsStub(bookingId = 12, offenderNo = "A1234BB", location = "BXI", nomisCount = 1, dpsCount = 2),
+      )
+
+      activitiesReconService.attendancesReconciliationReport("BXI", today)
+
+      verifyBlocking(telemetryClient, times(1)) {
+        trackEvent(
+          eq("activity-attendance-reconciliation-report-failed"),
+          telemetryCaptor.capture(),
+          isNull(),
+        )
+      }
+
+      assertThat(telemetryCaptor.allValues.size).isEqualTo(1)
+      assertThat(telemetryCaptor.firstValue).containsExactlyInAnyOrderEntriesOf(
+        mapOf(
+          "prison" to "BXI",
+          "date" to "$today",
+          "type" to "different_count",
+          "bookingId" to "12",
+          "offenderNo" to "A1234BB",
+          "location" to "BXI",
+        ),
       )
     }
 
