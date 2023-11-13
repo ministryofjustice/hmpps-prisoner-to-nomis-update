@@ -349,9 +349,25 @@ customEvents
 
 Often the fix involves re-synchronising the DPS attendances which can be done with an [endpoint in the synchronisation service](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html#/activities-resource/synchroniseUpsertAttendance).
 
-##### Known issues
+##### Re-running old attendance reconciliation errors
 
-If the prisoner has been released or transferred to a different prison then there's not much to be done. This information can be found in the `customDimensions` of the report failures found in App Insights.
+If the attendance reconciliation fails in error we publish a `customEvent` with name `activity-attendance-reconciliation-report-error` and do not know the results of the reconciliation.
+
+In order to re-run the attendance reconciliation for a particular day we need to manually perform the same task as the cronjob.
+
+Find a running pod and port-forward to it:
+
+e.g.
+```bash
+kubectl -n hmpps-prisoner-to-nomis-update-prod port-forward hmpps-prisoner-to-nomis-update-5ddc8c6d56-6ph6s 8080:8080
+```
+
+Then in another terminal run the curl command entering the date to be reconciled:
+
+e.g.
+```bash
+curl -XPOST 'http://localhost:8080/attendances/reports/reconciliation?date=2023-11-03'
+```
 
 ### Activities Synchronisation Error Handling
 

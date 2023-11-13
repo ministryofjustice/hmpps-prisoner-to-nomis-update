@@ -129,18 +129,22 @@ class ActivitiesReconService(
       nomisApiService.getPrisonerDetails(compareResults.all())
         .sortedBy { it.bookingId }
         .forEach {
-          telemetryClient.trackEvent(
-            "activity-$type-reconciliation-report-failed",
-            mutableMapOf(
-              "prison" to prisonId,
-              "type" to compareResults.differenceType(it.bookingId),
-              "bookingId" to it.bookingId.toString(),
-              "offenderNo" to it.offenderNo,
-              "location" to it.location,
-            ).apply {
-              date?.also { this["date"] = "$it" }
-            },
-          )
+          if (it.location == prisonId) {
+            telemetryClient.trackEvent(
+              "activity-$type-reconciliation-report-failed",
+              mutableMapOf(
+                "prison" to prisonId,
+                "type" to compareResults.differenceType(it.bookingId),
+                "bookingId" to it.bookingId.toString(),
+                "offenderNo" to it.offenderNo,
+                "location" to it.location,
+              ).apply {
+                date?.also { this["date"] = "$it" }
+              },
+            )
+          } else {
+            log.info("Ignoring failed $type reconciliation for booking ${it.bookingId} at prison $prisonId as the prisoner is now at location ${it.location}")
+          }
         }
     }
   }
