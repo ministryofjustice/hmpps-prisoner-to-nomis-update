@@ -18,8 +18,8 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrAttendancePaidException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrUpsertAttendanceError
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AttendanceReconciliationResponse
@@ -164,7 +164,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .uri("/schedules/{courseScheduleId}/booking/{bookingId}/attendance", courseScheduleId, bookingId)
       .bodyValue(request)
       .retrieve()
-      .awaitBodyOrAttendancePaidException()
+      .awaitBodyOrUpsertAttendanceError()
 
   suspend fun getAllocationReconciliation(prisonId: String): AllocationReconciliationResponse =
     webClient.get()
