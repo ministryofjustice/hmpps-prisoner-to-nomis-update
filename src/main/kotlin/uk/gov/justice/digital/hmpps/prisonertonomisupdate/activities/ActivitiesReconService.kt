@@ -77,35 +77,35 @@ class ActivitiesReconService(
       coroutineScope {
         val nomisBookingCounts = async { nomisApiService.getAttendanceReconciliation(prisonId, date) }
         val dpsBookingCounts = async { activitiesApiService.getAttendanceReconciliation(prisonId, date) }
-        val compareResults = compareBookingCounts(nomisBookingCounts.await(), dpsBookingCounts.await())
+        val differences = compareBookingCounts(nomisBookingCounts.await(), dpsBookingCounts.await())
 
-        publishTelemetry("attendance", prisonId, compareResults, date)
+        publishTelemetry("attendance", prisonId, differences, date)
       }
     } catch (e: Exception) {
       log.error("Attendance reconciliation report failed for prison $prisonId", e)
       telemetryClient.trackEvent("activity-attendance-reconciliation-report-error", mapOf("prison" to prisonId, "date" to "$date"))
     }
 
-  private suspend fun compareBookingCounts(nomisResults: NomisAllocationResponse, dpsResults: DpsAllocationResponse): CompareBookingsResult {
+  private suspend fun compareBookingCounts(nomisResults: NomisAllocationResponse, dpsResults: DpsAllocationResponse): CompareBookingsDifferences {
     val nomis = nomisResults.bookings.sortedBy { it.bookingId }.map { BookingCounts(it.bookingId, it.count) }
     val dps = dpsResults.bookings.sortedBy { it.bookingId }.map { BookingCounts(it.bookingId, it.count) }
     return compareBookingCounts(nomis, dps)
   }
 
-  private suspend fun compareBookingCounts(nomisResults: NomisAttendanceResponse, dpsResults: DpsAttendanceResponse): CompareBookingsResult {
+  private suspend fun compareBookingCounts(nomisResults: NomisAttendanceResponse, dpsResults: DpsAttendanceResponse): CompareBookingsDifferences {
     val nomis = nomisResults.bookings.sortedBy { it.bookingId }.map { BookingCounts(it.bookingId, it.count) }
     val dps = dpsResults.bookings.sortedBy { it.bookingId }.map { BookingCounts(it.bookingId, it.count) }
     return compareBookingCounts(nomis, dps)
   }
 
-  private suspend fun compareBookingCounts(nomis: List<BookingCounts>, dps: List<BookingCounts>): CompareBookingsResult {
+  private suspend fun compareBookingCounts(nomis: List<BookingCounts>, dps: List<BookingCounts>): CompareBookingsDifferences {
     val nomisOnlyIds = nomis.map { it.id } - dps.map { it.id }.toSet()
     val dpsOnlyIds = dps.map { it.id } - nomis.map { it.id }.toSet()
 
     val both = nomis.filterNot { nomisOnlyIds.contains(it.id) }.zip(dps.filterNot { dpsOnlyIds.contains(it.id) })
     val differentCountIds = both.filter { it.first.count != it.second.count }.map { it.first.id }
 
-    return CompareBookingsResult(
+    return CompareBookingsDifferences(
       nomisOnly = nomisOnlyIds,
       dpsOnly = dpsOnlyIds,
       differentCount = differentCountIds,
@@ -115,47 +115,55 @@ class ActivitiesReconService(
   private suspend fun publishTelemetry(
     type: String,
     prisonId: String,
-    compareResults: CompareBookingsResult,
+    compareResults: CompareBookingsDifferences,
     date: LocalDate? = null,
   ) {
-    if (compareResults.noDifferences()) {
+    val differencesWithDetails = nomisApiService.getPrisonerDetails(compareResults.all())
+
+    val ignoredBookings = differencesWithDetails
+      .filter { it.location != prisonId }
+      .onEach {
+        log.info("Ignoring failed $type reconciliation for booking ${it.bookingId} at prison $prisonId as the prisoner is now at location ${it.location}")
+      }
+      .map { it.bookingId }
+
+    // Publish telemetry for failures we're not ignoring
+    compareResults.all()
+      .filterNot { it in ignoredBookings }
+      .sorted()
+      .map { differencesWithDetails.first { details -> details.bookingId == it } }
+      .forEach {
+        telemetryClient.trackEvent(
+          "activity-$type-reconciliation-report-failed",
+          mutableMapOf(
+            "prison" to prisonId,
+            "type" to compareResults.differenceType(it.bookingId),
+            "bookingId" to it.bookingId.toString(),
+            "offenderNo" to it.offenderNo,
+            "location" to it.location,
+          ).apply {
+            date?.also { this["date"] = "$it" }
+          },
+        )
+      }
+
+    // Publish success telemetry if all failures were ignored or there were no failures
+    if (compareResults.all().size - ignoredBookings.size == 0) {
       telemetryClient.trackEvent(
         "activity-$type-reconciliation-report-success",
         mutableMapOf("prison" to prisonId).apply {
           date?.also { this["date"] = "$it" }
         },
       )
-    } else {
-      nomisApiService.getPrisonerDetails(compareResults.all())
-        .sortedBy { it.bookingId }
-        .forEach {
-          if (it.location == prisonId) {
-            telemetryClient.trackEvent(
-              "activity-$type-reconciliation-report-failed",
-              mutableMapOf(
-                "prison" to prisonId,
-                "type" to compareResults.differenceType(it.bookingId),
-                "bookingId" to it.bookingId.toString(),
-                "offenderNo" to it.offenderNo,
-                "location" to it.location,
-              ).apply {
-                date?.also { this["date"] = "$it" }
-              },
-            )
-          } else {
-            log.info("Ignoring failed $type reconciliation for booking ${it.bookingId} at prison $prisonId as the prisoner is now at location ${it.location}")
-          }
-        }
     }
   }
 }
 
-private data class CompareBookingsResult(
+private data class CompareBookingsDifferences(
   val nomisOnly: List<Long>,
   val dpsOnly: List<Long>,
   val differentCount: List<Long>,
 ) {
-  fun noDifferences() = nomisOnly.isEmpty() && dpsOnly.isEmpty() && differentCount.isEmpty()
   fun differenceType(bookingId: Long): String = when {
     nomisOnly.contains(bookingId) -> "NOMIS_only"
     dpsOnly.contains(bookingId) -> "DPS_only"
