@@ -115,10 +115,12 @@ class ActivitiesReconService(
   private suspend fun publishTelemetry(
     type: String,
     prisonId: String,
-    compareResults: CompareBookingsDifferences,
+    differences: CompareBookingsDifferences,
     date: LocalDate? = null,
   ) {
-    val differencesWithDetails = nomisApiService.getPrisonerDetails(compareResults.all())
+    val differencesWithDetails = with(differences.all()) {
+      if (isNotEmpty()) nomisApiService.getPrisonerDetails(this) else listOf()
+    }
 
     val ignoredBookings = differencesWithDetails
       .filter { it.location != prisonId }
@@ -128,7 +130,7 @@ class ActivitiesReconService(
       .map { it.bookingId }
 
     // Publish telemetry for failures we're not ignoring
-    compareResults.all()
+    differences.all()
       .filterNot { it in ignoredBookings }
       .sorted()
       .map { differencesWithDetails.first { details -> details.bookingId == it } }
@@ -137,7 +139,7 @@ class ActivitiesReconService(
           "activity-$type-reconciliation-report-failed",
           mutableMapOf(
             "prison" to prisonId,
-            "type" to compareResults.differenceType(it.bookingId),
+            "type" to differences.differenceType(it.bookingId),
             "bookingId" to it.bookingId.toString(),
             "offenderNo" to it.offenderNo,
             "location" to it.location,
@@ -148,7 +150,7 @@ class ActivitiesReconService(
       }
 
     // Publish success telemetry if all failures were ignored or there were no failures
-    if (compareResults.all().size - ignoredBookings.size == 0) {
+    if (differences.all().size - ignoredBookings.size == 0) {
       telemetryClient.trackEvent(
         "activity-$type-reconciliation-report-success",
         mutableMapOf("prison" to prisonId).apply {
