@@ -65,7 +65,7 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
     fun `will consume an amend attendance message`() {
       ActivitiesApiExtension.activitiesApi.stubGetAttendanceSync(ATTENDANCE_ID, buildGetAttendanceSyncResponse())
       MappingExtension.mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
-      NomisApiExtension.nomisApi.stubUpsertAttendance(NOMIS_CRS_ACTY_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
+      NomisApiExtension.nomisApi.stubUpsertAttendance(NOMIS_CRS_SCH_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
 
       awsSnsClient.publish(
         PublishRequest.builder().topicArn(topicArn)
@@ -94,7 +94,7 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
     fun `will consume an attendance expired message`() {
       ActivitiesApiExtension.activitiesApi.stubGetAttendanceSync(ATTENDANCE_ID, buildGetAttendanceSyncResponse(LocalDate.now().minusDays(1)))
       MappingExtension.mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
-      NomisApiExtension.nomisApi.stubUpsertAttendance(NOMIS_CRS_ACTY_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
+      NomisApiExtension.nomisApi.stubUpsertAttendance(NOMIS_CRS_SCH_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
 
       awsSnsClient.publish(
         PublishRequest.builder().topicArn(topicArn)
@@ -181,6 +181,53 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
           eq("activity-attendance-update-ignored"),
           check<Map<String, String>> {
             assertThat(it["reason"]).isEqualTo("Attendance update ignored as already paid session on ${LocalDate.now()} at 10:00")
+          },
+          isNull(),
+        )
+      }
+      assertThat(awsSqsActivityDlqClient.countMessagesOnQueue(activityDlqUrl).get()).isEqualTo(0)
+    }
+
+    @Test
+    fun `will ignore a bad request where the prisoner is deallocated and has moved from the prison`() {
+      ActivitiesApiExtension.activitiesApi.stubGetAttendanceSync(
+        ATTENDANCE_ID,
+        buildGetAttendanceSyncResponse(LocalDate.now()),
+      )
+      MappingExtension.mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      NomisApiExtension.nomisApi.stubUpsertAttendanceWithError(
+        courseScheduleId = NOMIS_CRS_SCH_ID,
+        bookingId = NOMIS_BOOKING_ID,
+        status = 400,
+        body = """
+          {
+            "status": 400,
+            "errorCode": 1002,
+            "userMessage": "Bad request: Cannot create an attendance for allocation any_allocation after its end date of any date with prisoner now in location MDI"
+          }
+        """.trimIndent(),
+      )
+
+      awsSnsClient.publish(
+        PublishRequest.builder().topicArn(topicArn)
+          .message(attendanceMessagePayload("activities.prisoner.attendance-amended", ATTENDANCE_ID))
+          .messageAttributes(
+            mapOf(
+              "eventType" to MessageAttributeValue.builder().dataType("String")
+                .stringValue("activities.prisoner.attendance-amended").build(),
+            ),
+          ).build(),
+      ).get()
+
+      await untilCallTo { ActivitiesApiExtension.activitiesApi.getCountFor("/synchronisation/attendance/$ATTENDANCE_ID") } matches { it == 1 }
+      await untilCallTo { NomisApiExtension.nomisApi.putCountFor("/schedules/$NOMIS_CRS_SCH_ID/booking/$NOMIS_BOOKING_ID/attendance") } matches { it == 1 }
+
+      // No DLQ message but telemetry is raised
+      await untilAsserted {
+        verify(telemetryClient).trackEvent(
+          eq("activity-attendance-update-ignored"),
+          check<Map<String, String>> {
+            assertThat(it["reason"]).isEqualTo("Attendance update ignored as the prisoner is deallocated and has moved from the prison")
           },
           isNull(),
         )

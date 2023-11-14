@@ -255,6 +255,25 @@ class ActivitiesReconTest {
     }
 
     @Test
+    fun `should still publish success telemetry if only failures are for prisoners different locations`() = runTest {
+      stubBookingCounts(
+        prisonId = "BXI",
+        BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "OUT", nomisCount = 1, dpsCount = 2),
+        BookingDetailsStub(bookingId = 11, offenderNo = "A1234BB", location = "MDI", nomisCount = 1, dpsCount = 2),
+      )
+
+      activitiesReconService.allocationsReconciliationReport("BXI")
+
+      verifyBlocking(telemetryClient) {
+        trackEvent(
+          eq("activity-allocation-reconciliation-report-success"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Test
     fun `should publish error telemetry`() = runTest {
       stubBookingCounts(prisonId = "BXI", BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "TRN", nomisCount = 1, dpsCount = 1))
       whenever(nomisApiService.getAllocationReconciliation(anyString())).thenThrow(BadGateway::class.java)
@@ -415,6 +434,26 @@ class ActivitiesReconTest {
           "location" to "BXI",
         ),
       )
+    }
+
+    @Test
+    fun `should still publish success telemetry if only differences are for prisoners in a different location`() = runTest {
+      stubBookingCounts(
+        prisonId = "BXI",
+        date = today,
+        BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "OUT", nomisCount = 1, dpsCount = 2),
+        BookingDetailsStub(bookingId = 11, offenderNo = "A1234BB", location = "MDI", nomisCount = 1, dpsCount = 2),
+      )
+
+      activitiesReconService.attendancesReconciliationReport("BXI", today)
+
+      verifyBlocking(telemetryClient) {
+        trackEvent(
+          eq("activity-attendance-reconciliation-report-success"),
+          any(),
+          isNull(),
+        )
+      }
     }
 
     @Test

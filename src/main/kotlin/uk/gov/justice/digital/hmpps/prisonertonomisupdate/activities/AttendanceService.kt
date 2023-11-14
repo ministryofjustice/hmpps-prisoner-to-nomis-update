@@ -5,6 +5,7 @@ import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.AttendancePaidException
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerMovedAllocationEndedException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.math.BigDecimal
@@ -55,6 +56,9 @@ class AttendanceService(
       // Do not error if the prisoner was paid today - bespoke processes such as Discharge Balance Calculation that pay before the overnight payroll can be ignored
       if (e is AttendancePaidException && attendanceSync.sessionDate == LocalDate.now()) {
         telemetryMap["reason"] = "Attendance update ignored as already paid session on ${attendanceSync.sessionDate} at ${attendanceSync.sessionStartTime}"
+        telemetryClient.trackEvent("activity-attendance-$upsertType-ignored", telemetryMap, null)
+      } else if (e is PrisonerMovedAllocationEndedException) {
+        telemetryMap["reason"] = "Attendance update ignored as the prisoner is deallocated and has moved from the prison"
         telemetryClient.trackEvent("activity-attendance-$upsertType-ignored", telemetryMap, null)
       } else {
         telemetryClient.trackEvent("activity-attendance-$upsertType-failed", telemetryMap, null)

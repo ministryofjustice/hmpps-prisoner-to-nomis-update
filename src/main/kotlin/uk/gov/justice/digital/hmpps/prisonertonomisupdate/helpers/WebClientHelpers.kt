@@ -13,21 +13,24 @@ suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNotFound(
     .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
     .awaitSingleOrNull()
 
-suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrAttendancePaidException(): T =
+suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrUpsertAttendanceError(): T =
   this.bodyToMono<T>()
     .onErrorResume(WebClientResponseException.BadRequest::class.java) {
-      val errorResponse = it.getResponseBodyAs(ErrorResponse::class.java)
-      if (errorResponse.errorCode == BadRequestError.ATTENDANCE_PAID.errorCode) {
-        Mono.error(AttendancePaidException(errorResponse))
-      } else {
-        Mono.error(it)
-      }
+      val errorResponse = it.getResponseBodyAs(ErrorResponse::class.java) as ErrorResponse
+      UpsertAttendanceError.entries.find { error -> error.errorCode == errorResponse.errorCode }
+        ?.let { err -> Mono.error(err.exception(errorResponse)) }
+        ?: Mono.error(it)
     }
     .awaitSingle()
 
-enum class BadRequestError(val errorCode: Int) {
-  ATTENDANCE_PAID(1001),
+enum class UpsertAttendanceError(val errorCode: Int, val exception: (ErrorResponse) -> UpsertAttendanceException) {
+  ATTENDANCE_PAID(1001, { AttendancePaidException(it) }),
+  PRISONER_MOVED_ALLOCATION_ENDED(1002, { PrisonerMovedAllocationEndedException(it) }),
 }
+
+sealed class UpsertAttendanceException(errorResponse: ErrorResponse) : RuntimeException(errorResponse.userMessage)
+class AttendancePaidException(errorResponse: ErrorResponse) : UpsertAttendanceException(errorResponse)
+class PrisonerMovedAllocationEndedException(errorResponse: ErrorResponse) : UpsertAttendanceException(errorResponse)
 
 suspend fun WebClient.ResponseSpec.awaitBodilessEntityOrThrowOnConflict() =
   this.toBodilessEntity()
@@ -46,5 +49,3 @@ data class DuplicateErrorContent(
   val duplicate: Map<String, *>,
   val existing: Map<String, *>? = null,
 )
-
-class AttendancePaidException(val error: ErrorResponse) : RuntimeException("message")
