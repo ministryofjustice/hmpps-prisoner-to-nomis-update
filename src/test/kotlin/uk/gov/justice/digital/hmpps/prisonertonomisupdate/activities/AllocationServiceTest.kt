@@ -18,6 +18,8 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.ACTIVE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.PrisonPayBand
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Slot
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationExclusion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
@@ -112,6 +114,83 @@ class AllocationServiceTest {
         isNull(),
       )
     }
+  }
+
+  @Nested
+  inner class ToAllocationExclusionRequest {
+    @Test
+    fun `should return empty list`() {
+      assertThat(allocationService.toAllocationExclusions(emptyList())).isEmpty()
+    }
+
+    @Test
+    fun `should return single slot`() {
+      val exclusions = listOf(aSlot(timeSlot = "AM", daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY)))
+
+      assertThat(allocationService.toAllocationExclusions(exclusions))
+        .containsExactly(AllocationExclusion(AllocationExclusion.Day.MON, AllocationExclusion.Slot.AM))
+    }
+
+    @Test
+    fun `should return multiple slots`() {
+      val exclusions = listOf(
+        aSlot(timeSlot = "AM", daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY)),
+        aSlot(timeSlot = "PM", daysOfWeek = setOf(Slot.DaysOfWeek.TUESDAY, Slot.DaysOfWeek.WEDNESDAY)),
+      )
+
+      assertThat(allocationService.toAllocationExclusions(exclusions))
+        .containsExactlyInAnyOrder(
+          AllocationExclusion(AllocationExclusion.Day.MON, AllocationExclusion.Slot.AM),
+          AllocationExclusion(AllocationExclusion.Day.TUE, AllocationExclusion.Slot.PM),
+          AllocationExclusion(AllocationExclusion.Day.WED, AllocationExclusion.Slot.PM),
+        )
+    }
+
+    @Test
+    fun `should return a whole day`() {
+      val exclusions = listOf(
+        aSlot(timeSlot = "AM", daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY)),
+        aSlot(timeSlot = "PM", daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY)),
+        aSlot(timeSlot = "ED", daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY)),
+      )
+
+      assertThat(allocationService.toAllocationExclusions(exclusions))
+        .containsExactlyInAnyOrder(
+          AllocationExclusion(AllocationExclusion.Day.MON, null),
+        )
+    }
+
+    @Test
+    fun `should handle multiple scenarios`() {
+      val exclusions = listOf(
+        aSlot(timeSlot = "AM", daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY, Slot.DaysOfWeek.WEDNESDAY, Slot.DaysOfWeek.THURSDAY)),
+        aSlot(timeSlot = "PM", daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY, Slot.DaysOfWeek.THURSDAY, Slot.DaysOfWeek.SATURDAY)),
+        aSlot(timeSlot = "ED", daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY, Slot.DaysOfWeek.THURSDAY, Slot.DaysOfWeek.SUNDAY)),
+      )
+
+      assertThat(allocationService.toAllocationExclusions(exclusions))
+        .containsExactlyInAnyOrder(
+          AllocationExclusion(AllocationExclusion.Day.MON, null),
+          AllocationExclusion(AllocationExclusion.Day.WED, AllocationExclusion.Slot.AM),
+          AllocationExclusion(AllocationExclusion.Day.THU, null),
+          AllocationExclusion(AllocationExclusion.Day.SAT, AllocationExclusion.Slot.PM),
+          AllocationExclusion(AllocationExclusion.Day.SUN, AllocationExclusion.Slot.ED),
+        )
+    }
+
+    private fun aSlot(timeSlot: String, daysOfWeek: Set<Slot.DaysOfWeek>) =
+      Slot(
+        weekNumber = 1,
+        timeSlot = timeSlot,
+        monday = false, // we don't use these fields so don't need to set them up
+        tuesday = false,
+        wednesday = false,
+        thursday = true,
+        friday = false,
+        saturday = false,
+        sunday = true,
+        daysOfWeek = daysOfWeek,
+      )
   }
 }
 
