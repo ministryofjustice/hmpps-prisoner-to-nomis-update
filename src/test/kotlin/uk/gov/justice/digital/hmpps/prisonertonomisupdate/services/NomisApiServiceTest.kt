@@ -1152,7 +1152,7 @@ internal class NomisApiServiceTest {
 
       nomisApi.verify(
         postRequestedFor(urlEqualTo("/prisoners/AB123D/adjudications"))
-          .withRequestBody(matchingJsonPath("$.adjudicationNumber", equalTo("1234567"))),
+          .withRequestBody(matchingJsonPath("$.incident.details", equalTo("The details of the incident are as follows"))),
       )
     }
 
