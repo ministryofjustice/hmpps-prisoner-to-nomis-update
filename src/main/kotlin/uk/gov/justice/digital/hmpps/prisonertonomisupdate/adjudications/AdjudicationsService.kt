@@ -102,7 +102,7 @@ class AdjudicationsService(
 
         AdjudicationMappingDto(
           adjudicationNumber = nomisAdjudicationResponse.adjudicationNumber,
-          chargeSequence = nomisAdjudicationResponse.adjudicationSequence,
+          chargeSequence = nomisAdjudicationResponse.charges.first().chargeSequence,
           chargeNumber = createEvent.additionalInformation.chargeNumber,
         )
       }
