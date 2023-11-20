@@ -1146,9 +1146,9 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `will post adjudication data to nomis api`() = runTest {
-      nomisApi.stubAdjudicationCreate("AB123D")
+      nomisApi.stubAdjudicationCreate("AB123D", adjudicationNumber = 1234567)
 
-      nomisApiService.createAdjudication("AB123D", newAdjudication(adjudicationNumber = 1234567))
+      nomisApiService.createAdjudication("AB123D", newAdjudication())
 
       nomisApi.verify(
         postRequestedFor(urlEqualTo("/prisoners/AB123D/adjudications"))
@@ -1723,7 +1723,7 @@ private fun updateSentencingAdjustment(
   comment = comment,
 )
 
-private fun newAdjudication(adjudicationNumber: Long = 1234567) = CreateAdjudicationRequest(
+private fun newAdjudication() = CreateAdjudicationRequest(
   incident = IncidentToCreate(
     reportingStaffUsername = " JANE.BROOKES ",
     incidentDate = LocalDate.parse("2023-07-25"),
@@ -1741,9 +1741,7 @@ private fun newAdjudication(adjudicationNumber: Long = 1234567) = CreateAdjudica
   charges = listOf(
     ChargeToCreate(
       offenceCode = "51:1",
-      offenceId = "$adjudicationNumber/1",
     ),
   ),
-  adjudicationNumber = adjudicationNumber,
   evidence = emptyList(),
 )

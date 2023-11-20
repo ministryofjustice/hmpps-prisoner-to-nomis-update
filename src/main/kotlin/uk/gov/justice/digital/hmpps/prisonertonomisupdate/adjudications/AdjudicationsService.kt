@@ -1090,7 +1090,6 @@ private fun PunishmentsAdditionalInformation.toTelemetryMap(): MutableMap<String
 )
 
 internal fun ReportedAdjudicationResponse.toNomisAdjudication() = CreateAdjudicationRequest(
-  adjudicationNumber = reportedAdjudication.chargeNumber.toNomisAdjudicationNumber(),
   incident = IncidentToCreate(
     reportingStaffUsername = reportedAdjudication.createdByUserId,
     incidentDate = reportedAdjudication.incidentDetails.dateTimeOfDiscovery.toLocalDate(),
@@ -1109,16 +1108,10 @@ internal fun ReportedAdjudicationResponse.toNomisAdjudication() = CreateAdjudica
   charges = listOf(
     ChargeToCreate(
       offenceCode = reportedAdjudication.getOffenceCode(),
-      offenceId = "${reportedAdjudication.chargeNumber.toNomisAdjudicationNumber()}/1",
     ),
   ),
   evidence = reportedAdjudication.evidence.map { it.toNomisCreateEvidence() },
 )
-
-// DPS charge number are either "12345" or "12345-1" - but for new ones it will always
-// be just "12345" so we can just convert to long for now without parsing
-// Once we tackle updates on migrated records this code will need changing to parse the number
-private fun String.toNomisAdjudicationNumber(): Long = this.toLong()
 
 private fun ReportedAdjudicationDto.getOffenceCode() = if (this.didInciteOtherPrisoner()) {
   this.offenceDetails.offenceRule.withOthersNomisCode!!
