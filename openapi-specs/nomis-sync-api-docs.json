@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-11-10.5504.c923097"
+    "version": "2023-11-20.5630.1eec413"
   },
   "servers": [
     {
@@ -4298,6 +4298,84 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/sentencing/court-case/{id}": {
+      "get": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "get a court case",
+        "description": "Requires role NOMIS_SENTENCING. Retrieves a court case by id",
+        "operationId": "getCourtCase",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Court case id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Court case id",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender No",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender No",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the court case details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtCaseResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offender not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/ids": {
       "get": {
         "tags": [
@@ -8164,8 +8242,7 @@
       },
       "ChargeToCreate": {
         "required": [
-          "offenceCode",
-          "offenceId"
+          "offenceCode"
         ],
         "type": "object",
         "properties": {
@@ -8173,30 +8250,18 @@
             "type": "string",
             "description": "Offence code they are charged with",
             "example": "51:1N"
-          },
-          "offenceId": {
-            "type": "string",
-            "description": "Charges associated with this adjudication (business key)",
-            "example": "1234567/1"
           }
         },
         "description": "Charges associated with this adjudication"
       },
       "CreateAdjudicationRequest": {
         "required": [
-          "adjudicationNumber",
           "charges",
           "evidence",
           "incident"
         ],
         "type": "object",
         "properties": {
-          "adjudicationNumber": {
-            "type": "integer",
-            "description": "The adjudication number (business key)",
-            "format": "int64",
-            "example": 10128828
-          },
           "incident": {
             "$ref": "#/components/schemas/IncidentToCreate"
           },
@@ -9105,15 +9170,15 @@
             "type": "integer",
             "format": "int32"
           },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
           "paged": {
             "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
-          },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
           }
         }
       },
@@ -9254,6 +9319,175 @@
           }
         },
         "description": "Adjustment type"
+      },
+      "CourtCaseResponse": {
+        "required": [
+          "caseSequence",
+          "caseStatus",
+          "caseType",
+          "courtEvents",
+          "createdByUsername",
+          "createdDateTime",
+          "id",
+          "lidsCaseNumber",
+          "offenderNo",
+          "prisonId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offenderNo": {
+            "type": "string"
+          },
+          "caseInfoNumber": {
+            "type": "string"
+          },
+          "caseSequence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "caseStatus": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "caseType": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "beginDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "prisonId": {
+            "type": "string"
+          },
+          "combinedCaseId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "statusUpdateStaffId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "statusUpdateDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "statusUpdateComment": {
+            "type": "string"
+          },
+          "statusUpdateReason": {
+            "type": "string"
+          },
+          "lidsCaseId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lidsCombinedCaseId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lidsCaseNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdByUsername": {
+            "type": "string"
+          },
+          "courtEvents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourtEventResponse"
+            }
+          }
+        },
+        "description": "Court Case"
+      },
+      "CourtEventResponse": {
+        "required": [
+          "courtEventType",
+          "createdByUsername",
+          "createdDateTime",
+          "eventDate",
+          "eventStatus",
+          "id",
+          "offenderNo",
+          "prisonId",
+          "startTime"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offenderNo": {
+            "type": "string"
+          },
+          "eventDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "startTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          },
+          "courtEventType": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "eventStatus": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "directionCode": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "judgeName": {
+            "type": "string"
+          },
+          "prisonId": {
+            "type": "string"
+          },
+          "outcomeReasonCode": {
+            "type": "string"
+          },
+          "commentText": {
+            "type": "string"
+          },
+          "orderRequestedFlag": {
+            "type": "boolean"
+          },
+          "holdFlag": {
+            "type": "boolean"
+          },
+          "nextEventRequestFlag": {
+            "type": "boolean"
+          },
+          "nextEventDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "nextEventStartTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdByUsername": {
+            "type": "string"
+          }
+        },
+        "description": "Court Event"
       },
       "PagePrisonerId": {
         "type": "object",
@@ -9783,6 +10017,7 @@
           "exclusions",
           "nomisId",
           "prisonId",
+          "scheduleRules",
           "startDate",
           "suspended"
         ],
@@ -9853,9 +10088,80 @@
             "items": {
               "$ref": "#/components/schemas/AllocationExclusion"
             }
+          },
+          "scheduleRules": {
+            "type": "array",
+            "description": "Rules for creating schedules - days and times",
+            "items": {
+              "$ref": "#/components/schemas/ScheduleRulesResponse"
+            }
           }
         },
         "description": "Allocation to an activity"
+      },
+      "ScheduleRulesResponse": {
+        "required": [
+          "endTime",
+          "friday",
+          "monday",
+          "saturday",
+          "startTime",
+          "sunday",
+          "thursday",
+          "tuesday",
+          "wednesday"
+        ],
+        "type": "object",
+        "properties": {
+          "startTime": {
+            "type": "string",
+            "description": "Course start time",
+            "format": "partial-time",
+            "example": "09:00"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "Course end time",
+            "format": "partial-time",
+            "example": "11:00"
+          },
+          "monday": {
+            "type": "boolean",
+            "description": "Runs on Mondays",
+            "example": true
+          },
+          "tuesday": {
+            "type": "boolean",
+            "description": "Runs on Tuesdays",
+            "example": true
+          },
+          "wednesday": {
+            "type": "boolean",
+            "description": "Runs on Wednesdays",
+            "example": true
+          },
+          "thursday": {
+            "type": "boolean",
+            "description": "Runs on Thursdays",
+            "example": true
+          },
+          "friday": {
+            "type": "boolean",
+            "description": "Runs on Fridays",
+            "example": true
+          },
+          "saturday": {
+            "type": "boolean",
+            "description": "Runs on Saturdays",
+            "example": true
+          },
+          "sunday": {
+            "type": "boolean",
+            "description": "Runs on Sundays",
+            "example": true
+          }
+        },
+        "description": "Activity Schedule Rules"
       },
       "AllocationReconciliationResponse": {
         "required": [
@@ -10283,70 +10589,6 @@
           }
         },
         "description": "Activity Pay Rates"
-      },
-      "ScheduleRulesResponse": {
-        "required": [
-          "endTime",
-          "friday",
-          "monday",
-          "saturday",
-          "startTime",
-          "sunday",
-          "thursday",
-          "tuesday",
-          "wednesday"
-        ],
-        "type": "object",
-        "properties": {
-          "startTime": {
-            "type": "string",
-            "description": "Course start time",
-            "format": "partial-time",
-            "example": "09:00"
-          },
-          "endTime": {
-            "type": "string",
-            "description": "Course end time",
-            "format": "partial-time",
-            "example": "11:00"
-          },
-          "monday": {
-            "type": "boolean",
-            "description": "Runs on Mondays",
-            "example": true
-          },
-          "tuesday": {
-            "type": "boolean",
-            "description": "Runs on Tuesdays",
-            "example": true
-          },
-          "wednesday": {
-            "type": "boolean",
-            "description": "Runs on Wednesdays",
-            "example": true
-          },
-          "thursday": {
-            "type": "boolean",
-            "description": "Runs on Thursdays",
-            "example": true
-          },
-          "friday": {
-            "type": "boolean",
-            "description": "Runs on Fridays",
-            "example": true
-          },
-          "saturday": {
-            "type": "boolean",
-            "description": "Runs on Saturdays",
-            "example": true
-          },
-          "sunday": {
-            "type": "boolean",
-            "description": "Runs on Sundays",
-            "example": true
-          }
-        },
-        "description": "Activity Schedule Rules"
       },
       "FindActiveActivityIdsResponse": {
         "required": [
