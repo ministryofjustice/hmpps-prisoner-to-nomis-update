@@ -16,15 +16,12 @@ generic-service:
     API_BASE_URL_INCENTIVES: https://incentives-api.hmpps.service.justice.gov.uk
     API_BASE_URL_ACTIVITIES: https://activities-api.prison.service.justice.gov.uk
     API_BASE_URL_APPOINTMENTS: https://activities-api.prison.service.justice.gov.uk
-    API_BASE_URL_SENTENCE_ADJUSTMENTS: https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk
+    API_BASE_URL_SENTENCE_ADJUSTMENTS: https://adjustments-api.hmpps.service.justice.gov.uk
     API_BASE_URL_ADJUDICATIONS: https://manage-adjudications-api.hmpps.service.justice.gov.uk
     API_BASE_URL_NON_ASSOCIATIONS: https://non-associations-api.hmpps.service.justice.gov.uk
     FEATURE_EVENT_RELEASE_DATE_ADJUSTMENTS_ADJUSTMENT_INSERTED: false
     FEATURE_EVENT_RELEASE_DATE_ADJUSTMENTS_ADJUSTMENT_UPDATED: false
     FEATURE_EVENT_RELEASE_DATE_ADJUSTMENTS_ADJUSTMENT_DELETED: false
-    FEATURE_EVENT_INCENTIVES_LEVEL_CHANGED: true
-    FEATURE_EVENT_INCENTIVES_LEVELS_REORDERED: true
-    FEATURE_EVENT_INCENTIVES_PRISON_LEVEL_CHANGED: true
     FEATURE_EVENT_ADJUDICATION_REPORT_CREATED: false
     FEATURE_EVENT_ADJUDICATION_DAMAGES_UPDATED: false
     FEATURE_EVENT_ADJUDICATION_EVIDENCE_UPDATED: false
