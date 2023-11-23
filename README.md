@@ -226,7 +226,7 @@ To check DPS you can run this endpoint:
 
 ```bash
 curl --location 'https://incentives-api.hmpps.service.justice.gov.uk/incentive-reviews/booking/{bookingId}}?with-details=true' \
---header 'Authorization: Bearer <token with valid token>'
+--header 'Authorization: Bearer <token with role ROLE_INCENTIVE_REVIEWS>'
 ```
 This will return what DPS believes is the current IEP, for instance the snippet
 ```json
@@ -265,6 +265,16 @@ It is likely to have the wrong level for one of these two reasons:
 The side effect of this event is a DPS IEP Review is created which is then written back to NOMIS
 
 - For duplicate NOMIS system generated IEP the only solution is for NOMIS Support Team to delete the rouge IEP records, that is the one or more records that was generated after the DPS one.
+
+Where the mismatch is due to out of order domain events this can be fixed by creating a new IEP record in NOMIS based on the correct incentive record
+This can happen if 2 incentives are created in quick succession in DPS but the first IEP takes a few minutes to process due to network issues.
+
+```bash
+
+  curl --location --request PUT 'https://https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk/incentives/prisoner/booking-id/{bookingId}/repair' \
+--header 'Authorization: Bearer <token with ROLE_NOMIS_INCENTIVES>' \
+--header 'Content-Type: application/json' 
+  ```
 
 ### Activities Reconciliation Report Alerts (allocations and attendances)
 

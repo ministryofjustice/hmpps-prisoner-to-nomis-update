@@ -23,14 +23,6 @@ class IncentivesService(
   private val objectMapper: ObjectMapper,
 ) : CreateMappingRetryable {
 
-  private fun IepDetail.toNomisIncentive(): CreateIncentiveDto = CreateIncentiveDto(
-    comments = comments,
-    iepDateTime = iepDate.atTime(iepTime.toLocalTime()),
-    userId = userId,
-    prisonId = agencyId,
-    iepLevel = iepCode,
-  )
-
   suspend fun createIncentive(event: IncentiveCreatedEvent) {
     synchronise {
       name = "incentive"
@@ -102,3 +94,11 @@ class IncentivesService(
   private inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
 }
+
+fun IepDetail.toNomisIncentive(): CreateIncentiveDto = CreateIncentiveDto(
+  comments = comments,
+  iepDateTime = iepDate.atTime(iepTime.toLocalTime()),
+  userId = userId,
+  prisonId = agencyId,
+  iepLevel = iepCode,
+)

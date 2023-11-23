@@ -144,12 +144,20 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubCurrentIncentiveGet(bookingId: Long, iepCode: String) {
+  fun stubCurrentIncentiveGet(bookingId: Long, iepCode: String = "STD", id: Long = 7654, prisonerNumber: String = "A1234AA") {
     stubFor(
       get("/incentive-reviews/booking/$bookingId?with-details=false").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody("""{"iepCode": "$iepCode"}""")
+          .withBody(
+            """
+              {
+                "iepCode": "$iepCode",
+                "id": $id,
+                "prisonerNumber": "$prisonerNumber"
+              }
+            """.trimMargin(),
+          )
           .withFixedDelay(500)
           .withStatus(200),
       ),

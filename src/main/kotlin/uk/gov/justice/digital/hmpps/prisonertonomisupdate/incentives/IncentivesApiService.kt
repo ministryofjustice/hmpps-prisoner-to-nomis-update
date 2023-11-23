@@ -87,4 +87,8 @@ data class PrisonIncentiveLevel(
   val privilegedVisitOrders: Int?,
 )
 
-data class IepSummary(val iepCode: String)
+data class IepSummary(
+  val id: Long,
+  val prisonerNumber: String,
+  val iepCode: String,
+)
