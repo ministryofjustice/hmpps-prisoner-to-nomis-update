@@ -61,7 +61,7 @@ internal class SentencingAdjustmentsApiServiceTest {
       val adjustment = sentencingAdjustmentsApiService.getAdjustment("1234")
 
       assertThat(adjustment.adjustmentDate).isEqualTo(LocalDate.parse("2022-01-01"))
-      assertThat(adjustment.adjustmentType).isEqualTo("RX")
+      assertThat(adjustment.adjustmentType.value).isEqualTo("RX")
       assertThat(adjustment.adjustmentDays).isEqualTo(1)
       assertThat(adjustment.adjustmentFromDate).isEqualTo(LocalDate.parse("2021-07-01"))
       assertThat(adjustment.sentenceSequence).isEqualTo(6)
@@ -79,7 +79,7 @@ internal class SentencingAdjustmentsApiServiceTest {
       val adjustment = sentencingAdjustmentsApiService.getAdjustment("1234")
 
       assertThat(adjustment.adjustmentDate).isEqualTo(LocalDate.parse("2022-01-01"))
-      assertThat(adjustment.adjustmentType).isEqualTo("ADA")
+      assertThat(adjustment.adjustmentType.value).isEqualTo("ADA")
       assertThat(adjustment.adjustmentDays).isEqualTo(1)
       assertThat(adjustment.adjustmentFromDate).isNull()
       assertThat(adjustment.sentenceSequence).isNull()
@@ -101,6 +101,48 @@ internal class SentencingAdjustmentsApiServiceTest {
 
       assertThrows<ServiceUnavailable> {
         sentencingAdjustmentsApiService.getAdjustment("1234")
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /adjustments?person={offenderNo}")
+  inner class GetAdjustments {
+    @BeforeEach
+    internal fun setUp() {
+      sentencingAdjustmentsApi.stubAdjustmentsGet()
+    }
+
+    @Test
+    fun `should call api with OAuth2 token`(): Unit = runTest {
+      sentencingAdjustmentsApiService.getAdjustments("A1234AA")
+
+      sentencingAdjustmentsApi.verify(
+        getRequestedFor(urlEqualTo("/adjustments?person=A1234AA"))
+          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will parse data for adjustments`(): Unit = runTest {
+      val adjustments = sentencingAdjustmentsApiService.getAdjustments("A1234AA")
+
+      assertThat(adjustments?.size).isEqualTo(11)
+    }
+
+    @Test
+    internal fun `when no person with no adjustments found null is returns`() = runTest {
+      sentencingAdjustmentsApi.stubAdjustmentsGetWithError(status = 404)
+
+      assertThat(sentencingAdjustmentsApiService.getAdjustments("A1234AA")).isNull()
+    }
+
+    @Test
+    internal fun `when any bad response is received an exception is thrown`() = runTest {
+      sentencingAdjustmentsApi.stubAdjustmentsGetWithError(status = 503)
+
+      assertThrows<ServiceUnavailable> {
+        sentencingAdjustmentsApiService.getAdjustments("A1234AA")
       }
     }
   }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.model.LegacyAdjustment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateSentencingAdjustmentRequest
@@ -63,12 +64,12 @@ class SentencingAdjustmentsService(
   private fun isDpsCreated(additionalInformation: AdditionalInformation) =
     additionalInformation.source != CreatingSystem.NOMIS.name
 
-  private suspend fun createTransformedAdjustment(adjustment: AdjustmentDetails) =
+  private suspend fun createTransformedAdjustment(adjustment: LegacyAdjustment) =
     CreateSentencingAdjustmentRequest(
-      adjustmentTypeCode = adjustment.adjustmentType,
+      adjustmentTypeCode = adjustment.adjustmentType.value,
       adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
       adjustmentFromDate = adjustment.adjustmentFromDate,
-      adjustmentDays = adjustment.adjustmentDays,
+      adjustmentDays = adjustment.adjustmentDays.toLong(),
       comment = adjustment.comment,
     ).run {
       if (adjustment.sentenceSequence == null) {
@@ -79,7 +80,7 @@ class SentencingAdjustmentsService(
       } else {
         nomisApiService.createSentenceAdjustment(
           adjustment.bookingId,
-          adjustment.sentenceSequence,
+          adjustment.sentenceSequence.toLong(),
           this,
         )
       }
@@ -108,12 +109,12 @@ class SentencingAdjustmentsService(
     }
   }
 
-  private suspend fun updateTransformedAdjustment(nomisAdjustmentId: Long, adjustment: AdjustmentDetails) =
+  private suspend fun updateTransformedAdjustment(nomisAdjustmentId: Long, adjustment: LegacyAdjustment) =
     UpdateSentencingAdjustmentRequest(
-      adjustmentTypeCode = adjustment.adjustmentType,
+      adjustmentTypeCode = adjustment.adjustmentType.value,
       adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
       adjustmentFromDate = adjustment.adjustmentFromDate,
-      adjustmentDays = adjustment.adjustmentDays,
+      adjustmentDays = adjustment.adjustmentDays.toLong(),
       comment = adjustment.comment,
     ).run {
       if (adjustment.sentenceSequence == null) {

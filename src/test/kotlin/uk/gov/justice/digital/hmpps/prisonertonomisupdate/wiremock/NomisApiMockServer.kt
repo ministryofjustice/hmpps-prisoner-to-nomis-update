@@ -1673,6 +1673,40 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetSentencingAdjustments(bookingId: Long) {
+    stubFor(
+      get(
+        urlPathEqualTo("/prisoners/booking-id/$bookingId/sentencing-adjustments"),
+      )
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(
+              """
+                {
+                 "dummy": "data"
+                }
+              """.trimIndent(),
+            ),
+        ),
+    )
+  }
+
+  fun stubGetSentencingAdjustmentsWithError(bookingId: Int, status: Int) {
+    stubFor(
+      get(
+        urlPathEqualTo("/prisoners/booking-id/$bookingId/sentencing-adjustments"),
+      )
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status)
+            .withBody("""{"message":"Error"}"""),
+        ),
+    )
+  }
+
   fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
   fun putCountFor(url: String) = this.findAll(WireMock.putRequestedFor(WireMock.urlEqualTo(url))).count()
 }
