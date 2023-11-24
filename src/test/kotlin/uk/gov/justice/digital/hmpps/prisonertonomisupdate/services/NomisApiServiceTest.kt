@@ -769,6 +769,30 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
+  inner class GetSentencingAdjustments {
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stubGetSentencingAdjustments(123456)
+
+      nomisApiService.getAdjustments(123456)
+
+      nomisApi.verify(
+        getRequestedFor(urlEqualTo("/prisoners/booking-id/123456/sentencing-adjustments"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should throw exception on any error`() = runTest {
+      nomisApi.stubGetSentencingAdjustmentsWithError(123456, status = 404)
+
+      assertThrows<NotFound> {
+        nomisApiService.getAdjustments(123456)
+      }
+    }
+  }
+
+  @Nested
   inner class CreateSentenceAdjustment {
 
     @Test

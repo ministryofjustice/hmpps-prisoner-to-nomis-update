@@ -1,0 +1,1090 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Adjustments API",
+    "description": "API for adjustments CRUD operations",
+    "contact": {
+      "name": "HMPPS Digital Studio",
+      "email": "feedback@digital.justice.gov.uk"
+    },
+    "version": "2023-11-23.1333.a1968ba"
+  },
+  "servers": [
+    {
+      "url": "https://adjustments-api-dev.hmpps.service.justice.gov.uk",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "adjustment-controller",
+      "description": "CRUD operations for adjustments."
+    },
+    {
+      "name": "legacy-controller",
+      "description": "CRUD operations for syncing data from NOMIS into adjustments api database."
+    }
+  ],
+  "paths": {
+    "/queue-admin/retry-dlq/{dlqName}": {
+      "put": {
+        "tags": [
+          "hmpps-queue-resource"
+        ],
+        "operationId": "retryDlq",
+        "parameters": [
+          {
+            "name": "dlqName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetryDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/retry-all-dlqs": {
+      "put": {
+        "tags": [
+          "hmpps-queue-resource"
+        ],
+        "operationId": "retryAllDlqs",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RetryDlqResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/purge-queue/{queueName}": {
+      "put": {
+        "tags": [
+          "hmpps-queue-resource"
+        ],
+        "operationId": "purgeQueue",
+        "parameters": [
+          {
+            "name": "queueName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurgeQueueResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/legacy/adjustments/{adjustmentId}": {
+      "get": {
+        "tags": [
+          "legacy-controller"
+        ],
+        "summary": "Get an adjustments",
+        "description": "Get details of an adjustment in the NOMIS system format.",
+        "operationId": "get",
+        "parameters": [
+          {
+            "name": "adjustmentId",
+            "in": "path",
+            "description": "The adjustment UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegacyAdjustment"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Adjustment found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegacyAdjustment"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Adjustment not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegacyAdjustment"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "legacy-controller"
+        ],
+        "summary": "Update an adjustments",
+        "description": "Synchronise an update from NOMIS into adjustments API.",
+        "operationId": "update",
+        "parameters": [
+          {
+            "name": "adjustmentId",
+            "in": "path",
+            "description": "The adjustment UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/vnd.nomis-offence+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LegacyAdjustment"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token"
+          },
+          "200": {
+            "description": "Adjustment update"
+          },
+          "404": {
+            "description": "Adjustment not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "legacy-controller"
+        ],
+        "summary": "Delete an adjustments",
+        "description": "Synchronise a deletion from NOMIS into adjustments API.",
+        "operationId": "delete",
+        "parameters": [
+          {
+            "name": "adjustmentId",
+            "in": "path",
+            "description": "The adjustment UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token"
+          },
+          "200": {
+            "description": "Adjustment deleted"
+          },
+          "404": {
+            "description": "Adjustment not found"
+          }
+        }
+      }
+    },
+    "/adjustments/{adjustmentId}": {
+      "get": {
+        "tags": [
+          "adjustment-controller"
+        ],
+        "summary": "Get an adjustments",
+        "description": "Get details of an adjustment",
+        "operationId": "get_1",
+        "parameters": [
+          {
+            "name": "adjustmentId",
+            "in": "path",
+            "description": "The adjustment UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdjustmentDto"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Adjustment found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdjustmentDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Adjustment not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdjustmentDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "adjustment-controller"
+        ],
+        "summary": "Update an adjustments",
+        "description": "Update an adjustment.",
+        "operationId": "update_1",
+        "parameters": [
+          {
+            "name": "adjustmentId",
+            "in": "path",
+            "description": "The adjustment UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustmentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token"
+          },
+          "200": {
+            "description": "Adjustment update"
+          },
+          "404": {
+            "description": "Adjustment not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "adjustment-controller"
+        ],
+        "summary": "Delete an adjustments",
+        "description": "Delete an adjustment.",
+        "operationId": "delete_1",
+        "parameters": [
+          {
+            "name": "adjustmentId",
+            "in": "path",
+            "description": "The adjustment UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token"
+          },
+          "200": {
+            "description": "Adjustment deleted"
+          },
+          "404": {
+            "description": "Adjustment not found"
+          }
+        }
+      }
+    },
+    "/legacy/adjustments": {
+      "post": {
+        "tags": [
+          "legacy-controller"
+        ],
+        "summary": "Create an adjustments",
+        "description": "Synchronise a creation from NOMIS into adjustments API.",
+        "operationId": "create",
+        "requestBody": {
+          "content": {
+            "application/vnd.nomis-offence+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LegacyAdjustment"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegacyAdjustmentCreatedResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Adjustment created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegacyAdjustmentCreatedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/legacy/adjustments/migration": {
+      "post": {
+        "tags": [
+          "legacy-controller"
+        ],
+        "summary": "Create an adjustment from the migration job",
+        "description": "Synchronise a creation from NOMIS into adjustments API. This endpoint is used for initial migration of data from NOMIS without raising any events.",
+        "operationId": "migration",
+        "requestBody": {
+          "content": {
+            "application/vnd.nomis-offence+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LegacyAdjustment"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegacyAdjustmentCreatedResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Adjustment created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegacyAdjustmentCreatedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/adjustments": {
+      "get": {
+        "tags": [
+          "adjustment-controller"
+        ],
+        "summary": "Get current adjustments by person",
+        "description": "Get current adjustments for a given person.",
+        "operationId": "findByPerson",
+        "parameters": [
+          {
+            "name": "person",
+            "in": "query",
+            "description": "The noms ID of the person",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdjustmentDto"
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Adjustment found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdjustmentDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Adjustment not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdjustmentDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "adjustment-controller"
+        ],
+        "summary": "Create an adjustments",
+        "description": "Create an adjustment.",
+        "operationId": "create_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustmentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Adjustment created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/adjustments/{adjustmentId}/effective-days": {
+      "post": {
+        "tags": [
+          "adjustment-controller"
+        ],
+        "summary": "Update the effective calculable days for and adjustment",
+        "description": "Update an adjustment's effective days.",
+        "operationId": "updateEffectiveDays",
+        "parameters": [
+          {
+            "name": "adjustmentId",
+            "in": "path",
+            "description": "The adjustment UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustmentEffectiveDaysDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token"
+          },
+          "200": {
+            "description": "Adjustment update"
+          },
+          "404": {
+            "description": "Adjustment not found"
+          }
+        }
+      }
+    },
+    "/adjustments/validate": {
+      "post": {
+        "tags": [
+          "adjustment-controller"
+        ],
+        "summary": "Validate an adjustments",
+        "description": "Validate an adjustment.",
+        "operationId": "validate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustmentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ValidationMessage"
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Adjustment validation returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ValidationMessage"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/get-dlq-messages/{dlqName}": {
+      "get": {
+        "tags": [
+          "hmpps-queue-resource"
+        ],
+        "operationId": "getDlqMessages",
+        "parameters": [
+          {
+            "name": "dlqName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "maxMessages",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DlqMessage": {
+        "required": [
+          "body",
+          "messageId"
+        ],
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            }
+          },
+          "messageId": {
+            "type": "string"
+          }
+        }
+      },
+      "RetryDlqResult": {
+        "required": [
+          "messages",
+          "messagesFoundCount"
+        ],
+        "type": "object",
+        "properties": {
+          "messagesFoundCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DlqMessage"
+            }
+          }
+        }
+      },
+      "PurgeQueueResult": {
+        "required": [
+          "messagesFoundCount"
+        ],
+        "type": "object",
+        "properties": {
+          "messagesFoundCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "LegacyAdjustment": {
+        "required": [
+          "active",
+          "adjustmentDays",
+          "adjustmentType",
+          "bookingId",
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "The NOMIS booking ID of the adjustment",
+            "format": "int64"
+          },
+          "sentenceSequence": {
+            "type": "integer",
+            "description": "The NOMIS sentence sequence of the adjustment",
+            "format": "int32"
+          },
+          "offenderNo": {
+            "type": "string",
+            "description": "The NOMIS offender number aka nomsId, prisonerId of the person this adjustment applies to"
+          },
+          "adjustmentType": {
+            "type": "string",
+            "description": "The NOMIS adjustment type",
+            "enum": [
+              "ADA",
+              "RADA",
+              "UAL",
+              "LAL",
+              "SREM",
+              "RSR",
+              "RST",
+              "RX",
+              "S240A",
+              "UR"
+            ]
+          },
+          "adjustmentDate": {
+            "type": "string",
+            "description": "The NOMIS date of adjustment",
+            "format": "date"
+          },
+          "adjustmentFromDate": {
+            "type": "string",
+            "description": "The NOMIS from date of adjustment",
+            "format": "date"
+          },
+          "adjustmentDays": {
+            "type": "integer",
+            "description": "The NOMIS adjustment days",
+            "format": "int32"
+          },
+          "comment": {
+            "type": "string",
+            "description": "The NOMIS comment for this adjustment"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "The NOMIS active or inactive flag"
+          }
+        },
+        "description": "An adjustment structured for synchronising with the NOMIS system"
+      },
+      "AdditionalDaysAwardedDto": {
+        "required": [
+          "adjudicationId",
+          "prospective"
+        ],
+        "type": "object",
+        "properties": {
+          "adjudicationId": {
+            "type": "array",
+            "description": "The id of the adjudication that resulted in the ADA",
+            "items": {
+              "type": "integer",
+              "description": "The id of the adjudication that resulted in the ADA",
+              "format": "int64"
+            }
+          },
+          "prospective": {
+            "type": "boolean"
+          }
+        },
+        "description": "The details of an additional days awarded (ADA) adjustment"
+      },
+      "AdjustmentDto": {
+        "required": [
+          "adjustmentType",
+          "bookingId",
+          "person"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the adjustment",
+            "format": "uuid"
+          },
+          "bookingId": {
+            "type": "integer",
+            "description": "The NOMIS booking ID of the adjustment",
+            "format": "int64"
+          },
+          "person": {
+            "type": "string",
+            "description": "The NOMIS ID of the person this adjustment applies to"
+          },
+          "adjustmentType": {
+            "type": "string",
+            "description": "The type of adjustment",
+            "enum": [
+              "REMAND",
+              "TAGGED_BAIL",
+              "UNLAWFULLY_AT_LARGE",
+              "LAWFULLY_AT_LARGE",
+              "ADDITIONAL_DAYS_AWARDED",
+              "RESTORATION_OF_ADDITIONAL_DAYS_AWARDED",
+              "SPECIAL_REMISSION",
+              "UNUSED_DEDUCTIONS"
+            ]
+          },
+          "toDate": {
+            "type": "string",
+            "description": "The end date of the adjustment",
+            "format": "date"
+          },
+          "fromDate": {
+            "type": "string",
+            "description": "The start date of the adjustment",
+            "format": "date"
+          },
+          "days": {
+            "type": "integer",
+            "description": "The number of adjustment days",
+            "format": "int32"
+          },
+          "remand": {
+            "$ref": "#/components/schemas/RemandDto"
+          },
+          "additionalDaysAwarded": {
+            "$ref": "#/components/schemas/AdditionalDaysAwardedDto"
+          },
+          "unlawfullyAtLarge": {
+            "$ref": "#/components/schemas/UnlawfullyAtLargeDto"
+          },
+          "prisonId": {
+            "type": "string",
+            "description": "The prison where the prisoner was located at the time the adjustment was created (a 3 character code identifying the prison)",
+            "readOnly": true,
+            "example": "LDS"
+          },
+          "prisonName": {
+            "type": "string",
+            "description": "The name name of the prison where the prisoner was located at the time the adjustment was created ",
+            "readOnly": true,
+            "example": "Leeds"
+          },
+          "lastUpdatedBy": {
+            "type": "string",
+            "description": "The person last updating this adjustment",
+            "readOnly": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The status of this adjustment",
+            "readOnly": true,
+            "enum": [
+              "ACTIVE",
+              "INACTIVE",
+              "DELETED"
+            ]
+          },
+          "lastUpdatedDate": {
+            "type": "string",
+            "description": "The date and time this adjustment was last updated",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "effectiveDays": {
+            "type": "integer",
+            "description": "The number of days effective in a calculation. (for example remand minus any unused deductions)",
+            "format": "int32",
+            "readOnly": true
+          },
+          "sentenceSequence": {
+            "type": "integer",
+            "description": "The NOMIS sentence sequence of the adjustment",
+            "format": "int32"
+          },
+          "daysBetween": {
+            "type": "integer",
+            "description": "The days between the from and two date",
+            "format": "int32",
+            "readOnly": true
+          }
+        },
+        "description": "The adjustment and its identifier"
+      },
+      "RemandDto": {
+        "required": [
+          "chargeId"
+        ],
+        "type": "object",
+        "properties": {
+          "chargeId": {
+            "type": "array",
+            "description": "The id of the charges this remand applies to",
+            "items": {
+              "type": "integer",
+              "description": "The id of the charges this remand applies to",
+              "format": "int64"
+            }
+          }
+        },
+        "description": "The details of remand adjustment"
+      },
+      "UnlawfullyAtLargeDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of UAL",
+            "enum": [
+              "RECALL",
+              "ESCAPE",
+              "SENTENCED_IN_ABSENCE",
+              "RELEASE_IN_ERROR"
+            ]
+          }
+        },
+        "description": "The details of a UAL adjustment"
+      },
+      "LegacyAdjustmentCreatedResponse": {
+        "required": [
+          "adjustmentId"
+        ],
+        "type": "object",
+        "properties": {
+          "adjustmentId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateResponseDto": {
+        "required": [
+          "adjustmentId"
+        ],
+        "type": "object",
+        "properties": {
+          "adjustmentId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "AdjustmentEffectiveDaysDto": {
+        "required": [
+          "effectiveDays",
+          "id",
+          "person"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the adjustment",
+            "format": "uuid"
+          },
+          "effectiveDays": {
+            "type": "integer",
+            "description": "The number of days effective in a calculation. (for example remand minus any unused deductions)",
+            "format": "int32"
+          },
+          "person": {
+            "type": "string",
+            "description": "The NOMIS ID of the person this adjustment applies to"
+          }
+        },
+        "description": "Details of the adjustment and the number of effective days within a calculation."
+      },
+      "ValidationMessage": {
+        "required": [
+          "arguments",
+          "code",
+          "message",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Validation code details",
+            "enum": [
+              "RADA_FROM_DATE_NOT_NULL",
+              "RADA_REDUCES_BY_MORE_THAN_HALF",
+              "MORE_RADAS_THAN_ADAS",
+              "RADA_DATE_CANNOT_BE_FUTURE",
+              "RADA_DATA_MUST_BE_AFTER_SENTENCE_DATE",
+              "RADA_DAYS_MUST_BE_POSTIVE",
+              "UAL_FROM_DATE_NOT_NULL",
+              "UAL_TO_DATE_NOT_NULL",
+              "UAL_FROM_DATE_AFTER_TO_DATE",
+              "UAL_TYPE_NOT_NULL",
+              "UAL_FIRST_DATE_CANNOT_BE_FUTURE",
+              "UAL_LAST_DATE_CANNOT_BE_FUTURE",
+              "UAL_DATE_MUST_BE_AFTER_SENTENCE_DATE"
+            ]
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "message": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "VALIDATION",
+              "WARNING"
+            ]
+          }
+        },
+        "description": "Validation message details"
+      },
+      "GetDlqResult": {
+        "required": [
+          "messages",
+          "messagesFoundCount",
+          "messagesReturnedCount"
+        ],
+        "type": "object",
+        "properties": {
+          "messagesFoundCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "messagesReturnedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DlqMessage"
+            }
+          }
+        }
+      }
+    }
+  }
+}

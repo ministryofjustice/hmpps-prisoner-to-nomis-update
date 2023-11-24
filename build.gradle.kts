@@ -51,18 +51,39 @@ kotlin {
 
 tasks {
   withType<KotlinCompile> {
-    dependsOn("buildActivityApiModel", "buildNomisSyncApiModel", "buildAdjudicationApiModel", "buildNonAssociationApiModel", "buildMappingServiceApiModel")
+    dependsOn(
+      "buildActivityApiModel",
+      "buildNomisSyncApiModel",
+      "buildAdjudicationApiModel",
+      "buildNonAssociationApiModel",
+      "buildMappingServiceApiModel",
+      "buildSentencingAdjustmentsApiModel"
+    )
     kotlinOptions {
       jvmTarget = "21"
     }
   }
   withType<KtLintCheckTask> {
     // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
-    mustRunAfter("buildActivityApiModel", "buildNomisSyncApiModel", "buildAdjudicationApiModel", "buildNonAssociationApiModel", "buildMappingServiceApiModel")
+    mustRunAfter(
+      "buildActivityApiModel",
+      "buildNomisSyncApiModel",
+      "buildAdjudicationApiModel",
+      "buildNonAssociationApiModel",
+      "buildMappingServiceApiModel",
+      "buildSentencingAdjustmentsApiModel"
+    )
   }
   withType<KtLintFormatTask> {
     // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
-    mustRunAfter("buildActivityApiModel", "buildNomisSyncApiModel", "buildAdjudicationApiModel", "buildNonAssociationApiModel", "buildMappingServiceApiModel")
+    mustRunAfter(
+      "buildActivityApiModel",
+      "buildNomisSyncApiModel",
+      "buildAdjudicationApiModel",
+      "buildNonAssociationApiModel",
+      "buildMappingServiceApiModel",
+      "buildSentencingAdjustmentsApiModel"
+    )
   }
 }
 
@@ -134,7 +155,18 @@ tasks.register("buildMappingServiceApiModel", GenerateTask::class) {
   globalProperties.set(mapOf("models" to ""))
 }
 
-val generatedProjectDirs = listOf("activities", "adjudications", "nonassociations", "nomissync", "mappings")
+tasks.register("buildSentencingAdjustmentsApiModel", GenerateTask::class) {
+  generatorName.set("kotlin")
+  skipValidateSpec.set(true)
+  inputSpec.set("openapi-specs/sentencing-adjustments-api-docs.json")
+  outputDir.set("$buildDirectory/generated/sentencingadjustments")
+  modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.model")
+  apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.api")
+  configOptions.set(configValues)
+  globalProperties.set(mapOf("models" to ""))
+}
+
+val generatedProjectDirs = listOf("activities", "adjudications", "nonassociations", "nomissync", "mappings", "sentencingadjustments")
 
 kotlin {
   generatedProjectDirs.forEach { generatedProject ->

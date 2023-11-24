@@ -284,6 +284,12 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .awaitBody()
 
+  suspend fun getAdjustments(bookingId: Long): SentencingAdjustments =
+    webClient.get()
+      .uri("/prisoners/booking-id/{bookingId}/sentencing-adjustments", bookingId)
+      .retrieve()
+      .awaitBody()
+
   // ////////// INCENTIVE LEVELS //////////////
 
   suspend fun getGlobalIncentiveLevel(incentiveLevel: String): ReferenceCode? =
@@ -710,6 +716,10 @@ data class UpdateSentencingAdjustmentRequest(
 )
 
 data class CreateSentencingAdjustmentResponse(val id: Long)
+
+data class SentencingAdjustments(
+  val dummy: String = "dummy",
+)
 
 data class CreateVisitResponseDto(
   val visitId: String,
