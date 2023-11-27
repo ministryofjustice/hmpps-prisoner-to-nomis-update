@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
@@ -9,14 +11,18 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.springframework.test.context.junit.jupiter.SpringExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.model.AdjustmentDto
 
 class SentencingAdjustmentsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
   companion object {
     @JvmField
     val sentencingAdjustmentsApi = SentencingAdjustmentsApiMockServer()
+    lateinit var objectMapper: ObjectMapper
   }
 
   override fun beforeAll(context: ExtensionContext) {
+    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonObjectMapper") as ObjectMapper)
     sentencingAdjustmentsApi.start()
   }
 
@@ -284,12 +290,12 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubAdjustmentsGet(adjustments: List<String>) {
+  fun stubAdjustmentsGet(adjustments: List<AdjustmentDto>) {
     stubFor(
       get(urlPathMatching("/adjustments")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(adjustments.joinToString { it })
+          .withBody(adjustments)
           .withStatus(200),
       ),
     )
@@ -414,5 +420,10 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
         ).willSetStateTo(Scenario.STARTED),
     )
+  }
+
+  fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
+    this.withBody(NomisApiExtension.objectMapper.writeValueAsString(body))
+    return this
   }
 }
