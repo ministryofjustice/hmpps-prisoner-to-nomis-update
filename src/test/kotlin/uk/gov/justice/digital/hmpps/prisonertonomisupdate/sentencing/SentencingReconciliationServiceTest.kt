@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
@@ -37,7 +38,13 @@ internal class SentencingReconciliationServiceTest {
     @BeforeEach
     fun beforeEach() {
       sentencingAdjustmentsApi.stubAdjustmentsGet(emptyList())
-      NomisApiExtension.nomisApi.stubGetSentencingAdjustments(123456)
+      NomisApiExtension.nomisApi.stubGetSentencingAdjustments(
+        bookingId = 123456,
+        sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
+          keyDateAdjustments = emptyList(),
+          sentenceAdjustments = emptyList(),
+        ),
+      )
     }
 
     @Test

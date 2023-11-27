@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAss
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UnquashHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
@@ -284,7 +285,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .awaitBody()
 
-  suspend fun getAdjustments(bookingId: Long): SentencingAdjustments =
+  suspend fun getAdjustments(bookingId: Long): SentencingAdjustmentsResponse =
     webClient.get()
       .uri("/prisoners/booking-id/{bookingId}/sentencing-adjustments", bookingId)
       .retrieve()
@@ -716,10 +717,6 @@ data class UpdateSentencingAdjustmentRequest(
 )
 
 data class CreateSentencingAdjustmentResponse(val id: Long)
-
-data class SentencingAdjustments(
-  val dummy: String = "dummy",
-)
 
 data class CreateVisitResponseDto(
   val visitId: String,
