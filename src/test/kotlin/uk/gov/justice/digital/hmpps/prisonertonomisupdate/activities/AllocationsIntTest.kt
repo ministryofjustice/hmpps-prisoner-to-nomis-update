@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
+import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -46,6 +47,33 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("payBandCode", equalTo("7")))
           .withRequestBody(matchingJsonPath("startDate", equalTo("2023-01-12")))
           .withRequestBody(matchingJsonPath("programStatusCode", equalTo("ALLOC"))),
+      )
+    }
+
+    @Test
+    fun
+    `will consume an allocation message with a missing pay band`() {
+      ActivitiesApiExtension.activitiesApi.stubGetAllocation(ALLOCATION_ID, buildApiAllocationDtoWithMissingPayBand())
+      MappingExtension.mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      NomisApiExtension.nomisApi.stubAllocationUpsert(NOMIS_CRS_ACTY_ID)
+
+      awsSnsClient.publish(
+        PublishRequest.builder().topicArn(topicArn)
+          .message(allocationMessagePayload("activities.prisoner.allocated", ACTIVITY_SCHEDULE_ID, ALLOCATION_ID))
+          .messageAttributes(
+            mapOf(
+              "eventType" to MessageAttributeValue.builder().dataType("String")
+                .stringValue("activities.prisoner.allocated").build(),
+            ),
+          ).build(),
+      ).get()
+
+      await untilCallTo { ActivitiesApiExtension.activitiesApi.getCountFor("/allocations/id/$ALLOCATION_ID") } matches { it == 1 }
+      await untilCallTo { NomisApiExtension.nomisApi.putCountFor("/activities/$NOMIS_CRS_ACTY_ID/allocation") } matches { it == 1 }
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/allocation"))
+          .withRequestBody(matchingJsonPath("bookingId", equalTo("$NOMIS_BOOKING_ID")))
+          .withRequestBody(matchingJsonPath("payBandCode", absent())),
       )
     }
   }
@@ -162,6 +190,23 @@ fun buildApiAllocationDtoJsonResponse(id: Long = ALLOCATION_ID): String {
       "nomisPayBand": 7,
       "prisonCode": "MDI"
     },
+    "allocatedBy": "SOME_USER",
+    "allocatedTime": "2023-01-10T14:46:05.849Z",
+    "scheduleDescription" : "description",
+    "activitySummary" : "summary",
+    "status": "ACTIVE"
+  }
+  """.trimIndent()
+}
+
+fun buildApiAllocationDtoWithMissingPayBand(id: Long = ALLOCATION_ID): String {
+  return """
+  {
+    "id": $id,
+    "prisonerNumber": "A1234AA",
+    "bookingId": $NOMIS_BOOKING_ID,
+    "scheduleId": $ACTIVITY_SCHEDULE_ID,
+    "startDate": "2023-01-12",
     "allocatedBy": "SOME_USER",
     "allocatedTime": "2023-01-10T14:46:05.849Z",
     "scheduleDescription" : "description",
