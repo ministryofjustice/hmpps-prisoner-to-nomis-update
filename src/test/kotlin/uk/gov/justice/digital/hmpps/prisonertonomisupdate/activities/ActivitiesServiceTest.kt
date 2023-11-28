@@ -429,6 +429,7 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
     capacity = 10,
     onWing = false,
     offWing = false,
+    paid = true,
   ),
   slots = emptyList(),
   startDate = LocalDate.now(),
@@ -480,4 +481,5 @@ private fun newActivity(): Activity = Activity(
   ),
   onWing = false,
   offWing = false,
+  paid = true,
 )

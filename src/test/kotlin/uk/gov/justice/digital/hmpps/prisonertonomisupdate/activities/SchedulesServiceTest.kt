@@ -252,6 +252,7 @@ private fun newScheduledInstance() = ActivityScheduleInstance(
       capacity = 10,
       onWing = false,
       offWing = false,
+      paid = true,
     ),
   ),
 )
