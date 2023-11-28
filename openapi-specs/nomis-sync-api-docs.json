@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-11-20.5630.1eec413"
+    "version": "2023-11-27.5680.4f13ea0"
   },
   "servers": [
     {
@@ -4438,6 +4438,62 @@
         }
       }
     },
+    "/prisoners/booking-id/{bookingId}/sentencing-adjustments": {
+      "get": {
+        "tags": [
+          "sentencing-adjustment-resource"
+        ],
+        "summary": "get active sentence and key date adjustments for a booking",
+        "description": "Retrieves all the current active sentence and key date adjustments (by booking) for a prisoner. Requires NOMIS_SENTENCING.",
+        "operationId": "getActiveAdjustments",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "NOMIS booking Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS booking Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the list of adjustments details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentencingAdjustmentsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/booking-id/{bookingId}/awards/{sanctionSequence}": {
       "get": {
         "tags": [
@@ -7452,7 +7508,6 @@
       "UpsertAllocationRequest": {
         "required": [
           "bookingId",
-          "payBandCode",
           "programStatusCode",
           "startDate"
         ],
@@ -9144,12 +9199,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -9523,12 +9578,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -9550,6 +9605,87 @@
             "type": "string"
           }
         }
+      },
+      "KeyDateAdjustmentResponse": {
+        "required": [
+          "active",
+          "adjustmentDays",
+          "adjustmentType",
+          "bookingId",
+          "id",
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The key date adjustment id",
+            "format": "int64"
+          },
+          "bookingId": {
+            "type": "integer",
+            "description": "The booking id",
+            "format": "int64"
+          },
+          "offenderNo": {
+            "type": "string",
+            "description": "The offender number, aka nomsId, prisonerId"
+          },
+          "adjustmentType": {
+            "$ref": "#/components/schemas/SentencingAdjustmentType"
+          },
+          "adjustmentDate": {
+            "type": "string",
+            "description": "Date adjustment is applied",
+            "format": "date"
+          },
+          "adjustmentFromDate": {
+            "type": "string",
+            "description": "Start of the period which contributed to the adjustment",
+            "format": "date"
+          },
+          "adjustmentToDate": {
+            "type": "string",
+            "description": "End of the period which contributed to the adjustment",
+            "format": "date"
+          },
+          "adjustmentDays": {
+            "type": "integer",
+            "description": "Number of days for the adjustment",
+            "format": "int64"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Comment"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Flag to indicate if the adjustment is being applied"
+          }
+        },
+        "description": "Key date adjustment"
+      },
+      "SentencingAdjustmentsResponse": {
+        "required": [
+          "keyDateAdjustments",
+          "sentenceAdjustments"
+        ],
+        "type": "object",
+        "properties": {
+          "keyDateAdjustments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KeyDateAdjustmentResponse"
+            }
+          },
+          "sentenceAdjustments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SentenceAdjustmentResponse"
+            }
+          }
+        },
+        "description": "Sentencing adjustment"
       },
       "NonAssociationResponse": {
         "required": [
@@ -9679,76 +9815,17 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
           }
         }
-      },
-      "KeyDateAdjustmentResponse": {
-        "required": [
-          "active",
-          "adjustmentDays",
-          "adjustmentType",
-          "bookingId",
-          "id",
-          "offenderNo"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "The key date adjustment id",
-            "format": "int64"
-          },
-          "bookingId": {
-            "type": "integer",
-            "description": "The booking id",
-            "format": "int64"
-          },
-          "offenderNo": {
-            "type": "string",
-            "description": "The offender number, aka nomsId, prisonerId"
-          },
-          "adjustmentType": {
-            "$ref": "#/components/schemas/SentencingAdjustmentType"
-          },
-          "adjustmentDate": {
-            "type": "string",
-            "description": "Date adjustment is applied",
-            "format": "date"
-          },
-          "adjustmentFromDate": {
-            "type": "string",
-            "description": "Start of the period which contributed to the adjustment",
-            "format": "date"
-          },
-          "adjustmentToDate": {
-            "type": "string",
-            "description": "End of the period which contributed to the adjustment",
-            "format": "date"
-          },
-          "adjustmentDays": {
-            "type": "integer",
-            "description": "Number of days for the adjustment",
-            "format": "int64"
-          },
-          "comment": {
-            "type": "string",
-            "description": "Comment"
-          },
-          "active": {
-            "type": "boolean",
-            "description": "Flag to indicate if the adjustment is being applied"
-          }
-        },
-        "description": "Key date adjustment"
       },
       "IncentiveIdResponse": {
         "required": [
@@ -9804,12 +9881,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -9998,12 +10075,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -10235,12 +10312,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -10300,12 +10377,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -10371,12 +10448,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -10639,12 +10716,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"

@@ -59,7 +59,7 @@ class AllocationService(
   private fun toUpsertAllocationRequest(allocation: Allocation) =
     UpsertAllocationRequest(
       bookingId = allocation.bookingId,
-      payBandCode = allocation.prisonPayBand.nomisPayBand.toString(),
+      payBandCode = allocation.prisonPayBand?.nomisPayBand?.toString(),
       startDate = allocation.startDate,
       endDate = allocation.endDate,
       endReason = getEndReason(allocation.status),

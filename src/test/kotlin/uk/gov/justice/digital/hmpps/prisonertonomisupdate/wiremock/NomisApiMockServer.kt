@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
@@ -15,6 +17,8 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
+import org.springframework.test.context.junit.jupiter.SpringExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
 import java.time.LocalDate
 
@@ -22,9 +26,11 @@ class NomisApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallbac
   companion object {
     @JvmField
     val nomisApi = NomisApiMockServer()
+    lateinit var objectMapper: ObjectMapper
   }
 
   override fun beforeAll(context: ExtensionContext) {
+    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonObjectMapper") as ObjectMapper)
     nomisApi.start()
   }
 
@@ -1673,8 +1679,41 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetSentencingAdjustments(bookingId: Long, sentencingAdjustmentsResponse: SentencingAdjustmentsResponse = SentencingAdjustmentsResponse(emptyList(), emptyList())) {
+    stubFor(
+      get(
+        urlPathEqualTo("/prisoners/booking-id/$bookingId/sentencing-adjustments"),
+      )
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(sentencingAdjustmentsResponse),
+        ),
+    )
+  }
+
+  fun stubGetSentencingAdjustmentsWithError(bookingId: Int, status: Int) {
+    stubFor(
+      get(
+        urlPathEqualTo("/prisoners/booking-id/$bookingId/sentencing-adjustments"),
+      )
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status)
+            .withBody("""{"message":"Error"}"""),
+        ),
+    )
+  }
+
   fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
   fun putCountFor(url: String) = this.findAll(WireMock.putRequestedFor(WireMock.urlEqualTo(url))).count()
+
+  fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
+    this.withBody(NomisApiExtension.objectMapper.writeValueAsString(body))
+    return this
+  }
 }
 
 private const val CREATE_VISIT_RESPONSE = """

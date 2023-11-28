@@ -7245,7 +7245,6 @@
           "bookingId",
           "id",
           "isUnemployment",
-          "prisonPayBand",
           "prisonerNumber",
           "scheduleDescription",
           "scheduleId",
