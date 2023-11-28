@@ -83,6 +83,26 @@ class ActivityResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `will synchronise an activity with missing pay rates`() = runTest {
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
+      activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse(payRates = """"pay": [],"""))
+      mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
+      mappingServer.stubCreateActivity()
+      nomisApi.stubActivityCreate(buildNomisActivityResponse())
+
+      webTestClient.post().uri("/activities/$ACTIVITY_SCHEDULE_ID")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .exchange()
+        .expectStatus().isCreated
+
+      nomisApi.verify(
+        postRequestedFor(urlEqualTo("/activities"))
+          .withRequestBody(matchingJsonPath("code", equalTo("$ACTIVITY_SCHEDULE_ID")))
+          .withRequestBody(matchingJsonPath("payRates.size()", equalTo("0"))),
+      )
+    }
+
+    @Test
     fun `will return error if anything fails`() = runTest {
       activitiesApi.stubGetScheduleWithError(ACTIVITY_SCHEDULE_ID)
 
@@ -152,6 +172,25 @@ class ActivityResourceIntTest : IntegrationTestBase() {
         eq("activity-amend-success"),
         check { assertThat(it).containsEntry("dpsActivityScheduleId", ACTIVITY_SCHEDULE_ID.toString()) },
         isNull(),
+      )
+    }
+
+    @Test
+    fun `will synchronise an activity update with missing pay rates`() = runTest {
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
+      activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse(payRates = """"pay": [],"""))
+      mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      nomisApi.stubActivityUpdate(NOMIS_CRS_ACTY_ID, buildNomisActivityResponse())
+      mappingServer.stubUpdateActivity()
+
+      webTestClient.put().uri("/activities/$ACTIVITY_SCHEDULE_ID")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .exchange()
+        .expectStatus().isOk
+
+      nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID"))
+          .withRequestBody(matchingJsonPath("payRates.size()", equalTo("0"))),
       )
     }
 
