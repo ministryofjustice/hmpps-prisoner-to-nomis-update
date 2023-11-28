@@ -438,7 +438,29 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
   }
 }
 
-fun buildGetActivityResponse(id: Long = ACTIVITY_ID): String =
+fun buildGetActivityResponse(
+  id: Long = ACTIVITY_ID,
+  payRates: String = """
+    "pay": [
+      {
+        "id": 3579,
+        "incentiveLevel": "Basic",
+        "incentiveNomisCode": "BAS",
+        "prisonPayBand": {
+           "id": 987,
+           "displaySequence": 1,
+           "alias": "Low",
+           "description": "Pay band 1",
+           "nomisPayBand": 1,
+           "prisonCode": "PVI"
+        },
+        "rate": 150,
+        "pieceRate": 250,
+        "pieceRateItems": 10
+      }
+    ],
+  """.trimIndent(),
+): String =
   """
     {
   "id": $id,
@@ -459,24 +481,7 @@ fun buildGetActivityResponse(id: Long = ACTIVITY_ID): String =
   "eligibilityRules": [],
   "schedules": [],
   "waitingList": [],
-  "pay": [
-    {
-      "id": 3579,
-      "incentiveLevel": "Basic",
-      "incentiveNomisCode": "BAS",
-      "prisonPayBand": {
-         "id": 987,
-         "displaySequence": 1,
-         "alias": "Low",
-         "description": "Pay band 1",
-         "nomisPayBand": 1,
-         "prisonCode": "PVI"
-      },
-      "rate": 150,
-      "pieceRate": 250,
-      "pieceRateItems": 10
-    }
-  ],
+  $payRates
   "startDate": "2023-01-12",
   "endDate": "2023-01-13",
   "riskLevel": "High",
