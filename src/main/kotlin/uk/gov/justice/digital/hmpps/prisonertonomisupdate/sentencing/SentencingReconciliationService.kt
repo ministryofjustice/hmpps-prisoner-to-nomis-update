@@ -21,7 +21,7 @@ class SentencingReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val nomisApiService: NomisApiService,
   private val adjustmentsApiService: SentencingAdjustmentsApiService,
-  @Value("\${reports.incentives.reconciliation.page-size}")
+  @Value("\${reports.sentencing.reconciliation.page-size}")
   private val pageSize: Long = 20,
 ) {
   private companion object {
