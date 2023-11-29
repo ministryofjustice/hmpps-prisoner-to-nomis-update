@@ -2,6 +2,8 @@
 
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -21,7 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.model.AdjustmentDto.AdjustmentType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension.Companion.sentencingAdjustmentsApi
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -42,295 +44,476 @@ internal class SentencingReconciliationServiceTest {
   private lateinit var service: SentencingReconciliationService
 
   @Nested
-  inner class WhenBothSystemsHaveNoAdjustments {
-    @BeforeEach
-    fun beforeEach() {
-      sentencingAdjustmentsApi.stubAdjustmentsGet(emptyList())
-      NomisApiExtension.nomisApi.stubGetSentencingAdjustments(
-        bookingId = 123456,
-        sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
-          keyDateAdjustments = emptyList(),
-          sentenceAdjustments = emptyList(),
-        ),
-      )
+  inner class CheckBookingAdjustmentsMatch {
+
+    @Nested
+    inner class WhenBothSystemsHaveNoAdjustments {
+      @BeforeEach
+      fun beforeEach() {
+        sentencingAdjustmentsApi.stubAdjustmentsGet(emptyList())
+        nomisApi.stubGetSentencingAdjustments(
+          bookingId = 123456,
+          sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
+            keyDateAdjustments = emptyList(),
+            sentenceAdjustments = emptyList(),
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(
+          service.checkBookingAdjustmentsMatch(
+            ActivePrisonerId(
+              bookingId = 123456L,
+              offenderNo = "A1234AA",
+            ),
+          ),
+        ).isNull()
+      }
     }
 
-    @Test
-    fun `will not report a mismatch`() = runTest {
-      assertThat(
-        service.checkBookingIncentiveMatch(
-          ActivePrisonerId(
-            bookingId = 123456L,
-            offenderNo = "A1234AA",
+    @Nested
+    inner class WhenBothSystemsHaveOneOfEachAdjustmentType {
+      @BeforeEach
+      fun beforeEach() {
+        sentencingAdjustmentsApi.stubAdjustmentsGet(
+          listOf(
+            adjustment(AdjustmentType.LAWFULLY_AT_LARGE),
+            adjustment(AdjustmentType.UNLAWFULLY_AT_LARGE),
+            adjustment(AdjustmentType.RESTORATION_OF_ADDITIONAL_DAYS_AWARDED),
+            adjustment(AdjustmentType.ADDITIONAL_DAYS_AWARDED),
+            adjustment(AdjustmentType.SPECIAL_REMISSION),
+            adjustment(AdjustmentType.REMAND),
+            adjustment(AdjustmentType.UNUSED_DEDUCTIONS),
+            adjustment(AdjustmentType.TAGGED_BAIL),
+            adjustment(AdjustmentType.TAGGED_BAIL),
+            adjustment(AdjustmentType.REMAND),
           ),
-        ),
-      ).isNull()
+        )
+        nomisApi.stubGetSentencingAdjustments(
+          bookingId = 123456,
+          sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
+            keyDateAdjustments = listOf(
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.LAL),
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.UAL),
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.RADA),
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.ADA),
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.SREM),
+            ),
+            sentenceAdjustments = listOf(
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.RSR),
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.UR),
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.S240A),
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.RST),
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.RX),
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(
+          service.checkBookingAdjustmentsMatch(
+            ActivePrisonerId(
+              bookingId = bookingId,
+              offenderNo = "offenderNo",
+            ),
+          ),
+        ).isNull()
+      }
+    }
+
+    @Nested
+    inner class WhenBothSystemsHaveVariousTaggedBailAdjustmentsThatMatch {
+      @BeforeEach
+      fun beforeEach() {
+        sentencingAdjustmentsApi.stubAdjustmentsGet(
+          listOf(
+            adjustment(AdjustmentType.TAGGED_BAIL),
+            adjustment(AdjustmentType.TAGGED_BAIL),
+          ),
+        )
+        nomisApi.stubGetSentencingAdjustments(
+          bookingId = 123456,
+          sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
+            keyDateAdjustments = listOf(),
+            sentenceAdjustments = listOf(
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.S240A),
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.RST),
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(
+          service.checkBookingAdjustmentsMatch(
+            ActivePrisonerId(
+              bookingId = bookingId,
+              offenderNo = offenderNo,
+            ),
+          ),
+        ).isNull()
+      }
+    }
+
+    @Nested
+    inner class WhenBothSystemsHaveVariousRemandAdjustmentsThatMatch {
+      @BeforeEach
+      fun beforeEach() {
+        sentencingAdjustmentsApi.stubAdjustmentsGet(
+          listOf(
+            adjustment(AdjustmentType.REMAND),
+            adjustment(AdjustmentType.REMAND),
+          ),
+        )
+        nomisApi.stubGetSentencingAdjustments(
+          bookingId = 123456,
+          sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
+            keyDateAdjustments = listOf(),
+            sentenceAdjustments = listOf(
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.RSR),
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.RX),
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(
+          service.checkBookingAdjustmentsMatch(
+            ActivePrisonerId(
+              bookingId = bookingId,
+              offenderNo = offenderNo,
+            ),
+          ),
+        ).isNull()
+      }
+    }
+
+    @Nested
+    inner class WhenDPSHaveOneAdjustmentMissing {
+      @BeforeEach
+      fun beforeEach() {
+        sentencingAdjustmentsApi.stubAdjustmentsGet(
+          listOf(
+            adjustment(AdjustmentType.LAWFULLY_AT_LARGE),
+            adjustment(AdjustmentType.UNLAWFULLY_AT_LARGE),
+            adjustment(AdjustmentType.RESTORATION_OF_ADDITIONAL_DAYS_AWARDED),
+            adjustment(AdjustmentType.ADDITIONAL_DAYS_AWARDED),
+            adjustment(AdjustmentType.SPECIAL_REMISSION),
+            adjustment(AdjustmentType.REMAND),
+            adjustment(AdjustmentType.UNUSED_DEDUCTIONS),
+            adjustment(AdjustmentType.TAGGED_BAIL),
+            adjustment(AdjustmentType.TAGGED_BAIL),
+          ),
+        )
+        nomisApi.stubGetSentencingAdjustments(
+          bookingId = 123456,
+          sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
+            keyDateAdjustments = listOf(
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.LAL),
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.UAL),
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.RADA),
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.ADA),
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.SREM),
+            ),
+            sentenceAdjustments = listOf(
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.RSR),
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.UR),
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.S240A),
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.RST),
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.RX),
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(
+          service.checkBookingAdjustmentsMatch(
+            ActivePrisonerId(
+              bookingId = bookingId,
+              offenderNo = offenderNo,
+            ),
+          ),
+        ).isEqualTo(
+          MismatchSentencingAdjustments(
+            prisonerId = ActivePrisonerId(
+              bookingId = bookingId,
+              offenderNo = offenderNo,
+            ),
+            dpsCounts = AdjustmentCounts(
+              lawfullyAtLarge = 1,
+              unlawfullyAtLarge = 1,
+              restorationOfAdditionalDaysAwarded = 1,
+              additionalDaysAwarded = 1,
+              specialRemission = 1,
+              remand = 1,
+              unusedDeductions = 1,
+              taggedBail = 2,
+            ),
+            nomisCounts = AdjustmentCounts(
+              lawfullyAtLarge = 1,
+              unlawfullyAtLarge = 1,
+              restorationOfAdditionalDaysAwarded = 1,
+              additionalDaysAwarded = 1,
+              specialRemission = 1,
+              remand = 2,
+              unusedDeductions = 1,
+              taggedBail = 2,
+            ),
+          ),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenNOMISHaveOneAdjustmentMissing {
+      @BeforeEach
+      fun beforeEach() {
+        sentencingAdjustmentsApi.stubAdjustmentsGet(
+          listOf(
+            adjustment(AdjustmentType.LAWFULLY_AT_LARGE),
+            adjustment(AdjustmentType.UNLAWFULLY_AT_LARGE),
+            adjustment(AdjustmentType.RESTORATION_OF_ADDITIONAL_DAYS_AWARDED),
+            adjustment(AdjustmentType.ADDITIONAL_DAYS_AWARDED),
+            adjustment(AdjustmentType.SPECIAL_REMISSION),
+            adjustment(AdjustmentType.REMAND),
+            adjustment(AdjustmentType.UNUSED_DEDUCTIONS),
+            adjustment(AdjustmentType.TAGGED_BAIL),
+            adjustment(AdjustmentType.TAGGED_BAIL),
+            adjustment(AdjustmentType.REMAND),
+          ),
+        )
+        nomisApi.stubGetSentencingAdjustments(
+          bookingId = 123456,
+          sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
+            keyDateAdjustments = listOf(
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.LAL),
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.UAL),
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.RADA),
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.ADA),
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.SREM),
+            ),
+            sentenceAdjustments = listOf(
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.RSR),
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.UR),
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.S240A),
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.RST),
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(
+          service.checkBookingAdjustmentsMatch(
+            ActivePrisonerId(
+              bookingId = bookingId,
+              offenderNo = offenderNo,
+            ),
+          ),
+        ).isEqualTo(
+          MismatchSentencingAdjustments(
+            prisonerId = ActivePrisonerId(
+              bookingId = bookingId,
+              offenderNo = offenderNo,
+            ),
+            dpsCounts = AdjustmentCounts(
+              lawfullyAtLarge = 1,
+              unlawfullyAtLarge = 1,
+              restorationOfAdditionalDaysAwarded = 1,
+              additionalDaysAwarded = 1,
+              specialRemission = 1,
+              remand = 2,
+              unusedDeductions = 1,
+              taggedBail = 2,
+            ),
+            nomisCounts = AdjustmentCounts(
+              lawfullyAtLarge = 1,
+              unlawfullyAtLarge = 1,
+              restorationOfAdditionalDaysAwarded = 1,
+              additionalDaysAwarded = 1,
+              specialRemission = 1,
+              remand = 1,
+              unusedDeductions = 1,
+              taggedBail = 2,
+            ),
+          ),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenBothSystemsHaveSameNumberButDifferentAdjustments {
+      @BeforeEach
+      fun beforeEach() {
+        sentencingAdjustmentsApi.stubAdjustmentsGet(
+          listOf(
+            adjustment(AdjustmentType.LAWFULLY_AT_LARGE),
+            adjustment(AdjustmentType.RESTORATION_OF_ADDITIONAL_DAYS_AWARDED),
+            adjustment(AdjustmentType.ADDITIONAL_DAYS_AWARDED),
+            adjustment(AdjustmentType.REMAND),
+            adjustment(AdjustmentType.TAGGED_BAIL),
+          ),
+        )
+        nomisApi.stubGetSentencingAdjustments(
+          bookingId = 123456,
+          sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
+            keyDateAdjustments = listOf(
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.UAL),
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.RADA),
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.ADA),
+            ),
+            sentenceAdjustments = listOf(
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.RSR),
+              sentenceAdjustment(adjustmentType = SentenceAdjustments.S240A),
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(
+          service.checkBookingAdjustmentsMatch(
+            ActivePrisonerId(
+              bookingId = bookingId,
+              offenderNo = offenderNo,
+            ),
+          ),
+        ).isEqualTo(
+          MismatchSentencingAdjustments(
+            prisonerId = ActivePrisonerId(
+              bookingId = bookingId,
+              offenderNo = offenderNo,
+            ),
+            dpsCounts = AdjustmentCounts(
+              lawfullyAtLarge = 1,
+              unlawfullyAtLarge = 0,
+              restorationOfAdditionalDaysAwarded = 1,
+              additionalDaysAwarded = 1,
+              specialRemission = 0,
+              remand = 1,
+              unusedDeductions = 0,
+              taggedBail = 1,
+            ),
+            nomisCounts = AdjustmentCounts(
+              lawfullyAtLarge = 0,
+              unlawfullyAtLarge = 1,
+              restorationOfAdditionalDaysAwarded = 1,
+              additionalDaysAwarded = 1,
+              specialRemission = 0,
+              remand = 1,
+              unusedDeductions = 0,
+              taggedBail = 1,
+            ),
+          ),
+        )
+      }
     }
   }
 
   @Nested
-  inner class WhenBothSystemsHaveOneOfEachAdjustmentType {
+  inner class GenerateReconciliationReport {
     @BeforeEach
-    fun beforeEach() {
+    fun setUp() {
+      nomisApi.stubGetActivePrisonersInitialCount(4)
+      nomisApi.stubGetActivePrisonersPage(4, 0, 4)
+      // different adjustments
       sentencingAdjustmentsApi.stubAdjustmentsGet(
+        offenderNo = "A0001TZ",
         listOf(
           adjustment(AdjustmentType.LAWFULLY_AT_LARGE),
-          adjustment(AdjustmentType.UNLAWFULLY_AT_LARGE),
-          adjustment(AdjustmentType.RESTORATION_OF_ADDITIONAL_DAYS_AWARDED),
-          adjustment(AdjustmentType.ADDITIONAL_DAYS_AWARDED),
-          adjustment(AdjustmentType.SPECIAL_REMISSION),
-          adjustment(AdjustmentType.REMAND),
-          adjustment(AdjustmentType.UNUSED_DEDUCTIONS),
-          adjustment(AdjustmentType.TAGGED_BAIL),
-          adjustment(AdjustmentType.TAGGED_BAIL),
-          adjustment(AdjustmentType.REMAND),
         ),
       )
-      NomisApiExtension.nomisApi.stubGetSentencingAdjustments(
-        bookingId = 123456,
+      nomisApi.stubGetSentencingAdjustments(
+        bookingId = 1,
         sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
           keyDateAdjustments = listOf(
-            keyDateAdjustment(adjustmentType = KeyDateAdjustments.LAL),
-            keyDateAdjustment(adjustmentType = KeyDateAdjustments.UAL),
             keyDateAdjustment(adjustmentType = KeyDateAdjustments.RADA),
-            keyDateAdjustment(adjustmentType = KeyDateAdjustments.ADA),
-            keyDateAdjustment(adjustmentType = KeyDateAdjustments.SREM),
           ),
           sentenceAdjustments = listOf(
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.RSR),
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.UR),
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.S240A),
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.RST),
             sentenceAdjustment(adjustmentType = SentenceAdjustments.RX),
           ),
         ),
       )
-    }
-
-    @Test
-    fun `will not report a mismatch`() = runTest {
-      assertThat(
-        service.checkBookingIncentiveMatch(
-          ActivePrisonerId(
-            bookingId = bookingId,
-            offenderNo = "offenderNo",
-          ),
-        ),
-      ).isNull()
-    }
-  }
-
-  @Nested
-  inner class WhenBothSystemsHaveVariousTaggedBailAdjustmentsThatMatch {
-    @BeforeEach
-    fun beforeEach() {
+      // same adjustments
       sentencingAdjustmentsApi.stubAdjustmentsGet(
+        offenderNo = "A0002TZ",
         listOf(
-          adjustment(AdjustmentType.TAGGED_BAIL),
-          adjustment(AdjustmentType.TAGGED_BAIL),
+          adjustment(AdjustmentType.UNLAWFULLY_AT_LARGE),
         ),
       )
-      NomisApiExtension.nomisApi.stubGetSentencingAdjustments(
-        bookingId = 123456,
+      nomisApi.stubGetSentencingAdjustments(
+        bookingId = 2,
+        sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
+          keyDateAdjustments = listOf(
+            keyDateAdjustment(adjustmentType = KeyDateAdjustments.UAL),
+          ),
+          sentenceAdjustments = listOf(),
+        ),
+      )
+      // none and missing from DPS
+      sentencingAdjustmentsApi.stubAdjustmentsGetWithError(
+        offenderNo = "A0003TZ",
+        status = 404,
+      )
+      nomisApi.stubGetSentencingAdjustments(
+        bookingId = 3,
         sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
           keyDateAdjustments = listOf(),
-          sentenceAdjustments = listOf(
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.S240A),
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.RST),
-          ),
+          sentenceAdjustments = listOf(),
         ),
       )
-    }
-
-    @Test
-    fun `will not report a mismatch`() = runTest {
-      assertThat(
-        service.checkBookingIncentiveMatch(
-          ActivePrisonerId(
-            bookingId = bookingId,
-            offenderNo = "offenderNo",
-          ),
-        ),
-      ).isNull()
-    }
-  }
-
-  @Nested
-  inner class WhenBothSystemsHaveVariousRemandAdjustmentsThatMatch {
-    @BeforeEach
-    fun beforeEach() {
-      sentencingAdjustmentsApi.stubAdjustmentsGet(
-        listOf(
-          adjustment(AdjustmentType.REMAND),
-          adjustment(AdjustmentType.REMAND),
-        ),
+      // NOMIS has one and missing from DPS
+      sentencingAdjustmentsApi.stubAdjustmentsGetWithError(
+        offenderNo = "A0004TZ",
+        status = 404,
       )
-      NomisApiExtension.nomisApi.stubGetSentencingAdjustments(
-        bookingId = 123456,
-        sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
-          keyDateAdjustments = listOf(),
-          sentenceAdjustments = listOf(
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.RSR),
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.RX),
-          ),
-        ),
-      )
-    }
-
-    @Test
-    fun `will not report a mismatch`() = runTest {
-      assertThat(
-        service.checkBookingIncentiveMatch(
-          ActivePrisonerId(
-            bookingId = bookingId,
-            offenderNo = "offenderNo",
-          ),
-        ),
-      ).isNull()
-    }
-  }
-
-  @Nested
-  inner class WhenDPSHaveOneAdjustmentMissing {
-    @BeforeEach
-    fun beforeEach() {
-      sentencingAdjustmentsApi.stubAdjustmentsGet(
-        listOf(
-          adjustment(AdjustmentType.LAWFULLY_AT_LARGE),
-          adjustment(AdjustmentType.UNLAWFULLY_AT_LARGE),
-          adjustment(AdjustmentType.RESTORATION_OF_ADDITIONAL_DAYS_AWARDED),
-          adjustment(AdjustmentType.ADDITIONAL_DAYS_AWARDED),
-          adjustment(AdjustmentType.SPECIAL_REMISSION),
-          adjustment(AdjustmentType.REMAND),
-          adjustment(AdjustmentType.UNUSED_DEDUCTIONS),
-          adjustment(AdjustmentType.TAGGED_BAIL),
-          adjustment(AdjustmentType.TAGGED_BAIL),
-        ),
-      )
-      NomisApiExtension.nomisApi.stubGetSentencingAdjustments(
-        bookingId = 123456,
-        sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
-          keyDateAdjustments = listOf(
-            keyDateAdjustment(adjustmentType = KeyDateAdjustments.LAL),
-            keyDateAdjustment(adjustmentType = KeyDateAdjustments.UAL),
-            keyDateAdjustment(adjustmentType = KeyDateAdjustments.RADA),
-            keyDateAdjustment(adjustmentType = KeyDateAdjustments.ADA),
-            keyDateAdjustment(adjustmentType = KeyDateAdjustments.SREM),
-          ),
-          sentenceAdjustments = listOf(
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.RSR),
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.UR),
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.S240A),
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.RST),
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.RX),
-          ),
-        ),
-      )
-    }
-
-    @Test
-    fun `will report a mismatch`() = runTest {
-      assertThat(
-        service.checkBookingIncentiveMatch(
-          ActivePrisonerId(
-            bookingId = bookingId,
-            offenderNo = "offenderNo",
-          ),
-        ),
-      ).isNotNull()
-    }
-  }
-
-  @Nested
-  inner class WhenNOMISHaveOneAdjustmentMissing {
-    @BeforeEach
-    fun beforeEach() {
-      sentencingAdjustmentsApi.stubAdjustmentsGet(
-        listOf(
-          adjustment(AdjustmentType.LAWFULLY_AT_LARGE),
-          adjustment(AdjustmentType.UNLAWFULLY_AT_LARGE),
-          adjustment(AdjustmentType.RESTORATION_OF_ADDITIONAL_DAYS_AWARDED),
-          adjustment(AdjustmentType.ADDITIONAL_DAYS_AWARDED),
-          adjustment(AdjustmentType.SPECIAL_REMISSION),
-          adjustment(AdjustmentType.REMAND),
-          adjustment(AdjustmentType.UNUSED_DEDUCTIONS),
-          adjustment(AdjustmentType.TAGGED_BAIL),
-          adjustment(AdjustmentType.TAGGED_BAIL),
-          adjustment(AdjustmentType.REMAND),
-        ),
-      )
-      NomisApiExtension.nomisApi.stubGetSentencingAdjustments(
-        bookingId = 123456,
-        sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
-          keyDateAdjustments = listOf(
-            keyDateAdjustment(adjustmentType = KeyDateAdjustments.LAL),
-            keyDateAdjustment(adjustmentType = KeyDateAdjustments.UAL),
-            keyDateAdjustment(adjustmentType = KeyDateAdjustments.RADA),
-            keyDateAdjustment(adjustmentType = KeyDateAdjustments.ADA),
-            keyDateAdjustment(adjustmentType = KeyDateAdjustments.SREM),
-          ),
-          sentenceAdjustments = listOf(
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.RSR),
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.UR),
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.S240A),
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.RST),
-          ),
-        ),
-      )
-    }
-
-    @Test
-    fun `will report a mismatch`() = runTest {
-      assertThat(
-        service.checkBookingIncentiveMatch(
-          ActivePrisonerId(
-            bookingId = bookingId,
-            offenderNo = "offenderNo",
-          ),
-        ),
-      ).isNotNull()
-    }
-  }
-
-  @Nested
-  inner class WhenBothSystemsHaveSameNumberButDifferentAdjustments {
-    @BeforeEach
-    fun beforeEach() {
-      sentencingAdjustmentsApi.stubAdjustmentsGet(
-        listOf(
-          adjustment(AdjustmentType.LAWFULLY_AT_LARGE),
-          adjustment(AdjustmentType.RESTORATION_OF_ADDITIONAL_DAYS_AWARDED),
-          adjustment(AdjustmentType.ADDITIONAL_DAYS_AWARDED),
-          adjustment(AdjustmentType.REMAND),
-          adjustment(AdjustmentType.TAGGED_BAIL),
-        ),
-      )
-      NomisApiExtension.nomisApi.stubGetSentencingAdjustments(
-        bookingId = 123456,
+      nomisApi.stubGetSentencingAdjustments(
+        bookingId = 4,
         sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
           keyDateAdjustments = listOf(
             keyDateAdjustment(adjustmentType = KeyDateAdjustments.UAL),
-            keyDateAdjustment(adjustmentType = KeyDateAdjustments.RADA),
-            keyDateAdjustment(adjustmentType = KeyDateAdjustments.ADA),
           ),
-          sentenceAdjustments = listOf(
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.RSR),
-            sentenceAdjustment(adjustmentType = SentenceAdjustments.S240A),
-          ),
+          sentenceAdjustments = listOf(),
         ),
       )
     }
 
     @Test
-    fun `will report a mismatch`() = runTest {
-      assertThat(
-        service.checkBookingIncentiveMatch(
-          ActivePrisonerId(
-            bookingId = bookingId,
-            offenderNo = "offenderNo",
-          ),
-        ),
-      ).isNotNull()
+    fun `will call DPS for each offenderNo`() = runTest {
+      service.generateReconciliationReport(4)
+      sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments?person=A0001TZ")))
+      sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments?person=A0002TZ")))
+      sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments?person=A0003TZ")))
+      sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments?person=A0004TZ")))
+    }
+
+    @Test
+    fun `will call NOMIS for each bookingId`() = runTest {
+      service.generateReconciliationReport(4)
+      nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/1/sentencing-adjustments")))
+      nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/2/sentencing-adjustments")))
+      nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/3/sentencing-adjustments")))
+      nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/4/sentencing-adjustments")))
+    }
+
+    @Test
+    fun `will return list of only the mismatches`() = runTest {
+      val mismatches = service.generateReconciliationReport(4)
+
+      assertThat(mismatches).hasSize(2)
+      assertThat(mismatches[0].prisonerId.offenderNo).isEqualTo("A0001TZ")
+      assertThat(mismatches[1].prisonerId.offenderNo).isEqualTo("A0004TZ")
     }
   }
 
