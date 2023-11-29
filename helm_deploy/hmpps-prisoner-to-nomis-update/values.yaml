@@ -36,6 +36,10 @@ generic-service:
           deny all;
           return 401;
         }
+        location /sentencing/reports/reconciliation {
+          deny all;
+          return 401;
+        }
     host: app-hostname.local # override per environment
     tlsSecretName: prisoner-to-nomis-cert
 

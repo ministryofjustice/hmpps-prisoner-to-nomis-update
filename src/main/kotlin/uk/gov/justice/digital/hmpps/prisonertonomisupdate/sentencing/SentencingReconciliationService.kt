@@ -89,7 +89,23 @@ class SentencingReconciliationService(
       )
     } ?: AdjustmentCounts()
 
-    return if (nomisCounts == dpsCounts) null else MismatchSentencingAdjustments(prisonerId, dpsCounts = dpsCounts, nomisCounts = nomisCounts)
+    return if (nomisCounts == dpsCounts) {
+      null
+    } else {
+      MismatchSentencingAdjustments(prisonerId, dpsCounts = dpsCounts, nomisCounts = nomisCounts).also { mismatch ->
+        log.info("Sentencing Adjustments Mismatch found  $mismatch")
+        telemetryClient.trackEvent(
+          "sentencing-reports-reconciliation-mismatch",
+          mapOf(
+            "offenderNo" to mismatch.prisonerId.offenderNo,
+            "bookingId" to mismatch.prisonerId.bookingId.toString(),
+            "nomisAdjustmentsCount" to (mismatch.nomisCounts.total().toString()),
+            "dpsAdjustmentsCount" to (mismatch.dpsCounts.total().toString()),
+            "differences" to (mismatch.dpsCounts.differenceMessage(mismatch.nomisCounts)),
+          ),
+        )
+      }
+    }
   }.onFailure {
     log.error("Unable to match adjustments for prisoner with ${prisonerId.offenderNo} booking: ${prisonerId.bookingId}", it)
     telemetryClient.trackEvent(
@@ -117,4 +133,20 @@ data class AdjustmentCounts(
   val remand: Int = 0,
   val unusedDeductions: Int = 0,
   val taggedBail: Int = 0,
-)
+) {
+  fun total(): Int = lawfullyAtLarge + unlawfullyAtLarge + restorationOfAdditionalDaysAwarded + additionalDaysAwarded + specialRemission + remand + unusedDeductions + taggedBail
+  fun differenceMessage(other: AdjustmentCounts): String {
+    val differences = mutableListOf<String>()
+    if (lawfullyAtLarge != other.lawfullyAtLarge) differences.add("lawfullyAtLarge ${lawfullyAtLarge - other.lawfullyAtLarge}")
+    if (unlawfullyAtLarge != other.unlawfullyAtLarge) differences.add("unlawfullyAtLarge ${unlawfullyAtLarge - other.unlawfullyAtLarge}")
+    if (restorationOfAdditionalDaysAwarded != other.restorationOfAdditionalDaysAwarded) differences.add("restorationOfAdditionalDaysAwarded ${restorationOfAdditionalDaysAwarded - other.restorationOfAdditionalDaysAwarded}")
+    if (additionalDaysAwarded != other.additionalDaysAwarded) differences.add("additionalDaysAwarded ${additionalDaysAwarded - other.additionalDaysAwarded}")
+    if (specialRemission != other.specialRemission) differences.add("specialRemission ${specialRemission - other.specialRemission}")
+    if (remand != other.remand) differences.add("remand ${remand - other.remand}")
+    if (unusedDeductions != other.unusedDeductions) differences.add("unusedDeductions ${unusedDeductions - other.unusedDeductions}")
+    if (taggedBail != other.taggedBail) differences.add("taggedBail ${taggedBail - other.taggedBail}")
+    if (differences.isEmpty()) return "no differences"
+
+    return differences.joinToString(", ")
+  }
+}
