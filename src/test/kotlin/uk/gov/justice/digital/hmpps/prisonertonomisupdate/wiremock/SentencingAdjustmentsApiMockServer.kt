@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.junit.jupiter.api.extension.AfterAllCallback
@@ -301,9 +302,37 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubAdjustmentsGet(offenderNo: String, adjustments: List<AdjustmentDto>) {
+    stubFor(
+      get(urlEqualTo("/adjustments?person=$offenderNo")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(adjustments)
+          .withStatus(200),
+      ),
+    )
+  }
+
   fun stubAdjustmentsGetWithError(status: Int) {
     stubFor(
       get(urlPathMatching("/adjustments")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            """
+              {
+                "error": "some error"
+              }
+            """.trimIndent(),
+          )
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubAdjustmentsGetWithError(offenderNo: String, status: Int) {
+    stubFor(
+      get(urlEqualTo("/adjustments?person=$offenderNo")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
