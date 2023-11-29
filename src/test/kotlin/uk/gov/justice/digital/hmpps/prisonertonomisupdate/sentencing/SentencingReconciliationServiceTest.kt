@@ -516,27 +516,27 @@ internal class SentencingReconciliationServiceTest {
       assertThat(mismatches[1].prisonerId.offenderNo).isEqualTo("A0004TZ")
     }
   }
-
-  private fun adjustment(
-    adjustmentType: AdjustmentType,
-    fromDate: LocalDate = LocalDate.now(),
-    effectiveDays: Int = 5,
-  ) = AdjustmentDto(
-    id = UUID.fromString("0102ab0f-69b0-4292-84d9-bc5fd9f46e66"),
-    bookingId = bookingId,
-    person = offenderNo,
-    adjustmentType = adjustmentType,
-    fromDate = fromDate,
-    toDate = fromDate.plusDays(effectiveDays.toLong()),
-    effectiveDays = effectiveDays,
-    daysBetween = effectiveDays,
-    status = AdjustmentDto.Status.ACTIVE,
-    lastUpdatedBy = "NOMIS",
-    lastUpdatedDate = LocalDateTime.now(),
-  )
 }
 
-private fun keyDateAdjustment(
+internal fun adjustment(
+  adjustmentType: AdjustmentType,
+  fromDate: LocalDate = LocalDate.now(),
+  effectiveDays: Int = 5,
+) = AdjustmentDto(
+  id = UUID.fromString("0102ab0f-69b0-4292-84d9-bc5fd9f46e66"),
+  bookingId = bookingId,
+  person = offenderNo,
+  adjustmentType = adjustmentType,
+  fromDate = fromDate,
+  toDate = fromDate.plusDays(effectiveDays.toLong()),
+  effectiveDays = effectiveDays,
+  daysBetween = effectiveDays,
+  status = AdjustmentDto.Status.ACTIVE,
+  lastUpdatedBy = "NOMIS",
+  lastUpdatedDate = LocalDateTime.now(),
+)
+
+internal fun keyDateAdjustment(
   adjustmentType: KeyDateAdjustments,
   fromDate: LocalDate = LocalDate.now(),
   effectiveDays: Int = 5,
@@ -553,7 +553,7 @@ private fun keyDateAdjustment(
   comment = null,
 )
 
-private fun sentenceAdjustment(
+internal fun sentenceAdjustment(
   adjustmentType: SentenceAdjustments,
   fromDate: LocalDate = LocalDate.now(),
   effectiveDays: Int = 5,
