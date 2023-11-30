@@ -6,7 +6,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import java.time.LocalDateTime
 
 @Service
@@ -34,7 +34,7 @@ class ActivitiesMappingService(
     webClient.get()
       .uri("/mapping/activities/activity-schedule-id/{activityScheduleId}", activityScheduleId)
       .retrieve()
-      .awaitBodyOrNotFound()
+      .awaitBodyOrNullForNotFound()
 
   suspend fun getMappings(activityScheduleId: Long): ActivityMappingDto =
     webClient.get()

@@ -7,7 +7,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import java.time.LocalDateTime
 
 @Service
@@ -26,7 +26,7 @@ class AppointmentMappingService(
     webClient.get()
       .uri("/mapping/appointments/appointment-instance-id/{id}", id)
       .retrieve()
-      .awaitBodyOrNotFound()
+      .awaitBodyOrNullForNotFound()
 
   suspend fun getMappingGivenAppointmentInstanceId(id: Long): AppointmentMappingDto =
     webClient.get()

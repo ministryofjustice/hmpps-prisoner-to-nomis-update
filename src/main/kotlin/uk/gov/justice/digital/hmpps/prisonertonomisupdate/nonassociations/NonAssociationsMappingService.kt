@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import java.time.LocalDateTime
 
 @Service
@@ -25,7 +25,7 @@ class NonAssociationMappingService(
     webClient.get()
       .uri("/mapping/non-associations/non-association-id/{id}", id)
       .retrieve()
-      .awaitBodyOrNotFound()
+      .awaitBodyOrNullForNotFound()
 
   suspend fun getMappingGivenNonAssociationId(id: Long): NonAssociationMappingDto =
     webClient.get()

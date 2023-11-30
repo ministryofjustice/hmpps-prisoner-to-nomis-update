@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -22,7 +22,7 @@ class IncentivesApiService(@Qualifier("incentivesApiWebClient") private val webC
     return webClient.get()
       .uri("/incentive-reviews/booking/{bookingId}?with-details=false", bookingId)
       .retrieve()
-      .awaitBodyOrNotFound()
+      .awaitBodyOrNullForNotFound()
   }
 
   suspend fun getGlobalIncentiveLevel(incentiveLevelCode: String): IncentiveLevel {
