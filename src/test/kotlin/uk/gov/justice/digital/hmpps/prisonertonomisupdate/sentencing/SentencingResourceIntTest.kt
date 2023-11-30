@@ -35,6 +35,7 @@ class SentencingResourceIntTest : IntegrationTestBase() {
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
+      offenderNo
 
       val numberOfActivePrisoners = 34L
       nomisApi.stubGetActivePrisonersInitialCount(numberOfActivePrisoners)
@@ -45,9 +46,9 @@ class SentencingResourceIntTest : IntegrationTestBase() {
 
       // mock non-matching for first and last prisoners
       nomisApi.stubGetSentencingAdjustments(1, SentencingAdjustmentsResponse(emptyList(), emptyList()))
-      sentencingAdjustmentsApi.stubAdjustmentsGet("A0001TZ", listOf(adjustment(adjustmentType = AdjustmentDto.AdjustmentType.REMAND)))
+      sentencingAdjustmentsApi.stubAdjustmentsGet("A0001TZ", listOf(adjustment(adjustmentType = AdjustmentDto.AdjustmentType.REMAND, bookingId = 1)))
       nomisApi.stubGetSentencingAdjustments(34, SentencingAdjustmentsResponse(emptyList(), listOf(sentenceAdjustment(adjustmentType = SentenceAdjustments.S240A))))
-      sentencingAdjustmentsApi.stubAdjustmentsGet("A0034TZ", listOf(adjustment(adjustmentType = AdjustmentDto.AdjustmentType.UNLAWFULLY_AT_LARGE)))
+      sentencingAdjustmentsApi.stubAdjustmentsGet("A0034TZ", listOf(adjustment(adjustmentType = AdjustmentDto.AdjustmentType.UNLAWFULLY_AT_LARGE, bookingId = 34)))
       // all others have no adjustments so match
       (2..<numberOfActivePrisoners).forEach {
         nomisApi.stubGetSentencingAdjustments(it, SentencingAdjustmentsResponse(emptyList(), emptyList()))

@@ -57,7 +57,11 @@ class SentencingReconciliationService(
   suspend fun checkBookingAdjustmentsMatch(prisonerId: ActivePrisonerId): MismatchSentencingAdjustments? = runCatching {
     val (nomisAdjustments, dpsAdjustments) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getAdjustments(prisonerId.bookingId) } to
-        async { adjustmentsApiService.getAdjustments(prisonerId.offenderNo) }
+        async {
+          adjustmentsApiService.getAdjustments(prisonerId.offenderNo)
+            // temporary fix until DPS filter out old adjustments
+            ?.filter { it.bookingId == prisonerId.bookingId }
+        }
     }.awaitBoth()
 
     val nomisCounts: AdjustmentCounts = nomisAdjustments.let {
