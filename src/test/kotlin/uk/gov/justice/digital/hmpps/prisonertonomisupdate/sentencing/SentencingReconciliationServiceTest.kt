@@ -117,7 +117,7 @@ internal class SentencingReconciliationServiceTest {
         assertThat(
           service.checkBookingAdjustmentsMatch(
             ActivePrisonerId(
-              bookingId = bookingId,
+              bookingId = adjustmentBookingId,
               offenderNo = "offenderNo",
             ),
           ),
@@ -152,7 +152,7 @@ internal class SentencingReconciliationServiceTest {
         assertThat(
           service.checkBookingAdjustmentsMatch(
             ActivePrisonerId(
-              bookingId = bookingId,
+              bookingId = adjustmentBookingId,
               offenderNo = offenderNo,
             ),
           ),
@@ -187,7 +187,7 @@ internal class SentencingReconciliationServiceTest {
         assertThat(
           service.checkBookingAdjustmentsMatch(
             ActivePrisonerId(
-              bookingId = bookingId,
+              bookingId = adjustmentBookingId,
               offenderNo = offenderNo,
             ),
           ),
@@ -238,14 +238,14 @@ internal class SentencingReconciliationServiceTest {
         assertThat(
           service.checkBookingAdjustmentsMatch(
             ActivePrisonerId(
-              bookingId = bookingId,
+              bookingId = adjustmentBookingId,
               offenderNo = offenderNo,
             ),
           ),
         ).isEqualTo(
           MismatchSentencingAdjustments(
             prisonerId = ActivePrisonerId(
-              bookingId = bookingId,
+              bookingId = adjustmentBookingId,
               offenderNo = offenderNo,
             ),
             dpsCounts = AdjustmentCounts(
@@ -316,14 +316,14 @@ internal class SentencingReconciliationServiceTest {
         assertThat(
           service.checkBookingAdjustmentsMatch(
             ActivePrisonerId(
-              bookingId = bookingId,
+              bookingId = adjustmentBookingId,
               offenderNo = offenderNo,
             ),
           ),
         ).isEqualTo(
           MismatchSentencingAdjustments(
             prisonerId = ActivePrisonerId(
-              bookingId = bookingId,
+              bookingId = adjustmentBookingId,
               offenderNo = offenderNo,
             ),
             dpsCounts = AdjustmentCounts(
@@ -385,14 +385,14 @@ internal class SentencingReconciliationServiceTest {
         assertThat(
           service.checkBookingAdjustmentsMatch(
             ActivePrisonerId(
-              bookingId = bookingId,
+              bookingId = adjustmentBookingId,
               offenderNo = offenderNo,
             ),
           ),
         ).isEqualTo(
           MismatchSentencingAdjustments(
             prisonerId = ActivePrisonerId(
-              bookingId = bookingId,
+              bookingId = adjustmentBookingId,
               offenderNo = offenderNo,
             ),
             dpsCounts = AdjustmentCounts(
@@ -431,7 +431,7 @@ internal class SentencingReconciliationServiceTest {
       sentencingAdjustmentsApi.stubAdjustmentsGet(
         offenderNo = "A0001TZ",
         listOf(
-          adjustment(AdjustmentType.LAWFULLY_AT_LARGE),
+          adjustment(AdjustmentType.LAWFULLY_AT_LARGE, bookingId = 1),
         ),
       )
       nomisApi.stubGetSentencingAdjustments(
@@ -449,7 +449,7 @@ internal class SentencingReconciliationServiceTest {
       sentencingAdjustmentsApi.stubAdjustmentsGet(
         offenderNo = "A0002TZ",
         listOf(
-          adjustment(AdjustmentType.UNLAWFULLY_AT_LARGE),
+          adjustment(AdjustmentType.UNLAWFULLY_AT_LARGE, bookingId = 2),
         ),
       )
       nomisApi.stubGetSentencingAdjustments(
@@ -522,6 +522,7 @@ internal fun adjustment(
   adjustmentType: AdjustmentType,
   fromDate: LocalDate = LocalDate.now(),
   effectiveDays: Int = 5,
+  bookingId: Long = adjustmentBookingId,
 ) = AdjustmentDto(
   id = UUID.fromString("0102ab0f-69b0-4292-84d9-bc5fd9f46e66"),
   bookingId = bookingId,
@@ -543,7 +544,7 @@ internal fun keyDateAdjustment(
 ) = KeyDateAdjustmentResponse(
   id = 123456L,
   offenderNo = offenderNo,
-  bookingId = bookingId,
+  bookingId = adjustmentBookingId,
   adjustmentType = adjustmentType.value,
   adjustmentDate = fromDate,
   adjustmentFromDate = fromDate,
@@ -561,7 +562,7 @@ internal fun sentenceAdjustment(
   id = 123456L,
   sentenceSequence = 1,
   offenderNo = offenderNo,
-  bookingId = bookingId,
+  bookingId = adjustmentBookingId,
   adjustmentType = adjustmentType.value,
   adjustmentDate = fromDate,
   adjustmentFromDate = fromDate,
@@ -572,8 +573,8 @@ internal fun sentenceAdjustment(
   comment = null,
 )
 
-private const val bookingId = 123456L
-private const val offenderNo = "A1234AA"
+const val adjustmentBookingId = 123456L
+const val offenderNo = "A1234AA"
 
 sealed class SentenceAdjustments(val value: SentencingAdjustmentType) {
   data object RSR : SentenceAdjustments(SentencingAdjustmentType("RSR", "Recall Sentence Remand"))
