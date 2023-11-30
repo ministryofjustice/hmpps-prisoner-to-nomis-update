@@ -138,6 +138,13 @@ internal class SentencingAdjustmentsApiServiceTest {
     }
 
     @Test
+    internal fun `when person has not active sentence (identified by Unprocessable Content error ) null is returned`() = runTest {
+      sentencingAdjustmentsApi.stubAdjustmentsGetWithError(status = 422)
+
+      assertThat(sentencingAdjustmentsApiService.getAdjustments("A1234AA")).isNull()
+    }
+
+    @Test
     internal fun `when any bad response is received an exception is thrown`() = runTest {
       sentencingAdjustmentsApi.stubAdjustmentsGetWithError(status = 503)
 

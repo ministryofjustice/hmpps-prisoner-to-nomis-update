@@ -8,9 +8,16 @@ import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ErrorResponse
 
-suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNotFound(): T? =
+suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForNotFound(): T? =
   this.bodyToMono<T>()
     .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
+    .awaitSingleOrNull()
+
+suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForClientError(): T? =
+  this.bodyToMono<T>()
+    .onErrorResume(WebClientResponseException::class.java) {
+      if (it.statusCode.is4xxClientError) Mono.empty() else Mono.error(it)
+    }
     .awaitSingleOrNull()
 
 suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrUpsertAttendanceError(): T =

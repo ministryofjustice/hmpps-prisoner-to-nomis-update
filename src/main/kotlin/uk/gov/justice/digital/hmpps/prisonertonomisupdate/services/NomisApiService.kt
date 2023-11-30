@@ -18,7 +18,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrUpsertAttendanceError
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationReconciliationResponse
@@ -111,7 +111,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     webClient.get()
       .uri("/incentives/booking-id/{bookingId}/current", bookingId)
       .retrieve()
-      .awaitBodyOrNotFound()
+      .awaitBodyOrNullForNotFound()
 
   // ////////// ACTIVITIES //////////////
 
@@ -297,7 +297,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     webClient.get()
       .uri("/incentives/reference-codes/{incentiveLevel}", incentiveLevel)
       .retrieve()
-      .awaitBodyOrNotFound()
+      .awaitBodyOrNullForNotFound()
 
   suspend fun updateGlobalIncentiveLevel(incentiveLevel: ReferenceCode) {
     webClient.put()
@@ -355,7 +355,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     webClient.get()
       .uri("/incentives/prison/{prison}/code/{code}", prison, code)
       .retrieve()
-      .awaitBodyOrNotFound()
+      .awaitBodyOrNullForNotFound()
 
   // ////////// ADJUDICATIONS //////////////
 

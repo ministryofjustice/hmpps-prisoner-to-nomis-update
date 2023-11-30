@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import java.time.LocalDateTime
 
 @Service
@@ -25,7 +25,7 @@ class SentencingAdjustmentsMappingService(
     webClient.get()
       .uri("/mapping/sentencing/adjustments/adjustment-id/{adjustmentId}", adjustmentId)
       .retrieve()
-      .awaitBodyOrNotFound()
+      .awaitBodyOrNullForNotFound()
 
   suspend fun getMappingGivenAdjustmentId(adjustmentId: String): SentencingAdjustmentMappingDto =
     webClient.get()

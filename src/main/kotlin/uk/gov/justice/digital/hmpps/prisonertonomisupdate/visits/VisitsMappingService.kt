@@ -8,7 +8,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 
 @Service
 class VisitsMappingService(
@@ -27,7 +27,7 @@ class VisitsMappingService(
     webClient.get()
       .uri("/mapping/visits/nomisId/{nomisId}", nomisId)
       .retrieve()
-      .awaitBodyOrNotFound()
+      .awaitBodyOrNullForNotFound()
 
   suspend fun getMappingGivenVsipIdOrNull(vsipId: String): VisitMappingDto? =
     webClient.get()
