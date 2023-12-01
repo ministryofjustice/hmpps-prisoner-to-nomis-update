@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers
 
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.bodyToMono
@@ -13,10 +14,10 @@ suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForNo
     .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
     .awaitSingleOrNull()
 
-suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForClientError(): T? =
+suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForStatus(vararg status: HttpStatus): T? =
   this.bodyToMono<T>()
     .onErrorResume(WebClientResponseException::class.java) {
-      if (it.statusCode.is4xxClientError) Mono.empty() else Mono.error(it)
+      if (it.statusCode in status) Mono.empty() else Mono.error(it)
     }
     .awaitSingleOrNull()
 
