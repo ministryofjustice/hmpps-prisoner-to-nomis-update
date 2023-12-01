@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import org.springframework.web.reactive.function.client.WebClientResponseException.Forbidden
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -142,6 +143,15 @@ internal class SentencingAdjustmentsApiServiceTest {
       sentencingAdjustmentsApi.stubAdjustmentsGetWithError(status = 422)
 
       assertThat(sentencingAdjustmentsApiService.getAdjustments("A1234AA")).isNull()
+    }
+
+    @Test
+    internal fun `when any other client bad response is received an exception is thrown`() = runTest {
+      sentencingAdjustmentsApi.stubAdjustmentsGetWithError(status = 403)
+
+      assertThrows<Forbidden> {
+        sentencingAdjustmentsApiService.getAdjustments("A1234AA")
+      }
     }
 
     @Test
