@@ -227,6 +227,7 @@ class AttendanceServiceTest {
               "nomisAttendanceEventId" to "$NOMIS_EVENT_ID",
               "nomisCourseScheduleId" to "$NOMIS_CRS_SCH_ID",
               "created" to "true",
+              "prisonId" to "MDI",
             ),
           )
         },
@@ -277,6 +278,7 @@ class AttendanceServiceTest {
               "nomisAttendanceEventId" to "$NOMIS_EVENT_ID",
               "nomisCourseScheduleId" to "$NOMIS_CRS_SCH_ID",
               "created" to "false",
+              "prisonId" to "MDI",
             ),
           )
         },
@@ -338,6 +340,7 @@ class AttendanceServiceTest {
       eventId = NOMIS_EVENT_ID,
       courseScheduleId = NOMIS_CRS_SCH_ID,
       created = created,
+      prisonId = "MDI",
     )
   }
 

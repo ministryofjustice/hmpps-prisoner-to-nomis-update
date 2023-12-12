@@ -243,7 +243,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       put("/activities/$courseActivityId/allocation").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody("""{ "offenderProgramReferenceId": 1234, "created": true }""")
+          .withBody("""{ "offenderProgramReferenceId": 1234, "created": true, "prisonId": "MDI" }""")
           .withStatus(200),
       ),
     )

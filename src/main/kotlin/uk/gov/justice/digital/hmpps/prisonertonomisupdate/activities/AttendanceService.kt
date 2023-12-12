@@ -49,6 +49,7 @@ class AttendanceService(
       ).also {
         telemetryMap["nomisAttendanceEventId"] = it.eventId.toString()
         telemetryMap["created"] = it.created.toString()
+        telemetryMap["prisonId"] = it.prisonId
       }
     }.onSuccess {
       telemetryClient.trackEvent("activity-attendance-$upsertType-success", telemetryMap, null)

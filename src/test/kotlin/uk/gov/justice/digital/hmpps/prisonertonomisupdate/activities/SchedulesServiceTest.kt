@@ -84,6 +84,7 @@ class SchedulesServiceTest {
           assertThat(it["scheduleDate"]).isEqualTo("2023-02-23")
           assertThat(it["startTime"]).isEqualTo("08:00")
           assertThat(it["endTime"]).isEqualTo("11:00")
+          assertThat(it["prisonId"]).isEqualTo("LEI")
         },
         isNull(),
       )
@@ -153,6 +154,7 @@ class SchedulesServiceTest {
         eq("activity-scheduled-instance-amend-failed"),
         check<Map<String, String>> {
           assertThat(it["nomisCourseActivityId"]).isEqualTo(NOMIS_CRS_ACTY_ID.toString())
+          assertThat(it["prisonId"]).isEqualTo("LEI")
         },
         isNull(),
       )
@@ -201,6 +203,7 @@ class SchedulesServiceTest {
           assertThat(it["startTime"]).isEqualTo("08:00")
           assertThat(it["endTime"]).isEqualTo("11:00")
           assertThat(it["nomisCourseScheduleId"]).isEqualTo(NOMIS_CRS_SCH_ID.toString())
+          assertThat(it["prisonId"]).isEqualTo("LEI")
         },
         isNull(),
       )

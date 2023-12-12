@@ -45,6 +45,7 @@ class AllocationService(
               toUpsertAllocationRequest(allocation),
             ).also {
               telemetryMap["nomisAllocationId"] = it.offenderProgramReferenceId.toString()
+              telemetryMap["prisonId"] = it.prisonId
             }
           }
       }

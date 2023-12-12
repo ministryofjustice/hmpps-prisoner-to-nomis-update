@@ -57,6 +57,7 @@ class ActivitiesService(
           .let { activitySchedule ->
             eventTelemetry += "description" to activitySchedule.description
             eventTelemetry += "dpsActivityId" to activitySchedule.activity.id.toString()
+            eventTelemetry += "prisonId" to activitySchedule.activity.prisonCode
 
             createTransformedActivity(activitySchedule)
               .also { eventTelemetry += "nomisCourseActivityId" to it.courseActivityId.toString() }
@@ -128,7 +129,10 @@ class ActivitiesService(
         .also { telemetryMap["nomisCourseActivityId"] = it.nomisCourseActivityId.toString() }
 
       val activitySchedule = activitiesApiService.getActivitySchedule(activityScheduleId)
-        .also { telemetryMap["dpsActivityId"] = it.activity.id.toString() }
+        .also {
+          telemetryMap["dpsActivityId"] = it.activity.id.toString()
+          telemetryMap["prisonId"] = it.activity.prisonCode
+        }
 
       val activity = activitiesApiService.getActivity(activitySchedule.activity.id)
 
@@ -268,9 +272,9 @@ data class ScheduleAdditionalInformation(
 )
 
 fun ActivitySchedule.toCreatePayPerSession(): CreateActivityRequest.PayPerSession =
-  CreateActivityRequest.PayPerSession.values()
+  CreateActivityRequest.PayPerSession.entries
     .first { it.value == this.activity.payPerSession.value }
 
 fun ActivitySchedule.toUpdatePayPerSession(): UpdateActivityRequest.PayPerSession =
-  UpdateActivityRequest.PayPerSession.values()
+  UpdateActivityRequest.PayPerSession.entries
     .first { it.value == this.activity.payPerSession.value }
