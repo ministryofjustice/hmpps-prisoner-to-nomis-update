@@ -30,6 +30,7 @@ class SchedulesService(
           telemetryMap["scheduleDate"] = it.date.toString()
           telemetryMap["startTime"] = it.startTime
           telemetryMap["endTime"] = it.endTime
+          telemetryMap["prisonId"] = it.activitySchedule.activity.prisonCode
         }
 
       val mappings = mappingService.getMappings(scheduledInstance.activitySchedule.id)

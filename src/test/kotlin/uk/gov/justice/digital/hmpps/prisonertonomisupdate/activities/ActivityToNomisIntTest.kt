@@ -219,6 +219,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           assertThat(it["existingNomisCourseActivityId"]).isEqualTo("$NOMIS_CRS_ACTY_ID")
           assertThat(it["duplicateActivityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
           assertThat(it["duplicateNomisCourseActivityId"]).isEqualTo("301")
+          assertThat(it["prisonId"]).isEqualTo("PVI")
         },
         isNull(),
       )

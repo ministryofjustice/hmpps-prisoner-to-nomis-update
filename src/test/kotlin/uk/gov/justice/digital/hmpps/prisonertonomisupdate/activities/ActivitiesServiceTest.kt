@@ -86,6 +86,7 @@ internal class ActivitiesServiceTest {
           assertThat(it["dpsActivityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
           assertThat(it["dpsActivityId"]).isEqualTo("$ACTIVITY_ID")
           assertThat(it["description"]).isEqualTo("description")
+          assertThat(it["prisonId"]).isEqualTo("MDI")
         },
         isNull(),
       )
@@ -153,6 +154,7 @@ internal class ActivitiesServiceTest {
           assertThat(it["dpsActivityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
           assertThat(it["dpsActivityId"]).isEqualTo("$ACTIVITY_ID")
           assertThat(it["description"]).isEqualTo("description")
+          assertThat(it["prisonId"]).isEqualTo("MDI")
         },
         isNull(),
       )
@@ -227,6 +229,7 @@ internal class ActivitiesServiceTest {
           assertThat(it["nomisCourseActivityId"]).isEqualTo("$NOMIS_CRS_ACTY_ID")
           assertThat(it["dpsActivityScheduleId"]).isEqualTo("$ACTIVITY_SCHEDULE_ID")
           assertThat(it["dpsActivityId"]).isEqualTo("$ACTIVITY_ID")
+          assertThat(it["prisonId"]).isEqualTo("MDI")
         },
         isNull(),
       )
@@ -287,6 +290,7 @@ internal class ActivitiesServiceTest {
               "dpsActivityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
               "dpsActivityId" to ACTIVITY_ID.toString(),
               "nomisCourseActivityId" to NOMIS_CRS_ACTY_ID.toString(),
+              "prisonId" to "MDI",
             ),
           )
         },
@@ -328,6 +332,7 @@ internal class ActivitiesServiceTest {
               "dpsActivityScheduleId" to ACTIVITY_SCHEDULE_ID.toString(),
               "dpsActivityId" to ACTIVITY_ID.toString(),
               "nomisCourseActivityId" to NOMIS_CRS_ACTY_ID.toString(),
+              "prisonId" to "MDI",
             ),
           )
         },

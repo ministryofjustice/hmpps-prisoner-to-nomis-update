@@ -48,7 +48,7 @@ class AllocationServiceTest {
         ),
       )
       whenever(nomisApiService.upsertAllocation(eq(NOMIS_CRS_ACTY_ID), any())).thenReturn(
-        UpsertAllocationResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID, created = true),
+        UpsertAllocationResponse(offenderProgramReferenceId = OFFENDER_PROGRAM_REFERENCE_ID, created = true, prisonId = "MDI"),
       )
 
       allocationService.upsertAllocationEvent(
@@ -70,6 +70,7 @@ class AllocationServiceTest {
           assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
           assertThat(it["bookingId"]).isEqualTo("$NOMIS_BOOKING_ID")
           assertThat(it["nomisAllocationId"]).isEqualTo("$OFFENDER_PROGRAM_REFERENCE_ID")
+          assertThat(it["prisonId"]).isEqualTo("MDI")
         },
         isNull(),
       )

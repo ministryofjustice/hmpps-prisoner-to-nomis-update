@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-11-27.5680.4f13ea0"
+    "version": "2023-12-11.5810.74f841b"
   },
   "servers": [
     {
@@ -4298,7 +4298,76 @@
         }
       }
     },
-    "/prisoners/{offenderNo}/sentencing/court-case/{id}": {
+    "/prisoners/{offenderNo}/sentencing/court-cases": {
+      "get": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "get court cases for an offender",
+        "description": "Requires role NOMIS_SENTENCING. Retrieves a court case by id",
+        "operationId": "getCourtCasesByOffender",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender No",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender No",
+              "example": "AA12345"
+            },
+            "example": "AA12345"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the list of court cases",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourtCaseResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offender not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/sentencing/court-cases/{id}": {
       "get": {
         "tags": [
           "sentencing-resource"
@@ -4427,6 +4496,153 @@
           },
           "403": {
             "description": "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/booking-id/{bookingId}/sentencing/sentence-sequence/{sequence}": {
+      "get": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "get sentences for an offender using the given booking id and sentence sequence",
+        "description": "Requires role NOMIS_SENTENCING. Retrieves a court case by id",
+        "operationId": "getOffenderSentence",
+        "parameters": [
+          {
+            "name": "sequence",
+            "in": "path",
+            "description": "Sentence sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sentence sequence",
+              "example": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "Offender Booking Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender Booking Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the sentence details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentenceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offender booking not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/booking-id/{bookingId}/sentencing/court-cases": {
+      "get": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "get court cases for an offender booking",
+        "description": "Requires role NOMIS_SENTENCING. Retrieves a court case by id",
+        "operationId": "getCourtCasesByOffenderBooking",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "Booking Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Booking Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the list of court cases",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourtCaseResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offender booking not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -6345,7 +6561,8 @@
         "required": [
           "courseScheduleId",
           "created",
-          "eventId"
+          "eventId",
+          "prisonId"
         ],
         "type": "object",
         "properties": {
@@ -6362,6 +6579,10 @@
           "created": {
             "type": "boolean",
             "description": "Whether or the attendance was created"
+          },
+          "prisonId": {
+            "type": "string",
+            "description": "Prison code"
           }
         },
         "description": "Attendance create/update response"
@@ -7571,7 +7792,8 @@
       "UpsertAllocationResponse": {
         "required": [
           "created",
-          "offenderProgramReferenceId"
+          "offenderProgramReferenceId",
+          "prisonId"
         ],
         "type": "object",
         "properties": {
@@ -7584,6 +7806,10 @@
           "created": {
             "type": "boolean",
             "description": "Whether or not the allocation was created"
+          },
+          "prisonId": {
+            "type": "string",
+            "description": "Prison code"
           }
         },
         "description": "OffenderProgramProfile create/update response"
@@ -9199,12 +9425,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -9377,6 +9603,7 @@
       },
       "CourtCaseResponse": {
         "required": [
+          "bookingId",
           "caseSequence",
           "caseStatus",
           "caseType",
@@ -9385,6 +9612,7 @@
           "createdDateTime",
           "id",
           "lidsCaseNumber",
+          "offenderCharges",
           "offenderNo",
           "prisonId"
         ],
@@ -9396,6 +9624,10 @@
           },
           "offenderNo": {
             "type": "string"
+          },
+          "bookingId": {
+            "type": "integer",
+            "format": "int64"
           },
           "caseInfoNumber": {
             "type": "string"
@@ -9460,13 +9692,85 @@
             "items": {
               "$ref": "#/components/schemas/CourtEventResponse"
             }
+          },
+          "offenderCharges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OffenderChargeResponse"
+            }
           }
         },
         "description": "Court Case"
       },
+      "CourtEventChargeResponse": {
+        "required": [
+          "eventId",
+          "mostSeriousFlag",
+          "offenderChargeId"
+        ],
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offenderChargeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offencesCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offenceDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "offenceEndDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "plea": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "propertyValue": {
+            "type": "number"
+          },
+          "totalPropertyValue": {
+            "type": "number"
+          },
+          "cjitCode1": {
+            "type": "string"
+          },
+          "cjitCode2": {
+            "type": "string"
+          },
+          "cjitCode3": {
+            "type": "string"
+          },
+          "resultCode1": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "resultCode2": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "resultCode1Indicator": {
+            "type": "string"
+          },
+          "resultCode2Indicator": {
+            "type": "string"
+          },
+          "mostSeriousFlag": {
+            "type": "boolean"
+          }
+        },
+        "description": "Court Event Charge"
+      },
       "CourtEventResponse": {
         "required": [
+          "courtEventCharges",
           "courtEventType",
+          "courtOrders",
           "createdByUsername",
           "createdDateTime",
           "eventDate",
@@ -9540,9 +9844,189 @@
           },
           "createdByUsername": {
             "type": "string"
+          },
+          "courtEventCharges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourtEventChargeResponse"
+            }
+          },
+          "courtOrders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourtOrderResponse"
+            }
           }
         },
         "description": "Court Event"
+      },
+      "CourtOrderResponse": {
+        "required": [
+          "courtDate",
+          "id",
+          "issuingCourt",
+          "orderStatus",
+          "orderType",
+          "sentencePurposes"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "courtDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "issuingCourt": {
+            "type": "string"
+          },
+          "courtInfoId": {
+            "type": "string"
+          },
+          "orderType": {
+            "type": "string"
+          },
+          "orderStatus": {
+            "type": "string"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "requestDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "seriousnessLevel": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "commentText": {
+            "type": "string"
+          },
+          "nonReportFlag": {
+            "type": "boolean"
+          },
+          "sentencePurposes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SentencePurposeResponse"
+            }
+          }
+        },
+        "description": "Court Order"
+      },
+      "OffenceResponse": {
+        "required": [
+          "description",
+          "offenceCode",
+          "statuteCode"
+        ],
+        "type": "object",
+        "properties": {
+          "offenceCode": {
+            "type": "string"
+          },
+          "statuteCode": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "description": "Offence"
+      },
+      "OffenderChargeResponse": {
+        "required": [
+          "id",
+          "mostSeriousFlag",
+          "offence"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offence": {
+            "$ref": "#/components/schemas/OffenceResponse"
+          },
+          "offencesCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offenceDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "offenceEndDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "plea": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "propertyValue": {
+            "type": "number"
+          },
+          "totalPropertyValue": {
+            "type": "number"
+          },
+          "cjitCode1": {
+            "type": "string"
+          },
+          "cjitCode2": {
+            "type": "string"
+          },
+          "cjitCode3": {
+            "type": "string"
+          },
+          "chargeStatus": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "resultCode1": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "resultCode2": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "resultCode1Indicator": {
+            "type": "string"
+          },
+          "resultCode2Indicator": {
+            "type": "string"
+          },
+          "mostSeriousFlag": {
+            "type": "boolean"
+          },
+          "lidsOffenceNumber": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "Offender Charge"
+      },
+      "SentencePurposeResponse": {
+        "required": [
+          "orderId",
+          "orderPartyCode",
+          "purposeCode"
+        ],
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "orderPartyCode": {
+            "type": "string"
+          },
+          "purposeCode": {
+            "type": "string"
+          }
+        },
+        "description": "Sentence Purpose"
       },
       "PagePrisonerId": {
         "type": "object",
@@ -9578,12 +10062,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -9605,6 +10089,202 @@
             "type": "string"
           }
         }
+      },
+      "SentenceResponse": {
+        "required": [
+          "bookingId",
+          "calculationType",
+          "category",
+          "createdByUsername",
+          "createdDateTime",
+          "sentenceSeq",
+          "startDate",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sentenceSeq": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string"
+          },
+          "calculationType": {
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "courtOrder": {
+            "$ref": "#/components/schemas/CourtOrderResponse"
+          },
+          "consecSequence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "commentText": {
+            "type": "string"
+          },
+          "absenceCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "caseId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "etdCalculatedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "mtdCalculatedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "ltdCalculatedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "ardCalculatedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "crdCalculatedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "pedCalculatedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "npdCalculatedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "ledCalculatedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "sedCalculatedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "prrdCalculatedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "tariffCalculatedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "dprrdCalculatedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "tusedCalculatedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "aggSentenceSequence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "aggAdjustDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sentenceLevel": {
+            "type": "string"
+          },
+          "extendedDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "counts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "statusUpdateReason": {
+            "type": "string"
+          },
+          "statusUpdateComment": {
+            "type": "string"
+          },
+          "statusUpdateDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "statusUpdateStaffId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "fineAmount": {
+            "type": "number"
+          },
+          "dischargeDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "nomSentDetailRef": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nomConsToSentDetailRef": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nomConsFromSentDetailRef": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nomConsWithSentDetailRef": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lineSequence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hdcExclusionFlag": {
+            "type": "boolean"
+          },
+          "hdcExclusionReason": {
+            "type": "string"
+          },
+          "cjaAct": {
+            "type": "string"
+          },
+          "sled2Calc": {
+            "type": "string",
+            "format": "date"
+          },
+          "startDate2Calc": {
+            "type": "string",
+            "format": "date"
+          },
+          "createdDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdByUsername": {
+            "type": "string"
+          }
+        },
+        "description": "Offender Sentence"
       },
       "KeyDateAdjustmentResponse": {
         "required": [
@@ -9815,12 +10495,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -9881,12 +10561,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -10075,12 +10755,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -10312,12 +10992,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -10377,12 +11057,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -10448,12 +11128,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -10716,12 +11396,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"

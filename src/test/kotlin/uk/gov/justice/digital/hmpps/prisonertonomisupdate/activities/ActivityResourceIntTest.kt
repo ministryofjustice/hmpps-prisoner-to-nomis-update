@@ -77,7 +77,10 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       verify(telemetryClient).trackEvent("activity-create-requested", mapOf("dpsActivityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()), null)
       verify(telemetryClient).trackEvent(
         eq("activity-create-success"),
-        check { assertThat(it).containsEntry("dpsActivityScheduleId", ACTIVITY_SCHEDULE_ID.toString()) },
+        check {
+          assertThat(it).containsEntry("dpsActivityScheduleId", ACTIVITY_SCHEDULE_ID.toString())
+          assertThat(it).containsEntry("prisonId", "PVI")
+        },
         isNull(),
       )
     }
@@ -170,7 +173,10 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       verify(telemetryClient).trackEvent("activity-amend-requested", mapOf("dpsActivityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()), null)
       verify(telemetryClient).trackEvent(
         eq("activity-amend-success"),
-        check { assertThat(it).containsEntry("dpsActivityScheduleId", ACTIVITY_SCHEDULE_ID.toString()) },
+        check {
+          assertThat(it).containsEntry("dpsActivityScheduleId", ACTIVITY_SCHEDULE_ID.toString())
+          assertThat(it).containsEntry("prisonId", "PVI")
+        },
         isNull(),
       )
     }
@@ -255,7 +261,10 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       verify(telemetryClient).trackEvent("activity-allocation-requested", mapOf("dpsAllocationId" to ALLOCATION_ID.toString()), null)
       verify(telemetryClient).trackEvent(
         eq("activity-allocation-success"),
-        check { assertThat(it).containsEntry("dpsAllocationId", ALLOCATION_ID.toString()) },
+        check {
+          assertThat(it).containsEntry("dpsAllocationId", ALLOCATION_ID.toString())
+          assertThat(it).containsEntry("prisonId", "MDI")
+        },
         isNull(),
       )
     }
@@ -307,7 +316,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
     fun `will synchronise an attendance`() = runTest {
       activitiesApi.stubGetAttendanceSync(ATTENDANCE_ID, buildGetAttendanceSyncResponse())
       mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
-      nomisApi.stubUpsertAttendance(NOMIS_CRS_SCH_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
+      nomisApi.stubUpsertAttendance(NOMIS_CRS_SCH_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID, "prisonId": "MDI" }""")
 
       webTestClient.put().uri("/attendances/$ATTENDANCE_ID")
         .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
@@ -321,7 +330,10 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       verify(telemetryClient).trackEvent("activity-attendance-requested", mapOf("dpsAttendanceId" to ATTENDANCE_ID.toString()), null)
       verify(telemetryClient).trackEvent(
         eq("activity-attendance-update-success"),
-        check { assertThat(it).containsEntry("dpsAttendanceId", ATTENDANCE_ID.toString()) },
+        check {
+          assertThat(it).containsEntry("dpsAttendanceId", ATTENDANCE_ID.toString())
+          assertThat(it).containsEntry("prisonId", "MDI")
+        },
         isNull(),
       )
     }

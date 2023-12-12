@@ -440,7 +440,8 @@ internal class NomisApiServiceTest {
     val validResponse = """{
         "eventId": 1,
         "courseScheduleId": 2,
-        "created": true
+        "created": true,
+        "prisonId": "MDI"
       }
     """.trimMargin()
 
