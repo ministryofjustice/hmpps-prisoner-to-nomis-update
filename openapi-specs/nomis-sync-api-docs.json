@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-12-11.5810.74f841b"
+    "version": "2023-12-13.5851.d58d6da"
   },
   "servers": [
     {
@@ -5356,7 +5356,7 @@
           "appointments-resource"
         ],
         "summary": "get appointments by filter",
-        "description": "Retrieves a paged list of incentive composite ids by filter. Requires ROLE_NOMIS_APPOINTMENTS.",
+        "description": "Retrieves a paged list of appointment ids by filter. Requires ROLE_NOMIS_APPOINTMENTS.",
         "operationId": "getAppointmentsByFilter",
         "parameters": [
           {
@@ -5370,8 +5370,8 @@
           {
             "name": "prisonIds",
             "in": "query",
-            "description": "Filter results by prison ids (returns all prisons if not specified)",
-            "required": false,
+            "description": "Filter results by prison ids",
+            "required": true,
             "schema": {
               "type": "array",
               "items": {
@@ -5425,7 +5425,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint when role NOMIS_INCENTIVES not present",
+            "description": "Forbidden to access this endpoint when role not present",
             "content": {
               "application/json": {
                 "schema": {
@@ -7537,7 +7537,6 @@
           "capacity",
           "description",
           "excludeBankHolidays",
-          "minimumIncentiveLevelCode",
           "outsideWork",
           "payPerSession",
           "payRates",
@@ -9108,7 +9107,6 @@
           "code",
           "description",
           "excludeBankHolidays",
-          "minimumIncentiveLevelCode",
           "outsideWork",
           "payPerSession",
           "payRates",
@@ -10097,7 +10095,9 @@
           "category",
           "createdByUsername",
           "createdDateTime",
+          "offenderCharges",
           "sentenceSeq",
+          "sentenceTerms",
           "startDate",
           "status"
         ],
@@ -10282,9 +10282,69 @@
           },
           "createdByUsername": {
             "type": "string"
+          },
+          "sentenceTerms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SentenceTermResponse"
+            }
+          },
+          "offenderCharges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OffenderChargeResponse"
+            }
           }
         },
         "description": "Offender Sentence"
+      },
+      "SentenceTermResponse": {
+        "required": [
+          "startDate",
+          "termSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "termSequence": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sentenceTermType": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "years": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "months": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weeks": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hours": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "lifeSentenceFlag": {
+            "type": "boolean"
+          }
+        },
+        "description": "Sentence Term"
       },
       "KeyDateAdjustmentResponse": {
         "required": [
@@ -11218,7 +11278,6 @@
           "courseActivityId",
           "description",
           "excludeBankHolidays",
-          "minimumIncentiveLevel",
           "outsideWork",
           "payPerSession",
           "payRates",

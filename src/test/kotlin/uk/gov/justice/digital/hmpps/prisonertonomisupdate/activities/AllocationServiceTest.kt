@@ -209,5 +209,6 @@ private fun newAllocation(): Allocation {
     scheduleId = ACTIVITY_SCHEDULE_ID,
     isUnemployment = false,
     status = ACTIVE,
+    exclusions = emptyList(),
   )
 }
