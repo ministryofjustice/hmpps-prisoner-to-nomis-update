@@ -194,7 +194,8 @@ fun buildApiAllocationDtoJsonResponse(id: Long = ALLOCATION_ID): String {
     "allocatedTime": "2023-01-10T14:46:05.849Z",
     "scheduleDescription" : "description",
     "activitySummary" : "summary",
-    "status": "ACTIVE"
+    "status": "ACTIVE",
+    "exclusions": []
   }
   """.trimIndent()
 }
@@ -211,7 +212,8 @@ fun buildApiAllocationDtoWithMissingPayBand(id: Long = ALLOCATION_ID): String {
     "allocatedTime": "2023-01-10T14:46:05.849Z",
     "scheduleDescription" : "description",
     "activitySummary" : "summary",
-    "status": "ACTIVE"
+    "status": "ACTIVE",
+    "exclusions": []
   }
   """.trimIndent()
 }
@@ -243,7 +245,8 @@ fun buildApiAllocationDeallocatedJsonResponse(id: Long = ALLOCATION_ID): String 
     "deallocatedTime": "2023-01-13T18:49:04.837Z",
     "scheduleDescription" : "description",
     "activitySummary" : "summary",
-    "status": "ENDED"
+    "status": "ENDED",
+    "exclusions": []
   }
   """.trimIndent()
 }
@@ -271,7 +274,8 @@ fun buildApiAllocationSuspendedJsonResponse(id: Long = ALLOCATION_ID): String {
     "suspendedTime": "2023-01-13T18:49:04.837Z",
     "scheduleDescription" : "description",
     "activitySummary" : "summary",
-    "status": "SUSPENDED"
+    "status": "SUSPENDED",
+    "exclusions": []
   }
   """.trimIndent()
 }
