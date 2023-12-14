@@ -239,8 +239,6 @@ private fun newScheduledInstance() = ActivityScheduleInstance(
       payPerSession = ActivityLite.PayPerSession.H,
       summary = "test",
       riskLevel = "risk",
-      minimumIncentiveNomisCode = "A",
-      minimumIncentiveLevel = "BAS",
       minimumEducationLevel = listOf(),
       category =
       ActivityCategory(
