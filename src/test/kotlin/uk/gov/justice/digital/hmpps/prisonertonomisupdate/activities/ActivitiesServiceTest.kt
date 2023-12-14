@@ -417,8 +417,6 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
     ),
     riskLevel = "high",
     payPerSession = ActivityLite.PayPerSession.H,
-    minimumIncentiveLevel = "Basic",
-    minimumIncentiveNomisCode = "BAS",
     minimumEducationLevel = listOf(
       ActivityMinimumEducationLevel(
         id = 123456,
@@ -472,8 +470,6 @@ private fun newActivity(): Activity = Activity(
   startDate = LocalDate.now(),
   createdTime = LocalDateTime.now(),
   createdBy = "me",
-  minimumIncentiveLevel = "Basic",
-  minimumIncentiveNomisCode = "BAS",
   riskLevel = "high",
   minimumEducationLevel = listOf(
     ActivityMinimumEducationLevel(

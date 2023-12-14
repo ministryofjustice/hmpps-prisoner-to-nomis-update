@@ -198,7 +198,6 @@ internal class ActivitiesApiServiceTest {
       assertThat(schedule.internalLocation?.code).isEqualTo("EDU-ROOM-1")
       assertThat(schedule.capacity).isEqualTo(10)
       assertThat(schedule.activity.payPerSession).isEqualTo(ActivityLite.PayPerSession.F)
-      assertThat(schedule.activity.minimumIncentiveNomisCode).isEqualTo("BAS")
       with(schedule.instances.first()) {
         assertThat(date).isEqualTo("2022-12-30")
         assertThat(startTime).isEqualTo("9:00")
@@ -465,7 +464,6 @@ internal class ActivitiesApiServiceTest {
       assertThat(activity.prisonCode).isEqualTo("PVI")
       assertThat(activity.description).isEqualTo("A basic maths course suitable for introduction to the subject")
       assertThat(activity.category.code).isEqualTo("LEISURE_SOCIAL")
-      assertThat(activity.minimumIncentiveNomisCode).isEqualTo("BAS")
       assertThat(activity.startDate).isEqualTo("2022-12-30")
       assertThat(activity.endDate).isEqualTo("2022-12-31")
       assertThat(activity.summary).isEqualTo("Maths level 1")
