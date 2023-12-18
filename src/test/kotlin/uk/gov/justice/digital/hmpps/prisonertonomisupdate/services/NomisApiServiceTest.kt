@@ -1619,6 +1619,30 @@ internal class NomisApiServiceTest {
       )
     }
   }
+
+  @Nested
+  inner class GetAdaAwardSummary {
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stubGetAdaAwardSummary(123456)
+
+      nomisApiService.getAdaAwardsSummary(123456)
+
+      nomisApi.verify(
+        getRequestedFor(urlEqualTo("/prisoners/booking-id/123456/awards/ada/summary"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should throw exception on any error`() = runTest {
+      nomisApi.stubGetAdaAwardSummaryWithError(123456, status = 404)
+
+      assertThrows<NotFound> {
+        nomisApiService.getAdaAwardsSummary(123456)
+      }
+    }
+  }
 }
 
 fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(

@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
 import java.time.LocalDate
@@ -716,6 +717,34 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withBody(ERROR_RESPONSE)
           .withStatus(status),
       ),
+    )
+  }
+
+  fun stubGetSentencingAdjustments(bookingId: Long, sentencingAdjustmentsResponse: SentencingAdjustmentsResponse = SentencingAdjustmentsResponse(emptyList(), emptyList())) {
+    stubFor(
+      get(
+        urlPathEqualTo("/prisoners/booking-id/$bookingId/sentencing-adjustments"),
+      )
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(sentencingAdjustmentsResponse),
+        ),
+    )
+  }
+
+  fun stubGetSentencingAdjustmentsWithError(bookingId: Int, status: Int) {
+    stubFor(
+      get(
+        urlPathEqualTo("/prisoners/booking-id/$bookingId/sentencing-adjustments"),
+      )
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status)
+            .withBody("""{"message":"Error"}"""),
+        ),
     )
   }
 
@@ -1467,6 +1496,42 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetAdaAwardSummary(
+    bookingId: Long,
+    adjudicationADAAwardSummaryResponse: AdjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
+      bookingId = bookingId,
+      offenderNo = "A1234XT",
+      prisonIds = listOf("MDI"),
+      adaSummaries = emptyList(),
+    ),
+  ) {
+    stubFor(
+      get(
+        urlPathEqualTo("/prisoners/booking-id/$bookingId/awards/ada/summary"),
+      )
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(adjudicationADAAwardSummaryResponse),
+        ),
+    )
+  }
+
+  fun stubGetAdaAwardSummaryWithError(bookingId: Int, status: Int) {
+    stubFor(
+      get(
+        urlPathEqualTo("/prisoners/booking-id/$bookingId/awards/ada/summary"),
+      )
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status)
+            .withBody("""{"message":"Error"}"""),
+        ),
+    )
+  }
+
   // *************************************************** Non-Associations **********************************************
 
   fun stubNonAssociationCreate(response: String) {
@@ -1477,44 +1542,6 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withStatus(201)
           .withBody(response),
       ),
-    )
-  }
-
-  fun stubNonAssociationCreateWithError(status: Int = 500) {
-    stubFor(
-      post("/non-associations").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(ERROR_RESPONSE)
-          .withStatus(status),
-      ),
-    )
-  }
-
-  fun stubNonAssociationCreateWithErrorFollowedBySlowSuccess(response: String) {
-    stubFor(
-      post("/non-associations")
-        .inScenario("Retry NOMIS NonAssociations Scenario")
-        .whenScenarioStateIs(Scenario.STARTED)
-        .willReturn(
-          aResponse()
-            .withStatus(500) // request unsuccessful with status code 500
-            .withHeader("Content-Type", "application/json"),
-        )
-        .willSetStateTo("Cause NOMIS NonAssociations Success"),
-    )
-
-    stubFor(
-      post("/non-associations")
-        .inScenario("Retry NOMIS NonAssociations Scenario")
-        .whenScenarioStateIs("Cause NOMIS NonAssociations Success")
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(201)
-            .withBody(response)
-            .withFixedDelay(1500),
-        ).willSetStateTo(Scenario.STARTED),
     )
   }
 
@@ -1532,32 +1559,6 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withBody(ERROR_RESPONSE)
           .withStatus(status),
       ),
-    )
-  }
-
-  fun stubNonAssociationAmendWithErrorFollowedBySlowSuccess(offenderNo1: String, offenderNo2: String) {
-    stubFor(
-      put("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/1")
-        .inScenario("Retry NOMIS NonAssociations amend Scenario")
-        .whenScenarioStateIs(Scenario.STARTED)
-        .willReturn(
-          aResponse()
-            .withStatus(500) // request unsuccessful with status code 500
-            .withHeader("Content-Type", "application/json"),
-        )
-        .willSetStateTo("Cause NOMIS NonAssociations amend Success"),
-    )
-
-    stubFor(
-      put("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/1")
-        .inScenario("Retry NOMIS NonAssociations amend Scenario")
-        .whenScenarioStateIs("Cause NOMIS NonAssociations amend Success")
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(200)
-            .withFixedDelay(1500),
-        ).willSetStateTo(Scenario.STARTED),
     )
   }
 
@@ -1674,34 +1675,6 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(responseCode)
-            .withBody("""{"message":"Error"}"""),
-        ),
-    )
-  }
-
-  fun stubGetSentencingAdjustments(bookingId: Long, sentencingAdjustmentsResponse: SentencingAdjustmentsResponse = SentencingAdjustmentsResponse(emptyList(), emptyList())) {
-    stubFor(
-      get(
-        urlPathEqualTo("/prisoners/booking-id/$bookingId/sentencing-adjustments"),
-      )
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(HttpStatus.OK.value())
-            .withBody(sentencingAdjustmentsResponse),
-        ),
-    )
-  }
-
-  fun stubGetSentencingAdjustmentsWithError(bookingId: Int, status: Int) {
-    stubFor(
-      get(
-        urlPathEqualTo("/prisoners/booking-id/$bookingId/sentencing-adjustments"),
-      )
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(status)
             .withBody("""{"message":"Error"}"""),
         ),
     )

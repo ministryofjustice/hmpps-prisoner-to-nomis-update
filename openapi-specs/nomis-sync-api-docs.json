@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-12-13.5851.d58d6da"
+    "version": "2023-12-15.5883.a3a318a"
   },
   "servers": [
     {
@@ -2757,6 +2757,159 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/sentencing/court-cases": {
+      "get": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "get court cases for an offender",
+        "description": "Requires role NOMIS_SENTENCING. Retrieves a court case by id",
+        "operationId": "getCourtCasesByOffender",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender No",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender No",
+              "example": "AA12345"
+            },
+            "example": "AA12345"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the list of court cases",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourtCaseResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offender not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "Creates a new Court Case",
+        "description": "Required role NOMIS_SENTENCING Creates a new Court Case for the offender and latest booking",
+        "operationId": "createCourtCase",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Booking Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Booking Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCourtCaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created Court case",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateCourtCaseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offender does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/adjudications": {
       "post": {
         "tags": [
@@ -4298,75 +4451,6 @@
         }
       }
     },
-    "/prisoners/{offenderNo}/sentencing/court-cases": {
-      "get": {
-        "tags": [
-          "sentencing-resource"
-        ],
-        "summary": "get court cases for an offender",
-        "description": "Requires role NOMIS_SENTENCING. Retrieves a court case by id",
-        "operationId": "getCourtCasesByOffender",
-        "parameters": [
-          {
-            "name": "offenderNo",
-            "in": "path",
-            "description": "Offender No",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Offender No",
-              "example": "AA12345"
-            },
-            "example": "AA12345"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "the list of court cases",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CourtCaseResponse"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Offender not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/prisoners/{offenderNo}/sentencing/court-cases/{id}": {
       "get": {
         "tags": [
@@ -4777,6 +4861,72 @@
           },
           "404": {
             "description": "Hearing result award does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/booking-id/{bookingId}/awards/ada/summary": {
+      "get": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "Get ADA award summary result award by booking ",
+        "description": "Retrieves a summary of ADA awards along with associated adjudication for a given booking. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "getAdjudicationADASummary",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "NOMIS booking Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS booking Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ADA Summary award Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdjudicationADAAwardSummaryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Booking does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -7925,6 +8075,48 @@
         },
         "description": "Visit creation response"
       },
+      "CreateCourtCaseRequest": {
+        "required": [
+          "court",
+          "legalCaseType",
+          "startDate",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "startDate": {
+            "type": "string",
+            "description": "Court case start date",
+            "format": "date"
+          },
+          "legalCaseType": {
+            "type": "string",
+            "description": "Legal Case type"
+          },
+          "court": {
+            "type": "string",
+            "description": "Court Id (establishment)"
+          },
+          "status": {
+            "type": "string",
+            "description": "Case status"
+          }
+        },
+        "description": "Court case create request"
+      },
+      "CreateCourtCaseResponse": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "Create adjustment response"
+      },
       "AdjudicationCharge": {
         "required": [
           "chargeSequence",
@@ -9604,15 +9796,15 @@
           "bookingId",
           "caseSequence",
           "caseStatus",
-          "caseType",
           "courtEvents",
           "createdByUsername",
           "createdDateTime",
+          "establishmentId",
           "id",
+          "legalCaseType",
           "lidsCaseNumber",
           "offenderCharges",
-          "offenderNo",
-          "prisonId"
+          "offenderNo"
         ],
         "type": "object",
         "properties": {
@@ -9637,14 +9829,14 @@
           "caseStatus": {
             "$ref": "#/components/schemas/CodeDescription"
           },
-          "caseType": {
+          "legalCaseType": {
             "$ref": "#/components/schemas/CodeDescription"
           },
           "beginDate": {
             "type": "string",
             "format": "date"
           },
-          "prisonId": {
+          "establishmentId": {
             "type": "string"
           },
           "combinedCaseId": {
@@ -10426,6 +10618,78 @@
           }
         },
         "description": "Sentencing adjustment"
+      },
+      "ADASummary": {
+        "required": [
+          "adjudicationNumber",
+          "days",
+          "effectiveDate",
+          "sanctionSequence",
+          "sanctionStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "adjudicationNumber": {
+            "type": "integer",
+            "description": "Parent adjudication number that lead to this award",
+            "format": "int64"
+          },
+          "sanctionSequence": {
+            "type": "integer",
+            "description": "Key to this sanction",
+            "format": "int32"
+          },
+          "days": {
+            "type": "integer",
+            "description": "Number of days awards",
+            "format": "int32"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "description": "Date of award",
+            "format": "date"
+          },
+          "sanctionStatus": {
+            "$ref": "#/components/schemas/CodeDescription"
+          }
+        },
+        "description": "ADA summary"
+      },
+      "AdjudicationADAAwardSummaryResponse": {
+        "required": [
+          "adaSummaries",
+          "bookingId",
+          "offenderNo",
+          "prisonIds"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "Booking id for the summary",
+            "format": "int64"
+          },
+          "offenderNo": {
+            "type": "string",
+            "description": "Prisoner number related to booking"
+          },
+          "prisonIds": {
+            "type": "array",
+            "description": "List of prisons this person attended during this booking",
+            "items": {
+              "type": "string",
+              "description": "List of prisons this person attended during this booking"
+            }
+          },
+          "adaSummaries": {
+            "type": "array",
+            "description": "List of ADAs awarded during this booking period",
+            "items": {
+              "$ref": "#/components/schemas/ADASummary"
+            }
+          }
+        },
+        "description": "Summary of adjudication for a booking"
       },
       "NonAssociationResponse": {
         "required": [
