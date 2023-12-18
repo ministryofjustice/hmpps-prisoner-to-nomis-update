@@ -20,6 +20,7 @@ import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrUpsertAttendanceError
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AttendanceReconciliationResponse
@@ -536,6 +537,12 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     .bodyValue(request)
     .retrieve()
     .awaitBodilessEntity()
+
+  suspend fun getAdaAwardsSummary(bookingId: Long): AdjudicationADAAwardSummaryResponse =
+    webClient.get()
+      .uri("/prisoners/booking-id/{bookingId}/awards/ada/summary", bookingId)
+      .retrieve()
+      .awaitBody()
 
   // ////////// NON-ASSOCIATIONS //////////////
 
