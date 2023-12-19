@@ -9,7 +9,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
@@ -54,8 +57,9 @@ class AdjudicationsReconciliationService(
     val nomisSummary = nomisApiService.getAdaAwardsSummary(prisonerId.bookingId)
     val dpsAdjudications = adjudicationsApiService.getAdjudicationsByBookingId(prisonerId.bookingId, nomisSummary.prisonIds)
 
-    // TODO matching
-    return null
+    val nomisAdaSummary: AdaSummary = nomisSummary.toAdaSummary()
+    val dpsAdaSummary: AdaSummary = dpsAdjudications.toAdaSummary()
+    return if (nomisAdaSummary != dpsAdaSummary) MismatchAdjudicationAdaPunishments(prisonerId = prisonerId, dpsAdas = dpsAdaSummary, nomisAda = nomisAdaSummary) else null
   }.onFailure {
     log.error("Unable to match adjudication for prisoner with ${prisonerId.offenderNo} booking: ${prisonerId.bookingId}", it)
     telemetryClient.trackEvent(
@@ -66,6 +70,17 @@ class AdjudicationsReconciliationService(
       ),
     )
   }.getOrNull()
+}
+
+private val dpsAdaTypes = listOf(PunishmentDto.Type.ADDITIONAL_DAYS, PunishmentDto.Type.PROSPECTIVE_DAYS)
+
+private fun List<ReportedAdjudicationDto>.toAdaSummary(): AdaSummary {
+  val adaPunishments = this.flatMap { it.punishments }.filter { it.type in dpsAdaTypes }
+  return AdaSummary(count = adaPunishments.size, days = adaPunishments.sumOf { it.schedule.days })
+}
+
+private fun AdjudicationADAAwardSummaryResponse.toAdaSummary(): AdaSummary {
+  return AdaSummary(count = this.adaSummaries.size, days = this.adaSummaries.sumOf { it.days })
 }
 
 data class MismatchAdjudicationAdaPunishments(
