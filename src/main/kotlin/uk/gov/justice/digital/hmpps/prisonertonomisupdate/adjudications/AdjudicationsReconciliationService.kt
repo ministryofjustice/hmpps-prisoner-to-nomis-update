@@ -59,7 +59,24 @@ class AdjudicationsReconciliationService(
 
     val nomisAdaSummary: AdaSummary = nomisSummary.toAdaSummary()
     val dpsAdaSummary: AdaSummary = dpsAdjudications.toAdaSummary()
-    return if (nomisAdaSummary != dpsAdaSummary) MismatchAdjudicationAdaPunishments(prisonerId = prisonerId, dpsAdas = dpsAdaSummary, nomisAda = nomisAdaSummary) else null
+    return if (nomisAdaSummary != dpsAdaSummary) {
+      MismatchAdjudicationAdaPunishments(prisonerId = prisonerId, dpsAdas = dpsAdaSummary, nomisAda = nomisAdaSummary).also { mismatch ->
+        log.info("Adjudications Mismatch found  $mismatch")
+        telemetryClient.trackEvent(
+          "adjudication-reports-reconciliation-mismatch",
+          mapOf(
+            "offenderNo" to mismatch.prisonerId.offenderNo,
+            "bookingId" to mismatch.prisonerId.bookingId.toString(),
+            "nomisAdaCount" to (mismatch.nomisAda.count.toString()),
+            "dpsAdaCount" to (mismatch.dpsAdas.count.toString()),
+            "nomisAdaDays" to (mismatch.nomisAda.days.toString()),
+            "dpsAdaDays" to (mismatch.dpsAdas.days.toString()),
+          ),
+        )
+      }
+    } else {
+      null
+    }
   }.onFailure {
     log.error("Unable to match adjudication for prisoner with ${prisonerId.offenderNo} booking: ${prisonerId.bookingId}", it)
     telemetryClient.trackEvent(

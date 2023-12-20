@@ -111,6 +111,82 @@ internal class AdjudicationsReconciliationServiceTest {
     }
 
     @Nested
+    inner class WhenBothSystemsHaveAMultipleIdenticalAdas {
+      @BeforeEach
+      fun beforeEach() {
+        adjudicationsApiServer.stubGetAdjudicationsByBookingId(
+          123456,
+          listOf(
+            aDPSAdjudication().copy(punishments = listOf(adaPunishment(days = 3))),
+            aDPSAdjudication().copy(punishments = listOf(adaPunishment(days = 9))),
+            aDPSAdjudication().copy(punishments = listOf(adaPunishment(days = 10))),
+          ),
+        )
+        nomisApi.stubGetAdaAwardSummary(
+          bookingId = 123456,
+          adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
+            bookingId = 123456,
+            offenderNo = "A1234AA",
+            prisonIds = listOf("MDI"),
+            adaSummaries = listOf(nomisSummary(days = 10), nomisSummary(days = 3), nomisSummary(days = 9)),
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(
+          service.checkADAPunishmentsMatch(
+            ActivePrisonerId(
+              bookingId = 123456L,
+              offenderNo = "A1234AA",
+            ),
+          ),
+        ).isNull()
+      }
+    }
+
+    @Nested
+    inner class WhenBothSystemsHaveAMultipleAdasWithSameLengthsButDifferentDates {
+      @BeforeEach
+      fun beforeEach() {
+        adjudicationsApiServer.stubGetAdjudicationsByBookingId(
+          123456,
+          listOf(
+            aDPSAdjudication().copy(punishments = listOf(adaPunishment(days = 3, startDate = LocalDate.now().minusDays(1)))),
+            aDPSAdjudication().copy(punishments = listOf(adaPunishment(days = 9, startDate = LocalDate.now().minusDays(2)))),
+            aDPSAdjudication().copy(punishments = listOf(adaPunishment(days = 10, startDate = LocalDate.now().minusDays(3)))),
+          ),
+        )
+        nomisApi.stubGetAdaAwardSummary(
+          bookingId = 123456,
+          adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
+            bookingId = 123456,
+            offenderNo = "A1234AA",
+            prisonIds = listOf("MDI"),
+            adaSummaries = listOf(
+              nomisSummary(days = 10, effectiveDate = LocalDate.now().minusWeeks(1)),
+              nomisSummary(days = 3, effectiveDate = LocalDate.now().minusWeeks(3)),
+              nomisSummary(days = 9, effectiveDate = LocalDate.now().minusWeeks(7)),
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report a mismatch ignoring the ADA dates`() = runTest {
+        assertThat(
+          service.checkADAPunishmentsMatch(
+            ActivePrisonerId(
+              bookingId = 123456L,
+              offenderNo = "A1234AA",
+            ),
+          ),
+        ).isNull()
+      }
+    }
+
+    @Nested
     inner class WhenBothSystemsHaveASingleIdenticalAdaButIsProspectiveInDPS {
       @BeforeEach
       fun beforeEach() {
@@ -122,6 +198,35 @@ internal class AdjudicationsReconciliationServiceTest {
             offenderNo = "A1234AA",
             prisonIds = listOf("MDI"),
             adaSummaries = listOf(nomisSummary(days = 10)),
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(
+          service.checkADAPunishmentsMatch(
+            ActivePrisonerId(
+              bookingId = 123456L,
+              offenderNo = "A1234AA",
+            ),
+          ),
+        ).isNull()
+      }
+    }
+
+    @Nested
+    inner class WhenBothSystemsHaveASingleIdenticalAdaButWithDifferentStatus {
+      @BeforeEach
+      fun beforeEach() {
+        adjudicationsApiServer.stubGetAdjudicationsByBookingId(123456, listOf(aDPSAdjudication().copy(punishments = listOf(adaPunishment(days = 10, type = PROSPECTIVE_DAYS)))))
+        nomisApi.stubGetAdaAwardSummary(
+          bookingId = 123456,
+          adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
+            bookingId = 123456,
+            offenderNo = "A1234AA",
+            prisonIds = listOf("MDI"),
+            adaSummaries = listOf(nomisSummary(days = 10).copy(sanctionStatus = CodeDescription("QUASHED", "Quashed"))),
           ),
         )
       }
@@ -219,7 +324,7 @@ internal class AdjudicationsReconciliationServiceTest {
   }
 }
 
-private fun aDPSAdjudication(chargeNumber: String = "4000001", prisonerNumber: String = "A1234AA"): ReportedAdjudicationDto = ReportedAdjudicationDto(
+internal fun aDPSAdjudication(chargeNumber: String = "4000001", prisonerNumber: String = "A1234AA"): ReportedAdjudicationDto = ReportedAdjudicationDto(
   chargeNumber = chargeNumber,
   prisonerNumber = prisonerNumber,
   gender = ReportedAdjudicationDto.Gender.FEMALE,
@@ -254,10 +359,10 @@ private fun aDPSAdjudication(chargeNumber: String = "4000001", prisonerNumber: S
   createdOnBehalfOfReason = null,
 )
 
-private fun adaPunishment(days: Int, startDate: LocalDate = LocalDate.now(), type: PunishmentDto.Type = ADDITIONAL_DAYS) =
+internal fun adaPunishment(days: Int, startDate: LocalDate = LocalDate.now(), type: PunishmentDto.Type = ADDITIONAL_DAYS) =
   PunishmentDto(type = type, schedule = PunishmentScheduleDto(days = days, startDate = startDate))
 
-private fun nomisSummary(days: Int, effectiveDate: LocalDate = LocalDate.now()): ADASummary = ADASummary(
+internal fun nomisSummary(days: Int, effectiveDate: LocalDate = LocalDate.now()): ADASummary = ADASummary(
   adjudicationNumber = 4000001,
   sanctionSequence = 1,
   days = days,
