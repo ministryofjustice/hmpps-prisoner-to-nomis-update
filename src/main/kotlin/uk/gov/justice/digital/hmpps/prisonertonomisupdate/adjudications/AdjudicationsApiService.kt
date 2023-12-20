@@ -21,7 +21,7 @@ class AdjudicationsApiService(private val adjudicationsApiWebClient: WebClient) 
   suspend fun getAdjudicationsByBookingId(bookingId: Long, prisonIds: List<String>): List<ReportedAdjudicationDto> {
     // TODO - switch to simplified non-paged version when available
     return adjudicationsApiWebClient.get()
-      .uri("/reported-adjudications/booking/{bookingId}?agency={agency}&page={page}&size={size}", bookingId, prisonIds.joinToString(), 0, 1000)
+      .uri("/reported-adjudications/booking/{bookingId}?agency={agency}&status=ACCEPTED,REJECTED,AWAITING_REVIEW,RETURNED,UNSCHEDULED,SCHEDULED,REFER_POLICE,REFER_INAD,REFER_GOV,PROSECUTION,DISMISSED,NOT_PROCEED,ADJOURNED,CHARGE_PROVED,QUASHED,CORRUPTED&page={page}&size={size}", bookingId, prisonIds.joinToString(), 0, 1000)
       .retrieve()
       .awaitBody<PageReportedAdjudicationDto>().content!!
   }
