@@ -8131,7 +8131,8 @@
               "NOT_PROCEED",
               "ADJOURNED",
               "CHARGE_PROVED",
-              "QUASHED"
+              "QUASHED",
+              "CORRUPTED"
             ]
           },
           "reviewedByUserId": {

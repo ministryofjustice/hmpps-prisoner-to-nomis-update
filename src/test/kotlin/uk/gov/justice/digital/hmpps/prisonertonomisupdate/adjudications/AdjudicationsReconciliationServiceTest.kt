@@ -219,7 +219,11 @@ internal class AdjudicationsReconciliationServiceTest {
     inner class WhenBothSystemsHaveASingleIdenticalAdaButWithDifferentStatus {
       @BeforeEach
       fun beforeEach() {
-        adjudicationsApiServer.stubGetAdjudicationsByBookingId(123456, listOf(aDPSAdjudication().copy(punishments = listOf(adaPunishment(days = 10, type = PROSPECTIVE_DAYS)))))
+        adjudicationsApiServer.stubGetAdjudicationsByBookingId(
+          123456,
+          listOf(aDPSAdjudication().copy(status = ReportedAdjudicationDto.Status.CORRUPTED, punishments = listOf(adaPunishment(days = 10, type = PROSPECTIVE_DAYS)))),
+          // if there is a compile error on Status.CORRUPTED please update line 8135 of the open API adjudication spec json manually - waiting for DPS swagger update
+        )
         nomisApi.stubGetAdaAwardSummary(
           bookingId = 123456,
           adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
