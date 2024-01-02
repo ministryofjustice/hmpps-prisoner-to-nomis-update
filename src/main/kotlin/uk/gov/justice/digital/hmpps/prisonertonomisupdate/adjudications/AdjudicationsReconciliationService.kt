@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Adjudi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithSingleRetry
 
 @Service
 class AdjudicationsReconciliationService(
@@ -54,8 +55,8 @@ class AdjudicationsReconciliationService(
       .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
   suspend fun checkADAPunishmentsMatch(prisonerId: ActivePrisonerId): MismatchAdjudicationAdaPunishments? = runCatching {
-    val nomisSummary = nomisApiService.getAdaAwardsSummary(prisonerId.bookingId)
-    val dpsAdjudications = adjudicationsApiService.getAdjudicationsByBookingId(prisonerId.bookingId, nomisSummary.prisonIds)
+    val nomisSummary = doApiCallWithSingleRetry { nomisApiService.getAdaAwardsSummary(prisonerId.bookingId) }
+    val dpsAdjudications = doApiCallWithSingleRetry { adjudicationsApiService.getAdjudicationsByBookingId(prisonerId.bookingId, nomisSummary.prisonIds) }
 
     val nomisAdaSummary: AdaSummary = nomisSummary.toAdaSummary()
     val dpsAdaSummary: AdaSummary = dpsAdjudications.toAdaSummary()
