@@ -159,7 +159,7 @@ internal class AdjudicationsServiceTest {
                 plea = HearingOutcomeDto.Plea.GUILTY,
               ),
             ),
-            outcome = CombinedOutcomeDto(outcome = OutcomeDto(code = OutcomeDto.Code.CHARGE_PROVED)),
+            outcome = CombinedOutcomeDto(outcome = OutcomeDto(code = OutcomeDto.Code.CHARGE_PROVED, canRemove = true)),
           ),
         ),
         disIssueHistory = emptyList(),
