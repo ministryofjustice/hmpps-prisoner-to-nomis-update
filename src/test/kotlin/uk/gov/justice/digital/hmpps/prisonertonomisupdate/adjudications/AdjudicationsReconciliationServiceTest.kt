@@ -358,13 +358,12 @@ internal fun aDPSAdjudication(chargeNumber: String = "4000001", prisonerNumber: 
   dateTimeOfFirstHearing = null,
   overrideAgencyId = null,
   transferableActionsAllowed = null,
-  hearingIdActioned = null,
   createdOnBehalfOfOfficer = null,
   createdOnBehalfOfReason = null,
 )
 
 internal fun adaPunishment(days: Int, startDate: LocalDate = LocalDate.now(), type: PunishmentDto.Type = ADDITIONAL_DAYS) =
-  PunishmentDto(type = type, schedule = PunishmentScheduleDto(days = days, startDate = startDate))
+  PunishmentDto(type = type, schedule = PunishmentScheduleDto(days = days, startDate = startDate), canRemove = true)
 
 internal fun nomisSummary(days: Int, effectiveDate: LocalDate = LocalDate.now()): ADASummary = ADASummary(
   adjudicationNumber = 4000001,
