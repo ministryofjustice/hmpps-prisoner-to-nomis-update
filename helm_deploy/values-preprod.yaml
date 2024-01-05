@@ -10,7 +10,7 @@ generic-service:
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
     API_BASE_URL_OAUTH: https://sign-in-preprod.hmpps.service.justice.gov.uk/auth
-    API_BASE_URL_NOMIS: https://nomis-prsner-pp.aks-live-1.studio-hosting.service.justice.gov.uk
+    API_BASE_URL_NOMIS: https://nomis-prisoner-api-preprod.prison.service.justice.gov.uk
     API_BASE_URL_MAPPING: https://nomis-sync-prisoner-mapping-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_VISITS: https://visit-scheduler-preprod.prison.service.justice.gov.uk
     API_BASE_URL_INCENTIVES: https://incentives-api-preprod.hmpps.service.justice.gov.uk
