@@ -15,7 +15,7 @@
       "description": "Development"
     },
     {
-      "url": "https://nomis-prsner-pp.aks-live-1.studio-hosting.service.justice.gov.uk",
+      "url": "https://nomis-prisoner-api-preprod.prison.service.justice.gov.uk",
       "description": "PreProd"
     },
     {
