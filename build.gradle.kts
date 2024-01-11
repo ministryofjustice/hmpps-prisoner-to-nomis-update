@@ -22,7 +22,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("org.springframework.data:spring-data-commons:3.2.1")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.1.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.2.1")
 
   implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.3.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
@@ -40,7 +40,7 @@ dependencies {
   testImplementation("org.wiremock:wiremock-standalone:3.3.1")
   testImplementation("org.mockito:mockito-inline:5.2.0")
   testImplementation("org.testcontainers:localstack:1.19.3")
-  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.630")
+  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.633")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 }
