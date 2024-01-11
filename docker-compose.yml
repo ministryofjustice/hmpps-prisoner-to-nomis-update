@@ -79,7 +79,7 @@ services:
 
 
   localstack-external:
-    image: localstack/localstack:2.3
+    image: localstack/localstack:3
     networks:
       - hmpps
     container_name: localstack-external
