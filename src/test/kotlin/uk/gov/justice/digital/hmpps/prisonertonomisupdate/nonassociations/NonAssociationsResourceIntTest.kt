@@ -237,7 +237,8 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
           .withQueryParam("size", WireMock.equalTo("1")),
       )
       nomisApi.verify(
-        4, // 34 prisoners will be spread over 4 pages of 10 prisoners each
+        // 34 prisoners will be spread over 4 pages of 10 prisoners each
+        4,
         WireMock.getRequestedFor(urlPathEqualTo("/non-associations/ids"))
           .withQueryParam("size", WireMock.equalTo("10")),
       )

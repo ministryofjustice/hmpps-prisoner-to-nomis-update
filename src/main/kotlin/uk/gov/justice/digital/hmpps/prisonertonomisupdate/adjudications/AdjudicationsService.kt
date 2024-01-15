@@ -1101,7 +1101,8 @@ internal fun ReportedAdjudicationResponse.toNomisAdjudication() = CreateAdjudica
     prisonId = reportedAdjudication.originatingAgencyId,
     prisonerVictimsOffenderNumbers = reportedAdjudication.offenceDetails.victimPrisonersNumber?.let { listOf(it) }
       ?: emptyList(),
-    staffWitnessesUsernames = emptyList(), // Not stored in DPS so can not be synchronised
+    // Not stored in DPS so can not be synchronised
+    staffWitnessesUsernames = emptyList(),
     staffVictimsUsernames = reportedAdjudication.offenceDetails.victimStaffUsername?.let { listOf(it) } ?: emptyList(),
     repairs = reportedAdjudication.damages.map { it.toNomisRepairForCreate() },
   ),

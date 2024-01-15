@@ -183,7 +183,8 @@ class AllocationServiceTest {
       Slot(
         weekNumber = 1,
         timeSlot = timeSlot,
-        monday = false, // we don't use these fields so don't need to set them up
+        // we don't use these fields so don't need to set them up
+        monday = false,
         tuesday = false,
         wednesday = false,
         thursday = true,

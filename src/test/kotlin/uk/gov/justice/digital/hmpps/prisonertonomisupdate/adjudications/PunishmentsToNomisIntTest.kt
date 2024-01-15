@@ -55,9 +55,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
         adjudicationsApiServer.stubChargeGet(
           CHARGE_NUMBER_FOR_CREATION,
           offenderNo = OFFENDER_NO,
-          punishments =
           // language=json
-          """
+          punishments = """
           [
             {
                 "id": 634,
@@ -171,9 +170,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           adjudicationsApiServer.stubChargeGet(
             CHARGE_NUMBER_FOR_CREATION,
             offenderNo = OFFENDER_NO,
-            punishments =
             // language=json
-            """
+            punishments = """
           [
             {
                 "id": 634,
@@ -251,9 +249,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           adjudicationsApiServer.stubChargeGet(
             CHARGE_NUMBER_FOR_CREATION,
             offenderNo = OFFENDER_NO,
-            punishments =
             // language=json
-            """
+            punishments = """
           [
             {
                 "id": 1,
@@ -327,9 +324,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           adjudicationsApiServer.stubChargeGet(
             CHARGE_NUMBER_FOR_CREATION,
             offenderNo = OFFENDER_NO,
-            punishments =
             // language=json
-            """
+            punishments = """
           [
             {
                 "id": 1,
@@ -442,9 +438,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           adjudicationsApiServer.stubChargeGet(
             CHARGE_NUMBER_FOR_CREATION,
             offenderNo = OFFENDER_NO,
-            punishments =
             // language=json
-            """
+            punishments = """
           [
             {
                 "id": 634,
@@ -528,9 +523,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
         adjudicationsApiServer.stubChargeGet(
           CHARGE_NUMBER_FOR_CREATION,
           offenderNo = OFFENDER_NO,
-          punishments =
           // language=json
-          """
+          punishments = """
           [
             {
                 "id": 634,
@@ -670,9 +664,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           adjudicationsApiServer.stubChargeGet(
             CHARGE_NUMBER_FOR_CREATION,
             offenderNo = OFFENDER_NO,
-            punishments =
             // language=json
-            """
+            punishments = """
           [
             {
                 "id": 634,
@@ -916,9 +909,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           adjudicationsApiServer.stubChargeGet(
             CHARGE_NUMBER_FOR_CREATION,
             offenderNo = OFFENDER_NO,
-            punishments =
             // language=json
-            """
+            punishments = """
           [
             {
                 "id": 634,
@@ -1034,9 +1026,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
         adjudicationsApiServer.stubChargeGet(
           CHARGE_NUMBER_FOR_CREATION,
           offenderNo = OFFENDER_NO,
-          punishments =
           // language=json
-          """
+          punishments = """
           [
             {
                 "id": 667,
@@ -1048,9 +1039,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             }
           ]
           """.trimIndent(),
-          outcomes =
           // language=json
-          """
+          outcomes = """
           [
             {
                 "hearing": {
@@ -1131,9 +1121,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           adjudicationsApiServer.stubChargeGet(
             CHARGE_NUMBER_FOR_CREATION,
             offenderNo = OFFENDER_NO,
-            punishments =
             // language=json
-            """
+            punishments = """
           [
             {
                 "id": 667,
@@ -1145,9 +1134,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             }
           ]
             """.trimIndent(),
-            outcomes =
             // language=json
-            """
+            outcomes = """
           [
             {
                 "hearing": {
@@ -1221,9 +1209,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
         adjudicationsApiServer.stubChargeGet(
           CHARGE_NUMBER_FOR_CREATION,
           offenderNo = OFFENDER_NO,
-          outcomes =
           // language=json
-          """
+          outcomes = """
           [
             {
                 "hearing": {
@@ -1249,9 +1236,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             }
           ] 
           """.trimIndent(),
-          punishments =
           // language=json
-          """
+          punishments = """
           [
             {
                 "id": 634,
@@ -1337,9 +1323,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
         adjudicationsApiServer.stubChargeGet(
           CHARGE_NUMBER_FOR_CREATION,
           offenderNo = OFFENDER_NO,
-          outcomes =
           // language=json
-          """
+          outcomes = """
           [
             {
                 "hearing": {
@@ -1365,9 +1350,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             }
           ] 
           """.trimIndent(),
-          punishments =
           // language=json
-          """
+          punishments = """
           [
             {
                 "id": 634,
@@ -1508,9 +1492,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           adjudicationsApiServer.stubChargeGet(
             CHARGE_NUMBER_FOR_CREATION,
             offenderNo = OFFENDER_NO,
-            outcomes =
             // language=json
-            """
+            outcomes = """
           [
             {
                 "hearing": {
@@ -1536,9 +1519,8 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             }
           ] 
             """.trimIndent(),
-            punishments =
             // language=json
-            """
+            punishments = """
           [
             {
                 "id": 634,

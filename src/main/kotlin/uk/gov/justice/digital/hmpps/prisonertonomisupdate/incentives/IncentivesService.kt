@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.format.DateTimeFormatter
 
-private const val incentiveCreatedInNomsByUser = "USER_CREATED_NOMIS"
+private const val INCENTIVE_CREATED_IN_NOMS_BY_USER = "USER_CREATED_NOMIS"
 
 @Service
 class IncentivesService(
@@ -38,7 +38,7 @@ class IncentivesService(
       }
       transform {
         incentivesApiService.getIncentive(event.additionalInformation.id)
-          .takeUnless { event.additionalInformation.reason == incentiveCreatedInNomsByUser }?.let { incentive ->
+          .takeUnless { event.additionalInformation.reason == INCENTIVE_CREATED_IN_NOMS_BY_USER }?.let { incentive ->
             eventTelemetry += mapOf(
               "prisonId" to incentive.agencyId,
               "iep" to incentive.iepCode,

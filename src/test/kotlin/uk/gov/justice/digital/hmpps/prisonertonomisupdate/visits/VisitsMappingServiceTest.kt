@@ -174,7 +174,7 @@ internal class VisitsMappingServiceTest {
     internal fun `when any bad response is received an exception is thrown`() = runTest {
       MappingExtension.mappingServer.stubGetVsipWithError("123", 503)
 
-      assertThrows<ServiceUnavailable>() {
+      assertThrows<ServiceUnavailable> {
         mappingService.getMappingGivenVsipIdOrNull("123")
       }
     }

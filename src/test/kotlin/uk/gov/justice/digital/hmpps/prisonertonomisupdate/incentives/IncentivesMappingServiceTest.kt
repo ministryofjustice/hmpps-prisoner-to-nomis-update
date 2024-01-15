@@ -118,7 +118,7 @@ internal class IncentivesMappingServiceTest {
     internal fun `when any bad response is received an exception is thrown`() = runTest {
       MappingExtension.mappingServer.stubGetIncentiveIdWithError(123, 503)
 
-      assertThrows<ServiceUnavailable>() {
+      assertThrows<ServiceUnavailable> {
         mappingService.getMappingGivenIncentiveIdOrNull(123)
       }
     }
