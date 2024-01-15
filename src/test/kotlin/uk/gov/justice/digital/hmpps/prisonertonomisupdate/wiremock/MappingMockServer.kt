@@ -309,8 +309,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun
-  stubGetMappings(activityScheduleId: Long, response: String) {
+  fun stubGetMappings(activityScheduleId: Long, response: String) {
     stubFor(
       get("/mapping/activities/activity-schedule-id/$activityScheduleId").willReturn(
         aResponse()
@@ -392,14 +391,14 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
               "userMessage": "Conflict: Appointment mapping already exists",
               "moreInfo": {
                 ${
-              if (nomisEventId != null) {
-                """ "existing": {
+                if (nomisEventId != null) {
+                  """ "existing": {
                                   "appointmentInstanceId": $appointmentInstanceId,
                                   "nomisEventId": $nomisEventId
                                 },"""
-              } else {
-                ""
-              }
+                } else {
+                  ""
+                }
               }
                 "duplicate": {
                   "appointmentInstanceId": $appointmentInstanceId,
@@ -969,7 +968,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
           .withBody(
-            // language=JSON
+            // language=json
             """ 
               {
                 "nomisBookingId": $nomisBookingId,

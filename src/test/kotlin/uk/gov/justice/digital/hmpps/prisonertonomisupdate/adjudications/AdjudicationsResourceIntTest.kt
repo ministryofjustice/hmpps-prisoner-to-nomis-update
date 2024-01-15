@@ -102,7 +102,8 @@ class AdjudicationsResourceIntTest : IntegrationTestBase() {
           .withQueryParam("active", WireMock.equalTo("true")),
       )
       nomisApi.verify(
-        4, // 34 prisoners will be spread over 4 pages of 10 prisoners each
+        // 34 prisoners will be spread over 4 pages of 10 prisoners each
+        4,
         WireMock.getRequestedFor(urlPathEqualTo("/prisoners/ids"))
           .withQueryParam("size", WireMock.equalTo("10"))
           .withQueryParam("active", WireMock.equalTo("true")),

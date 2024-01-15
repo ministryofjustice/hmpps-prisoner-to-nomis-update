@@ -27,11 +27,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Ad
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 
-private const val dpsHearingId = "123"
-private const val nomisHearingId = 456L
-private const val dpsChargeNumber = "123"
-private const val adjudicationNumber = 123456L
-private const val prisonerNumber = "A12345DF"
+private const val DPS_HEARING_ID = "123"
+private const val NOMIS_HEARING_ID = 456L
+private const val DPS_CHARGE_NUMBER = "123"
+private const val ADJUDICATION_NUMBER = 123456L
+private const val PRISONER_NUMBER = "A12345DF"
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class AdjudicationsServiceTest {
@@ -85,22 +85,22 @@ internal class AdjudicationsServiceTest {
     whenever(adjudicationsMappingService.getMappingGivenChargeNumber(any())).thenReturn(
       AdjudicationMappingDto(
         chargeSequence = 1,
-        chargeNumber = dpsChargeNumber,
-        adjudicationNumber = adjudicationNumber,
+        chargeNumber = DPS_CHARGE_NUMBER,
+        adjudicationNumber = ADJUDICATION_NUMBER,
       ),
     )
 
     whenever(hearingMappingService.getMappingGivenDpsHearingIdOrNull(any())).thenReturn(
-      AdjudicationHearingMappingDto(nomisHearingId = nomisHearingId, dpsHearingId = dpsHearingId),
+      AdjudicationHearingMappingDto(nomisHearingId = NOMIS_HEARING_ID, dpsHearingId = DPS_HEARING_ID),
     )
 
     adjudicationsService.createOrUpdateHearingCompleted(
       HearingEvent(
         HearingAdditionalInformation(
-          chargeNumber = dpsChargeNumber,
+          chargeNumber = DPS_CHARGE_NUMBER,
           prisonId = "MDI",
-          prisonerNumber = prisonerNumber,
-          hearingId = dpsHearingId,
+          prisonerNumber = PRISONER_NUMBER,
+          hearingId = DPS_HEARING_ID,
         ),
       ),
     )
@@ -109,8 +109,8 @@ internal class AdjudicationsServiceTest {
   private fun getReportedAdjudicationResponse(oicHearingType: HearingDto.OicHearingType = HearingDto.OicHearingType.GOV_ADULT) =
     ReportedAdjudicationResponse(
       ReportedAdjudicationDto(
-        chargeNumber = dpsChargeNumber,
-        prisonerNumber = prisonerNumber,
+        chargeNumber = DPS_CHARGE_NUMBER,
+        prisonerNumber = PRISONER_NUMBER,
         gender = ReportedAdjudicationDto.Gender.MALE,
         incidentDetails = IncidentDetailsDto(
           locationId = 2,
@@ -133,7 +133,7 @@ internal class AdjudicationsServiceTest {
         witnesses = emptyList(),
         hearings = listOf(
           HearingDto(
-            id = dpsHearingId.toLong(),
+            id = DPS_HEARING_ID.toLong(),
             locationId = 123,
             dateTimeOfHearing = "",
             oicHearingType = oicHearingType,
@@ -148,7 +148,7 @@ internal class AdjudicationsServiceTest {
         outcomes = listOf(
           OutcomeHistoryDto(
             hearing = HearingDto(
-              id = dpsHearingId.toLong(),
+              id = DPS_HEARING_ID.toLong(),
               locationId = 123,
               dateTimeOfHearing = "",
               oicHearingType = oicHearingType,

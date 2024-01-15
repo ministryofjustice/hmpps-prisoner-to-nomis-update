@@ -178,7 +178,8 @@ class ActivitiesService(
       payPerSession = schedule.toCreatePayPerSession(),
       schedules = schedule.instances.toCourseScheduleRequests(),
       scheduleRules = schedule.slots.toScheduleRuleRequests(),
-      excludeBankHolidays = !schedule.runsOnBankHoliday, // Nomis models the negative (exclude) and Activities models the positive (runs on)
+      // Nomis models the negative (exclude) and Activities models the positive (runs on)
+      excludeBankHolidays = !schedule.runsOnBankHoliday,
       outsideWork = activity.outsideWork,
     )
   }

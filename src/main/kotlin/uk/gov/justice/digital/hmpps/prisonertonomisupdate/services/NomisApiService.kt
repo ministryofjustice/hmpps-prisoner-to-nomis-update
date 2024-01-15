@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
-import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonNode
@@ -682,7 +681,8 @@ data class CreateAppointmentRequest(
   val startTime: LocalTime,
   @JsonFormat(pattern = "HH:mm")
   val endTime: LocalTime?,
-  val internalLocationId: Long? = null, // in cell if null
+  // in cell if null
+  val internalLocationId: Long? = null,
   val eventSubType: String,
   val comment: String? = null,
 )
@@ -698,7 +698,8 @@ data class UpdateAppointmentRequest(
   val startTime: LocalTime,
   @JsonFormat(pattern = "HH:mm")
   val endTime: LocalTime?,
-  val internalLocationId: Long? = null, // in cell if null
+  // in cell if null
+  val internalLocationId: Long? = null,
   val eventSubType: String,
   val comment: String? = null,
 )
@@ -751,9 +752,7 @@ data class NomisIncentive(
 
 data class NomisCodeDescription(val code: String, val description: String)
 
-class RestResponsePage<T>
-@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-constructor(
+class RestResponsePage<T>(
   @JsonProperty("content") content: List<T>,
   @JsonProperty("number") number: Int,
   @JsonProperty("size") size: Int,

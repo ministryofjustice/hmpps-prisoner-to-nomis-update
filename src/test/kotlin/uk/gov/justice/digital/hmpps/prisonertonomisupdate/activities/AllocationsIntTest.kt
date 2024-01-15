@@ -51,8 +51,7 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
     }
 
     @Test
-    fun
-    `will consume an allocation message with a missing pay band`() {
+    fun `will consume an allocation message with a missing pay band`() {
       ActivitiesApiExtension.activitiesApi.stubGetAllocation(ALLOCATION_ID, buildApiAllocationDtoWithMissingPayBand())
       MappingExtension.mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
       NomisApiExtension.nomisApi.stubAllocationUpsert(NOMIS_CRS_ACTY_ID)

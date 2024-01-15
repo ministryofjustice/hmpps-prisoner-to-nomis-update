@@ -42,7 +42,8 @@ class IncentivesResourceIntTest : IntegrationTestBase() {
       nomisApi.stubGetActivePrisonersPage(numberOfActivePrisoners, 3, 4)
       (1..numberOfActivePrisoners).forEach {
         nomisApi.stubCurrentIncentiveGet(it, "STD")
-        incentivesApi.stubCurrentIncentiveGet(it, if (it.toInt() % 10 == 0) "ENH" else "STD") // every 10th prisoner has an ENH incentive
+        // every 10th prisoner has an ENH incentive
+        incentivesApi.stubCurrentIncentiveGet(it, if (it.toInt() % 10 == 0) "ENH" else "STD")
       }
     }
 
@@ -72,7 +73,8 @@ class IncentivesResourceIntTest : IntegrationTestBase() {
           .withQueryParam("active", WireMock.equalTo("true")),
       )
       nomisApi.verify(
-        4, // 34 prisoners will be spread over 4 pages of 10 prisoners each
+        // 34 prisoners will be spread over 4 pages of 10 prisoners each
+        4,
         WireMock.getRequestedFor(urlPathEqualTo("/prisoners/ids"))
           .withQueryParam("size", WireMock.equalTo("10"))
           .withQueryParam("active", WireMock.equalTo("true")),

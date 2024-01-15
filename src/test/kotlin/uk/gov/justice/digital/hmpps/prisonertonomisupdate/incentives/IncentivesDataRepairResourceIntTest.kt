@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.Integratio
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
-private const val bookingId = 1234L
+private const val BOOKING_ID = 1234L
 
 class IncentivesDataRepairResourceIntTest : IntegrationTestBase() {
 
@@ -30,7 +30,7 @@ class IncentivesDataRepairResourceIntTest : IntegrationTestBase() {
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      incentivesApi.stubCurrentIncentiveGet(bookingId, id = 8765, prisonerNumber = "A1234AA")
+      incentivesApi.stubCurrentIncentiveGet(BOOKING_ID, id = 8765, prisonerNumber = "A1234AA")
       incentivesApi.stubIncentiveGet(
         8765,
         """
@@ -38,7 +38,7 @@ class IncentivesDataRepairResourceIntTest : IntegrationTestBase() {
             "id": 8765,
             "iepCode": "STD",
             "iepLevel": "Standard",
-            "bookingId": $bookingId,
+            "bookingId": $BOOKING_ID,
             "sequence": 2,
             "iepDate": "2022-12-02",
             "iepTime": "2022-12-02T10:00:00",
@@ -46,14 +46,14 @@ class IncentivesDataRepairResourceIntTest : IntegrationTestBase() {
           }
         """.trimIndent(),
       )
-      nomisApi.stubIncentiveCreate(bookingId)
+      nomisApi.stubIncentiveCreate(BOOKING_ID)
     }
 
     @Nested
     inner class Security {
       @Test
       fun `access forbidden when no role`() {
-        webTestClient.post().uri("/incentives/prisoner/booking-id/{bookingId}/repair", bookingId)
+        webTestClient.post().uri("/incentives/prisoner/booking-id/{bookingId}/repair", BOOKING_ID)
           .headers(setAuthorisation(roles = listOf()))
           .contentType(MediaType.APPLICATION_JSON)
           .exchange()
@@ -62,7 +62,7 @@ class IncentivesDataRepairResourceIntTest : IntegrationTestBase() {
 
       @Test
       fun `access forbidden with wrong role`() {
-        webTestClient.post().uri("/incentives/prisoner/booking-id/{bookingId}/repair", bookingId)
+        webTestClient.post().uri("/incentives/prisoner/booking-id/{bookingId}/repair", BOOKING_ID)
           .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
           .contentType(MediaType.APPLICATION_JSON)
           .exchange()
@@ -71,7 +71,7 @@ class IncentivesDataRepairResourceIntTest : IntegrationTestBase() {
 
       @Test
       fun `access unauthorised with no auth token`() {
-        webTestClient.post().uri("/incentives/prisoner/booking-id/{bookingId}/repair", bookingId)
+        webTestClient.post().uri("/incentives/prisoner/booking-id/{bookingId}/repair", BOOKING_ID)
           .contentType(MediaType.APPLICATION_JSON)
           .exchange()
           .expectStatus().isUnauthorized
@@ -82,7 +82,7 @@ class IncentivesDataRepairResourceIntTest : IntegrationTestBase() {
     inner class HappyPath {
       @Test
       fun `repair incentive`() {
-        webTestClient.post().uri("/incentives/prisoner/booking-id/{bookingId}/repair", bookingId)
+        webTestClient.post().uri("/incentives/prisoner/booking-id/{bookingId}/repair", BOOKING_ID)
           .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_INCENTIVES")))
           .contentType(MediaType.APPLICATION_JSON)
           .exchange()
@@ -91,7 +91,7 @@ class IncentivesDataRepairResourceIntTest : IntegrationTestBase() {
         verify(telemetryClient, times(1)).trackEvent(eq("incentives-repair"), telemetryCaptor.capture(), isNull())
 
         val telemetry = telemetryCaptor.value
-        assertThat(telemetry["nomisBookingId"]).isEqualTo(bookingId.toString())
+        assertThat(telemetry["nomisBookingId"]).isEqualTo(BOOKING_ID.toString())
         assertThat(telemetry["nomisIncentiveSequence"]).isEqualTo("1")
         assertThat(telemetry["id"]).isEqualTo("8765")
         assertThat(telemetry["offenderNo"]).isEqualTo("A1234AA")

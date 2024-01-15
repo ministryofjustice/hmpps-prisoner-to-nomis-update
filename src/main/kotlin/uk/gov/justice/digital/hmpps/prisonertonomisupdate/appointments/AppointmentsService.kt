@@ -159,7 +159,11 @@ class AppointmentsService(
 
   private fun toCreateAppointmentRequest(instance: AppointmentInstance) = CreateAppointmentRequest(
     bookingId = instance.bookingId,
-    internalLocationId = if (instance.inCell) { null } else { instance.internalLocationId },
+    internalLocationId = if (instance.inCell) {
+      null
+    } else {
+      instance.internalLocationId
+    },
     eventDate = instance.appointmentDate,
     startTime = LocalTime.parse(instance.startTime),
     endTime = instance.endTime?.let { LocalTime.parse(it) },
@@ -168,7 +172,11 @@ class AppointmentsService(
   )
 
   private fun toUpdateAppointmentRequest(instance: AppointmentInstance) = UpdateAppointmentRequest(
-    internalLocationId = if (instance.inCell) { null } else { instance.internalLocationId },
+    internalLocationId = if (instance.inCell) {
+      null
+    } else {
+      instance.internalLocationId
+    },
     eventDate = instance.appointmentDate,
     startTime = LocalTime.parse(instance.startTime),
     endTime = instance.endTime?.let { LocalTime.parse(it) },

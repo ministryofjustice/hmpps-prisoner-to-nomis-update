@@ -5,7 +5,7 @@ import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.13.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.14.1"
   kotlin("plugin.spring") version "1.9.22"
   id("org.openapi.generator") version "7.2.0"
 }
@@ -21,7 +21,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-  implementation("org.springframework.data:spring-data-commons:3.2.1")
+  implementation("org.springframework.data:spring-data-commons:3.2.2")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.2.1")
 
   implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.3.0")
@@ -40,7 +40,7 @@ dependencies {
   testImplementation("org.wiremock:wiremock-standalone:3.3.1")
   testImplementation("org.mockito:mockito-inline:5.2.0")
   testImplementation("org.testcontainers:localstack:1.19.3")
-  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.633")
+  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.637")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 }
@@ -57,7 +57,7 @@ tasks {
       "buildAdjudicationApiModel",
       "buildNonAssociationApiModel",
       "buildMappingServiceApiModel",
-      "buildSentencingAdjustmentsApiModel"
+      "buildSentencingAdjustmentsApiModel",
     )
     kotlinOptions {
       jvmTarget = "21"
@@ -71,7 +71,7 @@ tasks {
       "buildAdjudicationApiModel",
       "buildNonAssociationApiModel",
       "buildMappingServiceApiModel",
-      "buildSentencingAdjustmentsApiModel"
+      "buildSentencingAdjustmentsApiModel",
     )
   }
   withType<KtLintFormatTask> {
@@ -82,7 +82,7 @@ tasks {
       "buildAdjudicationApiModel",
       "buildNonAssociationApiModel",
       "buildMappingServiceApiModel",
-      "buildSentencingAdjustmentsApiModel"
+      "buildSentencingAdjustmentsApiModel",
     )
   }
 }
@@ -90,7 +90,7 @@ tasks {
 val configValues = mapOf(
   "dateLibrary" to "java8-localdatetime",
   "serializationLibrary" to "jackson",
-  "enumPropertyNaming" to "original"
+  "enumPropertyNaming" to "original",
 )
 
 val buildDirectory: Directory = layout.buildDirectory.get()
@@ -149,8 +149,8 @@ tasks.register("buildMappingServiceApiModel", GenerateTask::class) {
     mapOf(
       "dateLibrary" to "java8-localdatetime",
       "serializationLibrary" to "jackson",
-      "enumPropertyNaming" to "original"
-    )
+      "enumPropertyNaming" to "original",
+    ),
   )
   globalProperties.set(mapOf("models" to ""))
 }

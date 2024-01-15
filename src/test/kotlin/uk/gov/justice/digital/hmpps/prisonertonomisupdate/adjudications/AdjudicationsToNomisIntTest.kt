@@ -192,25 +192,24 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
         adjudicationsApiServer.stubChargeGet(
           CHARGE_NUMBER_FOR_UPDATE,
           offenderNo = OFFENDER_NO,
-          damages =
           // language=json
-          """
-          [
-            {
-                "code": "ELECTRICAL_REPAIR",
-                "details": "light switch",
-                "reporter": "QT1234T"
-            },
-            {
-                "code": "LOCK_REPAIR",
-                "details": "lock broken",
-                "reporter": "QT1234T"
-            },
-            {
-                "code": "CLEANING",
-                "details": "dirty carpets",
-                "reporter": "QT1234T"
-            }
+          damages = """
+        [
+          {
+            "code": "ELECTRICAL_REPAIR",
+            "details": "light switch",
+            "reporter": "QT1234T"
+          },
+          {
+            "code": "LOCK_REPAIR",
+            "details": "lock broken",
+            "reporter": "QT1234T"
+          },
+          {
+            "code": "CLEANING",
+            "details": "dirty carpets",
+            "reporter": "QT1234T"
+          }
         ]
           """.trimIndent(),
         )
@@ -388,9 +387,8 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
         adjudicationsApiServer.stubChargeGet(
           CHARGE_NUMBER_FOR_UPDATE,
           offenderNo = OFFENDER_NO,
-          evidence =
           // language=json
-          """
+          evidence = """
             [
                 {
                     "code": "BAGGED_AND_TAGGED",
