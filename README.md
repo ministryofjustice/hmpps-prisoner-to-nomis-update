@@ -99,6 +99,32 @@ Since this services uses the HMPPS SQS library with defaults this has all the de
 
 For purging queues the queue name can be found in the [health check](https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk/health) and the required role is the default `ROLE_QUEUE_ADMIN`.
 
+### Preprod Refresh Problems
+
+#### Activities
+
+As NOMIS, DPS Activities and our synchronisation mappings are all refreshed from preprod at slightly different times, after a preprod refresh the activities synchronisation can start failing with strange errors. The most common is conflicts for IDs that exist in the mapping table but not in NOMIS / DPS.
+
+After the preprod refresh in order to make preprod usable for new test data (i.e. created in DPS) we need to do the following:
+
+On the NOMIS preprod database find:
+* `select max(crs_acty_id) from oms_owner.course_activities;`
+* `select max(crs_sch_id) from oms_owner.course_schedules;`
+
+On the DPS Activities preprod database find:
+* `select max(activity_schedule_id) from activity_schedules;`
+* `select max(scheduled_instance_id) from scheduled_instances;`
+
+Then we delete any conflicting mappings from the mappings preprod database:
+* `delete from activity_mapping where nomis_course_activity_id > <max(crs_acty_id)>;`
+* `delete from activity_mapping where activity_schedule_id > <max(activity_schedule_id>;`
+* `delete from activity_schedule_mapping where nomis_course_schedule_id > <max(crs_sch_id)>;`
+* `delete from activity_schedule_mapping where scheduled_instance_id > <max(scheduled_instance_id)>;`
+
+There may still be some discrepancies between NOMIS and DPS, e.g. a new schedule or allocation could have been created in DPS between the NOMIS and DPS refreshes. These can probably be fixed by calling the manual sync endpoints, but it's messy - see advise on the [reconciliation report](activities-reconciliation-report-alerts-allocations-and-attendances) if you really want to try this. It's probably better to advise people to create new test data in DPS, which will be possible now that the bad mappings have been deleted.
+
+TODO: we normally need to purge the DLQ after a preprod refresh because of bad data - next time do the above first and see if that's enough to avoid the need to purge the DLQ.
+
 ### Duplicate handling
 
 There are various scenarios where a duplicate event may be received:
