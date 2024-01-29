@@ -226,6 +226,26 @@ class AdjudicationTransformationTest {
   }
 
   @Test
+  fun `victim not copied if they are also the suspect (NOMIS constraints do not allow this)`() {
+    val dpsAdjudication = dpsAdjudication().copy(
+      reportedAdjudication = dpsAdjudication().reportedAdjudication.copy(
+        prisonerNumber = "A1234AA",
+        offenceDetails = OffenceDto(
+          offenceCode = 1002,
+          offenceRule = OffenceRuleDto(
+            paragraphNumber = "1",
+            paragraphDescription = "Assists another prisoner to commit, or to attempt to commit, any of the foregoing offences:",
+            nomisCode = "51:1B",
+          ),
+          victimPrisonersNumber = "A1234AA",
+        ),
+      ),
+    )
+    val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
+    assertThat(nomisAdjudication.incident.prisonerVictimsOffenderNumbers).hasSize(0)
+  }
+
+  @Test
   fun `if there is a staff victims it is copied`() {
     val dpsAdjudication = dpsAdjudication().copy(
       reportedAdjudication = dpsAdjudication().reportedAdjudication.copy(

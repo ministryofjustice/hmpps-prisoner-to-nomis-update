@@ -1099,7 +1099,9 @@ internal fun ReportedAdjudicationResponse.toNomisAdjudication() = CreateAdjudica
     internalLocationId = reportedAdjudication.incidentDetails.locationId,
     details = reportedAdjudication.incidentStatement.statement,
     prisonId = reportedAdjudication.originatingAgencyId,
-    prisonerVictimsOffenderNumbers = reportedAdjudication.offenceDetails.victimPrisonersNumber?.let { listOf(it) }
+    prisonerVictimsOffenderNumbers = reportedAdjudication.offenceDetails.victimPrisonersNumber
+      ?.takeUnless { isVictimAlsoTheSuspect() }
+      ?.let { listOf(it) }
       ?: emptyList(),
     // Not stored in DPS so can not be synchronised
     staffWitnessesUsernames = emptyList(),
@@ -1113,6 +1115,9 @@ internal fun ReportedAdjudicationResponse.toNomisAdjudication() = CreateAdjudica
   ),
   evidence = reportedAdjudication.evidence.map { it.toNomisCreateEvidence() },
 )
+
+private fun ReportedAdjudicationResponse.isVictimAlsoTheSuspect() =
+  reportedAdjudication.offenceDetails.victimPrisonersNumber == reportedAdjudication.prisonerNumber
 
 private fun ReportedAdjudicationDto.getOffenceCode() = if (this.didInciteOtherPrisoner()) {
   this.offenceDetails.offenceRule.withOthersNomisCode!!
