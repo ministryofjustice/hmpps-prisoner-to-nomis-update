@@ -167,6 +167,7 @@ internal class AdjudicationsServiceTest {
         punishmentComments = emptyList(),
         outcomeEnteredInNomis = false,
         originatingAgencyId = "MDI",
+        linkedChargeNumbers = emptyList(),
       ),
     )
 }

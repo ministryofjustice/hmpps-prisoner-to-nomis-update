@@ -221,8 +221,7 @@ internal class AdjudicationsReconciliationServiceTest {
       fun beforeEach() {
         adjudicationsApiServer.stubGetAdjudicationsByBookingId(
           123456,
-          listOf(aDPSAdjudication().copy(status = ReportedAdjudicationDto.Status.CORRUPTED, punishments = listOf(adaPunishment(days = 10, type = PROSPECTIVE_DAYS)))),
-          // if there is a compile error on Status.CORRUPTED please update line 8135 of the open API adjudication spec json manually - waiting for DPS swagger update
+          listOf(aDPSAdjudication().copy(status = ReportedAdjudicationDto.Status.INVALID_ADA, punishments = listOf(adaPunishment(days = 10, type = PROSPECTIVE_DAYS)))),
         )
         nomisApi.stubGetAdaAwardSummary(
           bookingId = 123456,
@@ -360,6 +359,7 @@ internal fun aDPSAdjudication(chargeNumber: String = "4000001", prisonerNumber: 
   transferableActionsAllowed = null,
   createdOnBehalfOfOfficer = null,
   createdOnBehalfOfReason = null,
+  linkedChargeNumbers = emptyList(),
 )
 
 internal fun adaPunishment(days: Int, startDate: LocalDate = LocalDate.now(), type: PunishmentDto.Type = ADDITIONAL_DAYS) =

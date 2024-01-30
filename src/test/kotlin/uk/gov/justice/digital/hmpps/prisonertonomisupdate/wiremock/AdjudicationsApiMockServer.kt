@@ -118,6 +118,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         "outcomes": $outcomes,
         "punishments": $punishments,
         "punishmentComments": [],
+        "linkedChargeNumbers": [],
         "outcomeEnteredInNomis": false,
         "originatingAgencyId": "MDI"
     }
