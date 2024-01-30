@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-11-23.1333.a1968ba"
+    "version": "2024-01-26.1607.ccba529"
   },
   "servers": [
     {
@@ -462,6 +462,31 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "The status of adjustments. Defaults to ACTIVE",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "INACTIVE",
+                "DELETED",
+                "INACTIVE_WHEN_DELETED"
+              ]
+            }
+          },
+          {
+            "name": "sentenceEnvelopeDate",
+            "in": "query",
+            "description": "The earliest sentence date to filter adjustments by. Defaults to earliest active sentence date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
           }
         ],
         "responses": {
@@ -510,14 +535,17 @@
         "tags": [
           "adjustment-controller"
         ],
-        "summary": "Create an adjustments",
-        "description": "Create an adjustment.",
+        "summary": "Create adjustments",
+        "description": "Create adjustment.",
         "operationId": "create_1",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AdjustmentDto"
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AdjustmentDto"
+                }
               }
             }
           },
@@ -535,7 +563,7 @@
             }
           },
           "201": {
-            "description": "Adjustment created",
+            "description": "Adjustments created",
             "content": {
               "application/json": {
                 "schema": {
@@ -638,6 +666,37 @@
         }
       }
     },
+    "/adjustments/restore": {
+      "post": {
+        "tags": [
+          "adjustment-controller"
+        ],
+        "summary": "Restore a deleted adjustment",
+        "description": "Restore a deleted adjustment",
+        "operationId": "restore",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreAdjustmentsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token"
+          },
+          "200": {
+            "description": "Adjustment restored"
+          },
+          "404": {
+            "description": "Adjustment not found"
+          }
+        }
+      }
+    },
     "/queue-admin/get-dlq-messages/{dlqName}": {
       "get": {
         "tags": [
@@ -736,6 +795,7 @@
           "adjustmentDays",
           "adjustmentType",
           "bookingId",
+          "bookingReleased",
           "offenderNo"
         ],
         "type": "object",
@@ -792,6 +852,10 @@
           "active": {
             "type": "boolean",
             "description": "The NOMIS active or inactive flag"
+          },
+          "bookingReleased": {
+            "type": "boolean",
+            "description": "Has the prisoner been released from the NOMIS booking"
           }
         },
         "description": "An adjustment structured for synchronising with the NOMIS system"
@@ -878,6 +942,9 @@
           "unlawfullyAtLarge": {
             "$ref": "#/components/schemas/UnlawfullyAtLargeDto"
           },
+          "taggedBail": {
+            "$ref": "#/components/schemas/TaggedBailDto"
+          },
           "prisonId": {
             "type": "string",
             "description": "The prison where the prisoner was located at the time the adjustment was created (a 3 character code identifying the prison)",
@@ -902,12 +969,19 @@
             "enum": [
               "ACTIVE",
               "INACTIVE",
-              "DELETED"
+              "DELETED",
+              "INACTIVE_WHEN_DELETED"
             ]
           },
           "lastUpdatedDate": {
             "type": "string",
             "description": "The date and time this adjustment was last updated",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "createdDate": {
+            "type": "string",
+            "description": "The date and time this adjustment was last created",
             "format": "date-time",
             "readOnly": true
           },
@@ -949,6 +1023,20 @@
         },
         "description": "The details of remand adjustment"
       },
+      "TaggedBailDto": {
+        "required": [
+          "caseSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "caseSequence": {
+            "type": "integer",
+            "description": "The case sequence number this tagged-bail was associated with",
+            "format": "int32"
+          }
+        },
+        "description": "The details of the tagged bail adjustment"
+      },
       "UnlawfullyAtLargeDto": {
         "type": "object",
         "properties": {
@@ -979,13 +1067,16 @@
       },
       "CreateResponseDto": {
         "required": [
-          "adjustmentId"
+          "adjustmentIds"
         ],
         "type": "object",
         "properties": {
-          "adjustmentId": {
-            "type": "string",
-            "format": "uuid"
+          "adjustmentIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },
@@ -1060,6 +1151,24 @@
           }
         },
         "description": "Validation message details"
+      },
+      "RestoreAdjustmentsDto": {
+        "required": [
+          "ids"
+        ],
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "description": "The IDs of the adjustments to restore",
+            "items": {
+              "type": "string",
+              "description": "The IDs of the adjustments to restore",
+              "format": "uuid"
+            }
+          }
+        },
+        "description": "The adjustment UUID"
       },
       "GetDlqResult": {
         "required": [
