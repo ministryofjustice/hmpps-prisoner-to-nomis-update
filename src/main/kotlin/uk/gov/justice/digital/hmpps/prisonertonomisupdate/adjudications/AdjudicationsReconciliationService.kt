@@ -56,7 +56,7 @@ class AdjudicationsReconciliationService(
 
   suspend fun checkADAPunishmentsMatch(prisonerId: ActivePrisonerId): MismatchAdjudicationAdaPunishments? = runCatching {
     val nomisSummary = doApiCallWithSingleRetry { nomisApiService.getAdaAwardsSummary(prisonerId.bookingId) }
-    val dpsAdjudications = doApiCallWithSingleRetry { adjudicationsApiService.getAdjudicationsByBookingId(prisonerId.bookingId, nomisSummary.prisonIds) }
+    val dpsAdjudications = doApiCallWithSingleRetry { adjudicationsApiService.getAdjudicationsByBookingId(prisonerId.bookingId) }
 
     val nomisAdaSummary: AdaSummary = nomisSummary.toAdaSummary()
     val dpsAdaSummary: AdaSummary = dpsAdjudications.toAdaSummary()

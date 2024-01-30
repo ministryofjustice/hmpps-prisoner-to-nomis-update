@@ -306,8 +306,8 @@ internal class AdjudicationsReconciliationServiceTest {
     @Test
     fun `will call DPS for each bookingId`() = runTest {
       service.generateReconciliationReport(2)
-      adjudicationsApiServer.verify(getRequestedFor(urlPathEqualTo("/reported-adjudications/booking/1")))
-      adjudicationsApiServer.verify(getRequestedFor(urlPathEqualTo("/reported-adjudications/booking/2")))
+      adjudicationsApiServer.verify(getRequestedFor(urlPathEqualTo("/reported-adjudications/all-by-booking/1")))
+      adjudicationsApiServer.verify(getRequestedFor(urlPathEqualTo("/reported-adjudications/all-by-booking/2")))
     }
 
     @Test
