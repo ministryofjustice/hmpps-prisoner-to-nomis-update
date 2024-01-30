@@ -314,5 +314,6 @@ private fun dpsAdjudication() = ReportedAdjudicationResponse(
     dateTimeOfFirstHearing = null,
     overrideAgencyId = null,
     transferableActionsAllowed = null,
+    linkedChargeNumbers = emptyList(),
   ),
 )
