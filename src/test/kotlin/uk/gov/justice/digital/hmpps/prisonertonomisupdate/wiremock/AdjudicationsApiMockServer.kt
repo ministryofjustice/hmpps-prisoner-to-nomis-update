@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PageReportedAdjudicationDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDto
 
 class AdjudicationsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
@@ -373,13 +372,13 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetAdjudicationsByBookingId(bookingId: Long, adjudications: List<ReportedAdjudicationDto> = emptyList()) {
     stubFor(
       get(
-        WireMock.urlPathEqualTo("/reported-adjudications/booking/$bookingId"),
+        WireMock.urlPathEqualTo("/reported-adjudications/all-by-booking/$bookingId"),
       )
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.OK.value())
-            .withBody(PageReportedAdjudicationDto(content = adjudications)),
+            .withBody(adjudications),
         ),
     )
   }
@@ -387,7 +386,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetAdjudicationsByBookingIdWithError(bookingId: Long, status: Int) {
     stubFor(
       get(
-        WireMock.urlPathEqualTo("/reported-adjudications/booking/$bookingId"),
+        WireMock.urlPathEqualTo("/reported-adjudications/all-by-booking/$bookingId"),
       ).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
