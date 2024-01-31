@@ -7,7 +7,6 @@ val log: Logger = LoggerFactory.getLogger("HelperApi")
 
 suspend fun <T> doApiCallWithSingleRetry(api: suspend () -> T) = runCatching {
   api()
-}.onFailure {
-  log.warn("Retrying API call", it)
-  return api()
+}.recoverCatching {
+  api()
 }.getOrThrow()
