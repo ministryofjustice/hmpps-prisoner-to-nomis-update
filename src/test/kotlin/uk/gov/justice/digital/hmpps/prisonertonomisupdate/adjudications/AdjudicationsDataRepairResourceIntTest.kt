@@ -101,7 +101,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
         mappingServer.stubUpdatePunishments()
 
         webTestClient.post().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DP_CHARGE_NUMBER/punishments/repair")
-          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ADJUDCIATIONS")))
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ADJUDICATIONS")))
           .exchange()
           .expectStatus().isOk
       }

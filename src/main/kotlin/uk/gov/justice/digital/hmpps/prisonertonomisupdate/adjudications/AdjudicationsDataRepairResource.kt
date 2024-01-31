@@ -16,7 +16,7 @@ class AdjudicationsDataRepairResource(
 ) {
   @PostMapping("/prisons/{prisonId}/prisoners/{offenderNo}/adjudication/dps-charge-number/{chargeNumber}/punishments/repair")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("hasRole('NOMIS_ADJUDCIATIONS')")
+  @PreAuthorize("hasRole('NOMIS_ADJUDICATIONS')")
   @Operation(
     summary = "Resynchronises punishments for the given adjudication from DPS back to NOMIS",
     description = "Used when a domain event adjudication.punishments.updated has gone missing, so emergency use only. Requires ROLE_NOMIS_ADJUDICATIONS",
