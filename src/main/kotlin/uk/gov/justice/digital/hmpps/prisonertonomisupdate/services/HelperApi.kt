@@ -9,5 +9,5 @@ suspend fun <T> doApiCallWithSingleRetry(api: suspend () -> T) = runCatching {
   api()
 }.onFailure {
   log.warn("Retrying API call", it)
-  api()
+  return api()
 }.getOrThrow()
