@@ -578,6 +578,17 @@ class AdjudicationsService(
     }
   }
 
+  suspend fun updatePunishments(prisonId: String, offenderNo: String, chargeNumber: String) =
+    updatePunishments(
+      PunishmentEvent(
+        PunishmentsAdditionalInformation(
+          chargeNumber = chargeNumber,
+          prisonId = prisonId,
+          prisonerNumber = offenderNo,
+        ),
+      ),
+    )
+
   suspend fun updatePunishments(punishmentEvent: PunishmentEvent) {
     val eventInfo = punishmentEvent.additionalInformation
     val telemetryMap = eventInfo.toTelemetryMap()
