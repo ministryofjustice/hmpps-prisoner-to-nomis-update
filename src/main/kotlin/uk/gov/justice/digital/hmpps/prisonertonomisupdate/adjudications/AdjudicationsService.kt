@@ -426,6 +426,24 @@ class AdjudicationsService(
       ?: let { deleteReferral(deleteEvent.toReferralEvent()) }
   }
 
+  suspend fun deleteHearingCompleted(
+    chargeNumber: String,
+    prisonId: String,
+    prisonerNumber: String,
+    hearingId: String,
+  ) {
+    deleteHearingCompleted(
+      HearingEvent(
+        HearingAdditionalInformation(
+          chargeNumber = chargeNumber,
+          prisonId = prisonId,
+          prisonerNumber = prisonerNumber,
+          hearingId = hearingId,
+        ),
+      ),
+    )
+  }
+
   suspend fun deleteHearingCompleted(deleteEvent: HearingEvent) {
     val eventData: HearingAdditionalInformation = deleteEvent.additionalInformation
     val telemetryMap = deleteEvent.additionalInformation.toTelemetryMap()
