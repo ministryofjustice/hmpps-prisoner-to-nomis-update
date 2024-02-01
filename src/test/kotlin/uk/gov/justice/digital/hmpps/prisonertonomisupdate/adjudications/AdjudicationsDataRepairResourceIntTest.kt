@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications
 
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -19,11 +20,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.Adjudications
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
-private const val DP_CHARGE_NUMBER = "12345-1"
+private const val DPS_CHARGE_NUMBER = "12345-1"
+private const val DPS_HEARING_ID = "654321"
 private const val CHARGE_SEQ = 1
 private const val ADJUDICATION_NUMBER = 12345L
 private const val PRISON_ID = "MDI"
 private const val OFFENDER_NO = "A1234AA"
+private const val NOMIS_HEARING_ID = 2345L
 
 class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
 
@@ -35,7 +38,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
     inner class Security {
       @Test
       fun `access forbidden when no role`() {
-        webTestClient.post().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DP_CHARGE_NUMBER/punishments/repair")
+        webTestClient.post().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DPS_CHARGE_NUMBER/punishments/repair")
           .headers(setAuthorisation(roles = listOf()))
           .exchange()
           .expectStatus().isForbidden
@@ -43,7 +46,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
 
       @Test
       fun `access forbidden with wrong role`() {
-        webTestClient.post().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DP_CHARGE_NUMBER/punishments/repair")
+        webTestClient.post().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DPS_CHARGE_NUMBER/punishments/repair")
           .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
           .exchange()
           .expectStatus().isForbidden
@@ -51,7 +54,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
 
       @Test
       fun `access unauthorised with no auth token`() {
-        webTestClient.post().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DP_CHARGE_NUMBER/punishments/repair")
+        webTestClient.post().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DPS_CHARGE_NUMBER/punishments/repair")
           .exchange()
           .expectStatus().isUnauthorized
       }
@@ -61,9 +64,9 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
     inner class HappyPath {
       @BeforeEach
       fun setUp() {
-        mappingServer.stubGetByChargeNumber(DP_CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        mappingServer.stubGetByChargeNumber(DPS_CHARGE_NUMBER, ADJUDICATION_NUMBER)
         adjudicationsApiServer.stubChargeGet(
-          DP_CHARGE_NUMBER,
+          DPS_CHARGE_NUMBER,
           offenderNo = OFFENDER_NO,
           // language=json
           punishments = """
@@ -100,7 +103,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
         )
         mappingServer.stubUpdatePunishments()
 
-        webTestClient.post().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DP_CHARGE_NUMBER/punishments/repair")
+        webTestClient.post().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DPS_CHARGE_NUMBER/punishments/repair")
           .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ADJUDICATIONS")))
           .exchange()
           .expectStatus().isOk
@@ -108,7 +111,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
 
       @Test
       fun `will callback back to adjudication service to get more details`() {
-        adjudicationsApiServer.verify(getRequestedFor(urlEqualTo("/reported-adjudications/$DP_CHARGE_NUMBER/v2")))
+        adjudicationsApiServer.verify(getRequestedFor(urlEqualTo("/reported-adjudications/$DPS_CHARGE_NUMBER/v2")))
       }
 
       @Test
@@ -116,7 +119,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
         verify(telemetryClient).trackEvent(
           eq("punishment-update-success"),
           org.mockito.kotlin.check {
-            Assertions.assertThat(it["chargeNumber"]).isEqualTo(DP_CHARGE_NUMBER)
+            Assertions.assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
             Assertions.assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
@@ -134,7 +137,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
         verify(telemetryClient).trackEvent(
           eq("adjudication-punishment-repair"),
           org.mockito.kotlin.check {
-            Assertions.assertThat(it["chargeNumber"]).isEqualTo(DP_CHARGE_NUMBER)
+            Assertions.assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
           },
@@ -174,6 +177,128 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
             .withRequestBody(matchingJsonPath("punishmentsToDelete[0].nomisSanctionSequence", equalTo("9")))
             .withRequestBody(matchingJsonPath("punishmentsToDelete[1].nomisBookingId", equalTo("12345")))
             .withRequestBody(matchingJsonPath("punishmentsToDelete[1].nomisSanctionSequence", equalTo("8"))),
+        )
+      }
+    }
+  }
+
+  @DisplayName("DELETE /prisons/{prisonId}/prisoners/{offenderNo}/adjudication/dps-charge-number/{chargeNumber}/hearing/dps-hearing-id/{hearingId}/result")
+  @Nested
+  inner class RepairDeleteHearingResult {
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.delete().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DPS_CHARGE_NUMBER/hearing/dps-hearing-id/$DPS_HEARING_ID/result")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.delete().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DPS_CHARGE_NUMBER/hearing/dps-hearing-id/$DPS_HEARING_ID/result")
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.delete().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DPS_CHARGE_NUMBER/hearing/dps-hearing-id/$DPS_HEARING_ID/result")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetByChargeNumber(DPS_CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        adjudicationsApiServer.stubChargeGet(
+          chargeNumber = DPS_CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
+        nomisApi.stubHearingResultDelete(
+          ADJUDICATION_NUMBER,
+          NOMIS_HEARING_ID,
+          CHARGE_SEQ,
+          listOf(12345L to 10, 12345L to 11),
+        )
+        mappingServer.stubUpdatePunishments()
+
+        webTestClient.delete().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DPS_CHARGE_NUMBER/hearing/dps-hearing-id/$DPS_HEARING_ID/result")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ADJUDICATIONS")))
+          .exchange()
+          .expectStatus().isNoContent
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("hearing-result-deleted-success"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+            Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
+            Assertions.assertThat(it["punishmentsDeletedCount"]).isEqualTo("2")
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to delete the hearing result`() {
+        nomisApi.verify(WireMock.deleteRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQ/result")))
+      }
+
+      @Test
+      fun `will call the mapping service to remove the punishment mappings`() {
+        mappingServer.verify(
+          putRequestedFor(urlEqualTo("/mapping/punishments"))
+            .withRequestBody(
+              matchingJsonPath(
+                "punishmentsToDelete[0].nomisBookingId",
+                equalTo("12345"),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "punishmentsToDelete[0].nomisSanctionSequence",
+                equalTo("10"),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "punishmentsToDelete[1].nomisBookingId",
+                equalTo("12345"),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "punishmentsToDelete[1].nomisSanctionSequence",
+                equalTo("11"),
+              ),
+            ),
+        )
+      }
+
+      @Test
+      fun `will create audit telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("adjudication-hearing-delete-result-repair"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
+            Assertions.assertThat(it["hearingId"]).isEqualTo(DPS_HEARING_ID)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+          },
+          isNull(),
         )
       }
     }
