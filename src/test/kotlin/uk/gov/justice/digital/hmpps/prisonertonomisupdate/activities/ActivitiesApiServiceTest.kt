@@ -451,7 +451,7 @@ internal class ActivitiesApiServiceTest {
       activitiesApiService.getActivity(1234)
 
       activitiesApi.verify(
-        getRequestedFor(urlEqualTo("/activities/1234"))
+        getRequestedFor(urlEqualTo("/activities/1234/filtered?earliestSessionDate=${LocalDate.now()}"))
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }

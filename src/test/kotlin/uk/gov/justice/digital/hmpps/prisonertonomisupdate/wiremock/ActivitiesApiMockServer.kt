@@ -81,11 +81,11 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun stubGetActivity(id: Long, response: String) {
-    stubGet("/activities/$id", response)
+    stubGet("/activities/$id/filtered?earliestSessionDate=${LocalDate.now()}", response)
   }
 
   fun stubGetActivityWithError(id: Long, status: Int = 500) {
-    stubGetWithError("/activities/$id", status)
+    stubGetWithError("/activities/$id/filtered?earliestSessionDate=${LocalDate.now()}", status)
   }
 
   fun stubGetAllocation(id: Long, response: String) {

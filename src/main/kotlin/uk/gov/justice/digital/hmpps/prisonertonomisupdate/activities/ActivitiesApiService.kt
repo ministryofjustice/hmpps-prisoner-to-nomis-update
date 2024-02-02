@@ -25,7 +25,11 @@ class ActivitiesApiService(@Qualifier("activitiesApiWebClient") private val webC
 
   suspend fun getActivity(activityId: Long): Activity {
     return webClient.get()
-      .uri("/activities/{activityId}", activityId)
+      .uri {
+        it.path("/activities/{activityId}/filtered")
+          .queryParam("earliestSessionDate", LocalDate.now())
+          .build(activityId)
+      }
       .retrieve()
       .awaitBody()
   }
