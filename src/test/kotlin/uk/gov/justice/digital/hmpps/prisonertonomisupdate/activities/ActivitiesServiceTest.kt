@@ -457,7 +457,6 @@ private fun newActivity(): Activity = Activity(
   ),
   payPerSession = Activity.PayPerSession.H,
   eligibilityRules = emptyList(),
-  schedules = emptyList(),
   pay = listOf(
     ActivityPay(
       id = 1,
