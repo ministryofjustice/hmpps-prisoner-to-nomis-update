@@ -62,7 +62,6 @@ internal class AdjudicationsReconciliationServiceTest {
           adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
             bookingId = 123456,
             offenderNo = "A1234AA",
-            prisonIds = listOf("MDI"),
             adaSummaries = emptyList(),
           ),
         )
@@ -91,7 +90,6 @@ internal class AdjudicationsReconciliationServiceTest {
           adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
             bookingId = 123456,
             offenderNo = "A1234AA",
-            prisonIds = listOf("MDI"),
             adaSummaries = listOf(nomisSummary(days = 10)),
           ),
         )
@@ -127,7 +125,6 @@ internal class AdjudicationsReconciliationServiceTest {
           adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
             bookingId = 123456,
             offenderNo = "A1234AA",
-            prisonIds = listOf("MDI"),
             adaSummaries = listOf(nomisSummary(days = 10), nomisSummary(days = 3), nomisSummary(days = 9)),
           ),
         )
@@ -163,7 +160,6 @@ internal class AdjudicationsReconciliationServiceTest {
           adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
             bookingId = 123456,
             offenderNo = "A1234AA",
-            prisonIds = listOf("MDI"),
             adaSummaries = listOf(
               nomisSummary(days = 10, effectiveDate = LocalDate.now().minusWeeks(1)),
               nomisSummary(days = 3, effectiveDate = LocalDate.now().minusWeeks(3)),
@@ -196,7 +192,6 @@ internal class AdjudicationsReconciliationServiceTest {
           adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
             bookingId = 123456,
             offenderNo = "A1234AA",
-            prisonIds = listOf("MDI"),
             adaSummaries = listOf(nomisSummary(days = 10)),
           ),
         )
@@ -228,7 +223,6 @@ internal class AdjudicationsReconciliationServiceTest {
           adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
             bookingId = 123456,
             offenderNo = "A1234AA",
-            prisonIds = listOf("MDI"),
             adaSummaries = listOf(nomisSummary(days = 10).copy(sanctionStatus = CodeDescription("QUASHED", "Quashed"))),
           ),
         )
@@ -257,7 +251,6 @@ internal class AdjudicationsReconciliationServiceTest {
           adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
             bookingId = 123456,
             offenderNo = "A1234AA",
-            prisonIds = listOf("MDI"),
             adaSummaries = listOf(nomisSummary(days = 12)),
           ),
         )
@@ -290,14 +283,13 @@ internal class AdjudicationsReconciliationServiceTest {
       adjudicationsApiServer.stubGetAdjudicationsByBookingId(2, listOf(aDPSAdjudication().copy(punishments = listOf(adaPunishment(days = 10)))))
       nomisApi.stubGetAdaAwardSummary(
         bookingId = 1,
-        adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(bookingId = 1, offenderNo = "A1234AA", prisonIds = listOf("MDI"), adaSummaries = emptyList()),
+        adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(bookingId = 1, offenderNo = "A1234AA", adaSummaries = emptyList()),
       )
       nomisApi.stubGetAdaAwardSummary(
         bookingId = 2,
         adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
           bookingId = 2,
           offenderNo = "A1234AA",
-          prisonIds = listOf("MDI"),
           adaSummaries = listOf(nomisSummary(days = 12)),
         ),
       )
