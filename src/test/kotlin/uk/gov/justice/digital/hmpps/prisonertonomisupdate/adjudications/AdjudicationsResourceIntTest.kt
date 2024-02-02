@@ -48,7 +48,6 @@ class AdjudicationsResourceIntTest : IntegrationTestBase() {
         adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
           bookingId = 1,
           offenderNo = "A0001TZ",
-          prisonIds = listOf("MDI"),
           adaSummaries = listOf(nomisSummary(days = 12)),
         ),
       )
@@ -58,7 +57,6 @@ class AdjudicationsResourceIntTest : IntegrationTestBase() {
         adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
           bookingId = 34,
           offenderNo = "A0034TZ",
-          prisonIds = listOf("MDI"),
           adaSummaries = listOf(nomisSummary(days = 12)),
         ),
       )
@@ -71,7 +69,6 @@ class AdjudicationsResourceIntTest : IntegrationTestBase() {
           adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
             bookingId = it,
             offenderNo = "A${it.toString().padStart(4, '0')}TZ",
-            prisonIds = listOf("MDI"),
             adaSummaries = listOf(nomisSummary(days = 10)),
           ),
         )

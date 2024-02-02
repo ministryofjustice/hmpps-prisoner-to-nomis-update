@@ -1501,7 +1501,6 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     adjudicationADAAwardSummaryResponse: AdjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
       bookingId = bookingId,
       offenderNo = "A1234XT",
-      prisonIds = listOf("MDI"),
       adaSummaries = emptyList(),
     ),
   ) {

@@ -10673,14 +10673,6 @@
             "type": "string",
             "description": "Prisoner number related to booking"
           },
-          "prisonIds": {
-            "type": "array",
-            "description": "List of prisons this person attended during this booking",
-            "items": {
-              "type": "string",
-              "description": "List of prisons this person attended during this booking"
-            }
-          },
           "adaSummaries": {
             "type": "array",
             "description": "List of ADAs awarded during this booking period",
