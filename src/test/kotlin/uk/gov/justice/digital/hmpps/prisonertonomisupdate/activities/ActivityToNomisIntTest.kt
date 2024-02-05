@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
+import java.time.LocalDate
 
 internal const val ACTIVITY_SCHEDULE_ID: Long = 100
 internal const val ACTIVITY_ID: Long = 200
@@ -45,6 +46,7 @@ internal const val OFFENDER_NO = "A1234AA"
 
 class ActivityToNomisIntTest : SqsIntegrationTestBase() {
 
+  private val today = LocalDate.now()
   companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
@@ -72,7 +74,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       ).get()
 
       await untilCallTo { awsSqsActivityClient.countAllMessagesOnQueue(activityQueueUrl).get() } matches { it == 0 }
-      await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID") } matches { it == 1 }
+      await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID/filtered?earliestSessionDate=$today") } matches { it == 1 }
       await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
       nomisApi.verify(
         postRequestedFor(urlEqualTo("/activities"))
@@ -146,7 +148,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           ).build(),
       ).get()
 
-      await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID") } matches { it == 1 }
+      await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID/filtered?earliestSessionDate=$today") } matches { it == 1 }
       await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
       await untilAsserted { verify(telemetryClient).trackEvent(eq("activity-create-mapping-retry"), any(), isNull()) }
       await untilAsserted {
@@ -203,7 +205,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
         )
       }
 
-      await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID") } matches { it == 1 }
+      await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID/filtered?earliestSessionDate=$today") } matches { it == 1 }
       await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
       await untilAsserted { mappingServer.verify(exactly(1), postRequestedFor(urlEqualTo("/mapping/activities"))) }
 
@@ -244,7 +246,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           ).build(),
       ).get()
 
-      await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID") } matches { it == 1 }
+      await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID/filtered?earliestSessionDate=$today") } matches { it == 1 }
       await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
 
       // the mapping call fails resulting in a retry message being queued
@@ -291,7 +293,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           ).build(),
       ).get()
 
-      await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID") } matches { it == 1 }
+      await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID/filtered?earliestSessionDate=$today") } matches { it == 1 }
       await untilCallTo { nomisApi.postCountFor("/activities") } matches { it == 1 }
 
       // message sent to DLQ
@@ -324,7 +326,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       awsSnsClient.publish(amendActivityEvent()).get()
 
       await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/schedules/$ACTIVITY_SCHEDULE_ID"))) }
-      await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/activities/$ACTIVITY_ID"))) }
+      await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/activities/$ACTIVITY_ID/filtered?earliestSessionDate=$today"))) }
       await untilAsserted { mappingServer.verify(getRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/$ACTIVITY_SCHEDULE_ID"))) }
       await untilAsserted {
         nomisApi.verify(
@@ -405,7 +407,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       awsSnsClient.publish(amendActivityEvent()).get()
 
       await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/schedules/$ACTIVITY_SCHEDULE_ID"))) }
-      await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/activities/$ACTIVITY_ID"))) }
+      await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/activities/$ACTIVITY_ID/filtered?earliestSessionDate=$today"))) }
       await untilAsserted { mappingServer.verify(getRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/$ACTIVITY_SCHEDULE_ID"))) }
       // Both mappings are saved back to the mapping service - including the one no returned from the Activities API
       await untilAsserted {
