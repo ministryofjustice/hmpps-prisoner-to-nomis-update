@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory
 
 val log: Logger = LoggerFactory.getLogger("HelperApi")
 
-suspend fun <T> doApiCallWithSingleRetry(api: suspend () -> T) = runCatching {
+suspend fun <T> doApiCallWithRetries(api: suspend () -> T) = runCatching {
   api()
 }.recoverCatching {
   log.warn("Retrying API call 1", it)
