@@ -12,7 +12,7 @@ class HelperApiTest {
 
   @Test
   fun `test doApiCallWithSingleRetry with successful call`() = runTest {
-    val result = doApiCallWithSingleRetry { DummyApi().api() }
+    val result = doApiCallWithRetries { DummyApi().api() }
 
     assertEquals("Success", result)
   }
@@ -24,14 +24,14 @@ class HelperApiTest {
       .thenThrow(RuntimeException("API call failed"))
       .thenReturn("Mock Success")
 
-    val result = doApiCallWithSingleRetry { dummyApi.api() }
+    val result = doApiCallWithRetries { dummyApi.api() }
 
     assertEquals("Mock Success", result)
   }
 
   @Test
   fun `test doApiCallWithSingleRetry with failed first call and failed retry`() = runTest {
-    assertThrows<RuntimeException> { doApiCallWithSingleRetry { DummyApi().apiFails() } }
+    assertThrows<RuntimeException> { doApiCallWithRetries { DummyApi().apiFails() } }
   }
 }
 

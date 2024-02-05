@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 
 @Service
 class SentencingReconciliationService(
@@ -41,7 +42,7 @@ class SentencingReconciliationService(
   }
 
   private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) =
-    runCatching { nomisApiService.getActivePrisoners(page.first, page.second).content }
+    runCatching { doApiCallWithRetries { nomisApiService.getActivePrisoners(page.first, page.second) }.content }
       .onFailure {
         telemetryClient.trackEvent(
           "sentencing-reports-reconciliation-mismatch-page-error",
@@ -56,9 +57,9 @@ class SentencingReconciliationService(
 
   suspend fun checkBookingAdjustmentsMatch(prisonerId: ActivePrisonerId): MismatchSentencingAdjustments? = runCatching {
     val (nomisAdjustments, dpsAdjustments) = withContext(Dispatchers.Unconfined) {
-      async { nomisApiService.getAdjustments(prisonerId.bookingId) } to
+      async { doApiCallWithRetries { nomisApiService.getAdjustments(prisonerId.bookingId) } } to
         async {
-          adjustmentsApiService.getAdjustments(prisonerId.offenderNo)
+          doApiCallWithRetries { adjustmentsApiService.getAdjustments(prisonerId.offenderNo) }
             // temporary fix until DPS filter out old adjustments
             ?.filter { it.bookingId == prisonerId.bookingId }
         }

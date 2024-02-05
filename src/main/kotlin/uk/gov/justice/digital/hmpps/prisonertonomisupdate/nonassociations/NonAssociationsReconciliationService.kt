@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.model.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithSingleRetry
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 import java.time.LocalDate
 
 private const val NO_COMMENT_PROVIDED = "No comment provided"
@@ -106,7 +106,7 @@ class NonAssociationsReconciliationService(
   }
 
   internal suspend fun getNomisNonAssociationsForPage(page: Pair<Long, Long>) =
-    runCatching { doApiCallWithSingleRetry { nomisApiService.getNonAssociations(page.first, page.second).content } }
+    runCatching { doApiCallWithRetries { nomisApiService.getNonAssociations(page.first, page.second).content } }
       .onFailure {
         telemetryClient.trackEvent(
           "non-associations-reports-reconciliation-mismatch-page-error",
@@ -118,7 +118,7 @@ class NonAssociationsReconciliationService(
       .also { log.info("Nomis Page requested: $page, with ${it.size} non-associations") }
 
   internal suspend fun getDpsNonAssociationsForPage(page: Pair<Long, Long>): List<NonAssociation> =
-    runCatching { doApiCallWithSingleRetry { nonAssociationsApiService.getAllNonAssociations(page.first, page.second).content } }
+    runCatching { doApiCallWithRetries { nonAssociationsApiService.getAllNonAssociations(page.first, page.second).content } }
       .onFailure {
         telemetryClient.trackEvent(
           "non-associations-reports-reconciliation-mismatch-page-error",
@@ -135,8 +135,8 @@ class NonAssociationsReconciliationService(
     val today = LocalDate.now()
 
     val (nomisListUnsorted, dpsListUnsorted) = withContext(Dispatchers.Unconfined) {
-      async { doApiCallWithSingleRetry { nomisApiService.getNonAssociationDetails(id.offenderNo1, id.offenderNo2) } } to
-        async { doApiCallWithSingleRetry { nonAssociationsApiService.getNonAssociationsBetween(id.offenderNo1, id.offenderNo2) } }
+      async { doApiCallWithRetries { nomisApiService.getNonAssociationDetails(id.offenderNo1, id.offenderNo2) } } to
+        async { doApiCallWithRetries { nonAssociationsApiService.getNonAssociationsBetween(id.offenderNo1, id.offenderNo2) } }
     }.awaitBoth()
 
     val nomisListSortedBySequence = nomisListUnsorted.sortedBy { it.typeSequence }
