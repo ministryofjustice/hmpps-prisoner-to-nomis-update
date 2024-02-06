@@ -75,7 +75,7 @@ class AdjudicationsDataRepairResource(
   @PreAuthorize("hasRole('NOMIS_ADJUDICATIONS')")
   @Operation(
     summary = "Resynchronises an outcome for the given adjudication from DPS back to NOMIS",
-    description = "Used when a domain event adjudication.punishments.updated has gone missing, so emergency use only. Requires ROLE_NOMIS_ADJUDICATIONS",
+    description = "Used when one of the numerous outcome upsert domain events, calling adjudicationsService.upsertOutcome(message.fromJson()) from the listener have gone missing, so emergency use only. Requires ROLE_NOMIS_ADJUDICATIONS",
   )
   suspend fun repairOutcome(
     @PathVariable prisonId: String,
