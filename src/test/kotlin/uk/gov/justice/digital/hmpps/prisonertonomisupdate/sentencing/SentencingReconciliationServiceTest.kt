@@ -552,6 +552,7 @@ internal fun keyDateAdjustment(
   adjustmentDays = effectiveDays.toLong(),
   active = true,
   comment = null,
+  hasBeenReleased = false,
 )
 
 internal fun sentenceAdjustment(
@@ -571,6 +572,7 @@ internal fun sentenceAdjustment(
   active = true,
   hiddenFromUsers = false,
   comment = null,
+  hasBeenReleased = false,
 )
 
 const val ADJUSTMENT_BOOKING_ID = 123456L

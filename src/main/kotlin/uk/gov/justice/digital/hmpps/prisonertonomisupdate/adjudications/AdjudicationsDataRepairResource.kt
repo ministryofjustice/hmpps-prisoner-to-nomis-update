@@ -69,4 +69,30 @@ class AdjudicationsDataRepairResource(
       null,
     )
   }
+
+  @PostMapping("/prisons/{prisonId}/prisoners/{offenderNo}/adjudication/dps-charge-number/{chargeNumber}/hearing/dps-hearing-id/{hearingId}/outcome")
+  @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("hasRole('NOMIS_ADJUDICATIONS')")
+  @Operation(
+    summary = "Resynchronises an outcome for the given adjudication from DPS back to NOMIS",
+    description = "Used when one of the numerous outcome upsert domain events, calling adjudicationsService.upsertOutcome(message.fromJson()) from the listener have gone missing, so emergency use only. Requires ROLE_NOMIS_ADJUDICATIONS",
+  )
+  suspend fun repairOutcome(
+    @PathVariable prisonId: String,
+    @PathVariable offenderNo: String,
+    @PathVariable chargeNumber: String,
+    @PathVariable hearingId: String,
+  ) {
+    adjudicationService.upsertOutcome(chargeNumber = chargeNumber, offenderNo = offenderNo, prisonId = prisonId, hearingId = hearingId)
+    telemetryClient.trackEvent(
+      "adjudication-outcome-repair",
+      mapOf(
+        "prisonId" to prisonId,
+        "chargeNumber" to chargeNumber,
+        "offenderNo" to offenderNo,
+        "hearingId" to hearingId,
+      ),
+      null,
+    )
+  }
 }

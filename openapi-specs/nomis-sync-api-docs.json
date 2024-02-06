@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2023-12-15.5883.a3a318a"
+    "version": "2024-02-02.6429.80bde95"
   },
   "servers": [
     {
@@ -15,7 +15,7 @@
       "description": "Development"
     },
     {
-      "url": "https://nomis-prisoner-api-preprod.prison.service.justice.gov.uk",
+      "url": "https://nomis-prsner-pp.aks-live-1.studio-hosting.service.justice.gov.uk",
       "description": "PreProd"
     },
     {
@@ -450,6 +450,109 @@
           },
           "401": {
             "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/court-appearances/{eventId}": {
+      "put": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "Updates Court Appearance",
+        "description": "Required role NOMIS_SENTENCING Updates a new Court Appearance for the offender,latest booking and given Court Case",
+        "operationId": "updateCourtAppearance",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender no",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender no",
+              "example": "AB1234A"
+            },
+            "example": "AB1234A"
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "description": "Case Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Case Id",
+              "example": 34565
+            },
+            "example": 34565
+          },
+          {
+            "name": "eventId",
+            "in": "path",
+            "description": "Case appearance Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Case appearance Id",
+              "example": 34565
+            },
+            "example": 34565
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourtAppearanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Court Appearance updated"
+          },
+          "400": {
+            "description": "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Court appearance does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -2680,6 +2783,166 @@
         }
       }
     },
+    "/service-prisons/{serviceCode}/prison/{prisonId}": {
+      "get": {
+        "tags": [
+          "service-agency-switches-resource"
+        ],
+        "summary": "Check if a service is turned on for a prison",
+        "description": "Check if a prison is turned on for a service. Requires role NOMIS_ACTIVITIES",
+        "operationId": "checkServicePrison",
+        "parameters": [
+          {
+            "name": "serviceCode",
+            "in": "path",
+            "description": "The code of the service from the EXTERNAL_SERVICES table",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The code of the service from the EXTERNAL_SERVICES table",
+              "example": "ACTIVITY"
+            },
+            "example": "ACTIVITY"
+          },
+          {
+            "name": "prisonId",
+            "in": "path",
+            "description": "The id of the prison",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The id of the prison",
+              "example": "MDI"
+            },
+            "example": "MDI"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role SYNCHRONISATION_REPORTING",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found, the service is not turned on for the prison",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "service-agency-switches-resource"
+        ],
+        "summary": "Turn on a service for a prison",
+        "description": "Turn on a service for a prison. Requires role NOMIS_ACTIVITIES",
+        "operationId": "createServicePrison",
+        "parameters": [
+          {
+            "name": "serviceCode",
+            "in": "path",
+            "description": "The code of the service from the EXTERNAL_SERVICES table",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The code of the service from the EXTERNAL_SERVICES table",
+              "example": "ACTIVITY"
+            },
+            "example": "ACTIVITY"
+          },
+          {
+            "name": "prisonId",
+            "in": "path",
+            "description": "The id of the prison",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The id of the prison",
+              "example": "MDI"
+            },
+            "example": "MDI"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role SYNCHRONISATION_REPORTING",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found, the service or prison do not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/visits": {
       "post": {
         "tags": [
@@ -2899,6 +3162,104 @@
           },
           "404": {
             "description": "Offender does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/court-appearances": {
+      "post": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "Creates a new Court Appearance",
+        "description": "Required role NOMIS_SENTENCING Creates a new Court Appearance for the offender,latest booking and given Court Case",
+        "operationId": "createCourtAppearance",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender no",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender no",
+              "example": "AB1234A"
+            },
+            "example": "AB1234A"
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "description": "Case Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Case Id",
+              "example": 34565
+            },
+            "example": 34565
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourtAppearanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created Court Appearance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateCourtAppearanceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Court case does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -4451,6 +4812,231 @@
         }
       }
     },
+    "/questionnaires/{questionnaireId}": {
+      "get": {
+        "tags": [
+          "incident-questionnaire-resource"
+        ],
+        "summary": "Get incident questionnaire details",
+        "description": "Gets incident questionnaire details. Requires role NOMIS_INCIDENTS",
+        "operationId": "getQuestionnaire",
+        "parameters": [
+          {
+            "name": "questionnaireId",
+            "in": "path",
+            "description": "Incident Questionnaire id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Incident Questionnaire id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionnaireResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_INCIDENTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/questionnaires/ids": {
+      "get": {
+        "tags": [
+          "incident-questionnaire-resource"
+        ],
+        "summary": "get questionnaire IDs by filter",
+        "description": "Retrieves a paged list of incident questionnaire ids by filter. Requires ROLE_NOMIS_INCIDENTS.",
+        "operationId": "getIdsByFilter",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "description": "Filter results by those that were created on or after the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "description": "Filter results by those that were created on or before the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pageable list of ids are returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageQuestionnaireIdResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_INCIDENTS not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisons/{prisonId}/incentive-levels": {
+      "get": {
+        "tags": [
+          "prison-resource"
+        ],
+        "summary": "Retrieve a list of active incentive levels for a prison",
+        "description": "Retrieve a list of active incentive levels for a prison. Requires role NOMIS_ACTIVITIES",
+        "operationId": "getPrisonIncentiveLevels",
+        "parameters": [
+          {
+            "name": "prisonId",
+            "in": "path",
+            "description": "The prison ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The prison ID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IncentiveLevel"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role SYNCHRONISATION_REPORTING",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prison not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/sentencing/court-cases/{id}": {
       "get": {
         "tags": [
@@ -5152,6 +5738,154 @@
         }
       }
     },
+    "/incidents/{incidentId}": {
+      "get": {
+        "tags": [
+          "incident-resource"
+        ],
+        "summary": "Get incident details",
+        "description": "Gets incident details. Requires role NOMIS_INCIDENTS",
+        "operationId": "getIncident",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "description": "Incident id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Incident id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_INCIDENTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/incidents/ids": {
+      "get": {
+        "tags": [
+          "incident-resource"
+        ],
+        "summary": "get incident IDs by filter",
+        "description": "Retrieves a paged list of incident ids by filter. Requires ROLE_NOMIS_INCIDENTS.",
+        "operationId": "getIdsByFilter_1",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "description": "Filter results by those that were created on or after the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "description": "Filter results by those that were created on or before the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pageable list of ids are returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageIncidentIdResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_INCIDENTS not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/incentives/ids": {
       "get": {
         "tags": [
@@ -5587,6 +6321,88 @@
         }
       }
     },
+    "/appointments/counts": {
+      "get": {
+        "tags": [
+          "appointments-resource"
+        ],
+        "summary": "Get appointment counts by prison, event sub type and future / past. Note that the 'future' is everything from tomorrow onwards.",
+        "description": "Retrieves counts of appointments for the migration preview. Requires ROLE_NOMIS_APPOINTMENTS.",
+        "operationId": "getAppointmentCounts",
+        "parameters": [
+          {
+            "name": "prisonIds",
+            "in": "query",
+            "description": "Filter results by prison ids",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "example": "['MDI','LEI']"
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "description": "Filter results by appointments that were created on or after the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "description": "Filter results by appointments that were created on or before the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2022-04-11"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Appointment counts returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppointmentCountsResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/appointments/booking/{bookingId}/location/{locationId}/start/{dateTime}": {
       "get": {
         "tags": [
@@ -5751,6 +6567,93 @@
         }
       }
     },
+    "/allocations/suspended": {
+      "get": {
+        "tags": [
+          "activities-resource"
+        ],
+        "summary": "Find suspended allocations",
+        "description": "Searches for suspended prisoners on active course allocations. Requires role NOMIS_ACTIVITIES",
+        "operationId": "findSuspendedAllocations",
+        "parameters": [
+          {
+            "name": "prisonId",
+            "in": "query",
+            "description": "Prison id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Prison id"
+            }
+          },
+          {
+            "name": "excludeProgramCode",
+            "in": "query",
+            "description": "Exclude program codes",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Exclude program codes"
+            }
+          },
+          {
+            "name": "courseActivityId",
+            "in": "query",
+            "description": "Course Activity ID",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Course Activity ID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FindSuspendedAllocationsResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/allocations/reconciliation/{prisonId}": {
       "get": {
         "tags": [
@@ -5778,6 +6681,93 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AllocationReconciliationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/allocations/missing-pay-bands": {
+      "get": {
+        "tags": [
+          "activities-resource"
+        ],
+        "summary": "Find allocations with missing pay bands",
+        "description": "Searches for prisoners allocated to a course activity without a pay band assigned. Requires role NOMIS_ACTIVITIES",
+        "operationId": "findAllocationsWithMissingPayBands",
+        "parameters": [
+          {
+            "name": "prisonId",
+            "in": "query",
+            "description": "Prison id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Prison id"
+            }
+          },
+          {
+            "name": "excludeProgramCode",
+            "in": "query",
+            "description": "Exclude program codes",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Exclude program codes"
+            }
+          },
+          {
+            "name": "courseActivityId",
+            "in": "query",
+            "description": "Course Activity ID",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Course Activity ID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FindAllocationsMissingPayBandsResponse"
+                  }
                 }
               }
             }
@@ -6366,6 +7356,93 @@
         }
       }
     },
+    "/activities/rates-with-unknown-incentives": {
+      "get": {
+        "tags": [
+          "activities-resource"
+        ],
+        "summary": "Find activities with pay rates with unknown incentive level",
+        "description": "Searches for course activities that have an active pay rate with an unknown incentive level. Requires role NOMIS_ACTIVITIES",
+        "operationId": "findRatesWithUnknownIncentiveLevel",
+        "parameters": [
+          {
+            "name": "prisonId",
+            "in": "query",
+            "description": "Prison id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Prison id"
+            }
+          },
+          {
+            "name": "excludeProgramCode",
+            "in": "query",
+            "description": "Exclude program codes",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Exclude program codes"
+            }
+          },
+          {
+            "name": "courseActivityId",
+            "in": "query",
+            "description": "Course Activity ID",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Course Activity ID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FindPayRateWithUnknownIncentiveResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/activities/ids": {
       "get": {
         "tags": [
@@ -6457,6 +7534,55 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/incident/adjudication-number/{adjudicationNumber}": {
+      "delete": {
+        "tags": [
+          "adjudication-resource"
+        ],
+        "summary": "**** Used to recover from a duplicate incident creation only ***** Deletes an incident by adjudication number.",
+        "description": "Deletes an incident by adjudication number. Supports the removal of a duplicate incident without a DPS mapping. Requires ROLE_NOMIS_ADJUDICATIONS",
+        "operationId": "deleteIncident",
+        "parameters": [
+          {
+            "name": "adjudicationNumber",
+            "in": "path",
+            "description": "Adjudication number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Adjudication number",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Incident deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ADJUDICATIONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -6801,6 +7927,77 @@
           }
         },
         "description": "Visit cancellation"
+      },
+      "CourtAppearanceRequest": {
+        "required": [
+          "courtEventCharges",
+          "courtEventType",
+          "courtId",
+          "eventDateTime"
+        ],
+        "type": "object",
+        "properties": {
+          "eventDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          },
+          "courtEventType": {
+            "type": "string"
+          },
+          "courtId": {
+            "type": "string"
+          },
+          "outcomeReasonCode": {
+            "type": "string"
+          },
+          "nextEventDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          },
+          "courtEventCharges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OffenderChargeRequest"
+            }
+          },
+          "nextCourtId": {
+            "type": "string"
+          }
+        },
+        "description": "Court Event"
+      },
+      "OffenderChargeRequest": {
+        "required": [
+          "mostSeriousFlag",
+          "offenceCode"
+        ],
+        "type": "object",
+        "properties": {
+          "offenceCode": {
+            "type": "string"
+          },
+          "offencesCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offenceDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "offenceEndDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "resultCode1": {
+            "type": "string"
+          },
+          "mostSeriousFlag": {
+            "type": "boolean"
+          }
+        },
+        "description": "Court Event"
       },
       "UpdateNonAssociationRequest": {
         "required": [
@@ -8077,7 +9274,8 @@
       },
       "CreateCourtCaseRequest": {
         "required": [
-          "court",
+          "courtAppearance",
+          "courtId",
           "legalCaseType",
           "startDate",
           "status"
@@ -8086,31 +9284,74 @@
         "properties": {
           "startDate": {
             "type": "string",
-            "description": "Court case start date",
             "format": "date"
           },
           "legalCaseType": {
-            "type": "string",
-            "description": "Legal Case type"
+            "type": "string"
           },
-          "court": {
-            "type": "string",
-            "description": "Court Id (establishment)"
+          "courtId": {
+            "type": "string"
           },
           "status": {
-            "type": "string",
-            "description": "Case status"
+            "type": "string"
+          },
+          "courtAppearance": {
+            "$ref": "#/components/schemas/CourtAppearanceRequest"
           }
         },
         "description": "Court case create request"
       },
-      "CreateCourtCaseResponse": {
+      "CreateCourtAppearanceResponse": {
         "required": [
+          "courtEventChargesIds",
           "id"
         ],
         "type": "object",
         "properties": {
           "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "courtEventChargesIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCourtEventChargesResponse"
+            }
+          },
+          "nextCourtAppearanceId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "Create adjustment response"
+      },
+      "CreateCourtCaseResponse": {
+        "required": [
+          "courtAppearanceIds",
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "courtAppearanceIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCourtAppearanceResponse"
+            }
+          }
+        },
+        "description": "Create adjustment response"
+      },
+      "CreateCourtEventChargesResponse": {
+        "required": [
+          "offenderChargeId"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderChargeId": {
             "type": "integer",
             "format": "int64"
           }
@@ -8528,6 +9769,7 @@
           "adjudicationNumber",
           "chargeSequence",
           "createdByUsername",
+          "createdDateTime",
           "effectiveDate",
           "sequence"
         ],
@@ -8580,6 +9822,12 @@
           "createdByUsername": {
             "type": "string",
             "description": "Username of person who created the record in NOMIS"
+          },
+          "createdDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date time when the record was created the record in NOMIS",
+            "example": "2021-07-05T10:35:17"
           }
         }
       },
@@ -9707,6 +10955,7 @@
           "adjustmentDays",
           "adjustmentType",
           "bookingId",
+          "hasBeenReleased",
           "hiddenFromUsers",
           "id",
           "offenderNo",
@@ -9723,6 +10972,10 @@
             "type": "integer",
             "description": "The booking id",
             "format": "int64"
+          },
+          "hasBeenReleased": {
+            "type": "boolean",
+            "description": "Indicates whether for this booking the prisoner has been released"
           },
           "offenderNo": {
             "type": "string",
@@ -9791,15 +11044,313 @@
         },
         "description": "Adjustment type"
       },
+      "AnswerResponse": {
+        "required": [
+          "active",
+          "answer",
+          "answerSequence",
+          "commentRequired",
+          "dateRequired",
+          "id",
+          "listSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The answer id",
+            "format": "int64"
+          },
+          "answer": {
+            "type": "string",
+            "description": "The answer text"
+          },
+          "answerSequence": {
+            "type": "integer",
+            "description": "The answer id used to set the listSequence values",
+            "format": "int32",
+            "example": 1
+          },
+          "listSequence": {
+            "type": "integer",
+            "description": "The order of the answers",
+            "format": "int32",
+            "example": 1
+          },
+          "active": {
+            "type": "boolean",
+            "description": "If the answer is active",
+            "example": true
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "The date the answer is no longer used",
+            "format": "date"
+          },
+          "nextQuestion": {
+            "$ref": "#/components/schemas/NextQuestionResponse"
+          },
+          "dateRequired": {
+            "type": "boolean",
+            "description": "If the answer should include a date",
+            "example": true
+          },
+          "commentRequired": {
+            "type": "boolean",
+            "description": "If the answer should include a comment",
+            "example": true
+          }
+        },
+        "description": "List of Answers to this question"
+      },
+      "NextQuestionResponse": {
+        "required": [
+          "id",
+          "question"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The question id",
+            "format": "int64"
+          },
+          "question": {
+            "type": "string",
+            "description": "The question text"
+          }
+        },
+        "description": "Question to be asked following this answer"
+      },
+      "QuestionResponse": {
+        "required": [
+          "active",
+          "answers",
+          "id",
+          "listSequence",
+          "multipleAnswers",
+          "question",
+          "questionSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The question id",
+            "format": "int64"
+          },
+          "question": {
+            "type": "string",
+            "description": "The question text"
+          },
+          "answers": {
+            "type": "array",
+            "description": "List of Answers to this question",
+            "items": {
+              "$ref": "#/components/schemas/AnswerResponse"
+            }
+          },
+          "active": {
+            "type": "boolean",
+            "description": "If the question is active",
+            "example": true
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "The date the question is no longer used",
+            "format": "date"
+          },
+          "multipleAnswers": {
+            "type": "boolean",
+            "description": "If the question has multiple answers",
+            "example": true
+          },
+          "questionSequence": {
+            "type": "integer",
+            "description": "The question id used to set the listSequence values",
+            "format": "int32",
+            "example": 1
+          },
+          "listSequence": {
+            "type": "integer",
+            "description": "The order of the questions",
+            "format": "int32",
+            "example": 1
+          }
+        },
+        "description": "List of Questions (and associated Answers) for this Questionnaire"
+      },
+      "QuestionnaireResponse": {
+        "required": [
+          "active",
+          "code",
+          "createdBy",
+          "createdDate",
+          "id",
+          "listSequence",
+          "offenderRoles",
+          "questions"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The unique identifier of the questionnaire",
+            "format": "int64"
+          },
+          "description": {
+            "type": "string",
+            "description": "A description of the questionnaire",
+            "example": "Escape from Establishment"
+          },
+          "code": {
+            "type": "string",
+            "description": "Code to identify this questionnaire",
+            "example": "ESCAPE_EST"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "If the questionnaire is active",
+            "example": true
+          },
+          "listSequence": {
+            "type": "integer",
+            "description": "Sequence value of the questionnaires",
+            "format": "int32",
+            "example": 1
+          },
+          "questions": {
+            "type": "array",
+            "description": "List of Questions (and associated Answers) for this Questionnaire",
+            "items": {
+              "$ref": "#/components/schemas/QuestionResponse"
+            }
+          },
+          "offenderRoles": {
+            "type": "array",
+            "description": "List of Roles allowed for an offender's participation in an incident",
+            "items": {
+              "type": "string",
+              "description": "List of Roles allowed for an offender's participation in an incident"
+            }
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "The date the questionnaire is no longer used",
+            "format": "date"
+          },
+          "createdDate": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Questionnaire created date",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Questionnaire created by"
+          },
+          "modifiedDate": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Questionnaire modified date",
+            "example": "2021-07-05T10:35:17"
+          },
+          "modifiedBy": {
+            "type": "string",
+            "description": "Questionnaire modified by"
+          }
+        },
+        "description": "Questionnaire"
+      },
+      "PageQuestionnaireIdResponse": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuestionnaireIdResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "QuestionnaireIdResponse": {
+        "required": [
+          "questionnaireId"
+        ],
+        "type": "object",
+        "properties": {
+          "questionnaireId": {
+            "type": "integer",
+            "description": "The questionnaire id",
+            "format": "int64"
+          }
+        },
+        "description": "Questionnaire id"
+      },
+      "IncentiveLevel": {
+        "required": [
+          "code",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "The incentive level code",
+            "example": "STD"
+          },
+          "description": {
+            "type": "string",
+            "description": "The incentive level description",
+            "example": "Standard"
+          }
+        },
+        "description": "An incentive levels"
+      },
       "CourtCaseResponse": {
         "required": [
           "bookingId",
           "caseSequence",
           "caseStatus",
           "courtEvents",
+          "courtId",
           "createdByUsername",
           "createdDateTime",
-          "establishmentId",
           "id",
           "legalCaseType",
           "lidsCaseNumber",
@@ -9836,7 +11387,7 @@
             "type": "string",
             "format": "date"
           },
-          "establishmentId": {
+          "courtId": {
             "type": "string"
           },
           "combinedCaseId": {
@@ -9896,7 +11447,7 @@
         "required": [
           "eventId",
           "mostSeriousFlag",
-          "offenderChargeId"
+          "offenderCharge"
         ],
         "type": "object",
         "properties": {
@@ -9904,9 +11455,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "offenderChargeId": {
-            "type": "integer",
-            "format": "int64"
+          "offenderCharge": {
+            "$ref": "#/components/schemas/OffenderChargeResponse"
           },
           "offencesCount": {
             "type": "integer",
@@ -9960,15 +11510,14 @@
         "required": [
           "courtEventCharges",
           "courtEventType",
+          "courtId",
           "courtOrders",
           "createdByUsername",
           "createdDateTime",
-          "eventDate",
+          "eventDateTime",
           "eventStatus",
           "id",
-          "offenderNo",
-          "prisonId",
-          "startTime"
+          "offenderNo"
         ],
         "type": "object",
         "properties": {
@@ -9979,11 +11528,7 @@
           "offenderNo": {
             "type": "string"
           },
-          "eventDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "startTime": {
+          "eventDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
             "example": "2021-07-05T10:35:17"
@@ -10000,11 +11545,11 @@
           "judgeName": {
             "type": "string"
           },
-          "prisonId": {
+          "courtId": {
             "type": "string"
           },
           "outcomeReasonCode": {
-            "type": "string"
+            "$ref": "#/components/schemas/CodeDescription"
           },
           "commentText": {
             "type": "string"
@@ -10018,11 +11563,7 @@
           "nextEventRequestFlag": {
             "type": "boolean"
           },
-          "nextEventDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "nextEventStartTime": {
+          "nextEventDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
             "example": "2021-07-05T10:35:17"
@@ -10544,6 +12085,7 @@
           "adjustmentDays",
           "adjustmentType",
           "bookingId",
+          "hasBeenReleased",
           "id",
           "offenderNo"
         ],
@@ -10558,6 +12100,10 @@
             "type": "integer",
             "description": "The booking id",
             "format": "int64"
+          },
+          "hasBeenReleased": {
+            "type": "boolean",
+            "description": "Indicates whether for this booking the prisoner has been released"
           },
           "offenderNo": {
             "type": "string",
@@ -10659,8 +12205,7 @@
         "required": [
           "adaSummaries",
           "bookingId",
-          "offenderNo",
-          "prisonIds"
+          "offenderNo"
         ],
         "type": "object",
         "properties": {
@@ -10802,6 +12347,384 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/NonAssociationIdResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "History": {
+        "required": [
+          "questionnaire",
+          "questionnaireId",
+          "questions"
+        ],
+        "type": "object",
+        "properties": {
+          "questionnaireId": {
+            "type": "integer",
+            "description": "The historical incident questionnaire id",
+            "format": "int64"
+          },
+          "questionnaire": {
+            "type": "string",
+            "description": "The historical incident questionnaire code"
+          },
+          "description": {
+            "type": "string",
+            "description": "The historical incident questionnaire description"
+          },
+          "questions": {
+            "type": "array",
+            "description": "Questions asked for the historical incident questionnaire",
+            "items": {
+              "$ref": "#/components/schemas/HistoryQuestion"
+            }
+          }
+        },
+        "description": "Historical questionnaire details for the incident"
+      },
+      "HistoryQuestion": {
+        "required": [
+          "answers",
+          "question",
+          "sequence"
+        ],
+        "type": "object",
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "description": "The sequence number of the historical question for this incident",
+            "format": "int32"
+          },
+          "question": {
+            "type": "string",
+            "description": "The Question being asked"
+          },
+          "answers": {
+            "type": "array",
+            "description": "Historical list of Responses to this question",
+            "items": {
+              "$ref": "#/components/schemas/HistoryResponse"
+            }
+          }
+        },
+        "description": "Questions asked for the historical incident questionnaire"
+      },
+      "HistoryResponse": {
+        "required": [
+          "answer",
+          "sequence"
+        ],
+        "type": "object",
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "description": "The sequence number of the answer",
+            "format": "int32"
+          },
+          "answer": {
+            "type": "string",
+            "description": "The answer text"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Comment added to the response by recording staff"
+          }
+        },
+        "description": "Historical list of Responses to this question"
+      },
+      "IncidentResponse": {
+        "required": [
+          "history",
+          "id",
+          "incidentDateTime",
+          "lockedResponse",
+          "offenderParties",
+          "questions",
+          "reportedDateTime",
+          "reportedStaff",
+          "requirements",
+          "staffParties",
+          "status",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The incident id",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string",
+            "description": "A summary of the incident"
+          },
+          "description": {
+            "type": "string",
+            "description": "The incident details"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status code of the incident"
+          },
+          "type": {
+            "type": "string",
+            "description": "The incident questionnaire type"
+          },
+          "lockedResponse": {
+            "type": "boolean",
+            "description": "If the response is locked ie if the response is completed"
+          },
+          "incidentDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time of the incident",
+            "example": "2021-07-05T10:35:17"
+          },
+          "reportedStaff": {
+            "$ref": "#/components/schemas/Staff"
+          },
+          "reportedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the incident was reported",
+            "example": "2021-07-05T10:35:17"
+          },
+          "staffParties": {
+            "type": "array",
+            "description": "Staff involved in the incident",
+            "items": {
+              "$ref": "#/components/schemas/StaffParty"
+            }
+          },
+          "offenderParties": {
+            "type": "array",
+            "description": "Offenders involved in the incident",
+            "items": {
+              "$ref": "#/components/schemas/OffenderParty"
+            }
+          },
+          "requirements": {
+            "type": "array",
+            "description": "Requirements for completing the incident report",
+            "items": {
+              "$ref": "#/components/schemas/Requirement"
+            }
+          },
+          "questions": {
+            "type": "array",
+            "description": "Questions asked for the incident",
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            }
+          },
+          "history": {
+            "type": "array",
+            "description": "Historical questionnaire details for the incident",
+            "items": {
+              "$ref": "#/components/schemas/History"
+            }
+          }
+        },
+        "description": "Incident Details"
+      },
+      "Offender": {
+        "required": [
+          "lastName",
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderNo": {
+            "type": "string",
+            "description": "NOMIS id"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "First name of staff member"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Last name of staff member"
+          }
+        },
+        "description": "Offender involved in the incident"
+      },
+      "OffenderParty": {
+        "required": [
+          "offender",
+          "role"
+        ],
+        "type": "object",
+        "properties": {
+          "offender": {
+            "$ref": "#/components/schemas/Offender"
+          },
+          "role": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "comment": {
+            "type": "string",
+            "description": "General information about the incident"
+          }
+        },
+        "description": "Offenders involved in the incident"
+      },
+      "Question": {
+        "required": [
+          "answers",
+          "question",
+          "sequence"
+        ],
+        "type": "object",
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "description": "The sequence number of the question for this incident",
+            "format": "int32"
+          },
+          "question": {
+            "type": "string",
+            "description": "The Question being asked"
+          },
+          "answers": {
+            "type": "array",
+            "description": "List of Responses to this question",
+            "items": {
+              "$ref": "#/components/schemas/Response"
+            }
+          }
+        },
+        "description": "Questions asked for the incident"
+      },
+      "Requirement": {
+        "required": [
+          "date",
+          "prisonId",
+          "staff"
+        ],
+        "type": "object",
+        "properties": {
+          "comment": {
+            "type": "string",
+            "description": "The update required to the incident report"
+          },
+          "date": {
+            "type": "string",
+            "description": "Date the requirement was recorded",
+            "format": "date"
+          },
+          "staff": {
+            "$ref": "#/components/schemas/Staff"
+          },
+          "prisonId": {
+            "type": "string",
+            "description": "The reporting location of the staff"
+          }
+        },
+        "description": "Requirements for completing the incident report"
+      },
+      "Response": {
+        "required": [
+          "answer",
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The id of the answer",
+            "format": "int64"
+          },
+          "answer": {
+            "type": "string",
+            "description": "The answer text"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Comment added to the response by recording staff"
+          }
+        },
+        "description": "List of Responses to this question"
+      },
+      "StaffParty": {
+        "required": [
+          "role",
+          "staff"
+        ],
+        "type": "object",
+        "properties": {
+          "staff": {
+            "$ref": "#/components/schemas/Staff"
+          },
+          "role": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "comment": {
+            "type": "string",
+            "description": "General information about the incident"
+          }
+        },
+        "description": "Staff involved in the incident"
+      },
+      "IncidentIdResponse": {
+        "required": [
+          "incidentId"
+        ],
+        "type": "object",
+        "properties": {
+          "incidentId": {
+            "type": "integer",
+            "description": "The incident id",
+            "format": "int64"
+          }
+        },
+        "description": "Incident id"
+      },
+      "PageIncidentIdResponse": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IncidentIdResponse"
             }
           },
           "number": {
@@ -11083,6 +13006,35 @@
           }
         }
       },
+      "AppointmentCountsResponse": {
+        "required": [
+          "count",
+          "eventSubType",
+          "future",
+          "prisonId"
+        ],
+        "type": "object",
+        "properties": {
+          "prisonId": {
+            "type": "string",
+            "description": "The prison id"
+          },
+          "eventSubType": {
+            "type": "string",
+            "description": "The event sub type"
+          },
+          "future": {
+            "type": "boolean",
+            "description": "Future appointments?"
+          },
+          "count": {
+            "type": "integer",
+            "description": "The count",
+            "format": "int64"
+          }
+        },
+        "description": "Appointment counts"
+      },
       "GetAllocationResponse": {
         "required": [
           "bookingId",
@@ -11236,6 +13188,33 @@
         },
         "description": "Activity Schedule Rules"
       },
+      "FindSuspendedAllocationsResponse": {
+        "required": [
+          "courseActivityDescription",
+          "courseActivityId",
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderNo": {
+            "type": "string",
+            "description": "NOMIS offender number",
+            "example": "A1234BC"
+          },
+          "courseActivityId": {
+            "type": "integer",
+            "description": "Course Activity ID",
+            "format": "int64",
+            "example": 1234567
+          },
+          "courseActivityDescription": {
+            "type": "string",
+            "description": "Course description",
+            "example": "Kitchens AM"
+          }
+        },
+        "description": "Find suspended prisoners from active allocations"
+      },
       "AllocationReconciliationResponse": {
         "required": [
           "bookings",
@@ -11258,6 +13237,39 @@
           }
         },
         "description": "Allocation reconciliation check response"
+      },
+      "FindAllocationsMissingPayBandsResponse": {
+        "required": [
+          "courseActivityDescription",
+          "courseActivityId",
+          "incentiveLevel",
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderNo": {
+            "type": "string",
+            "description": "NOMIS offender number",
+            "example": "A1234BC"
+          },
+          "incentiveLevel": {
+            "type": "string",
+            "description": "NOMIS incentive level",
+            "example": "STD"
+          },
+          "courseActivityId": {
+            "type": "integer",
+            "description": "Course Activity ID",
+            "format": "int64",
+            "example": 1234567
+          },
+          "courseActivityDescription": {
+            "type": "string",
+            "description": "Course description",
+            "example": "Kitchens AM"
+          }
+        },
+        "description": "Find active allocations with missing pay bands"
       },
       "FindActiveAllocationIdsResponse": {
         "required": [
@@ -11463,6 +13475,7 @@
           "bookingId",
           "charge",
           "gender",
+          "hasMultipleCharges",
           "hearings",
           "incident",
           "investigations",
@@ -11524,6 +13537,10 @@
             "items": {
               "$ref": "#/components/schemas/Hearing"
             }
+          },
+          "hasMultipleCharges": {
+            "type": "boolean",
+            "description": "indicates if this charge was part of a larger multi-charge adjudication in NOMIS"
           }
         },
         "description": "The requested adjudication charge and associated adjudication details. Note: the adjudication may have other charges associated with it"
@@ -11661,6 +13678,39 @@
           }
         },
         "description": "Activity Pay Rates"
+      },
+      "FindPayRateWithUnknownIncentiveResponse": {
+        "required": [
+          "courseActivityDescription",
+          "courseActivityId",
+          "incentiveLevelCode",
+          "payBandCode"
+        ],
+        "type": "object",
+        "properties": {
+          "courseActivityDescription": {
+            "type": "string",
+            "description": "Course description",
+            "example": "Kitchens AM"
+          },
+          "courseActivityId": {
+            "type": "integer",
+            "description": "Course Activity ID",
+            "format": "int64",
+            "example": 1234567
+          },
+          "payBandCode": {
+            "type": "string",
+            "description": "Pay band code",
+            "example": "5"
+          },
+          "incentiveLevelCode": {
+            "type": "string",
+            "description": "Incentive level",
+            "example": "STD"
+          }
+        },
+        "description": "Find activities with a pay rate with unknown incentive level"
       },
       "FindActiveActivityIdsResponse": {
         "required": [

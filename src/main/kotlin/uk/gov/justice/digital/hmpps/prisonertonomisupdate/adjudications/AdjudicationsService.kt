@@ -607,6 +607,18 @@ class AdjudicationsService(
       ),
     )
 
+  suspend fun upsertOutcome(prisonId: String, offenderNo: String, chargeNumber: String, hearingId: String) =
+    upsertOutcome(
+      OutcomeEvent(
+        OutcomeAdditionalInformation(
+          chargeNumber = chargeNumber,
+          prisonId = prisonId,
+          hearingId = hearingId,
+          prisonerNumber = offenderNo,
+        ),
+      ),
+    )
+
   suspend fun updatePunishments(punishmentEvent: PunishmentEvent) {
     val eventInfo = punishmentEvent.additionalInformation
     val telemetryMap = eventInfo.toTelemetryMap()

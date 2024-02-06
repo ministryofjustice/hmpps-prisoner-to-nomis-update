@@ -176,7 +176,11 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubChargeGetWithHearingAndReferPoliceOutcome(hearingId: Long = 123, chargeNumber: String, offenderNo: String = "A7937DY") {
+  fun stubChargeGetWithHearingAndReferPoliceOutcome(
+    hearingId: Long = 123,
+    chargeNumber: String,
+    offenderNo: String = "A7937DY",
+  ) {
     stubChargeGetWithHearingAndSeparateOutcomeBlock(
       hearingId = hearingId,
       outcomeCode = "REFER_POLICE",
@@ -185,8 +189,23 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubChargeGetWithHearingAndNotProceedOutcome(
+    hearingId: Long = 123,
+    chargeNumber: String,
+    offenderNo: String = "A7937DY",
+  ) {
+    stubChargeGetWithHearingAndSeparateOutcomeBlock(
+      hearingId = hearingId,
+      outcomeCode = "NOT_PROCEED",
+      hearingOutcomeCode = "COMPLETE",
+      chargeNumber = chargeNumber,
+      offenderNo = offenderNo,
+    )
+  }
+
   private fun stubChargeGetWithHearingAndSeparateOutcomeBlock(
     outcomeCode: String,
+    hearingOutcomeCode: String? = null,
     hearingId: Long = 123,
     chargeNumber: String,
     offenderNo: String = "A7937DY",
@@ -202,7 +221,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             "outcome": {
               "id": 975,
               "adjudicator": "JBULLENGEN",
-              "code": "$outcomeCode",
+              "code": "${hearingOutcomeCode ?: outcomeCode}",
               "details": "pdfs"
               },
             "agencyId": "MDI"
