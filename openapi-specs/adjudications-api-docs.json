@@ -12,7 +12,7 @@
       "name": "MIT",
       "url": "https://opensource.org/license/mit-0"
     },
-    "version": "2024-01-30.10268.8b709b6"
+    "version": "2024-02-05.10537.d771434"
   },
   "servers": [
     {
@@ -6093,6 +6093,176 @@
         }
       ]
     },
+    "/reported-adjudications/bookings/prisoner/{prisonerNumber}": {
+      "get": {
+        "tags": [
+          "40. Reports"
+        ],
+        "summary": "Get adjudications for all offender bookings for a prisoner",
+        "operationId": "getAdjudicationsForPrisoner_1",
+        "parameters": [
+          {
+            "name": "prisonerNumber",
+            "in": "path",
+            "description": "prisoner number",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "optional inclusive start date for results",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "optional inclusive end date for results",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "list of status filter for reports",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "reported adjudication status codes",
+                "enum": [
+                  "ACCEPTED",
+                  "REJECTED",
+                  "AWAITING_REVIEW",
+                  "RETURNED",
+                  "UNSCHEDULED",
+                  "SCHEDULED",
+                  "REFER_POLICE",
+                  "REFER_INAD",
+                  "REFER_GOV",
+                  "PROSECUTION",
+                  "DISMISSED",
+                  "NOT_PROCEED",
+                  "ADJOURNED",
+                  "CHARGE_PROVED",
+                  "QUASHED",
+                  "INVALID_OUTCOME",
+                  "INVALID_SUSPENDED",
+                  "INVALID_ADA"
+                ]
+              }
+            }
+          },
+          {
+            "name": "pageable",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Results page you want to retrieve (0..N). Default 0, e.g. the first page"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Number of records per page. Default 20"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort as combined comma separated property and uppercase direction. Multiple sort params allowed to sort by multiple properties. Default to date_time_of_discovery DESC"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageReportedAdjudicationDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not able to process the request because the header “Accept” does not match with any of the content types this endpoint can handle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "Active-Caseload",
+          "in": "header",
+          "description": "Current Caseload for request, to be used when making calls to a specific report",
+          "required": false,
+          "schema": {
+            "type": "string"
+          },
+          "example": "MDI"
+        }
+      ]
+    },
     "/reported-adjudications/booking/{bookingId}": {
       "get": {
         "tags": [
@@ -10006,18 +10176,18 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "first": {
             "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -10035,17 +10205,17 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
+          "paged": {
+            "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
           },
-          "paged": {
-            "type": "boolean"
-          },
           "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageNumber": {
             "type": "integer",
             "format": "int32"
           }
@@ -10376,18 +10546,18 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "first": {
             "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -10783,18 +10953,18 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "first": {
             "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
