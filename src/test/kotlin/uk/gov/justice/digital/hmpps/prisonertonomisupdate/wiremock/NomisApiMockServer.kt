@@ -1679,6 +1679,125 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  // *************************************************** Locations **********************************************
+
+  fun stubLocationCreate(response: String) {
+    stubFor(
+      post("/locations").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubLocationCreateWithError(status: Int = 500) {
+    stubFor(
+      post("/locations").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubLocationCreateWithErrorFollowedBySlowSuccess(response: String) {
+    stubFor(
+      post("/locations")
+        .inScenario("Retry NOMIS Locations Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause NOMIS Locations Success"),
+    )
+
+    stubFor(
+      post("/locations")
+        .inScenario("Retry NOMIS Locations Scenario")
+        .whenScenarioStateIs("Cause NOMIS Locations Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(response)
+            .withStatus(200)
+            .withFixedDelay(1500),
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubLocationUpdate(locationId: Long) {
+    stubFor(
+      put("/locations/$locationId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubLocationUpdateWithError(locationId: Long, status: Int = 500) {
+    stubFor(
+      put("/locations/$locationId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubLocationDelete(locationId: Long) {
+    stubFor(
+      delete("/locations/$locationId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
+
+  fun stubLocationDeleteWithError(locationId: Long, status: Int = 500) {
+    stubFor(
+      delete("/locations/$locationId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubLocationDeleteWithErrorFollowedBySlowSuccess(locationId: Long) {
+    stubFor(
+      delete("/locations/$locationId")
+        .inScenario("Retry NOMIS Appointments Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause NOMIS Appointments Success"),
+    )
+
+    stubFor(
+      delete("/locations/$locationId")
+        .inScenario("Retry NOMIS Appointments Scenario")
+        .whenScenarioStateIs("Cause NOMIS Appointments Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(200)
+            .withFixedDelay(1500),
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
   fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
   fun putCountFor(url: String) = this.findAll(WireMock.putRequestedFor(WireMock.urlEqualTo(url))).count()
 

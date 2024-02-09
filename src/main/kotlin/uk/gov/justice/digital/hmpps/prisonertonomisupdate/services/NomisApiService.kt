@@ -32,11 +32,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardResponses
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DeleteHearingResultAwardResponses
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DeleteHearingResultResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Hearing
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonDetails
@@ -621,6 +624,40 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
         offender1,
         offender2,
       )
+      .retrieve()
+      .awaitBody()
+
+  // ///////////////////// LOCATIONS /////////////////////////
+
+  suspend fun createLocation(request: CreateLocationRequest): LocationIdResponse =
+    webClient.post()
+      .uri("/locations")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBody()
+
+  suspend fun getLocations(
+    pageNumber: Long,
+    pageSize: Long,
+  ): PageImpl<LocationIdResponse> =
+    webClient
+      .get()
+      .uri {
+        it.path("/locations/ids")
+          .queryParam("page", pageNumber)
+          .queryParam("size", pageSize)
+          .build()
+      }
+      .retrieve()
+      .bodyToMono(typeReference<RestResponsePage<LocationIdResponse>>())
+      .awaitSingle()
+
+  suspend fun getLocationDetails(
+    id: Long,
+  ): LocationResponse =
+    webClient
+      .get()
+      .uri("/locations/{id}", id)
       .retrieve()
       .awaitBody()
 }

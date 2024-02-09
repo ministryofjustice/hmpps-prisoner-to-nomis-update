@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-02-02.6429.80bde95"
+    "version": "2024-02-09.6517.398a34e"
   },
   "servers": [
     {
@@ -591,7 +591,7 @@
             "schema": {
               "type": "string"
             },
-            "example": "A34578ED"
+            "example": "A4578ED"
           },
           {
             "name": "typeSequence",
@@ -687,7 +687,7 @@
             "schema": {
               "type": "string"
             },
-            "example": "A34578ED"
+            "example": "A4578ED"
           },
           {
             "name": "typeSequence",
@@ -765,7 +765,7 @@
             "schema": {
               "type": "string"
             },
-            "example": "A34578ED"
+            "example": "A4578ED"
           },
           {
             "name": "typeSequence",
@@ -3795,6 +3795,68 @@
         }
       }
     },
+    "/locations": {
+      "post": {
+        "tags": [
+          "location-resource"
+        ],
+        "summary": "Creates a new location",
+        "description": "Creates a new location. Requires role ROLE_NOMIS_LOCATIONS",
+        "operationId": "createLocation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created location",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationIdResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid data such as prison or parent do not exist etc.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role ROLE_NOMIS_LOCATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/incentives/reference-codes": {
       "post": {
         "tags": [
@@ -5551,7 +5613,7 @@
             "schema": {
               "type": "string"
             },
-            "example": "A34578ED"
+            "example": "A4578ED"
           },
           {
             "name": "typeSequence",
@@ -5636,7 +5698,7 @@
             "schema": {
               "type": "string"
             },
-            "example": "A34578ED"
+            "example": "A4578ED"
           }
         ],
         "responses": {
@@ -5727,6 +5789,187 @@
           },
           "403": {
             "description": "Forbidden to access this endpoint when role NOMIS_NON_ASSOCIATIONS not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/{id}": {
+      "get": {
+        "tags": [
+          "location-resource"
+        ],
+        "summary": "Get a location",
+        "description": "Get the location given the id. Requires role ROLE_NOMIS_LOCATIONS",
+        "operationId": "getLocation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Location id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 12345678
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Location information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No location exists for this id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role ROLE_NOMIS_LOCATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/key/{key}": {
+      "get": {
+        "tags": [
+          "location-resource"
+        ],
+        "summary": "Get a location",
+        "description": "Get the location given the business key. Requires role ROLE_NOMIS_LOCATIONS",
+        "operationId": "getLocationByKey",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "description": "Location id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "LEI-B-3-014"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Location information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No location exists for this id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role ROLE_NOMIS_LOCATIONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/ids": {
+      "get": {
+        "tags": [
+          "location-resource"
+        ],
+        "summary": "get locations by filter",
+        "description": "Retrieves a paged list of composite ids by filter. Requires ROLE_NOMIS_LOCATIONS.",
+        "operationId": "getLocationsByFilter",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pageable list of ids is returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageLocationIdResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role ROLE_NOMIS_LOCATIONS not present",
             "content": {
               "application/json": {
                 "schema": {
@@ -8040,6 +8283,12 @@
             "type": "string",
             "description": "Comment",
             "example": "Some comment"
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "Expiry date",
+            "format": "date",
+            "example": "2024-08-12"
           }
         },
         "description": "Offender NonAssociation update request"
@@ -10400,6 +10649,149 @@
         },
         "description": "Non-association creation response"
       },
+      "CreateLocationRequest": {
+        "required": [
+          "certified",
+          "locationCode",
+          "locationType",
+          "parentLocationId",
+          "prisonId"
+        ],
+        "type": "object",
+        "properties": {
+          "certified": {
+            "type": "boolean",
+            "description": "Whether certified for use",
+            "example": true,
+            "default": false
+          },
+          "locationType": {
+            "type": "string",
+            "description": "Whether a CELL, VISIT room, Kitchen etc (Ref type ILOC_TYPE)",
+            "enum": [
+              "ADJU",
+              "ADMI",
+              "APP",
+              "AREA",
+              "ASSO",
+              "BOOT",
+              "BOX",
+              "CELL",
+              "CLAS",
+              "EXER",
+              "EXTE",
+              "FAIT",
+              "GROU",
+              "HCEL",
+              "HOLD",
+              "IGRO",
+              "INSI",
+              "INTE",
+              "LAND",
+              "LOCA",
+              "MEDI",
+              "MOVE",
+              "OFFI",
+              "OUTS",
+              "POSI",
+              "RESI",
+              "ROOM",
+              "RTU",
+              "SHEL",
+              "SPOR",
+              "STOR",
+              "TABL",
+              "TRAI",
+              "TRRM",
+              "VIDE",
+              "VISIT",
+              "WING",
+              "WORK"
+            ]
+          },
+          "prisonId": {
+            "type": "string",
+            "description": "Prison code of the location",
+            "example": "LEI"
+          },
+          "parentLocationId": {
+            "type": "integer",
+            "description": "The containing location id",
+            "format": "int64",
+            "example": 1234567
+          },
+          "operationalCapacity": {
+            "type": "integer",
+            "description": "Max capacity subject to resources",
+            "format": "int32",
+            "example": 43
+          },
+          "cnaCapacity": {
+            "type": "integer",
+            "description": "Certified Normal Accommodation capacity",
+            "format": "int32",
+            "example": 44
+          },
+          "userDescription": {
+            "maxLength": 40,
+            "minLength": 0,
+            "type": "string",
+            "description": "Description of location",
+            "example": "Some description"
+          },
+          "locationCode": {
+            "type": "string",
+            "description": "Usually a number for a cell, a letter for a wing or landing. Used to calculate description",
+            "example": "005"
+          },
+          "unitType": {
+            "type": "string",
+            "description": "Housing Unit type, Reference code (HOU_UN_TYPE)",
+            "enum": [
+              "HC",
+              "HOLC",
+              "NA",
+              "OU",
+              "REC",
+              "SEG",
+              "SPLC"
+            ]
+          },
+          "capacity": {
+            "type": "integer",
+            "description": "Physical maximum capacity",
+            "format": "int32",
+            "example": 45
+          },
+          "listSequence": {
+            "type": "integer",
+            "description": "Defines the order within parent location",
+            "format": "int32"
+          },
+          "comment": {
+            "maxLength": 240,
+            "minLength": 0,
+            "type": "string",
+            "description": "Comment",
+            "example": "Some comment"
+          }
+        },
+        "description": "Location creation request"
+      },
+      "LocationIdResponse": {
+        "required": [
+          "locationId"
+        ],
+        "type": "object",
+        "properties": {
+          "locationId": {
+            "type": "integer",
+            "description": "The created agency_internal_locations location id",
+            "format": "int64"
+          }
+        },
+        "description": "Location creation response"
+      },
       "ReorderRequest": {
         "required": [
           "codeList"
@@ -12347,6 +12739,138 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/NonAssociationIdResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "LocationResponse": {
+        "required": [
+          "certified",
+          "description",
+          "locationCode",
+          "locationId",
+          "locationType",
+          "parentLocationId",
+          "prisonId"
+        ],
+        "type": "object",
+        "properties": {
+          "locationId": {
+            "type": "integer",
+            "description": "The location id",
+            "format": "int64",
+            "example": 1234567
+          },
+          "certified": {
+            "type": "boolean",
+            "description": "Whether certified for use",
+            "example": true,
+            "default": false
+          },
+          "locationType": {
+            "type": "string",
+            "description": "Whether a CELL, VISIT room, Kitchen etc (Ref type ILOC_TYPE)",
+            "example": "LAND"
+          },
+          "prisonId": {
+            "type": "string",
+            "description": "Prison code of the location",
+            "example": "LEI"
+          },
+          "parentLocationId": {
+            "type": "integer",
+            "description": "The containing location id",
+            "format": "int64",
+            "example": 1234567
+          },
+          "operationalCapacity": {
+            "type": "integer",
+            "description": "Max capacity subject to resources",
+            "format": "int32",
+            "example": 43
+          },
+          "cnaCapacity": {
+            "type": "integer",
+            "description": "Certified Normal Accommodation capacity",
+            "format": "int32",
+            "example": 44
+          },
+          "userDescription": {
+            "type": "string",
+            "description": "Description of location",
+            "example": "Some description"
+          },
+          "description": {
+            "type": "string",
+            "description": "Constructed full code of location",
+            "example": "WWI-B-2-004"
+          },
+          "locationCode": {
+            "type": "string",
+            "description": "Usually a number for a cell, a letter for a wing or landing. Used to calculate description",
+            "example": "xxxx"
+          },
+          "capacity": {
+            "type": "integer",
+            "description": "Physical maximum capacity",
+            "format": "int32",
+            "example": 45
+          },
+          "listSequence": {
+            "type": "integer",
+            "description": "Defines the order within parent location",
+            "format": "int32"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Comment",
+            "example": "Some comment"
+          }
+        },
+        "description": "Location request returned data"
+      },
+      "PageLocationIdResponse": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LocationIdResponse"
             }
           },
           "number": {
