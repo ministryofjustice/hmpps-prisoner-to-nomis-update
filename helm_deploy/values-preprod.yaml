@@ -19,6 +19,9 @@ generic-service:
     API_BASE_URL_SENTENCE_ADJUSTMENTS: https://adjustments-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_ADJUDICATIONS: https://manage-adjudications-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_NON_ASSOCIATIONS: https://non-associations-api-preprod.hmpps.service.justice.gov.uk
+    API_BASE_URL_LOCATIONS: https://locations-inside-prison-api-preprod.hmpps.service.justice.gov.uk
+    FEATURE_EVENT_LOCATION_INSIDE_PRISON_CREATED: false
+    FEATURE_EVENT_LOCATION_INSIDE_PRISON_DELETED: false
 
 generic-prometheus-alerts:
   businessHoursOnly: true

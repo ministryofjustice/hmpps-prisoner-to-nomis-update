@@ -1129,4 +1129,131 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+
+  // *************************************************** Locations **********************************************
+
+  fun stubCreateLocation() {
+    stubFor(
+      post("/mapping/locations").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCreateLocationWithError(status: Int = 500) {
+    stubFor(
+      post("/mapping/locations").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubCreateLocationWithDuplicateError(
+    dpsId: String,
+    nomisId: Long,
+    duplicateNomisId: Long,
+  ) {
+    stubFor(
+      post("/mapping/locations")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+            { 
+              "status": 409,
+              "errorCode": 1409,
+              "userMessage": "Conflict: Location mapping already exists",
+               "moreInfo": {
+                "existing": {
+                  "dpsLocationId": $dpsId,
+                  "nomisLocationId": "$nomisId"
+                  },
+                "duplicate": {
+                  "dpsLocationId": $dpsId,
+                  "nomisLocationId": "$duplicateNomisId"
+                }
+              }
+            }
+              """.trimMargin(),
+            )
+            .withStatus(409),
+        ),
+    )
+  }
+
+  fun stubCreateLocationWithErrorFollowedBySlowSuccess() {
+    stubFor(
+      post("/mapping/locations")
+        .inScenario("Retry Mapping Location Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause Mapping Location Success"),
+    )
+
+    stubFor(
+      post("/mapping/locations")
+        .inScenario("Retry Mapping Location Scenario")
+        .whenScenarioStateIs("Cause Mapping Location Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201)
+            .withFixedDelay(1500),
+
+          ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetMappingGivenDpsLocationId(id: String, response: String) {
+    stubFor(
+      get("/mapping/locations/dps/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubGetMappingGivenDpsLocationIdWithError(id: String, status: Int = 500) {
+    stubFor(
+      get("/mapping/locations/dps/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubGetAllLocationMappings(response: String) {
+    stubFor(
+      get("/mapping/locations").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubDeleteLocationMapping(id: String) {
+    stubFor(
+      delete("/mapping/locations/dps/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
 }

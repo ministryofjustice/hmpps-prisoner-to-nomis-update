@@ -26,6 +26,9 @@ private const val NON_ASSOCIATION_ID = 1234L
 @Import(NonAssociationsApiService::class, NonAssociationsConfiguration::class)
 internal class NonAssociationsApiServiceTest {
 
+  @Autowired
+  private lateinit var nonAssociationsApiService: NonAssociationsApiService
+
   val response = """
     {
       "id": 42,
@@ -45,9 +48,6 @@ internal class NonAssociationsApiServiceTest {
       }
     }
   """.trimIndent()
-
-  @Autowired
-  private lateinit var nonAssociationsApiService: NonAssociationsApiService
 
   @Nested
   @DisplayName("GET /legacy/api/non-associations/{id}")
@@ -75,7 +75,7 @@ internal class NonAssociationsApiServiceTest {
     }
 
     @Test
-    fun `when adjudication is not found an exception is thrown`() = runTest {
+    fun `when NA is not found an exception is thrown`() = runTest {
       nonAssociationsApiServer.stubGetNonAssociationWithError(NON_ASSOCIATION_ID, status = 404)
 
       assertThrows<NotFound> {

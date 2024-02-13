@@ -51,6 +51,13 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   internal val nonAssociationQueueUrl by lazy { nonAssociationQueue.queueUrl }
   internal val nonAssociationDlqUrl by lazy { nonAssociationQueue.dlqUrl }
 
+  internal val locationQueue by lazy { hmppsQueueService.findByQueueId("location") as HmppsQueue }
+
+  internal val awsSqsLocationClient by lazy { locationQueue.sqsClient }
+  internal val awsSqsLocationDlqClient by lazy { locationQueue.sqsDlqClient }
+  internal val locationQueueUrl by lazy { locationQueue.queueUrl }
+  internal val locationDlqUrl by lazy { locationQueue.dlqUrl }
+
   internal val sentencingQueue by lazy { hmppsQueueService.findByQueueId("sentencing") as HmppsQueue }
 
   internal val awsSqsSentencingClient by lazy { sentencingQueue.sqsClient }
@@ -85,6 +92,9 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 
     awsSqsNonAssociationClient.purgeQueue(nonAssociationQueueUrl).get()
     awsSqsNonAssociationDlqClient?.purgeQueue(nonAssociationDlqUrl)?.get()
+
+    awsSqsLocationClient.purgeQueue(locationQueueUrl).get()
+    awsSqsLocationDlqClient?.purgeQueue(locationDlqUrl)?.get()
 
     awsSqsSentencingClient.purgeQueue(sentencingQueueUrl).get()
     awsSqsSentencingDlqClient?.purgeQueue(sentencingDlqUrl)?.get()

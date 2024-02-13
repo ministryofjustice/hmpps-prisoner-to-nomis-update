@@ -26,6 +26,11 @@ hmpps.sqs:
       dlqName: hmpps_prisoner_to_nomis_nonassociation_dlq
       subscribeTopicId: domainevents
       subscribeFilter: "{\"eventType\":[\"non-associations.created\", \"non-associations.deleted\", \"non-associations.amended\", \"non-associations.closed\"]}"
+    location:
+      queueName: hmpps_prisoner_to_nomis_location_queue
+      dlqName: hmpps_prisoner_to_nomis_location_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: "{\"eventType\":[\"location.inside.prison.created\", \"location.inside.prison.deleted\"]}"
     sentencing:
       queueName: hmpps_prisoner_to_nomis_sentencing_queue
       dlqName: hmpps_prisoner_to_nomis_sentencing_dlq

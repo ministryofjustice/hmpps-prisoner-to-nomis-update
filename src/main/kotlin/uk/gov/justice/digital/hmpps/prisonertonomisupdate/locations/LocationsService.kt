@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Lo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDateTime
@@ -20,36 +21,90 @@ class LocationsService(
   private val locationsApiService: LocationsApiService,
   private val nomisApiService: NomisApiService,
   private val mappingService: LocationsMappingService,
-  private val locationsUpdateQueueService: LocationsRetryQueueService,
+  private val locationsRetryQueueService: LocationsRetryQueueService,
   private val telemetryClient: TelemetryClient,
   private val objectMapper: ObjectMapper,
 ) : CreateMappingRetryable {
 
   suspend fun createLocation(event: LocationDomainEvent) {
-    synchronise {
-      name = "location"
-      telemetryClient = this@LocationsService.telemetryClient
-      retryQueueService = locationsUpdateQueueService
-      eventTelemetry = mapOf("dpsId" to event.additionalInformation.id)
+    val telemetryMap = mapOf("dpsId" to event.additionalInformation.id)
+    if (isDpsCreated(event.additionalInformation)) {
+      synchronise {
+        name = "location"
+        telemetryClient = this@LocationsService.telemetryClient
+        retryQueueService = locationsRetryQueueService
+        eventTelemetry = telemetryMap
 
-      checkMappingDoesNotExist {
-        mappingService.getMappingGivenDpsIdOrNull(event.additionalInformation.id)
-      }
-      transform {
-        locationsApiService.getLocation(event.additionalInformation.id).run {
-          val request = toCreateLocationRequest(this)
-
-          eventTelemetry += "prisonId" to prisonId
-          // TODO: add more telemetry
-
-          LocationMappingDto(
-            dpsLocationId = id.toString(),
-            nomisLocationId = nomisApiService.createLocation(request).locationId,
-            mappingType = LocationMappingDto.MappingType.LOCATION_CREATED,
-          )
+        checkMappingDoesNotExist {
+          mappingService.getMappingGivenDpsIdOrNull(event.additionalInformation.id)
         }
+        transform {
+          locationsApiService.getLocation(event.additionalInformation.id).run {
+            val request = toCreateLocationRequest(this)
+
+            eventTelemetry += "dpsId" to id.toString()
+            eventTelemetry += "key" to key
+            eventTelemetry += "prisonId" to prisonId
+
+            LocationMappingDto(
+              dpsLocationId = id.toString(),
+              nomisLocationId = nomisApiService.createLocation(request).locationId,
+              mappingType = LocationMappingDto.MappingType.LOCATION_CREATED,
+            )
+          }
+        }
+        saveMapping { mappingService.createMapping(it) }
       }
-      saveMapping { }
+    } else {
+      telemetryClient.trackEvent("nonAssociation-create-ignored", telemetryMap)
+    }
+  }
+
+  suspend fun deleteLocation(event: LocationDomainEvent) {
+    val dpsId = event.additionalInformation.id
+    val telemetryMap = mutableMapOf("dpsId" to dpsId)
+    if (isDpsCreated(event.additionalInformation)) {
+      runCatching {
+        val nomisId =
+          mappingService.getMappingGivenDpsId(dpsId).nomisLocationId
+            .also { telemetryMap += "nomisId" to it.toString() }
+
+        nomisApiService.deleteLocation(nomisId)
+        mappingService.deleteMapping(dpsId)
+      }.onSuccess {
+        telemetryClient.trackEvent("location-delete-success", telemetryMap, null)
+      }.onFailure { e ->
+        telemetryClient.trackEvent("location-delete-failed", telemetryMap, null)
+        throw e
+      }
+    }
+  }
+
+  suspend fun deleteAllLocations() {
+    mappingService.getAllMappings().forEach { mapping ->
+      runCatching {
+        nomisApiService.deleteLocation(mapping.nomisLocationId)
+        mappingService.deleteMapping(mapping.dpsLocationId)
+      }.onSuccess {
+        telemetryClient.trackEvent(
+          "location-DELETE-ALL-success",
+          mapOf(
+            "nomisId" to mapping.nomisLocationId.toString(),
+            "dpsId" to mapping.dpsLocationId,
+          ),
+          null,
+        )
+      }.onFailure { e ->
+        log.error("Failed to delete location with dpsId ${mapping.dpsLocationId}", e)
+        telemetryClient.trackEvent(
+          "location-DELETE-ALL-failed",
+          mapOf(
+            "nomisId" to mapping.nomisLocationId.toString(),
+            "dpsId" to mapping.dpsLocationId,
+          ),
+          null,
+        )
+      }
     }
   }
 
@@ -61,7 +116,9 @@ class LocationsService(
     parentLocationId = 0, // instance.parentId,
     prisonId = instance.prisonId,
   )
-  // TODO: will probably use a sync endpoint to get Nomis-style fields
+
+  private fun isDpsCreated(additionalInformation: LocationAdditionalInformation) =
+    additionalInformation.source != CreatingSystem.NOMIS.name
 
   suspend fun createRetry(message: CreateMappingRetryMessage<LocationMappingDto>) {
     mappingService.createMapping(message.mapping)
@@ -93,4 +150,5 @@ data class LocationDomainEvent(
 data class LocationAdditionalInformation(
   val id: String,
   val key: String,
+  val source: String? = null,
 )

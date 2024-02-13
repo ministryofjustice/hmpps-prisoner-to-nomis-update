@@ -660,6 +660,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .uri("/locations/{id}", id)
       .retrieve()
       .awaitBody()
+
+  suspend fun deleteLocation(id: Long) {
+    webClient.delete()
+      .uri("/locations/{id}", id)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 }
 
 data class CreateVisitDto(

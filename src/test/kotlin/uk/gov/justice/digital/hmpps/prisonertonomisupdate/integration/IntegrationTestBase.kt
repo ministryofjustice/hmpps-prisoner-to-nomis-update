@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.Adjudications
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NonAssociationsApiExtension
@@ -34,6 +35,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExte
   SentencingAdjustmentsApiExtension::class,
   AdjudicationsApiExtension::class,
   NonAssociationsApiExtension::class,
+  LocationsApiExtension::class,
 )
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")

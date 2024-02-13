@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
+import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
@@ -41,13 +42,13 @@ class LocationsMappingService(
       .bodyToMono(LocationMappingDto::class.java)
       .awaitSingle()
 
-//  suspend fun getAllMappings(): List<LocationMappingDto> =
-//    webClient.get()
-//      .uri("/mapping/locations")
-//      .retrieve()
-//      .awaitBody()
+  suspend fun getAllMappings(): List<LocationMappingDto> =
+    webClient.get()
+      .uri("/mapping/locations")
+      .retrieve()
+      .awaitBody()
 
-  suspend fun deleteMapping(dpsId: Long) {
+  suspend fun deleteMapping(dpsId: String) {
     webClient.delete()
       .uri("/mapping/locations/dps/{dpsId}", dpsId)
       .retrieve()
