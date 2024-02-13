@@ -113,8 +113,9 @@ class LocationsService(
     certified = instance.certification != null,
     locationType = CreateLocationRequest.LocationType.valueOf(instance.locationType.name),
     comment = instance.comments,
-    parentLocationId = 0, // instance.parentId,
+    parentLocationId = 0,
     prisonId = instance.prisonId,
+    // TBD
   )
 
   private fun isDpsCreated(additionalInformation: LocationAdditionalInformation) =

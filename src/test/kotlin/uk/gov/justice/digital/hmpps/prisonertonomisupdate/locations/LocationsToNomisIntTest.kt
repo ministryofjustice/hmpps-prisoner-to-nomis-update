@@ -87,7 +87,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         verify(telemetryClient).trackEvent(
           eq("location-create-success"),
           org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsId"]).isEqualTo("$DPS_ID")
+            Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
             Assertions.assertThat(it["key"]).isEqualTo("MDI-A-1-001")
             Assertions.assertThat(it["prisonId"]).isEqualTo("MDI")
           },
@@ -108,9 +108,9 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
 
         await untilAsserted {
           MappingExtension.mappingServer.verify(
-              WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/locations"))
-                  .withRequestBody(WireMock.matchingJsonPath("dpsLocationId", WireMock.equalTo(DPS_ID)))
-                  .withRequestBody(WireMock.matchingJsonPath("nomisLocationId", WireMock.equalTo(NOMIS_ID.toString()))),
+            WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/locations"))
+              .withRequestBody(WireMock.matchingJsonPath("dpsLocationId", WireMock.equalTo(DPS_ID)))
+              .withRequestBody(WireMock.matchingJsonPath("nomisLocationId", WireMock.equalTo(NOMIS_ID.toString()))),
           )
         }
         await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }

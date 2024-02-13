@@ -1210,7 +1210,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
             .withStatus(201)
             .withFixedDelay(1500),
 
-          ).willSetStateTo(Scenario.STARTED),
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 

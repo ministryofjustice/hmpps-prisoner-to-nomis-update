@@ -59,37 +59,37 @@ internal class LocationsApiServiceTest {
 
     @Test
     fun `should call api with OAuth2 token`(): Unit = runTest {
-        locationsApiService.getLocation(LOCATION_ID)
+      locationsApiService.getLocation(LOCATION_ID)
 
-        LocationsApiExtension.locationsApi.verify(
-            WireMock.getRequestedFor(WireMock.urlEqualTo("/locations/$LOCATION_ID"))
-                .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
-        )
+      LocationsApiExtension.locationsApi.verify(
+        WireMock.getRequestedFor(WireMock.urlEqualTo("/locations/$LOCATION_ID"))
+          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+      )
     }
 
     @Test
     fun `will parse data for a detail field`(): Unit = runTest {
-        val location = locationsApiService.getLocation(LOCATION_ID)
+      val location = locationsApiService.getLocation(LOCATION_ID)
 
-        Assertions.assertThat(location.pathHierarchy).isEqualTo("A-1-001")
+      Assertions.assertThat(location.pathHierarchy).isEqualTo("A-1-001")
     }
 
     @Test
     fun `when location is not found an exception is thrown`() = runTest {
-        LocationsApiExtension.locationsApi.stubGetLocationWithError(LOCATION_ID, status = 404)
+      LocationsApiExtension.locationsApi.stubGetLocationWithError(LOCATION_ID, status = 404)
 
-        assertThrows<WebClientResponseException.NotFound> {
-            locationsApiService.getLocation(LOCATION_ID)
-        }
+      assertThrows<WebClientResponseException.NotFound> {
+        locationsApiService.getLocation(LOCATION_ID)
+      }
     }
 
     @Test
     fun `when any bad response is received an exception is thrown`() = runTest {
-        LocationsApiExtension.locationsApi.stubGetLocationWithError(LOCATION_ID, status = 503)
+      LocationsApiExtension.locationsApi.stubGetLocationWithError(LOCATION_ID, status = 503)
 
-        assertThrows<WebClientResponseException.ServiceUnavailable> {
-            locationsApiService.getLocation(LOCATION_ID)
-        }
+      assertThrows<WebClientResponseException.ServiceUnavailable> {
+        locationsApiService.getLocation(LOCATION_ID)
+      }
     }
   }
 }
