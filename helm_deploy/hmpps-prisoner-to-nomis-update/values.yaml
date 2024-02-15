@@ -162,6 +162,10 @@ generic-service:
       HMPPS_SQS_QUEUES_NONASSOCIATION_QUEUE_NAME: "sqs_queue_name"
     sqs-nomis-update-nonassociation-dlq-secret:
       HMPPS_SQS_QUEUES_NONASSOCIATION_DLQ_NAME: "sqs_queue_name"
+    sqs-nomis-update-location-secret:
+      HMPPS_SQS_QUEUES_LOCATION_QUEUE_NAME: "sqs_queue_name"
+    sqs-nomis-update-location-dlq-secret:
+      HMPPS_SQS_QUEUES_LOCATION_DLQ_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-sentencing:
       HMPPS_SQS_QUEUES_SENTENCING_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-sentencing-dlq:
