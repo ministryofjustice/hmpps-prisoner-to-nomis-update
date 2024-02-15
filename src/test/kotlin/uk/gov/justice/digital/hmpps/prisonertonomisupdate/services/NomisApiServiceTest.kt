@@ -19,6 +19,7 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
+import org.springframework.web.reactive.function.client.WebClientResponseException.InternalServerError
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Course
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.EvidenceToUpdateOrAdd
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ExistingHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.HearingResultAwardRequest
@@ -437,7 +439,7 @@ internal class NomisApiServiceTest {
   @Nested
   inner class UpsertAttendance {
 
-    val validResponse = """{
+    private val validResponse = """{
         "eventId": 1,
         "courseScheduleId": 2,
         "created": true,
@@ -763,8 +765,8 @@ internal class NomisApiServiceTest {
     fun `when any error response is received an exception is thrown`() = runTest {
       nomisApi.stubAppointmentCreateWithError()
 
-      assertThrows<ServiceUnavailable> {
-        nomisApiService.createActivity(newActivity())
+      assertThrows<InternalServerError> {
+        nomisApiService.createAppointment(newAppointment())
       }
     }
   }
@@ -1643,6 +1645,45 @@ internal class NomisApiServiceTest {
       }
     }
   }
+
+  // /////////////////////////// LOCATIONS ////////////////////////////
+
+  @Nested
+  inner class CreateLocation {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`(): Unit = runTest {
+      nomisApi.stubLocationCreate("""{ "locationId": 12345 }""")
+
+      nomisApiService.createLocation(newLocation())
+
+      nomisApi.verify(
+        postRequestedFor(urlEqualTo("/locations"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will post data to nomis api`(): Unit = runTest {
+      nomisApi.stubLocationCreate("""{ "locationId": 12345 }""")
+
+      nomisApiService.createLocation(newLocation())
+
+      nomisApi.verify(
+        postRequestedFor(urlEqualTo("/locations"))
+          .withRequestBody(matchingJsonPath("$.locationCode", equalTo("FAIT"))),
+      )
+    }
+
+    @Test
+    fun `when any error response is received an exception is thrown`() = runTest {
+      nomisApi.stubLocationCreateWithError()
+
+      assertThrows<InternalServerError> {
+        nomisApiService.createLocation(newLocation())
+      }
+    }
+  }
 }
 
 fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(
@@ -1793,4 +1834,13 @@ private fun newAdjudication() = CreateAdjudicationRequest(
     ),
   ),
   evidence = emptyList(),
+)
+
+private fun newLocation() = CreateLocationRequest(
+  locationType = CreateLocationRequest.LocationType.FAIT,
+  locationCode = "FAIT",
+  parentLocationId = 123456,
+  capacity = 10,
+  userDescription = "Appointment Room 1",
+  prisonId = "MDI",
 )

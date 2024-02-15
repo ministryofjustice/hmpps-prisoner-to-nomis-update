@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.Adjudications
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NonAssociationsApiExtension
@@ -107,5 +108,6 @@ class HealthCheckTest : IntegrationTestBase() {
     SentencingAdjustmentsApiExtension.sentencingAdjustmentsApi.stubHealthPing(status)
     AdjudicationsApiExtension.adjudicationsApiServer.stubHealthPing(status)
     NonAssociationsApiExtension.nonAssociationsApiServer.stubHealthPing(status)
+    LocationsApiExtension.locationsApi.stubHealthPing(status)
   }
 }

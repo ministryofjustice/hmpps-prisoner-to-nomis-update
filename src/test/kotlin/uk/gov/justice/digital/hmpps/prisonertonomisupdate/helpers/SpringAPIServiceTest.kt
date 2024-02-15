@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.Adjudications
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NonAssociationsApiExtension
@@ -47,6 +48,7 @@ import kotlin.annotation.AnnotationTarget.CLASS
   SentencingAdjustmentsApiExtension::class,
   AdjudicationsApiExtension::class,
   NonAssociationsApiExtension::class,
+  LocationsApiExtension::class,
 )
 @ActiveProfiles("test")
 @SpringBootTest(classes = [JacksonAutoConfiguration::class, CodecsAutoConfiguration::class, WebClientConfiguration::class, WebClientAutoConfiguration::class, ReactiveOAuth2ClientAutoConfiguration::class, ReactiveSecurityAutoConfiguration::class])
