@@ -13,3 +13,4 @@ api.base.url:
   sentence.adjustments: http://localhost:8080
   adjudications: http://localhost:8080
   nonAssociations: http://localhost:8080
+  court.sentencing: http://localhost:8080

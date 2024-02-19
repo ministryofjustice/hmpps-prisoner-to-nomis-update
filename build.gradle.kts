@@ -57,6 +57,7 @@ tasks {
       "buildLocationApiModel",
       "buildMappingServiceApiModel",
       "buildSentencingAdjustmentsApiModel",
+      "buildCourtSentencingApiModel",
     )
     kotlinOptions {
       jvmTarget = "21"
@@ -72,6 +73,7 @@ tasks {
       "buildLocationApiModel",
       "buildMappingServiceApiModel",
       "buildSentencingAdjustmentsApiModel",
+      "buildCourtSentencingApiModel",
     )
   }
   withType<KtLintFormatTask> {
@@ -84,6 +86,7 @@ tasks {
       "buildLocationApiModel",
       "buildMappingServiceApiModel",
       "buildSentencingAdjustmentsApiModel",
+      "buildCourtSentencingApiModel",
     )
   }
 }
@@ -177,7 +180,18 @@ tasks.register("buildSentencingAdjustmentsApiModel", GenerateTask::class) {
   globalProperties.set(mapOf("models" to ""))
 }
 
-val generatedProjectDirs = listOf("activities", "adjudications", "nonassociations", "locations", "nomissync", "mappings", "sentencingadjustments")
+tasks.register("buildCourtSentencingApiModel", GenerateTask::class) {
+  generatorName.set("kotlin")
+  skipValidateSpec.set(true)
+  inputSpec.set("openapi-specs/court-sentencing-api-docs.json")
+  outputDir.set("$buildDirectory/generated/courtsentencing")
+  modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model")
+  apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.api")
+  configOptions.set(configValues)
+  globalProperties.set(mapOf("models" to ""))
+}
+
+val generatedProjectDirs = listOf("activities", "adjudications", "nonassociations", "locations", "nomissync", "mappings", "sentencingadjustments", "courtsentencing")
 
 kotlin {
   generatedProjectDirs.forEach { generatedProject ->

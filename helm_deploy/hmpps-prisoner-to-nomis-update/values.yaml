@@ -112,6 +112,7 @@ generic-service:
     FEATURE_EVENT_ADJUDICATION_OUTCOME_NOTPROCEED: true
     FEATURE_EVENT_ADJUDICATION_OUTCOME_REFERPOLICE: true
     FEATURE_EVENT_ADJUDICATION_HEARINGOUTCOME_UPDATED: true
+    FEATURE_EVENT_COURT_SENTENCING_COURT_CASE_CREATED: true
     HMPPS_SQS_USE_WEB_TOKEN: true
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.

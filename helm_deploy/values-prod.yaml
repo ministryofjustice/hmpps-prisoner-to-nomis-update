@@ -17,6 +17,7 @@ generic-service:
     API_BASE_URL_ACTIVITIES: https://activities-api.prison.service.justice.gov.uk
     API_BASE_URL_APPOINTMENTS: https://activities-api.prison.service.justice.gov.uk
     API_BASE_URL_SENTENCE_ADJUSTMENTS: https://adjustments-api.hmpps.service.justice.gov.uk
+    API_BASE_URL_COURT_SENTENCING: https://remand-and-sentencing-api.hmpps.service.justice.gov.uk
     API_BASE_URL_ADJUDICATIONS: https://manage-adjudications-api.hmpps.service.justice.gov.uk
     API_BASE_URL_NON_ASSOCIATIONS: https://non-associations-api.hmpps.service.justice.gov.uk
     API_BASE_URL_LOCATIONS: https://locations-inside-prison-api.hmpps.service.justice.gov.uk
@@ -24,7 +25,7 @@ generic-service:
     FEATURE_EVENT_RELEASE_DATE_ADJUSTMENTS_ADJUSTMENT_UPDATED: false
     FEATURE_EVENT_RELEASE_DATE_ADJUSTMENTS_ADJUSTMENT_DELETED: false
     FEATURE_EVENT_LOCATION_INSIDE_PRISON_CREATED: false
-    FEATURE_EVENT_LOCATION_INSIDE_PRISON_DELETED: false
+    FEATURE_EVENT_COURT_SENTENCING_COURT_CASE_CREATED: false
 
 generic-prometheus-alerts:
   sqsAlertsQueueNames:
