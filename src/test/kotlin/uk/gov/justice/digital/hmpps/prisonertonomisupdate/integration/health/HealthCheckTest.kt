@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.Integratio
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.CourtSentencingApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiExtension
@@ -40,6 +41,7 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("components.sentenceAdjustmentsApi.status").isEqualTo("UP")
       .jsonPath("components.adjudicationsApi.status").isEqualTo("UP")
       .jsonPath("components.nonAssociationsApi.status").isEqualTo("UP")
+      .jsonPath("components.courtSentencingApi.status").isEqualTo("UP")
   }
 
   @Test
@@ -109,5 +111,6 @@ class HealthCheckTest : IntegrationTestBase() {
     AdjudicationsApiExtension.adjudicationsApiServer.stubHealthPing(status)
     NonAssociationsApiExtension.nonAssociationsApiServer.stubHealthPing(status)
     LocationsApiExtension.locationsApi.stubHealthPing(status)
+    CourtSentencingApiExtension.courtSentencingApi.stubHealthPing(status)
   }
 }
