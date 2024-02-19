@@ -17,6 +17,7 @@ api.base.url:
   adjudications: http://localhost:8089
   non-associations: http://localhost:8092
   locations: http://localhost:8093
+  court.sentencing: http://localhost:8094
 
 hmpps.sqs:
   provider: localstack
@@ -74,6 +75,13 @@ hmpps.sqs:
       queueName: "adjudication-${random.uuid}"
       dlqName: "adjudication-dlq-${random.uuid}"
       subscribeTopicId: domainevents
+      dlqMaxReceiveCount: 3
+      visibilityTimeout: 120
+    courtsentencing:
+      queueName: "court-sentencing-${random.uuid}"
+      dlqName: "court-sentencing-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: "{\"eventType\":[\"XXX.inserted\"]}"
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
   topics:

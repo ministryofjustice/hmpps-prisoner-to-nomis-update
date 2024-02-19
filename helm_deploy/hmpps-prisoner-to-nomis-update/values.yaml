@@ -175,6 +175,10 @@ generic-service:
       HMPPS_SQS_QUEUES_ADJUDICATION_QUEUE_NAME: "sqs_queue_name"
     sqs-nomis-update-adjudication-dlq-secret:
       HMPPS_SQS_QUEUES_ADJUDICATION_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-court-sentencing:
+      HMPPS_SQS_QUEUES_COURTSENTENCING_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-court-sentencing-dlq:
+      HMPPS_SQS_QUEUES_COURTSENTENCING_DLQ_NAME: "sqs_queue_name"
 
   allowlist:
     groups:
