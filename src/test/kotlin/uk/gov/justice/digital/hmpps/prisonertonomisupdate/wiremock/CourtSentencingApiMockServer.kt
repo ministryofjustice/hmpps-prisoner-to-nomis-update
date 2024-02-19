@@ -34,7 +34,7 @@ class CourtSentencingApiExtension : BeforeAllCallback, AfterAllCallback, BeforeE
 
 class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
   companion object {
-    private const val WIREMOCK_PORT = 8087
+    private const val WIREMOCK_PORT = 8094
   }
 
   fun stubHealthPing(status: Int) {
