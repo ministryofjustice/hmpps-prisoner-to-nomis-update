@@ -1843,4 +1843,5 @@ private fun newLocation() = CreateLocationRequest(
   capacity = 10,
   userDescription = "Appointment Room 1",
   prisonId = "MDI",
+  description = "",
 )
