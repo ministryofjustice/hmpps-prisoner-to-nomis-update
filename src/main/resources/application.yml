@@ -66,6 +66,11 @@ spring:
             client-id: ${adjudications.client.id}
             client-secret: ${adjudications.client.secret}
             authorization-grant-type: client_credentials
+          court-sentencing-api:
+            provider: hmpps-auth
+            client-id: ${adjudications.client.id} # TODO
+            client-secret: ${adjudications.client.secret} # TODO
+            authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${api.base.url.oauth}/oauth/token

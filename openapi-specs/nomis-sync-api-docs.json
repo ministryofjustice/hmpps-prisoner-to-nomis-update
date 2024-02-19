@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-02-09.6517.398a34e"
+    "version": "2024-02-16.6631.56edd57"
   },
   "servers": [
     {
@@ -826,6 +826,371 @@
         }
       }
     },
+    "/locations/{locationId}": {
+      "put": {
+        "tags": [
+          "location-resource"
+        ],
+        "summary": "Updates an existing location",
+        "description": "Updates an existing location. Requires role NOMIS_LOCATIONS",
+        "operationId": "updateAppointment",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "path",
+            "description": "NOMIS location Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS location Id",
+              "example": 1234567
+            },
+            "example": 1234567
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "404": {
+            "description": "Location id does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid data such as location or subtype do not exist etc.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_APPOINTMENTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/{locationId}/reactivate": {
+      "put": {
+        "tags": [
+          "location-resource"
+        ],
+        "summary": "Reactivates a deactivated location",
+        "description": "Requires role NOMIS_LOCATIONS",
+        "operationId": "reactivateLocation",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "path",
+            "description": "NOMIS location Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS location Id",
+              "example": 1234567
+            },
+            "example": 1234567
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "404": {
+            "description": "Location id does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Location was already active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_APPOINTMENTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/{locationId}/deactivate": {
+      "put": {
+        "tags": [
+          "location-resource"
+        ],
+        "summary": "Deactivates an existing location",
+        "description": "Requires role NOMIS_LOCATIONS",
+        "operationId": "deactivateLocation",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "path",
+            "description": "NOMIS location Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS location Id",
+              "example": 1234567
+            },
+            "example": 1234567
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactivateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "404": {
+            "description": "Location id does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Reason code does not exist, or already deactivated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_APPOINTMENTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/{locationId}/certification": {
+      "put": {
+        "tags": [
+          "location-resource"
+        ],
+        "summary": "Update location certification",
+        "description": "Requires role NOMIS_LOCATIONS",
+        "operationId": "updateCertification",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "path",
+            "description": "NOMIS location Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS location Id",
+              "example": 1234567
+            },
+            "example": 1234567
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCertificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "404": {
+            "description": "Location id does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_APPOINTMENTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/{locationId}/capacity": {
+      "put": {
+        "tags": [
+          "location-resource"
+        ],
+        "summary": "Update location capacity",
+        "description": "Requires role NOMIS_LOCATIONS",
+        "operationId": "updateCapacity",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "path",
+            "description": "NOMIS location Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS location Id",
+              "example": 1234567
+            },
+            "example": 1234567
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCapacityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "404": {
+            "description": "Location id does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_APPOINTMENTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/key-date-adjustments/{adjustmentId}": {
       "get": {
         "tags": [
@@ -1297,7 +1662,7 @@
         ],
         "summary": "Updates an existing appointment",
         "description": "Updates an existing appointment. Requires role NOMIS_APPOINTMENTS",
-        "operationId": "updateAppointment",
+        "operationId": "updateAppointment_1",
         "parameters": [
           {
             "name": "nomisEventId",
@@ -1316,7 +1681,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateAppointmentRequest"
+                "$ref": "#/components/schemas/UpdateAppointmentRequest"
               }
             }
           },
@@ -1324,14 +1689,7 @@
         },
         "responses": {
           "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateAppointmentRequest"
-                }
-              }
-            }
+            "description": "Success"
           },
           "404": {
             "description": "Event id does not exist",
@@ -1457,14 +1815,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateAppointmentRequest"
-                }
-              }
-            }
+            "description": "Success"
           },
           "404": {
             "description": "Event id does not exist",
@@ -1523,14 +1874,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateAppointmentRequest"
-                }
-              }
-            }
+            "description": "Success"
           },
           "404": {
             "description": "Event id does not exist",
@@ -3815,7 +4159,7 @@
         },
         "responses": {
           "201": {
-            "description": "Successfully created location",
+            "description": "Successfully created location with created id",
             "content": {
               "application/json": {
                 "schema": {
@@ -4044,7 +4388,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateAppointmentRequest"
+                  "$ref": "#/components/schemas/CreateAppointmentResponse"
                 }
               }
             }
@@ -5586,6 +5930,84 @@
         }
       }
     },
+    "/prisoner/booking-id/{bookingId}/alerts/{alertSequence}": {
+      "get": {
+        "tags": [
+          "alerts-resource"
+        ],
+        "summary": "get an alert by bookingId and alert sequence",
+        "description": "Retrieves an prisoner alert. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "getAlert",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "Booking Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Booking Id",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "alertSequence",
+            "in": "path",
+            "description": "Alert sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Alert sequence",
+              "example": 3
+            },
+            "example": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Alert Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ALERTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Alert does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}": {
       "get": {
         "tags": [
@@ -6439,7 +6861,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateAppointmentRequest"
+                  "$ref": "#/components/schemas/AppointmentResponse"
                 }
               }
             }
@@ -6698,7 +7120,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateAppointmentRequest"
+                  "$ref": "#/components/schemas/AppointmentResponse"
                 }
               }
             }
@@ -8173,7 +8595,8 @@
       },
       "CourtAppearanceRequest": {
         "required": [
-          "courtEventCharges",
+          "courtEventChargesToCreate",
+          "courtEventChargesToUpdate",
           "courtEventType",
           "courtId",
           "eventDateTime"
@@ -8199,7 +8622,13 @@
             "type": "string",
             "example": "2021-07-05T10:35:17"
           },
-          "courtEventCharges": {
+          "courtEventChargesToUpdate": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExistingOffenderChargeRequest"
+            }
+          },
+          "courtEventChargesToCreate": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/OffenderChargeRequest"
@@ -8207,6 +8636,42 @@
           },
           "nextCourtId": {
             "type": "string"
+          }
+        },
+        "description": "Court Event"
+      },
+      "ExistingOffenderChargeRequest": {
+        "required": [
+          "mostSeriousFlag",
+          "offenceCode",
+          "offenderChargeId"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderChargeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offenceCode": {
+            "type": "string"
+          },
+          "offencesCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offenceDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "offenceEndDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "resultCode1": {
+            "type": "string"
+          },
+          "mostSeriousFlag": {
+            "type": "boolean"
           }
         },
         "description": "Court Event"
@@ -8292,6 +8757,173 @@
           }
         },
         "description": "Offender NonAssociation update request"
+      },
+      "UpdateLocationRequest": {
+        "required": [
+          "description",
+          "locationCode",
+          "locationType"
+        ],
+        "type": "object",
+        "properties": {
+          "locationType": {
+            "type": "string",
+            "description": "Whether a CELL, VISIT room, Kitchen etc (Ref type ILOC_TYPE)",
+            "enum": [
+              "ADJU",
+              "ADMI",
+              "APP",
+              "AREA",
+              "ASSO",
+              "BOOT",
+              "BOX",
+              "CELL",
+              "CLAS",
+              "EXER",
+              "EXTE",
+              "FAIT",
+              "GROU",
+              "HCEL",
+              "HOLD",
+              "IGRO",
+              "INSI",
+              "INTE",
+              "LAND",
+              "LOCA",
+              "MEDI",
+              "MOVE",
+              "OFFI",
+              "OUTS",
+              "POSI",
+              "RESI",
+              "ROOM",
+              "RTU",
+              "SHEL",
+              "SPOR",
+              "STOR",
+              "TABL",
+              "TRAI",
+              "TRRM",
+              "VIDE",
+              "VISIT",
+              "WING",
+              "WORK"
+            ]
+          },
+          "description": {
+            "maxLength": 240,
+            "minLength": 0,
+            "type": "string",
+            "description": "Full code hierarchy",
+            "example": "MDI-C-3-015"
+          },
+          "userDescription": {
+            "maxLength": 40,
+            "minLength": 0,
+            "type": "string",
+            "description": "Description of location",
+            "example": "Some description"
+          },
+          "locationCode": {
+            "type": "string",
+            "description": "Usually a number for a cell, a letter for a wing or landing. Used to calculate description",
+            "example": "005"
+          },
+          "parentLocationId": {
+            "type": "integer",
+            "description": "Parent location if any, e.g. landing for a cell",
+            "format": "int64",
+            "example": 1234567
+          },
+          "unitType": {
+            "type": "string",
+            "description": "Housing Unit type, Reference code (HOU_UN_TYPE)",
+            "enum": [
+              "HC",
+              "HOLC",
+              "NA",
+              "OU",
+              "REC",
+              "SEG",
+              "SPLC"
+            ]
+          },
+          "listSequence": {
+            "type": "integer",
+            "description": "Defines the order within parent location",
+            "format": "int32"
+          },
+          "comment": {
+            "maxLength": 240,
+            "minLength": 0,
+            "type": "string",
+            "description": "Comment",
+            "example": "Some comment"
+          }
+        },
+        "description": "Location update request"
+      },
+      "DeactivateRequest": {
+        "type": "object",
+        "properties": {
+          "reasonCode": {
+            "type": "string",
+            "description": "The reason code for deactivation, reference data 'LIV_UN_RSN'",
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D",
+              "E",
+              "F",
+              "G",
+              "H",
+              "I",
+              "J",
+              "K",
+              "L"
+            ]
+          }
+        },
+        "description": "Location deactivate request"
+      },
+      "UpdateCertificationRequest": {
+        "required": [
+          "certified",
+          "cnaCapacity"
+        ],
+        "type": "object",
+        "properties": {
+          "cnaCapacity": {
+            "minimum": 0,
+            "type": "integer",
+            "description": "The CNA certified capacity",
+            "format": "int32"
+          },
+          "certified": {
+            "type": "boolean",
+            "description": "Whether the location is certified"
+          }
+        },
+        "description": "Location update certification request"
+      },
+      "UpdateCapacityRequest": {
+        "type": "object",
+        "properties": {
+          "capacity": {
+            "minimum": 0,
+            "type": "integer",
+            "description": "The maximum physical capacity",
+            "format": "int32"
+          },
+          "operationalCapacity": {
+            "minimum": 0,
+            "type": "integer",
+            "description": "The maximum operational capacity",
+            "format": "int32"
+          }
+        },
+        "description": "Location update capacity request"
       },
       "UpdateKeyDateAdjustmentRequest": {
         "required": [
@@ -8539,9 +9171,8 @@
         },
         "description": "Incentive information"
       },
-      "CreateAppointmentRequest": {
+      "UpdateAppointmentRequest": {
         "required": [
-          "bookingId",
           "endTime",
           "eventDate",
           "eventSubType",
@@ -8549,12 +9180,6 @@
         ],
         "type": "object",
         "properties": {
-          "bookingId": {
-            "type": "integer",
-            "description": "Booking id of the prisoner",
-            "format": "int64",
-            "example": 1234567
-          },
           "eventDate": {
             "type": "string",
             "description": "Appointment date",
@@ -8592,7 +9217,7 @@
             "example": "Some comment"
           }
         },
-        "description": "Offender individual schedule creation request"
+        "description": "Offender individual schedule update request"
       },
       "CodeDescription": {
         "required": [
@@ -10652,6 +11277,7 @@
       "CreateLocationRequest": {
         "required": [
           "certified",
+          "description",
           "locationCode",
           "locationType",
           "parentLocationId",
@@ -10744,6 +11370,13 @@
             "description": "Usually a number for a cell, a letter for a wing or landing. Used to calculate description",
             "example": "005"
           },
+          "description": {
+            "maxLength": 240,
+            "minLength": 0,
+            "type": "string",
+            "description": "Full code hierarchy",
+            "example": "MDI-C-3-015"
+          },
           "unitType": {
             "type": "string",
             "description": "Housing Unit type, Reference code (HOU_UN_TYPE)",
@@ -10805,6 +11438,75 @@
             }
           }
         }
+      },
+      "CreateAppointmentRequest": {
+        "required": [
+          "bookingId",
+          "endTime",
+          "eventDate",
+          "eventSubType",
+          "startTime"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "Booking id of the prisoner",
+            "format": "int64",
+            "example": 1234567
+          },
+          "eventDate": {
+            "type": "string",
+            "description": "Appointment date",
+            "format": "date",
+            "example": "2022-08-12"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "Appointment start time",
+            "format": "partial-time",
+            "example": "09:45"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "Activity end time",
+            "format": "partial-time",
+            "example": "15:20"
+          },
+          "internalLocationId": {
+            "type": "integer",
+            "description": "Room where the appointment is to occur (in cell if null)",
+            "format": "int64",
+            "example": 112233
+          },
+          "eventSubType": {
+            "type": "string",
+            "description": "Appointment event sub-type",
+            "example": "MEOT"
+          },
+          "comment": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string",
+            "description": "Comment",
+            "example": "Some comment"
+          }
+        },
+        "description": "Offender individual schedule creation request"
+      },
+      "CreateAppointmentResponse": {
+        "required": [
+          "eventId"
+        ],
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "integer",
+            "description": "The created offender_ind_schedules id",
+            "format": "int64"
+          }
+        },
+        "description": "Offender individual schedule creation response"
       },
       "CreateHearingResponse": {
         "required": [
@@ -11281,15 +11983,15 @@
             "type": "integer",
             "format": "int32"
           },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
           "paged": {
             "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -12620,6 +13322,128 @@
         },
         "description": "Summary of adjudication for a booking"
       },
+      "AlertResponse": {
+        "required": [
+          "alertCode",
+          "alertSequence",
+          "audit",
+          "bookingId",
+          "date",
+          "isActive",
+          "isVerified",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "The prisoner's bookingId related to this alert",
+            "format": "int64"
+          },
+          "alertSequence": {
+            "type": "integer",
+            "description": "The sequence primary key within this booking",
+            "format": "int64"
+          },
+          "alertCode": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "date": {
+            "type": "string",
+            "description": "Date alert started",
+            "format": "date"
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "Date alert expired",
+            "format": "date"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "true if alert is active and has not expired"
+          },
+          "isVerified": {
+            "type": "boolean",
+            "description": "true if alert has been verified by another member of staff"
+          },
+          "authorisedBy": {
+            "type": "string",
+            "description": "Free format text of person or department that authorised the alert",
+            "example": "security"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Free format comment"
+          },
+          "audit": {
+            "$ref": "#/components/schemas/NomisAudit"
+          }
+        },
+        "description": "The data held in NOMIS about an alert associated with a prisoner"
+      },
+      "NomisAudit": {
+        "required": [
+          "createDatetime",
+          "createUsername"
+        ],
+        "type": "object",
+        "properties": {
+          "createDatetime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date time record was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createUsername": {
+            "type": "string",
+            "description": "Username of person that created the record (might also be a system) "
+          },
+          "modifyUserId": {
+            "type": "string",
+            "description": "Username of person that last modified the record (might also be a system)"
+          },
+          "modifyDatetime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date time record was last modified",
+            "example": "2021-07-05T10:35:17"
+          },
+          "auditTimestamp": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Audit Date time",
+            "example": "2021-07-05T10:35:17"
+          },
+          "auditUserId": {
+            "type": "string",
+            "description": "Audit username"
+          },
+          "auditModuleName": {
+            "type": "string",
+            "description": "NOMIS or DPS module that created the record"
+          },
+          "auditClientUserId": {
+            "type": "string",
+            "description": "Client userid"
+          },
+          "auditClientIpAddress": {
+            "type": "string",
+            "description": "IP Address where request originated from"
+          },
+          "auditClientWorkstationName": {
+            "type": "string",
+            "description": "Machine name where request originated from"
+          },
+          "auditAdditionalInfo": {
+            "type": "string",
+            "description": "Additional information that is audited"
+          }
+        },
+        "description": "The data held in NOMIS the person or system that created this record"
+      },
       "NonAssociationResponse": {
         "required": [
           "effectiveDate",
@@ -12980,6 +13804,7 @@
           "incidentDateTime",
           "lockedResponse",
           "offenderParties",
+          "prison",
           "questions",
           "reportedDateTime",
           "reportedStaff",
@@ -13002,6 +13827,9 @@
           "description": {
             "type": "string",
             "description": "The incident details"
+          },
+          "prison": {
+            "$ref": "#/components/schemas/CodeDescription"
           },
           "status": {
             "type": "string",
@@ -13469,6 +14297,86 @@
         },
         "description": "A count for an offender booking",
         "example": "[ { bookingId: 1234567, count: 2 } ]"
+      },
+      "AppointmentResponse": {
+        "required": [
+          "bookingId",
+          "createdBy",
+          "createdDate",
+          "endDateTime",
+          "internalLocation",
+          "offenderNo",
+          "prisonId",
+          "startDateTime",
+          "status",
+          "subtype"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "The booking id",
+            "format": "int64"
+          },
+          "offenderNo": {
+            "type": "string",
+            "description": "The offender number, aka nomsId, prisonerId"
+          },
+          "prisonId": {
+            "type": "string",
+            "description": "Prison where the appointment occurs"
+          },
+          "internalLocation": {
+            "type": "integer",
+            "description": "NOMIS room id",
+            "format": "int64"
+          },
+          "startDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Start date and time",
+            "example": "2021-07-05T10:35:17"
+          },
+          "endDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "End date and time",
+            "example": "2021-07-05T10:35:17"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Comment"
+          },
+          "subtype": {
+            "type": "string",
+            "description": "Event subtype"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status"
+          },
+          "createdDate": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Record created date",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Record created by"
+          },
+          "modifiedDate": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Record modified date",
+            "example": "2021-07-05T10:35:17"
+          },
+          "modifiedBy": {
+            "type": "string",
+            "description": "Record modified by"
+          }
+        },
+        "description": "Appointment information"
       },
       "AppointmentIdResponse": {
         "required": [

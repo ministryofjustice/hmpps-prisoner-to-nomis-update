@@ -40,6 +40,12 @@ hmpps.sqs:
       queueName: hmpps_prisoner_to_nomis_adjudication_queue
       dlqName: hmpps_prisoner_to_nomis_adjudication_dlq
       subscribeTopicId: domainevents
+    courtsentencing:
+      queueName: hmpps_prisoner_to_nomis_court_sentencing_queue
+      dlqName: hmpps_prisoner_to_nomis_court_sentencing_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: "{\"eventType\":[\"court-sentencing.court-case.created\"]}"
+
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:hmpps_domain_events

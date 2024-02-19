@@ -115,6 +115,8 @@ class LocationsService(
     comment = instance.comments,
     parentLocationId = 0,
     prisonId = instance.prisonId,
+    // TODO added to allow compilation after generated code change
+    description = "",
     // TBD
   )
 
