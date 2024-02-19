@@ -93,11 +93,12 @@ class CourtSentencingService(
 fun CourtCase.toNomisCourtCase(): CreateCourtCaseRequest = CreateCourtCaseRequest(
   startDate = this.latestAppearance.appearanceDate,
   courtId = this.latestAppearance.courtCode,
+  // TODO fix LocalDateTime as string,
   courtAppearance = CourtAppearanceRequest(
     eventDateTime = LocalDateTime.of(
       this.latestAppearance.appearanceDate,
       LocalTime.MIDNIGHT,
-    ).toString(), // TODO fix LocalDateTime as string,
+    ).toString(),
     courtId = this.latestAppearance.courtCode,
     courtEventType = "TBC",
     courtEventChargesToUpdate = listOf(),
