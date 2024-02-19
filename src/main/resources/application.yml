@@ -68,8 +68,8 @@ spring:
             authorization-grant-type: client_credentials
           court-sentencing-api:
             provider: hmpps-auth
-            client-id: ${court.sentencing.client.id}
-            client-secret: ${court.sentencing.client.secret}
+            client-id: ${adjudications.client.id} # TODO
+            client-secret: ${adjudications.client.secret} # TODO
             authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
