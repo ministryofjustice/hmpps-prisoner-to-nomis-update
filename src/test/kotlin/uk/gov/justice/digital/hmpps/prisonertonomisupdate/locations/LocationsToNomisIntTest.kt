@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
@@ -13,15 +14,18 @@ import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiExtension.Companion.locationsApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
 private const val DPS_ID = "57718979-573c-433a-9e51-2d83f887c11c"
+private const val PARENT_ID = "12345678-573c-433a-9e51-2d83f887c11c"
 private const val NOMIS_ID = 1234567L
 
 class LocationsToNomisIntTest : SqsIntegrationTestBase() {
@@ -45,8 +49,8 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         "capacityOfCertifiedCell": 1
       },
       "orderWithinParentLocation": 1,
-      "topLevelId": "57718979-573c-433a-9e51-2d83f887c11c",
-      "parentId": "57718979-573c-433a-9e51-2d83f887c11c",
+      "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",
+      "parentId": "$PARENT_ID",
       "key": "MDI-A-1-001",
       "isResidential": true
     }
@@ -60,16 +64,25 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
     }
   """.trimIndent()
 
+  val parentMappingResponse = """
+    {
+      "dpsLocationId": "$PARENT_ID",
+      "nomisLocationId": 12345678,
+      "mappingType": "LOCATION_CREATED"
+    }
+  """.trimIndent()
+
   @Nested
   inner class Create {
     @Nested
     inner class WhenLocationHasBeenCreatedInDPS {
       @BeforeEach
       fun setUp() {
-        LocationsApiExtension.locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
-        NomisApiExtension.nomisApi.stubLocationCreate("""{ "locationId": $NOMIS_ID }""")
-        MappingExtension.mappingServer.stubGetMappingGivenDpsLocationIdWithError(DPS_ID, 404)
-        MappingExtension.mappingServer.stubCreateLocation()
+        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        nomisApi.stubLocationCreate("""{ "locationId": $NOMIS_ID }""")
+        mappingServer.stubGetMappingGivenDpsLocationIdWithError(DPS_ID, 404)
+        mappingServer.stubGetMappingGivenDpsLocationId(PARENT_ID, parentMappingResponse)
+        mappingServer.stubCreateLocation()
         publishLocationDomainEvent("location.inside.prison.created")
       }
 
@@ -77,7 +90,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will callback back to location service to get more details`() {
         waitForCreateProcessingToBeComplete()
 
-        LocationsApiExtension.locationsApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/locations/$DPS_ID")))
+        locationsApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/locations/$DPS_ID")))
       }
 
       @Test
@@ -99,7 +112,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to create the location`() {
         waitForCreateProcessingToBeComplete()
 
-        NomisApiExtension.nomisApi.verify(WireMock.postRequestedFor(WireMock.urlEqualTo("/locations")))
+        nomisApi.verify(WireMock.postRequestedFor(WireMock.urlEqualTo("/locations")))
       }
 
       @Test
@@ -107,7 +120,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         waitForCreateProcessingToBeComplete()
 
         await untilAsserted {
-          MappingExtension.mappingServer.verify(
+          mappingServer.verify(
             WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/locations"))
               .withRequestBody(WireMock.matchingJsonPath("dpsLocationId", WireMock.equalTo(DPS_ID)))
               .withRequestBody(WireMock.matchingJsonPath("nomisLocationId", WireMock.equalTo(NOMIS_ID.toString()))),
@@ -122,7 +135,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        MappingExtension.mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+        mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
         publishLocationDomainEvent("location.inside.prison.created")
       }
 
@@ -138,7 +151,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
           isNull(),
         )
 
-        NomisApiExtension.nomisApi.verify(
+        nomisApi.verify(
           0,
           WireMock.postRequestedFor(WireMock.urlEqualTo("/locations")),
         )
@@ -149,14 +162,15 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenMappingServiceFailsOnce {
       @BeforeEach
       fun setUp() {
-        MappingExtension.mappingServer.stubGetMappingGivenDpsLocationIdWithError(DPS_ID, 404)
-        MappingExtension.mappingServer.stubCreateLocationWithErrorFollowedBySlowSuccess()
-        NomisApiExtension.nomisApi.stubLocationCreate("""{ "locationId": $NOMIS_ID }""")
-        LocationsApiExtension.locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        mappingServer.stubGetMappingGivenDpsLocationIdWithError(DPS_ID, 404)
+        mappingServer.stubGetMappingGivenDpsLocationId(PARENT_ID, parentMappingResponse)
+        mappingServer.stubCreateLocationWithErrorFollowedBySlowSuccess()
+        nomisApi.stubLocationCreate("""{ "locationId": $NOMIS_ID }""")
+        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
         publishLocationDomainEvent("location.inside.prison.created")
 
-        await untilCallTo { LocationsApiExtension.locationsApi.getCountFor("/locations/$DPS_ID") } matches { it == 1 }
-        await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/locations") } matches { it == 1 }
+        await untilCallTo { locationsApi.getCountFor("/locations/$DPS_ID") } matches { it == 1 }
+        await untilCallTo { nomisApi.postCountFor("/locations") } matches { it == 1 }
       }
 
       @Test
@@ -168,7 +182,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
             isNull(),
           )
         }
-        NomisApiExtension.nomisApi.verify(
+        nomisApi.verify(
           1,
           WireMock.postRequestedFor(WireMock.urlEqualTo("/locations")),
         )
@@ -177,7 +191,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will eventually create a mapping after NOMIS location is created`() {
         await untilAsserted {
-          MappingExtension.mappingServer.verify(
+          mappingServer.verify(
             2,
             WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/locations"))
               .withRequestBody(WireMock.matchingJsonPath("dpsLocationId", WireMock.equalTo(DPS_ID)))
@@ -200,29 +214,393 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  inner class Update {
+    @Nested
+    inner class WhenLocationHasBeenUpdatedInDPS {
+      @BeforeEach
+      fun setUp() {
+        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+        mappingServer.stubGetMappingGivenDpsLocationId(PARENT_ID, parentMappingResponse)
+        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID")
+        publishLocationDomainEvent("location.inside.prison.amended")
+      }
+
+      @Test
+      fun `will callback back to location service to get more details`() {
+        await untilAsserted {
+          locationsApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/locations/$DPS_ID")))
+        }
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("location-amend-success"),
+            org.mockito.kotlin.check {
+              assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+              assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+              assertThat(it["key"]).isEqualTo("MDI-A-1-001")
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Test
+      fun `will call nomis api to update the location`() {
+        await untilAsserted {
+          nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID")))
+        }
+      }
+    }
+
+    @Nested
+    inner class Exceptions {
+
+      @Nested
+      inner class WhenServiceFailsOnce {
+
+        @BeforeEach
+        fun setUp() {
+          locationsApi.stubGetLocationWithErrorFollowedBySlowSuccess(
+            id = DPS_ID,
+            response = locationApiResponse,
+          )
+          mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+          mappingServer.stubGetMappingGivenDpsLocationId(PARENT_ID, parentMappingResponse)
+          nomisApi.stubLocationUpdate("/locations/$NOMIS_ID")
+          publishLocationDomainEvent("location.inside.prison.amended")
+        }
+
+        @Test
+        fun `will callback back to location service twice to get more details`() {
+          await untilAsserted {
+            locationsApi.verify(2, WireMock.getRequestedFor(WireMock.urlEqualTo("/locations/$DPS_ID")))
+            verify(telemetryClient).trackEvent(Mockito.eq("location-amend-success"), any(), isNull())
+          }
+        }
+
+        @Test
+        fun `will eventually update the location in NOMIS`() {
+          await untilAsserted {
+            nomisApi.verify(1, WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID")))
+            verify(telemetryClient).trackEvent(Mockito.eq("location-amend-failed"), any(), isNull())
+            verify(telemetryClient).trackEvent(Mockito.eq("location-amend-success"), any(), isNull())
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenServiceKeepsFailing {
+
+        @BeforeEach
+        fun setUp() {
+          locationsApi.stubGetLocation(id = DPS_ID, response = locationApiResponse)
+          mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+          mappingServer.stubGetMappingGivenDpsLocationId(PARENT_ID, parentMappingResponse)
+          nomisApi.stubLocationUpdateWithError("/locations/$NOMIS_ID", 503)
+          publishLocationDomainEvent("location.inside.prison.amended")
+        }
+
+        @Test
+        fun `will callback back to location service 3 times before given up`() {
+          await untilAsserted {
+            locationsApi.verify(3, WireMock.getRequestedFor(WireMock.urlEqualTo("/locations/$DPS_ID")))
+          }
+        }
+
+        @Test
+        fun `will create failure telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              Mockito.eq("location-amend-failed"),
+              org.mockito.kotlin.check {
+                assertThat(it["dpsId"]).isEqualTo(DPS_ID.toString())
+                assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+              },
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will add message to dead letter queue`() {
+          await untilCallTo {
+            awsSqsLocationDlqClient!!.countAllMessagesOnQueue(locationDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class Deactivate {
+    @Nested
+    inner class WhenLocationHasBeenDeactivatedInDPS {
+      @BeforeEach
+      fun setUp() {
+        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/deactivate")
+        publishLocationDomainEvent("location.inside.prison.deactivated")
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            Mockito.eq("location-deactivate-success"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+              Assertions.assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Test
+      fun `will call nomis api to deactivate the location`() {
+        await untilAsserted {
+          nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/deactivate")))
+        }
+      }
+    }
+
+    @Nested
+    inner class Exceptions {
+
+      @Nested
+      inner class WhenServiceFailsOnce {
+
+        @BeforeEach
+        fun setUp() {
+          locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+          mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+          nomisApi.stubLocationUpdateWithErrorFollowedBySlowSuccess("/locations/$NOMIS_ID/deactivate")
+          publishLocationDomainEvent("location.inside.prison.deactivated")
+        }
+
+        @Test
+        fun `will eventually deactivate the location in NOMIS`() {
+          await untilAsserted {
+            nomisApi.verify(2, WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/deactivate")))
+            verify(telemetryClient).trackEvent(Mockito.eq("location-deactivate-failed"), any(), isNull())
+            verify(telemetryClient).trackEvent(Mockito.eq("location-deactivate-success"), any(), isNull())
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenNomisFails {
+
+        @BeforeEach
+        fun setUp() {
+          locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+          mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+          nomisApi.stubLocationUpdateWithError("/locations/$NOMIS_ID/deactivate", 503)
+          publishLocationDomainEvent("location.inside.prison.deactivated")
+        }
+
+        @Test
+        fun `will create failure telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              Mockito.eq("location-deactivate-failed"),
+              org.mockito.kotlin.check {
+                Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+                Assertions.assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+              },
+              isNull(),
+            )
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenMappingNotFound {
+
+        @BeforeEach
+        fun setUp() {
+          locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+          mappingServer.stubGetMappingGivenDpsLocationIdWithError(DPS_ID, 404)
+          nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/deactivate")
+          publishLocationDomainEvent("location.inside.prison.deactivated")
+        }
+
+        @Test
+        fun `will create failure telemetry and not call Nomis`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              Mockito.eq("location-deactivate-failed"),
+              org.mockito.kotlin.check {
+                Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+              },
+              isNull(),
+            )
+          }
+          nomisApi.verify(
+            0,
+            WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/deactivate")),
+          )
+        }
+      }
+
+      @Nested
+      inner class WhenLocationApiFails {
+
+        @BeforeEach
+        fun setUp() {
+          locationsApi.stubGetLocationWithError(DPS_ID, 404)
+          mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+          nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/deactivate")
+          publishLocationDomainEvent("location.inside.prison.deactivated")
+        }
+
+        @Test
+        fun `will create failure telemetry and not call Nomis`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              Mockito.eq("location-deactivate-failed"),
+              org.mockito.kotlin.check {
+                Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+              },
+              isNull(),
+            )
+          }
+          nomisApi.verify(
+            0,
+            WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/deactivate")),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class Reactivate {
+    @Nested
+    inner class WhenLocationHasBeenReactivatedInDPS {
+      @BeforeEach
+      fun setUp() {
+        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/reactivate")
+        publishLocationDomainEvent("location.inside.prison.reactivated")
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            Mockito.eq("location-reactivate-success"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+              Assertions.assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Test
+      fun `will call nomis api to reactivate the location`() {
+        await untilAsserted {
+          nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/reactivate")))
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class ChangeCapacity {
+    @Nested
+    inner class WhenCapacityHasBeenChangedInDPS {
+      @BeforeEach
+      fun setUp() {
+        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/capacity")
+        publishLocationDomainEvent("location.inside.prison.capacity.changed")
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            Mockito.eq("location-capacity-success"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+              Assertions.assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Test
+      fun `will call nomis api to change the capacity`() {
+        await untilAsserted {
+          nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/capacity")))
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class ChangeCertification {
+    @Nested
+    inner class WhenCertificationHasBeenChangedInDPS {
+      @BeforeEach
+      fun setUp() {
+        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/certification")
+        publishLocationDomainEvent("location.inside.prison.certification.changed")
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            Mockito.eq("location-certification-success"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+              Assertions.assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Test
+      fun `will call nomis api to change the certification`() {
+        await untilAsserted {
+          nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/certification")))
+        }
+      }
+    }
+  }
+
+  @Nested
   inner class DeleteLocation {
     @Nested
     inner class WhenLocationHasJustBeenDeletedByLocationService {
 
       @BeforeEach
       fun setUp() {
-        MappingExtension.mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
-        NomisApiExtension.nomisApi.stubLocationDelete(NOMIS_ID)
-        MappingExtension.mappingServer.stubDeleteLocationMapping(DPS_ID)
+        mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+        nomisApi.stubLocationDelete(NOMIS_ID)
+        mappingServer.stubDeleteLocationMapping(DPS_ID)
         publishLocationDomainEvent("location.inside.prison.deleted")
       }
 
       @Test
       fun `will delete the location in NOMIS`() {
         await untilAsserted {
-          NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID")))
-        }
-      }
-
-      @Test
-      fun `will delete the mapping`() {
-        await untilAsserted {
-          MappingExtension.mappingServer.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/mapping/locations/dps/$DPS_ID")))
+          nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/deactivate")))
         }
       }
 
@@ -252,6 +630,6 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  fun locationMessagePayload(id: String, eventType: String) =
+  private fun locationMessagePayload(id: String, eventType: String) =
     """{"eventType":"$eventType", "additionalInformation": {"id":"$id", "key":"MDI-A-1-001"}, "version": "1.0", "description": "description", "occurredAt": "2024-02-01T17:09:56.0"}"""
 }

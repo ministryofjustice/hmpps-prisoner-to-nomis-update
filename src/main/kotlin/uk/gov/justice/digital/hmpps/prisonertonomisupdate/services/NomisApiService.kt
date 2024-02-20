@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DeactivateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DeleteHearingResultAwardResponses
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DeleteHearingResultResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Hearing
@@ -49,12 +50,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Prison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UnquashHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCapacityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCertificationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateEvidenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateEvidenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateHearingRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateHearingResultAwardResponses
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsResponse
@@ -638,10 +642,41 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .retrieve()
       .awaitBody()
 
-  suspend fun getLocations(
-    pageNumber: Long,
-    pageSize: Long,
-  ): PageImpl<LocationIdResponse> =
+  suspend fun updateLocation(locationId: Long, request: UpdateLocationRequest) =
+    webClient.put()
+      .uri("/locations/{id}", locationId)
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+
+  suspend fun deactivateLocation(locationId: Long, request: DeactivateRequest) =
+    webClient.put()
+      .uri("/locations/{id}/deactivate", locationId)
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+
+  suspend fun reactivateLocation(locationId: Long) =
+    webClient.put()
+      .uri("/locations/{id}/reactivate", locationId)
+      .retrieve()
+      .awaitBodilessEntity()
+
+  suspend fun updateLocationCapacity(locationId: Long, request: UpdateCapacityRequest) =
+    webClient.put()
+      .uri("/locations/{id}/capacity", locationId)
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+
+  suspend fun updateLocationCertification(locationId: Long, request: UpdateCertificationRequest) =
+    webClient.put()
+      .uri("/locations/{id}/certification", locationId)
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+
+  suspend fun getLocations(pageNumber: Long, pageSize: Long): PageImpl<LocationIdResponse> =
     webClient
       .get()
       .uri {
@@ -654,21 +689,12 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyToMono(typeReference<RestResponsePage<LocationIdResponse>>())
       .awaitSingle()
 
-  suspend fun getLocationDetails(
-    id: Long,
-  ): LocationResponse =
+  suspend fun getLocationDetails(id: Long): LocationResponse =
     webClient
       .get()
       .uri("/locations/{id}", id)
       .retrieve()
       .awaitBody()
-
-  suspend fun deleteLocation(id: Long) {
-    webClient.delete()
-      .uri("/locations/{id}", id)
-      .retrieve()
-      .awaitBodilessEntity()
-  }
 
   // ///////////////////// COURT SENTENCING /////////////////////////
 

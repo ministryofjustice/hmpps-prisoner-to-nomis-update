@@ -1837,6 +1837,7 @@ private fun newAdjudication() = CreateAdjudicationRequest(
 )
 
 private fun newLocation() = CreateLocationRequest(
+  description = "MDI-FAIT",
   locationType = CreateLocationRequest.LocationType.FAIT,
   locationCode = "FAIT",
   parentLocationId = 123456,
