@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -100,9 +99,9 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         verify(telemetryClient).trackEvent(
           eq("location-create-success"),
           org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
-            Assertions.assertThat(it["key"]).isEqualTo("MDI-A-1-001")
-            Assertions.assertThat(it["prisonId"]).isEqualTo("MDI")
+            assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+            assertThat(it["key"]).isEqualTo("MDI-A-1-001")
+            assertThat(it["prisonId"]).isEqualTo("MDI")
           },
           isNull(),
         )
@@ -146,7 +145,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         verify(telemetryClient).trackEvent(
           eq("location-create-duplicate"),
           org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+            assertThat(it["dpsId"]).isEqualTo(DPS_ID)
           },
           isNull(),
         )
@@ -317,7 +316,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
             verify(telemetryClient, times(3)).trackEvent(
               Mockito.eq("location-amend-failed"),
               org.mockito.kotlin.check {
-                assertThat(it["dpsId"]).isEqualTo(DPS_ID.toString())
+                assertThat(it["dpsId"]).isEqualTo(DPS_ID)
                 assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
               },
               isNull(),
@@ -353,8 +352,8 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
           verify(telemetryClient).trackEvent(
             Mockito.eq("location-deactivate-success"),
             org.mockito.kotlin.check {
-              Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
-              Assertions.assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+              assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+              assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
             },
             isNull(),
           )
@@ -410,8 +409,8 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
             verify(telemetryClient, times(3)).trackEvent(
               Mockito.eq("location-deactivate-failed"),
               org.mockito.kotlin.check {
-                Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
-                Assertions.assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+                assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+                assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
               },
               isNull(),
             )
@@ -436,7 +435,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
             verify(telemetryClient, times(3)).trackEvent(
               Mockito.eq("location-deactivate-failed"),
               org.mockito.kotlin.check {
-                Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+                assertThat(it["dpsId"]).isEqualTo(DPS_ID)
               },
               isNull(),
             )
@@ -465,7 +464,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
             verify(telemetryClient, times(3)).trackEvent(
               Mockito.eq("location-deactivate-failed"),
               org.mockito.kotlin.check {
-                Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+                assertThat(it["dpsId"]).isEqualTo(DPS_ID)
               },
               isNull(),
             )
@@ -497,8 +496,8 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
           verify(telemetryClient).trackEvent(
             Mockito.eq("location-reactivate-success"),
             org.mockito.kotlin.check {
-              Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
-              Assertions.assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+              assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+              assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
             },
             isNull(),
           )
@@ -532,8 +531,8 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
           verify(telemetryClient).trackEvent(
             Mockito.eq("location-capacity-success"),
             org.mockito.kotlin.check {
-              Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
-              Assertions.assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+              assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+              assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
             },
             isNull(),
           )
@@ -567,8 +566,8 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
           verify(telemetryClient).trackEvent(
             Mockito.eq("location-certification-success"),
             org.mockito.kotlin.check {
-              Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
-              Assertions.assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+              assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+              assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
             },
             isNull(),
           )
@@ -610,8 +609,8 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
           verify(telemetryClient).trackEvent(
             Mockito.eq("location-delete-success"),
             org.mockito.kotlin.check {
-              Assertions.assertThat(it["dpsId"]).isEqualTo(DPS_ID)
-              Assertions.assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+              assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+              assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
             },
             isNull(),
           )
