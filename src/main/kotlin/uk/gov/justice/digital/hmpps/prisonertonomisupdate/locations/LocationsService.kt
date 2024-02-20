@@ -9,6 +9,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateLocationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DeactivateRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCapacityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCertificationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
@@ -36,13 +40,17 @@ class LocationsService(
         eventTelemetry = telemetryMap
 
         checkMappingDoesNotExist {
-          mappingService.getMappingGivenDpsIdOrNull(event.additionalInformation.id)
+          kotlin.runCatching { mappingService.getMappingGivenDpsIdOrNull(event.additionalInformation.id) }
+            .onFailure { log.info("Back from checkMappingDoesNotExist with failure: $it") }
+            .onSuccess { log.info("Back from checkMappingDoesNotExist with success: $it") }
+            .getOrNull()
+            .also { log.info("Back from checkMappingDoesNotExist: $it") }
         }
         transform {
+          log.info("In transform")
           locationsApiService.getLocation(event.additionalInformation.id).run {
             val request = toCreateLocationRequest(this)
 
-            eventTelemetry += "dpsId" to id.toString()
             eventTelemetry += "key" to key
             eventTelemetry += "prisonId" to prisonId
 
@@ -56,68 +64,178 @@ class LocationsService(
         saveMapping { mappingService.createMapping(it) }
       }
     } else {
-      telemetryClient.trackEvent("nonAssociation-create-ignored", telemetryMap)
+      telemetryClient.trackEvent("location-create-ignored", telemetryMap)
     }
   }
 
-  suspend fun deleteLocation(event: LocationDomainEvent) {
-    val dpsId = event.additionalInformation.id
-    val telemetryMap = mutableMapOf("dpsId" to dpsId)
+  suspend fun amendLocation(event: LocationDomainEvent) {
+    doUpdateLocation(event, "amend") { nomisLocationId, location ->
+      nomisApiService.updateLocation(nomisLocationId, toUpdateLocationRequest(location))
+    }
+  }
+
+  suspend fun deactivateLocation(event: LocationDomainEvent) {
+    doUpdateLocation(event, "deactivate") { nomisLocationId, location ->
+      nomisApiService.deactivateLocation(nomisLocationId, toDeactivateRequest(location))
+    }
+  }
+
+  suspend fun reactivateLocation(event: LocationDomainEvent) {
+    doUpdateLocation(event, "reactivate") { nomisLocationId, _ ->
+      nomisApiService.reactivateLocation(nomisLocationId)
+    }
+  }
+
+  suspend fun changeCapacity(event: LocationDomainEvent) {
+    doUpdateLocation(event, "capacity") { nomisLocationId, location ->
+      nomisApiService.updateLocationCapacity(nomisLocationId, UpdateCapacityRequest(location.capacity?.capacity, location.capacity?.operationalCapacity))
+    }
+  }
+
+  suspend fun changeCertification(event: LocationDomainEvent) {
+    doUpdateLocation(event, "certification") { nomisLocationId, location ->
+      nomisApiService.updateLocationCertification(
+        nomisLocationId,
+        UpdateCertificationRequest(location.certification?.capacityOfCertifiedCell ?: 0, location.certification?.certified ?: false),
+      )
+    }
+  }
+
+  suspend fun softDeleteLocation(event: LocationDomainEvent) {
+    val telemetryMap = mutableMapOf("dpsId" to event.additionalInformation.id)
+    telemetryMap["key"] = event.additionalInformation.key
     if (isDpsCreated(event.additionalInformation)) {
       runCatching {
-        val nomisId =
-          mappingService.getMappingGivenDpsId(dpsId).nomisLocationId
-            .also { telemetryMap += "nomisId" to it.toString() }
-
-        nomisApiService.deleteLocation(nomisId)
-        mappingService.deleteMapping(dpsId)
+        mappingService.getMappingGivenDpsId(event.additionalInformation.id).apply {
+          telemetryMap["nomisId"] = nomisLocationId.toString()
+          nomisApiService.deactivateLocation(nomisLocationId, DeactivateRequest())
+          nomisApiService.updateLocationCapacity(nomisLocationId, UpdateCapacityRequest(0, 0))
+          nomisApiService.updateLocationCertification(nomisLocationId, UpdateCertificationRequest(0, false))
+          // TODO: Need to decide how to define a soft-deleted location
+        }
       }.onSuccess {
-        telemetryClient.trackEvent("location-delete-success", telemetryMap, null)
+        telemetryClient.trackEvent("location-delete-success", telemetryMap)
       }.onFailure { e ->
-        telemetryClient.trackEvent("location-delete-failed", telemetryMap, null)
+        telemetryClient.trackEvent("location-delete-failed", telemetryMap)
         throw e
       }
+    } else {
+      telemetryClient.trackEvent("location-delete-ignored", telemetryMap)
     }
   }
 
-  suspend fun deleteAllLocations() {
-    mappingService.getAllMappings().forEach { mapping ->
+  private suspend fun doUpdateLocation(event: LocationDomainEvent, name: String, update: suspend (Long, Location) -> Unit) {
+    val telemetryMap = mutableMapOf("dpsId" to event.additionalInformation.id)
+    telemetryMap["key"] = event.additionalInformation.key
+    if (isDpsCreated(event.additionalInformation)) {
       runCatching {
-        nomisApiService.deleteLocation(mapping.nomisLocationId)
-        mappingService.deleteMapping(mapping.dpsLocationId)
+        val location = locationsApiService.getLocation(event.additionalInformation.id)
+
+        mappingService.getMappingGivenDpsId(event.additionalInformation.id)
+          .apply {
+            telemetryMap["nomisId"] = nomisLocationId.toString()
+            update(nomisLocationId, location)
+          }
       }.onSuccess {
-        telemetryClient.trackEvent(
-          "location-DELETE-ALL-success",
-          mapOf(
-            "nomisId" to mapping.nomisLocationId.toString(),
-            "dpsId" to mapping.dpsLocationId,
-          ),
-          null,
-        )
+        telemetryClient.trackEvent("location-$name-success", telemetryMap)
       }.onFailure { e ->
-        log.error("Failed to delete location with dpsId ${mapping.dpsLocationId}", e)
-        telemetryClient.trackEvent(
-          "location-DELETE-ALL-failed",
-          mapOf(
-            "nomisId" to mapping.nomisLocationId.toString(),
-            "dpsId" to mapping.dpsLocationId,
-          ),
-          null,
-        )
+        telemetryClient.trackEvent("location-$name-failed", telemetryMap)
+        throw e
       }
+    } else {
+      telemetryClient.trackEvent("location-$name-ignored", telemetryMap)
     }
   }
 
-  private fun toCreateLocationRequest(instance: Location) = CreateLocationRequest(
+  private suspend fun toCreateLocationRequest(instance: Location) = CreateLocationRequest(
     locationCode = instance.code,
-    certified = instance.certification != null,
-    locationType = CreateLocationRequest.LocationType.valueOf(instance.locationType.name),
+    certified = instance.certification?.certified ?: false,
+    locationType = CreateLocationRequest.LocationType.valueOf(toLocationType(instance.locationType)),
     comment = instance.comments,
-    parentLocationId = 0,
+    parentLocationId = instance.parentId.let { mappingService.getMappingGivenDpsId(it.toString()).nomisLocationId },
     prisonId = instance.prisonId,
     // TODO added to allow compilation after generated code change
-    description = "",
-    // TBD
+    description = instance.key,
+    operationalCapacity = instance.capacity?.operationalCapacity,
+    userDescription = instance.description,
+    capacity = instance.capacity?.capacity,
+    listSequence = instance.orderWithinParentLocation,
+    unitType = instance.residentialHousingType?.let { CreateLocationRequest.UnitType.valueOf(toUnitType(it)) },
+  )
+
+  private suspend fun toUpdateLocationRequest(instance: Location) = UpdateLocationRequest(
+    locationCode = instance.code,
+    locationType = UpdateLocationRequest.LocationType.valueOf(toLocationType(instance.locationType)),
+    description = instance.key,
+    userDescription = instance.description,
+    parentLocationId = instance.parentId?.let { mappingService.getMappingGivenDpsId(it.toString()).nomisLocationId },
+    unitType = instance.residentialHousingType?.let { UpdateLocationRequest.UnitType.valueOf(toUnitType(it)) },
+    listSequence = instance.orderWithinParentLocation,
+    comment = instance.comments,
+  )
+
+  private fun toUnitType(residentialHousingType: Location.ResidentialHousingType) = when (residentialHousingType) {
+    Location.ResidentialHousingType.HEALTHCARE -> "HC"
+    Location.ResidentialHousingType.HOLDING_CELL -> "HOLC"
+    Location.ResidentialHousingType.NORMAL_ACCOMMODATION -> "NA"
+    Location.ResidentialHousingType.OTHER_USE -> "OU"
+    Location.ResidentialHousingType.RECEPTION -> "REC"
+    Location.ResidentialHousingType.SEGREGATION -> "SEG"
+    Location.ResidentialHousingType.SPECIALIST_CELL -> "SPLC"
+  }
+
+  private fun toLocationType(locationtype: Location.LocationType) = when (locationtype) {
+    Location.LocationType.WING -> "WING"
+    Location.LocationType.SPUR, // TODO coming later
+    Location.LocationType.TIER, // TODO not sure about this yet
+    Location.LocationType.LANDING,
+    -> "LAND"
+
+    Location.LocationType.CELL -> "CELL"
+    Location.LocationType.ADJUDICATION_ROOM -> "ADJU"
+    Location.LocationType.ADMINISTRATION_AREA -> "ADMI"
+    Location.LocationType.APPOINTMENTS -> "APP"
+    Location.LocationType.AREA -> "AREA"
+    Location.LocationType.ASSOCIATION -> "ASSO"
+    Location.LocationType.BOOTH -> "BOOT"
+    Location.LocationType.BOX -> "BOX"
+    Location.LocationType.CLASSROOM -> "CLAS"
+    Location.LocationType.EXERCISE_AREA -> "EXER"
+    Location.LocationType.EXTERNAL_GROUNDS -> "EXTE"
+    Location.LocationType.FAITH_AREA -> "FAIT"
+    Location.LocationType.GROUP -> "GROU"
+    Location.LocationType.HOLDING_CELL -> "HCEL"
+    Location.LocationType.HOLDING_AREA -> "HOLD"
+    Location.LocationType.INTERNAL_GROUNDS -> "IGRO"
+    Location.LocationType.INSIDE_PARTY -> "INSI"
+    Location.LocationType.INTERVIEW -> "INTE"
+    Location.LocationType.LOCATION -> "LOCA"
+    Location.LocationType.MEDICAL -> "MEDI"
+    Location.LocationType.MOVEMENT_AREA -> "MOVE"
+    Location.LocationType.OFFICE -> "OFFI"
+    Location.LocationType.OUTSIDE_PARTY -> "OUTS"
+    Location.LocationType.POSITION -> "POSI"
+    Location.LocationType.RESIDENTIAL_UNIT -> "RESI"
+    Location.LocationType.ROOM -> "ROOM"
+    Location.LocationType.RETURN_TO_UNIT -> "RTU"
+    Location.LocationType.SHELF -> "SHEL"
+    Location.LocationType.SPORTS -> "SPOR"
+    Location.LocationType.STORE -> "STOR"
+    Location.LocationType.TABLE -> "TABL"
+    Location.LocationType.TRAINING_AREA -> "TRAI"
+    Location.LocationType.TRAINING_ROOM -> "TRRM"
+    Location.LocationType.VIDEO_LINK -> "VIDE"
+    Location.LocationType.VISITS -> "VISIT"
+    Location.LocationType.WORKSHOP -> "WORK"
+  }
+
+  private fun toDeactivateRequest(location: Location): DeactivateRequest = DeactivateRequest(
+    reasonCode = when (location.deactivatedReason) {
+      Location.DeactivatedReason.CELL_RECLAIMS -> DeactivateRequest.ReasonCode.A
+      Location.DeactivatedReason.DAMAGED -> DeactivateRequest.ReasonCode.B
+      // TODO: Add more mappings
+      else -> null
+    },
   )
 
   private fun isDpsCreated(additionalInformation: LocationAdditionalInformation) =
@@ -134,6 +252,7 @@ class LocationsService(
   }
 
   override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
+
   private inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
 

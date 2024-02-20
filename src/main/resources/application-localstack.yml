@@ -30,7 +30,15 @@ hmpps.sqs:
       queueName: hmpps_prisoner_to_nomis_location_queue
       dlqName: hmpps_prisoner_to_nomis_location_dlq
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"location.inside.prison.created\", \"location.inside.prison.deleted\"]}"
+      subscribeFilter: >-
+        { "eventType":[
+          "location.inside.prison.created",
+          "location.inside.prison.amended",
+          "location.inside.prison.deactivated",
+          "location.inside.prison.reactivated",
+          "location.inside.prison.capacity.changed",
+          "location.inside.prison.certification.changed",
+          "location.inside.prison.deleted"]}
     sentencing:
       queueName: hmpps_prisoner_to_nomis_sentencing_queue
       dlqName: hmpps_prisoner_to_nomis_sentencing_dlq
@@ -40,6 +48,34 @@ hmpps.sqs:
       queueName: hmpps_prisoner_to_nomis_adjudication_queue
       dlqName: hmpps_prisoner_to_nomis_adjudication_dlq
       subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "adjudication.report.created",
+          "adjudication.damages.updated",
+          "adjudication.evidence.updated",
+          "adjudication.hearing.created",
+          "adjudication.hearing.updated",
+          "adjudication.hearing.deleted",
+          "adjudication.hearingCompleted.created",
+          "adjudication.hearingAdjourn.created",
+          "adjudication.hearingReferral.created",
+          "adjudication.referral.outcome.prosecution",
+          "adjudication.referral.outcome.notProceed",
+          "adjudication.referral.outcome.referGov",
+          "adjudication.outcome.referPolice",
+          "adjudication.outcome.notProceed",
+          "adjudication.hearingOutcome.updated",
+          "adjudication.hearingCompleted.deleted",
+          "adjudication.hearingAdjourn.deleted",
+          "adjudication.hearingReferral.deleted",
+          "adjudication.referral.outcome.deleted",
+          "adjudication.referral.deleted",
+          "adjudication.outcome.notProceed.deleted",
+          "adjudication.punishments.created",
+          "adjudication.punishments.updated",
+          "adjudication.punishments.deleted",
+          "adjudication.outcome.quashed",
+          "adjudication.outcome.unquashed"]}
     courtsentencing:
       queueName: hmpps_prisoner_to_nomis_court_sentencing_queue
       dlqName: hmpps_prisoner_to_nomis_court_sentencing_dlq

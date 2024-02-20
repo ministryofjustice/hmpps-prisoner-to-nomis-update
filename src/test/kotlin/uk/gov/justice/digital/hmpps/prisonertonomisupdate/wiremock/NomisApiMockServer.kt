@@ -1730,9 +1730,9 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubLocationUpdate(locationId: Long) {
+  fun stubLocationUpdate(url: String) {
     stubFor(
-      put("/locations/$locationId").willReturn(
+      put(url).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(200),
@@ -1740,14 +1740,40 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubLocationUpdateWithError(locationId: Long, status: Int = 500) {
+  fun stubLocationUpdateWithError(url: String, status: Int = 500) {
     stubFor(
-      put("/locations/$locationId").willReturn(
+      put(url).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(ERROR_RESPONSE)
           .withStatus(status),
       ),
+    )
+  }
+
+  fun stubLocationUpdateWithErrorFollowedBySlowSuccess(url: String) {
+    stubFor(
+      put(url)
+        .inScenario("Retry NOMIS Locations Update Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause NOMIS Locations Update Success"),
+    )
+
+    stubFor(
+      put(url)
+        .inScenario("Retry NOMIS Locations Update Scenario")
+        .whenScenarioStateIs("Cause NOMIS Locations Update Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(200)
+            .withFixedDelay(1500),
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 
