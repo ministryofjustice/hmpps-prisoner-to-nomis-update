@@ -1256,4 +1256,121 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+
+  // *************************************************** Court Sentencing **********************************************
+
+  fun stubCreateCourtCase() {
+    stubFor(
+      post("/mapping/court-sentencing/court-cases").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCreateCourtCaseWithError(status: Int = 500) {
+    stubFor(
+      post("/mapping/court-sentencing/court-cases").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubCreateCourtCaseWithDuplicateError(
+    dpsId: String,
+    nomisId: Long,
+    duplicateNomisId: Long,
+  ) {
+    stubFor(
+      post("/mapping/court-sentencing/court-cases")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+            { 
+              "status": 409,
+              "errorCode": 1409,
+              "userMessage": "Conflict: Court Case mapping already exists",
+               "moreInfo": {
+                "existing": {
+                  "dpsCourtCaseId": $dpsId,
+                  "nomisCourtCaseId": "$nomisId"
+                  },
+                "duplicate": {
+                  "dpsCourtCaseId": $dpsId,
+                  "nomisCourtCaseId": "$duplicateNomisId"
+                }
+              }
+            }
+              """.trimMargin(),
+            )
+            .withStatus(409),
+        ),
+    )
+  }
+
+  fun stubCreateCourtCaseWithErrorFollowedBySlowSuccess() {
+    stubFor(
+      post("/mapping/court-sentencing/court-cases")
+        .inScenario("Retry Mapping Court Case Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause Mapping Court Case Success"),
+    )
+
+    stubFor(
+      post("/mapping/court-sentencing/court-cases")
+        .inScenario("Retry Mapping Court Case Scenario")
+        .whenScenarioStateIs("Cause Mapping Court Case Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201)
+            .withFixedDelay(1500),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetCourtCaseMappingGivenDpsId(id: String, nomisCourtCaseId: Long = 54321) {
+    stubFor(
+      get("/mapping/court-sentencing/court-cases/dps-court-case-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            // language=json
+            """ 
+              {
+                "dpsCourtCaseId": $id,
+                "nomisCourtCaseId": $nomisCourtCaseId,
+                "mappingType": "COURT_CASE_CREATED",
+                "whenCreated": "2021-07-05T10:35:17"
+              }
+            
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubGetCreateCaseMappingGivenDpsIdWithError(id: String, status: Int = 500) {
+    stubFor(
+      get("/mapping/court-sentencing/court-cases/dps-court-case-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
+          .withStatus(status),
+      ),
+    )
+  }
 }

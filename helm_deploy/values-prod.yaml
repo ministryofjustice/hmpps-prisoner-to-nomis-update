@@ -46,5 +46,7 @@ generic-prometheus-alerts:
     - "syscon-devs-prod-hmpps_prisoner_to_nomis_nonassociation_dead_letter_queue"
     - "syscon-devs-prod-hmpps_prisoner_to_nomis_location_queue"
     - "syscon-devs-prod-hmpps_prisoner_to_nomis_location_dead_letter_queue"
+    - "syscon-devs-prod-hmpps_prisoner_to_nomis_court_sentencing_queue"
+    - "syscon-devs-prod-hmpps_prisoner_to_nomis_court_sentencing_dlq"
   sqsAlertsOldestThreshold: 2
   sqsAlertsTotalMessagesThreshold: 1

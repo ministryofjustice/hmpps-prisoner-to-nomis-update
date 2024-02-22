@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
@@ -53,7 +54,7 @@ class CourtSentencingService(
 
         CourtCaseMappingDto(
           nomisCourtCaseId = nomisResponse.id,
-          courtCaseId = courtCaseId,
+          dpsCourtCaseId = courtCaseId,
           // todo court appearance mappings
         )
       }
@@ -61,16 +62,22 @@ class CourtSentencingService(
     }
   }
 
-  suspend fun createCourtCaseMapping(message: CreateMappingRetryMessage<CourtCaseMappingDto>) =
+  suspend fun createRetry(message: CreateMappingRetryMessage<CourtCaseMappingDto>) =
     courtCaseMappingService.createMapping(message.mapping).also {
       telemetryClient.trackEvent(
-        "court-case-create-success",
+        "court-case-create-mapping-retry-success",
         message.telemetryAttributes,
         null,
       )
     }
 
-  override suspend fun retryCreateMapping(message: String) = createCourtCaseMapping(message.fromJson())
+  override suspend fun retryCreateMapping(message: String) {
+    val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
+    when (baseMapping.entityName) {
+      EntityType.COURT_CASE.displayName -> createRetry(message.fromJson())
+      else -> throw IllegalArgumentException("Unknown entity type: ${baseMapping.entityName}")
+    }
+  }
 
   private inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
@@ -82,10 +89,6 @@ class CourtSentencingService(
   )
 
   data class CourtCaseCreatedEvent(
-    val additionalInformation: AdditionalInformation,
-  )
-
-  data class CourtAppearanceCreatedEvent(
     val additionalInformation: AdditionalInformation,
   )
 }

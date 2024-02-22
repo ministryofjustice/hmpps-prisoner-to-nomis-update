@@ -1824,6 +1824,57 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  // *************************************************** Court Sentencing **********************************************
+
+  fun stubCourtCaseCreate(offenderNo: String, response: String) {
+    stubFor(
+      post("/prisoners/$offenderNo/sentencing/court-cases").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCourtCaseCreateWithError(offenderNo: String, status: Int = 500) {
+    stubFor(
+      post("/prisoners/$offenderNo/sentencing/court-cases").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubCourtCaseCreateWithErrorFollowedBySlowSuccess(offenderNo: String, response: String) {
+    stubFor(
+      post("/prisoners/$offenderNo/sentencing/court-cases")
+        .inScenario("Retry NOMIS Court Case Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause NOMIS Court Case Success"),
+    )
+
+    stubFor(
+      post("/prisoners/$offenderNo/sentencing/court-cases")
+        .inScenario("Retry NOMIS Court Case Scenario")
+        .whenScenarioStateIs("Cause NOMIS Court Case Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(response)
+            .withStatus(200)
+            .withFixedDelay(1500),
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
   fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
   fun putCountFor(url: String) = this.findAll(WireMock.putRequestedFor(WireMock.urlEqualTo(url))).count()
 
