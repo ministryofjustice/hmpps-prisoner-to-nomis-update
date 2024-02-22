@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import kotlinx.coroutines.test.runTest
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiExtension
 
 private const val LOCATION_ID = "2475f250-434a-4257-afe7-b911f1773a4d"
@@ -42,7 +43,7 @@ internal class LocationsApiServiceTest {
         "certified": true,
         "capacityOfCertifiedCell": 1
       },
-      "attributes": {},
+      "attributes": ["LOCATE_FLAT", "ELIGIBLE"],
       "orderWithinParentLocation": 1,
       "topLevelId": "57718979-573c-433a-9e51-2d83f887c11c",
       "parentId": "57718979-573c-433a-9e51-2d83f887c11c",
@@ -73,7 +74,8 @@ internal class LocationsApiServiceTest {
     fun `will parse data for a detail field`(): Unit = runTest {
       val location = locationsApiService.getLocation(LOCATION_ID)
 
-      Assertions.assertThat(location.pathHierarchy).isEqualTo("A-1-001")
+      assertThat(location.pathHierarchy).isEqualTo("A-1-001")
+      assertThat(location.attributes).containsExactlyInAnyOrder(Location.Attributes.LOCATE_FLAT, Location.Attributes.ELIGIBLE)
     }
 
     @Test
