@@ -147,7 +147,7 @@ class LocationsService(
     certified = instance.certification?.certified ?: false,
     locationType = CreateLocationRequest.LocationType.valueOf(toLocationType(instance.locationType)),
     comment = instance.comments,
-    parentLocationId = instance.parentId.let { mappingService.getMappingGivenDpsId(it.toString()).nomisLocationId },
+    parentLocationId = instance.parentId?.let { mappingService.getMappingGivenDpsId(it.toString()).nomisLocationId },
     prisonId = instance.prisonId,
     // TODO added to allow compilation after generated code change
     description = instance.key,
