@@ -117,7 +117,7 @@ hmpps.sqs:
       queueName: "court-sentencing-${random.uuid}"
       dlqName: "court-sentencing-dlq-${random.uuid}"
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"XXX.inserted\"]}"
+      subscribeFilter: "{\"eventType\":[\"court-sentencing.court-case.created\"]}"
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
   topics:

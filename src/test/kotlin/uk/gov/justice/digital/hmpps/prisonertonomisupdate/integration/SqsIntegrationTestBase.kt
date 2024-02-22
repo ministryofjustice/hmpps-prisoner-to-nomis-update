@@ -1,7 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration
 
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.BeforeEach
 import org.mockito.Mockito
+import org.mockito.kotlin.any
+import org.mockito.kotlin.isNull
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
@@ -72,6 +77,13 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   internal val adjudicationQueueUrl by lazy { adjudicationQueue.queueUrl }
   internal val adjudicationDlqUrl by lazy { adjudicationQueue.dlqUrl }
 
+  internal val courtSentencingQueue by lazy { hmppsQueueService.findByQueueId("courtsentencing") as HmppsQueue }
+
+  internal val awsSqsCourtSentencingClient by lazy { courtSentencingQueue.sqsClient }
+  internal val awsSqsCourtSentencingDlqClient by lazy { courtSentencingQueue.sqsDlqClient }
+  internal val courtSentencingQueueUrl by lazy { courtSentencingQueue.queueUrl }
+  internal val courtSentencingDlqUrl by lazy { courtSentencingQueue.dlqUrl }
+
   internal val awsSnsClient by lazy { topic.snsClient }
   internal val topicArn by lazy { topic.arn }
 
@@ -101,6 +113,13 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 
     awsSqsAdjudicationClient.purgeQueue(adjudicationQueueUrl).get()
     awsSqsAdjudicationDlqClient?.purgeQueue(adjudicationDlqUrl)?.get()
+
+    awsSqsCourtSentencingClient.purgeQueue(courtSentencingQueueUrl).get()
+    awsSqsCourtSentencingDlqClient?.purgeQueue(courtSentencingDlqUrl)?.get()
+  }
+
+  internal fun waitForAnyProcessingToComplete() {
+    await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
   }
 }
 
