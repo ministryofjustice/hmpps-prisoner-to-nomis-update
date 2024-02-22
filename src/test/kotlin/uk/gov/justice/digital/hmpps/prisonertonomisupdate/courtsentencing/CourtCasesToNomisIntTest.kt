@@ -16,6 +16,7 @@ import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.CourtSentencingApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
@@ -49,7 +50,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/courtCase/${COURT_CASE_ID_FOR_CREATION}")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/court-case/${COURT_CASE_ID_FOR_CREATION}")))
       }
 
       @Test
@@ -60,9 +61,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           eq("court-case-create-success"),
           org.mockito.kotlin.check {
             Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtCaseMapping.MappingType.DPS_CREATED.toString())
           },
           isNull(),
         )
@@ -75,7 +76,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will create a mapping between the two adjudications`() {
+      fun `will create a mapping between the two court cases`() {
         waitForAnyProcessingToComplete()
 
         await untilAsserted {
@@ -95,7 +96,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
-    inner class WhenMappingAlreadyCreatedForAdjudication {
+    inner class WhenMappingAlreadyCreatedForCourtCase {
 
       @BeforeEach
       fun setUp() {
@@ -107,14 +108,14 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will not create an adjudication in NOMIS`() {
+      fun `will not create an court case in NOMIS`() {
         waitForAnyProcessingToComplete()
 
         verify(telemetryClient).trackEvent(
           eq("court-case-create-duplicate"),
           org.mockito.kotlin.check {
-            Assertions.assertThat(it["chargeNumber"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
           },
           isNull(),
         )
@@ -142,12 +143,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         MappingExtension.mappingServer.stubCreateCourtCaseWithErrorFollowedBySlowSuccess()
         publishCreateCourtCaseDomainEvent()
 
-        await untilCallTo { CourtSentencingApiExtension.courtSentencingApi.getCountFor("/courtCase/$COURT_CASE_ID_FOR_CREATION") } matches { it == 1 }
-        await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/prisoners/offenderNo/$OFFENDER_NO/sentencing/court-cases") } matches { it == 1 }
+        await untilCallTo { CourtSentencingApiExtension.courtSentencingApi.getCountFor("/court-case/$COURT_CASE_ID_FOR_CREATION") } matches { it == 1 }
+        await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/prisoners/$OFFENDER_NO/sentencing/court-cases") } matches { it == 1 }
       }
 
       @Test
-      fun `should only create the NOMIS adjudication once`() {
+      fun `should only create the NOMIS court case once`() {
         await untilAsserted {
           verify(telemetryClient).trackEvent(
             eq("court-case-create-mapping-retry-success"),
@@ -157,12 +158,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         }
         NomisApiExtension.nomisApi.verify(
           1,
-          WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/offenderNo/$OFFENDER_NO/sentencing/court-cases")),
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases")),
         )
       }
 
       @Test
-      fun `will eventually create a mapping after NOMIS adjudication is created`() {
+      fun `will eventually create a mapping after NOMIS court case is created`() {
         await untilAsserted {
           MappingExtension.mappingServer.verify(
             2,

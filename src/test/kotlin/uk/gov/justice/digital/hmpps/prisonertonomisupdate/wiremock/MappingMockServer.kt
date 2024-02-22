@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMapping
 
 class MappingExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
   companion object {
@@ -1324,13 +1325,13 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
             .withStatus(500) // request unsuccessful with status code 500
             .withHeader("Content-Type", "application/json"),
         )
-        .willSetStateTo("Cause Mapping Court Case Success"),
+        .willSetStateTo("Create Mapping Court Case Success"),
     )
 
     stubFor(
       post("/mapping/court-sentencing/court-cases")
         .inScenario("Retry Mapping Court Case Scenario")
-        .whenScenarioStateIs("Cause Mapping Court Case Success")
+        .whenScenarioStateIs("Create Mapping Court Case Success")
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -1352,7 +1353,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
               {
                 "dpsCourtCaseId": $id,
                 "nomisCourtCaseId": $nomisCourtCaseId,
-                "mappingType": "COURT_CASE_CREATED",
+                "mappingType": "${CourtCaseMapping.MappingType.DPS_CREATED}",
                 "whenCreated": "2021-07-05T10:35:17"
               }
             

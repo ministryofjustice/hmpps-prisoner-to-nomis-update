@@ -33,7 +33,7 @@ class CourtSentencingService(
     val courtCaseId = createEvent.additionalInformation.id
     val offenderNo: String = createEvent.additionalInformation.offenderNo
     val telemetryMap = mutableMapOf(
-      "courtCaseId" to courtCaseId,
+      "dpsCourtCaseId" to courtCaseId,
       "offenderNo" to offenderNo,
     )
     synchronise {
