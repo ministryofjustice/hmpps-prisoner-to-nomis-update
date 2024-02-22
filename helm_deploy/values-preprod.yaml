@@ -27,6 +27,7 @@ generic-service:
 
 generic-prometheus-alerts:
   businessHoursOnly: true
+  alertSeverity: syscon-nonprod
   sqsAlertsQueueNames:
     - "syscon-devs-preprod-hmpps_prisoner_to_nomis_visit_queue"
     - "syscon-devs-preprod-hmpps_prisoner_to_nomis_visit_dlq"
