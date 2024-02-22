@@ -336,12 +336,30 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
 
   @Nested
   inner class Deactivate {
+    val locationApiResponseDeactivated = """
+    {
+      "id": "$DPS_ID",
+      "prisonId": "MDI",
+      "code": "001",
+      "pathHierarchy": "A-1-001",
+      "locationType": "CELL",
+      "active": false,
+      "orderWithinParentLocation": 1,
+      "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",
+      "key": "MDI-A-1-001",
+      "isResidential": true,
+      deactivatedDate: "2024-02-01",
+      deactivatedReason: "CELL_RECLAIMS",
+      reactivatedDate: "2024-02-14"
+    }
+    """.trimIndent()
+
     @Nested
     inner class WhenLocationHasBeenDeactivatedInDPS {
       @BeforeEach
       fun setUp() {
         locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
-        mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+        mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationApiResponseDeactivated)
         nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/deactivate")
         publishLocationDomainEvent("location.inside.prison.deactivated")
       }
@@ -361,9 +379,14 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will call nomis api to deactivate the location`() {
+      fun `will call nomis api correctly to deactivate the location`() {
         await untilAsserted {
-          nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/deactivate")))
+          nomisApi.verify(
+            WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/deactivate"))
+              .withRequestBody(WireMock.matchingJsonPath("deactivatedReason", WireMock.equalTo("B")))
+              .withRequestBody(WireMock.matchingJsonPath("reactivatedDate", WireMock.equalTo("2024-02-14")))
+              .withRequestBody(WireMock.matchingJsonPath("deactivatedDate", WireMock.equalTo("2024-02-01"))),
+          )
         }
       }
     }

@@ -30,6 +30,7 @@ internal class LocationsApiServiceTest {
       "code": "001",
       "pathHierarchy": "A-1-001",
       "locationType": "CELL",
+      "residentialHousingType": "NORMAL_ACCOMMODATION",
       "active": true,
       "description": "Wing A",
       "comments": "Not to be used",
@@ -41,6 +42,7 @@ internal class LocationsApiServiceTest {
         "certified": true,
         "capacityOfCertifiedCell": 1
       },
+      "attributes": {},
       "orderWithinParentLocation": 1,
       "topLevelId": "57718979-573c-433a-9e51-2d83f887c11c",
       "parentId": "57718979-573c-433a-9e51-2d83f887c11c",

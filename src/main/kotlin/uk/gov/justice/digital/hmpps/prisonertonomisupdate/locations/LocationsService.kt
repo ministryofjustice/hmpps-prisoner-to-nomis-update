@@ -40,14 +40,9 @@ class LocationsService(
         eventTelemetry = telemetryMap
 
         checkMappingDoesNotExist {
-          kotlin.runCatching { mappingService.getMappingGivenDpsIdOrNull(event.additionalInformation.id) }
-            .onFailure { log.info("Back from checkMappingDoesNotExist with failure: $it") }
-            .onSuccess { log.info("Back from checkMappingDoesNotExist with success: $it") }
-            .getOrNull()
-            .also { log.info("Back from checkMappingDoesNotExist: $it") }
+          mappingService.getMappingGivenDpsIdOrNull(event.additionalInformation.id)
         }
         transform {
-          log.info("In transform")
           locationsApiService.getLocation(event.additionalInformation.id).run {
             val request = toCreateLocationRequest(this)
 
@@ -231,11 +226,21 @@ class LocationsService(
 
   private fun toDeactivateRequest(location: Location): DeactivateRequest = DeactivateRequest(
     reasonCode = when (location.deactivatedReason) {
-      Location.DeactivatedReason.CELL_RECLAIMS -> DeactivateRequest.ReasonCode.A
-      Location.DeactivatedReason.DAMAGED -> DeactivateRequest.ReasonCode.B
-      // TODO: Add more mappings
+      Location.DeactivatedReason.NEW_BUILDING -> DeactivateRequest.ReasonCode.A
+      Location.DeactivatedReason.CELL_RECLAIMS -> DeactivateRequest.ReasonCode.B
+      Location.DeactivatedReason.CHANGE_OF_USE -> DeactivateRequest.ReasonCode.C
+      Location.DeactivatedReason.REFURBISHMENT -> DeactivateRequest.ReasonCode.D
+      Location.DeactivatedReason.CLOSURE -> DeactivateRequest.ReasonCode.E
+      Location.DeactivatedReason.OTHER -> DeactivateRequest.ReasonCode.F
+      Location.DeactivatedReason.LOCAL_WORK -> DeactivateRequest.ReasonCode.G
+      Location.DeactivatedReason.STAFF_SHORTAGE -> DeactivateRequest.ReasonCode.H
+      Location.DeactivatedReason.MOTHBALLED -> DeactivateRequest.ReasonCode.I
+      Location.DeactivatedReason.DAMAGED -> DeactivateRequest.ReasonCode.J
+      Location.DeactivatedReason.OUT_OF_USE -> DeactivateRequest.ReasonCode.K
+      Location.DeactivatedReason.CELLS_RETURNING_TO_USE -> DeactivateRequest.ReasonCode.L
       else -> null
     },
+    reactivateDate = location.reactivatedDate,
   )
 
   private fun isDpsCreated(additionalInformation: LocationAdditionalInformation) =

@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-02-19.6643.e90067d"
+    "version": "2024-02-20.MANUAL"
   },
   "servers": [
     {
@@ -5221,7 +5221,7 @@
     "/questionnaires/{questionnaireId}": {
       "get": {
         "tags": [
-          "incident-questionnaire-resource"
+          "questionnaire-resource"
         ],
         "summary": "Get incident questionnaire details",
         "description": "Gets incident questionnaire details. Requires role NOMIS_INCIDENTS",
@@ -5295,7 +5295,7 @@
     "/questionnaires/ids": {
       "get": {
         "tags": [
-          "incident-questionnaire-resource"
+          "questionnaire-resource"
         ],
         "summary": "get questionnaire IDs by filter",
         "description": "Retrieves a paged list of incident questionnaire ids by filter. Requires ROLE_NOMIS_INCIDENTS.",
@@ -8884,6 +8884,12 @@
               "K",
               "L"
             ]
+          },
+          "reactivateDate": {
+            "type": "string",
+            "description": "The expected reactivation date if any",
+            "format": "date",
+            "example": "2024-12-31"
           }
         },
         "description": "Location deactivate request"
@@ -13777,7 +13783,6 @@
       },
       "HistoryResponse": {
         "required": [
-          "answer",
           "sequence"
         ],
         "type": "object",
@@ -13997,10 +14002,6 @@
         "description": "Requirements for completing the incident report"
       },
       "Response": {
-        "required": [
-          "answer",
-          "id"
-        ],
         "type": "object",
         "properties": {
           "id": {
