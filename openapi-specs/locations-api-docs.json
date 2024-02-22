@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-02-05.319.414440c"
+    "version": "2024-02-20.398.7374ba2"
   },
   "servers": [
     {
@@ -30,6 +30,10 @@
     {
       "name": "Locations",
       "description": "Returns location information"
+    },
+    {
+      "name": "Constants",
+      "description": "Returns location reference data."
     }
   ],
   "paths": {
@@ -922,6 +926,246 @@
           }
         }
       }
+    },
+    "/constants/residential-housing-type": {
+      "get": {
+        "tags": [
+          "Constants"
+        ],
+        "summary": "Get residential housing reference data",
+        "description": "Requires the READ_LOCATION_REFERENCE_DATA role.",
+        "operationId": "locationAttributeConstants",
+        "responses": {
+          "200": {
+            "description": "Returns location reference data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Constant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the READ_LOCATION_REFERENCE_DATA role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/constants/residential-attribute-type": {
+      "get": {
+        "tags": [
+          "Constants"
+        ],
+        "summary": "Get residential attribute reference data",
+        "description": "Requires the READ_LOCATION_REFERENCE_DATA role.",
+        "operationId": "residentialAttributeTypeConstants",
+        "responses": {
+          "200": {
+            "description": "Returns residential attribute reference data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/CompoundConstant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the READ_LOCATION_REFERENCE_DATA role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/constants/non-residential-usage-type": {
+      "get": {
+        "tags": [
+          "Constants"
+        ],
+        "summary": "Get non-residential usage reference data",
+        "description": "Requires the READ_LOCATION_REFERENCE_DATA role.",
+        "operationId": "nonResidentialUsageTypeConstants",
+        "responses": {
+          "200": {
+            "description": "Returns location reference data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Constant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the READ_LOCATION_REFERENCE_DATA role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/constants/location-type": {
+      "get": {
+        "tags": [
+          "Constants"
+        ],
+        "summary": "Get location reference data",
+        "description": "Requires the READ_LOCATION_REFERENCE_DATA role.",
+        "operationId": "locationConstants",
+        "responses": {
+          "200": {
+            "description": "Returns location reference data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Constant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the READ_LOCATION_REFERENCE_DATA role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/constants/deactivated-reason": {
+      "get": {
+        "tags": [
+          "Constants"
+        ],
+        "summary": "Get deactivated reason reference data",
+        "description": "Requires the READ_LOCATION_REFERENCE_DATA role.",
+        "operationId": "deactivedReasonsConstants",
+        "responses": {
+          "200": {
+            "description": "Returns location reference data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Constant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the READ_LOCATION_REFERENCE_DATA role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1083,7 +1327,6 @@
           },
           "code": {
             "type": "string",
-            "description": "Location Code",
             "example": "001"
           },
           "pathHierarchy": {
@@ -1171,96 +1414,112 @@
           "attributes": {
             "type": "object",
             "additionalProperties": {
-              "type": "array",
+              "type": "object",
               "description": "Location Attributes",
-              "items": {
-                "type": "string",
-                "description": "Location Attributes",
-                "enum": [
-                  "ANTI_BARRICADE_DOOR",
-                  "AUDITABLE_CELL_BELL",
-                  "FIXED_BED",
-                  "METAL_DOOR",
-                  "MOVABLE_BED",
-                  "PRIVACY_CURTAIN",
-                  "PRIVACY_SCREEN",
-                  "STANDARD_CELL_BELL",
-                  "SEPARATE_TOILET",
-                  "WOODEN_DOOR",
-                  "CAT_A_CELL",
-                  "DOUBLE_OCCUPANCY",
-                  "E_LIST_CELL",
-                  "GATED_CELL",
-                  "LISTENER_CELL",
-                  "LOCATE_FLAT",
-                  "MULTIPLE_OCCUPANCY",
-                  "NON_SMOKER_CELL",
-                  "OBSERVATION_CELL",
-                  "SAFE_CELL",
-                  "SINGLE_OCCUPANCY",
-                  "SPECIAL_CELL",
-                  "WHEELCHAIR_ACCESS",
-                  "UNCONVICTED_JUVENILES",
-                  "SENTENCED_JUVENILES",
-                  "UNCONVICTED_18_20",
-                  "SENTENCED_18_20",
-                  "UNCONVICTED_ADULTS",
-                  "SENTENCED_ADULTS",
-                  "VULNERABLE_PRISONER_UNIT",
-                  "SPECIAL_UNIT",
-                  "RESETTLEMENT_HOSTEL",
-                  "HEALTHCARE_CENTRE",
-                  "NATIONAL_RESOURCE_HOSPITAL",
-                  "OTHER_SPECIFIED",
-                  "REMAND_CENTRE",
-                  "LOCAL_PRISON",
-                  "CLOSED_PRISON",
-                  "OPEN_TRAINING",
-                  "HOSTEL",
-                  "CLOSED_YOUNG_OFFENDER",
-                  "OPEN_YOUNG_OFFENDER",
-                  "REMAND_UNDER_18",
-                  "SENTENCED_UNDER_18",
-                  "ECL_COMPONENT",
-                  "ADDITIONAL_SPECIAL_UNIT",
-                  "SECOND_CLOSED_TRAINER",
-                  "IMMIGRATION_DETAINEES",
-                  "CELL",
-                  "LANDING",
-                  "WING",
-                  "CAT_A",
-                  "CAT_A_EX",
-                  "CAT_A_HI",
-                  "CAT_B",
-                  "CAT_C",
-                  "CAT_D",
-                  "ELIGIBLE",
-                  "PAROLE_GRANTED",
-                  "INELIGIBLE",
-                  "YOI_CLOSED",
-                  "YOI_OPEN",
-                  "YOI_RESTRICTED",
-                  "YOI_SHORT_SENTENCE",
-                  "YOI_LONG_TERM_CLOSED",
-                  "UNCLASSIFIED",
-                  "UNCATEGORISED_SENTENCED_MALE",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH",
-                  "NOT_APPLICABLE",
-                  "PROV_A",
-                  "PENDING",
-                  "REF_REVIEW",
-                  "REFUSED_NO_REVIEW",
-                  "STANDARD",
-                  "FEMALE_RESTRICTED",
-                  "FEMALE_CLOSED",
-                  "FEMALE_SEMI",
-                  "FEMALE_OPEN",
-                  "UN_SENTENCED",
-                  "YES",
-                  "NO"
-                ]
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Location Attribute Keys",
+                  "enum": [
+                    "USED_FOR",
+                    "LOCATION_ATTRIBUTE",
+                    "SANITATION_FITTINGS",
+                    "NON_ASSOCIATIONS",
+                    "SECURITY"
+                    ]
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Location Attribute Values",
+                    "enum": [
+                      "ANTI_BARRICADE_DOOR",
+                      "AUDITABLE_CELL_BELL",
+                      "FIXED_BED",
+                      "METAL_DOOR",
+                      "MOVABLE_BED",
+                      "PRIVACY_CURTAIN",
+                      "PRIVACY_SCREEN",
+                      "STANDARD_CELL_BELL",
+                      "SEPARATE_TOILET",
+                      "WOODEN_DOOR",
+                      "CAT_A_CELL",
+                      "DOUBLE_OCCUPANCY",
+                      "E_LIST_CELL",
+                      "GATED_CELL",
+                      "LISTENER_CELL",
+                      "LOCATE_FLAT",
+                      "MULTIPLE_OCCUPANCY",
+                      "NON_SMOKER_CELL",
+                      "OBSERVATION_CELL",
+                      "SAFE_CELL",
+                      "SINGLE_OCCUPANCY",
+                      "SPECIAL_CELL",
+                      "WHEELCHAIR_ACCESS",
+                      "UNCONVICTED_JUVENILES",
+                      "SENTENCED_JUVENILES",
+                      "UNCONVICTED_18_20",
+                      "SENTENCED_18_20",
+                      "UNCONVICTED_ADULTS",
+                      "SENTENCED_ADULTS",
+                      "VULNERABLE_PRISONER_UNIT",
+                      "SPECIAL_UNIT",
+                      "RESETTLEMENT_HOSTEL",
+                      "HEALTHCARE_CENTRE",
+                      "NATIONAL_RESOURCE_HOSPITAL",
+                      "OTHER_SPECIFIED",
+                      "REMAND_CENTRE",
+                      "LOCAL_PRISON",
+                      "CLOSED_PRISON",
+                      "OPEN_TRAINING",
+                      "HOSTEL",
+                      "CLOSED_YOUNG_OFFENDER",
+                      "OPEN_YOUNG_OFFENDER",
+                      "REMAND_UNDER_18",
+                      "SENTENCED_UNDER_18",
+                      "ECL_COMPONENT",
+                      "ADDITIONAL_SPECIAL_UNIT",
+                      "SECOND_CLOSED_TRAINER",
+                      "IMMIGRATION_DETAINEES",
+                      "CELL",
+                      "LANDING",
+                      "WING",
+                      "CAT_A",
+                      "CAT_A_EX",
+                      "CAT_A_HI",
+                      "CAT_B",
+                      "CAT_C",
+                      "CAT_D",
+                      "ELIGIBLE",
+                      "PAROLE_GRANTED",
+                      "INELIGIBLE",
+                      "YOI_CLOSED",
+                      "YOI_OPEN",
+                      "YOI_RESTRICTED",
+                      "YOI_SHORT_SENTENCE",
+                      "YOI_LONG_TERM_CLOSED",
+                      "UNCLASSIFIED",
+                      "UNCATEGORISED_SENTENCED_MALE",
+                      "LOW",
+                      "MEDIUM",
+                      "HIGH",
+                      "NOT_APPLICABLE",
+                      "PROV_A",
+                      "PENDING",
+                      "REF_REVIEW",
+                      "REFUSED_NO_REVIEW",
+                      "STANDARD",
+                      "FEMALE_RESTRICTED",
+                      "FEMALE_CLOSED",
+                      "FEMALE_SEMI",
+                      "FEMALE_OPEN",
+                      "UN_SENTENCED",
+                      "YES",
+                      "NO"
+                    ]
+                  }
+                }
               }
             },
             "description": "Location Attributes"
@@ -1325,6 +1584,9 @@
             "description": "Parent Location Id",
             "format": "uuid",
             "example": "57718979-573c-433a-9e51-2d83f887c11c"
+          },
+          "parentLocation": {
+            "$ref": "#/components/schemas/Location"
           },
           "childLocations": {
             "type": "array",
@@ -1942,6 +2204,43 @@
           },
           "unsorted": {
             "type": "boolean"
+          }
+        }
+      },
+      "Constant": {
+        "required": [
+          "description",
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "CompoundConstant": {
+        "required": [
+          "description",
+          "key",
+          "values"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Constant"
+            }
           }
         }
       }
