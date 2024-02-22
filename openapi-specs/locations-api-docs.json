@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-02-20.398.7374ba2"
+    "version": "2024-02-22.424.449c708"
   },
   "servers": [
     {
@@ -27,6 +27,14 @@
     }
   ],
   "tags": [
+    {
+      "name": "Migrate",
+      "description": "Migrate NOMIS to Locations Inside Prison Service API endpoints."
+    },
+    {
+      "name": "Sync",
+      "description": "Sync NOMIS to Locations Inside Prison Service API endpoints."
+    },
     {
       "name": "Locations",
       "description": "Returns location information"
@@ -282,6 +290,160 @@
         }
       }
     },
+    "/sync/upsert": {
+      "post": {
+        "tags": [
+          "Sync"
+        ],
+        "summary": "Upsert of a location",
+        "description": "Requires role SYNC_LOCATIONS and write scope",
+        "operationId": "upsertLocation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertLocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated location",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created location",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the SYNC_LOCATIONS role with write scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/migrate": {
+      "post": {
+        "tags": [
+          "Migrate"
+        ],
+        "summary": "Migrate a location",
+        "description": "Requires role MIGRATE_LOCATIONS and write scope",
+        "operationId": "migrate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertLocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Migrated location",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the MIGRATE_LOCATIONS role with write scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/locations/residential": {
       "post": {
         "tags": [
@@ -343,6 +505,16 @@
           },
           "404": {
             "description": "Data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Location already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -415,6 +587,16 @@
           },
           "404": {
             "description": "Data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Location already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -641,6 +823,16 @@
           },
           "404": {
             "description": "Data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Location already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -1327,6 +1519,7 @@
           },
           "code": {
             "type": "string",
+            "description": "Location Code",
             "example": "001"
           },
           "pathHierarchy": {
@@ -1412,117 +1605,97 @@
             "$ref": "#/components/schemas/Certification"
           },
           "attributes": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "object",
+            "type": "array",
+            "description": "Location Attributes",
+            "items": {
+              "type": "string",
               "description": "Location Attributes",
-              "properties": {
-                "code": {
-                  "type": "string",
-                  "description": "Location Attribute Keys",
-                  "enum": [
-                    "USED_FOR",
-                    "LOCATION_ATTRIBUTE",
-                    "SANITATION_FITTINGS",
-                    "NON_ASSOCIATIONS",
-                    "SECURITY"
-                    ]
-                },
-                "values": {
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "description": "Location Attribute Values",
-                    "enum": [
-                      "ANTI_BARRICADE_DOOR",
-                      "AUDITABLE_CELL_BELL",
-                      "FIXED_BED",
-                      "METAL_DOOR",
-                      "MOVABLE_BED",
-                      "PRIVACY_CURTAIN",
-                      "PRIVACY_SCREEN",
-                      "STANDARD_CELL_BELL",
-                      "SEPARATE_TOILET",
-                      "WOODEN_DOOR",
-                      "CAT_A_CELL",
-                      "DOUBLE_OCCUPANCY",
-                      "E_LIST_CELL",
-                      "GATED_CELL",
-                      "LISTENER_CELL",
-                      "LOCATE_FLAT",
-                      "MULTIPLE_OCCUPANCY",
-                      "NON_SMOKER_CELL",
-                      "OBSERVATION_CELL",
-                      "SAFE_CELL",
-                      "SINGLE_OCCUPANCY",
-                      "SPECIAL_CELL",
-                      "WHEELCHAIR_ACCESS",
-                      "UNCONVICTED_JUVENILES",
-                      "SENTENCED_JUVENILES",
-                      "UNCONVICTED_18_20",
-                      "SENTENCED_18_20",
-                      "UNCONVICTED_ADULTS",
-                      "SENTENCED_ADULTS",
-                      "VULNERABLE_PRISONER_UNIT",
-                      "SPECIAL_UNIT",
-                      "RESETTLEMENT_HOSTEL",
-                      "HEALTHCARE_CENTRE",
-                      "NATIONAL_RESOURCE_HOSPITAL",
-                      "OTHER_SPECIFIED",
-                      "REMAND_CENTRE",
-                      "LOCAL_PRISON",
-                      "CLOSED_PRISON",
-                      "OPEN_TRAINING",
-                      "HOSTEL",
-                      "CLOSED_YOUNG_OFFENDER",
-                      "OPEN_YOUNG_OFFENDER",
-                      "REMAND_UNDER_18",
-                      "SENTENCED_UNDER_18",
-                      "ECL_COMPONENT",
-                      "ADDITIONAL_SPECIAL_UNIT",
-                      "SECOND_CLOSED_TRAINER",
-                      "IMMIGRATION_DETAINEES",
-                      "CELL",
-                      "LANDING",
-                      "WING",
-                      "CAT_A",
-                      "CAT_A_EX",
-                      "CAT_A_HI",
-                      "CAT_B",
-                      "CAT_C",
-                      "CAT_D",
-                      "ELIGIBLE",
-                      "PAROLE_GRANTED",
-                      "INELIGIBLE",
-                      "YOI_CLOSED",
-                      "YOI_OPEN",
-                      "YOI_RESTRICTED",
-                      "YOI_SHORT_SENTENCE",
-                      "YOI_LONG_TERM_CLOSED",
-                      "UNCLASSIFIED",
-                      "UNCATEGORISED_SENTENCED_MALE",
-                      "LOW",
-                      "MEDIUM",
-                      "HIGH",
-                      "NOT_APPLICABLE",
-                      "PROV_A",
-                      "PENDING",
-                      "REF_REVIEW",
-                      "REFUSED_NO_REVIEW",
-                      "STANDARD",
-                      "FEMALE_RESTRICTED",
-                      "FEMALE_CLOSED",
-                      "FEMALE_SEMI",
-                      "FEMALE_OPEN",
-                      "UN_SENTENCED",
-                      "YES",
-                      "NO"
-                    ]
-                  }
-                }
-              }
-            },
-            "description": "Location Attributes"
+              "enum": [
+                "ANTI_BARRICADE_DOOR",
+                "AUDITABLE_CELL_BELL",
+                "FIXED_BED",
+                "METAL_DOOR",
+                "MOVABLE_BED",
+                "PRIVACY_CURTAIN",
+                "PRIVACY_SCREEN",
+                "STANDARD_CELL_BELL",
+                "SEPARATE_TOILET",
+                "WOODEN_DOOR",
+                "CAT_A_CELL",
+                "DOUBLE_OCCUPANCY",
+                "E_LIST_CELL",
+                "GATED_CELL",
+                "LISTENER_CELL",
+                "LOCATE_FLAT",
+                "MULTIPLE_OCCUPANCY",
+                "NON_SMOKER_CELL",
+                "OBSERVATION_CELL",
+                "SAFE_CELL",
+                "SINGLE_OCCUPANCY",
+                "SPECIAL_CELL",
+                "WHEELCHAIR_ACCESS",
+                "UNCONVICTED_JUVENILES",
+                "SENTENCED_JUVENILES",
+                "UNCONVICTED_18_20",
+                "SENTENCED_18_20",
+                "UNCONVICTED_ADULTS",
+                "SENTENCED_ADULTS",
+                "VULNERABLE_PRISONER_UNIT",
+                "SPECIAL_UNIT",
+                "RESETTLEMENT_HOSTEL",
+                "HEALTHCARE_CENTRE",
+                "NATIONAL_RESOURCE_HOSPITAL",
+                "OTHER_SPECIFIED",
+                "REMAND_CENTRE",
+                "LOCAL_PRISON",
+                "CLOSED_PRISON",
+                "OPEN_TRAINING",
+                "HOSTEL",
+                "CLOSED_YOUNG_OFFENDER",
+                "OPEN_YOUNG_OFFENDER",
+                "REMAND_UNDER_18",
+                "SENTENCED_UNDER_18",
+                "ECL_COMPONENT",
+                "ADDITIONAL_SPECIAL_UNIT",
+                "SECOND_CLOSED_TRAINER",
+                "IMMIGRATION_DETAINEES",
+                "CELL",
+                "LANDING",
+                "WING",
+                "CAT_A",
+                "CAT_A_EX",
+                "CAT_A_HI",
+                "CAT_B",
+                "CAT_C",
+                "CAT_D",
+                "ELIGIBLE",
+                "PAROLE_GRANTED",
+                "INELIGIBLE",
+                "YOI_CLOSED",
+                "YOI_OPEN",
+                "YOI_RESTRICTED",
+                "YOI_SHORT_SENTENCE",
+                "YOI_LONG_TERM_CLOSED",
+                "UNCLASSIFIED",
+                "UNCATEGORISED_SENTENCED_MALE",
+                "LOW",
+                "MEDIUM",
+                "HIGH",
+                "NOT_APPLICABLE",
+                "PROV_A",
+                "PENDING",
+                "REF_REVIEW",
+                "REFUSED_NO_REVIEW",
+                "STANDARD",
+                "FEMALE_RESTRICTED",
+                "FEMALE_CLOSED",
+                "FEMALE_SEMI",
+                "FEMALE_OPEN",
+                "UN_SENTENCED",
+                "YES",
+                "NO"
+              ]
+            }
           },
           "usage": {
             "type": "array",
@@ -1663,9 +1836,249 @@
               "OUT_OF_USE",
               "CELLS_RETURNING_TO_USE"
             ]
+          },
+          "reactivationDate": {
+            "type": "string",
+            "description": "Proposed re-activation date",
+            "format": "date",
+            "example": "2025-01-05"
           }
         },
         "description": "Request to deactivate a location"
+      },
+      "UpsertLocationRequest": {
+        "required": [
+          "code",
+          "lastModifiedDate",
+          "lastUpdatedBy",
+          "locationType",
+          "prisonId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Location Id, provided if a new location",
+            "format": "uuid",
+            "example": "2475f250-434a-4257-afe7-b911f1773a4d"
+          },
+          "prisonId": {
+            "type": "string",
+            "description": "Prison ID",
+            "example": "MDI"
+          },
+          "code": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Code of the location",
+            "example": "001"
+          },
+          "locationType": {
+            "type": "string",
+            "description": "Location Type",
+            "example": "CELL",
+            "enum": [
+              "WING",
+              "SPUR",
+              "LANDING",
+              "CELL",
+              "ROOM",
+              "HOLDING_AREA",
+              "TIER",
+              "MOVEMENT_AREA",
+              "RESIDENTIAL_UNIT",
+              "EXTERNAL_GROUNDS",
+              "HOLDING_CELL",
+              "MEDICAL",
+              "GROUP",
+              "OFFICE",
+              "ADMINISTRATION_AREA",
+              "BOOTH",
+              "BOX",
+              "RETURN_TO_UNIT",
+              "CLASSROOM",
+              "TRAINING_AREA",
+              "TRAINING_ROOM",
+              "EXERCISE_AREA",
+              "AREA",
+              "SPORTS",
+              "WORKSHOP",
+              "INSIDE_PARTY",
+              "OUTSIDE_PARTY",
+              "FAITH_AREA",
+              "ADJUDICATION_ROOM",
+              "APPOINTMENTS",
+              "VISITS",
+              "VIDEO_LINK",
+              "ASSOCIATION",
+              "INTERNAL_GROUNDS",
+              "INTERVIEW",
+              "LOCATION",
+              "POSITION",
+              "SHELF",
+              "STORE",
+              "TABLE"
+            ]
+          },
+          "description": {
+            "maxLength": 80,
+            "minLength": 0,
+            "type": "string",
+            "description": "Alternative description to display for location",
+            "example": "Wing A"
+          },
+          "comments": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Additional comments that can be made about this location",
+            "example": "Not to be used"
+          },
+          "orderWithinParentLocation": {
+            "type": "integer",
+            "description": "Sequence of locations within the current parent location",
+            "format": "int32",
+            "example": 1
+          },
+          "residentialHousingType": {
+            "type": "string",
+            "description": "If residential location, its type",
+            "example": "NORMAL_ACCOMMODATION",
+            "enum": [
+              "NORMAL_ACCOMMODATION",
+              "HEALTHCARE",
+              "HOLDING_CELL",
+              "OTHER_USE",
+              "RECEPTION",
+              "SEGREGATION",
+              "SPECIALIST_CELL"
+            ]
+          },
+          "parentLocationPath": {
+            "type": "string",
+            "description": "Path hierarchy of the parent (if one exists)",
+            "example": "A-1"
+          },
+          "capacity": {
+            "$ref": "#/components/schemas/Capacity"
+          },
+          "certification": {
+            "$ref": "#/components/schemas/Certification"
+          },
+          "attributes": {
+            "uniqueItems": true,
+            "type": "array",
+            "description": "Location Attributes",
+            "items": {
+              "type": "string",
+              "description": "Location Attributes",
+              "enum": [
+                "ANTI_BARRICADE_DOOR",
+                "AUDITABLE_CELL_BELL",
+                "FIXED_BED",
+                "METAL_DOOR",
+                "MOVABLE_BED",
+                "PRIVACY_CURTAIN",
+                "PRIVACY_SCREEN",
+                "STANDARD_CELL_BELL",
+                "SEPARATE_TOILET",
+                "WOODEN_DOOR",
+                "CAT_A_CELL",
+                "DOUBLE_OCCUPANCY",
+                "E_LIST_CELL",
+                "GATED_CELL",
+                "LISTENER_CELL",
+                "LOCATE_FLAT",
+                "MULTIPLE_OCCUPANCY",
+                "NON_SMOKER_CELL",
+                "OBSERVATION_CELL",
+                "SAFE_CELL",
+                "SINGLE_OCCUPANCY",
+                "SPECIAL_CELL",
+                "WHEELCHAIR_ACCESS",
+                "UNCONVICTED_JUVENILES",
+                "SENTENCED_JUVENILES",
+                "UNCONVICTED_18_20",
+                "SENTENCED_18_20",
+                "UNCONVICTED_ADULTS",
+                "SENTENCED_ADULTS",
+                "VULNERABLE_PRISONER_UNIT",
+                "SPECIAL_UNIT",
+                "RESETTLEMENT_HOSTEL",
+                "HEALTHCARE_CENTRE",
+                "NATIONAL_RESOURCE_HOSPITAL",
+                "OTHER_SPECIFIED",
+                "REMAND_CENTRE",
+                "LOCAL_PRISON",
+                "CLOSED_PRISON",
+                "OPEN_TRAINING",
+                "HOSTEL",
+                "CLOSED_YOUNG_OFFENDER",
+                "OPEN_YOUNG_OFFENDER",
+                "REMAND_UNDER_18",
+                "SENTENCED_UNDER_18",
+                "ECL_COMPONENT",
+                "ADDITIONAL_SPECIAL_UNIT",
+                "SECOND_CLOSED_TRAINER",
+                "IMMIGRATION_DETAINEES",
+                "CELL",
+                "LANDING",
+                "WING",
+                "CAT_A",
+                "CAT_A_EX",
+                "CAT_A_HI",
+                "CAT_B",
+                "CAT_C",
+                "CAT_D",
+                "ELIGIBLE",
+                "PAROLE_GRANTED",
+                "INELIGIBLE",
+                "YOI_CLOSED",
+                "YOI_OPEN",
+                "YOI_RESTRICTED",
+                "YOI_SHORT_SENTENCE",
+                "YOI_LONG_TERM_CLOSED",
+                "UNCLASSIFIED",
+                "UNCATEGORISED_SENTENCED_MALE",
+                "LOW",
+                "MEDIUM",
+                "HIGH",
+                "NOT_APPLICABLE",
+                "PROV_A",
+                "PENDING",
+                "REF_REVIEW",
+                "REFUSED_NO_REVIEW",
+                "STANDARD",
+                "FEMALE_RESTRICTED",
+                "FEMALE_CLOSED",
+                "FEMALE_SEMI",
+                "FEMALE_OPEN",
+                "UN_SENTENCED",
+                "YES",
+                "NO"
+              ]
+            }
+          },
+          "usage": {
+            "uniqueItems": true,
+            "type": "array",
+            "description": "Location Usage",
+            "items": {
+              "$ref": "#/components/schemas/NonResidentialUsageDto"
+            }
+          },
+          "lastModifiedDate": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Location Usage",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastUpdatedBy": {
+            "type": "string",
+            "description": "Location Usage"
+          }
+        },
+        "description": "Request to upsert a location"
       },
       "CreateResidentialLocationRequest": {
         "required": [
@@ -1989,102 +2402,98 @@
             "$ref": "#/components/schemas/Certification"
           },
           "attributes": {
-            "type": "object",
-            "additionalProperties": {
-              "uniqueItems": true,
-              "type": "array",
+            "uniqueItems": true,
+            "type": "array",
+            "description": "Location Attributes",
+            "items": {
+              "type": "string",
               "description": "Location Attributes",
-              "items": {
-                "type": "string",
-                "description": "Location Attributes",
-                "enum": [
-                  "ANTI_BARRICADE_DOOR",
-                  "AUDITABLE_CELL_BELL",
-                  "FIXED_BED",
-                  "METAL_DOOR",
-                  "MOVABLE_BED",
-                  "PRIVACY_CURTAIN",
-                  "PRIVACY_SCREEN",
-                  "STANDARD_CELL_BELL",
-                  "SEPARATE_TOILET",
-                  "WOODEN_DOOR",
-                  "CAT_A_CELL",
-                  "DOUBLE_OCCUPANCY",
-                  "E_LIST_CELL",
-                  "GATED_CELL",
-                  "LISTENER_CELL",
-                  "LOCATE_FLAT",
-                  "MULTIPLE_OCCUPANCY",
-                  "NON_SMOKER_CELL",
-                  "OBSERVATION_CELL",
-                  "SAFE_CELL",
-                  "SINGLE_OCCUPANCY",
-                  "SPECIAL_CELL",
-                  "WHEELCHAIR_ACCESS",
-                  "UNCONVICTED_JUVENILES",
-                  "SENTENCED_JUVENILES",
-                  "UNCONVICTED_18_20",
-                  "SENTENCED_18_20",
-                  "UNCONVICTED_ADULTS",
-                  "SENTENCED_ADULTS",
-                  "VULNERABLE_PRISONER_UNIT",
-                  "SPECIAL_UNIT",
-                  "RESETTLEMENT_HOSTEL",
-                  "HEALTHCARE_CENTRE",
-                  "NATIONAL_RESOURCE_HOSPITAL",
-                  "OTHER_SPECIFIED",
-                  "REMAND_CENTRE",
-                  "LOCAL_PRISON",
-                  "CLOSED_PRISON",
-                  "OPEN_TRAINING",
-                  "HOSTEL",
-                  "CLOSED_YOUNG_OFFENDER",
-                  "OPEN_YOUNG_OFFENDER",
-                  "REMAND_UNDER_18",
-                  "SENTENCED_UNDER_18",
-                  "ECL_COMPONENT",
-                  "ADDITIONAL_SPECIAL_UNIT",
-                  "SECOND_CLOSED_TRAINER",
-                  "IMMIGRATION_DETAINEES",
-                  "CELL",
-                  "LANDING",
-                  "WING",
-                  "CAT_A",
-                  "CAT_A_EX",
-                  "CAT_A_HI",
-                  "CAT_B",
-                  "CAT_C",
-                  "CAT_D",
-                  "ELIGIBLE",
-                  "PAROLE_GRANTED",
-                  "INELIGIBLE",
-                  "YOI_CLOSED",
-                  "YOI_OPEN",
-                  "YOI_RESTRICTED",
-                  "YOI_SHORT_SENTENCE",
-                  "YOI_LONG_TERM_CLOSED",
-                  "UNCLASSIFIED",
-                  "UNCATEGORISED_SENTENCED_MALE",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH",
-                  "NOT_APPLICABLE",
-                  "PROV_A",
-                  "PENDING",
-                  "REF_REVIEW",
-                  "REFUSED_NO_REVIEW",
-                  "STANDARD",
-                  "FEMALE_RESTRICTED",
-                  "FEMALE_CLOSED",
-                  "FEMALE_SEMI",
-                  "FEMALE_OPEN",
-                  "UN_SENTENCED",
-                  "YES",
-                  "NO"
-                ]
-              }
-            },
-            "description": "Location Attributes"
+              "enum": [
+                "ANTI_BARRICADE_DOOR",
+                "AUDITABLE_CELL_BELL",
+                "FIXED_BED",
+                "METAL_DOOR",
+                "MOVABLE_BED",
+                "PRIVACY_CURTAIN",
+                "PRIVACY_SCREEN",
+                "STANDARD_CELL_BELL",
+                "SEPARATE_TOILET",
+                "WOODEN_DOOR",
+                "CAT_A_CELL",
+                "DOUBLE_OCCUPANCY",
+                "E_LIST_CELL",
+                "GATED_CELL",
+                "LISTENER_CELL",
+                "LOCATE_FLAT",
+                "MULTIPLE_OCCUPANCY",
+                "NON_SMOKER_CELL",
+                "OBSERVATION_CELL",
+                "SAFE_CELL",
+                "SINGLE_OCCUPANCY",
+                "SPECIAL_CELL",
+                "WHEELCHAIR_ACCESS",
+                "UNCONVICTED_JUVENILES",
+                "SENTENCED_JUVENILES",
+                "UNCONVICTED_18_20",
+                "SENTENCED_18_20",
+                "UNCONVICTED_ADULTS",
+                "SENTENCED_ADULTS",
+                "VULNERABLE_PRISONER_UNIT",
+                "SPECIAL_UNIT",
+                "RESETTLEMENT_HOSTEL",
+                "HEALTHCARE_CENTRE",
+                "NATIONAL_RESOURCE_HOSPITAL",
+                "OTHER_SPECIFIED",
+                "REMAND_CENTRE",
+                "LOCAL_PRISON",
+                "CLOSED_PRISON",
+                "OPEN_TRAINING",
+                "HOSTEL",
+                "CLOSED_YOUNG_OFFENDER",
+                "OPEN_YOUNG_OFFENDER",
+                "REMAND_UNDER_18",
+                "SENTENCED_UNDER_18",
+                "ECL_COMPONENT",
+                "ADDITIONAL_SPECIAL_UNIT",
+                "SECOND_CLOSED_TRAINER",
+                "IMMIGRATION_DETAINEES",
+                "CELL",
+                "LANDING",
+                "WING",
+                "CAT_A",
+                "CAT_A_EX",
+                "CAT_A_HI",
+                "CAT_B",
+                "CAT_C",
+                "CAT_D",
+                "ELIGIBLE",
+                "PAROLE_GRANTED",
+                "INELIGIBLE",
+                "YOI_CLOSED",
+                "YOI_OPEN",
+                "YOI_RESTRICTED",
+                "YOI_SHORT_SENTENCE",
+                "YOI_LONG_TERM_CLOSED",
+                "UNCLASSIFIED",
+                "UNCATEGORISED_SENTENCED_MALE",
+                "LOW",
+                "MEDIUM",
+                "HIGH",
+                "NOT_APPLICABLE",
+                "PROV_A",
+                "PENDING",
+                "REF_REVIEW",
+                "REFUSED_NO_REVIEW",
+                "STANDARD",
+                "FEMALE_RESTRICTED",
+                "FEMALE_CLOSED",
+                "FEMALE_SEMI",
+                "FEMALE_OPEN",
+                "UN_SENTENCED",
+                "YES",
+                "NO"
+              ]
+            }
           },
           "usage": {
             "uniqueItems": true,
@@ -2185,10 +2594,10 @@
             "type": "integer",
             "format": "int32"
           },
-          "paged": {
+          "unpaged": {
             "type": "boolean"
           },
-          "unpaged": {
+          "paged": {
             "type": "boolean"
           }
         }
