@@ -10,7 +10,7 @@ class CourtSentencingApiService(private val courtSentencingApiWebClient: WebClie
 
   suspend fun getCourtCase(id: String): CourtCase {
     return courtSentencingApiWebClient.get()
-      .uri("/TBC", id)
+      .uri("/court-case/{id}", id)
       .retrieve()
       .awaitBody()
   }
