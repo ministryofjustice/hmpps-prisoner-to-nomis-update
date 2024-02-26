@@ -49,6 +49,3 @@ generic-prometheus-alerts:
     - "syscon-devs-preprod-hmpps_prisoner_to_nomis_court_sentencing_dlq"
   sqsAlertsOldestThreshold: 2
   sqsAlertsTotalMessagesThreshold: 1
-
-cron:
-  allocationReconReportSchedule: "55 7 * * *"
