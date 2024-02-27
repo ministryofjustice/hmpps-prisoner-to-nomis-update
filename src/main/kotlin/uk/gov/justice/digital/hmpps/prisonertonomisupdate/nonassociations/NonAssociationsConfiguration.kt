@@ -7,9 +7,9 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.authorisedWebClient
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.healthWebClient
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.health.HealthCheck
+import uk.gov.justice.hmpps.kotlin.auth.reactiveAuthorisedWebClient
+import uk.gov.justice.hmpps.kotlin.auth.reactiveHealthWebClient
+import uk.gov.justice.hmpps.kotlin.health.ReactiveHealthPingCheck
 import java.time.Duration
 
 @Configuration
@@ -20,12 +20,12 @@ class NonAssociationsConfiguration(
 ) {
 
   @Bean
-  fun nonAssociationsApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(baseUrl, healthTimeout)
+  fun nonAssociationsApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(baseUrl, healthTimeout)
 
   @Bean
   fun nonAssociationsApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.authorisedWebClient(authorizedClientManager, registrationId = "non-associations-api", url = baseUrl, timeout)
+    builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "non-associations-api", url = baseUrl, timeout)
 
   @Component("nonAssociationsApi")
-  class NonAssociationsApiHealth(@Qualifier("nonAssociationsApiHealthWebClient") webClient: WebClient) : HealthCheck(webClient)
+  class NonAssociationsApiHealth(@Qualifier("nonAssociationsApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
 }

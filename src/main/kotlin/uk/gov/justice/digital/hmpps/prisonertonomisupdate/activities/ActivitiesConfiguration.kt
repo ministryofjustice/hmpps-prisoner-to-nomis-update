@@ -7,9 +7,9 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.authorisedWebClient
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.healthWebClient
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.health.HealthCheck
+import uk.gov.justice.hmpps.kotlin.auth.reactiveAuthorisedWebClient
+import uk.gov.justice.hmpps.kotlin.auth.reactiveHealthWebClient
+import uk.gov.justice.hmpps.kotlin.health.ReactiveHealthPingCheck
 import java.time.Duration
 
 @Configuration
@@ -20,12 +20,12 @@ class ActivitiesConfiguration(
 ) {
 
   @Bean
-  fun activitiesApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(baseUrl, healthTimeout)
+  fun activitiesApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(baseUrl, healthTimeout)
 
   @Bean
   fun activitiesApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.authorisedWebClient(authorizedClientManager, registrationId = "activities-api", url = baseUrl, timeout)
+    builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "activities-api", url = baseUrl, timeout)
 
   @Component("activitiesApi")
-  class ActivitiesApiHealth(@Qualifier("activitiesApiHealthWebClient") webClient: WebClient) : HealthCheck(webClient)
+  class ActivitiesApiHealth(@Qualifier("activitiesApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
 }

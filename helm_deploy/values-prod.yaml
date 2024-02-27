@@ -9,7 +9,7 @@ generic-service:
 
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
-    API_BASE_URL_OAUTH: https://sign-in.hmpps.service.justice.gov.uk/auth
+    API_BASE_URL_HMPPS_AUTH: https://sign-in.hmpps.service.justice.gov.uk/auth
     API_BASE_URL_NOMIS: https://nomis-prisoner.aks-live-1.studio-hosting.service.justice.gov.uk
     API_BASE_URL_MAPPING: https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk
     API_BASE_URL_VISITS: https://visit-scheduler.prison.service.justice.gov.uk

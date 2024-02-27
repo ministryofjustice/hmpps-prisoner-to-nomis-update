@@ -7,9 +7,9 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.authorisedWebClient
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.healthWebClient
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.health.HealthCheck
+import uk.gov.justice.hmpps.kotlin.auth.reactiveAuthorisedWebClient
+import uk.gov.justice.hmpps.kotlin.auth.reactiveHealthWebClient
+import uk.gov.justice.hmpps.kotlin.health.ReactiveHealthPingCheck
 import java.time.Duration
 
 @Configuration
@@ -20,12 +20,12 @@ class SentencingConfiguration(
 ) {
 
   @Bean
-  fun sentenceAdjustmentsApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(sentenceAdjustmentsUrl, healthTimeout)
+  fun sentenceAdjustmentsApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(sentenceAdjustmentsUrl, healthTimeout)
 
   @Bean
   fun sentenceAdjustmentsApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.authorisedWebClient(authorizedClientManager, registrationId = "sentence-adjustments-api", url = sentenceAdjustmentsUrl, timeout)
+    builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "sentence-adjustments-api", url = sentenceAdjustmentsUrl, timeout)
 
   @Component("sentenceAdjustmentsApi")
-  class SentenceAdjustmentsApiHealth(@Qualifier("sentenceAdjustmentsApiHealthWebClient") webClient: WebClient) : HealthCheck(webClient)
+  class SentenceAdjustmentsApiHealth(@Qualifier("sentenceAdjustmentsApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
 }
