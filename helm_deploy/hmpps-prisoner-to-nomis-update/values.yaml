@@ -194,5 +194,5 @@ generic-prometheus-alerts:
   cronjobTargetOverride: "hmpps-prisoner-to-nomis-update-queue-.*"
 
 cron:
-  allocationReconReportSchedule: "5 23 * * *"
+  allocationReconReportSchedule: "5 7 * * *"
   attendanceReconReportSchedule: "5 1 * * *"
