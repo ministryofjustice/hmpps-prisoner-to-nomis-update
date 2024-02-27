@@ -2,6 +2,7 @@
 
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
+import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -890,6 +891,7 @@ internal class NomisApiServiceTest {
           adjustmentDays = 9,
           adjustmentFromDate = LocalDate.parse("2020-07-19"),
           comment = "Adjusted for remand",
+          sentenceSequence = 3,
         ),
       )
 
@@ -899,6 +901,7 @@ internal class NomisApiServiceTest {
           .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
           .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("9")))
           .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
+          .withRequestBody(matchingJsonPath("sentenceSequence", equalTo("3")))
           .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand"))),
       )
     }
@@ -1076,6 +1079,7 @@ internal class NomisApiServiceTest {
           .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
           .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("9")))
           .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
+          .withRequestBody(matchingJsonPath("sentenceSequence", absent()))
           .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand"))),
       )
     }
@@ -1805,12 +1809,14 @@ private fun updateSentencingAdjustment(
   adjustmentFromDate: LocalDate? = null,
   adjustmentDays: Long = 99,
   comment: String? = "Adjustment comment",
+  sentenceSequence: Int? = null,
 ) = UpdateSentencingAdjustmentRequest(
   adjustmentTypeCode = adjustmentTypeCode,
   adjustmentDate = adjustmentDate,
   adjustmentFromDate = adjustmentFromDate,
   adjustmentDays = adjustmentDays,
   comment = comment,
+  sentenceSequence = sentenceSequence,
 )
 
 private fun newAdjudication() = CreateAdjudicationRequest(

@@ -802,6 +802,7 @@ data class UpdateSentencingAdjustmentRequest(
   @JsonFormat(pattern = "yyyy-MM-dd")
   val adjustmentFromDate: LocalDate?,
   val adjustmentDays: Long,
+  val sentenceSequence: Int?,
   val comment: String?,
 )
 

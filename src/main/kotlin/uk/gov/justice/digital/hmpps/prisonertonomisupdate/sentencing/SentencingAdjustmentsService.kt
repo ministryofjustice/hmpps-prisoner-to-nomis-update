@@ -116,6 +116,7 @@ class SentencingAdjustmentsService(
       adjustmentFromDate = adjustment.adjustmentFromDate,
       adjustmentDays = adjustment.adjustmentDays.toLong(),
       comment = adjustment.comment,
+      sentenceSequence = adjustment.sentenceSequence,
     ).run {
       if (adjustment.sentenceSequence == null) {
         nomisApiService.updateKeyDateAdjustment(
