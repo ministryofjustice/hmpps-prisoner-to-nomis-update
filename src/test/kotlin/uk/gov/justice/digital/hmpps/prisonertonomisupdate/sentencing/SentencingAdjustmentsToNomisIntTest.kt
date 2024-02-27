@@ -819,6 +819,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
                 .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
                 .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
+                .withRequestBody(matchingJsonPath("sentenceSequence", equalTo("$sentenceSequence")))
                 .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand"))),
             )
           }
