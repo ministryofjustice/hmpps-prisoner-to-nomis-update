@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseRequest
@@ -55,7 +56,13 @@ class CourtSentencingService(
         CourtCaseMappingDto(
           nomisCourtCaseId = nomisResponse.id,
           dpsCourtCaseId = courtCaseId,
-          // todo court appearance mappings
+          // expecting a court case with 1 court appearance - separate event for subsequent appearances
+          courtAppearances = listOf(
+            CourtAppearanceMappingDto(
+              dpsCourtAppearanceId = courtCase.latestAppearance.appearanceUuid.toString(),
+              nomisCourtAppearanceId = nomisResponse.courtAppearanceIds.first().id,
+            ),
+          ),
         )
       }
       saveMapping { courtCaseMappingService.createMapping(it) }

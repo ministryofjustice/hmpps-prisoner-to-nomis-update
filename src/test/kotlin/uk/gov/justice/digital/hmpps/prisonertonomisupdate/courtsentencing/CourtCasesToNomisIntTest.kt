@@ -23,6 +23,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExten
 
 private const val COURT_CASE_ID_FOR_CREATION = "12345"
 private const val NOMIS_COURT_CASE_ID_FOR_CREATION = 7L
+private const val DPS_COURT_APPEARANCE_ID = "9c591b18-642a-484a-a967-2d17b5c9c5a1"
+private const val NOMIS_COURT_APPEARANCE_ID = 3L
 private const val OFFENDER_NO = "AB12345"
 private const val PRISON_ID = "MDI"
 
@@ -37,10 +39,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         CourtSentencingApiExtension.courtSentencingApi.stubCourtCaseGet(
           COURT_CASE_ID_FOR_CREATION,
           offenderNo = OFFENDER_NO,
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
         )
         NomisApiExtension.nomisApi.stubCourtCaseCreate(
           OFFENDER_NO,
-          """{ "id": 7, "courtAppearanceIds": [{"id": 3, "courtEventChargesIds": [{"id": 5 }] }] }""",
+          """{ "id": 7, "courtAppearanceIds": [{"id": $NOMIS_COURT_APPEARANCE_ID, "courtEventChargesIds": [{"id": 5 }] }] }""",
         )
         MappingExtension.mappingServer.stubGetCreateCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
         MappingExtension.mappingServer.stubCreateCourtCase()
@@ -64,6 +67,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["mappingType"]).isEqualTo(CourtCaseMapping.MappingType.DPS_CREATED.toString())
+            Assertions.assertThat(it["courtAppearances"]).contains("dpsCourtAppearanceId=$DPS_COURT_APPEARANCE_ID")
+            Assertions.assertThat(it["courtAppearances"]).contains("nomisCourtAppearanceId=$NOMIS_COURT_APPEARANCE_ID")
           },
           isNull(),
         )
@@ -134,6 +139,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         CourtSentencingApiExtension.courtSentencingApi.stubCourtCaseGet(
           COURT_CASE_ID_FOR_CREATION,
           offenderNo = OFFENDER_NO,
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
         )
         NomisApiExtension.nomisApi.stubCourtCaseCreate(
           OFFENDER_NO,
