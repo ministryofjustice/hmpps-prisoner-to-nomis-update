@@ -24,7 +24,12 @@ class AdjudicationsConfiguration(
 
   @Bean
   fun adjudicationsApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "adjudications-api", url = adjudicationsUrl, timeout)
+    builder.reactiveAuthorisedWebClient(
+      authorizedClientManager = authorizedClientManager,
+      registrationId = "adjudications-api",
+      url = adjudicationsUrl,
+      timeout = timeout,
+    )
 
   @Component("adjudicationsApi")
   class AdjudicationsApiHealth(@Qualifier("adjudicationsApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)

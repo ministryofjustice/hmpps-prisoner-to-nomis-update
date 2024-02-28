@@ -24,7 +24,12 @@ class LocationsConfiguration(
 
   @Bean
   fun locationsApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "locations-api", url = baseUrl, timeout)
+    builder.reactiveAuthorisedWebClient(
+      authorizedClientManager = authorizedClientManager,
+      registrationId = "locations-api",
+      url = baseUrl,
+      timeout = timeout,
+    )
 
   @Component("locationsApi")
   class LocationsApiHealth(@Qualifier("locationsApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)

@@ -23,14 +23,24 @@ class WebClientConfiguration(
 
   @Bean
   fun nomisApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "nomis-api", url = nomisApiBaseUri, timeout)
+    builder.reactiveAuthorisedWebClient(
+      authorizedClientManager = authorizedClientManager,
+      registrationId = "nomis-api",
+      url = nomisApiBaseUri,
+      timeout = timeout,
+    )
 
   @Bean
   fun mappingHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(mappingBaseUri, healthTimeout)
 
   @Bean
   fun mappingWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "mapping-api", url = mappingBaseUri, timeout)
+    builder.reactiveAuthorisedWebClient(
+      authorizedClientManager = authorizedClientManager,
+      registrationId = "mapping-api",
+      url = mappingBaseUri,
+      timeout = timeout,
+    )
 
   @Bean
   fun hmppsAuthApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(oauthApiBaseUri, healthTimeout)

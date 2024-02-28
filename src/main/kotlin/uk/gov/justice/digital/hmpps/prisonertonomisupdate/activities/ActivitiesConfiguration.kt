@@ -24,7 +24,12 @@ class ActivitiesConfiguration(
 
   @Bean
   fun activitiesApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "activities-api", url = baseUrl, timeout)
+    builder.reactiveAuthorisedWebClient(
+      authorizedClientManager = authorizedClientManager,
+      registrationId = "activities-api",
+      url = baseUrl,
+      timeout = timeout,
+    )
 
   @Component("activitiesApi")
   class ActivitiesApiHealth(@Qualifier("activitiesApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
