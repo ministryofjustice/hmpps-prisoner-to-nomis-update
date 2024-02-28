@@ -12,7 +12,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: ${api.base.url.oauth}/.well-known/jwks.json
+          jwk-set-uri: ${api.base.url.hmpps-auth}/.well-known/jwks.json
 
       client:
         registration:
@@ -73,7 +73,7 @@ spring:
             authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
-            token-uri: ${api.base.url.oauth}/oauth/token
+            token-uri: ${api.base.url.hmpps-auth}/oauth/token
 
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"

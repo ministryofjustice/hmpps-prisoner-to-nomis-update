@@ -7,9 +7,9 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.authorisedWebClient
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.healthWebClient
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.health.HealthCheck
+import uk.gov.justice.hmpps.kotlin.auth.reactiveAuthorisedWebClient
+import uk.gov.justice.hmpps.kotlin.auth.reactiveHealthWebClient
+import uk.gov.justice.hmpps.kotlin.health.ReactiveHealthPingCheck
 import java.time.Duration
 
 @Configuration
@@ -20,12 +20,17 @@ class IncentivesConfiguration(
 ) {
 
   @Bean
-  fun incentivesApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(baseUrl, healthTimeout)
+  fun incentivesApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(baseUrl, healthTimeout)
 
   @Bean
   fun incentivesApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.authorisedWebClient(authorizedClientManager, registrationId = "incentives-api", url = baseUrl, timeout)
+    builder.reactiveAuthorisedWebClient(
+      authorizedClientManager = authorizedClientManager,
+      registrationId = "incentives-api",
+      url = baseUrl,
+      timeout = timeout,
+    )
 
   @Component("incentivesApi")
-  class IncentivesApiHealth(@Qualifier("incentivesApiHealthWebClient") webClient: WebClient) : HealthCheck(webClient)
+  class IncentivesApiHealth(@Qualifier("incentivesApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
 }

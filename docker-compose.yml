@@ -14,7 +14,7 @@ services:
       - SERVER_PORT=8080
       - SPRING_PROFILES_ACTIVE=dev
       - HMPPS_SQS_LOCALSTACK_URL=http://localstack:4566
-      - API_BASE_URL_OAUTH=http://hmpps-auth:8080/auth
+      - API_BASE_URL_HMPPS_AUTH=http://hmpps-auth:8080/auth
       - API_BASE_URL_NOMIS=http://hmpps-nomis-prisoner-api:8080
       - API_BASE_URL_VISITS=http://hmpps-prisoner-to-nomis-update:8080
       - API_BASE_URL_VISIT_MAPPING=http://hmpps-nomis-visit-mapping-api:8080
@@ -44,7 +44,7 @@ services:
     environment:
       - SERVER_PORT=8080
       - SPRING_PROFILES_ACTIVE=dev
-      - API_BASE_URL_OAUTH=http://hmpps-auth:8080/auth
+      - API_BASE_URL_HMPPS_AUTH=http://hmpps-auth:8080/auth
       - API_BASE_URL_NOMIS=http://hmpps-nomis-prisoner-api:8080
       - API_BASE_URL_VISITS=http://hmpps-visits-api:8080
       - API_BASE_URL_MAPPING=http://hmpps-nomis-visit-mapping-api:8080
@@ -63,7 +63,7 @@ services:
       - SPRING_PROFILES_ACTIVE=dev
       - SPRING_FLYWAY_URL=jdbc:postgresql://mapping-db:5432/mapping?sslmode=prefer
       - SPRING_R2DBC_URL=r2dbc:postgresql://mapping-db:5432/mapping?sslmode=prefer
-      - API_BASE_URL_OAUTH=http:/hmpps-auth:8080/auth
+      - API_BASE_URL_HMPPS_AUTH=http:/hmpps-auth:8080/auth
 
   localstack:
     image: localstack/localstack:2.3
