@@ -44,7 +44,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
         NomisApiExtension.nomisApi.stubCourtCaseCreate(
           OFFENDER_NO,
-          """{ "id": 7, "courtAppearanceIds": [{"id": $NOMIS_COURT_APPEARANCE_ID, "nextCourtAppearanceId": $NOMIS_NEXT_COURT_APPEARANCE_ID, "courtEventChargesIds": [{"id": 5 }] }] }""",
+          """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION, "courtAppearanceIds": [{"id": $NOMIS_COURT_APPEARANCE_ID, "nextCourtAppearanceId": $NOMIS_NEXT_COURT_APPEARANCE_ID, "courtEventChargesIds": [{"id": 5 }] }] }""",
         )
         MappingExtension.mappingServer.stubGetCreateCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
         MappingExtension.mappingServer.stubCreateCourtCase()
@@ -204,7 +204,14 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                   WireMock.equalTo(COURT_CASE_ID_FOR_CREATION.toString()),
                 ),
               )
-              .withRequestBody(WireMock.matchingJsonPath("nomisCourtCaseId", WireMock.equalTo("7"))),
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "nomisCourtCaseId",
+                  WireMock.equalTo(
+                    NOMIS_COURT_CASE_ID_FOR_CREATION.toString(),
+                  ),
+                ),
+              ),
           )
         }
         await untilAsserted {
