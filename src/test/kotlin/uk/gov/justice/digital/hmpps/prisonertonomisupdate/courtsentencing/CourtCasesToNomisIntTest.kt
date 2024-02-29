@@ -25,6 +25,7 @@ private const val COURT_CASE_ID_FOR_CREATION = "12345"
 private const val NOMIS_COURT_CASE_ID_FOR_CREATION = 7L
 private const val DPS_COURT_APPEARANCE_ID = "9c591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val NOMIS_COURT_APPEARANCE_ID = 3L
+private const val NOMIS_NEXT_COURT_APPEARANCE_ID = 9L
 private const val OFFENDER_NO = "AB12345"
 private const val PRISON_ID = "MDI"
 
@@ -43,7 +44,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
         NomisApiExtension.nomisApi.stubCourtCaseCreate(
           OFFENDER_NO,
-          """{ "id": 7, "courtAppearanceIds": [{"id": $NOMIS_COURT_APPEARANCE_ID, "courtEventChargesIds": [{"id": 5 }] }] }""",
+          """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION, "courtAppearanceIds": [{"id": $NOMIS_COURT_APPEARANCE_ID, "nextCourtAppearanceId": $NOMIS_NEXT_COURT_APPEARANCE_ID, "courtEventChargesIds": [{"id": 5 }] }] }""",
         )
         MappingExtension.mappingServer.stubGetCreateCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
         MappingExtension.mappingServer.stubCreateCourtCase()
@@ -93,7 +94,30 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                   WireMock.equalTo(COURT_CASE_ID_FOR_CREATION.toString()),
                 ),
               )
-              .withRequestBody(WireMock.matchingJsonPath("nomisCourtCaseId", WireMock.equalTo("7"))),
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "nomisCourtCaseId",
+                  WireMock.equalTo(
+                    NOMIS_COURT_CASE_ID_FOR_CREATION.toString(),
+                  ),
+                ),
+              )
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "courtAppearances[0].nomisCourtAppearanceId",
+                  WireMock.equalTo(
+                    NOMIS_COURT_APPEARANCE_ID.toString(),
+                  ),
+                ),
+              )
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "courtAppearances[0].nomisNextCourtAppearanceId",
+                  WireMock.equalTo(
+                    NOMIS_NEXT_COURT_APPEARANCE_ID.toString(),
+                  ),
+                ),
+              ),
           )
         }
         await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -143,7 +167,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
         NomisApiExtension.nomisApi.stubCourtCaseCreate(
           OFFENDER_NO,
-          """{ "id": 7, "courtAppearanceIds": [{"id": 3, "courtEventChargesIds": [{"id": 5 }] }] }""",
+          """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION, "courtAppearanceIds": [{"id": $NOMIS_COURT_APPEARANCE_ID, "courtEventChargesIds": [{"id": 5 }] }] }""",
         )
         MappingExtension.mappingServer.stubGetCreateCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
         MappingExtension.mappingServer.stubCreateCourtCaseWithErrorFollowedBySlowSuccess()
@@ -180,7 +204,14 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                   WireMock.equalTo(COURT_CASE_ID_FOR_CREATION.toString()),
                 ),
               )
-              .withRequestBody(WireMock.matchingJsonPath("nomisCourtCaseId", WireMock.equalTo("7"))),
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "nomisCourtCaseId",
+                  WireMock.equalTo(
+                    NOMIS_COURT_CASE_ID_FOR_CREATION.toString(),
+                  ),
+                ),
+              ),
           )
         }
         await untilAsserted {

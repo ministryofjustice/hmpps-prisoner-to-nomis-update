@@ -6,7 +6,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
@@ -53,7 +53,7 @@ class CourtSentencingService(
         val nomisResponse =
           nomisApiService.createCourtCase(offenderNo, courtCase.toNomisCourtCase())
 
-        CourtCaseMappingDto(
+        CourtCaseAllMappingDto(
           nomisCourtCaseId = nomisResponse.id,
           dpsCourtCaseId = courtCaseId,
           // expecting a court case with 1 court appearance - separate event for subsequent appearances
@@ -61,15 +61,17 @@ class CourtSentencingService(
             CourtAppearanceMappingDto(
               dpsCourtAppearanceId = courtCase.latestAppearance.appearanceUuid.toString(),
               nomisCourtAppearanceId = nomisResponse.courtAppearanceIds.first().id,
+              nomisNextCourtAppearanceId = nomisResponse.courtAppearanceIds.first().nextCourtAppearanceId,
             ),
           ),
+          courtCharges = listOf(),
         )
       }
       saveMapping { courtCaseMappingService.createMapping(it) }
     }
   }
 
-  suspend fun createRetry(message: CreateMappingRetryMessage<CourtCaseMappingDto>) =
+  suspend fun createRetry(message: CreateMappingRetryMessage<CourtCaseAllMappingDto>) =
     courtCaseMappingService.createMapping(message.mapping).also {
       telemetryClient.trackEvent(
         "court-case-create-mapping-retry-success",
