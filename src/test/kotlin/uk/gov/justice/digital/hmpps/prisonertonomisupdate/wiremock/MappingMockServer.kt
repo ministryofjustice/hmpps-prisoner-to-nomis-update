@@ -1354,8 +1354,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
                 "dpsCourtCaseId": $id,
                 "nomisCourtCaseId": $nomisCourtCaseId,
                 "mappingType": "${CourtCaseMapping.MappingType.DPS_CREATED}",
-                "whenCreated": "2021-07-05T10:35:17",
-                "courtAppearances": []
+                "whenCreated": "2021-07-05T10:35:17"
               }
             
             """.trimIndent(),
