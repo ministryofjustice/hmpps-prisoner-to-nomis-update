@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-02-26.3758.3931115"
+    "version": "2024-02-29.3796.a1b89fe"
   },
   "servers": [
     {
@@ -963,13 +963,13 @@
           "court-sentencing-mapping-resource"
         ],
         "summary": "Creates a new court case hierarchical mapping",
-        "description": "Creates a mapping between nomis Court Case ID and DPS Court Case ID, plus child Court appearances Requires ROLE_NOMIS_COURT_SENTENCING",
+        "description": "Creates a mapping between nomis Court Case ID and DPS Court Case ID. Also maps child entities: Court appearances and charges. Requires ROLE_NOMIS_COURT_SENTENCING",
         "operationId": "createMapping_7",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CourtCaseMappingDto"
+                "$ref": "#/components/schemas/CourtCaseAllMappingDto"
               }
             }
           },
@@ -5254,14 +5254,20 @@
         "properties": {
           "nomisCourtAppearanceId": {
             "type": "integer",
-            "description": "NOMIS court case id",
+            "description": "NOMIS court appearance id",
             "format": "int64",
             "example": 123456
           },
           "dpsCourtAppearanceId": {
             "type": "string",
-            "description": "DPS court case id",
+            "description": "DPS court appearance id",
             "example": "123456"
+          },
+          "nomisNextCourtAppearanceId": {
+            "type": "integer",
+            "description": "optional NOMIS next court appearance id",
+            "format": "int64",
+            "example": 123456
           },
           "label": {
             "maxLength": 20,
@@ -5287,9 +5293,10 @@
         },
         "description": "Court appearance mapping"
       },
-      "CourtCaseMappingDto": {
+      "CourtCaseAllMappingDto": {
         "required": [
           "courtAppearances",
+          "courtCharges",
           "dpsCourtCaseId",
           "nomisCourtCaseId"
         ],
@@ -5311,6 +5318,13 @@
             "description": "Court Appearance mappings",
             "items": {
               "$ref": "#/components/schemas/CourtAppearanceMappingDto"
+            }
+          },
+          "courtCharges": {
+            "type": "array",
+            "description": "Court Charge mappings",
+            "items": {
+              "$ref": "#/components/schemas/CourtChargeMappingDto"
             }
           },
           "label": {
@@ -5335,7 +5349,49 @@
             "example": "2021-07-05T10:35:17"
           }
         },
-        "description": "Court case mapping"
+        "description": "Court case mapping including child entity mapping"
+      },
+      "CourtChargeMappingDto": {
+        "required": [
+          "dpsCourtChargeId",
+          "nomisCourtChargeId"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisCourtChargeId": {
+            "type": "integer",
+            "description": "NOMIS court charge id",
+            "format": "int64",
+            "example": 123456
+          },
+          "dpsCourtChargeId": {
+            "type": "string",
+            "description": "DPS court charge id",
+            "example": "123456"
+          },
+          "label": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "Mapping type",
+            "default": "DPS_CREATED",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date-time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "Court Charge mapping"
       },
       "CourtCaseMapping": {
         "required": [
@@ -5396,6 +5452,10 @@
             "type": "string"
           },
           "nomisCourtAppearanceId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nomisNextCourtAppearanceId": {
             "type": "integer",
             "format": "int64"
           },
@@ -5728,6 +5788,48 @@
             }
           }
         }
+      },
+      "CourtCaseMappingDto": {
+        "required": [
+          "dpsCourtCaseId",
+          "nomisCourtCaseId"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisCourtCaseId": {
+            "type": "integer",
+            "description": "NOMIS court case id",
+            "format": "int64",
+            "example": 123456
+          },
+          "dpsCourtCaseId": {
+            "type": "string",
+            "description": "DPS court case id",
+            "example": "123456"
+          },
+          "label": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "Mapping type",
+            "default": "DPS_CREATED",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date-time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "Court case mapping"
       }
     },
     "securitySchemes": {

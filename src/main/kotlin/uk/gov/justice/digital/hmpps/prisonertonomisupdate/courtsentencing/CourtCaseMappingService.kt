@@ -6,6 +6,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
 
 @Service
@@ -13,7 +14,7 @@ class CourtCaseMappingService(
   @Qualifier("mappingWebClient") private val webClient: WebClient,
 ) {
 
-  suspend fun createMapping(request: CourtCaseMappingDto) {
+  suspend fun createMapping(request: CourtCaseAllMappingDto) {
     webClient.post()
       .uri("/mapping/court-sentencing/court-cases")
       .bodyValue(request)
