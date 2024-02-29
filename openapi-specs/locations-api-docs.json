@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-02-22.424.449c708"
+    "version": "2024-02-28.524.f7ba60a"
   },
   "servers": [
     {
@@ -372,14 +372,14 @@
         }
       }
     },
-    "/migrate": {
+    "/migrate/location": {
       "post": {
         "tags": [
           "Migrate"
         ],
         "summary": "Migrate a location",
         "description": "Requires role MIGRATE_LOCATIONS and write scope",
-        "operationId": "migrate",
+        "operationId": "migrateLocation",
         "requestBody": {
           "content": {
             "application/json": {
@@ -397,6 +397,92 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the MIGRATE_LOCATIONS role with write scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/migrate/location/{id}/history": {
+      "post": {
+        "tags": [
+          "Migrate"
+        ],
+        "summary": "Migrate a location history",
+        "description": "Requires role MIGRATE_LOCATIONS and write scope",
+        "operationId": "migrateHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The location Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The location Id",
+              "example": "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+            },
+            "example": "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MigrateHistoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Migrated history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeHistory"
                 }
               }
             }
@@ -631,6 +717,15 @@
           },
           {
             "name": "includeChildren",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "includeHistory",
             "in": "query",
             "required": false,
             "schema": {
@@ -1073,6 +1168,15 @@
               "type": "boolean",
               "default": false
             }
+          },
+          {
+            "name": "includeHistory",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
@@ -1492,6 +1596,43 @@
         },
         "description": "Certification"
       },
+      "ChangeHistory": {
+        "required": [
+          "amendedBy",
+          "amendedDate",
+          "attribute"
+        ],
+        "type": "object",
+        "properties": {
+          "attribute": {
+            "type": "string",
+            "description": "Location Attribute",
+            "example": "Location Type"
+          },
+          "oldValue": {
+            "type": "string",
+            "description": "Previous value of this attribute",
+            "example": "CELL"
+          },
+          "newValue": {
+            "type": "string",
+            "description": "New value of this attribute",
+            "example": "WING"
+          },
+          "amendedBy": {
+            "type": "string",
+            "description": "User who made the change",
+            "example": "user"
+          },
+          "amendedDate": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date the change was made",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "Change History"
+      },
       "Location": {
         "required": [
           "active",
@@ -1768,6 +1909,13 @@
               "$ref": "#/components/schemas/Location"
             }
           },
+          "changeHistory": {
+            "type": "array",
+            "description": "History of changes",
+            "items": {
+              "$ref": "#/components/schemas/ChangeHistory"
+            }
+          },
           "key": {
             "type": "string",
             "description": "Business Key for a location",
@@ -1849,7 +1997,6 @@
       "UpsertLocationRequest": {
         "required": [
           "code",
-          "lastModifiedDate",
           "lastUpdatedBy",
           "locationType",
           "prisonId"
@@ -2067,18 +2214,81 @@
               "$ref": "#/components/schemas/NonResidentialUsageDto"
             }
           },
+          "createDate": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date location was created, if not provided then the current time will be used for a new location",
+            "example": "2021-07-05T10:35:17"
+          },
           "lastModifiedDate": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
-            "description": "Location Usage",
+            "description": "Last updated, if not provided then the current time will be used",
             "example": "2021-07-05T10:35:17"
           },
           "lastUpdatedBy": {
             "type": "string",
-            "description": "Location Usage"
+            "description": "Username of the staff updating the location"
           }
         },
         "description": "Request to upsert a location"
+      },
+      "MigrateHistoryRequest": {
+        "required": [
+          "amendedBy",
+          "amendedDate",
+          "attribute"
+        ],
+        "type": "object",
+        "properties": {
+          "attribute": {
+            "type": "string",
+            "description": "Location Attribute",
+            "example": "CAPACITY",
+            "enum": [
+              "CODE",
+              "LOCATION_TYPE",
+              "RESIDENTIAL_HOUSING_TYPE",
+              "OPERATIONAL_CAPACITY",
+              "CAPACITY",
+              "CERTIFIED_CAPACITY",
+              "CERTIFIED",
+              "PARENT_LOCATION",
+              "ORDER_WITHIN_PARENT_LOCATION",
+              "COMMENTS",
+              "DESCRIPTION",
+              "ATTRIBUTES",
+              "USAGE",
+              "NON_RESIDENTIAL_CAPACITY",
+              "ACTIVE",
+              "DEACTIVATED_DATE",
+              "DEACTIVATED_REASON",
+              "PROPOSED_REACTIVATION_DATE"
+            ]
+          },
+          "oldValue": {
+            "type": "string",
+            "description": "Previous value of this attribute, null if NEW",
+            "example": "2"
+          },
+          "newValue": {
+            "type": "string",
+            "description": "New value of this attribute, null if REMOVED",
+            "example": "1"
+          },
+          "amendedBy": {
+            "type": "string",
+            "description": "User who made the change",
+            "example": "username"
+          },
+          "amendedDate": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date the change was made",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "Request to migrate a location's history"
       },
       "CreateResidentialLocationRequest": {
         "required": [
@@ -2586,6 +2796,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "paged": {
+            "type": "boolean"
+          },
+          "unpaged": {
+            "type": "boolean"
+          },
           "pageSize": {
             "type": "integer",
             "format": "int32"
@@ -2593,12 +2809,6 @@
           "pageNumber": {
             "type": "integer",
             "format": "int32"
-          },
-          "unpaged": {
-            "type": "boolean"
-          },
-          "paged": {
-            "type": "boolean"
           }
         }
       },

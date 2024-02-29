@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-02-20.MANUAL"
+    "version": "2024-02-27.6726.e6a2a17"
   },
   "servers": [
     {
@@ -8758,6 +8758,30 @@
         },
         "description": "Offender NonAssociation update request"
       },
+      "ProfileRequest": {
+        "required": [
+          "profileCode",
+          "profileType"
+        ],
+        "type": "object",
+        "properties": {
+          "profileType": {
+            "type": "string",
+            "description": "Reference Domain for the attribute",
+            "enum": [
+              "HOU_SANI_FIT",
+              "HOU_UNIT_ATT",
+              "HOU_USED_FOR",
+              "SUP_LVL_TYPE"
+            ]
+          },
+          "profileCode": {
+            "type": "string",
+            "description": "Reference Code within the domain for the attribute"
+          }
+        },
+        "description": "Location profile or attribute"
+      },
       "UpdateLocationRequest": {
         "required": [
           "description",
@@ -8860,13 +8884,109 @@
             "type": "string",
             "description": "Comment",
             "example": "Some comment"
+          },
+          "profiles": {
+            "type": "array",
+            "description": "Profiles",
+            "items": {
+              "$ref": "#/components/schemas/ProfileRequest"
+            }
+          },
+          "usages": {
+            "type": "array",
+            "description": "Usages",
+            "items": {
+              "$ref": "#/components/schemas/UsageRequest"
+            }
           }
         },
         "description": "Location update request"
       },
+      "UsageRequest": {
+        "required": [
+          "internalLocationUsageType"
+        ],
+        "type": "object",
+        "properties": {
+          "internalLocationUsageType": {
+            "type": "string",
+            "description": "Types of location that the usage applies to",
+            "enum": [
+              "APP",
+              "MOVEMENT",
+              "OCCUR",
+              "OIC",
+              "OTHER",
+              "PROG",
+              "PROP",
+              "VISIT"
+            ]
+          },
+          "usageLocationType": {
+            "type": "string",
+            "description": "Non-residential usage type",
+            "enum": [
+              "ADJU",
+              "ADMI",
+              "APP",
+              "AREA",
+              "ASSO",
+              "BOOT",
+              "BOX",
+              "CELL",
+              "CLAS",
+              "EXER",
+              "EXTE",
+              "FAIT",
+              "GROU",
+              "HCEL",
+              "HOLD",
+              "IGRO",
+              "INSI",
+              "INTE",
+              "LAND",
+              "LOCA",
+              "MEDI",
+              "MOVE",
+              "OFFI",
+              "OUTS",
+              "POSI",
+              "RESI",
+              "ROOM",
+              "RTU",
+              "SHEL",
+              "SPOR",
+              "SPUR",
+              "STOR",
+              "TABL",
+              "TRAI",
+              "TRRM",
+              "VIDE",
+              "VISIT",
+              "WING",
+              "WORK"
+            ]
+          },
+          "capacity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sequence": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "Location usage"
+      },
       "DeactivateRequest": {
         "type": "object",
         "properties": {
+          "deactivateDate": {
+            "type": "string",
+            "description": "The deactivation date, defaults to today",
+            "format": "date",
+            "example": "2024-12-31"
+          },
           "reasonCode": {
             "type": "string",
             "description": "The reason code for deactivation, reference data 'LIV_UN_RSN'",
@@ -11414,6 +11534,20 @@
             "type": "string",
             "description": "Comment",
             "example": "Some comment"
+          },
+          "profiles": {
+            "type": "array",
+            "description": "Profiles",
+            "items": {
+              "$ref": "#/components/schemas/ProfileRequest"
+            }
+          },
+          "usages": {
+            "type": "array",
+            "description": "Usages",
+            "items": {
+              "$ref": "#/components/schemas/UsageRequest"
+            }
           }
         },
         "description": "Location creation request"
@@ -11941,6 +12075,12 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -11957,12 +12097,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -12374,6 +12508,12 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -12390,12 +12530,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -12871,6 +13005,12 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -12887,12 +13027,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -13556,6 +13690,12 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -13572,12 +13712,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -13688,6 +13822,12 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -13704,12 +13844,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -14065,6 +14199,12 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -14081,12 +14221,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -14131,6 +14265,12 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -14147,12 +14287,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -14405,6 +14539,12 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -14421,12 +14561,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -14731,6 +14865,12 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -14747,12 +14887,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -14796,6 +14930,12 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -14812,12 +14952,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -14867,6 +15001,12 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -14883,12 +15023,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -15172,6 +15306,12 @@
             "type": "integer",
             "format": "int64"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -15188,12 +15328,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",

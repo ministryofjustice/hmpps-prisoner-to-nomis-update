@@ -1,6 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations
 
-import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -47,6 +53,13 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         "certified": true,
         "capacityOfCertifiedCell": 1
       },
+      "attributes": [ "FEMALE_SEMI", "NON_SMOKER_CELL" ],
+      "usage": [
+        { "usageType": "APPOINTMENT", "capacity": 3, "sequence": 1  },
+        { "usageType": "VISIT",       "capacity": 3, "sequence": 2  },
+        { "usageType": "MOVEMENT",    "sequence": 3  },
+        { "usageType": "OCCURRENCE",  "sequence": 4  }
+      ],
       "orderWithinParentLocation": 1,
       "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",
       "parentId": "$PARENT_ID",
@@ -89,7 +102,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will callback back to location service to get more details`() {
         waitForCreateProcessingToBeComplete()
 
-        locationsApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/locations/$DPS_ID")))
+        locationsApi.verify(getRequestedFor(urlEqualTo("/locations/$DPS_ID")))
       }
 
       @Test
@@ -99,7 +112,8 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         verify(telemetryClient).trackEvent(
           eq("location-create-success"),
           org.mockito.kotlin.check {
-            assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+            assertThat(it["dpsLocationId"]).isEqualTo(DPS_ID)
+            assertThat(it["nomisLocationId"]).isEqualTo(NOMIS_ID.toString())
             assertThat(it["key"]).isEqualTo("MDI-A-1-001")
             assertThat(it["prisonId"]).isEqualTo("MDI")
           },
@@ -111,7 +125,40 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to create the location`() {
         waitForCreateProcessingToBeComplete()
 
-        nomisApi.verify(WireMock.postRequestedFor(WireMock.urlEqualTo("/locations")))
+        nomisApi.verify(
+          postRequestedFor(urlEqualTo("/locations"))
+            .withRequestBody(
+              equalToJson(
+                """
+                {
+                  "certified" : true,
+                  "locationType" : "CELL",
+                  "prisonId" : "MDI",
+                  "locationCode" : "001",
+                  "description" : "MDI-A-1-001",
+                  "parentLocationId" : 12345678,
+                  "operationalCapacity" : 2,
+                  "cnaCapacity" : 1,
+                  "userDescription" : "Wing A",
+                  "unitType" : null,
+                  "capacity" : 2,
+                  "listSequence" : 1,
+                  "comment" : "Not to be used",
+                  "profiles" : [
+                    { "profileType" : "SUP_LVL_TYPE", "profileCode" : "S" },
+                    { "profileType" : "HOU_UNIT_ATT", "profileCode" : "NSMC" }
+                  ],
+                  "usages" : [
+                    { "internalLocationUsageType": "APP",      "usageLocationType" : null, "capacity": 3, "sequence": 1 },
+                    { "internalLocationUsageType": "VISIT",    "usageLocationType" : null, "capacity": 3, "sequence": 2 },
+                    { "internalLocationUsageType": "MOVEMENT", "usageLocationType" : null, "capacity" : null, "sequence": 3 },
+                    { "internalLocationUsageType": "OCCUR",    "usageLocationType" : null, "capacity" : null, "sequence": 4 }
+                  ]
+                }
+                """.trimIndent(),
+              ),
+            ),
+        )
       }
 
       @Test
@@ -120,12 +167,84 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
 
         await untilAsserted {
           mappingServer.verify(
-            WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/locations"))
-              .withRequestBody(WireMock.matchingJsonPath("dpsLocationId", WireMock.equalTo(DPS_ID)))
-              .withRequestBody(WireMock.matchingJsonPath("nomisLocationId", WireMock.equalTo(NOMIS_ID.toString()))),
+            postRequestedFor(urlEqualTo("/mapping/locations"))
+              .withRequestBody(matchingJsonPath("dpsLocationId", equalTo(DPS_ID)))
+              .withRequestBody(matchingJsonPath("nomisLocationId", equalTo(NOMIS_ID.toString()))),
           )
         }
         await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+      }
+    }
+
+    @Nested
+    inner class ValidationErrors {
+
+      @Test
+      fun `attribute is invalid`() {
+        val locationApiResponse = """
+          {
+            "id": "$DPS_ID",
+            "prisonId": "MDI",
+            "code": "001",
+            "pathHierarchy": "A-1-001",
+            "locationType": "CELL",
+            "active": true,
+            "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",
+            "parentId": "$PARENT_ID",
+            "key": "MDI-A-1-001",
+            "isResidential": true,
+            "attributes": [ "INVALID" ]
+          }
+        """.trimIndent()
+
+        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        publishLocationDomainEvent("location.inside.prison.created")
+
+        await untilAsserted {
+          verify(telemetryClient, times(3)).trackEvent(
+            eq("location-create-failed"),
+            org.mockito.kotlin.check {
+              assertThat(it["dpsLocationId"]).isEqualTo(DPS_ID)
+              assertThat(it["nomisLocationId"]).isNull()
+              assertThat(it["key"]).isEqualTo("MDI-A-1-001")
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Test
+      fun `usage is invalid`() {
+        val locationApiResponse = """
+          {
+            "id": "$DPS_ID",
+            "prisonId": "MDI",
+            "code": "001",
+            "pathHierarchy": "A-1-001",
+            "locationType": "CELL",
+            "active": true,
+            "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",
+            "parentId": "$PARENT_ID",
+            "key": "MDI-A-1-001",
+            "isResidential": true,
+            "usage": [{ "usageType": "INVALID", "capacity": 3, "sequence": 1 }]
+          }
+        """.trimIndent()
+
+        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        publishLocationDomainEvent("location.inside.prison.created")
+
+        await untilAsserted {
+          verify(telemetryClient, times(3)).trackEvent(
+            eq("location-create-failed"),
+            org.mockito.kotlin.check {
+              assertThat(it["dpsLocationId"]).isEqualTo(DPS_ID)
+              assertThat(it["nomisLocationId"]).isNull()
+              assertThat(it["key"]).isEqualTo("MDI-A-1-001")
+            },
+            isNull(),
+          )
+        }
       }
     }
 
@@ -145,14 +264,14 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         verify(telemetryClient).trackEvent(
           eq("location-create-duplicate"),
           org.mockito.kotlin.check {
-            assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+            assertThat(it["dpsLocationId"]).isEqualTo(DPS_ID)
           },
           isNull(),
         )
 
         nomisApi.verify(
           0,
-          WireMock.postRequestedFor(WireMock.urlEqualTo("/locations")),
+          postRequestedFor(urlEqualTo("/locations")),
         )
       }
     }
@@ -183,7 +302,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         }
         nomisApi.verify(
           1,
-          WireMock.postRequestedFor(WireMock.urlEqualTo("/locations")),
+          postRequestedFor(urlEqualTo("/locations")),
         )
       }
 
@@ -192,9 +311,9 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           mappingServer.verify(
             2,
-            WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/locations"))
-              .withRequestBody(WireMock.matchingJsonPath("dpsLocationId", WireMock.equalTo(DPS_ID)))
-              .withRequestBody(WireMock.matchingJsonPath("nomisLocationId", WireMock.equalTo(NOMIS_ID.toString()))),
+            postRequestedFor(urlEqualTo("/mapping/locations"))
+              .withRequestBody(matchingJsonPath("dpsLocationId", equalTo(DPS_ID)))
+              .withRequestBody(matchingJsonPath("nomisLocationId", equalTo(NOMIS_ID.toString()))),
           )
         }
         await untilAsserted {
@@ -228,7 +347,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to location service to get more details`() {
         await untilAsserted {
-          locationsApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/locations/$DPS_ID")))
+          locationsApi.verify(getRequestedFor(urlEqualTo("/locations/$DPS_ID")))
         }
       }
 
@@ -250,7 +369,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to update the location`() {
         await untilAsserted {
-          nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID")))
+          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID")))
         }
       }
     }
@@ -276,7 +395,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to location service twice to get more details`() {
           await untilAsserted {
-            locationsApi.verify(2, WireMock.getRequestedFor(WireMock.urlEqualTo("/locations/$DPS_ID")))
+            locationsApi.verify(2, getRequestedFor(urlEqualTo("/locations/$DPS_ID")))
             verify(telemetryClient).trackEvent(Mockito.eq("location-amend-success"), any(), isNull())
           }
         }
@@ -284,7 +403,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will eventually update the location in NOMIS`() {
           await untilAsserted {
-            nomisApi.verify(1, WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID")))
+            nomisApi.verify(1, putRequestedFor(urlEqualTo("/locations/$NOMIS_ID")))
             verify(telemetryClient).trackEvent(Mockito.eq("location-amend-failed"), any(), isNull())
             verify(telemetryClient).trackEvent(Mockito.eq("location-amend-success"), any(), isNull())
           }
@@ -306,7 +425,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to location service 3 times before given up`() {
           await untilAsserted {
-            locationsApi.verify(3, WireMock.getRequestedFor(WireMock.urlEqualTo("/locations/$DPS_ID")))
+            locationsApi.verify(3, getRequestedFor(urlEqualTo("/locations/$DPS_ID")))
           }
         }
 
@@ -382,10 +501,10 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api correctly to deactivate the location`() {
         await untilAsserted {
           nomisApi.verify(
-            WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/deactivate"))
-              .withRequestBody(WireMock.matchingJsonPath("reasonCode", WireMock.equalTo("B")))
-              .withRequestBody(WireMock.matchingJsonPath("reactivateDate", WireMock.equalTo("2024-02-14"))),
-            // TODO .withRequestBody(WireMock.matchingJsonPath("deactivateDate", WireMock.equalTo("2024-02-01"))),
+            putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/deactivate"))
+              .withRequestBody(matchingJsonPath("reasonCode", equalTo("B")))
+              .withRequestBody(matchingJsonPath("reactivateDate", equalTo("2024-02-14")))
+              .withRequestBody(matchingJsonPath("deactivateDate", equalTo("2024-02-01"))),
           )
         }
       }
@@ -408,7 +527,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will eventually deactivate the location in NOMIS`() {
           await untilAsserted {
-            nomisApi.verify(2, WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/deactivate")))
+            nomisApi.verify(2, putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/deactivate")))
             verify(telemetryClient).trackEvent(Mockito.eq("location-deactivate-failed"), any(), isNull())
             verify(telemetryClient).trackEvent(Mockito.eq("location-deactivate-success"), any(), isNull())
           }
@@ -465,7 +584,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
           }
           nomisApi.verify(
             0,
-            WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/deactivate")),
+            putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/deactivate")),
           )
         }
       }
@@ -494,7 +613,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
           }
           nomisApi.verify(
             0,
-            WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/deactivate")),
+            putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/deactivate")),
           )
         }
       }
@@ -530,7 +649,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to reactivate the location`() {
         await untilAsserted {
-          nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/reactivate")))
+          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/reactivate")))
         }
       }
     }
@@ -565,7 +684,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to change the capacity`() {
         await untilAsserted {
-          nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/capacity")))
+          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/capacity")))
         }
       }
     }
@@ -600,7 +719,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to change the certification`() {
         await untilAsserted {
-          nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/certification")))
+          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/certification")))
         }
       }
     }
@@ -622,7 +741,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will delete the location in NOMIS`() {
         await untilAsserted {
-          nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/locations/$NOMIS_ID/deactivate")))
+          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/deactivate")))
         }
       }
 
@@ -632,8 +751,8 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
           verify(telemetryClient).trackEvent(
             Mockito.eq("location-delete-success"),
             org.mockito.kotlin.check {
-              assertThat(it["dpsId"]).isEqualTo(DPS_ID)
-              assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+              assertThat(it["dpsLocationId"]).isEqualTo(DPS_ID)
+              assertThat(it["nomisLocationId"]).isEqualTo(NOMIS_ID.toString())
             },
             isNull(),
           )
