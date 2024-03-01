@@ -7,8 +7,10 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.OffenderChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -53,6 +55,7 @@ class CourtSentencingService(
         val nomisResponse =
           nomisApiService.createCourtCase(offenderNo, courtCase.toNomisCourtCase())
 
+        val nomisCourtAppearanceResponse = nomisResponse.courtAppearanceIds.first()
         CourtCaseAllMappingDto(
           nomisCourtCaseId = nomisResponse.id,
           dpsCourtCaseId = courtCaseId,
@@ -60,11 +63,16 @@ class CourtSentencingService(
           courtAppearances = listOf(
             CourtAppearanceMappingDto(
               dpsCourtAppearanceId = courtCase.latestAppearance.appearanceUuid.toString(),
-              nomisCourtAppearanceId = nomisResponse.courtAppearanceIds.first().id,
-              nomisNextCourtAppearanceId = nomisResponse.courtAppearanceIds.first().nextCourtAppearanceId,
+              nomisCourtAppearanceId = nomisCourtAppearanceResponse.id,
+              nomisNextCourtAppearanceId = nomisCourtAppearanceResponse.nextCourtAppearanceId,
             ),
           ),
-          courtCharges = listOf(),
+          courtCharges = courtCase.latestAppearance.charges.mapIndexed { index, dpsCharge ->
+            CourtChargeMappingDto(
+              nomisCourtChargeId = nomisCourtAppearanceResponse.courtEventChargesIds[index].offenderChargeId,
+              dpsCourtChargeId = dpsCharge.chargeUuid.toString(),
+            )
+          },
         )
       }
       saveMapping { courtCaseMappingService.createMapping(it) }
@@ -114,7 +122,17 @@ fun CourtCase.toNomisCourtCase(): CreateCourtCaseRequest = CreateCourtCaseReques
     courtId = this.latestAppearance.courtCode,
     courtEventType = "TBC",
     courtEventChargesToUpdate = listOf(),
-    courtEventChargesToCreate = listOf(),
+    courtEventChargesToCreate = this.latestAppearance.charges.mapIndexed { index, dpsCharge ->
+      OffenderChargeRequest(
+        offenceCode = dpsCharge.offenceCode,
+        offenceDate = dpsCharge.offenceStartDate,
+        offenceEndDate = dpsCharge.offenceEndDate,
+        // TODO dps has text that 'mainly' matches nomis but there are also non-matching values on T3
+        resultCode1 = dpsCharge.outcome,
+        // TODO do dps provide this?
+        mostSeriousFlag = index == 0,
+      )
+    },
   ),
   legalCaseType = "TBC",
   status = "TBC",

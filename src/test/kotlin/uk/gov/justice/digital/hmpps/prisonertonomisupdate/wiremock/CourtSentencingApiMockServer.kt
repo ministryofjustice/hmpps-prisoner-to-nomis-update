@@ -49,7 +49,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubCourtCaseGet(courtCaseId: String, courtAppearanceId: String, offenderNo: String = "A6160DZ") {
+  fun stubCourtCaseGet(courtCaseId: String, courtAppearanceId: String, courtCharge1Id: String, courtCharge2Id: String, offenderNo: String = "A6160DZ") {
     stubFor(
       get(WireMock.urlPathMatching("/court-case/$courtCaseId")).willReturn(
         aResponse()
@@ -76,10 +76,19 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         },
         "charges": [
             {
-                "chargeUuid": "3dc522fb-167d-44b2-932a-d075f8816fae",
+                "chargeUuid": "$courtCharge1Id",
                 "offenceCode": "PS90037",
                 "offenceStartDate": "2024-01-15",
                 "offenceEndDate": null,
+                "outcome": "Remand in Custody (Bail Refused)",
+                "terrorRelated": null,
+                "sentence": null
+            },
+            {
+                "chargeUuid": "$courtCharge2Id",
+                "offenceCode": "PS90090",
+                "offenceStartDate": "2024-01-17",
+                "offenceEndDate": "2024-01-19",
                 "outcome": "Remand in Custody (Bail Refused)",
                 "terrorRelated": null,
                 "sentence": null
@@ -102,15 +111,24 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "appearanceType": "Court appearance"
             },
             "charges": [
-                {
-                    "chargeUuid": "3dc522fb-167d-44b2-932a-d075f8816fae",
-                    "offenceCode": "PS90037",
-                    "offenceStartDate": "2024-01-15",
-                    "offenceEndDate": null,
-                    "outcome": "Remand in Custody (Bail Refused)",
-                    "terrorRelated": null,
-                    "sentence": null
-                }
+              {
+                "chargeUuid": "$courtCharge1Id",
+                "offenceCode": "PS90037",
+                "offenceStartDate": "2024-01-15",
+                "offenceEndDate": null,
+                "outcome": "Remand in Custody (Bail Refused)",
+                "terrorRelated": null,
+                "sentence": null
+              },
+              {
+                  "chargeUuid": "$courtCharge2Id",
+                  "offenceCode": "PS90090",
+                  "offenceStartDate": "2024-01-17",
+                  "offenceEndDate": "2024-01-19",
+                  "outcome": "Remand in Custody (Bail Refused)",
+                  "terrorRelated": null,
+                  "sentence": null
+              }
             ]
         }
     ]
