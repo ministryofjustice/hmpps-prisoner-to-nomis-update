@@ -14,3 +14,4 @@ api.base.url:
   adjudications: http://localhost:8080
   nonAssociations: http://localhost:8080
   court.sentencing: http://localhost:8080
+  alerts: http://localhost:8080

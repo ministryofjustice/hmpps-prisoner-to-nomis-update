@@ -112,6 +112,8 @@ generic-service:
       ADJUDICATIONS_CLIENT_SECRET: "ADJUDICATIONS_CLIENT_SECRET"
       COURT_SENTENCING_CLIENT_ID: "COURT_SENTENCING_CLIENT_ID"
       COURT_SENTENCING_CLIENT_SECRET: "COURT_SENTENCING_CLIENT_SECRET"
+      ALERTS_CLIENT_ID: "ALERTS_CLIENT_ID"
+      ALERTS_CLIENT_SECRET: "ALERTS_CLIENT_SECRET"
     domain-events-sqs-nomis-update-visit:
       HMPPS_SQS_QUEUES_VISIT_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-visit-dlq:
@@ -148,6 +150,10 @@ generic-service:
       HMPPS_SQS_QUEUES_COURTSENTENCING_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-court-sentencing-dlq:
       HMPPS_SQS_QUEUES_COURTSENTENCING_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-alerts:
+      HMPPS_SQS_QUEUES_ALERTS_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-alerts-dlq:
+      HMPPS_SQS_QUEUES_ALERTS_DLQ_NAME: "sqs_queue_name"
 
   allowlist:
     groups:
