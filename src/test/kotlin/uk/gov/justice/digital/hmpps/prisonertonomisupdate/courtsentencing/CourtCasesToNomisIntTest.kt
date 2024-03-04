@@ -50,7 +50,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
         NomisApiExtension.nomisApi.stubCourtCaseCreate(
           OFFENDER_NO,
-          """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION, "courtAppearanceIds": [{"id": $NOMIS_COURT_APPEARANCE_ID, "nextCourtAppearanceId": $NOMIS_NEXT_COURT_APPEARANCE_ID, "courtEventChargesIds": [{"offenderChargeId": $NOMIS_COURT_CHARGE_ID }] }] }""",
+          nomisCourtCaseCreateResponseWithTwoCharges(),
         )
         MappingExtension.mappingServer.stubGetCreateCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
         MappingExtension.mappingServer.stubCreateCourtCase()
@@ -78,6 +78,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             Assertions.assertThat(it["courtAppearances"]).contains("nomisCourtAppearanceId=$NOMIS_COURT_APPEARANCE_ID")
             Assertions.assertThat(it["courtCharges"]).contains("dpsCourtChargeId=$DPS_COURT_CHARGE_ID")
             Assertions.assertThat(it["courtCharges"]).contains("nomisCourtChargeId=$NOMIS_COURT_CHARGE_ID")
+            Assertions.assertThat(it["courtCharges"]).contains("dpsCourtChargeId=$DPS_COURT_CHARGE_2_ID")
+            Assertions.assertThat(it["courtCharges"]).contains("nomisCourtChargeId=$NOMIS_COURT_CHARGE_2_ID")
           },
           isNull(),
         )
@@ -141,6 +143,22 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                     DPS_COURT_CHARGE_ID,
                   ),
                 ),
+              )
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "courtCharges[1].nomisCourtChargeId",
+                  WireMock.equalTo(
+                    NOMIS_COURT_CHARGE_2_ID.toString(),
+                  ),
+                ),
+              )
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "courtCharges[1].dpsCourtChargeId",
+                  WireMock.equalTo(
+                    DPS_COURT_CHARGE_2_ID,
+                  ),
+                ),
               ),
           )
         }
@@ -193,7 +211,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
         NomisApiExtension.nomisApi.stubCourtCaseCreate(
           OFFENDER_NO,
-          """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION, "courtAppearanceIds": [{"id": $NOMIS_COURT_APPEARANCE_ID, "courtEventChargesIds": [{"id": 5 }] }] }""",
+          nomisCourtCaseCreateResponseWithTwoCharges(),
         )
         MappingExtension.mappingServer.stubGetCreateCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
         MappingExtension.mappingServer.stubCreateCourtCaseWithErrorFollowedBySlowSuccess()
@@ -273,4 +291,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
   fun courtCaseMessagePayload(courtCaseId: String, offenderNo: String, eventType: String, source: String = "DPS") =
     """{"eventType":"$eventType", "additionalInformation": {"id":"$courtCaseId", "offenderNo": "$offenderNo", "source": "$source"}}"""
+
+  fun nomisCourtCaseCreateResponseWithTwoCharges(): String {
+    return """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION, "courtAppearanceIds": [{"id": $NOMIS_COURT_APPEARANCE_ID, "nextCourtAppearanceId": $NOMIS_NEXT_COURT_APPEARANCE_ID, "courtEventChargesIds": [{"offenderChargeId": $NOMIS_COURT_CHARGE_ID }, {"offenderChargeId": $NOMIS_COURT_CHARGE_2_ID }] }] }"""
+  }
 }
