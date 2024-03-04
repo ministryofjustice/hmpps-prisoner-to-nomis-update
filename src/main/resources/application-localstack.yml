@@ -82,6 +82,15 @@ hmpps.sqs:
       subscribeTopicId: domainevents
       subscribeFilter: >-
         { "eventType":["court-sentencing.court-case.created"]}
+    alerts:
+      queueName: hmpps_prisoner_to_nomis_alerts_queue
+      dlqName: hmpps_prisoner_to_nomis_alerts_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "prisoner-alerts.alert-created",
+          "prisoner-alerts.alert-updated",
+          "prisoner-alerts.alert-deleted"]}
 
   topics:
     domainevents:

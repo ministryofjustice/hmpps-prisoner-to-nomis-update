@@ -21,9 +21,13 @@ generic-service:
     API_BASE_URL_ADJUDICATIONS: https://manage-adjudications-api.hmpps.service.justice.gov.uk
     API_BASE_URL_NON_ASSOCIATIONS: https://non-associations-api.hmpps.service.justice.gov.uk
     API_BASE_URL_LOCATIONS: https://locations-inside-prison-api.hmpps.service.justice.gov.uk
+    API_BASE_URL_ALERTS: https://alerts-api.hmpps.service.justice.gov.uk
     FEATURE_EVENT_LOCATION_INSIDE_PRISON_CREATED: false
     FEATURE_EVENT_LOCATION_INSIDE_PRISON_DELETED: false
     FEATURE_EVENT_COURT_SENTENCING_COURT_CASE_CREATED: false
+    FEATURE_EVENT_PRISONER_ALERTS_ALERT_CREATED: false
+    FEATURE_EVENT_PRISONER_ALERTS_ALERT_UPDATED: false
+    FEATURE_EVENT_PRISONER_ALERTS_ALERT_DELETED: false
 
 generic-prometheus-alerts:
   sqsAlertsQueueNames:
@@ -45,5 +49,7 @@ generic-prometheus-alerts:
     - "syscon-devs-prod-hmpps_prisoner_to_nomis_location_dead_letter_queue"
     - "syscon-devs-prod-hmpps_prisoner_to_nomis_court_sentencing_queue"
     - "syscon-devs-prod-hmpps_prisoner_to_nomis_court_sentencing_dlq"
+    - "syscon-devs-prod-hmpps_prisoner_to_nomis_alerts_queue"
+    - "syscon-devs-prod-hmpps_prisoner_to_nomis_alerts_dlq"
   sqsAlertsOldestThreshold: 2
   sqsAlertsTotalMessagesThreshold: 1

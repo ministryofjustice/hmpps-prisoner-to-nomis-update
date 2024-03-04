@@ -84,6 +84,13 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   internal val courtSentencingQueueUrl by lazy { courtSentencingQueue.queueUrl }
   internal val courtSentencingDlqUrl by lazy { courtSentencingQueue.dlqUrl }
 
+  internal val alertsQueue by lazy { hmppsQueueService.findByQueueId("alerts") as HmppsQueue }
+
+  internal val awsSqsAlertsClient by lazy { alertsQueue.sqsClient }
+  internal val awsSqsAlertsDlqClient by lazy { alertsQueue.sqsDlqClient }
+  internal val alertsQueueUrl by lazy { alertsQueue.queueUrl }
+  internal val alertsDlqUrl by lazy { alertsQueue.dlqUrl }
+
   internal val awsSnsClient by lazy { topic.snsClient }
   internal val topicArn by lazy { topic.arn }
 
@@ -116,6 +123,9 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 
     awsSqsCourtSentencingClient.purgeQueue(courtSentencingQueueUrl).get()
     awsSqsCourtSentencingDlqClient?.purgeQueue(courtSentencingDlqUrl)?.get()
+
+    awsSqsAlertsClient.purgeQueue(alertsQueueUrl).get()
+    awsSqsAlertsDlqClient?.purgeQueue(alertsDlqUrl)?.get()
   }
 
   internal fun waitForAnyProcessingToComplete() {

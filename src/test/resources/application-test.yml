@@ -18,6 +18,7 @@ api.base.url:
   non-associations: http://localhost:8092
   locations: http://localhost:8093
   court.sentencing: http://localhost:8094
+  alerts: http://localhost:8095
 
 hmpps.sqs:
   provider: localstack
@@ -118,6 +119,17 @@ hmpps.sqs:
       dlqName: "court-sentencing-dlq-${random.uuid}"
       subscribeTopicId: domainevents
       subscribeFilter: "{\"eventType\":[\"court-sentencing.court-case.created\"]}"
+      dlqMaxReceiveCount: 3
+      visibilityTimeout: 120
+    alerts:
+      queueName: "alerts-${random.uuid}"
+      dlqName: "alerts-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "prisoner-alerts.alert-created",
+          "prisoner-alerts.alert-updated",
+          "prisoner-alerts.alert-deleted"]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
   topics:
