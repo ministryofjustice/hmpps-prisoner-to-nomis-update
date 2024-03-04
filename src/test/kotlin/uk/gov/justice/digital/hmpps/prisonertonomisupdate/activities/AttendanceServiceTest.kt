@@ -353,6 +353,7 @@ class AttendanceServiceTest {
         "ATTENDED,false,UNBEH,false,false",
         "CANCELLED,true,CANC,false,true",
         "SUSPENDED,false,SUS,false,true",
+        "AUTO_SUSPENDED,false,SUS,false,true",
         "SICK,true,ACCAB,false,true",
         "SICK,false,REST,false,true",
         "REFUSED,false,UNACAB,true,false",

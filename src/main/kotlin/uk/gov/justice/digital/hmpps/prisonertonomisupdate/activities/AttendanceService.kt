@@ -111,7 +111,7 @@ fun AttendanceSync.toEventOutcome() = attendanceReasonCode?.let {
 
     it == "CANCELLED" -> EventOutcome("CANC", unexcusedAbsence = false, authorisedAbsence = true)
 
-    it == "SUSPENDED" -> EventOutcome("SUS", unexcusedAbsence = false, authorisedAbsence = true)
+    it == "SUSPENDED" || it == "AUTO_SUSPENDED" -> EventOutcome("SUS", unexcusedAbsence = false, authorisedAbsence = true)
 
     it == "SICK" && issuePayment == true -> EventOutcome("ACCAB", unexcusedAbsence = false, authorisedAbsence = true)
 
