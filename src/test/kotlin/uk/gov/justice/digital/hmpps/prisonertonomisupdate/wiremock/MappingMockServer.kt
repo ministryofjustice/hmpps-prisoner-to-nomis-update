@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMapping
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 
 class MappingExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
   companion object {
@@ -1299,11 +1300,11 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
               "userMessage": "Conflict: Court Case mapping already exists",
                "moreInfo": {
                 "existing": {
-                  "dpsCourtCaseId": $dpsId,
+                  "dpsCourtCaseId": "$dpsId",
                   "nomisCourtCaseId": "$nomisId"
                   },
                 "duplicate": {
-                  "dpsCourtCaseId": $dpsId,
+                  "dpsCourtCaseId": "$dpsId",
                   "nomisCourtCaseId": "$duplicateNomisId"
                 }
               }
@@ -1351,8 +1352,8 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
             // language=json
             """ 
               {
-                "dpsCourtCaseId": $id,
-                "nomisCourtCaseId": $nomisCourtCaseId,
+                "dpsCourtCaseId": "$id",
+                "nomisCourtCaseId": "$nomisCourtCaseId",
                 "mappingType": "${CourtCaseMapping.MappingType.DPS_CREATED}",
                 "whenCreated": "2021-07-05T10:35:17"
               }
@@ -1371,6 +1372,108 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
           .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubGetCourtAppearanceMappingGivenDpsIdWithError(id: String, status: Int = 500) {
+    stubFor(
+      get("/mapping/court-sentencing/court-appearances/dps-court-appearance-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubCreateCourtAppearance() {
+    stubFor(
+      post("/mapping/court-sentencing/court-appearances").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubGetCourtAppearanceMappingGivenDpsId(id: String, nomisCourtAppearanceId: Long = 54321) {
+    stubFor(
+      get("/mapping/court-sentencing/court-appearances/dps-court-appearance-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            // language=json
+            """ 
+              {
+                "dpsCourtAppearanceId": "$id",
+                "nomisCourtAppearanceId": "$nomisCourtAppearanceId",
+                "mappingType": "${CourtCaseMapping.MappingType.DPS_CREATED}",
+                "whenCreated": "2021-07-05T10:35:17"
+              }
+            
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubCreateCourtAppearanceWithErrorFollowedBySlowSuccess() {
+    stubFor(
+      post("/mapping/court-sentencing/court-appearances")
+        .inScenario("Retry Mapping Court Appearance Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Create Mapping Court Appearance Success"),
+    )
+
+    stubFor(
+      post("/mapping/court-sentencing/court-appearances")
+        .inScenario("Retry Mapping Court Appearance Scenario")
+        .whenScenarioStateIs("Create Mapping Court Appearance Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201)
+            .withFixedDelay(1500),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+  fun stubGetCourtChargeMappingGivenDpsIdWithError(id: String, status: Int = 500) {
+    stubFor(
+      get("/mapping/court-sentencing/court-charges/dps-court-charge-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubGetCourtChargeMappingGivenDpsId(id: String, nomisCourtChargeId: Long) {
+    stubFor(
+      get("/mapping/court-sentencing/court-charges/dps-court-charge-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            // language=json
+            """ 
+              {
+                "dpsCourtChargeId": "$id",
+                "nomisCourtChargeId": $nomisCourtChargeId,
+                "mappingType": "${CourtChargeMappingDto.MappingType.DPS_CREATED}",
+                "whenCreated": "2021-07-05T10:35:17"
+              }
+            
+            """.trimIndent(),
+          )
+          .withStatus(200),
       ),
     )
   }

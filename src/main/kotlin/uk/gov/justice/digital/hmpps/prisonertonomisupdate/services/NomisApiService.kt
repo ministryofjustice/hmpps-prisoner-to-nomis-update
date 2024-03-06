@@ -24,9 +24,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Adjudi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AttendanceReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourseScheduleRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingRequest
@@ -701,6 +703,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
   suspend fun createCourtCase(offenderNo: String, request: CreateCourtCaseRequest): CreateCourtCaseResponse =
     webClient.post()
       .uri("/prisoners/{offenderNo}/sentencing/court-cases", offenderNo)
+      .bodyValue(request)
+      .retrieve()
+      .awaitBody()
+
+  suspend fun createCourtAppearance(offenderNo: String, nomisCourtCaseId: Long, request: CourtAppearanceRequest): CreateCourtAppearanceResponse =
+    webClient.post()
+      .uri("/prisoners/{offenderNo}/sentencing/court-cases/{courtCaseId}/court-appearances", offenderNo, nomisCourtCaseId)
       .bodyValue(request)
       .retrieve()
       .awaitBody()
