@@ -5,11 +5,17 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.Alert
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.AlertCodeSummary
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.UUID
 
 class AlertsDpsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
   companion object {
@@ -52,4 +58,40 @@ class AlertsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     this.withBody(AlertsDpsApiExtension.objectMapper.writeValueAsString(body))
     return this
   }
+
+  fun stubGetAlert(alert: Alert = dpsAlert()) {
+    stubFor(
+      get(urlMatching("/alerts/.*"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(alert)
+            .withStatus(200),
+        ),
+    )
+  }
 }
+
+fun dpsAlert(): Alert = Alert(
+  alertUuid = UUID.randomUUID(),
+  prisonNumber = "A1234AA",
+  alertCode = AlertCodeSummary(
+    alertTypeCode = "A",
+    code = "ABC",
+    description = "Alert code description",
+    listSequence = 3,
+    isActive = true,
+  ),
+  description = "Alert description",
+  authorisedBy = "A. Nurse, An Agency",
+  activeFrom = LocalDate.parse("2021-09-27"),
+  activeTo = LocalDate.parse("2022-07-15"),
+  isActive = true,
+  comments = emptyList(),
+  createdAt = LocalDateTime.parse("2024-02-28T13:56:10"),
+  createdBy = "USER1234",
+  createdByDisplayName = "Firstname Lastname",
+  lastModifiedAt = LocalDateTime.parse("2024-02-28T13:56:10"),
+  lastModifiedBy = "USER1234",
+  lastModifiedByDisplayName = "Firstname Lastname",
+)
