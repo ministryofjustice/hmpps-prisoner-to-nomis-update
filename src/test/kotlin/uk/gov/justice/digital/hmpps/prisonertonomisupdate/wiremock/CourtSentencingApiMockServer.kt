@@ -140,6 +140,74 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubCourtAppearanceGetWithFourCharges(courtCaseId: String, courtAppearanceId: String, courtCharge1Id: String, courtCharge2Id: String, courtCharge3Id: String, courtCharge4Id: String, offenderNo: String = "A6160DZ") {
+    stubFor(
+      get(WireMock.urlPathMatching("/court-appearance/$courtAppearanceId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            // language=json
+            """
+           {
+            "appearanceUuid": "$courtAppearanceId",
+            "outcome": "Remand in Custody (Bail Refused)",
+            "courtCode": "Doncaster Magistrates Court",
+            "courtCaseReference": "G123456789",
+            "appearanceDate": "2024-09-23",
+            "warrantId": "7e15b408-4f97-453e-98b7-24791978221c",
+            "warrantType": "REMAND",
+            "taggedBail": null,
+            "nextCourtAppearance": {
+                "appearanceDate": "2024-12-10",
+                "courtCode": "Doncaster Magistrates Court",
+                "appearanceType": "Court appearance"
+            },
+           "charges": [
+            {
+                "chargeUuid": "$courtCharge1Id",
+                "offenceCode": "PS90037",
+                "offenceStartDate": "2024-01-15",
+                "offenceEndDate": null,
+                "outcome": "Remand in Custody (Bail Refused)",
+                "terrorRelated": null,
+                "sentence": null
+            },
+            {
+                "chargeUuid": "$courtCharge2Id",
+                "offenceCode": "PS90090",
+                "offenceStartDate": "2024-01-17",
+                "offenceEndDate": "2024-01-19",
+                "outcome": "Remand in Custody (Bail Refused)",
+                "terrorRelated": null,
+                "sentence": null
+            },
+            {
+                "chargeUuid": "$courtCharge3Id",
+                "offenceCode": "PS90095",
+                "offenceStartDate": "2024-02-15",
+                "offenceEndDate": null,
+                "outcome": "Remand in Custody (Bail Refused)",
+                "terrorRelated": null,
+                "sentence": null
+            },
+            {
+                "chargeUuid": "$courtCharge4Id",
+                "offenceCode": "PS90096",
+                "offenceStartDate": "2024-02-17",
+                "offenceEndDate": "2024-02-19",
+                "outcome": "Remand in Custody (Bail Refused)",
+                "terrorRelated": null,
+                "sentence": null
+            }
+        ]
+     }   
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
     this.withBody(NomisApiExtension.objectMapper.writeValueAsString(body))
     return this

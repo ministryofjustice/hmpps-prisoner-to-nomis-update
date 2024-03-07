@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-02-29.3796.a1b89fe"
+    "version": "2024-03-06.3845.8293b3a"
   },
   "servers": [
     {
@@ -453,6 +453,46 @@
       }
     },
     "/mapping/sentencing/adjustments": {
+      "get": {
+        "tags": [
+          "sentencing-mapping-resource"
+        ],
+        "summary": "get all paged mappings",
+        "description": "Retrieve all mappings . Results are paged.",
+        "operationId": "getAllSentenceAdjustmentMappings",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping page returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentencingAdjustmentMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "sentencing-mapping-resource"
@@ -1031,7 +1071,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CourtAppearanceMappingDto"
+                "$ref": "#/components/schemas/CourtAppearanceAllMappingDto"
               }
             }
           },
@@ -3283,6 +3323,62 @@
         }
       }
     },
+    "/mapping/court-sentencing/court-charges/dps-court-charge-id/{courtChargeId}": {
+      "get": {
+        "tags": [
+          "court-sentencing-mapping-resource"
+        ],
+        "summary": "get court charge mapping",
+        "description": "Retrieves a mapping by DPS id. Requires role NOMIS_COURT_SENTENCING",
+        "operationId": "getCourtChargeMappingByDpsId",
+        "parameters": [
+          {
+            "name": "courtChargeId",
+            "in": "path",
+            "description": "DPS court charge id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS court charge id",
+              "example": "D123"
+            },
+            "example": "D123"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtAppearanceAllMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/court-sentencing/court-cases/dps-court-case-id/{courtCaseId}": {
       "get": {
         "tags": [
@@ -3346,7 +3442,7 @@
         ],
         "summary": "get court appearance mapping",
         "description": "Retrieves a mapping by DPS id. Requires role NOMIS_COURT_SENTENCING",
-        "operationId": "getCourtAppearanceMappingByNomisId",
+        "operationId": "getCourtAppearanceMappingByDpsId",
         "parameters": [
           {
             "name": "courtAppearanceId",
@@ -3367,7 +3463,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CourtAppearanceMappingDto"
+                  "$ref": "#/components/schemas/CourtAppearanceAllMappingDto"
                 }
               }
             }
@@ -3834,6 +3930,62 @@
               "example": 2
             },
             "example": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/alerts/dps-alert-id/{dpsAlertId}": {
+      "get": {
+        "tags": [
+          "alerts-mapping-resource"
+        ],
+        "summary": "get mapping",
+        "description": "Retrieves a mapping by DPS id. Requires role NOMIS_ALERTS",
+        "operationId": "getMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsAlertId",
+            "in": "path",
+            "description": "DPS alert id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS alert id",
+              "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+            },
+            "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
           }
         ],
         "responses": {
@@ -5436,6 +5588,62 @@
             "type": "boolean"
           }
         }
+      },
+      "CourtAppearanceAllMappingDto": {
+        "required": [
+          "courtCharges",
+          "dpsCourtAppearanceId",
+          "nomisCourtAppearanceId"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisCourtAppearanceId": {
+            "type": "integer",
+            "description": "NOMIS court appearance id",
+            "format": "int64",
+            "example": 123456
+          },
+          "dpsCourtAppearanceId": {
+            "type": "string",
+            "description": "DPS court appearance id",
+            "example": "123456"
+          },
+          "nomisNextCourtAppearanceId": {
+            "type": "integer",
+            "description": "optional NOMIS next court appearance id",
+            "format": "int64",
+            "example": 123456
+          },
+          "courtCharges": {
+            "type": "array",
+            "description": "Court Charge mappings",
+            "items": {
+              "$ref": "#/components/schemas/CourtChargeMappingDto"
+            }
+          },
+          "label": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "Mapping type",
+            "default": "DPS_CREATED",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date-time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "Court appearance mapping"
       },
       "CourtAppearanceMapping": {
         "required": [

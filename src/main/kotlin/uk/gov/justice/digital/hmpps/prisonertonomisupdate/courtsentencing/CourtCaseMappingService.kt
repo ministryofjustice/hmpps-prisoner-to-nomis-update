@@ -6,8 +6,11 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceAllMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 
 @Service
 class CourtCaseMappingService(
@@ -17,6 +20,14 @@ class CourtCaseMappingService(
   suspend fun createMapping(request: CourtCaseAllMappingDto) {
     webClient.post()
       .uri("/mapping/court-sentencing/court-cases")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntityOrThrowOnConflict()
+  }
+
+  suspend fun createAppearanceMapping(request: CourtAppearanceAllMappingDto) {
+    webClient.post()
+      .uri("/mapping/court-sentencing/court-appearances")
       .bodyValue(request)
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()
@@ -33,4 +44,16 @@ class CourtCaseMappingService(
       .uri("/mapping/court-sentencing/court-cases/dps-court-case-id/{dpsCourtCaseId}", dpsCourtCaseId)
       .retrieve()
       .awaitBody()
+
+  suspend fun getMappingGivenCourtAppearanceIdOrNull(dpsCourtAppearanceId: String): CourtAppearanceMappingDto? =
+    webClient.get()
+      .uri("/mapping/court-sentencing/court-appearances/dps-court-appearance-id/{dpsCourtAppearanceId}", dpsCourtAppearanceId)
+      .retrieve()
+      .awaitBodyOrNullForNotFound()
+
+  suspend fun getMappingGivenCourtChargeIdOrNull(dpsCourtChargeId: String): CourtChargeMappingDto? =
+    webClient.get()
+      .uri("/mapping/court-sentencing/court-charges/dps-court-charge-id/{dpsCourtChargeId}", dpsCourtChargeId)
+      .retrieve()
+      .awaitBodyOrNullForNotFound()
 }
