@@ -10,29 +10,37 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.matching.StringValuePattern
+import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilAsserted
+import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.eq
 import org.mockito.kotlin.any
+import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension.Companion.alertsDpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AlertMappingDto
+import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDate
 import java.util.UUID
 
 class AlertsToNomisIntTest : SqsIntegrationTestBase() {
   @Autowired
-  private lateinit var alertNomisApiMockServer: AlertsNomisApiMockServer
+  private lateinit var alertsNomisApi: AlertsNomisApiMockServer
 
   @Autowired
-  private lateinit var alertMappingApiMockServer: AlertsMappingApiMockServer
+  private lateinit var alertsMappingApi: AlertsMappingApiMockServer
 
   @Nested
   @DisplayName("prisoner-alerts.alert-created")
@@ -57,7 +65,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will not try to create the Alert in NOMIS`() {
-        alertNomisApiMockServer.verify(0, putRequestedFor(anyUrl()))
+        alertsNomisApi.verify(0, putRequestedFor(anyUrl()))
       }
     }
 
@@ -65,7 +73,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
     @DisplayName("when DPS is the origin of a Alert create")
     inner class WhenDpsCreated {
       @Nested
-      @DisplayName("Happy path")
+      @DisplayName("when all goes ok")
       inner class HappyPath {
         private val offenderNo = "A1234KT"
         private val dpsAlertId = UUID.randomUUID().toString()
@@ -74,6 +82,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
+          alertsMappingApi.stubGetByDpsId(HttpStatus.NOT_FOUND)
           alertsDpsApi.stubGetAlert(
             dpsAlert().copy(
               alertUuid = UUID.fromString(dpsAlertId),
@@ -87,8 +96,8 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
               description = "Added for good reasons",
             ),
           )
-          alertNomisApiMockServer.stubPostAlert(offenderNo, alert = createAlertResponse(bookingId = nomisBookingId, alertSequence = nomisAlertSequence))
-          alertMappingApiMockServer.stubPostMapping()
+          alertsNomisApi.stubPostAlert(offenderNo, alert = createAlertResponse(bookingId = nomisBookingId, alertSequence = nomisAlertSequence))
+          alertsMappingApi.stubPostMapping()
           publishCreateAlertDomainEvent(offenderNo = offenderNo, alertUuid = dpsAlertId)
           waitForAnyProcessingToComplete()
         }
@@ -103,18 +112,33 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
         }
 
         @Test
+        fun `telemetry will contain key facts about the alert created`() {
+          verify(telemetryClient).trackEvent(
+            eq("alert-create-success"),
+            check {
+              assertThat(it).containsEntry("dpsAlertId", dpsAlertId)
+              assertThat(it).containsEntry("offenderNo", offenderNo)
+              assertThat(it).containsEntry("alertCode", "HPI")
+              assertThat(it).containsEntry("nomisAlertSequence", "$nomisAlertSequence")
+              assertThat(it).containsEntry("nomisBookingId", "$nomisBookingId")
+            },
+            isNull(),
+          )
+        }
+
+        @Test
         fun `will call back to DPS to get alert details`() {
           alertsDpsApi.verify(getRequestedFor(urlMatching("/alerts/$dpsAlertId")))
         }
 
         @Test
         fun `will create the alert in NOMIS`() {
-          alertNomisApiMockServer.verify(postRequestedFor(urlEqualTo("/prisoners/$offenderNo/alerts")))
+          alertsNomisApi.verify(postRequestedFor(urlEqualTo("/prisoners/$offenderNo/alerts")))
         }
 
         @Test
         fun `the created alert will contain details of the DPS alert`() {
-          alertNomisApiMockServer.verify(
+          alertsNomisApi.verify(
             postRequestedFor(anyUrl())
               .withRequestBodyJsonPath("alertCode", "HPI")
               .withRequestBodyJsonPath("date", "2023-03-03")
@@ -128,18 +152,145 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will create a mapping between the NOMIS and DPS ids`() {
-          alertMappingApiMockServer.verify(postRequestedFor(urlEqualTo("/mapping/alerts")))
+          alertsMappingApi.verify(postRequestedFor(urlEqualTo("/mapping/alerts")))
         }
 
         @Test
         fun `the created mapping will contain the IDs`() {
-          alertMappingApiMockServer.verify(
+          alertsMappingApi.verify(
             postRequestedFor(anyUrl())
               .withRequestBodyJsonPath("dpsAlertId", dpsAlertId)
               .withRequestBodyJsonPath("nomisBookingId", nomisBookingId)
               .withRequestBodyJsonPath("nomisAlertSequence", nomisAlertSequence)
               .withRequestBodyJsonPath("mappingType", AlertMappingDto.MappingType.DPS_CREATED.name),
           )
+        }
+      }
+
+      @Nested
+      @DisplayName("when the create of the mapping fails")
+      inner class WithCreateMappingFailures {
+        private val offenderNo = "A1234KT"
+        private val dpsAlertId = UUID.randomUUID().toString()
+        private val nomisBookingId = 43217L
+        private val nomisAlertSequence = 3L
+
+        @BeforeEach
+        fun setUp() {
+          alertsMappingApi.stubGetByDpsId(HttpStatus.NOT_FOUND)
+          alertsDpsApi.stubGetAlert(dpsAlert().copy(alertUuid = UUID.fromString(dpsAlertId)))
+          alertsNomisApi.stubPostAlert(offenderNo, alert = createAlertResponse(bookingId = nomisBookingId, alertSequence = nomisAlertSequence))
+        }
+
+        @Nested
+        @DisplayName("fails once")
+        inner class MappingFailsOnce {
+          @BeforeEach
+          fun setUp() {
+            alertsMappingApi.stubPostMappingFollowedBySuccess(HttpStatus.INTERNAL_SERVER_ERROR)
+            publishCreateAlertDomainEvent(offenderNo = offenderNo, alertUuid = dpsAlertId)
+          }
+
+          @Test
+          fun `will eventually send telemetry for success`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("alert-create-success"),
+                any(),
+                isNull(),
+              )
+            }
+          }
+
+          @Test
+          fun `will create the alert in NOMIS once`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("alert-create-success"),
+                any(),
+                isNull(),
+              )
+            }
+
+            alertsNomisApi.verify(1, postRequestedFor(urlEqualTo("/prisoners/$offenderNo/alerts")))
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the alert created`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("alert-create-success"),
+                check {
+                  assertThat(it).containsEntry("dpsAlertId", dpsAlertId)
+                  assertThat(it).containsEntry("offenderNo", offenderNo)
+                  assertThat(it).containsEntry("alertCode", "HPI")
+                  assertThat(it).containsEntry("nomisAlertSequence", "$nomisAlertSequence")
+                  assertThat(it).containsEntry("nomisBookingId", "$nomisBookingId")
+                },
+                isNull(),
+              )
+            }
+          }
+        }
+
+        @Nested
+        @DisplayName("always fails")
+        inner class MappingAlwaysFails {
+          @BeforeEach
+          fun setUp() {
+            alertsMappingApi.stubPostMapping(HttpStatus.INTERNAL_SERVER_ERROR)
+            publishCreateAlertDomainEvent(offenderNo = offenderNo, alertUuid = dpsAlertId)
+          }
+
+          @Test
+          fun `will add message to dead letter queue`() {
+            await untilCallTo {
+              awsSqsAlertsDlqClient!!.countAllMessagesOnQueue(alertsDlqUrl!!).get()
+            } matches { it == 1 }
+          }
+
+          @Test
+          fun `will create the alert in NOMIS once`() {
+            await untilCallTo {
+              awsSqsAlertsDlqClient!!.countAllMessagesOnQueue(alertsDlqUrl!!).get()
+            } matches { it == 1 }
+
+            alertsNomisApi.verify(1, postRequestedFor(urlEqualTo("/prisoners/$offenderNo/alerts")))
+          }
+        }
+      }
+
+      @Nested
+      @DisplayName("when alert has already been created")
+      inner class WhenAlertAlreadyCreated {
+        private val dpsAlertId = UUID.randomUUID().toString()
+        private val nomisBookingId = 43217L
+        private val nomisAlertSequence = 3L
+        private val offenderNo = "A1234KT"
+
+        @BeforeEach
+        fun setUp() {
+          alertsMappingApi.stubGetByDpsId(
+            dpsAlertId = dpsAlertId,
+            AlertMappingDto(
+              dpsAlertId = dpsAlertId,
+              nomisBookingId = nomisBookingId,
+              nomisAlertSequence = nomisAlertSequence,
+              mappingType = AlertMappingDto.MappingType.DPS_CREATED,
+            ),
+          )
+          publishCreateAlertDomainEvent(offenderNo = offenderNo, alertUuid = dpsAlertId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `it will not call back to DPS API`() {
+          alertsDpsApi.verify(0, getRequestedFor(anyUrl()))
+        }
+
+        @Test
+        fun `it will not create the alert again in NOMIS`() {
+          alertsNomisApi.verify(0, postRequestedFor(anyUrl()))
         }
       }
     }
