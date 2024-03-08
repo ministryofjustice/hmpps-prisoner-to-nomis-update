@@ -15,12 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExten
 class AlertsNomisApiMockServer(private val objectMapper: ObjectMapper) {
   fun stubPostAlert(
     offenderNo: String = "A1234AK",
-    alert: CreateAlertResponse = CreateAlertResponse(
-      bookingId = 12345,
-      alertSequence = 1,
-      alertCode = CodeDescription("HPI", ""),
-      type = CodeDescription("X", ""),
-    ),
+    alert: CreateAlertResponse = createAlertResponse(),
   ) {
     nomisApi.stubFor(
       post(urlEqualTo("/prisoners/$offenderNo/alerts")).willReturn(
@@ -33,4 +28,11 @@ class AlertsNomisApiMockServer(private val objectMapper: ObjectMapper) {
   }
 
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
+  fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }
+fun createAlertResponse(bookingId: Long = 12345, alertSequence: Long = 1) = CreateAlertResponse(
+  bookingId = bookingId,
+  alertSequence = alertSequence,
+  alertCode = CodeDescription("HPI", ""),
+  type = CodeDescription("X", ""),
+)
