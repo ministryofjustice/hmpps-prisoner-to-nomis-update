@@ -81,7 +81,7 @@ hmpps.sqs:
       dlqName: hmpps_prisoner_to_nomis_court_sentencing_dlq
       subscribeTopicId: domainevents
       subscribeFilter: >-
-        { "eventType":["court-sentencing.court-case.created", "court-sentencing.court-appearance.created"]}
+        { "eventType":["court-sentencing.court-case.created", "court-sentencing.court-appearance.created", "court-sentencing.court-appearance.updated"]}
     alerts:
       queueName: hmpps_prisoner_to_nomis_alerts_queue
       dlqName: hmpps_prisoner_to_nomis_alerts_dlq

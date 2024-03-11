@@ -39,6 +39,8 @@ class CourtSentencingDomainEventListener(
         courtSentencingService.createCourtCase(message.fromJson())
       "court-sentencing.court-appearance.created" ->
         courtSentencingService.createCourtAppearance(message.fromJson())
+      "court-sentencing.court-appearance.updated" ->
+        courtSentencingService.updateCourtAppearance(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }

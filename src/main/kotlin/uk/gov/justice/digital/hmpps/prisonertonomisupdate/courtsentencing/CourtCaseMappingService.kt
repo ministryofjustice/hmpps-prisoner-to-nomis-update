@@ -51,6 +51,12 @@ class CourtCaseMappingService(
       .retrieve()
       .awaitBodyOrNullForNotFound()
 
+  suspend fun getMappingGivenCourtAppearanceId(dpsCourtAppearanceId: String): CourtAppearanceMappingDto =
+    webClient.get()
+      .uri("/mapping/court-sentencing/court-appearances/dps-court-appearance-id/{dpsCourtAppearanceId}", dpsCourtAppearanceId)
+      .retrieve()
+      .awaitBody()
+
   suspend fun getMappingGivenCourtChargeIdOrNull(dpsCourtChargeId: String): CourtChargeMappingDto? =
     webClient.get()
       .uri("/mapping/court-sentencing/court-charges/dps-court-charge-id/{dpsCourtChargeId}", dpsCourtChargeId)

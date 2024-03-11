@@ -118,7 +118,7 @@ hmpps.sqs:
       queueName: "court-sentencing-${random.uuid}"
       dlqName: "court-sentencing-dlq-${random.uuid}"
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"court-sentencing.court-case.created\", \"court-sentencing.court-appearance.created\"]}"
+      subscribeFilter: "{\"eventType\":[\"court-sentencing.court-case.created\", \"court-sentencing.court-appearance.created\", \"court-sentencing.court-appearance.updated\"]}"
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
     alerts:
