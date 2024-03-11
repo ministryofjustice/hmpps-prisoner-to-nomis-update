@@ -69,8 +69,31 @@ class AlertsService(
 
   override suspend fun retryCreateMapping(message: String) = createMapping(message.fromJson())
 
-  fun updateAlert(alertEvent: AlertEvent) {
-    TODO("Not yet implemented")
+  suspend fun updateAlert(alertEvent: AlertEvent) {
+    val dpsAlertId = alertEvent.additionalInformation.alertUuid
+    val offenderNo = alertEvent.additionalInformation.prisonNumber
+    val telemetryMap = mutableMapOf(
+      "dpsAlertId" to dpsAlertId,
+      "offenderNo" to offenderNo,
+      "alertCode" to alertEvent.additionalInformation.alertCode,
+    )
+
+    if (alertEvent.wasUpdateInDPS()) {
+      runCatching {
+        val mapping = mappingApiService.getOrNullByDpsId(dpsAlertId) ?: throw IllegalStateException("Tried to update an alert that has never been created")
+        telemetryMap["nomisBookingId"] = mapping.nomisBookingId.toString()
+        telemetryMap["nomisAlertSequence"] = mapping.nomisAlertSequence.toString()
+
+        val dpsAlert = dpsApiService.getAlert(dpsAlertId)
+        nomisApiService.updateAlert(bookingId = mapping.nomisBookingId, alertSequence = mapping.nomisAlertSequence, dpsAlert.toNomisUpdateRequest())
+        telemetryClient.trackEvent("alert-updated-success", telemetryMap, null)
+      }.onFailure { e ->
+        telemetryClient.trackEvent("alert-updated-failed", telemetryMap, null)
+        throw e
+      }
+    } else {
+      telemetryClient.trackEvent("alert-updated-ignored", telemetryMap)
+    }
   }
 
   fun deleteAlert(alertEvent: AlertEvent) {
@@ -95,6 +118,7 @@ data class AlertAdditionalInformation(
   val source: AlertSource,
 )
 
+@Suppress("unused")
 enum class AlertSource {
   ALERTS_SERVICE,
   NOMIS,
@@ -102,3 +126,4 @@ enum class AlertSource {
 }
 
 fun AlertEvent.wasCreatedInDPS() = this.additionalInformation.source == AlertSource.ALERTS_SERVICE
+fun AlertEvent.wasUpdateInDPS() = this.additionalInformation.source == AlertSource.ALERTS_SERVICE

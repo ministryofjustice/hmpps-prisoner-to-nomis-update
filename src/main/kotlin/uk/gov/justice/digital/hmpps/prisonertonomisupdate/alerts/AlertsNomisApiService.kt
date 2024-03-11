@@ -4,8 +4,10 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AlertResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAlertRequest
 
 @Service
 class AlertsNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
@@ -14,6 +16,15 @@ class AlertsNomisApiService(@Qualifier("nomisApiWebClient") private val webClien
       "/prisoners/{offenderNo}/alerts",
       offenderNo,
     )
+    .bodyValue(nomisAlert)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun updateAlert(bookingId: Long, alertSequence: Long, nomisAlert: UpdateAlertRequest): AlertResponse = webClient.put().uri(
+    "/prisoners/booking-id/{bookingId}/alerts/{alertSequence}",
+    bookingId,
+    alertSequence,
+  )
     .bodyValue(nomisAlert)
     .retrieve()
     .awaitBody()
