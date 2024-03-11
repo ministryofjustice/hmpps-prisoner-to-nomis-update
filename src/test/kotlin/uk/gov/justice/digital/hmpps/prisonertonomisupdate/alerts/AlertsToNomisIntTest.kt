@@ -23,16 +23,19 @@ import org.mockito.Mockito.eq
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension.Companion.alertsDpsApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.Comment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AlertMappingDto
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 class AlertsToNomisIntTest : SqsIntegrationTestBase() {
@@ -65,7 +68,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will not try to create the Alert in NOMIS`() {
-        alertsNomisApi.verify(0, putRequestedFor(anyUrl()))
+        alertsNomisApi.verify(0, postRequestedFor(anyUrl()))
       }
     }
 
@@ -296,6 +299,165 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  @DisplayName("prisoner-alerts.alert-updated")
+  inner class AlertUpdated {
+    @Nested
+    @DisplayName("when NOMIS is the origin of the Alert update")
+    inner class WhenNomisUpdated {
+      @BeforeEach
+      fun setup() {
+        publishUpdateAlertDomainEvent(source = AlertSource.NOMIS)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing it ignored the update`() {
+        verify(telemetryClient).trackEvent(
+          eq("alert-updated-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not try to update the Alert in NOMIS`() {
+        alertsNomisApi.verify(0, putRequestedFor(anyUrl()))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the Alert update")
+    inner class WhenDpsUpdated {
+      @Nested
+      @DisplayName("when no mapping found")
+      inner class WhenNoMappingFound {
+        @BeforeEach
+        fun setUp() {
+          alertsMappingApi.stubGetByDpsId(HttpStatus.NOT_FOUND)
+          publishUpdateAlertDomainEvent()
+        }
+
+        @Test
+        fun `will treat this as an error and message will go on DLQ`() {
+          await untilCallTo {
+            awsSqsAlertsDlqClient!!.countAllMessagesOnQueue(alertsDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+
+        @Test
+        fun `will send telemetry event showing it failed to update for each retry`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              eq("alert-updated-failed"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+      }
+
+      @Nested
+      @DisplayName("when mapping is found")
+      inner class WhenMappingIsFound {
+        private val dpsAlertId = UUID.randomUUID().toString()
+        private val nomisBookingId = 43217L
+        private val nomisAlertSequence = 3L
+        private val offenderNo = "A1234KT"
+
+        @BeforeEach
+        fun setUp() {
+          alertsMappingApi.stubGetByDpsId(
+            dpsAlertId,
+            AlertMappingDto(
+              dpsAlertId = dpsAlertId,
+              nomisBookingId = nomisBookingId,
+              nomisAlertSequence = nomisAlertSequence,
+              mappingType = AlertMappingDto.MappingType.DPS_CREATED,
+            ),
+          )
+          alertsDpsApi.stubGetAlert(
+            alert = dpsAlert().copy(
+              alertUuid = UUID.fromString(dpsAlertId),
+              activeFrom = LocalDate.parse("2020-07-19"),
+              activeTo = LocalDate.parse("2023-07-19"),
+              isActive = false,
+              authorisedBy = "Rasheed",
+              lastModifiedBy = "RASHEED.BAKE",
+              comments = listOf(
+                Comment(
+                  UUID.randomUUID(),
+                  comment = "The only comment",
+                  createdBy = "SOMEONE",
+                  createdAt = LocalDateTime.now(),
+                  createdByDisplayName = "Some One",
+                ),
+              ),
+              description = "Alert added for good reasons",
+              alertCode = dpsAlert().alertCode.copy(code = "HPI"),
+            ),
+          )
+          alertsNomisApi.stubPutAlert(bookingId = nomisBookingId, alertSequence = nomisAlertSequence)
+          publishUpdateAlertDomainEvent(alertUuid = dpsAlertId, offenderNo = offenderNo)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the update`() {
+          verify(telemetryClient).trackEvent(
+            eq("alert-updated-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the updated alert`() {
+          verify(telemetryClient).trackEvent(
+            eq("alert-updated-success"),
+            check {
+              assertThat(it).containsEntry("dpsAlertId", dpsAlertId)
+              assertThat(it).containsEntry("offenderNo", offenderNo)
+              assertThat(it).containsEntry("alertCode", "HPI")
+              assertThat(it).containsEntry("nomisAlertSequence", "$nomisAlertSequence")
+              assertThat(it).containsEntry("nomisBookingId", "$nomisBookingId")
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call the mapping service to get the NOMIS alert id`() {
+          alertsMappingApi.verify(getRequestedFor(urlMatching("/mapping/alerts/dps-alert-id/$dpsAlertId")))
+        }
+
+        @Test
+        fun `will call back to DPS to get alert details`() {
+          alertsDpsApi.verify(getRequestedFor(urlMatching("/alerts/$dpsAlertId")))
+        }
+
+        @Test
+        fun `will update the alert in NOMIS`() {
+          alertsNomisApi.verify(putRequestedFor(urlEqualTo("/prisoners/booking-id/$nomisBookingId/alerts/$nomisAlertSequence")))
+        }
+
+        @Test
+        fun `the update alert will contain details of the DPS alert`() {
+          alertsNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("date", "2020-07-19")
+              .withRequestBodyJsonPath("isActive", false)
+              .withRequestBodyJsonPath("updateUsername", "RASHEED.BAKE")
+              .withRequestBodyJsonPath("expiryDate", "2023-07-19")
+              // TODO likely to do something when there are loads of comments for now use description
+              .withRequestBodyJsonPath("comment", "Alert added for good reasons")
+              .withRequestBodyJsonPath("authorisedBy", "Rasheed"),
+          )
+        }
+      }
+    }
+  }
+
   private fun publishCreateAlertDomainEvent(
     offenderNo: String = "A1234KT",
     alertUuid: String = UUID.randomUUID().toString(),
@@ -303,6 +465,15 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
     alertCode: String = "HPI",
   ) {
     publishAlertDomainEvent("prisoner-alerts.alert-created", offenderNo, alertUuid, source, alertCode)
+  }
+
+  private fun publishUpdateAlertDomainEvent(
+    offenderNo: String = "A1234KT",
+    alertUuid: String = UUID.randomUUID().toString(),
+    source: AlertSource = AlertSource.ALERTS_SERVICE,
+    alertCode: String = "HPI",
+  ) {
+    publishAlertDomainEvent("prisoner-alerts.alert-updated", offenderNo, alertUuid, source, alertCode)
   }
 
   private fun publishAlertDomainEvent(

@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-03-07.6835.6f1346e"
+    "version": "2024-03-11.6909.d119b6e"
   },
   "servers": [
     {
@@ -553,6 +553,180 @@
           },
           "404": {
             "description": "Court appearance does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/booking-id/{bookingId}/alerts/{alertSequence}": {
+      "get": {
+        "tags": [
+          "alerts-resource"
+        ],
+        "summary": "get an alert by bookingId and alert sequence",
+        "description": "Retrieves an prisoner alert. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "getAlert_1",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "Booking Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Booking Id",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "alertSequence",
+            "in": "path",
+            "description": "Alert sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Alert sequence",
+              "example": 3
+            },
+            "example": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Alert Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ALERTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Alert does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "alerts-resource"
+        ],
+        "summary": "Updates an alert on a prisoner",
+        "description": "Updates an alert on the specified prisoner's booking which should be the latest booking. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "updateAlert",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "Booking id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Booking id",
+              "example": 1234567
+            },
+            "example": 1234567
+          },
+          {
+            "name": "alertSequence",
+            "in": "path",
+            "description": "Alert sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Alert sequence",
+              "example": 3
+            },
+            "example": 3
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAlertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Alert Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "One or more fields in the request contains invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ALERTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Alert does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -3658,6 +3832,16 @@
               }
             }
           },
+          "400": {
+            "description": "One or more fields in the request contains invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized to access this endpoint",
             "content": {
@@ -6024,84 +6208,6 @@
         "summary": "get an alert by bookingId and alert sequence",
         "description": "Retrieves an prisoner alert. Requires ROLE_NOMIS_ALERTS",
         "operationId": "getAlert",
-        "parameters": [
-          {
-            "name": "bookingId",
-            "in": "path",
-            "description": "Booking Id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Booking Id",
-              "example": 12345
-            },
-            "example": 12345
-          },
-          {
-            "name": "alertSequence",
-            "in": "path",
-            "description": "Alert sequence",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Alert sequence",
-              "example": 3
-            },
-            "example": 3
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Alert Information Returned",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AlertResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ALERTS",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Alert does not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/prisoners/booking-id/{bookingId}/alerts/{alertSequence}": {
-      "get": {
-        "tags": [
-          "alerts-resource"
-        ],
-        "summary": "get an alert by bookingId and alert sequence",
-        "description": "Retrieves an prisoner alert. Requires ROLE_NOMIS_ALERTS",
-        "operationId": "getAlert_1",
         "parameters": [
           {
             "name": "bookingId",
@@ -8878,6 +8984,181 @@
         },
         "description": "Court Event"
       },
+      "AlertResponse": {
+        "required": [
+          "alertCode",
+          "alertSequence",
+          "audit",
+          "bookingId",
+          "date",
+          "isActive",
+          "isVerified",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "The prisoner's bookingId related to this alert",
+            "format": "int64"
+          },
+          "alertSequence": {
+            "type": "integer",
+            "description": "The sequence primary key within this booking",
+            "format": "int64"
+          },
+          "alertCode": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "date": {
+            "type": "string",
+            "description": "Date alert started",
+            "format": "date"
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "Date alert expired",
+            "format": "date"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "true if alert is active and has not expired"
+          },
+          "isVerified": {
+            "type": "boolean",
+            "description": "true if alert has been verified by another member of staff"
+          },
+          "authorisedBy": {
+            "type": "string",
+            "description": "Free format text of person or department that authorised the alert",
+            "example": "security"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Free format comment"
+          },
+          "audit": {
+            "$ref": "#/components/schemas/NomisAudit"
+          }
+        },
+        "description": "The data held in NOMIS about an alert associated with a prisoner"
+      },
+      "CodeDescription": {
+        "required": [
+          "code",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "NomisAudit": {
+        "required": [
+          "createDatetime",
+          "createUsername"
+        ],
+        "type": "object",
+        "properties": {
+          "createDatetime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date time record was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createUsername": {
+            "type": "string",
+            "description": "Username of person that created the record (might also be a system) "
+          },
+          "modifyUserId": {
+            "type": "string",
+            "description": "Username of person that last modified the record (might also be a system)"
+          },
+          "modifyDatetime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date time record was last modified",
+            "example": "2021-07-05T10:35:17"
+          },
+          "auditTimestamp": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Audit Date time",
+            "example": "2021-07-05T10:35:17"
+          },
+          "auditUserId": {
+            "type": "string",
+            "description": "Audit username"
+          },
+          "auditModuleName": {
+            "type": "string",
+            "description": "NOMIS or DPS module that created the record"
+          },
+          "auditClientUserId": {
+            "type": "string",
+            "description": "Client userid"
+          },
+          "auditClientIpAddress": {
+            "type": "string",
+            "description": "IP Address where request originated from"
+          },
+          "auditClientWorkstationName": {
+            "type": "string",
+            "description": "Machine name where request originated from"
+          },
+          "auditAdditionalInfo": {
+            "type": "string",
+            "description": "Additional information that is audited"
+          }
+        },
+        "description": "The data held in NOMIS the person or system that created this record"
+      },
+      "UpdateAlertRequest": {
+        "required": [
+          "date",
+          "isActive",
+          "updateUsername"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Date alert started",
+            "format": "date"
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "Date alert expired",
+            "format": "date"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "true if alert is active and has not expired"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Free format comment"
+          },
+          "updateUsername": {
+            "type": "string",
+            "description": "Username of person that update the record (might also be a system) "
+          },
+          "authorisedBy": {
+            "type": "string",
+            "description": "Free format text of person or department that authorised the alert",
+            "example": "security"
+          }
+        },
+        "description": "A request to update an alert in NOMIS"
+      },
       "UpdateNonAssociationRequest": {
         "required": [
           "effectiveDate",
@@ -9516,21 +9797,6 @@
           }
         },
         "description": "Offender individual schedule update request"
-      },
-      "CodeDescription": {
-        "required": [
-          "code",
-          "description"
-        ],
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        }
       },
       "Repair": {
         "required": [
@@ -13705,128 +13971,6 @@
         },
         "description": "Summary of adjudication for a booking"
       },
-      "AlertResponse": {
-        "required": [
-          "alertCode",
-          "alertSequence",
-          "audit",
-          "bookingId",
-          "date",
-          "isActive",
-          "isVerified",
-          "type"
-        ],
-        "type": "object",
-        "properties": {
-          "bookingId": {
-            "type": "integer",
-            "description": "The prisoner's bookingId related to this alert",
-            "format": "int64"
-          },
-          "alertSequence": {
-            "type": "integer",
-            "description": "The sequence primary key within this booking",
-            "format": "int64"
-          },
-          "alertCode": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "type": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "date": {
-            "type": "string",
-            "description": "Date alert started",
-            "format": "date"
-          },
-          "expiryDate": {
-            "type": "string",
-            "description": "Date alert expired",
-            "format": "date"
-          },
-          "isActive": {
-            "type": "boolean",
-            "description": "true if alert is active and has not expired"
-          },
-          "isVerified": {
-            "type": "boolean",
-            "description": "true if alert has been verified by another member of staff"
-          },
-          "authorisedBy": {
-            "type": "string",
-            "description": "Free format text of person or department that authorised the alert",
-            "example": "security"
-          },
-          "comment": {
-            "type": "string",
-            "description": "Free format comment"
-          },
-          "audit": {
-            "$ref": "#/components/schemas/NomisAudit"
-          }
-        },
-        "description": "The data held in NOMIS about an alert associated with a prisoner"
-      },
-      "NomisAudit": {
-        "required": [
-          "createDatetime",
-          "createUsername"
-        ],
-        "type": "object",
-        "properties": {
-          "createDatetime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Date time record was created",
-            "example": "2021-07-05T10:35:17"
-          },
-          "createUsername": {
-            "type": "string",
-            "description": "Username of person that created the record (might also be a system) "
-          },
-          "modifyUserId": {
-            "type": "string",
-            "description": "Username of person that last modified the record (might also be a system)"
-          },
-          "modifyDatetime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Date time record was last modified",
-            "example": "2021-07-05T10:35:17"
-          },
-          "auditTimestamp": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Audit Date time",
-            "example": "2021-07-05T10:35:17"
-          },
-          "auditUserId": {
-            "type": "string",
-            "description": "Audit username"
-          },
-          "auditModuleName": {
-            "type": "string",
-            "description": "NOMIS or DPS module that created the record"
-          },
-          "auditClientUserId": {
-            "type": "string",
-            "description": "Client userid"
-          },
-          "auditClientIpAddress": {
-            "type": "string",
-            "description": "IP Address where request originated from"
-          },
-          "auditClientWorkstationName": {
-            "type": "string",
-            "description": "Machine name where request originated from"
-          },
-          "auditAdditionalInfo": {
-            "type": "string",
-            "description": "Additional information that is audited"
-          }
-        },
-        "description": "The data held in NOMIS the person or system that created this record"
-      },
       "NonAssociationResponse": {
         "required": [
           "effectiveDate",
@@ -14179,31 +14323,41 @@
       },
       "History": {
         "required": [
-          "questionnaire",
+          "incidentChangeDate",
+          "incidentChangeStaff",
           "questionnaireId",
-          "questions"
+          "questions",
+          "type"
         ],
         "type": "object",
         "properties": {
           "questionnaireId": {
             "type": "integer",
-            "description": "The historical incident questionnaire id",
+            "description": "The history questionnaire id for the incident",
             "format": "int64"
           },
-          "questionnaire": {
+          "type": {
             "type": "string",
-            "description": "The historical incident questionnaire code"
+            "description": "The questionnaire type"
           },
           "description": {
             "type": "string",
-            "description": "The historical incident questionnaire description"
+            "description": "The questionnaire description"
           },
           "questions": {
             "type": "array",
-            "description": "Questions asked for the historical incident questionnaire",
+            "description": "Questions asked for the questionnaire",
             "items": {
               "$ref": "#/components/schemas/HistoryQuestion"
             }
+          },
+          "incidentChangeDate": {
+            "type": "string",
+            "description": "When the questionnaire was changed",
+            "format": "date"
+          },
+          "incidentChangeStaff": {
+            "$ref": "#/components/schemas/Staff"
           }
         },
         "description": "Historical questionnaire details for the incident"
@@ -14212,13 +14366,19 @@
         "required": [
           "answers",
           "question",
+          "questionId",
           "sequence"
         ],
         "type": "object",
         "properties": {
+          "questionId": {
+            "type": "integer",
+            "description": "The sequence number of the response question for this incident",
+            "format": "int64"
+          },
           "sequence": {
             "type": "integer",
-            "description": "The sequence number of the historical question for this incident",
+            "description": "The sequence number of the question for this incident",
             "format": "int32"
           },
           "question": {
@@ -14233,17 +14393,23 @@
             }
           }
         },
-        "description": "Questions asked for the historical incident questionnaire"
+        "description": "Questions asked for the questionnaire"
       },
       "HistoryResponse": {
         "required": [
-          "sequence"
+          "recordingStaff",
+          "responseSequence"
         ],
         "type": "object",
         "properties": {
-          "sequence": {
+          "questionResponseId": {
             "type": "integer",
-            "description": "The sequence number of the answer",
+            "description": "The id of the questionnaire question answer",
+            "format": "int64"
+          },
+          "responseSequence": {
+            "type": "integer",
+            "description": "The sequence number of the response for this incident",
             "format": "int32"
           },
           "answer": {
@@ -14253,6 +14419,9 @@
           "comment": {
             "type": "string",
             "description": "Comment added to the response by recording staff"
+          },
+          "recordingStaff": {
+            "$ref": "#/components/schemas/Staff"
           }
         },
         "description": "Historical list of Responses to this question"
@@ -14260,14 +14429,15 @@
       "IncidentResponse": {
         "required": [
           "history",
-          "id",
           "incidentDateTime",
+          "incidentId",
           "lockedResponse",
           "offenderParties",
           "prison",
+          "questionnaireId",
           "questions",
           "reportedDateTime",
-          "reportedStaff",
+          "reportingStaff",
           "requirements",
           "staffParties",
           "status",
@@ -14275,9 +14445,14 @@
         ],
         "type": "object",
         "properties": {
-          "id": {
+          "incidentId": {
             "type": "integer",
             "description": "The incident id",
+            "format": "int64"
+          },
+          "questionnaireId": {
+            "type": "integer",
+            "description": "The id of the questionnaire associated with this incident",
             "format": "int64"
           },
           "title": {
@@ -14292,8 +14467,7 @@
             "$ref": "#/components/schemas/CodeDescription"
           },
           "status": {
-            "type": "string",
-            "description": "Current status code of the incident"
+            "$ref": "#/components/schemas/IncidentStatus"
           },
           "type": {
             "type": "string",
@@ -14309,7 +14483,7 @@
             "description": "The date and time of the incident",
             "example": "2021-07-05T10:35:17"
           },
-          "reportedStaff": {
+          "reportingStaff": {
             "$ref": "#/components/schemas/Staff"
           },
           "reportedDateTime": {
@@ -14355,6 +14529,34 @@
           }
         },
         "description": "Incident Details"
+      },
+      "IncidentStatus": {
+        "required": [
+          "code",
+          "description",
+          "enhancedUser",
+          "standardUser"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "listSequence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "standardUser": {
+            "type": "boolean"
+          },
+          "enhancedUser": {
+            "type": "boolean"
+          }
+        },
+        "description": "Status details"
       },
       "Offender": {
         "required": [
@@ -14405,10 +14607,16 @@
         "required": [
           "answers",
           "question",
+          "questionId",
           "sequence"
         ],
         "type": "object",
         "properties": {
+          "questionId": {
+            "type": "integer",
+            "description": "The questionnaire question id",
+            "format": "int64"
+          },
           "sequence": {
             "type": "integer",
             "description": "The sequence number of the question for this incident",
@@ -14456,12 +14664,21 @@
         "description": "Requirements for completing the incident report"
       },
       "Response": {
+        "required": [
+          "recordingStaff",
+          "sequence"
+        ],
         "type": "object",
         "properties": {
-          "id": {
+          "questionResponseId": {
             "type": "integer",
-            "description": "The id of the answer",
+            "description": "The id of the questionnaire question answer",
             "format": "int64"
+          },
+          "sequence": {
+            "type": "integer",
+            "description": "The sequence number of the response for this incident",
+            "format": "int32"
           },
           "answer": {
             "type": "string",
@@ -14470,6 +14687,9 @@
           "comment": {
             "type": "string",
             "description": "Comment added to the response by recording staff"
+          },
+          "recordingStaff": {
+            "$ref": "#/components/schemas/Staff"
           }
         },
         "description": "List of Responses to this question"

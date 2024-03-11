@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-03-07.570.d334918"
+    "version": "2024-03-08.640.c8308bc"
   },
   "servers": [
     {
@@ -24,91 +24,6 @@
     }
   ],
   "paths": {
-    "/queue-admin/retry-dlq/{dlqName}": {
-      "put": {
-        "tags": [
-          "hmpps-queue-resource"
-        ],
-        "description": "\n\nRequires one of the following roles:\n* ROLE_ALERTS_ADMIN",
-        "operationId": "retryDlq",
-        "parameters": [
-          {
-            "name": "dlqName",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/RetryDlqResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/queue-admin/retry-all-dlqs": {
-      "put": {
-        "tags": [
-          "hmpps-queue-resource"
-        ],
-        "operationId": "retryAllDlqs",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RetryDlqResult"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/queue-admin/purge-queue/{queueName}": {
-      "put": {
-        "tags": [
-          "hmpps-queue-resource"
-        ],
-        "description": "\n\nRequires one of the following roles:\n* ROLE_ALERTS_ADMIN",
-        "operationId": "purgeQueue",
-        "parameters": [
-          {
-            "name": "queueName",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/PurgeQueueResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/alerts/{alertUuid}": {
       "get": {
         "tags": [
@@ -127,23 +42,21 @@
               "type": "string",
               "format": "uuid"
             }
-          },
-          {
-            "name": "Username",
-            "in": "header",
-            "description": "The username of the user interacting with the client service. This can be used instead of the `user_name` or `username` token claim when the client service is acting on behalf of a user. The value passed in the username header will only be used if a `user_name` or `username` token claim is not present.",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Alert found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Alert"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The alert associated with this identifier was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -162,18 +75,8 @@
               }
             }
           },
-          "200": {
-            "description": "Alert found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Alert"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The alert associated with this identifier was not found.",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -203,6 +106,18 @@
             }
           },
           {
+            "name": "Username",
+            "in": "header",
+            "description": "The username of the user interacting with the client service. This can be used instead of the `user_name` or `username` token claim when the client service is acting on behalf of a user. The value passed in the username header will only be used if a `user_name` or `username` token claim is not present.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
             "name": "Source",
             "in": "header",
             "description": "The source of the request. Will default to 'ALERTS_SERVICE' if not suppliedThis value will be assigned to the additionalInformation.source property in published domain events. A source value of 'NOMIS' will allow any username value that is less than 32 characters to be supplied. If this username is not found, its value will be used for the user display name property. A source value of 'MIGRATION' will suppress all domain event publishing.",
@@ -215,18 +130,6 @@
                     "NOMIS",
                     "MIGRATION"
                   ]
-                }
-              }
-            }
-          },
-          {
-            "name": "Username",
-            "in": "header",
-            "description": "The username of the user interacting with the client service. This can be used instead of the `user_name` or `username` token claim when the client service is acting on behalf of a user. The value passed in the username header will only be used if a `user_name` or `username` token claim is not present.",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string"
                 }
               }
             }
@@ -243,18 +146,8 @@
           "required": true
         },
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -273,8 +166,18 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -304,6 +207,18 @@
             }
           },
           {
+            "name": "Username",
+            "in": "header",
+            "description": "The username of the user interacting with the client service. This can be used instead of the `user_name` or `username` token claim when the client service is acting on behalf of a user. The value passed in the username header will only be used if a `user_name` or `username` token claim is not present.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
             "name": "Source",
             "in": "header",
             "description": "The source of the request. Will default to 'ALERTS_SERVICE' if not suppliedThis value will be assigned to the additionalInformation.source property in published domain events. A source value of 'NOMIS' will allow any username value that is less than 32 characters to be supplied. If this username is not found, its value will be used for the user display name property. A source value of 'MIGRATION' will suppress all domain event publishing.",
@@ -319,43 +234,11 @@
                 }
               }
             }
-          },
-          {
-            "name": "Username",
-            "in": "header",
-            "description": "The username of the user interacting with the client service. This can be used instead of the `user_name` or `username` token claim when the client service is acting on behalf of a user. The value passed in the username header will only be used if a `user_name` or `username` token claim is not present.",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "204": {
             "description": "Alert deleted"
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
           },
           "404": {
             "description": "Alert was not found or already deleted",
@@ -366,35 +249,13 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/nomis-alerts": {
-      "post": {
-        "tags": [
-          "nomis-alerts-controller"
-        ],
-        "summary": "Create or update an alert from NOMIS alert data. An upsert endpoint. SYNC ONLY",
-        "description": "Accepts alerts data in NOMIS format and creates a corresponding alert in this service if one does not exist or updates an existing alert if a corresponding alert already exists in the new service. This can be disambiguated by the response code, A 201 Created indicates the request caused a new alert to be created, a 200 OK is returned when an existing alert was updated by the request. In both cases, the alert's unique identifier is returned for mapping purposes. This endpoint is therefore idempotent and will not create duplicate alert records. This endpoint does not validate the supplied data as it must accept all NOMIS alert data. This endpoint is intended to be used by the synchronisation process to migrate existing alerts and sync new and updated ones. The 'Sync-Suppress-Events' header should be used to suppress domain event publishing when alerts are initially migrated. It should not be used or should be set to false (the default) when syncing new and updated alerts. \n\nRequires one of the following roles:\n* ROLE_NOMIS_ALERTS\n* ROLE_ALERTS_ADMIN",
-        "operationId": "upsertNomisAlert",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NomisAlert"
-              }
-            }
           },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Alert updated successfully",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NomisAlertMapping"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -408,39 +269,8 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "Alert created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NomisAlertMapping"
-                }
-              }
-            }
           }
-        },
-        "deprecated": true
+        }
       }
     },
     "/alerts": {
@@ -453,6 +283,18 @@
         "operationId": "createAlert",
         "parameters": [
           {
+            "name": "Username",
+            "in": "header",
+            "description": "The username of the user interacting with the client service. This can be used instead of the `user_name` or `username` token claim when the client service is acting on behalf of a user. The value passed in the username header will only be used if a `user_name` or `username` token claim is not present.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
             "name": "Source",
             "in": "header",
             "description": "The source of the request. Will default to 'ALERTS_SERVICE' if not suppliedThis value will be assigned to the additionalInformation.source property in published domain events. A source value of 'NOMIS' will allow any username value that is less than 32 characters to be supplied. If this username is not found, its value will be used for the user display name property. A source value of 'MIGRATION' will suppress all domain event publishing.",
@@ -465,18 +307,6 @@
                     "NOMIS",
                     "MIGRATION"
                   ]
-                }
-              }
-            }
-          },
-          {
-            "name": "Username",
-            "in": "header",
-            "description": "The username of the user interacting with the client service. This can be used instead of the `user_name` or `username` token claim when the client service is acting on behalf of a user. The value passed in the username header will only be used if a `user_name` or `username` token claim is not present.",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string"
                 }
               }
             }
@@ -493,36 +323,6 @@
           "required": true
         },
         "responses": {
-          "409": {
-            "description": "Conflict, the person already has an active alert using the supplied alert code",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "400": {
             "description": "Bad request",
             "content": {
@@ -542,44 +342,33 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/queue-admin/get-dlq-messages/{dlqName}": {
-      "get": {
-        "tags": [
-          "hmpps-queue-resource"
-        ],
-        "description": "\n\nRequires one of the following roles:\n* ROLE_ALERTS_ADMIN",
-        "operationId": "getDlqMessages",
-        "parameters": [
-          {
-            "name": "dlqName",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
             }
           },
-          {
-            "name": "maxMessages",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 100
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetDlqResult"
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict, the person already has an active alert using the supplied alert code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -607,6 +396,26 @@
           }
         ],
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Alerts found",
             "content": {
@@ -619,142 +428,8 @@
                 }
               }
             }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
           }
         }
-      }
-    },
-    "/nomis-alerts/{alertUuid}": {
-      "get": {
-        "tags": [
-          "nomis-alerts-controller"
-        ],
-        "summary": "Get an alert in NOMIS format by its unique identifier. SYNC ONLY",
-        "description": "Returns the alert with the matching identifier in the NOMIS data format. This endpoint is intended to be used by the synchronisation process to retrieve the latest state of an alert.\n\nRequires one of the following roles:\n* ROLE_NOMIS_ALERTS\n* ROLE_ALERTS_ADMIN",
-        "operationId": "retrieveNomisAlert",
-        "parameters": [
-          {
-            "name": "alertUuid",
-            "in": "path",
-            "description": "Alert unique identifier",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NomisAlert"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NomisAlert"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Alert found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NomisAlert"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The alert associated with this identifier was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "deprecated": true
-      },
-      "delete": {
-        "tags": [
-          "nomis-alerts-controller"
-        ],
-        "summary": "Deletes an alert. SYNC ONLY",
-        "description": "This endpoint fully removes the alert from the system. It is used when an alert has been created in error or otherwise removed from NOMIS and should therefore also be removed from this service. This endpoint will return 200 OK if the alert was not found or already deleted. This is to prevent low value warnings being logged. This endpoint is intended to be used by the synchronisation process to sync the deletion of existing alerts.\n\nRequires one of the following roles:\n* ROLE_NOMIS_ALERTS\n* ROLE_ALERTS_ADMIN",
-        "operationId": "deleteNomisAlert",
-        "parameters": [
-          {
-            "name": "alertUuid",
-            "in": "path",
-            "description": "Alert unique identifier",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "204": {
-            "description": "Alert deleted"
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Alert was not found or already deleted"
-          }
-        },
-        "deprecated": true
       }
     },
     "/alert-types": {
@@ -777,12 +452,15 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Alert types and codes found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AlertType"
+                  }
                 }
               }
             }
@@ -797,15 +475,12 @@
               }
             }
           },
-          "200": {
-            "description": "Alert types and codes found",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AlertType"
-                  }
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -816,55 +491,6 @@
   },
   "components": {
     "schemas": {
-      "DlqMessage": {
-        "required": [
-          "body",
-          "messageId"
-        ],
-        "type": "object",
-        "properties": {
-          "body": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "object"
-            }
-          },
-          "messageId": {
-            "type": "string"
-          }
-        }
-      },
-      "RetryDlqResult": {
-        "required": [
-          "messages",
-          "messagesFoundCount"
-        ],
-        "type": "object",
-        "properties": {
-          "messagesFoundCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "messages": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DlqMessage"
-            }
-          }
-        }
-      },
-      "PurgeQueueResult": {
-        "required": [
-          "messagesFoundCount"
-        ],
-        "type": "object",
-        "properties": {
-          "messagesFoundCount": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
       "UpdateAlert": {
         "type": "object",
         "properties": {
@@ -930,6 +556,7 @@
       },
       "Alert": {
         "required": [
+          "activeFrom",
           "alertCode",
           "alertUuid",
           "comments",
@@ -1100,151 +727,6 @@
         },
         "description": "A comment appended to an alert comment thread"
       },
-      "NomisAlert": {
-        "required": [
-          "alertCode",
-          "alertDate",
-          "alertSeq",
-          "alertStatus",
-          "alertType",
-          "createDatetime",
-          "offenderBookId",
-          "offenderNo",
-          "verifiedFlag"
-        ],
-        "type": "object",
-        "properties": {
-          "alertDate": {
-            "type": "string",
-            "description": "The date the alert came into effect. Maps to the ALERT_DATE column in the NOMIS database.",
-            "format": "date",
-            "example": "2021-09-27"
-          },
-          "offenderBookId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "rootOffenderId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "offenderNo": {
-            "type": "string"
-          },
-          "alertSeq": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "alertType": {
-            "type": "string"
-          },
-          "alertCode": {
-            "type": "string"
-          },
-          "authorizePersonText": {
-            "type": "string"
-          },
-          "createDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "alertStatus": {
-            "type": "string"
-          },
-          "verifiedFlag": {
-            "type": "boolean"
-          },
-          "verifiedDatetime": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "verifiedUserId": {
-            "type": "string"
-          },
-          "expiryDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "commentText": {
-            "type": "string"
-          },
-          "caseloadId": {
-            "type": "string"
-          },
-          "modifyUserId": {
-            "type": "string"
-          },
-          "modifyDatetime": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "caseloadType": {
-            "type": "string"
-          },
-          "createDatetime": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "createUserId": {
-            "type": "string"
-          },
-          "auditTimestamp": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "auditUserId": {
-            "type": "string"
-          },
-          "auditModuleName": {
-            "type": "string"
-          },
-          "auditClientUserId": {
-            "type": "string"
-          },
-          "auditClientIpAddress": {
-            "type": "string"
-          },
-          "auditClientWorkstationName": {
-            "type": "string"
-          },
-          "auditAdditionalInfo": {
-            "type": "string"
-          }
-        }
-      },
-      "NomisAlertMapping": {
-        "required": [
-          "alertSeq",
-          "alertUuid",
-          "offenderBookId",
-          "status"
-        ],
-        "type": "object",
-        "properties": {
-          "offenderBookId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "alertSeq": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "alertUuid": {
-            "type": "string",
-            "description": "The unique identifier assigned to the alert",
-            "format": "uuid",
-            "example": "8cdadcf3-b003-4116-9956-c99bd8df6a00"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "CREATED",
-              "UPDATED"
-            ]
-          }
-        },
-        "description": "The mapping between a NOMIS alert and an alert in the HMPPS Alerts API. NOMIS uses a composite key of offender book ID and alert sequence number to uniquely identify an alert. The alert UUID is the unique identifier assigned to the alert in the HMPPS Alerts API."
-      },
       "CreateAlert": {
         "required": [
           "alertCode",
@@ -1292,30 +774,6 @@
           }
         },
         "description": "The alert data to use to create an alert in the service"
-      },
-      "GetDlqResult": {
-        "required": [
-          "messages",
-          "messagesFoundCount",
-          "messagesReturnedCount"
-        ],
-        "type": "object",
-        "properties": {
-          "messagesFoundCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "messagesReturnedCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "messages": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DlqMessage"
-            }
-          }
-        }
       },
       "AlertCode": {
         "required": [

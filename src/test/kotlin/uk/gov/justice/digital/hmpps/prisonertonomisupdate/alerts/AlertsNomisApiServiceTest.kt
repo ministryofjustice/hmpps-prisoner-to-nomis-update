@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -14,6 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAlertRequest
 import java.time.LocalDate
 
 @SpringAPIServiceTest
@@ -72,6 +74,61 @@ class AlertsNomisApiServiceTest {
       date = LocalDate.now(),
       isActive = true,
       createUsername = "BOBBY.BEANS",
+    )
+  }
+
+  @Nested
+  inner class UpdateAlert {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsNomisApiMockServer.stubPutAlert(bookingId = 1234567, alertSequence = 4)
+
+      apiService.updateAlert(bookingId = 1234567, alertSequence = 4, nomisAlert = updateAlertRequest())
+
+      alertsNomisApiMockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass alert Id to service`() = runTest {
+      alertsNomisApiMockServer.stubPutAlert(bookingId = 1234567, alertSequence = 4)
+
+      apiService.updateAlert(bookingId = 1234567, alertSequence = 4, nomisAlert = updateAlertRequest())
+
+      alertsNomisApiMockServer.verify(
+        putRequestedFor(urlPathEqualTo("/prisoners/booking-id/1234567/alerts/4")),
+      )
+    }
+
+    @Test
+    internal fun `will pass alert update request to service`() = runTest {
+      alertsNomisApiMockServer.stubPutAlert(bookingId = 1234567, alertSequence = 4)
+
+      apiService.updateAlert(
+        bookingId = 1234567,
+        alertSequence = 4,
+        nomisAlert = UpdateAlertRequest(
+          date = LocalDate.parse("2020-07-19"),
+          expiryDate = LocalDate.parse("2020-08-19"),
+          isActive = true,
+          updateUsername = "BOBBY.BEANS",
+        ),
+      )
+
+      alertsNomisApiMockServer.verify(
+        putRequestedFor(anyUrl())
+          .withRequestBodyJsonPath("date", "2020-07-19")
+          .withRequestBodyJsonPath("expiryDate", "2020-08-19")
+          .withRequestBodyJsonPath("isActive", true)
+          .withRequestBodyJsonPath("updateUsername", "BOBBY.BEANS"),
+      )
+    }
+
+    private fun updateAlertRequest(): UpdateAlertRequest = UpdateAlertRequest(
+      date = LocalDate.now(),
+      isActive = true,
+      updateUsername = "BOBBY.BEANS",
     )
   }
 }
