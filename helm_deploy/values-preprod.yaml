@@ -24,6 +24,7 @@ generic-service:
     API_BASE_URL_ALERTS: https://alerts-api-preprod.hmpps.service.justice.gov.uk
     FEATURE_EVENT_COURT_SENTENCING_COURT_CASE_CREATED: false
     FEATURE_EVENT_COURT_SENTENCING_COURT_APPEARANCE_CREATED: false
+    FEATURE_EVENT_COURT_SENTENCING_COURT_APPEARANCE_UPDATED: false
 
 generic-prometheus-alerts:
   businessHoursOnly: true

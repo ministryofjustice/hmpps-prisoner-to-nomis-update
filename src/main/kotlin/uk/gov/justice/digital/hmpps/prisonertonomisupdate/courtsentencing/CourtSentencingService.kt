@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.Charge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCase
@@ -147,6 +148,59 @@ class CourtSentencingService(
         }
       }
       saveMapping { courtCaseMappingService.createAppearanceMapping(it) }
+    }
+  }
+
+  suspend fun updateCourtAppearance(createEvent: CourtAppearanceCreatedEvent) {
+    val courtCaseId = createEvent.additionalInformation.courtCaseId
+    val courtAppearanceId = createEvent.additionalInformation.id
+    val offenderNo: String = createEvent.additionalInformation.offenderNo
+    val telemetryMap = mutableMapOf(
+      "dpsCourtCaseId" to courtCaseId,
+      "dpsCourtAppearanceId" to courtAppearanceId,
+      "offenderNo" to offenderNo,
+    )
+
+    runCatching {
+      val courtCaseMapping =
+        courtCaseMappingService.getMappingGivenCourtCaseId(courtCaseId).also {
+          telemetryMap["nomisCourtCaseId"] = it.nomisCourtCaseId.toString()
+        }
+      val courtAppearanceMapping =
+        courtCaseMappingService.getMappingGivenCourtAppearanceId(courtAppearanceId)
+          .also {
+            telemetryMap["nomisCourtAppearanceId"] = it.nomisCourtAppearanceId.toString()
+          }
+
+      val dpsCourtAppearance = courtSentencingApiService.getCourtAppearance(courtAppearanceId)
+
+      val courtEventChargesToUpdate: MutableList<Pair<Charge, Long>> = mutableListOf()
+      val courtEventChargesToCreate: MutableList<Charge> = mutableListOf()
+      dpsCourtAppearance.charges.forEach { charge ->
+        courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(charge.chargeUuid.toString())?.let { mapping ->
+          courtEventChargesToUpdate.add(Pair(charge, mapping.nomisCourtChargeId))
+        } ?: let {
+          courtEventChargesToCreate.add(charge)
+        }
+      }
+
+      nomisApiService.updateCourtAppearance(
+        offenderNo = offenderNo,
+        nomisCourtCaseId = courtCaseMapping.nomisCourtCaseId,
+        nomisCourtAppearanceId = courtAppearanceMapping.nomisCourtAppearanceId,
+        request = dpsCourtAppearance.toNomisCourtAppearance(
+          courtEventChargesToCreate = courtEventChargesToCreate.map { it.toNomisCourtCharge() },
+          courtEventChargesToUpdate = courtEventChargesToUpdate.map { it.first.toExistingNomisCourtCharge(it.second) },
+        ),
+      )
+
+      telemetryClient.trackEvent(
+        "court-appearance-updated-success",
+        telemetryMap,
+      )
+    }.onFailure { e ->
+      telemetryClient.trackEvent("court-appearance-updated-failed", telemetryMap, null)
+      throw e
     }
   }
 

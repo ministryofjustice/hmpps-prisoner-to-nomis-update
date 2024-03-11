@@ -713,6 +713,13 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyValue(request)
       .retrieve()
       .awaitBody()
+
+  suspend fun updateCourtAppearance(offenderNo: String, nomisCourtCaseId: Long, nomisCourtAppearanceId: Long, request: CourtAppearanceRequest) =
+    webClient.put()
+      .uri("/prisoners/{offenderNo}/sentencing/court-cases/{nomisCourtCaseId}/court-appearances/{nomisCourtAppearanceId}", offenderNo, nomisCourtCaseId, nomisCourtAppearanceId)
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
 }
 
 data class CreateVisitDto(
