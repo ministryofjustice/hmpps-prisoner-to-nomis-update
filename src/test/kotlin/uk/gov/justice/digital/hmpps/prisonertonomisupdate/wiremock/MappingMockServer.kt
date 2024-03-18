@@ -1397,6 +1397,16 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubCourtChargeBatchUpdate() {
+    stubFor(
+      put("/mapping/court-sentencing/court-charges").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200),
+      ),
+    )
+  }
+
   fun stubGetCourtAppearanceMappingGivenDpsId(id: String, nomisCourtAppearanceId: Long = 54321) {
     stubFor(
       get("/mapping/court-sentencing/court-appearances/dps-court-appearance-id/$id").willReturn(

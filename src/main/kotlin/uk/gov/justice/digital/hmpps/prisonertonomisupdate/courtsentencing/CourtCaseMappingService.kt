@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 
 @Service
@@ -28,6 +29,14 @@ class CourtCaseMappingService(
   suspend fun createAppearanceMapping(request: CourtAppearanceAllMappingDto) {
     webClient.post()
       .uri("/mapping/court-sentencing/court-appearances")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntityOrThrowOnConflict()
+  }
+
+  suspend fun createChargeBatchUpdateMapping(request: CourtChargeBatchUpdateMappingDto) {
+    webClient.put()
+      .uri("/mapping/court-sentencing/court-charges")
       .bodyValue(request)
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()

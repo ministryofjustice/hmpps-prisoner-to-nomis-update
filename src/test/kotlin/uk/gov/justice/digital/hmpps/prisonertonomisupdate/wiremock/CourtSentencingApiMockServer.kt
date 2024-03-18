@@ -12,6 +12,21 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 
+const val COURT_CHARGE_1_OFFENCE_CODE = "PS90031"
+const val COURT_CHARGE_2_OFFENCE_CODE = "PS90032"
+const val COURT_CHARGE_3_OFFENCE_CODE = "PS90033"
+const val COURT_CHARGE_4_OFFENCE_CODE = "PS90034"
+const val COURT_CHARGE_1_RESULT_CODE = "Remand in Custody 1 (Bail Refused)"
+const val COURT_CHARGE_2_RESULT_CODE = "Remand in Custody 2 (Bail Refused)"
+const val COURT_CHARGE_3_RESULT_CODE = "Remand in Custody 3 (Bail Refused)"
+const val COURT_CHARGE_4_RESULT_CODE = "Remand in Custody 4 (Bail Refused)"
+const val COURT_CHARGE_1_OFFENCE_DATE = "2024-01-11"
+const val COURT_CHARGE_2_OFFENCE_DATE = "2024-01-12"
+const val COURT_CHARGE_3_OFFENCE_DATE = "2024-01-13"
+const val COURT_CHARGE_4_OFFENCE_DATE = "2024-01-14"
+const val COURT_CHARGE_1_OFFENCE_END_DATE = "2024-01-11"
+const val COURT_CHARGE_2_OFFENCE_END_DATE = "2024-01-12"
+
 class CourtSentencingApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
   companion object {
     @JvmField
@@ -165,37 +180,37 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
            "charges": [
             {
                 "chargeUuid": "$courtCharge1Id",
-                "offenceCode": "PS90037",
-                "offenceStartDate": "2024-01-15",
-                "offenceEndDate": null,
-                "outcome": "Remand in Custody (Bail Refused)",
+                "offenceCode": "$COURT_CHARGE_1_OFFENCE_CODE",
+                "offenceStartDate": "$COURT_CHARGE_1_OFFENCE_DATE",
+                "offenceEndDate": "$COURT_CHARGE_1_OFFENCE_END_DATE",
+                "outcome": "$COURT_CHARGE_1_RESULT_CODE",
                 "terrorRelated": null,
                 "sentence": null
             },
             {
                 "chargeUuid": "$courtCharge2Id",
-                "offenceCode": "PS90090",
-                "offenceStartDate": "2024-01-17",
-                "offenceEndDate": "2024-01-19",
-                "outcome": "Remand in Custody (Bail Refused)",
+                "offenceCode": "$COURT_CHARGE_2_OFFENCE_CODE",
+                "offenceStartDate": "$COURT_CHARGE_2_OFFENCE_DATE",
+                "offenceEndDate": "$COURT_CHARGE_2_OFFENCE_END_DATE",
+                "outcome": "$COURT_CHARGE_2_RESULT_CODE",
                 "terrorRelated": null,
                 "sentence": null
             },
             {
                 "chargeUuid": "$courtCharge3Id",
-                "offenceCode": "PS90095",
-                "offenceStartDate": "2024-02-15",
+                "offenceCode": "$COURT_CHARGE_3_OFFENCE_CODE",
+                "offenceStartDate": "$COURT_CHARGE_3_OFFENCE_DATE",
                 "offenceEndDate": null,
-                "outcome": "Remand in Custody (Bail Refused)",
+                "outcome": "$COURT_CHARGE_3_RESULT_CODE",
                 "terrorRelated": null,
                 "sentence": null
             },
             {
                 "chargeUuid": "$courtCharge4Id",
-                "offenceCode": "PS90096",
-                "offenceStartDate": "2024-02-17",
-                "offenceEndDate": "2024-02-19",
-                "outcome": "Remand in Custody (Bail Refused)",
+                "offenceCode": "$COURT_CHARGE_4_OFFENCE_CODE",
+                "offenceStartDate": "$COURT_CHARGE_4_OFFENCE_DATE",
+                "offenceEndDate": null,
+                "outcome": "$COURT_CHARGE_4_RESULT_CODE",
                 "terrorRelated": null,
                 "sentence": null
             }
