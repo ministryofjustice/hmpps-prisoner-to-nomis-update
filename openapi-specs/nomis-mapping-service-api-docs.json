@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-03-06.3845.8293b3a"
+    "version": "2024-03-14.3874.039dc9c"
   },
   "servers": [
     {
@@ -96,6 +96,44 @@
           },
           "409": {
             "description": "One of the punishment mappings already exist"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-sentencing/court-charges": {
+      "put": {
+        "tags": [
+          "court-sentencing-mapping-resource"
+        ],
+        "summary": "Creates a new set of court charge mapping and deletes ones no longer required",
+        "description": "Creates a record of a DPS court charge id and NOMIS court charge id. The ones that require deleting are removed by NOMIS id. Requires NOMIS_COURT_SENTENCING",
+        "operationId": "courtChargeBatchUpdateMappings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourtChargeBatchUpdateMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping entries created"
+          },
+          "409": {
+            "description": "One of the court charge mappings already exist"
           },
           "401": {
             "description": "Unauthorized to access this endpoint",
@@ -4892,6 +4930,87 @@
           }
         }
       },
+      "CourtChargeBatchUpdateMappingDto": {
+        "required": [
+          "courtChargesToCreate",
+          "courtChargesToDelete"
+        ],
+        "type": "object",
+        "properties": {
+          "courtChargesToCreate": {
+            "type": "array",
+            "description": "Court Charge mappings to create",
+            "items": {
+              "$ref": "#/components/schemas/CourtChargeMappingDto"
+            }
+          },
+          "courtChargesToDelete": {
+            "type": "array",
+            "description": "Court Charge mappings to delete",
+            "items": {
+              "$ref": "#/components/schemas/CourtChargeNomisIdDto"
+            }
+          }
+        },
+        "description": "Batch of Court Charge mappings to create and delete"
+      },
+      "CourtChargeMappingDto": {
+        "required": [
+          "dpsCourtChargeId",
+          "nomisCourtChargeId"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisCourtChargeId": {
+            "type": "integer",
+            "description": "NOMIS court charge id",
+            "format": "int64",
+            "example": 123456
+          },
+          "dpsCourtChargeId": {
+            "type": "string",
+            "description": "DPS court charge id",
+            "example": "123456"
+          },
+          "label": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "Mapping type",
+            "default": "DPS_CREATED",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date-time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "Court Charge mapping"
+      },
+      "CourtChargeNomisIdDto": {
+        "required": [
+          "nomisCourtChargeId"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisCourtChargeId": {
+            "type": "integer",
+            "description": "NOMIS court charge id",
+            "format": "int64",
+            "example": 123456
+          }
+        },
+        "description": "ID of mapping identified by the NOMIS id for a Court Charge mapping"
+      },
       "ActivityMappingDto": {
         "required": [
           "activityScheduleId",
@@ -5502,48 +5621,6 @@
           }
         },
         "description": "Court case mapping including child entity mapping"
-      },
-      "CourtChargeMappingDto": {
-        "required": [
-          "dpsCourtChargeId",
-          "nomisCourtChargeId"
-        ],
-        "type": "object",
-        "properties": {
-          "nomisCourtChargeId": {
-            "type": "integer",
-            "description": "NOMIS court charge id",
-            "format": "int64",
-            "example": 123456
-          },
-          "dpsCourtChargeId": {
-            "type": "string",
-            "description": "DPS court charge id",
-            "example": "123456"
-          },
-          "label": {
-            "maxLength": 20,
-            "minLength": 0,
-            "type": "string",
-            "description": "Label (a timestamp for migrated ids)"
-          },
-          "mappingType": {
-            "type": "string",
-            "description": "Mapping type",
-            "default": "DPS_CREATED",
-            "enum": [
-              "MIGRATED",
-              "DPS_CREATED"
-            ]
-          },
-          "whenCreated": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Date-time the mapping was created",
-            "example": "2021-07-05T10:35:17"
-          }
-        },
-        "description": "Court Charge mapping"
       },
       "CourtCaseMapping": {
         "required": [

@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.Charge
@@ -11,7 +13,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeNomisIdDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ExistingOffenderChargeRequest
@@ -19,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Offend
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -33,9 +38,14 @@ class CourtSentencingService(
   private val objectMapper: ObjectMapper,
 ) : CreateMappingRetryable {
 
+  private companion object {
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
+
   enum class EntityType(val displayName: String) {
     COURT_CASE("court-case"),
     COURT_APPEARANCE("court-appearance"),
+    COURT_CHARGE("court-appearance"),
   }
 
   suspend fun createCourtCase(createEvent: CourtCaseCreatedEvent) {
@@ -184,7 +194,7 @@ class CourtSentencingService(
         }
       }
 
-      nomisApiService.updateCourtAppearance(
+      val nomisResponse = nomisApiService.updateCourtAppearance(
         offenderNo = offenderNo,
         nomisCourtCaseId = courtCaseMapping.nomisCourtCaseId,
         nomisCourtAppearanceId = courtAppearanceMapping.nomisCourtAppearanceId,
@@ -193,6 +203,32 @@ class CourtSentencingService(
           courtEventChargesToUpdate = courtEventChargesToUpdate.map { it.first.toExistingNomisCourtCharge(it.second) },
         ),
       )
+
+      CourtChargeBatchUpdateMappingDto(
+        courtChargesToCreate = courtEventChargesToCreate.zip(nomisResponse.createdCourtEventChargesIds) { charge, nomisChargeResponseDto ->
+          CourtChargeMappingDto(
+            nomisCourtChargeId = nomisChargeResponseDto.offenderChargeId,
+            dpsCourtChargeId = charge.chargeUuid.toString(),
+          )
+        },
+        courtChargesToDelete = nomisResponse.deletedOffenderChargesIds.map {
+          CourtChargeNomisIdDto(
+            nomisCourtChargeId = it.offenderChargeId,
+          )
+        },
+      ).takeIf { it.hasAnyMappingsToUpdate() }?.run {
+        telemetryMap["newCourtChargeMappings"] = this.courtChargesToCreate.map { "dpsCourtChargeId: ${it.dpsCourtChargeId}, nomisCourtChargeId: ${it.nomisCourtChargeId}" }.toString()
+        telemetryMap["deletedCourtChargeMappings"] = this.courtChargesToDelete.map { "nomisCourtChargeId: ${it.nomisCourtChargeId}" }.toString()
+        createMapping(
+          mapping = this,
+          telemetryClient = telemetryClient,
+          retryQueueService = courtSentencingRetryQueueService,
+          eventTelemetry = telemetryMap,
+          name = EntityType.COURT_CHARGE.displayName,
+          postMapping = { courtCaseMappingService.createChargeBatchUpdateMapping(it) },
+          log = log,
+        )
+      }
 
       telemetryClient.trackEvent(
         "court-appearance-updated-success",
@@ -309,6 +345,8 @@ fun Charge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeRequest(
   resultCode1 = this.outcome,
 // TODO do dps provide this?
   mostSeriousFlag = false,
+  // TODO determine if this comes from DPS or is it determined
+  offencesCount = 1,
 )
 
 fun Charge.toExistingNomisCourtCharge(nomisId: Long): ExistingOffenderChargeRequest = ExistingOffenderChargeRequest(
@@ -320,4 +358,8 @@ fun Charge.toExistingNomisCourtCharge(nomisId: Long): ExistingOffenderChargeRequ
   resultCode1 = this.outcome,
 // TODO do dps provide this?
   mostSeriousFlag = false,
+  offencesCount = 1,
 )
+
+private fun CourtChargeBatchUpdateMappingDto.hasAnyMappingsToUpdate(): Boolean =
+  this.courtChargesToCreate.isNotEmpty() || this.courtChargesToDelete.isNotEmpty()
