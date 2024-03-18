@@ -8,11 +8,12 @@ import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
@@ -119,15 +120,15 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
       fun `will create success telemetry`() {
         verify(telemetryClient).trackEvent(
           eq("punishment-update-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-            Assertions.assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
-            Assertions.assertThat(it["chargeSequence"]).isEqualTo(CHARGE_SEQ.toString())
-            Assertions.assertThat(it["punishmentsCreatedCount"]).isEqualTo("1")
-            Assertions.assertThat(it["punishmentsUpdatedCount"]).isEqualTo("1")
-            Assertions.assertThat(it["punishmentsDeletedCount"]).isEqualTo("2")
+          check {
+            assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
+            assertThat(it["chargeSequence"]).isEqualTo(CHARGE_SEQ.toString())
+            assertThat(it["punishmentsCreatedCount"]).isEqualTo("1")
+            assertThat(it["punishmentsUpdatedCount"]).isEqualTo("1")
+            assertThat(it["punishmentsDeletedCount"]).isEqualTo("2")
           },
           isNull(),
         )
@@ -137,10 +138,10 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
       fun `will create audit telemetry`() {
         verify(telemetryClient).trackEvent(
           eq("adjudication-punishment-repair"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+          check {
+            assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
           },
           isNull(),
         )
@@ -241,13 +242,13 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
       fun `will create success telemetry`() {
         verify(telemetryClient).trackEvent(
           eq("hearing-result-deleted-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-            Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
-            Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
-            Assertions.assertThat(it["punishmentsDeletedCount"]).isEqualTo("2")
+          check {
+            assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+            assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
+            assertThat(it["punishmentsDeletedCount"]).isEqualTo("2")
           },
           isNull(),
         )
@@ -293,11 +294,11 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
       fun `will create audit telemetry`() {
         verify(telemetryClient).trackEvent(
           eq("adjudication-hearing-delete-result-repair"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
-            Assertions.assertThat(it["hearingId"]).isEqualTo(DPS_HEARING_ID)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+          check {
+            assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
+            assertThat(it["hearingId"]).isEqualTo(DPS_HEARING_ID)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
           },
           isNull(),
         )
@@ -363,16 +364,16 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
       fun `will create success telemetry`() {
         verify(telemetryClient).trackEvent(
           eq("hearing-result-upserted-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-            Assertions.assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
-            Assertions.assertThat(it["chargeSequence"]).isEqualTo(CHARGE_SEQ.toString())
-            Assertions.assertThat(it["dpsHearingId"]).isEqualTo("654321")
-            Assertions.assertThat(it["nomisHearingId"]).isEqualTo("2345")
-            Assertions.assertThat(it["findingCode"]).isEqualTo("NOT_PROCEED")
-            Assertions.assertThat(it["plea"]).isEqualTo("NOT_ASKED")
+          check {
+            assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
+            assertThat(it["chargeSequence"]).isEqualTo(CHARGE_SEQ.toString())
+            assertThat(it["dpsHearingId"]).isEqualTo("654321")
+            assertThat(it["nomisHearingId"]).isEqualTo("2345")
+            assertThat(it["findingCode"]).isEqualTo("NOT_PROCEED")
+            assertThat(it["plea"]).isEqualTo("NOT_ASKED")
           },
           isNull(),
         )
@@ -382,11 +383,11 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
       fun `will create audit telemetry`() {
         verify(telemetryClient).trackEvent(
           eq("adjudication-outcome-repair"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-            Assertions.assertThat(it["hearingId"]).isEqualTo(DPS_HEARING_ID)
+          check {
+            assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            assertThat(it["hearingId"]).isEqualTo(DPS_HEARING_ID)
           },
           isNull(),
         )
@@ -395,6 +396,88 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
       @Test
       fun `will call nomis api to update the outcome`() {
         nomisApi.verify(postRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQ/result")))
+      }
+    }
+  }
+
+  @DisplayName("POST /prisons/{prisonId}/prisoners/{offenderNo}/adjudication/dps-charge-number/{chargeNumber}/hearing/dps-hearing-id/{hearingId}")
+  @Nested
+  inner class RepairHearing {
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.post().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DPS_CHARGE_NUMBER/hearing/dps-hearing-id/$DPS_HEARING_ID")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.post().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DPS_CHARGE_NUMBER/hearing/dps-hearing-id/$DPS_HEARING_ID")
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.post().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DPS_CHARGE_NUMBER/hearing/dps-hearing-id/$DPS_HEARING_ID")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetByChargeNumber(DPS_CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        adjudicationsApiServer.stubChargeGet(DPS_CHARGE_NUMBER, offenderNo = OFFENDER_NO, hearingId = DPS_HEARING_ID.toLong())
+        nomisApi.stubHearingCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        mappingServer.stubGetByDpsHearingIdWithError(DPS_HEARING_ID, 404)
+        mappingServer.stubCreateHearing()
+
+        webTestClient.post().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DPS_CHARGE_NUMBER/hearing/dps-hearing-id/$DPS_HEARING_ID")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ADJUDICATIONS")))
+          .exchange()
+          .expectStatus().isOk
+      }
+
+      @Test
+      fun `will callback back to adjudication service to get more details`() {
+        adjudicationsApiServer.verify(getRequestedFor(urlEqualTo("/reported-adjudications/$DPS_CHARGE_NUMBER/v2")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("hearing-create-success"),
+          check {
+            assertThat(it["chargeNumber"]).isEqualTo(DPS_CHARGE_NUMBER)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+            assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to create the hearing`() {
+        nomisApi.verify(postRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings")))
+      }
+
+      @Test
+      fun `will create a mapping between the two hearings`() {
+        mappingServer.verify(
+          postRequestedFor(urlEqualTo("/mapping/hearings"))
+            .withRequestBody(matchingJsonPath("dpsHearingId", equalTo(DPS_HEARING_ID)))
+            .withRequestBody(matchingJsonPath("nomisHearingId", equalTo(NOMIS_HEARING_ID.toString()))),
+        )
       }
     }
   }
