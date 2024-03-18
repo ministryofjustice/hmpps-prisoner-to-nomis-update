@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-03-11.6909.d119b6e"
+    "version": "2024-03-14.6978.f56c655"
   },
   "servers": [
     {
@@ -519,7 +519,14 @@
         },
         "responses": {
           "200": {
-            "description": "Court Appearance updated"
+            "description": "Court Appearance updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateCourtAppearanceResponse"
+                }
+              }
+            }
           },
           "400": {
             "description": "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
@@ -8984,6 +8991,45 @@
         },
         "description": "Court Event"
       },
+      "CreateCourtEventChargesResponse": {
+        "required": [
+          "offenderChargeId"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderChargeId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "Create adjustment response"
+      },
+      "UpdateCourtAppearanceResponse": {
+        "required": [
+          "createdCourtEventChargesIds",
+          "deletedOffenderChargesIds"
+        ],
+        "type": "object",
+        "properties": {
+          "createdCourtEventChargesIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCourtEventChargesResponse"
+            }
+          },
+          "deletedOffenderChargesIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCourtEventChargesResponse"
+            }
+          },
+          "nextCourtAppearanceId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "Create adjustment response"
+      },
       "AlertResponse": {
         "required": [
           "alertCode",
@@ -10779,19 +10825,6 @@
             "items": {
               "$ref": "#/components/schemas/CreateCourtAppearanceResponse"
             }
-          }
-        },
-        "description": "Create adjustment response"
-      },
-      "CreateCourtEventChargesResponse": {
-        "required": [
-          "offenderChargeId"
-        ],
-        "type": "object",
-        "properties": {
-          "offenderChargeId": {
-            "type": "integer",
-            "format": "int64"
           }
         },
         "description": "Create adjustment response"
