@@ -14,7 +14,7 @@ generic-service:
     v1_2_enabled: true
     v0_47_enabled: false
     annotations:
-      nginx.ingress.kubernetes.io/configuration-snippet: |
+      nginx.ingress.kubernetes.io/server-snippet: |
         server_tokens off;
         location /queue-admin/retry-all-dlqs {
           deny all;
