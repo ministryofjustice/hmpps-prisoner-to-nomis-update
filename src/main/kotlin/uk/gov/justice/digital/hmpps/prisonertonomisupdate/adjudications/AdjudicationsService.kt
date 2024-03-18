@@ -255,6 +255,22 @@ class AdjudicationsService(
     }
   }
 
+  suspend fun createHearing(
+    chargeNumber: String,
+    prisonId: String,
+    offenderNo: String,
+    hearingId: String,
+  ) = createHearing(
+    HearingEvent(
+      HearingAdditionalInformation(
+        chargeNumber = chargeNumber,
+        prisonId = prisonId,
+        prisonerNumber = offenderNo,
+        hearingId = hearingId,
+      ),
+    ),
+  )
+
   suspend fun createHearing(createEvent: HearingEvent) {
     val chargeNumber = createEvent.additionalInformation.chargeNumber
     val prisonId: String = createEvent.additionalInformation.prisonId

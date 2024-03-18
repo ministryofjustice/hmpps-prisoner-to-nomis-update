@@ -95,4 +95,30 @@ class AdjudicationsDataRepairResource(
       null,
     )
   }
+
+  @PostMapping("/prisons/{prisonId}/prisoners/{offenderNo}/adjudication/dps-charge-number/{chargeNumber}/hearing/dps-hearing-id/{hearingId}")
+  @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("hasRole('NOMIS_ADJUDICATIONS')")
+  @Operation(
+    summary = "Resynchronises a hearing for the given adjudication from DPS back to NOMIS",
+    description = "Used when a hearing has been deleted in NOMIS due to linked charges, so emergency use only. Requires ROLE_NOMIS_ADJUDICATIONS",
+  )
+  suspend fun repairHearing(
+    @PathVariable prisonId: String,
+    @PathVariable offenderNo: String,
+    @PathVariable chargeNumber: String,
+    @PathVariable hearingId: String,
+  ) {
+    adjudicationService.createHearing(chargeNumber = chargeNumber, offenderNo = offenderNo, prisonId = prisonId, hearingId = hearingId)
+    telemetryClient.trackEvent(
+      "adjudication-hearing-repair",
+      mapOf(
+        "prisonId" to prisonId,
+        "chargeNumber" to chargeNumber,
+        "offenderNo" to offenderNo,
+        "hearingId" to hearingId,
+      ),
+      null,
+    )
+  }
 }
