@@ -59,6 +59,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     evidence: String = "[]",
     punishments: String = "[]",
     status: String = "UNSCHEDULED",
+    hearingId: Long = 345,
   ) {
     stubFor(
       get("/reported-adjudications/$chargeNumber/v2").willReturn(
@@ -101,7 +102,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         "evidence": $evidence,
         "witnesses": [],
         "hearings": [{
-                "id": 345,
+                "id": $hearingId,
                 "locationId": 27187,
                 "dateTimeOfHearing": "2023-08-23T14:25:00",
                 "oicHearingType": "GOV_ADULT",
