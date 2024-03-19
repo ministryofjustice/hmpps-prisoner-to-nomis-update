@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
@@ -458,6 +459,170 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  @DisplayName("prisoner-alerts.alert-deleted")
+  inner class AlertDeleted {
+    @Nested
+    @DisplayName("when NOMIS is the origin of the Alert delete")
+    inner class WhenNomisDeleted {
+      @BeforeEach
+      fun setup() {
+        publishDeleteAlertDomainEvent(source = AlertSource.NOMIS)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing it ignored the update`() {
+        verify(telemetryClient).trackEvent(
+          eq("alert-deleted-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not try to delete the Alert in NOMIS`() {
+        alertsNomisApi.verify(0, deleteRequestedFor(anyUrl()))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of the Alert delete")
+    inner class WhenDpsDeleted {
+      @Nested
+      @DisplayName("when no mapping found")
+      inner class WhenNoMappingFound {
+        @BeforeEach
+        fun setUp() {
+          alertsMappingApi.stubGetByDpsId(HttpStatus.NOT_FOUND)
+          publishDeleteAlertDomainEvent()
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will ignore request since delete may have happened already by previous event`() {
+          verify(telemetryClient).trackEvent(
+            eq("alert-deleted-skipped"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when mapping is found")
+      inner class WhenMappingIsFound {
+        private val dpsAlertId = UUID.randomUUID().toString()
+        private val nomisBookingId = 43217L
+        private val nomisAlertSequence = 3L
+        private val offenderNo = "A1234KT"
+
+        @BeforeEach
+        fun setUp() {
+          alertsMappingApi.stubGetByDpsId(
+            dpsAlertId,
+            AlertMappingDto(
+              dpsAlertId = dpsAlertId,
+              nomisBookingId = nomisBookingId,
+              nomisAlertSequence = nomisAlertSequence,
+              mappingType = AlertMappingDto.MappingType.DPS_CREATED,
+            ),
+          )
+          alertsNomisApi.stubDeleteAlert(bookingId = nomisBookingId, alertSequence = nomisAlertSequence)
+          alertsMappingApi.stubDeleteByDpsId(dpsAlertId)
+          publishDeleteAlertDomainEvent(alertUuid = dpsAlertId, offenderNo = offenderNo)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the delete`() {
+          verify(telemetryClient).trackEvent(
+            eq("alert-deleted-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the deleted alert`() {
+          verify(telemetryClient).trackEvent(
+            eq("alert-deleted-success"),
+            check {
+              assertThat(it).containsEntry("dpsAlertId", dpsAlertId)
+              assertThat(it).containsEntry("offenderNo", offenderNo)
+              assertThat(it).containsEntry("alertCode", "HPI")
+              assertThat(it).containsEntry("nomisAlertSequence", "$nomisAlertSequence")
+              assertThat(it).containsEntry("nomisBookingId", "$nomisBookingId")
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call the mapping service to get the NOMIS alert id`() {
+          alertsMappingApi.verify(getRequestedFor(urlMatching("/mapping/alerts/dps-alert-id/$dpsAlertId")))
+        }
+
+        @Test
+        fun `will delete the alert in NOMIS`() {
+          alertsNomisApi.verify(deleteRequestedFor(urlEqualTo("/prisoners/booking-id/$nomisBookingId/alerts/$nomisAlertSequence")))
+        }
+
+        @Test
+        fun `will delete the alert mapping`() {
+          alertsMappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/alerts/dps-alert-id/$dpsAlertId")))
+        }
+      }
+
+      @Nested
+      @DisplayName("when mapping delete fails")
+      inner class WhenMappingDeleteFails {
+        private val dpsAlertId = UUID.randomUUID().toString()
+        private val nomisBookingId = 43217L
+        private val nomisAlertSequence = 3L
+        private val offenderNo = "A1234KT"
+
+        @BeforeEach
+        fun setUp() {
+          alertsMappingApi.stubGetByDpsId(
+            dpsAlertId,
+            AlertMappingDto(
+              dpsAlertId = dpsAlertId,
+              nomisBookingId = nomisBookingId,
+              nomisAlertSequence = nomisAlertSequence,
+              mappingType = AlertMappingDto.MappingType.DPS_CREATED,
+            ),
+          )
+          alertsNomisApi.stubDeleteAlert(bookingId = nomisBookingId, alertSequence = nomisAlertSequence)
+          alertsMappingApi.stubDeleteByDpsId(status = HttpStatus.INTERNAL_SERVER_ERROR)
+          publishDeleteAlertDomainEvent(alertUuid = dpsAlertId, offenderNo = offenderNo)
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("alert-deleted-success"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will delete the alert in NOMIS`() {
+          alertsNomisApi.verify(deleteRequestedFor(urlEqualTo("/prisoners/booking-id/$nomisBookingId/alerts/$nomisAlertSequence")))
+        }
+
+        @Test
+        fun `will try delete the alert mapping once and ignore failure`() {
+          alertsMappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/alerts/dps-alert-id/$dpsAlertId")))
+          verify(telemetryClient).trackEvent(
+            eq("alert-mapping-deleted-failed"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
   private fun publishCreateAlertDomainEvent(
     offenderNo: String = "A1234KT",
     alertUuid: String = UUID.randomUUID().toString(),
@@ -474,6 +639,15 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
     alertCode: String = "HPI",
   ) {
     publishAlertDomainEvent("prisoner-alerts.alert-updated", offenderNo, alertUuid, source, alertCode)
+  }
+
+  private fun publishDeleteAlertDomainEvent(
+    offenderNo: String = "A1234KT",
+    alertUuid: String = UUID.randomUUID().toString(),
+    source: AlertSource = AlertSource.ALERTS_SERVICE,
+    alertCode: String = "HPI",
+  ) {
+    publishAlertDomainEvent("prisoner-alerts.alert-deleted", offenderNo, alertUuid, source, alertCode)
   }
 
   private fun publishAlertDomainEvent(

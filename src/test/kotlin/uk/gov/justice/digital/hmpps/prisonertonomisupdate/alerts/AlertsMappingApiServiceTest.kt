@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
@@ -130,6 +131,34 @@ class AlertsMappingApiServiceTest {
           .withRequestBody(matchingJsonPath("nomisAlertSequence", equalTo("1")))
           .withRequestBody(matchingJsonPath("dpsAlertId", equalTo(dpsAlertId)))
           .withRequestBody(matchingJsonPath("mappingType", equalTo("DPS_CREATED"))),
+      )
+    }
+  }
+
+  @Nested
+  inner class DeleteMapping {
+    private val dpsAlertId = UUID.randomUUID().toString()
+
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsMappingApiMockServer.stubDeleteByDpsId(dpsAlertId)
+
+      apiService.deleteByDpsId(dpsAlertId)
+
+      alertsMappingApiMockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass ids to service`() = runTest {
+      val dpsAlertId = "a04f7a8d-61aa-400c-9395-f4dc62f36ab0"
+      alertsMappingApiMockServer.stubDeleteByDpsId(dpsAlertId)
+
+      apiService.deleteByDpsId(dpsAlertId)
+
+      alertsMappingApiMockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/mapping/alerts/dps-alert-id/$dpsAlertId")),
       )
     }
   }
