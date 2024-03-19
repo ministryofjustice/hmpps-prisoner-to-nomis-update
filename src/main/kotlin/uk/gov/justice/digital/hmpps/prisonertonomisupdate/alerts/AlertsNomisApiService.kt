@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AlertResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertRequest
@@ -28,4 +29,14 @@ class AlertsNomisApiService(@Qualifier("nomisApiWebClient") private val webClien
     .bodyValue(nomisAlert)
     .retrieve()
     .awaitBody()
+
+  suspend fun deleteAlert(bookingId: Long, alertSequence: Long) {
+    webClient.delete().uri(
+      "/prisoners/booking-id/{bookingId}/alerts/{alertSequence}",
+      bookingId,
+      alertSequence,
+    )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 }

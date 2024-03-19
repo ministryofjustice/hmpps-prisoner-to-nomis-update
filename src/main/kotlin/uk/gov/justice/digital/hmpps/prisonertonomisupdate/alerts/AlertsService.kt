@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AlertMappingDto
@@ -19,6 +21,10 @@ class AlertsService(
   private val alertsRetryQueueService: AlertsRetryQueueService,
   private val objectMapper: ObjectMapper,
 ) : CreateMappingRetryable {
+  private companion object {
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
+
   suspend fun createAlert(alertEvent: AlertEvent) {
     val dpsAlertId = alertEvent.additionalInformation.alertUuid
     val offenderNo = alertEvent.additionalInformation.prisonNumber
@@ -96,8 +102,40 @@ class AlertsService(
     }
   }
 
-  fun deleteAlert(alertEvent: AlertEvent) {
-    TODO("Not yet implemented")
+  suspend fun deleteAlert(alertEvent: AlertEvent) {
+    val dpsAlertId = alertEvent.additionalInformation.alertUuid
+    val offenderNo = alertEvent.additionalInformation.prisonNumber
+    val telemetryMap = mutableMapOf(
+      "dpsAlertId" to dpsAlertId,
+      "offenderNo" to offenderNo,
+      "alertCode" to alertEvent.additionalInformation.alertCode,
+    )
+    if (alertEvent.wasDeletedInDPS()) {
+      runCatching {
+        mappingApiService.getOrNullByDpsId(dpsAlertId)?.also { mapping ->
+          telemetryMap["nomisBookingId"] = mapping.nomisBookingId.toString()
+          telemetryMap["nomisAlertSequence"] = mapping.nomisAlertSequence.toString()
+
+          nomisApiService.deleteAlert(bookingId = mapping.nomisBookingId, alertSequence = mapping.nomisAlertSequence)
+          tryToDeletedMapping(dpsAlertId)
+          telemetryClient.trackEvent("alert-deleted-success", telemetryMap, null)
+        } ?: also {
+          telemetryClient.trackEvent("alert-deleted-skipped", telemetryMap, null)
+        }
+      }.onFailure { e ->
+        telemetryClient.trackEvent("alert-deleted-failed", telemetryMap, null)
+        throw e
+      }
+    } else {
+      telemetryClient.trackEvent("alert-deleted-ignored", telemetryMap)
+    }
+  }
+
+  private suspend fun tryToDeletedMapping(dpsAlertId: String) = kotlin.runCatching {
+    mappingApiService.deleteByDpsId(dpsAlertId)
+  }.onFailure { e ->
+    telemetryClient.trackEvent("alert-mapping-deleted-failed", mapOf("dpsAlertId" to dpsAlertId), null)
+    log.warn("Unable to delete mapping for alert $dpsAlertId. Please delete manually", e)
   }
 
   private inline fun <reified T> String.fromJson(): T =
@@ -125,5 +163,7 @@ enum class AlertSource {
   MIGRATION,
 }
 
-fun AlertEvent.wasCreatedInDPS() = this.additionalInformation.source == AlertSource.ALERTS_SERVICE
-fun AlertEvent.wasUpdateInDPS() = this.additionalInformation.source == AlertSource.ALERTS_SERVICE
+fun AlertEvent.wasCreatedInDPS() = wasSourceDPS()
+fun AlertEvent.wasUpdateInDPS() = wasSourceDPS()
+fun AlertEvent.wasDeletedInDPS() = wasSourceDPS()
+fun AlertEvent.wasSourceDPS() = this.additionalInformation.source == AlertSource.ALERTS_SERVICE

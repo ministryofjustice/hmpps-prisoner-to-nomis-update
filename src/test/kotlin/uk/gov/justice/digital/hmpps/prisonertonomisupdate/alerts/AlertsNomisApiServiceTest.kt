@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -130,5 +131,30 @@ class AlertsNomisApiServiceTest {
       isActive = true,
       updateUsername = "BOBBY.BEANS",
     )
+  }
+
+  @Nested
+  inner class DeleteAlert {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsNomisApiMockServer.stubDeleteAlert(bookingId = 1234567, alertSequence = 4)
+
+      apiService.deleteAlert(bookingId = 1234567, alertSequence = 4)
+
+      alertsNomisApiMockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass alert Id to service`() = runTest {
+      alertsNomisApiMockServer.stubDeleteAlert(bookingId = 1234567, alertSequence = 4)
+
+      apiService.deleteAlert(bookingId = 1234567, alertSequence = 4)
+
+      alertsNomisApiMockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/prisoners/booking-id/1234567/alerts/4")),
+      )
+    }
   }
 }

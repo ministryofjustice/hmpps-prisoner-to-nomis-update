@@ -24,4 +24,14 @@ class AlertsMappingApiService(@Qualifier("mappingWebClient") private val webClie
       .retrieve()
       .awaitBodilessEntity()
   }
+
+  suspend fun deleteByDpsId(alertId: String) {
+    webClient.delete()
+      .uri(
+        "/mapping/alerts/dps-alert-id/{alertId}",
+        alertId,
+      )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 }
