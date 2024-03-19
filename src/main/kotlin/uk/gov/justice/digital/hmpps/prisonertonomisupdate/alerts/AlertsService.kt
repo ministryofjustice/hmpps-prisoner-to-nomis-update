@@ -92,9 +92,9 @@ class AlertsService(
 
         val dpsAlert = dpsApiService.getAlert(dpsAlertId)
         nomisApiService.updateAlert(bookingId = mapping.nomisBookingId, alertSequence = mapping.nomisAlertSequence, dpsAlert.toNomisUpdateRequest())
-        telemetryClient.trackEvent("alert-updated-success", telemetryMap, null)
+        telemetryClient.trackEvent("alert-updated-success", telemetryMap)
       }.onFailure { e ->
-        telemetryClient.trackEvent("alert-updated-failed", telemetryMap, null)
+        telemetryClient.trackEvent("alert-updated-failed", telemetryMap)
         throw e
       }
     } else {
@@ -118,12 +118,12 @@ class AlertsService(
 
           nomisApiService.deleteAlert(bookingId = mapping.nomisBookingId, alertSequence = mapping.nomisAlertSequence)
           tryToDeletedMapping(dpsAlertId)
-          telemetryClient.trackEvent("alert-deleted-success", telemetryMap, null)
+          telemetryClient.trackEvent("alert-deleted-success", telemetryMap)
         } ?: also {
-          telemetryClient.trackEvent("alert-deleted-skipped", telemetryMap, null)
+          telemetryClient.trackEvent("alert-deleted-skipped", telemetryMap)
         }
       }.onFailure { e ->
-        telemetryClient.trackEvent("alert-deleted-failed", telemetryMap, null)
+        telemetryClient.trackEvent("alert-deleted-failed", telemetryMap)
         throw e
       }
     } else {
@@ -134,7 +134,7 @@ class AlertsService(
   private suspend fun tryToDeletedMapping(dpsAlertId: String) = kotlin.runCatching {
     mappingApiService.deleteByDpsId(dpsAlertId)
   }.onFailure { e ->
-    telemetryClient.trackEvent("alert-mapping-deleted-failed", mapOf("dpsAlertId" to dpsAlertId), null)
+    telemetryClient.trackEvent("alert-mapping-deleted-failed", mapOf("dpsAlertId" to dpsAlertId))
     log.warn("Unable to delete mapping for alert $dpsAlertId. Please delete manually", e)
   }
 
