@@ -117,11 +117,11 @@ internal class LocationsServiceTest {
       key = DPS_KEY,
       isResidential = true,
       residentialHousingType = Location.ResidentialHousingType.NORMAL_ACCOMMODATION,
-      description = "description",
+      localName = "description",
       comments = "comments",
       capacity = Capacity(
-        operationalCapacity = 12,
-        capacity = 14,
+        workingCapacity = 12,
+        maxCapacity = 14,
       ),
       certification = Certification(
         certified = true,

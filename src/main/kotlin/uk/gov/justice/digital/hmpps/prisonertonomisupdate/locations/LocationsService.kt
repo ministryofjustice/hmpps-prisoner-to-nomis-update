@@ -88,7 +88,7 @@ class LocationsService(
 
   suspend fun changeCapacity(event: LocationDomainEvent) {
     doUpdateLocation(event, "capacity") { nomisLocationId, location ->
-      nomisApiService.updateLocationCapacity(nomisLocationId, UpdateCapacityRequest(location.capacity?.capacity, location.capacity?.operationalCapacity))
+      nomisApiService.updateLocationCapacity(nomisLocationId, UpdateCapacityRequest(location.capacity?.maxCapacity, location.capacity?.maxCapacity))
     }
   }
 
@@ -155,10 +155,10 @@ class LocationsService(
     comment = instance.comments,
     parentLocationId = instance.parentId?.let { mappingService.getMappingGivenDpsId(it.toString()).nomisLocationId },
     prisonId = instance.prisonId,
-    description = "${instance.prisonId}-${instance.pathHierarchy}",
-    operationalCapacity = instance.capacity?.operationalCapacity,
-    userDescription = instance.description,
-    capacity = instance.capacity?.capacity,
+    description = instance.key,
+    operationalCapacity = instance.capacity?.workingCapacity,
+    userDescription = instance.localName,
+    capacity = instance.capacity?.maxCapacity,
     listSequence = instance.orderWithinParentLocation,
     unitType = instance.residentialHousingType?.let { CreateLocationRequest.UnitType.valueOf(toUnitType(it)) },
     profiles = instance.attributes?.map { toAttribute(it) },
@@ -303,7 +303,7 @@ class LocationsService(
     locationCode = instance.code,
     locationType = UpdateLocationRequest.LocationType.valueOf(toLocationType(instance.locationType)),
     description = instance.key,
-    userDescription = instance.description,
+    userDescription = instance.localName,
     parentLocationId = instance.parentId?.let { mappingService.getMappingGivenDpsId(it.toString()).nomisLocationId },
     unitType = instance.residentialHousingType?.let { UpdateLocationRequest.UnitType.valueOf(toUnitType(it)) },
     listSequence = instance.orderWithinParentLocation,
@@ -323,7 +323,6 @@ class LocationsService(
   private fun toLocationType(locationtype: Location.LocationType) = when (locationtype) {
     Location.LocationType.WING -> "WING"
     Location.LocationType.SPUR -> "SPUR"
-    Location.LocationType.TIER, // TODO not sure about this yet
     Location.LocationType.LANDING,
     -> "LAND"
 

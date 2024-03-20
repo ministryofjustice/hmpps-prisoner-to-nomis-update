@@ -29,6 +29,7 @@ hmpps.sqs:
     location:
       queueName: hmpps_prisoner_to_nomis_location_queue
       dlqName: hmpps_prisoner_to_nomis_location_dlq
+      errorVisibilityTimeout: 0
       subscribeTopicId: domainevents
       subscribeFilter: >-
         { "eventType":[
