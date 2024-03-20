@@ -156,14 +156,12 @@ data class AlertAdditionalInformation(
   val source: AlertSource,
 )
 
-@Suppress("unused")
 enum class AlertSource {
-  ALERTS_SERVICE,
+  DPS,
   NOMIS,
-  MIGRATION,
 }
 
 fun AlertEvent.wasCreatedInDPS() = wasSourceDPS()
 fun AlertEvent.wasUpdateInDPS() = wasSourceDPS()
 fun AlertEvent.wasDeletedInDPS() = wasSourceDPS()
-fun AlertEvent.wasSourceDPS() = this.additionalInformation.source == AlertSource.ALERTS_SERVICE
+fun AlertEvent.wasSourceDPS() = this.additionalInformation.source == AlertSource.DPS

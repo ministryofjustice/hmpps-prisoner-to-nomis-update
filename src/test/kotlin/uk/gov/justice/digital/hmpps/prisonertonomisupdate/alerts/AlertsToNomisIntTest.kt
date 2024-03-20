@@ -626,7 +626,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
   private fun publishCreateAlertDomainEvent(
     offenderNo: String = "A1234KT",
     alertUuid: String = UUID.randomUUID().toString(),
-    source: AlertSource = AlertSource.ALERTS_SERVICE,
+    source: AlertSource = AlertSource.DPS,
     alertCode: String = "HPI",
   ) {
     publishAlertDomainEvent("prisoner-alerts.alert-created", offenderNo, alertUuid, source, alertCode)
@@ -635,7 +635,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
   private fun publishUpdateAlertDomainEvent(
     offenderNo: String = "A1234KT",
     alertUuid: String = UUID.randomUUID().toString(),
-    source: AlertSource = AlertSource.ALERTS_SERVICE,
+    source: AlertSource = AlertSource.DPS,
     alertCode: String = "HPI",
   ) {
     publishAlertDomainEvent("prisoner-alerts.alert-updated", offenderNo, alertUuid, source, alertCode)
@@ -644,7 +644,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
   private fun publishDeleteAlertDomainEvent(
     offenderNo: String = "A1234KT",
     alertUuid: String = UUID.randomUUID().toString(),
-    source: AlertSource = AlertSource.ALERTS_SERVICE,
+    source: AlertSource = AlertSource.DPS,
     alertCode: String = "HPI",
   ) {
     publishAlertDomainEvent("prisoner-alerts.alert-deleted", offenderNo, alertUuid, source, alertCode)
