@@ -33,11 +33,11 @@ internal class LocationsApiServiceTest {
       "locationType": "CELL",
       "residentialHousingType": "NORMAL_ACCOMMODATION",
       "active": true,
-      "description": "Wing A",
+      "localName": "Wing A",
       "comments": "Not to be used",
       "capacity": {
-        "capacity": 2,
-        "operationalCapacity": 2
+        "maxCapacity": 2,
+        "workingCapacity": 2
       },
       "certification": {
         "certified": true,

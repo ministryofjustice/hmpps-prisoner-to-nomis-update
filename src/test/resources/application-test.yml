@@ -73,6 +73,7 @@ hmpps.sqs:
           "location.inside.prison.deleted"]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
+      errorVisibilityTimeout: 0
     sentencing:
       queueName: "sentencing-${random.uuid}"
       dlqName: "sentencing-dlq-${random.uuid}"

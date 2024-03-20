@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-02-28.524.f7ba60a"
+    "version": "2024-03-20.720.c4b3dbd"
   },
   "servers": [
     {
@@ -694,6 +694,78 @@
         }
       }
     },
+    "/locations/create-wing": {
+      "post": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Creates a residential wing with landings and cells",
+        "description": "Requires role MAINTAIN_LOCATIONS and write scope",
+        "operationId": "createWing",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Returns created locations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Location already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/locations/{id}": {
       "get": {
         "tags": [
@@ -1085,6 +1157,9 @@
             "description": "Prison Id",
             "required": true,
             "schema": {
+              "maxLength": 5,
+              "minLength": 3,
+              "pattern": "^[A-Z]{2}I|ZZGHI$",
               "type": "string",
               "description": "Prison Id",
               "example": "MDI"
@@ -1555,20 +1630,20 @@
       },
       "Capacity": {
         "required": [
-          "capacity",
-          "operationalCapacity"
+          "maxCapacity",
+          "workingCapacity"
         ],
         "type": "object",
         "properties": {
-          "capacity": {
+          "maxCapacity": {
             "type": "integer",
-            "description": "Capacity of the location",
+            "description": "Max capacity of the location",
             "format": "int32",
             "example": 2
           },
-          "operationalCapacity": {
+          "workingCapacity": {
             "type": "integer",
-            "description": "Operational capacity of the location",
+            "description": "Working capacity of the location",
             "format": "int32",
             "example": 2
           }
@@ -1679,7 +1754,6 @@
               "CELL",
               "ROOM",
               "HOLDING_AREA",
-              "TIER",
               "MOVEMENT_AREA",
               "RESIDENTIAL_UNIT",
               "EXTERNAL_GROUNDS",
@@ -1729,7 +1803,7 @@
               "SPECIALIST_CELL"
             ]
           },
-          "description": {
+          "localName": {
             "type": "string",
             "description": "Alternative description to display for location",
             "example": "Wing A"
@@ -1881,9 +1955,15 @@
               "CELLS_RETURNING_TO_USE"
             ]
           },
+          "proposedReactivationDate": {
+            "type": "string",
+            "description": "Proposed Date for location reactivation",
+            "format": "date",
+            "example": "2026-01-24"
+          },
           "reactivatedDate": {
             "type": "string",
-            "description": "Date the location was reactivated",
+            "description": "Date the location was reactivated (deprecated)",
             "format": "date",
             "example": "2023-01-24"
           },
@@ -1985,7 +2065,7 @@
               "CELLS_RETURNING_TO_USE"
             ]
           },
-          "reactivationDate": {
+          "proposedReactivationDate": {
             "type": "string",
             "description": "Proposed re-activation date",
             "format": "date",
@@ -2005,13 +2085,16 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Location Id, provided if a new location",
+            "description": "Location UUID, provided if a new location",
             "format": "uuid",
             "example": "2475f250-434a-4257-afe7-b911f1773a4d"
           },
           "prisonId": {
+            "maxLength": 5,
+            "minLength": 3,
+            "pattern": "^[A-Z]{2}I|ZZGHI$",
             "type": "string",
-            "description": "Prison ID",
+            "description": "Prison ID where the location is situated",
             "example": "MDI"
           },
           "code": {
@@ -2031,7 +2114,6 @@
               "CELL",
               "ROOM",
               "HOLDING_AREA",
-              "TIER",
               "MOVEMENT_AREA",
               "RESIDENTIAL_UNIT",
               "EXTERNAL_GROUNDS",
@@ -2067,7 +2149,7 @@
               "TABLE"
             ]
           },
-          "description": {
+          "localName": {
             "maxLength": 80,
             "minLength": 0,
             "type": "string",
@@ -2105,6 +2187,12 @@
             "type": "string",
             "description": "Path hierarchy of the parent (if one exists)",
             "example": "A-1"
+          },
+          "parentId": {
+            "type": "string",
+            "description": "Parent UUID of the parent location (if one exists)",
+            "format": "uuid",
+            "example": "2475f250-434a-4257-afe7-b911f1773a4e"
           },
           "capacity": {
             "$ref": "#/components/schemas/Capacity"
@@ -2293,6 +2381,7 @@
       "CreateResidentialLocationRequest": {
         "required": [
           "code",
+          "isCell",
           "locationType",
           "prisonId",
           "residentialHousingType"
@@ -2300,8 +2389,9 @@
         "type": "object",
         "properties": {
           "prisonId": {
-            "maxLength": 3,
+            "maxLength": 5,
             "minLength": 3,
+            "pattern": "^[A-Z]{2}I|ZZGHI$",
             "type": "string",
             "description": "Prison ID where the location is situated",
             "example": "MDI"
@@ -2337,7 +2427,6 @@
               "CELL",
               "ROOM",
               "HOLDING_AREA",
-              "TIER",
               "MOVEMENT_AREA",
               "RESIDENTIAL_UNIT",
               "EXTERNAL_GROUNDS",
@@ -2373,7 +2462,7 @@
               "TABLE"
             ]
           },
-          "description": {
+          "localName": {
             "maxLength": 80,
             "minLength": 0,
             "type": "string",
@@ -2404,6 +2493,103 @@
           },
           "certification": {
             "$ref": "#/components/schemas/Certification"
+          },
+          "attributes": {
+            "uniqueItems": true,
+            "type": "array",
+            "description": "Location Attributes",
+            "items": {
+              "type": "string",
+              "description": "Location Attributes",
+              "enum": [
+                "ANTI_BARRICADE_DOOR",
+                "AUDITABLE_CELL_BELL",
+                "FIXED_BED",
+                "METAL_DOOR",
+                "MOVABLE_BED",
+                "PRIVACY_CURTAIN",
+                "PRIVACY_SCREEN",
+                "STANDARD_CELL_BELL",
+                "SEPARATE_TOILET",
+                "WOODEN_DOOR",
+                "CAT_A_CELL",
+                "DOUBLE_OCCUPANCY",
+                "E_LIST_CELL",
+                "GATED_CELL",
+                "LISTENER_CELL",
+                "LOCATE_FLAT",
+                "MULTIPLE_OCCUPANCY",
+                "NON_SMOKER_CELL",
+                "OBSERVATION_CELL",
+                "SAFE_CELL",
+                "SINGLE_OCCUPANCY",
+                "SPECIAL_CELL",
+                "WHEELCHAIR_ACCESS",
+                "UNCONVICTED_JUVENILES",
+                "SENTENCED_JUVENILES",
+                "UNCONVICTED_18_20",
+                "SENTENCED_18_20",
+                "UNCONVICTED_ADULTS",
+                "SENTENCED_ADULTS",
+                "VULNERABLE_PRISONER_UNIT",
+                "SPECIAL_UNIT",
+                "RESETTLEMENT_HOSTEL",
+                "HEALTHCARE_CENTRE",
+                "NATIONAL_RESOURCE_HOSPITAL",
+                "OTHER_SPECIFIED",
+                "REMAND_CENTRE",
+                "LOCAL_PRISON",
+                "CLOSED_PRISON",
+                "OPEN_TRAINING",
+                "HOSTEL",
+                "CLOSED_YOUNG_OFFENDER",
+                "OPEN_YOUNG_OFFENDER",
+                "REMAND_UNDER_18",
+                "SENTENCED_UNDER_18",
+                "ECL_COMPONENT",
+                "ADDITIONAL_SPECIAL_UNIT",
+                "SECOND_CLOSED_TRAINER",
+                "IMMIGRATION_DETAINEES",
+                "CELL",
+                "LANDING",
+                "WING",
+                "CAT_A",
+                "CAT_A_EX",
+                "CAT_A_HI",
+                "CAT_B",
+                "CAT_C",
+                "CAT_D",
+                "ELIGIBLE",
+                "PAROLE_GRANTED",
+                "INELIGIBLE",
+                "YOI_CLOSED",
+                "YOI_OPEN",
+                "YOI_RESTRICTED",
+                "YOI_SHORT_SENTENCE",
+                "YOI_LONG_TERM_CLOSED",
+                "UNCLASSIFIED",
+                "UNCATEGORISED_SENTENCED_MALE",
+                "LOW",
+                "MEDIUM",
+                "HIGH",
+                "NOT_APPLICABLE",
+                "PROV_A",
+                "PENDING",
+                "REF_REVIEW",
+                "REFUSED_NO_REVIEW",
+                "STANDARD",
+                "FEMALE_RESTRICTED",
+                "FEMALE_CLOSED",
+                "FEMALE_SEMI",
+                "FEMALE_OPEN",
+                "UN_SENTENCED",
+                "YES",
+                "NO"
+              ]
+            }
+          },
+          "isCell": {
+            "type": "boolean"
           }
         },
         "description": "Request to create a location"
@@ -2411,14 +2597,16 @@
       "CreateNonResidentialLocationRequest": {
         "required": [
           "code",
+          "isCell",
           "locationType",
           "prisonId"
         ],
         "type": "object",
         "properties": {
           "prisonId": {
-            "maxLength": 3,
+            "maxLength": 5,
             "minLength": 3,
+            "pattern": "^[A-Z]{2}I|ZZGHI$",
             "type": "string",
             "description": "Prison ID where the location is situated",
             "example": "MDI"
@@ -2440,7 +2628,6 @@
               "CELL",
               "ROOM",
               "HOLDING_AREA",
-              "TIER",
               "MOVEMENT_AREA",
               "RESIDENTIAL_UNIT",
               "EXTERNAL_GROUNDS",
@@ -2476,7 +2663,7 @@
               "TABLE"
             ]
           },
-          "description": {
+          "localName": {
             "maxLength": 80,
             "minLength": 0,
             "type": "string",
@@ -2501,9 +2688,179 @@
             "description": "ID of parent location",
             "format": "uuid",
             "example": "c73e8ad1-191b-42b8-bfce-2550cc858dab"
+          },
+          "usage": {
+            "uniqueItems": true,
+            "type": "array",
+            "description": "Location Usage",
+            "items": {
+              "$ref": "#/components/schemas/NonResidentialUsageDto"
+            }
+          },
+          "isCell": {
+            "type": "boolean"
           }
         },
         "description": "Request to create a non-residential location"
+      },
+      "CreateWingRequest": {
+        "required": [
+          "defaultCellCapacity",
+          "numberOfCellsPerSection",
+          "prisonId",
+          "wingCode"
+        ],
+        "type": "object",
+        "properties": {
+          "prisonId": {
+            "maxLength": 5,
+            "minLength": 3,
+            "pattern": "^[A-Z]{2}I|ZZGHI$",
+            "type": "string",
+            "description": "Prison ID where the location is situated",
+            "example": "MDI"
+          },
+          "wingCode": {
+            "maxLength": 12,
+            "minLength": 0,
+            "type": "string",
+            "description": "Code assigned to a wing",
+            "example": "B"
+          },
+          "wingDescription": {
+            "maxLength": 80,
+            "minLength": 0,
+            "type": "string",
+            "description": "Alternative description to display for location",
+            "example": "Wing A"
+          },
+          "numberOfLandings": {
+            "maximum": 10,
+            "type": "integer",
+            "description": "Number of landings required",
+            "format": "int32",
+            "example": 3
+          },
+          "numberOfSpursPerLanding": {
+            "maximum": 10,
+            "type": "integer",
+            "description": "Number of spurs required",
+            "format": "int32",
+            "example": 2
+          },
+          "numberOfCellsPerSection": {
+            "maximum": 999,
+            "type": "integer",
+            "description": "Number of cells required in each section (wing,landing or spur)",
+            "format": "int32",
+            "example": 40
+          },
+          "defaultCellCapacity": {
+            "maximum": 10,
+            "type": "integer",
+            "description": "Default Cell Capacity",
+            "format": "int32",
+            "example": 1,
+            "default": 1
+          },
+          "defaultAttributesOfCells": {
+            "uniqueItems": true,
+            "type": "array",
+            "description": "Default set of attributes",
+            "example": "SINGLE_OCCUPANCY",
+            "items": {
+              "type": "string",
+              "description": "Default set of attributes",
+              "example": "SINGLE_OCCUPANCY",
+              "enum": [
+                "ANTI_BARRICADE_DOOR",
+                "AUDITABLE_CELL_BELL",
+                "FIXED_BED",
+                "METAL_DOOR",
+                "MOVABLE_BED",
+                "PRIVACY_CURTAIN",
+                "PRIVACY_SCREEN",
+                "STANDARD_CELL_BELL",
+                "SEPARATE_TOILET",
+                "WOODEN_DOOR",
+                "CAT_A_CELL",
+                "DOUBLE_OCCUPANCY",
+                "E_LIST_CELL",
+                "GATED_CELL",
+                "LISTENER_CELL",
+                "LOCATE_FLAT",
+                "MULTIPLE_OCCUPANCY",
+                "NON_SMOKER_CELL",
+                "OBSERVATION_CELL",
+                "SAFE_CELL",
+                "SINGLE_OCCUPANCY",
+                "SPECIAL_CELL",
+                "WHEELCHAIR_ACCESS",
+                "UNCONVICTED_JUVENILES",
+                "SENTENCED_JUVENILES",
+                "UNCONVICTED_18_20",
+                "SENTENCED_18_20",
+                "UNCONVICTED_ADULTS",
+                "SENTENCED_ADULTS",
+                "VULNERABLE_PRISONER_UNIT",
+                "SPECIAL_UNIT",
+                "RESETTLEMENT_HOSTEL",
+                "HEALTHCARE_CENTRE",
+                "NATIONAL_RESOURCE_HOSPITAL",
+                "OTHER_SPECIFIED",
+                "REMAND_CENTRE",
+                "LOCAL_PRISON",
+                "CLOSED_PRISON",
+                "OPEN_TRAINING",
+                "HOSTEL",
+                "CLOSED_YOUNG_OFFENDER",
+                "OPEN_YOUNG_OFFENDER",
+                "REMAND_UNDER_18",
+                "SENTENCED_UNDER_18",
+                "ECL_COMPONENT",
+                "ADDITIONAL_SPECIAL_UNIT",
+                "SECOND_CLOSED_TRAINER",
+                "IMMIGRATION_DETAINEES",
+                "CELL",
+                "LANDING",
+                "WING",
+                "CAT_A",
+                "CAT_A_EX",
+                "CAT_A_HI",
+                "CAT_B",
+                "CAT_C",
+                "CAT_D",
+                "ELIGIBLE",
+                "PAROLE_GRANTED",
+                "INELIGIBLE",
+                "YOI_CLOSED",
+                "YOI_OPEN",
+                "YOI_RESTRICTED",
+                "YOI_SHORT_SENTENCE",
+                "YOI_LONG_TERM_CLOSED",
+                "UNCLASSIFIED",
+                "UNCATEGORISED_SENTENCED_MALE",
+                "LOW",
+                "MEDIUM",
+                "HIGH",
+                "NOT_APPLICABLE",
+                "PROV_A",
+                "PENDING",
+                "REF_REVIEW",
+                "REFUSED_NO_REVIEW",
+                "STANDARD",
+                "FEMALE_RESTRICTED",
+                "FEMALE_CLOSED",
+                "FEMALE_SEMI",
+                "FEMALE_OPEN",
+                "UN_SENTENCED",
+                "YES",
+                "NO"
+              ]
+            }
+          }
+        },
+        "description": "Request to create a wing"
       },
       "PatchLocationRequest": {
         "required": [
@@ -2529,7 +2886,6 @@
               "CELL",
               "ROOM",
               "HOLDING_AREA",
-              "TIER",
               "MOVEMENT_AREA",
               "RESIDENTIAL_UNIT",
               "EXTERNAL_GROUNDS",
@@ -2565,7 +2921,7 @@
               "TABLE"
             ]
           },
-          "description": {
+          "localName": {
             "maxLength": 80,
             "minLength": 0,
             "type": "string",
@@ -2751,12 +3107,6 @@
             "type": "integer",
             "format": "int64"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -2772,7 +3122,16 @@
             "format": "int32"
           },
           "sort": {
-            "$ref": "#/components/schemas/SortObject"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SortObject"
+            }
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -2794,13 +3153,10 @@
             "format": "int64"
           },
           "sort": {
-            "$ref": "#/components/schemas/SortObject"
-          },
-          "paged": {
-            "type": "boolean"
-          },
-          "unpaged": {
-            "type": "boolean"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SortObject"
+            }
           },
           "pageSize": {
             "type": "integer",
@@ -2809,19 +3165,31 @@
           "pageNumber": {
             "type": "integer",
             "format": "int32"
+          },
+          "paged": {
+            "type": "boolean"
+          },
+          "unpaged": {
+            "type": "boolean"
           }
         }
       },
       "SortObject": {
         "type": "object",
         "properties": {
-          "empty": {
+          "direction": {
+            "type": "string"
+          },
+          "nullHandling": {
+            "type": "string"
+          },
+          "ascending": {
             "type": "boolean"
           },
-          "sorted": {
-            "type": "boolean"
+          "property": {
+            "type": "string"
           },
-          "unsorted": {
+          "ignoreCase": {
             "type": "boolean"
           }
         }
@@ -2867,6 +3235,8 @@
     "securitySchemes": {
       "bearer-jwt": {
         "type": "http",
+        "name": "Authorization",
+        "in": "header",
         "scheme": "bearer",
         "bearerFormat": "JWT"
       },
@@ -2888,7 +3258,8 @@
               "write": "Allows write of data"
             }
           }
-        }
+        },
+        "openIdConnectUrl": "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/.well-known/openid-configuration"
       }
     }
   }

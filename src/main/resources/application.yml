@@ -134,3 +134,8 @@ reports:
   non-associations:
     reconciliation:
       page-size: 40
+
+hmpps.sqs:
+  queues:
+    location:
+      errorVisibilityTimeout: 30
