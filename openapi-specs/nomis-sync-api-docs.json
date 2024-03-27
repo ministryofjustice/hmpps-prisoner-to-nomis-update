@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-03-19.7028.8fb823c"
+    "version": "2024-03-21.7051.058dee4"
   },
   "servers": [
     {
@@ -12734,14 +12734,14 @@
             "type": "integer",
             "format": "int32"
           },
-          "paged": {
-            "type": "boolean"
-          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
           },
           "unpaged": {
+            "type": "boolean"
+          },
+          "paged": {
             "type": "boolean"
           }
         }
@@ -14228,6 +14228,40 @@
           }
         }
       },
+      "AmendmentResponse": {
+        "required": [
+          "amendDateTime",
+          "amendedBy"
+        ],
+        "type": "object",
+        "properties": {
+          "amendDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Amended timestamp",
+            "example": "2021-07-05T10:35:17"
+          },
+          "columnName": {
+            "type": "string",
+            "description": "Which value was changed",
+            "example": "Sequence"
+          },
+          "oldValue": {
+            "type": "string",
+            "description": "Original value"
+          },
+          "newValue": {
+            "type": "string",
+            "description": "New value"
+          },
+          "amendedBy": {
+            "type": "string",
+            "description": "Username of the person who made the change",
+            "example": "NQP44X"
+          }
+        },
+        "description": "History"
+      },
       "LocationResponse": {
         "required": [
           "active",
@@ -14268,6 +14302,11 @@
             "description": "The containing location id",
             "format": "int64",
             "example": 1234567
+          },
+          "parentKey": {
+            "type": "string",
+            "description": "The containing location id's key (Nomis description field)",
+            "example": "WWI-B-2"
           },
           "operationalCapacity": {
             "type": "integer",
@@ -14372,6 +14411,13 @@
             "description": "Usages",
             "items": {
               "$ref": "#/components/schemas/UsageRequest"
+            }
+          },
+          "amendments": {
+            "type": "array",
+            "description": "History",
+            "items": {
+              "$ref": "#/components/schemas/AmendmentResponse"
             }
           },
           "createDatetime": {
