@@ -90,7 +90,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenLocationHasBeenCreatedInDPS {
       @BeforeEach
       fun setUp() {
-        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
         nomisApi.stubLocationCreate("""{ "locationId": $NOMIS_ID }""")
         mappingServer.stubGetMappingGivenDpsLocationIdWithError(DPS_ID, 404)
         mappingServer.stubGetMappingGivenDpsLocationId(PARENT_ID, parentMappingResponse)
@@ -102,7 +102,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will callback back to location service to get more details`() {
         waitForCreateProcessingToBeComplete()
 
-        locationsApi.verify(getRequestedFor(urlEqualTo("/locations/$DPS_ID")))
+        locationsApi.verify(getRequestedFor(urlEqualTo("/locations/$DPS_ID?includeHistory=false")))
       }
 
       @Test
@@ -197,7 +197,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
           }
         """.trimIndent()
 
-        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
         publishLocationDomainEvent("location.inside.prison.created")
 
         await untilAsserted {
@@ -231,7 +231,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
           }
         """.trimIndent()
 
-        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
         publishLocationDomainEvent("location.inside.prison.created")
 
         await untilAsserted {
@@ -284,10 +284,10 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         mappingServer.stubGetMappingGivenDpsLocationId(PARENT_ID, parentMappingResponse)
         mappingServer.stubCreateLocationWithErrorFollowedBySlowSuccess()
         nomisApi.stubLocationCreate("""{ "locationId": $NOMIS_ID }""")
-        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
         publishLocationDomainEvent("location.inside.prison.created")
 
-        await untilCallTo { locationsApi.getCountFor("/locations/$DPS_ID") } matches { it == 1 }
+        await untilCallTo { locationsApi.getCountFor("/locations/$DPS_ID?includeHistory=false") } matches { it == 1 }
         await untilCallTo { nomisApi.postCountFor("/locations") } matches { it == 1 }
       }
 
@@ -337,7 +337,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenLocationHasBeenUpdatedInDPS {
       @BeforeEach
       fun setUp() {
-        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
         mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
         mappingServer.stubGetMappingGivenDpsLocationId(PARENT_ID, parentMappingResponse)
         nomisApi.stubLocationUpdate("/locations/$NOMIS_ID")
@@ -347,7 +347,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to location service to get more details`() {
         await untilAsserted {
-          locationsApi.verify(getRequestedFor(urlEqualTo("/locations/$DPS_ID")))
+          locationsApi.verify(getRequestedFor(urlEqualTo("/locations/$DPS_ID?includeHistory=false")))
         }
       }
 
@@ -384,6 +384,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           locationsApi.stubGetLocationWithErrorFollowedBySlowSuccess(
             id = DPS_ID,
+            includeHistory = false,
             response = locationApiResponse,
           )
           mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
@@ -395,7 +396,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to location service twice to get more details`() {
           await untilAsserted {
-            locationsApi.verify(2, getRequestedFor(urlEqualTo("/locations/$DPS_ID")))
+            locationsApi.verify(2, getRequestedFor(urlEqualTo("/locations/$DPS_ID?includeHistory=false")))
             verify(telemetryClient).trackEvent(Mockito.eq("location-amend-success"), any(), isNull())
           }
         }
@@ -415,7 +416,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          locationsApi.stubGetLocation(id = DPS_ID, response = locationApiResponse)
+          locationsApi.stubGetLocation(id = DPS_ID, false, response = locationApiResponse)
           mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
           mappingServer.stubGetMappingGivenDpsLocationId(PARENT_ID, parentMappingResponse)
           nomisApi.stubLocationUpdateWithError("/locations/$NOMIS_ID", 503)
@@ -425,7 +426,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to location service 3 times before given up`() {
           await untilAsserted {
-            locationsApi.verify(3, getRequestedFor(urlEqualTo("/locations/$DPS_ID")))
+            locationsApi.verify(3, getRequestedFor(urlEqualTo("/locations/$DPS_ID?includeHistory=false")))
           }
         }
 
@@ -477,7 +478,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenLocationHasBeenDeactivatedInDPS {
       @BeforeEach
       fun setUp() {
-        locationsApi.stubGetLocation(DPS_ID, locationApiResponseDeactivated)
+        locationsApi.stubGetLocation(DPS_ID, false, locationApiResponseDeactivated)
         mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
         nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/deactivate")
         publishLocationDomainEvent("location.inside.prison.deactivated")
@@ -518,7 +519,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+          locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
           mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
           nomisApi.stubLocationUpdateWithErrorFollowedBySlowSuccess("/locations/$NOMIS_ID/deactivate")
           publishLocationDomainEvent("location.inside.prison.deactivated")
@@ -539,7 +540,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+          locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
           mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
           nomisApi.stubLocationUpdateWithError("/locations/$NOMIS_ID/deactivate", 503)
           publishLocationDomainEvent("location.inside.prison.deactivated")
@@ -565,7 +566,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+          locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
           mappingServer.stubGetMappingGivenDpsLocationIdWithError(DPS_ID, 404)
           nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/deactivate")
           publishLocationDomainEvent("location.inside.prison.deactivated")
@@ -594,7 +595,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          locationsApi.stubGetLocationWithError(DPS_ID, 404)
+          locationsApi.stubGetLocationWithError(DPS_ID, false, 404)
           mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
           nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/deactivate")
           publishLocationDomainEvent("location.inside.prison.deactivated")
@@ -626,7 +627,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenLocationHasBeenReactivatedInDPS {
       @BeforeEach
       fun setUp() {
-        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
         mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
         nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/reactivate")
         publishLocationDomainEvent("location.inside.prison.reactivated")
@@ -661,7 +662,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenCapacityHasBeenChangedInDPS {
       @BeforeEach
       fun setUp() {
-        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
         mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
         nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/capacity")
         publishLocationDomainEvent("location.inside.prison.capacity.changed")
@@ -696,7 +697,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenCertificationHasBeenChangedInDPS {
       @BeforeEach
       fun setUp() {
-        locationsApi.stubGetLocation(DPS_ID, locationApiResponse)
+        locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
         mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
         nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/certification")
         publishLocationDomainEvent("location.inside.prison.certification.changed")

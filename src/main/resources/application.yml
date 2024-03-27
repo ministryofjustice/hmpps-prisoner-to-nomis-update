@@ -134,6 +134,9 @@ reports:
   non-associations:
     reconciliation:
       page-size: 40
+  locations:
+    reconciliation:
+      page-size: 40
 
 hmpps.sqs:
   queues:

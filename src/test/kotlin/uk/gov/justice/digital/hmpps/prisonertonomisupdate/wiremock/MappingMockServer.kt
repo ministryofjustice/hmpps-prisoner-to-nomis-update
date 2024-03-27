@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.okJson
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.stubbing.Scenario
@@ -1009,59 +1010,6 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubCreateNonAssociationWithError(status: Int = 500) {
-    stubFor(
-      post("/mapping/non-associations").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
-          .withStatus(status),
-      ),
-    )
-  }
-
-  fun stubCreateNonAssociationWithDuplicateError(
-    nonAssociationId: Long,
-    firstOffenderNo: String,
-    secondOffenderNo: String,
-    nomisTypeSequence: Int,
-    duplicateFirstOffenderNo: String,
-    duplicateSecondOffenderNo: String,
-    duplicateNomisTypeSequence: Int,
-  ) {
-    stubFor(
-      post("/mapping/non-associations")
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody(
-              """
-            { 
-              "status": 409,
-              "errorCode": 1409,
-              "userMessage": "Conflict: NonAssociation mapping already exists",
-               "moreInfo": {
-                "existing": {
-                  "nonAssociationId": $nonAssociationId,
-                  "firstOffenderNo": "$firstOffenderNo",
-                  "secondOffenderNo": "$secondOffenderNo",
-                  "nomisTypeSequence": $nomisTypeSequence
-                  },
-                "duplicate": {
-                  "nonAssociationId": $nonAssociationId,
-                  "firstOffenderNo": "$duplicateFirstOffenderNo",
-                  "secondOffenderNo": "$duplicateSecondOffenderNo",
-                  "nomisTypeSequence": $duplicateNomisTypeSequence
-                }
-              }
-            }
-              """.trimMargin(),
-            )
-            .withStatus(409),
-        ),
-    )
-  }
-
   fun stubGetMappingGivenNonAssociationId(id: Long, response: String) {
     stubFor(
       get("/mapping/non-associations/non-association-id/$id").willReturn(
@@ -1108,17 +1056,6 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
             .withFixedDelay(1500),
 
         ).willSetStateTo(Scenario.STARTED),
-    )
-  }
-
-  fun stubGetAllNonAssociationMappings(response: String) {
-    stubFor(
-      get("/mapping/non-associations").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(response)
-          .withStatus(200),
-      ),
     )
   }
 
@@ -1218,12 +1155,13 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetMappingGivenDpsLocationId(id: String, response: String) {
     stubFor(
-      get("/mapping/locations/dps/$id").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(response)
-          .withStatus(200),
-      ),
+      get("/mapping/locations/dps/$id").willReturn(okJson(response)),
+    )
+  }
+
+  fun stubGetMappingGivenNomisLocationId(id: Long, response: String) {
+    stubFor(
+      get("/mapping/locations/nomis/$id").willReturn(okJson(response)),
     )
   }
 
@@ -1455,6 +1393,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         ).willSetStateTo(Scenario.STARTED),
     )
   }
+
   fun stubGetCourtChargeMappingGivenDpsIdWithError(id: String, status: Int = 500) {
     stubFor(
       get("/mapping/court-sentencing/court-charges/dps-court-charge-id/$id").willReturn(

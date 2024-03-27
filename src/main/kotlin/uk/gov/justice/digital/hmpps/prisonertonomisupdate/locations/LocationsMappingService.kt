@@ -35,6 +35,12 @@ class LocationsMappingService(
       .bodyToMono(LocationMappingDto::class.java)
       .awaitSingle()
 
+  suspend fun getMappingGivenNomisIdOrNull(id: Long): LocationMappingDto? =
+    webClient.get()
+      .uri("/mapping/locations/nomis/{id}", id)
+      .retrieve()
+      .awaitBodyOrNullForNotFound()
+
   suspend fun getMappingGivenNomisId(id: Long): LocationMappingDto =
     webClient.get()
       .uri("/mapping/locations/nomis/{id}", id)
