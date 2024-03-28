@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AmendmentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ProfileRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
@@ -169,9 +171,9 @@ class LocationsReconciliationService(
             nomisRecord.certified,
             nomisRecord.cnaCapacity,
             nomisRecord.active,
-            nomisRecord.profiles?.size,
+            expectedDpsSize(nomisRecord.profiles),
             nomisRecord.usages?.size,
-            nomisRecord.amendments?.size,
+            expectedDpsSize(nomisRecord.amendments),
           ),
           LocationReportDetail(
             dpsRecord.code,
@@ -233,13 +235,48 @@ class LocationsReconciliationService(
       if (nomis.operationalCapacity != null && nomis.operationalCapacity > 0 && nomis.operationalCapacity != dps.capacity?.workingCapacity) return "Cell operational capacity mismatch"
       if (nomis.capacity != null && nomis.capacity > 0 && nomis.capacity != dps.capacity?.maxCapacity) return "Cell max capacity mismatch"
       if ((nomis.certified == true) != (dps.certification?.certified == true)) return "Cell certification mismatch"
-      if (nomis.cnaCapacity != dps.certification?.capacityOfCertifiedCell) return "Cell CNA capacity mismatch"
-      // if ((nomis.profiles?.toSet()?.size ?: 0) != (dps.attributes?.size ?: 0)) return "Cell attributes mismatch"
+      if ((nomis.cnaCapacity ?: 0) != (dps.certification?.capacityOfCertifiedCell ?: 0)) return "Cell CNA capacity mismatch"
+      if (expectedDpsSize(nomis.profiles) != (dps.attributes?.size ?: 0)) return "Cell attributes mismatch"
     }
-    // if (dps.residentialHousingType == null && (nomis.usages?.size ?: 0) != (dps.usage?.size ?: 0)) return "Location usage mismatch"
-    if ((nomis.amendments?.size ?: 0) != (dps.changeHistory?.size ?: 0)) return "Location history mismatch"
+    if (dps.residentialHousingType == null && (nomis.usages?.size ?: 0) != (dps.usage?.size ?: 0)) return "Location usage mismatch"
+    if (expectedDpsSize(nomis.amendments) != (dps.changeHistory?.size ?: 0)) return "Location history mismatch"
     return null
   }
+
+  private fun expectedDpsSize(profiles: List<ProfileRequest>?) = (
+    profiles
+      ?.filterNot { it.profileType == ProfileRequest.ProfileType.NON_ASSO_TYP }
+      ?.filterNot {
+        // Invalid codes (not in ref data)
+        (it.profileType == ProfileRequest.ProfileType.HOU_USED_FOR && it.profileCode == "S") ||
+          (it.profileType == ProfileRequest.ProfileType.HOU_USED_FOR && it.profileCode == "BM") ||
+          (it.profileType == ProfileRequest.ProfileType.HOU_USED_FOR && it.profileCode == "MB") ||
+          (it.profileType == ProfileRequest.ProfileType.HOU_SANI_FIT && it.profileCode == "ABC") ||
+          (it.profileType == ProfileRequest.ProfileType.HOU_UNIT_ATT && it.profileCode == "LISTENER") ||
+          (it.profileType == ProfileRequest.ProfileType.HOU_USED_FOR && it.profileCode == "0") ||
+          (it.profileType == ProfileRequest.ProfileType.HOU_SANI_FIT && it.profileCode == "TVP") ||
+          (it.profileType == ProfileRequest.ProfileType.HOU_SANI_FIT && it.profileCode == "ST")
+      }
+      ?.map {
+        if (it.profileCode == "N/A") {
+          ProfileRequest(ProfileRequest.ProfileType.SUP_LVL_TYPE, "NA")
+        } else if (it.profileType == ProfileRequest.ProfileType.HOU_USED_FOR && it.profileCode == "V") {
+          ProfileRequest(ProfileRequest.ProfileType.HOU_USED_FOR, "7")
+        } else {
+          it
+        }
+      }
+      ?.toSet()
+      ?.size ?: 0
+    )
+
+  private fun expectedDpsSize(amendments: List<AmendmentResponse>?) = (
+    amendments
+      ?.filter { it.oldValue != it.newValue }
+      // eliminate duplicate entries with timestamps within same second (about 120)
+      ?.toSet()
+      ?.size ?: 0
+    )
 }
 
 data class LocationReportDetail(

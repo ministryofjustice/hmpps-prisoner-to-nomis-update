@@ -130,6 +130,7 @@ class LocationsReconciliationServiceTest {
     profiles = listOf(
       ProfileRequest(ProfileRequest.ProfileType.SUP_LVL_TYPE, "C"),
       ProfileRequest(ProfileRequest.ProfileType.SUP_LVL_TYPE, "D"),
+      ProfileRequest(ProfileRequest.ProfileType.NON_ASSO_TYP, "not-migrated-to-dps"),
     ),
     usages = listOf(
       UsageRequest(UsageRequest.InternalLocationUsageType.OCCUR, UsageRequest.UsageLocationType.MEDI, 42, 5),
@@ -140,6 +141,22 @@ class LocationsReconciliationServiceTest {
         columnName = "Accommodation Type",
         oldValue = "41",
         newValue = "42",
+        amendedBy = "STEVE_ADM",
+      ),
+      // not counted in DPS as it is a duplicate:
+      AmendmentResponse(
+        amendDateTime = "2023-09-25T11:12:45",
+        columnName = "Accommodation Type",
+        oldValue = "41",
+        newValue = "42",
+        amendedBy = "STEVE_ADM",
+      ),
+      // not counted in DPS as old and new are the same
+      AmendmentResponse(
+        amendDateTime = "2023-09-25T11:12:45",
+        columnName = "Accommodation Type",
+        oldValue = "same",
+        newValue = "same",
         amendedBy = "STEVE_ADM",
       ),
     ),
