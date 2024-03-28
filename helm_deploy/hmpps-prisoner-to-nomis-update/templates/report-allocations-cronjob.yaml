@@ -23,4 +23,12 @@ spec:
                 - /bin/sh
                 - -c
                 - curl --retry 2 -XPOST http://hmpps-prisoner-to-nomis-update/allocations/reports/reconciliation
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
           restartPolicy: Never
