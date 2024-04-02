@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
-import java.time.LocalDateTime
 
 @Service
 class LocationsService(
@@ -411,7 +410,6 @@ data class LocationDomainEvent(
   val eventType: String,
   val version: String,
   val description: String,
-  val occurredAt: LocalDateTime,
   val additionalInformation: LocationAdditionalInformation,
 )
 

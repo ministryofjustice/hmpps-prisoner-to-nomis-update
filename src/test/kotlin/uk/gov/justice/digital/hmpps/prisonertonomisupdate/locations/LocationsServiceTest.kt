@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Locati
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ProfileRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UsageRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import java.time.LocalDateTime
 import java.util.UUID
 
 private const val DPS_LOCATION_ID = "abcdef01-2345-6789-abcd-ef0123456789"
@@ -99,7 +98,6 @@ internal class LocationsServiceTest {
       "TYPE",
       "version",
       "description",
-      LocalDateTime.now(),
       LocationAdditionalInformation(id = DPS_LOCATION_ID, key = DPS_KEY),
     )
     locationsService.createLocation(location)
