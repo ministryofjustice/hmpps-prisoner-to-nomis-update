@@ -171,9 +171,9 @@ class LocationsReconciliationService(
             nomisRecord.certified,
             nomisRecord.cnaCapacity,
             nomisRecord.active,
-            expectedDpsSize(nomisRecord.profiles),
+            expectedDpsAttributesSize(nomisRecord.profiles),
             nomisRecord.usages?.size,
-            expectedDpsSize(nomisRecord.amendments),
+            expectedDpsHistorySize(nomisRecord.amendments),
           ),
           LocationReportDetail(
             dpsRecord.code,
@@ -236,14 +236,14 @@ class LocationsReconciliationService(
       if (nomis.capacity != null && nomis.capacity > 0 && nomis.capacity != dps.capacity?.maxCapacity) return "Cell max capacity mismatch"
       if ((nomis.certified == true) != (dps.certification?.certified == true)) return "Cell certification mismatch"
       if ((nomis.cnaCapacity ?: 0) != (dps.certification?.capacityOfCertifiedCell ?: 0)) return "Cell CNA capacity mismatch"
-      if (expectedDpsSize(nomis.profiles) != (dps.attributes?.size ?: 0)) return "Cell attributes mismatch"
+      if (expectedDpsAttributesSize(nomis.profiles) != (dps.attributes?.size ?: 0)) return "Cell attributes mismatch"
     }
     if (dps.residentialHousingType == null && (nomis.usages?.size ?: 0) != (dps.usage?.size ?: 0)) return "Location usage mismatch"
-    if (expectedDpsSize(nomis.amendments) != (dps.changeHistory?.size ?: 0)) return "Location history mismatch"
+    if (expectedDpsHistorySize(nomis.amendments) != (dps.changeHistory?.size ?: 0)) return "Location history mismatch"
     return null
   }
 
-  private fun expectedDpsSize(profiles: List<ProfileRequest>?) = (
+  private fun expectedDpsAttributesSize(profiles: List<ProfileRequest>?) = (
     profiles
       ?.filterNot { it.profileType == ProfileRequest.ProfileType.NON_ASSO_TYP }
       ?.filterNot {
@@ -270,7 +270,7 @@ class LocationsReconciliationService(
       ?.size ?: 0
     )
 
-  private fun expectedDpsSize(amendments: List<AmendmentResponse>?) = (
+  private fun expectedDpsHistorySize(amendments: List<AmendmentResponse>?) = (
     amendments
       ?.filter { it.oldValue != it.newValue }
       // eliminate duplicate entries with timestamps within same second (about 120)
