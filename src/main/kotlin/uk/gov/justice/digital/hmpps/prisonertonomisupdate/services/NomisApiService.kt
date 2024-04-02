@@ -721,8 +721,21 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .bodyValue(request)
       .retrieve()
       .awaitBody()
+
+  suspend fun mergesSinceDate(offenderNo: String, fromDate: LocalDate): List<MergeDetail> =
+    webClient.get()
+      .uri("/prisoners/{offenderNo}/merges?fromDate={fromDate}", offenderNo, fromDate)
+      .retrieve()
+      .awaitBody()
 }
 
+data class MergeDetail(
+  val fromOffenderNo: String,
+  val fromBookingId: Long,
+  val toOffenderNo: String,
+  val toBookingId: Long,
+  val dateTime: LocalDateTime,
+)
 data class CreateVisitDto(
   val offenderNo: String,
   val prisonId: String,

@@ -12,6 +12,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
@@ -30,15 +34,19 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ADASum
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension.Companion.adjudicationsApiServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @SpringAPIServiceTest
 @Import(
   AdjudicationsReconciliationService::class,
   NomisApiService::class,
+  AdjudicationsMappingService::class,
   AdjudicationsApiService::class,
   AdjudicationsConfiguration::class,
 )
@@ -245,30 +253,238 @@ internal class AdjudicationsReconciliationServiceTest {
     inner class WhenBothSystemsHaveASingleButTheAdaHasDifferentLengths {
       @BeforeEach
       fun beforeEach() {
-        adjudicationsApiServer.stubGetAdjudicationsByBookingId(123456, listOf(aDPSAdjudication().copy(punishments = listOf(adaPunishment(days = 10)))))
+        adjudicationsApiServer.stubGetAdjudicationsByBookingId(123456, listOf(aDPSAdjudication().copy(chargeNumber = "MDI-00010", punishments = listOf(adaPunishment(days = 10)))))
         nomisApi.stubGetAdaAwardSummary(
           bookingId = 123456,
           adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
             bookingId = 123456,
             offenderNo = "A1234AA",
-            adaSummaries = listOf(nomisSummary(days = 12)),
+            adaSummaries = listOf(nomisSummary(adjudicationNumber = 10234567, days = 12)),
           ),
         )
       }
 
-      @Test
-      fun `will report a mismatch`() = runTest {
-        val mismatch = service.checkADAPunishmentsMatch(
-          ActivePrisonerId(
-            bookingId = 123456L,
+      @Nested
+      inner class NoMergesSinceMigration {
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubGetMergesFromDate(offenderNo = "A1234AA", merges = emptyList())
+        }
+
+        @Test
+        fun `will retrieve merges since the NOMIS migration`() = runTest {
+          service.checkADAPunishmentsMatch(
+            ActivePrisonerId(
+              bookingId = 123456L,
+              offenderNo = "A1234AA",
+            ),
+          )
+          nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/A1234AA/merges?fromDate=2024-01-28")))
+        }
+
+        @Test
+        fun `will report a mismatch`() = runTest {
+          val mismatch = service.checkADAPunishmentsMatch(
+            ActivePrisonerId(
+              bookingId = 123456L,
+              offenderNo = "A1234AA",
+            ),
+          )
+          assertThat(mismatch).isNotNull
+          assertThat(mismatch?.dpsAdas?.count).isEqualTo(1)
+          assertThat(mismatch?.nomisAda?.count).isEqualTo(1)
+          assertThat(mismatch?.dpsAdas?.days).isEqualTo(10)
+          assertThat(mismatch?.nomisAda?.days).isEqualTo(12)
+        }
+      }
+
+      @Nested
+      inner class MergeSinceMigrationButNoMissingAdjudications {
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubGetMergesFromDate(
             offenderNo = "A1234AA",
+            merges = listOf(
+              MergeDetail(fromOffenderNo = "A1234AB", toOffenderNo = "A1234AA", fromBookingId = 1234, toBookingId = 1235, dateTime = LocalDateTime.parse("2024-02-02T12:34:56")),
+            ),
+          )
+          mappingServer.stubGetByChargeNumber("MDI-00010", 10234567)
+        }
+
+        @Test
+        fun `will report a mismatch`() = runTest {
+          val mismatch = service.checkADAPunishmentsMatch(
+            ActivePrisonerId(
+              bookingId = 123456L,
+              offenderNo = "A1234AA",
+            ),
+          )
+          assertThat(mismatch).isNotNull
+          assertThat(mismatch?.dpsAdas?.count).isEqualTo(1)
+          assertThat(mismatch?.nomisAda?.count).isEqualTo(1)
+          assertThat(mismatch?.dpsAdas?.days).isEqualTo(10)
+          assertThat(mismatch?.nomisAda?.days).isEqualTo(12)
+        }
+      }
+    }
+
+    @Nested
+    inner class WhenDPSHasAMissingAdjudicationWithADA {
+      @BeforeEach
+      fun beforeEach() {
+        adjudicationsApiServer.stubGetAdjudicationsByBookingId(
+          123456,
+          listOf(
+            aDPSAdjudication().copy(chargeNumber = "MDI-00001", punishments = listOf(adaPunishment(days = 3))),
+            aDPSAdjudication().copy(chargeNumber = "MDI-00002", punishments = listOf(adaPunishment(days = 9))),
           ),
         )
-        assertThat(mismatch).isNotNull
-        assertThat(mismatch?.dpsAdas?.count).isEqualTo(1)
-        assertThat(mismatch?.nomisAda?.count).isEqualTo(1)
-        assertThat(mismatch?.dpsAdas?.days).isEqualTo(10)
-        assertThat(mismatch?.nomisAda?.days).isEqualTo(12)
+        nomisApi.stubGetAdaAwardSummary(
+          bookingId = 123456,
+          adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
+            bookingId = 123456,
+            offenderNo = "A1234AA",
+            adaSummaries = listOf(
+              nomisSummary(adjudicationNumber = 1000001, days = 3),
+              nomisSummary(adjudicationNumber = 1000002, days = 9),
+              nomisSummary(adjudicationNumber = 1000003, days = 10),
+            ),
+          ),
+        )
+      }
+
+      @Nested
+      inner class NoMergesSinceMigration {
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubGetMergesFromDate(offenderNo = "A1234AA", merges = emptyList())
+        }
+
+        @Test
+        fun `will report a mismatch`() = runTest {
+          val mismatch = service.checkADAPunishmentsMatch(
+            ActivePrisonerId(
+              bookingId = 123456L,
+              offenderNo = "A1234AA",
+            ),
+          )
+          assertThat(mismatch).isNotNull
+        }
+      }
+
+      @Nested
+      inner class MergeSinceMigrationWithMissingAdjudications {
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubGetMergesFromDate(
+            offenderNo = "A1234AA",
+            merges = listOf(
+              MergeDetail(fromOffenderNo = "A1234AB", toOffenderNo = "A1234AA", fromBookingId = 1234, toBookingId = 1235, dateTime = LocalDateTime.parse("2024-02-02T12:34:56")),
+            ),
+          )
+          mappingServer.stubGetByChargeNumber("MDI-00001", 1000001)
+          mappingServer.stubGetByChargeNumber("MDI-00002", 1000002)
+        }
+
+        @Test
+        fun `will not report a mismatch assume it is due to the merge`() = runTest {
+          val mismatch = service.checkADAPunishmentsMatch(
+            ActivePrisonerId(
+              bookingId = 123456L,
+              offenderNo = "A1234AA",
+            ),
+          )
+          assertThat(mismatch).isNull()
+        }
+
+        @Test
+        fun `will track telemetry with reason for not reporting mismatch`() = runTest {
+          service.checkADAPunishmentsMatch(
+            ActivePrisonerId(
+              bookingId = 123456L,
+              offenderNo = "A1234AA",
+            ),
+          )
+
+          verify(telemetryClient).trackEvent(
+            eq("adjudication-reports-reconciliation-merge-mismatch"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+    }
+
+    @Nested
+    inner class WhenDPSHasNoMissingAdjudicationsButMissingDays {
+      @BeforeEach
+      fun beforeEach() {
+        adjudicationsApiServer.stubGetAdjudicationsByBookingId(
+          123456,
+          listOf(
+            aDPSAdjudication().copy(chargeNumber = "MDI-00001", punishments = listOf(adaPunishment(days = 3))),
+            aDPSAdjudication().copy(chargeNumber = "MDI-00002", punishments = listOf(adaPunishment(days = 9))),
+            aDPSAdjudication().copy(chargeNumber = "MDI-00003", punishments = listOf(adaPunishment(days = 1))),
+          ),
+        )
+        nomisApi.stubGetAdaAwardSummary(
+          bookingId = 123456,
+          adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
+            bookingId = 123456,
+            offenderNo = "A1234AA",
+            adaSummaries = listOf(
+              nomisSummary(adjudicationNumber = 1000001, days = 3),
+              nomisSummary(adjudicationNumber = 1000002, days = 9),
+              nomisSummary(adjudicationNumber = 1000003, days = 10),
+            ),
+          ),
+        )
+      }
+
+      @Nested
+      inner class NoMergesSinceMigration {
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubGetMergesFromDate(offenderNo = "A1234AA", merges = emptyList())
+        }
+
+        @Test
+        fun `will report a mismatch`() = runTest {
+          val mismatch = service.checkADAPunishmentsMatch(
+            ActivePrisonerId(
+              bookingId = 123456L,
+              offenderNo = "A1234AA",
+            ),
+          )
+          assertThat(mismatch).isNotNull
+        }
+      }
+
+      @Nested
+      inner class MergeSinceMigrationWithMissingAdjudications {
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubGetMergesFromDate(
+            offenderNo = "A1234AA",
+            merges = listOf(
+              MergeDetail(fromOffenderNo = "A1234AB", toOffenderNo = "A1234AA", fromBookingId = 1234, toBookingId = 1235, dateTime = LocalDateTime.parse("2024-02-02T12:34:56")),
+            ),
+          )
+          mappingServer.stubGetByChargeNumber("MDI-00001", 1000001)
+          mappingServer.stubGetByChargeNumber("MDI-00002", 1000002)
+          mappingServer.stubGetByChargeNumber("MDI-00003", 1000003)
+        }
+
+        @Test
+        fun `will report a mismatch`() = runTest {
+          val mismatch = service.checkADAPunishmentsMatch(
+            ActivePrisonerId(
+              bookingId = 123456L,
+              offenderNo = "A1234AA",
+            ),
+          )
+          assertThat(mismatch).isNotNull
+        }
       }
     }
   }
@@ -283,16 +499,17 @@ internal class AdjudicationsReconciliationServiceTest {
       adjudicationsApiServer.stubGetAdjudicationsByBookingId(2, listOf(aDPSAdjudication().copy(punishments = listOf(adaPunishment(days = 10)))))
       nomisApi.stubGetAdaAwardSummary(
         bookingId = 1,
-        adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(bookingId = 1, offenderNo = "A1234AA", adaSummaries = emptyList()),
+        adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(bookingId = 1, offenderNo = "A0001TZ", adaSummaries = emptyList()),
       )
       nomisApi.stubGetAdaAwardSummary(
         bookingId = 2,
         adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
           bookingId = 2,
-          offenderNo = "A1234AA",
+          offenderNo = "A0002TZ",
           adaSummaries = listOf(nomisSummary(days = 12)),
         ),
       )
+      nomisApi.stubGetMergesFromDate(offenderNo = "A0002TZ", merges = emptyList())
     }
 
     @Test
@@ -357,8 +574,8 @@ internal fun aDPSAdjudication(chargeNumber: String = "4000001", prisonerNumber: 
 internal fun adaPunishment(days: Int, startDate: LocalDate = LocalDate.now(), type: PunishmentDto.Type = ADDITIONAL_DAYS) =
   PunishmentDto(type = type, schedule = PunishmentScheduleDto(days = days, startDate = startDate), canRemove = true)
 
-internal fun nomisSummary(days: Int, effectiveDate: LocalDate = LocalDate.now()): ADASummary = ADASummary(
-  adjudicationNumber = 4000001,
+internal fun nomisSummary(days: Int, effectiveDate: LocalDate = LocalDate.now(), adjudicationNumber: Long = 4000001): ADASummary = ADASummary(
+  adjudicationNumber = adjudicationNumber,
   sanctionSequence = 1,
   days = days,
   effectiveDate = effectiveDate,
