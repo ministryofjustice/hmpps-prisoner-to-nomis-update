@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiExtension.Companion.locationsApi
 
 private const val LOCATION_ID = "2475f250-434a-4257-afe7-b911f1773a4d"
 
@@ -57,15 +57,15 @@ internal class LocationsApiServiceTest {
   inner class GetLocation {
     @BeforeEach
     internal fun setUp() {
-      LocationsApiExtension.locationsApi.stubGetLocation(LOCATION_ID, response)
+      locationsApi.stubGetLocation(LOCATION_ID, false, response)
     }
 
     @Test
     fun `should call api with OAuth2 token`(): Unit = runTest {
       locationsApiService.getLocation(LOCATION_ID)
 
-      LocationsApiExtension.locationsApi.verify(
-        WireMock.getRequestedFor(WireMock.urlEqualTo("/locations/$LOCATION_ID"))
+      locationsApi.verify(
+        WireMock.getRequestedFor(WireMock.urlEqualTo("/locations/$LOCATION_ID?includeHistory=false"))
           .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
       )
     }
@@ -80,7 +80,7 @@ internal class LocationsApiServiceTest {
 
     @Test
     fun `when location is not found an exception is thrown`() = runTest {
-      LocationsApiExtension.locationsApi.stubGetLocationWithError(LOCATION_ID, status = 404)
+      locationsApi.stubGetLocationWithError(LOCATION_ID, false, status = 404)
 
       assertThrows<WebClientResponseException.NotFound> {
         locationsApiService.getLocation(LOCATION_ID)
@@ -89,7 +89,7 @@ internal class LocationsApiServiceTest {
 
     @Test
     fun `when any bad response is received an exception is thrown`() = runTest {
-      LocationsApiExtension.locationsApi.stubGetLocationWithError(LOCATION_ID, status = 503)
+      locationsApi.stubGetLocationWithError(LOCATION_ID, false, status = 503)
 
       assertThrows<WebClientResponseException.ServiceUnavailable> {
         locationsApiService.getLocation(LOCATION_ID)

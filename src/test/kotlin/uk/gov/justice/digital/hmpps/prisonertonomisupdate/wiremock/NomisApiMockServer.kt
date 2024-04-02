@@ -8,6 +8,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.ok
+import com.github.tomakehurst.wiremock.client.WireMock.okJson
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
@@ -1821,6 +1822,70 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withStatus(200)
             .withFixedDelay(1500),
         ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetLocationsInitialCount(response: String) {
+    stubFor(
+      get(urlPathEqualTo("/locations/ids"))
+        .withQueryParam("page", WireMock.equalTo("0"))
+        .withQueryParam("size", WireMock.equalTo("1"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(response),
+        ),
+    )
+  }
+
+  fun stubGetLocationsPage(pageNumber: Long, pageSize: Long = 10, response: String) {
+    stubFor(
+      get(urlPathEqualTo("/locations/ids"))
+        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
+        .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withFixedDelay(500)
+            .withBody(response),
+        ),
+    )
+  }
+
+  fun stubGetLocationsPageWithError(pageNumber: Long, responseCode: Int) {
+    stubFor(
+      get(urlPathEqualTo("/locations/ids"))
+        .withQueryParam("page", WireMock.equalTo(pageNumber.toString())).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(responseCode)
+            .withBody("""{"message":"Error"}"""),
+        ),
+    )
+  }
+
+  fun stubGetLocation(id: Long, response: String) {
+    stubFor(
+      get(
+        urlPathEqualTo("/locations/$id"),
+      )
+        .willReturn(okJson(response)),
+    )
+  }
+
+  fun stubGetLocationWithError(id: Long, responseCode: Int) {
+    stubFor(
+      get(
+        urlPathEqualTo("/locations/$id"),
+      )
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(responseCode)
+            .withBody("""{"message":"Error"}"""),
+        ),
     )
   }
 

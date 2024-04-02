@@ -1,11 +1,11 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "app.fullname" . }}-report-non-assoc
+  name: {{ include "app.fullname" . }}-report-locations
   labels:
     {{- include "app.labels" . | nindent 4 }}
 spec:
-  schedule: "30 2 * * 2"
+  schedule: "30 2 * * 3"
   concurrencyPolicy: Forbid
   failedJobsHistoryLimit: 5
   startingDeadlineSeconds: 600
@@ -17,16 +17,16 @@ spec:
       template:
         spec:
           containers:
-            - name: report-non-associations
+            - name: report-locations
               image: ghcr.io/ministryofjustice/hmpps-devops-tools
               args:
                 - /bin/sh
                 - -c
-                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/non-associations/reports/reconciliation
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/locations/reports/reconciliation
               securityContext:
                 capabilities:
                   drop:
-                  - ALL
+                    - ALL
                 runAsNonRoot: true
                 allowPrivilegeEscalation: false
                 seccompProfile:

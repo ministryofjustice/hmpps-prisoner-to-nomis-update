@@ -1,9 +1,14 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.jsonResponse
+import com.github.tomakehurst.wiremock.client.WireMock.okJson
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
@@ -38,27 +43,30 @@ class LocationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubHealthPing(status: Int) {
     stubFor(
-      get("/health/ping").willReturn(WireMock.okJson(if (status == 200) "pong" else "some error")),
+      get("/health/ping").willReturn(okJson(if (status == 200) "pong" else "some error")),
     )
   }
 
-  fun stubGetLocation(id: String, response: String) {
+  fun stubGetLocation(id: String, includeHistory: Boolean, response: String) {
     stubFor(
-      get("/locations/$id").willReturn(WireMock.okJson(response)),
+      get(urlPathEqualTo("/locations/$id"))
+        .withQueryParam("includeHistory", equalTo(includeHistory.toString()))
+        .willReturn(okJson(response)),
     )
   }
 
-  fun stubGetLocationWithError(id: String, status: Int = 500) {
+  fun stubGetLocationWithError(id: String, includeHistory: Boolean, status: Int = 500) {
     stubFor(
-      get("/locations/$id").willReturn(
-        WireMock.jsonResponse("""{ "error": "some error" }""", status),
-      ),
+      get(urlPathEqualTo("/locations/$id"))
+        .withQueryParam("includeHistory", equalTo(includeHistory.toString()))
+        .willReturn(jsonResponse("""{ "error": "some error" }""", status)),
     )
   }
 
-  fun stubGetLocationWithErrorFollowedBySlowSuccess(id: String, response: String) {
+  fun stubGetLocationWithErrorFollowedBySlowSuccess(id: String, includeHistory: Boolean, response: String) {
     stubFor(
-      get("/locations/$id")
+      get(urlPathEqualTo("/locations/$id"))
+        .withQueryParam("includeHistory", equalTo(includeHistory.toString()))
         .inScenario("Retry Locations Scenario")
         .whenScenarioStateIs(Scenario.STARTED)
         .willReturn(
@@ -70,7 +78,8 @@ class LocationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
 
     stubFor(
-      get("/locations/$id")
+      get(urlPathEqualTo("/locations/$id"))
+        .withQueryParam("includeHistory", equalTo(includeHistory.toString()))
         .inScenario("Retry Locations Scenario")
         .whenScenarioStateIs("Cause Locations Success")
         .willReturn(
@@ -85,21 +94,21 @@ class LocationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetLocationsPage(pageNumber: Long, pageSize: Long = 100, response: String) {
     stubFor(
-      get(WireMock.urlPathEqualTo("/locations"))
-        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
-        .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
-        .willReturn(WireMock.okJson(response)),
+      get(urlPathEqualTo("/locations"))
+        .withQueryParam("page", equalTo(pageNumber.toString()))
+        .withQueryParam("size", equalTo(pageSize.toString()))
+        .willReturn(okJson(response)),
     )
   }
 
   fun stubGetLocationsPageWithError(pageNumber: Long, pageSize: Long = 100, status: Int = 500) {
     stubFor(
-      get(WireMock.urlPathEqualTo("/locations"))
-        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
-        .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
-        .willReturn(WireMock.jsonResponse("""{ "error": "some error" }""", status)),
+      get(urlPathEqualTo("/locations"))
+        .withQueryParam("page", equalTo(pageNumber.toString()))
+        .withQueryParam("size", equalTo(pageSize.toString()))
+        .willReturn(jsonResponse("""{ "error": "some error" }""", status)),
     )
   }
 
-  fun getCountFor(url: String) = this.findAll(WireMock.getRequestedFor(WireMock.urlEqualTo(url))).count()
+  fun getCountFor(url: String) = this.findAll(getRequestedFor(urlEqualTo(url))).count()
 }
