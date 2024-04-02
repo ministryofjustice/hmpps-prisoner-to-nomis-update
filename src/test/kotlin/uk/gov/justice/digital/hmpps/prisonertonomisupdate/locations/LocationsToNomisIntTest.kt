@@ -341,6 +341,8 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
         mappingServer.stubGetMappingGivenDpsLocationId(PARENT_ID, parentMappingResponse)
         nomisApi.stubLocationUpdate("/locations/$NOMIS_ID")
+        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/capacity")
+        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/certification")
         publishLocationDomainEvent("location.inside.prison.amended")
       }
 
@@ -370,6 +372,8 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to update the location`() {
         await untilAsserted {
           nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID")))
+          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/capacity")))
+          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/certification")))
         }
       }
     }
@@ -390,6 +394,8 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
           mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
           mappingServer.stubGetMappingGivenDpsLocationId(PARENT_ID, parentMappingResponse)
           nomisApi.stubLocationUpdate("/locations/$NOMIS_ID")
+          nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/capacity")
+          nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/certification")
           publishLocationDomainEvent("location.inside.prison.amended")
         }
 
@@ -656,75 +662,75 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
-  @Nested
-  inner class ChangeCapacity {
-    @Nested
-    inner class WhenCapacityHasBeenChangedInDPS {
-      @BeforeEach
-      fun setUp() {
-        locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
-        mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
-        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/capacity")
-        publishLocationDomainEvent("location.inside.prison.capacity.changed")
-      }
-
-      @Test
-      fun `will create success telemetry`() {
-        await untilAsserted {
-          verify(telemetryClient).trackEvent(
-            Mockito.eq("location-capacity-success"),
-            org.mockito.kotlin.check {
-              assertThat(it["dpsId"]).isEqualTo(DPS_ID)
-              assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
-            },
-            isNull(),
-          )
-        }
-      }
-
-      @Test
-      fun `will call nomis api to change the capacity`() {
-        await untilAsserted {
-          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/capacity")))
-        }
-      }
-    }
-  }
-
-  @Nested
-  inner class ChangeCertification {
-    @Nested
-    inner class WhenCertificationHasBeenChangedInDPS {
-      @BeforeEach
-      fun setUp() {
-        locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
-        mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
-        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/certification")
-        publishLocationDomainEvent("location.inside.prison.certification.changed")
-      }
-
-      @Test
-      fun `will create success telemetry`() {
-        await untilAsserted {
-          verify(telemetryClient).trackEvent(
-            Mockito.eq("location-certification-success"),
-            org.mockito.kotlin.check {
-              assertThat(it["dpsId"]).isEqualTo(DPS_ID)
-              assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
-            },
-            isNull(),
-          )
-        }
-      }
-
-      @Test
-      fun `will call nomis api to change the certification`() {
-        await untilAsserted {
-          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/certification")))
-        }
-      }
-    }
-  }
+//  @Nested
+//  inner class ChangeCapacity {
+//    @Nested
+//    inner class WhenCapacityHasBeenChangedInDPS {
+//      @BeforeEach
+//      fun setUp() {
+//        locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
+//        mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+//        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/capacity")
+//        publishLocationDomainEvent("location.inside.prison.capacity.changed")
+//      }
+//
+//      @Test
+//      fun `will create success telemetry`() {
+//        await untilAsserted {
+//          verify(telemetryClient).trackEvent(
+//            Mockito.eq("location-capacity-success"),
+//            org.mockito.kotlin.check {
+//              assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+//              assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+//            },
+//            isNull(),
+//          )
+//        }
+//      }
+//
+//      @Test
+//      fun `will call nomis api to change the capacity`() {
+//        await untilAsserted {
+//          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/capacity")))
+//        }
+//      }
+//    }
+//  }
+//
+//  @Nested
+//  inner class ChangeCertification {
+//    @Nested
+//    inner class WhenCertificationHasBeenChangedInDPS {
+//      @BeforeEach
+//      fun setUp() {
+//        locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
+//        mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+//        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/certification")
+//        publishLocationDomainEvent("location.inside.prison.certification.changed")
+//      }
+//
+//      @Test
+//      fun `will create success telemetry`() {
+//        await untilAsserted {
+//          verify(telemetryClient).trackEvent(
+//            Mockito.eq("location-certification-success"),
+//            org.mockito.kotlin.check {
+//              assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+//              assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+//            },
+//            isNull(),
+//          )
+//        }
+//      }
+//
+//      @Test
+//      fun `will call nomis api to change the certification`() {
+//        await untilAsserted {
+//          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/certification")))
+//        }
+//      }
+//    }
+//  }
 
   @Nested
   inner class DeleteLocation {
@@ -734,7 +740,10 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
-        nomisApi.stubLocationDelete(NOMIS_ID)
+        // nomisApi.stubLocationDelete(NOMIS_ID)
+        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/deactivate")
+        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/capacity")
+        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/certification")
         mappingServer.stubDeleteLocationMapping(DPS_ID)
         publishLocationDomainEvent("location.inside.prison.deleted")
       }
@@ -743,6 +752,8 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will delete the location in NOMIS`() {
         await untilAsserted {
           nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/deactivate")))
+          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/capacity")))
+          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/certification")))
         }
       }
 
