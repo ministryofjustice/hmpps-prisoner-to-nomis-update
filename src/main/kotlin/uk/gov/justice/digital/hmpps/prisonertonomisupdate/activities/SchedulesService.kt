@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourseScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import java.time.LocalDateTime
 
 @Service
 class SchedulesService(
@@ -77,7 +76,6 @@ data class ScheduledInstanceDomainEvent(
   val additionalInformation: ScheduledInstanceAdditionalInformation,
   val version: String,
   val description: String,
-  val occurredAt: LocalDateTime,
 )
 
 data class ScheduledInstanceAdditionalInformation(

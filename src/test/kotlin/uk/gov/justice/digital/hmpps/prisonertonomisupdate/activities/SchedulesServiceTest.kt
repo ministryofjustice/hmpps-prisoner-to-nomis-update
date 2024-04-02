@@ -45,7 +45,6 @@ class SchedulesServiceTest {
         additionalInformation = ScheduledInstanceAdditionalInformation(ACTIVITY_SCHEDULE_ID, SCHEDULE_INSTANCE_ID),
         version = "1.0",
         description = "description",
-        occurredAt = LocalDateTime.now(),
       )
 
     @Test

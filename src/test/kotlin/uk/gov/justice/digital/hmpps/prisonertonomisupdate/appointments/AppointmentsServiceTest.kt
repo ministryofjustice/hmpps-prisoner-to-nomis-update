@@ -117,7 +117,6 @@ internal class AppointmentsServiceTest {
       "TYPE",
       "version",
       "description",
-      LocalDateTime.now(),
       AppointmentAdditionalInformation(appointmentInstanceId = APPOINTMENT_INSTANCE_ID),
     )
     appointmentsService.updateAppointment(appointment)
@@ -144,7 +143,6 @@ internal class AppointmentsServiceTest {
       "TYPE",
       "version",
       "description",
-      LocalDateTime.now(),
       AppointmentAdditionalInformation(appointmentInstanceId = APPOINTMENT_INSTANCE_ID),
     )
     appointmentsService.createAppointment(appointment)

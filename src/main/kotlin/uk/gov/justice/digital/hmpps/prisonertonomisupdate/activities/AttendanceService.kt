@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Service
 class AttendanceService(
@@ -152,7 +151,6 @@ data class AttendanceDomainEvent(
   val additionalInformation: AttendanceAdditionalInformation,
   val version: String,
   val description: String,
-  val occurredAt: LocalDateTime,
 )
 
 data class AttendanceAdditionalInformation(

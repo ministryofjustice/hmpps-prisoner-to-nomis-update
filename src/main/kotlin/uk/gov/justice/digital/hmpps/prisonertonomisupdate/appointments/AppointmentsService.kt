@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateAppointmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
-import java.time.LocalDateTime
 import java.time.LocalTime
 
 @Service
@@ -224,7 +223,6 @@ data class AppointmentDomainEvent(
   val eventType: String,
   val version: String,
   val description: String,
-  val occurredAt: LocalDateTime,
   val additionalInformation: AppointmentAdditionalInformation,
 )
 
