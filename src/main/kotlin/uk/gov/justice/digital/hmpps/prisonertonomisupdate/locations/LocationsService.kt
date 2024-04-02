@@ -90,21 +90,6 @@ class LocationsService(
     }
   }
 
-//  suspend fun changeCapacity(event: LocationDomainEvent) {
-//    doUpdateLocation(event, "capacity") { nomisLocationId, location ->
-//      nomisApiService.updateLocationCapacity(nomisLocationId, UpdateCapacityRequest(location.capacity?.maxCapacity, location.capacity?.maxCapacity))
-//    }
-//  }
-//
-//  suspend fun changeCertification(event: LocationDomainEvent) {
-//    doUpdateLocation(event, "certification") { nomisLocationId, location ->
-//      nomisApiService.updateLocationCertification(
-//        nomisLocationId,
-//        UpdateCertificationRequest(location.certification?.capacityOfCertifiedCell ?: 0, location.certification?.certified ?: false),
-//      )
-//    }
-//  }
-
   suspend fun softDeleteLocation(event: LocationDomainEvent) {
     val telemetryMap = mutableMapOf("dpsLocationId" to event.additionalInformation.id)
     telemetryMap["key"] = event.additionalInformation.key
