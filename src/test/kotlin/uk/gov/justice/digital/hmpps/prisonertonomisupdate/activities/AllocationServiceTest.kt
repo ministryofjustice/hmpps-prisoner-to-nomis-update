@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Alloca
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 class AllocationServiceTest {
 
@@ -56,7 +55,6 @@ class AllocationServiceTest {
           eventType = "dummy",
           version = "1.0",
           description = "description",
-          occurredAt = LocalDateTime.now(),
           additionalInformation = AllocationAdditionalInformation(
             allocationId = ALLOCATION_ID,
           ),
@@ -96,7 +94,6 @@ class AllocationServiceTest {
               eventType = "dummy",
               version = "1.0",
               description = "description",
-              occurredAt = LocalDateTime.now(),
               additionalInformation = AllocationAdditionalInformation(
                 allocationId = ALLOCATION_ID,
               ),

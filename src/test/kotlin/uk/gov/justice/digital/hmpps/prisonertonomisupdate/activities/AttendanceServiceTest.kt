@@ -32,7 +32,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 class AttendanceServiceTest {
 
@@ -291,7 +290,6 @@ class AttendanceServiceTest {
       additionalInformation = AttendanceAdditionalInformation(ATTENDANCE_ID),
       version = "1.0",
       description = "some description",
-      occurredAt = LocalDateTime.now(),
     )
 
     private fun attendanceSyncWaiting() = AttendanceSync(

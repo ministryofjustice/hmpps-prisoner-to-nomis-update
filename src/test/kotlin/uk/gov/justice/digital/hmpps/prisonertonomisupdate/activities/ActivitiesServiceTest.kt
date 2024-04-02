@@ -64,7 +64,6 @@ internal class ActivitiesServiceTest {
         additionalInformation = ScheduleAdditionalInformation(ACTIVITY_SCHEDULE_ID),
         version = "1.0",
         description = "description",
-        occurredAt = LocalDateTime.now(),
       )
 
     @Test
@@ -170,7 +169,6 @@ internal class ActivitiesServiceTest {
         additionalInformation = ScheduleAdditionalInformation(ACTIVITY_SCHEDULE_ID),
         version = "1.0",
         description = "description",
-        occurredAt = LocalDateTime.now(),
       )
 
     @Test

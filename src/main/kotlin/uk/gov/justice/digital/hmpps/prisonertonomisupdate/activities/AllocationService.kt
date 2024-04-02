@@ -68,7 +68,7 @@ class AllocationService(
       suspended = isSuspended(allocation.status),
       suspendedComment = getSuspendedComment(allocation.status, allocation.suspendedBy, allocation.suspendedTime, allocation.suspendedReason),
       programStatusCode = getProgramStatus(allocation.status),
-      exclusions = toAllocationExclusions(allocation.exclusions ?: listOf()),
+      exclusions = toAllocationExclusions(allocation.exclusions),
     )
 
   private fun getEndReason(status: Allocation.Status) =
@@ -128,7 +128,6 @@ data class AllocationDomainEvent(
   val eventType: String,
   val version: String,
   val description: String,
-  val occurredAt: LocalDateTime,
   val additionalInformation: AllocationAdditionalInformation,
 )
 

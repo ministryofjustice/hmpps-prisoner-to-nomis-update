@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.lang.Integer.min
 import java.math.BigDecimal
-import java.time.LocalDateTime
 import java.time.LocalTime
 
 @Service
@@ -263,7 +262,6 @@ data class ScheduleDomainEvent(
   val additionalInformation: ScheduleAdditionalInformation,
   val version: String,
   val description: String,
-  val occurredAt: LocalDateTime,
 )
 
 data class ScheduleAdditionalInformation(
