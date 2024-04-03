@@ -10,6 +10,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -34,6 +35,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Eviden
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ExistingHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.HearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.IncidentToCreate
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToUpdateOrAdd
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UnquashHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
@@ -1647,6 +1649,49 @@ internal class NomisApiServiceTest {
       assertThrows<NotFound> {
         nomisApiService.getAdaAwardsSummary(123456)
       }
+    }
+  }
+
+  @Nested
+  inner class GetMergesSinceDate {
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stubGetMergesFromDate(offenderNo = "A1234AA")
+
+      nomisApiService.mergesSinceDate(offenderNo = "A1234AA", fromDate = LocalDate.now())
+
+      nomisApi.verify(
+        getRequestedFor(urlPathEqualTo("/prisoners/A1234AA/merges"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should pass date to service`() = runTest {
+      nomisApi.stubGetMergesFromDate(offenderNo = "A1234AA")
+
+      nomisApiService.mergesSinceDate(offenderNo = "A1234AA", fromDate = LocalDate.parse("2022-01-01"))
+
+      nomisApi.verify(
+        getRequestedFor(urlPathEqualTo("/prisoners/A1234AA/merges"))
+          .withQueryParam("fromDate", equalTo("2022-01-01")),
+      )
+    }
+
+    @Test
+    fun `can return multiple merges`() = runTest {
+      nomisApi.stubGetMergesFromDate(
+        offenderNo = "A1234AA",
+        merges = listOf(
+          MergeDetail(deletedOffenderNo = "A1234AB", retainedOffenderNo = "A1234AA", previousBookingId = 1234, activeBookingId = 1235, requestDateTime = "2024-02-02T12:34:56"),
+          MergeDetail(deletedOffenderNo = "A1234AC", retainedOffenderNo = "A1234AA", previousBookingId = 1233, activeBookingId = 1234, requestDateTime = "2024-02-01T13:34:56"),
+        ),
+      )
+
+      val merges = nomisApiService.mergesSinceDate(offenderNo = "A1234AA", fromDate = LocalDate.parse("2022-01-01"))
+      assertThat(merges).hasSize(2)
+      assertThat(merges.first().requestDateTime).isEqualTo("2024-02-02T12:34:56")
+      assertThat(merges.last().requestDateTime).isEqualTo("2024-02-01T13:34:56")
     }
   }
 

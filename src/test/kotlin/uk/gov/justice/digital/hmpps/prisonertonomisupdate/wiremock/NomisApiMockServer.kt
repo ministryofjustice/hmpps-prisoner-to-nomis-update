@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
 import java.time.LocalDate
@@ -1528,6 +1529,23 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withHeader("Content-Type", "application/json")
             .withStatus(status)
             .withBody("""{"message":"Error"}"""),
+        ),
+    )
+  }
+
+  fun stubGetMergesFromDate(
+    offenderNo: String,
+    merges: List<MergeDetail> = emptyList(),
+  ) {
+    stubFor(
+      get(
+        urlPathEqualTo("/prisoners/$offenderNo/merges"),
+      )
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(merges),
         ),
     )
   }

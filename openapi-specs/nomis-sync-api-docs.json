@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-03-21.7051.058dee4"
+    "version": "2024-04-03.7132.310f3d6"
   },
   "servers": [
     {
@@ -5857,6 +5857,76 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/merges": {
+      "get": {
+        "tags": [
+          "prisoners-resource"
+        ],
+        "summary": "Gets prisoner's list of merge details since a given date",
+        "description": "Requires role SYNCHRONISATION_REPORTING.",
+        "operationId": "getPrisonerMerges",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender Noms Id",
+            "required": true,
+            "schema": {
+              "pattern": "[A-Z]\\d{4}[A-Z]{2}",
+              "type": "string",
+              "description": "Offender Noms Id",
+              "example": "A1234ZZ"
+            },
+            "example": "A1234ZZ"
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "description": "The earliest date to search for merges from",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "list of prisoner merges",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MergeDetail"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/ids": {
       "get": {
         "tags": [
@@ -7918,6 +7988,80 @@
         }
       }
     },
+    "/alerts/ids": {
+      "get": {
+        "tags": [
+          "alerts-resource"
+        ],
+        "summary": "Get alert IDs by filter",
+        "description": "Retrieves a paged list of alert ids by filter. Requires ROLE_NOMIS_ALERTS.",
+        "operationId": "getAlertIdsByFilter",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "description": "Filter results by alerts that were created on or after the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "description": "Filter results by alerts that were created on or before the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pageable list of ids are returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageAlertIdResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role ROLE_NOMIS_ALERTS not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/adjustments/ids": {
       "get": {
         "tags": [
@@ -9189,9 +9333,17 @@
             "type": "string",
             "description": "Username of person that created the record (might also be a system) "
           },
+          "createDisplayName": {
+            "type": "string",
+            "description": "Real name of person that created the record (might by null for system users)"
+          },
           "modifyUserId": {
             "type": "string",
             "description": "Username of person that last modified the record (might also be a system)"
+          },
+          "modifyDisplayName": {
+            "type": "string",
+            "description": "Real name of person that modified the record (might by null for system users)"
           },
           "modifyDatetime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
@@ -13613,6 +13765,47 @@
         },
         "description": "Sentence Purpose"
       },
+      "MergeDetail": {
+        "required": [
+          "activeBookingId",
+          "deletedOffenderNo",
+          "previousBookingId",
+          "requestDateTime",
+          "retainedOffenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "deletedOffenderNo": {
+            "type": "string",
+            "description": "The NOMIS reference of the record that was merged to and was then removed",
+            "example": "A1234AA"
+          },
+          "activeBookingId": {
+            "type": "integer",
+            "description": "The booking that was merged to and which then became active",
+            "format": "int64",
+            "example": 12345678
+          },
+          "retainedOffenderNo": {
+            "type": "string",
+            "description": "The NOMIS reference of the record that was merged from and was retained",
+            "example": "A1234AA"
+          },
+          "previousBookingId": {
+            "type": "integer",
+            "description": "The booking that was merged from and was retained as inactive",
+            "format": "int64",
+            "example": 12345678
+          },
+          "requestDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "When the merge happened",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "Details of a prisoner merge"
+      },
       "PagePrisonerId": {
         "type": "object",
         "properties": {
@@ -15593,6 +15786,80 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/FindActiveAllocationIdsResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SortObject"
+            }
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AlertIdResponse": {
+        "required": [
+          "alertSequence",
+          "bookingId",
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "The booking id",
+            "format": "int64"
+          },
+          "alertSequence": {
+            "type": "integer",
+            "description": "The alert sequence",
+            "format": "int64"
+          },
+          "offenderNo": {
+            "type": "string",
+            "description": "The prisoner number"
+          }
+        },
+        "description": "Alert id"
+      },
+      "PageAlertIdResponse": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlertIdResponse"
             }
           },
           "number": {

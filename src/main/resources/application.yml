@@ -130,6 +130,7 @@ reports:
       page-size: 20
   sentencing:
     reconciliation:
+      migration-date: 2024-01-28
       page-size: 20
   non-associations:
     reconciliation:

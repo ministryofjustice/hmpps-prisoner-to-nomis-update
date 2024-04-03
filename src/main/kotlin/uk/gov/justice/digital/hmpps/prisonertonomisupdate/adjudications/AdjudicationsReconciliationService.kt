@@ -17,14 +17,18 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
+import java.time.LocalDate
 
 @Service
 class AdjudicationsReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val nomisApiService: NomisApiService,
   private val adjudicationsApiService: AdjudicationsApiService,
+  private val adjudicationsMappingService: AdjudicationsMappingService,
   @Value("\${reports.sentencing.reconciliation.page-size}")
   private val pageSize: Long = 20,
+  @Value("\${reports.sentencing.reconciliation.migration-date}")
+  private val nomisMigrationDate: LocalDate,
 ) {
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -60,7 +64,7 @@ class AdjudicationsReconciliationService(
 
     val nomisAdaSummary: AdaSummary = nomisSummary.toAdaSummary()
     val dpsAdaSummary: AdaSummary = dpsAdjudications.toAdaSummary()
-    return if (nomisAdaSummary != dpsAdaSummary) {
+    return if (nomisAdaSummary != dpsAdaSummary && mismatchNotDueToAMerge(prisonerId, nomisSummary, dpsAdjudications)) {
       MismatchAdjudicationAdaPunishments(prisonerId = prisonerId, dpsAdas = dpsAdaSummary, nomisAda = nomisAdaSummary).also { mismatch ->
         log.info("Adjudications Mismatch found  $mismatch")
         telemetryClient.trackEvent(
@@ -88,6 +92,43 @@ class AdjudicationsReconciliationService(
       ),
     )
   }.getOrNull()
+
+  private suspend fun mismatchNotDueToAMerge(prisonerId: ActivePrisonerId, nomisSummary: AdjudicationADAAwardSummaryResponse, dpsAdjudications: List<ReportedAdjudicationDto>): Boolean {
+    val merges = nomisApiService.mergesSinceDate(prisonerId.offenderNo, nomisMigrationDate)
+    if (merges.isNotEmpty()) {
+      log.debug("Merges found for {} the latest on {}", prisonerId.offenderNo, merges.last().requestDateTime)
+      val adjudicationsNotPresentOnDPSBooking = adjudicationsNotPresentOnDPSBooking(nomisSummary, dpsAdjudications)
+      log.debug("Missing adjudications on DPS booking {}", adjudicationsNotPresentOnDPSBooking)
+      if (adjudicationsNotPresentOnDPSBooking.isNotEmpty()) {
+        val nomisAdaSummary = nomisSummary.toAdaSummary()
+        val dpsAdaSummary = dpsAdjudications.toAdaSummary()
+        telemetryClient.trackEvent(
+          "adjudication-reports-reconciliation-merge-mismatch",
+          mapOf(
+            "offenderNo" to prisonerId.offenderNo,
+            "bookingId" to prisonerId.bookingId.toString(),
+            "nomisAdaCount" to (nomisAdaSummary.count.toString()),
+            "dpsAdaCount" to (dpsAdaSummary.count.toString()),
+            "nomisAdaDays" to (nomisAdaSummary.days.toString()),
+            "dpsAdaDays" to (dpsAdaSummary.days.toString()),
+            "mergeDate" to (merges.last().requestDateTime),
+            "mergeFrom" to (merges.last().deletedOffenderNo),
+            "missingAdjudications" to (adjudicationsNotPresentOnDPSBooking.joinToString()),
+          ),
+        )
+        return false
+      } else {
+        return true
+      }
+    } else {
+      return true
+    }
+  }
+
+  private suspend fun adjudicationsNotPresentOnDPSBooking(nomisSummary: AdjudicationADAAwardSummaryResponse, dpsAdjudications: List<ReportedAdjudicationDto>): List<Long> {
+    val dpsAdjudicationNumbers = dpsAdjudications.mapNotNull { adjudicationsMappingService.getMappingGivenChargeNumberOrNull(it.chargeNumber)?.adjudicationNumber }
+    return nomisSummary.adaSummaries.filter { it.adjudicationNumber !in dpsAdjudicationNumbers }.map { it.adjudicationNumber }
+  }
 }
 
 private val dpsAdaTypes = listOf(PunishmentDto.Type.ADDITIONAL_DAYS, PunishmentDto.Type.PROSPECTIVE_DAYS)

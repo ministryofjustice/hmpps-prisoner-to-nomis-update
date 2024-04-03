@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Delete
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Hearing
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonDetails
@@ -719,6 +720,12 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
     webClient.put()
       .uri("/prisoners/{offenderNo}/sentencing/court-cases/{nomisCourtCaseId}/court-appearances/{nomisCourtAppearanceId}", offenderNo, nomisCourtCaseId, nomisCourtAppearanceId)
       .bodyValue(request)
+      .retrieve()
+      .awaitBody()
+
+  suspend fun mergesSinceDate(offenderNo: String, fromDate: LocalDate): List<MergeDetail> =
+    webClient.get()
+      .uri("/prisoners/{offenderNo}/merges?fromDate={fromDate}", offenderNo, fromDate)
       .retrieve()
       .awaitBody()
 }
