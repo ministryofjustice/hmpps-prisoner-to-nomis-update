@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Delete
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Hearing
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonDetails
@@ -729,13 +730,6 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .awaitBody()
 }
 
-data class MergeDetail(
-  val fromOffenderNo: String,
-  val fromBookingId: Long,
-  val toOffenderNo: String,
-  val toBookingId: Long,
-  val dateTime: LocalDateTime,
-)
 data class CreateVisitDto(
   val offenderNo: String,
   val prisonId: String,

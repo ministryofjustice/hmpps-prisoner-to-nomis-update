@@ -20,9 +20,9 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MergeDetail
 import java.time.LocalDate
 
 class NomisApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {

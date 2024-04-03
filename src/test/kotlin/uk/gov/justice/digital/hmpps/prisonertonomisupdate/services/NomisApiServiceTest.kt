@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Eviden
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ExistingHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.HearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.IncidentToCreate
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToUpdateOrAdd
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UnquashHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
@@ -1682,15 +1683,15 @@ internal class NomisApiServiceTest {
       nomisApi.stubGetMergesFromDate(
         offenderNo = "A1234AA",
         merges = listOf(
-          MergeDetail(fromOffenderNo = "A1234AB", toOffenderNo = "A1234AA", fromBookingId = 1234, toBookingId = 1235, dateTime = LocalDateTime.parse("2024-02-02T12:34:56")),
-          MergeDetail(fromOffenderNo = "A1234AC", toOffenderNo = "A1234AA", fromBookingId = 1233, toBookingId = 1234, dateTime = LocalDateTime.parse("2024-02-01T13:34:56")),
+          MergeDetail(deletedOffenderNo = "A1234AB", retainedOffenderNo = "A1234AA", previousBookingId = 1234, activeBookingId = 1235, requestDateTime = "2024-02-02T12:34:56"),
+          MergeDetail(deletedOffenderNo = "A1234AC", retainedOffenderNo = "A1234AA", previousBookingId = 1233, activeBookingId = 1234, requestDateTime = "2024-02-01T13:34:56"),
         ),
       )
 
       val merges = nomisApiService.mergesSinceDate(offenderNo = "A1234AA", fromDate = LocalDate.parse("2022-01-01"))
       assertThat(merges).hasSize(2)
-      assertThat(merges.first().dateTime).isEqualTo(LocalDateTime.parse("2024-02-02T12:34:56"))
-      assertThat(merges.last().dateTime).isEqualTo(LocalDateTime.parse("2024-02-01T13:34:56"))
+      assertThat(merges.first().requestDateTime).isEqualTo("2024-02-02T12:34:56")
+      assertThat(merges.last().requestDateTime).isEqualTo("2024-02-01T13:34:56")
     }
   }
 

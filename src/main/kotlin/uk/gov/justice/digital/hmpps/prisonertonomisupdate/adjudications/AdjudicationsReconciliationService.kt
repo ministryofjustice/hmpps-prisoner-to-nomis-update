@@ -96,7 +96,7 @@ class AdjudicationsReconciliationService(
   private suspend fun mismatchNotDueToAMerge(prisonerId: ActivePrisonerId, nomisSummary: AdjudicationADAAwardSummaryResponse, dpsAdjudications: List<ReportedAdjudicationDto>): Boolean {
     val merges = nomisApiService.mergesSinceDate(prisonerId.offenderNo, nomisMigrationDate)
     if (merges.isNotEmpty()) {
-      log.debug("Merges found for {} the latest on {}", prisonerId.offenderNo, merges.last().dateTime)
+      log.debug("Merges found for {} the latest on {}", prisonerId.offenderNo, merges.last().requestDateTime)
       val adjudicationsNotPresentOnDPSBooking = adjudicationsNotPresentOnDPSBooking(nomisSummary, dpsAdjudications)
       log.debug("Missing adjudications on DPS booking {}", adjudicationsNotPresentOnDPSBooking)
       if (adjudicationsNotPresentOnDPSBooking.isNotEmpty()) {
@@ -111,8 +111,8 @@ class AdjudicationsReconciliationService(
             "dpsAdaCount" to (dpsAdaSummary.count.toString()),
             "nomisAdaDays" to (nomisAdaSummary.days.toString()),
             "dpsAdaDays" to (dpsAdaSummary.days.toString()),
-            "mergeDate" to (merges.last().dateTime.toString()),
-            "mergeFrom" to (merges.last().fromOffenderNo),
+            "mergeDate" to (merges.last().requestDateTime),
+            "mergeFrom" to (merges.last().deletedOffenderNo),
             "missingAdjudications" to (adjudicationsNotPresentOnDPSBooking.joinToString()),
           ),
         )

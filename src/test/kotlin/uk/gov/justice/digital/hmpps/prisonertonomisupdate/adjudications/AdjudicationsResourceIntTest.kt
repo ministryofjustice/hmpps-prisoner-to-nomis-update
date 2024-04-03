@@ -73,6 +73,9 @@ class AdjudicationsResourceIntTest : IntegrationTestBase() {
           ),
         )
       }
+
+      nomisApi.stubGetMergesFromDate("A0001TZ")
+      nomisApi.stubGetMergesFromDate("A0034TZ")
     }
 
     @Test
