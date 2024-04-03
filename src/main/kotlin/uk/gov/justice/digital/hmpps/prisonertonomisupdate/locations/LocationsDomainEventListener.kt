@@ -37,8 +37,6 @@ class LocationsDomainEventListener(
       "location.inside.prison.amended" -> locationsService.amendLocation(message.fromJson())
       "location.inside.prison.deactivated" -> locationsService.deactivateLocation(message.fromJson())
       "location.inside.prison.reactivated" -> locationsService.reactivateLocation(message.fromJson())
-      "location.inside.prison.capacity.changed" -> locationsService.changeCapacity(message.fromJson())
-      "location.inside.prison.certification.changed" -> locationsService.changeCertification(message.fromJson())
       "location.inside.prison.deleted" -> locationsService.softDeleteLocation(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
