@@ -372,7 +372,7 @@ internal class AdjudicationsReconciliationServiceTest {
       }
 
       @Nested
-      inner class MergeSinceMigrationWithMissingAdjudications {
+      inner class MergeSinceMigrationWithMissingAdjudicationsAdaOnPreviousBooking {
         @BeforeEach
         fun setUp() {
           nomisApi.stubGetMergesFromDate(
@@ -383,6 +383,12 @@ internal class AdjudicationsReconciliationServiceTest {
           )
           mappingServer.stubGetByChargeNumber("MDI-00001", 1000001)
           mappingServer.stubGetByChargeNumber("MDI-00002", 1000002)
+          adjudicationsApiServer.stubGetAdjudicationsByBookingId(
+            1234,
+            listOf(
+              aDPSAdjudication().copy(chargeNumber = "MDI-00003", punishments = listOf(adaPunishment(days = 10))),
+            ),
+          )
         }
 
         @Test
@@ -397,7 +403,53 @@ internal class AdjudicationsReconciliationServiceTest {
         }
 
         @Test
-        fun `will track telemetry with reason for not reporting mismatch`() = runTest {
+        fun `will track telemetry with mismatch resolved`() = runTest {
+          service.checkADAPunishmentsMatch(
+            ActivePrisonerId(
+              bookingId = 123456L,
+              offenderNo = "A1234AA",
+            ),
+          )
+
+          verify(telemetryClient).trackEvent(
+            eq("adjudication-reports-reconciliation-merge-mismatch-resolved"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class MergeSinceMigrationWithMissingAdjudicationsAndAdaNotOnPreviousBooking {
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubGetMergesFromDate(
+            offenderNo = "A1234AA",
+            merges = listOf(
+              MergeDetail(deletedOffenderNo = "A1234AB", retainedOffenderNo = "A1234AA", previousBookingId = 1234, activeBookingId = 1235, requestDateTime = "2024-02-02T12:34:56"),
+            ),
+          )
+          mappingServer.stubGetByChargeNumber("MDI-00001", 1000001)
+          mappingServer.stubGetByChargeNumber("MDI-00002", 1000002)
+          adjudicationsApiServer.stubGetAdjudicationsByBookingId(
+            1234,
+            listOf(),
+          )
+        }
+
+        @Test
+        fun `will report a mismatch even though there has been a merge`() = runTest {
+          val mismatch = service.checkADAPunishmentsMatch(
+            ActivePrisonerId(
+              bookingId = 123456L,
+              offenderNo = "A1234AA",
+            ),
+          )
+          assertThat(mismatch).isNotNull()
+        }
+
+        @Test
+        fun `will track telemetry with mismatch not resolved`() = runTest {
           service.checkADAPunishmentsMatch(
             ActivePrisonerId(
               bookingId = 123456L,
