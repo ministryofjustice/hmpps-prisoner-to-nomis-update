@@ -96,33 +96,35 @@ class AdjudicationsReconciliationService(
   private suspend fun mismatchNotDueToAMerge(prisonerId: ActivePrisonerId, nomisSummary: AdjudicationADAAwardSummaryResponse, dpsAdjudications: List<ReportedAdjudicationDto>): Boolean {
     val merges = nomisApiService.mergesSinceDate(prisonerId.offenderNo, nomisMigrationDate)
     if (merges.isNotEmpty()) {
-      log.debug("Merges found for {} the latest on {}", prisonerId.offenderNo, merges.last().requestDateTime)
       val adjudicationsNotPresentOnDPSBooking = adjudicationsNotPresentOnDPSBooking(nomisSummary, dpsAdjudications)
-      log.debug("Missing adjudications on DPS booking {}", adjudicationsNotPresentOnDPSBooking)
       if (adjudicationsNotPresentOnDPSBooking.isNotEmpty()) {
+        val dpsAdjudicationsOnPreviousBooking = merges.flatMap { doApiCallWithRetries { adjudicationsApiService.getAdjudicationsByBookingId(it.previousBookingId) } }
+        val allAdjudications = dpsAdjudicationsOnPreviousBooking + dpsAdjudications
         val nomisAdaSummary = nomisSummary.toAdaSummary()
-        val dpsAdaSummary = dpsAdjudications.toAdaSummary()
-        telemetryClient.trackEvent(
-          "adjudication-reports-reconciliation-merge-mismatch",
-          mapOf(
-            "offenderNo" to prisonerId.offenderNo,
-            "bookingId" to prisonerId.bookingId.toString(),
-            "nomisAdaCount" to (nomisAdaSummary.count.toString()),
-            "dpsAdaCount" to (dpsAdaSummary.count.toString()),
-            "nomisAdaDays" to (nomisAdaSummary.days.toString()),
-            "dpsAdaDays" to (dpsAdaSummary.days.toString()),
-            "mergeDate" to (merges.last().requestDateTime),
-            "mergeFrom" to (merges.last().deletedOffenderNo),
-            "missingAdjudications" to (adjudicationsNotPresentOnDPSBooking.joinToString()),
-          ),
+        val dpsAdaSummary = allAdjudications.toAdaSummary()
+        val telemetry = mapOf(
+          "offenderNo" to prisonerId.offenderNo,
+          "bookingId" to prisonerId.bookingId.toString(),
+          "nomisAdaCount" to (nomisAdaSummary.count.toString()),
+          "originalDpsAdaCount" to (dpsAdjudications.toAdaSummary().count.toString()),
+          "dpsAdaCount" to (dpsAdaSummary.count.toString()),
+          "nomisAdaDays" to (nomisAdaSummary.days.toString()),
+          "originalDpsAdaDays" to (dpsAdjudications.toAdaSummary().days.toString()),
+          "dpsAdaDays" to (dpsAdaSummary.days.toString()),
+          "mergeDate" to (merges.last().requestDateTime),
+          "mergeFrom" to (merges.last().deletedOffenderNo),
+          "missingAdjudications" to (adjudicationsNotPresentOnDPSBooking.joinToString()),
         )
-        return false
-      } else {
-        return true
+
+        if (nomisAdaSummary == dpsAdaSummary) {
+          telemetryClient.trackEvent("adjudication-reports-reconciliation-merge-mismatch-resolved", telemetry)
+          return false
+        } else {
+          telemetryClient.trackEvent("adjudication-reports-reconciliation-merge-mismatch", telemetry)
+        }
       }
-    } else {
-      return true
     }
+    return true
   }
 
   private suspend fun adjudicationsNotPresentOnDPSBooking(nomisSummary: AdjudicationADAAwardSummaryResponse, dpsAdjudications: List<ReportedAdjudicationDto>): List<Long> {
