@@ -208,5 +208,7 @@ class LocationsReconciliationServiceTest {
     //    deactivatedReason = ,
     //    reactivatedDate = ,
     parentId = UUID.fromString(PARENT_DPS_LOCATION_ID),
+    permanentlyInactive = false,
+    deactivatedByParent = false,
   )
 }
