@@ -476,7 +476,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       "isResidential": true,
       "deactivatedDate": "2024-02-01",
       "deactivatedReason": "CELL_RECLAIMS",
-      "reactivatedDate": "2024-02-14"
+      "proposedReactivationDate": "2024-02-14"
     }
     """.trimIndent()
 

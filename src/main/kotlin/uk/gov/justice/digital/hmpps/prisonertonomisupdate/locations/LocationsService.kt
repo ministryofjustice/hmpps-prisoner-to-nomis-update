@@ -283,7 +283,6 @@ class LocationsService(
       NonResidentialUsageDto.UsageType.PROGRAMMES_ACTIVITIES -> UsageRequest.InternalLocationUsageType.PROG
       NonResidentialUsageDto.UsageType.PROPERTY -> UsageRequest.InternalLocationUsageType.PROP
     },
-    usageLocationType = null,
     sequence = u.sequence,
     capacity = u.capacity,
   )
@@ -372,7 +371,7 @@ class LocationsService(
       Location.DeactivatedReason.CELLS_RETURNING_TO_USE -> DeactivateRequest.ReasonCode.L
       else -> null
     },
-    reactivateDate = location.reactivatedDate,
+    reactivateDate = location.proposedReactivationDate,
   )
 
   private fun isDpsCreated(additionalInformation: LocationAdditionalInformation) =

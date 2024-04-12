@@ -143,6 +143,8 @@ internal class LocationsServiceTest {
       parentId = UUID.fromString(PARENT_DPS_LOCATION_ID),
       //      parentLocation = ,
       //      childLocations = ,
+      permanentlyInactive = false,
+      deactivatedByParent = false,
     )
   }
 }

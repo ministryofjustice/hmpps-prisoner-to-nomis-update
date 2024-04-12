@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.ChangeHistory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AmendmentResponse
@@ -29,7 +30,7 @@ class LocationsReconciliationService(
   @Value("\${reports.locations.reconciliation.page-size}")
   private val pageSize: Long,
 ) {
-  private val invalidPrisons = listOf("ZZGHI", "UNKNWN", "TRN", "LT4")
+  private val invalidPrisons = listOf("ZZGHI", "UNKNWN", "TRN", "LT4", "ALI") // Albany defunct
   private var nomisTotal = 0
   private var invalidPrisonsTotal = 0
 
@@ -191,7 +192,7 @@ class LocationsReconciliationService(
             dpsRecord.changeHistory?.size,
           ),
         )
-      log.info("Location Mismatch found $verdict (type ${nomisRecord.locationType}) in $mismatch")
+      log.info("Location Mismatch found $verdict (type ${nomisRecord.locationType}) in:\n  $mismatch")
       telemetryClient.trackEvent(
         "locations-reports-reconciliation-mismatch",
         mapOf(
@@ -239,8 +240,87 @@ class LocationsReconciliationService(
       if (expectedDpsAttributesSize(nomis.profiles) != (dps.attributes?.size ?: 0)) return "Cell attributes mismatch"
     }
     if (dps.residentialHousingType == null && (nomis.usages?.size ?: 0) != (dps.usage?.size ?: 0)) return "Location usage mismatch"
-    if (expectedDpsHistorySize(nomis.amendments) != (dps.changeHistory?.size ?: 0)) return "Location history mismatch"
+    if (historyDoesNotMatch(nomis, dps)) {
+      return "Location history mismatch:\n${
+        reportHistory(nomis.amendments, dps.changeHistory)
+      }"
+    }
     return null
+  }
+
+  fun historyDoesNotMatch(nomis: LocationResponse, dps: Location): Boolean {
+    if (expectedDpsHistorySize(nomis.amendments) == (dps.changeHistory?.size ?: 0)) {
+      return false
+    }
+    val nomisListConverted = nomis.amendments!!.map { a ->
+      ChangeHistory(toHistoryAttribute(a.columnName), a.amendedBy, a.amendDateTime, a.oldValue, a.newValue)
+    }
+    val nomisSetSorted = nomisListConverted.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
+    val dpsSetSorted = dps.changeHistory!!.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
+
+    var dpsIndex = 0
+    nomisSetSorted.forEach { nomisItem ->
+      val dpsItem = dpsSetSorted.elementAtOrNull(dpsIndex)
+      if (dpsItem != null) {
+        if (nomisItem.attribute == dpsItem.attribute &&
+          nomisItem.amendedBy == dpsItem.amendedBy &&
+          nomisItem.amendedDate == dpsItem.amendedDate &&
+          nomisItem.oldValue == dpsItem.oldValue &&
+          nomisItem.newValue == dpsItem.newValue
+        ) {
+          // matches
+        } else {
+          return true
+        }
+      } else {
+        return true
+      }
+      dpsIndex++
+    }
+    return false
+  }
+
+  private fun reportHistory(nomisList: List<AmendmentResponse>?, dpsList: List<ChangeHistory>?): String {
+    val nomisListConverted = nomisList!!.map { nomis ->
+      ChangeHistory(toHistoryAttribute(nomis.columnName), nomis.amendedBy, nomis.amendDateTime, nomis.oldValue, nomis.newValue)
+    }
+
+    val onlyInDps = dpsList!! - nomisListConverted
+    val onlyInNomis = nomisListConverted - dpsList
+
+    if (onlyInDps.isNotEmpty() || onlyInNomis.isNotEmpty()) {
+      return """  Only in Dps: $onlyInDps
+          |  Only in Nomis: $onlyInNomis
+      """.trimMargin()
+    }
+
+    val nomisSetSorted = nomisListConverted.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
+    val dpsSetSorted = dpsList.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
+
+    nomisSetSorted.forEachIndexed { index, nomisItem ->
+      val dpsItem = dpsSetSorted.elementAtOrNull(index)
+      if (dpsItem != null) {
+        if (nomisItem.attribute == dpsItem.attribute &&
+          nomisItem.amendedBy == dpsItem.amendedBy &&
+          nomisItem.amendedDate == dpsItem.amendedDate &&
+          nomisItem.oldValue == dpsItem.oldValue &&
+          nomisItem.newValue == dpsItem.newValue
+        ) {
+          // matches
+        } else {
+          return """Item at index $index doesn't match :
+            | prev  ${dpsSetSorted.elementAtOrNull(index - 1)}
+            | nomis $nomisItem
+            | dps   $dpsItem
+          """.trimMargin()
+        }
+      } else {
+        return """No corresponding element in dpsList for index $index: $nomisItem
+          | previous was ${dpsSetSorted.elementAtOrNull(index - 1)}
+        """.trimMargin()
+      }
+    }
+    return ""
   }
 
   private fun expectedDpsAttributesSize(profiles: List<ProfileRequest>?) = (
@@ -277,6 +357,52 @@ class LocationsReconciliationService(
       ?.toSet()
       ?.size ?: 0
     )
+
+  private fun toHistoryAttribute(columnName: String?): String =
+    when (columnName) {
+      "Unit Type" -> "RESIDENTIAL_HOUSING_TYPE"
+      "Active" -> "ACTIVE"
+      "Living Unit Id" -> "CODE"
+      "Comments" -> "COMMENTS"
+      "Accommodation Type" -> "LOCATION_TYPE"
+      "Certified" -> "CERTIFIED"
+      "Description" -> "DESCRIPTION"
+      "Baseline CNA" -> "CERTIFIED_CAPACITY"
+      "Operational Capacity" -> "OPERATIONAL_CAPACITY"
+      "Deactivate Reason" -> "DEACTIVATED_REASON"
+      "Proposed Reactivate Date" -> "PROPOSED_REACTIVATION_DATE"
+      "Sequence" -> "ORDER_WITHIN_PARENT_LOCATION"
+      "Deactivate Date" -> "DEACTIVATED_DATE"
+      "Maximum Capacity" -> "CAPACITY"
+      null -> "ATTRIBUTES"
+      else -> throw IllegalArgumentException("Unknown history attribute column name $columnName")
+    }.let {
+      LocationAttribute.valueOf(it).description
+    }
+}
+
+// Copied from locations api
+enum class LocationAttribute(
+  val description: String,
+) {
+  CODE("Code"),
+  LOCATION_TYPE("Location Type"),
+  RESIDENTIAL_HOUSING_TYPE("Residential Housing Type"),
+  OPERATIONAL_CAPACITY("Working Capacity"),
+  CAPACITY("Max Capacity"),
+  CERTIFIED_CAPACITY("Baseline Certified Capacity"),
+  CERTIFIED("Certified"),
+  PARENT_LOCATION("Parent Location"),
+  ORDER_WITHIN_PARENT_LOCATION("Order within parent location"),
+  COMMENTS("Comments"),
+  DESCRIPTION("Local Name"),
+  ATTRIBUTES("Attributes"),
+  USAGE("Usage"),
+  NON_RESIDENTIAL_CAPACITY("Non Residential Capacity"),
+  ACTIVE("Active"),
+  DEACTIVATED_DATE("Deactivated Date"),
+  DEACTIVATED_REASON("Deactivated Reason"),
+  PROPOSED_REACTIVATION_DATE("Proposed Reactivation Date"),
 }
 
 data class LocationReportDetail(
