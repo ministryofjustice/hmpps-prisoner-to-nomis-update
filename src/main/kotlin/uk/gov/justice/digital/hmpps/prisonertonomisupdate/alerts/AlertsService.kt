@@ -52,6 +52,7 @@ class AlertsService(
                   dpsAlertId = dpsAlertId,
                   nomisBookingId = nomisAlert.bookingId,
                   nomisAlertSequence = nomisAlert.alertSequence,
+                  offenderNo = offenderNo,
                   mappingType = AlertMappingDto.MappingType.DPS_CREATED,
                 )
               }

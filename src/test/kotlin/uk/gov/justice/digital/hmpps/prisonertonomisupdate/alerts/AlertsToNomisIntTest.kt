@@ -156,7 +156,14 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will create a mapping between the NOMIS and DPS ids`() {
-          alertsMappingApi.verify(postRequestedFor(urlEqualTo("/mapping/alerts")))
+          alertsMappingApi.verify(
+            postRequestedFor(urlEqualTo("/mapping/alerts"))
+              .withRequestBodyJsonPath("offenderNo", offenderNo)
+              .withRequestBodyJsonPath("mappingType", "DPS_CREATED")
+              .withRequestBodyJsonPath("dpsAlertId", dpsAlertId)
+              .withRequestBodyJsonPath("nomisAlertSequence", nomisAlertSequence)
+              .withRequestBodyJsonPath("nomisBookingId", nomisBookingId),
+          )
         }
 
         @Test
