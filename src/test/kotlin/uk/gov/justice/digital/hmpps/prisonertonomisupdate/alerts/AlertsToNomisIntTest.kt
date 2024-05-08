@@ -472,24 +472,58 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
     @Nested
     @DisplayName("when NOMIS is the origin of the Alert delete")
     inner class WhenNomisDeleted {
-      @BeforeEach
-      fun setup() {
-        publishDeleteAlertDomainEvent(source = AlertSource.NOMIS)
-        waitForAnyProcessingToComplete()
+      @Nested
+      inner class WhenUserDeleted {
+        @BeforeEach
+        fun setup() {
+          publishDeleteAlertDomainEvent(source = AlertSource.NOMIS)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing it ignored the update`() {
+          verify(telemetryClient).trackEvent(
+            eq("alert-deleted-ignored"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will not try to delete the Alert in NOMIS`() {
+          alertsNomisApi.verify(0, deleteRequestedFor(anyUrl()))
+        }
       }
 
-      @Test
-      fun `will send telemetry event showing it ignored the update`() {
-        verify(telemetryClient).trackEvent(
-          eq("alert-deleted-ignored"),
-          any(),
-          isNull(),
-        )
-      }
+      @Nested
+      inner class WhenDeletedDueToMerge {
+        private val dpsAlertId = "bd91f2ac-6840-4fa1-8d7b-90d5a85d35c2"
 
-      @Test
-      fun `will not try to delete the Alert in NOMIS`() {
-        alertsNomisApi.verify(0, deleteRequestedFor(anyUrl()))
+        @BeforeEach
+        fun setup() {
+          alertsMappingApi.stubDeleteByDpsId(dpsAlertId)
+          publishDeleteAlertDomainEvent(source = AlertSource.NOMIS, reason = AlertReason.MERGE, alertUuid = dpsAlertId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing it removed the mapping`() {
+          verify(telemetryClient).trackEvent(
+            eq("alert-deleted-merge"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will not try to delete the Alert in NOMIS`() {
+          alertsNomisApi.verify(0, deleteRequestedFor(anyUrl()))
+        }
+
+        @Test
+        fun `will delete the alert mapping`() {
+          alertsMappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/alerts/dps-alert-id/$dpsAlertId")))
+        }
       }
     }
 
@@ -652,9 +686,10 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
     offenderNo: String = "A1234KT",
     alertUuid: String = UUID.randomUUID().toString(),
     source: AlertSource = AlertSource.DPS,
+    reason: AlertReason = AlertReason.USER,
     alertCode: String = "HPI",
   ) {
-    publishAlertDomainEvent("prisoner-alerts.alert-deleted", offenderNo, alertUuid, source, alertCode)
+    publishAlertDomainEvent("prisoner-alerts.alert-deleted", offenderNo, alertUuid, source, alertCode, reason)
   }
 
   private fun publishAlertDomainEvent(
@@ -663,6 +698,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
     alertUuid: String,
     source: AlertSource,
     alertCode: String,
+    reason: AlertReason = AlertReason.USER,
   ) {
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -673,6 +709,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
             alertUuid = alertUuid,
             source = source,
             alertCode = alertCode,
+            reason = reason,
           ),
         )
         .messageAttributes(
@@ -691,6 +728,7 @@ fun alertMessagePayload(
   alertUuid: String,
   source: AlertSource,
   alertCode: String,
+  reason: AlertReason,
 ) =
   //language=JSON
   """
@@ -701,7 +739,8 @@ fun alertMessagePayload(
         "alertUuid": "$alertUuid",
         "prisonNumber": "$offenderNo", 
         "source": "${source.name}",
-        "alertCode": "$alertCode"
+        "alertCode": "$alertCode",
+        "reason": "${reason.name}"
       }
     }
     """
