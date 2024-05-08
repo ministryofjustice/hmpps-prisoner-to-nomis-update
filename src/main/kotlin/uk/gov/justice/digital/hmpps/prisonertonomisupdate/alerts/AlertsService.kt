@@ -128,7 +128,12 @@ class AlertsService(
         throw e
       }
     } else {
-      telemetryClient.trackEvent("alert-deleted-ignored", telemetryMap)
+      if (alertEvent.wasDeletedDueToMerge()) {
+        tryToDeletedMapping(dpsAlertId)
+        telemetryClient.trackEvent("alert-deleted-merge", telemetryMap)
+      } else {
+        telemetryClient.trackEvent("alert-deleted-ignored", telemetryMap)
+      }
     }
   }
 
@@ -155,6 +160,7 @@ data class AlertAdditionalInformation(
   val prisonNumber: String,
   val alertCode: String,
   val source: AlertSource,
+  val reason: AlertReason,
 )
 
 enum class AlertSource {
@@ -162,7 +168,13 @@ enum class AlertSource {
   NOMIS,
 }
 
+enum class AlertReason {
+  USER,
+  MERGE,
+}
+
 fun AlertEvent.wasCreatedInDPS() = wasSourceDPS()
 fun AlertEvent.wasUpdateInDPS() = wasSourceDPS()
 fun AlertEvent.wasDeletedInDPS() = wasSourceDPS()
+fun AlertEvent.wasDeletedDueToMerge() = this.additionalInformation.reason == AlertReason.MERGE
 fun AlertEvent.wasSourceDPS() = this.additionalInformation.source == AlertSource.DPS
