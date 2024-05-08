@@ -140,6 +140,7 @@ class LocationsResourceIntTest : IntegrationTestBase() {
     "orderWithinParentLocation": 1,
     "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",
     "key": "MDI-A-1-001",
+    "status": "ACTIVE",
     "isResidential": true
   }
   """.trimIndent()

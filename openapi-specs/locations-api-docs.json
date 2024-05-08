@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-04-11.879.a35e085"
+    "version": "2024-05-07.1093.d26c68e"
   },
   "servers": [
     {
@@ -231,6 +231,178 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/DeactivationLocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Returns updated location",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Location not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/{id}/convert-to-cell": {
+      "put": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Makes a non-res cell location a cell",
+        "description": "Requires role MAINTAIN_LOCATIONS and write scope",
+        "operationId": "convertCellToNonResidentialLocation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The location Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The location Id",
+              "example": "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+            },
+            "example": "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConvertToCellRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Returns updated location",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Location not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/{id}/convert-cell-to-non-res-cell": {
+      "put": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Converts a cell to a non res cell location",
+        "description": "Requires role MAINTAIN_LOCATIONS and write scope",
+        "operationId": "convertCellToNonResidentialLocation_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The location Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The location Id",
+              "example": "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+            },
+            "example": "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConvertCellToNonResidentialLocationRequest"
               }
             }
           },
@@ -989,6 +1161,102 @@
         }
       }
     },
+    "/locations/residential/{prisonId}/below-parent": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Return locations for this prison below the parent location, is not provided - top level (w.g. WINGS)",
+        "description": "Requires role VIEW_LOCATIONS",
+        "operationId": "getLocationForPrisonBelowParent",
+        "parameters": [
+          {
+            "name": "prisonId",
+            "in": "path",
+            "description": "Prison Id",
+            "required": true,
+            "schema": {
+              "maxLength": 5,
+              "minLength": 3,
+              "pattern": "^[A-Z]{2}I|ZZGHI$",
+              "type": "string",
+              "description": "Prison Id",
+              "example": "MDI"
+            },
+            "example": "MDI"
+          },
+          {
+            "name": "parentLocationId",
+            "in": "query",
+            "description": "Parent location ID",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Parent location ID",
+              "example": "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+            },
+            "example": "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          {
+            "name": "parentPathHierarchy",
+            "in": "query",
+            "description": "Parent location path hierarchy, can be a Wing code, or landing code",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Parent location path hierarchy, can be a Wing code, or landing code",
+              "example": "A-1"
+            },
+            "example": "A-1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns locations for this level",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Location"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the VIEW_LOCATIONS role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/locations/prison/{prisonId}": {
       "get": {
         "tags": [
@@ -1134,6 +1402,102 @@
           },
           "404": {
             "description": "Data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/constants/used-for-type": {
+      "get": {
+        "tags": [
+          "Constants"
+        ],
+        "summary": "Get used for type data",
+        "description": "Requires the READ_LOCATION_REFERENCE_DATA role.",
+        "operationId": "getUsedForTypeConstants",
+        "responses": {
+          "200": {
+            "description": "Returns used for type reference data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Constant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the READ_LOCATION_REFERENCE_DATA role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/constants/specialist-cell-type": {
+      "get": {
+        "tags": [
+          "Constants"
+        ],
+        "summary": "Get specialist cell type data",
+        "description": "Requires the READ_LOCATION_REFERENCE_DATA role.",
+        "operationId": "getSpecialistCellTypeConstants",
+        "responses": {
+          "200": {
+            "description": "Returns specialist cell reference data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Constant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the READ_LOCATION_REFERENCE_DATA role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1384,6 +1748,171 @@
           }
         }
       }
+    },
+    "/constants/converted-cell-type": {
+      "get": {
+        "tags": [
+          "Constants"
+        ],
+        "summary": "Get converted cell type data",
+        "description": "Requires the READ_LOCATION_REFERENCE_DATA role.",
+        "operationId": "getConvertedCellType",
+        "responses": {
+          "200": {
+            "description": "Returns converted cell reference data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Constant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the READ_LOCATION_REFERENCE_DATA role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/constants/accommodation-type": {
+      "get": {
+        "tags": [
+          "Constants"
+        ],
+        "summary": "Get accommodation type data",
+        "description": "Requires the READ_LOCATION_REFERENCE_DATA role.",
+        "operationId": "getAccommodationTypeConstants",
+        "responses": {
+          "200": {
+            "description": "Returns accommodation reference data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Constant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the READ_LOCATION_REFERENCE_DATA role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/delete/{id}": {
+      "delete": {
+        "tags": [
+          "Sync"
+        ],
+        "summary": "Delete a location",
+        "description": "Requires role SYNC_LOCATIONS and write scope",
+        "operationId": "deleteLocation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Location UUID to remove",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Location UUID to remove",
+              "example": "2475f250-434a-4257-afe7-b911f1773a4d"
+            },
+            "example": "2475f250-434a-4257-afe7-b911f1773a4d"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted location"
+          },
+          "400": {
+            "description": "Invalid Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the SYNC_LOCATIONS role with write scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1567,6 +2096,7 @@
           "pathHierarchy",
           "permanentlyInactive",
           "prisonId",
+          "status",
           "topLevelId"
         ],
         "type": "object",
@@ -1773,11 +2303,106 @@
               "$ref": "#/components/schemas/NonResidentialUsageDto"
             }
           },
+          "accommodationTypes": {
+            "type": "array",
+            "description": "Accommodation Types",
+            "items": {
+              "type": "string",
+              "description": "Accommodation Types",
+              "enum": [
+                "NORMAL_ACCOMMODATION",
+                "HEALTHCARE_INPATIENTS",
+                "CARE_AND_SEPARATION",
+                "OTHER_NON_RESIDENTIAL"
+              ]
+            }
+          },
+          "specialistCellTypes": {
+            "type": "array",
+            "description": "Specialist Cell Types",
+            "items": {
+              "type": "string",
+              "description": "Specialist Cell Types",
+              "enum": [
+                "BIOHAZARD_DIRTY_PROTEST",
+                "CAT_A",
+                "CONSTANT_SUPERVISION",
+                "CSU",
+                "DRY",
+                "ESCAPE_LIST",
+                "FIRE_RESISTANT",
+                "FIXES_FURNITURE",
+                "ISOLATION_DISEASES",
+                "LIGATURE_RESISTANT",
+                "LISTENER_CRISIS",
+                "LOW_MOBILITY",
+                "MEDICAL",
+                "MOTHER_AND_BABY",
+                "SOUND_RESISTANT",
+                "UNFURNISHED",
+                "WHEELCHAIR_ACCESSIBLE"
+              ]
+            }
+          },
+          "usedFor": {
+            "type": "array",
+            "description": "Usage For",
+            "items": {
+              "type": "string",
+              "description": "Usage For",
+              "enum": [
+                "STANDARD_ACCOMMODATION",
+                "PERSONALITY_DISORDER",
+                "THERAPEUTIC_COMMUNITY",
+                "PIPE",
+                "SUB_MISUSE_DRUG_RECOVERY",
+                "VULNERABLE_PRISONERS",
+                "FIRST_NIGHT_CENTRE",
+                "REMAND",
+                "MOTHER_AND_BABY",
+                "YOUNG_PERSONS",
+                "HIGH_SECURITY",
+                "CLOSE_SUPERVISION_CENTRE",
+                "PATHWAY_TO_PROG",
+                "IPP_LONG_TERM_SENTENCES"
+              ]
+            }
+          },
           "orderWithinParentLocation": {
             "type": "integer",
             "description": "Sequence of locations within the current parent location",
             "format": "int32",
             "example": 1
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the location",
+            "example": "ACTIVE",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE",
+              "NON_RESIDENTIAL"
+            ]
+          },
+          "convertedCellType": {
+            "type": "string",
+            "description": "Convert Cell Type",
+            "enum": [
+              "OFFICE",
+              "SHOWER",
+              "STORE",
+              "UTILITY_ROOM",
+              "HOLDING_ROOM",
+              "INTERVIEW_ROOM",
+              "KITCHEN_SERVERY",
+              "TREATMENT_ROOM",
+              "STAFF_ROOM",
+              "OTHER"
+            ]
+          },
+          "otherConvertedCellType": {
+            "type": "string",
+            "description": "Convert Cell Type (Other)"
           },
           "active": {
             "type": "boolean",
@@ -1800,18 +2425,15 @@
             "description": "Reason for deactivation",
             "example": "DAMAGED",
             "enum": [
-              "NEW_BUILDING",
-              "CELL_RECLAIMS",
-              "CHANGE_OF_USE",
               "REFURBISHMENT",
-              "CLOSURE",
-              "OTHER",
-              "LOCAL_WORK",
+              "MAINTENANCE",
               "STAFF_SHORTAGE",
               "MOTHBALLED",
               "DAMAGED",
-              "OUT_OF_USE",
-              "CELLS_RETURNING_TO_USE"
+              "DAMP",
+              "PEST",
+              "SECURITY_SEALED",
+              "OTHER"
             ]
           },
           "proposedReactivationDate": {
@@ -1834,6 +2456,11 @@
           },
           "parentLocation": {
             "$ref": "#/components/schemas/Location"
+          },
+          "inactiveCells": {
+            "type": "integer",
+            "description": "Number of inactive cells below this location",
+            "format": "int32"
           },
           "childLocations": {
             "type": "array",
@@ -1895,37 +2522,139 @@
       },
       "DeactivationLocationRequest": {
         "required": [
-          "deactivationReason"
+          "permanentDeactivation"
         ],
         "type": "object",
         "properties": {
+          "permanentDeactivation": {
+            "type": "boolean"
+          },
           "deactivationReason": {
             "type": "string",
-            "description": "Reason for deactivation",
-            "example": "DAMAGED",
+            "description": "Reason for deactivation, if temp",
+            "example": "MOTHBALLED",
             "enum": [
-              "NEW_BUILDING",
-              "CELL_RECLAIMS",
-              "CHANGE_OF_USE",
               "REFURBISHMENT",
-              "CLOSURE",
-              "OTHER",
-              "LOCAL_WORK",
+              "MAINTENANCE",
               "STAFF_SHORTAGE",
               "MOTHBALLED",
               "DAMAGED",
-              "OUT_OF_USE",
-              "CELLS_RETURNING_TO_USE"
+              "DAMP",
+              "PEST",
+              "SECURITY_SEALED",
+              "OTHER"
             ]
           },
           "proposedReactivationDate": {
             "type": "string",
-            "description": "Proposed re-activation date",
+            "description": "Proposed re-activation date, if temp",
             "format": "date",
             "example": "2025-01-05"
+          },
+          "planetFmReference": {
+            "type": "string"
           }
         },
         "description": "Request to deactivate a location"
+      },
+      "ConvertToCellRequest": {
+        "required": [
+          "accommodationType",
+          "maxCapacity",
+          "workingCapacity"
+        ],
+        "type": "object",
+        "properties": {
+          "accommodationType": {
+            "type": "string",
+            "enum": [
+              "NORMAL_ACCOMMODATION",
+              "HEALTHCARE_INPATIENTS",
+              "CARE_AND_SEPARATION",
+              "OTHER_NON_RESIDENTIAL"
+            ]
+          },
+          "specialistCellType": {
+            "type": "string",
+            "enum": [
+              "BIOHAZARD_DIRTY_PROTEST",
+              "CAT_A",
+              "CONSTANT_SUPERVISION",
+              "CSU",
+              "DRY",
+              "ESCAPE_LIST",
+              "FIRE_RESISTANT",
+              "FIXES_FURNITURE",
+              "ISOLATION_DISEASES",
+              "LIGATURE_RESISTANT",
+              "LISTENER_CRISIS",
+              "LOW_MOBILITY",
+              "MEDICAL",
+              "MOTHER_AND_BABY",
+              "SOUND_RESISTANT",
+              "UNFURNISHED",
+              "WHEELCHAIR_ACCESSIBLE"
+            ]
+          },
+          "maxCapacity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "workingCapacity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "usedForTypes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "STANDARD_ACCOMMODATION",
+                "PERSONALITY_DISORDER",
+                "THERAPEUTIC_COMMUNITY",
+                "PIPE",
+                "SUB_MISUSE_DRUG_RECOVERY",
+                "VULNERABLE_PRISONERS",
+                "FIRST_NIGHT_CENTRE",
+                "REMAND",
+                "MOTHER_AND_BABY",
+                "YOUNG_PERSONS",
+                "HIGH_SECURITY",
+                "CLOSE_SUPERVISION_CENTRE",
+                "PATHWAY_TO_PROG",
+                "IPP_LONG_TERM_SENTENCES"
+              ]
+            }
+          }
+        },
+        "description": "Request to convert a non-res location to a cell"
+      },
+      "ConvertCellToNonResidentialLocationRequest": {
+        "required": [
+          "convertedCellType"
+        ],
+        "type": "object",
+        "properties": {
+          "convertedCellType": {
+            "type": "string",
+            "enum": [
+              "OFFICE",
+              "SHOWER",
+              "STORE",
+              "UTILITY_ROOM",
+              "HOLDING_ROOM",
+              "INTERVIEW_ROOM",
+              "KITCHEN_SERVERY",
+              "TREATMENT_ROOM",
+              "STAFF_ROOM",
+              "OTHER"
+            ]
+          },
+          "otherConvertedCellType": {
+            "type": "string"
+          }
+        },
+        "description": "Request to convert a cell to a non-res location"
       },
       "NomisSyncLocationRequest": {
         "required": [
@@ -2043,18 +2772,18 @@
             "description": "Reason for deactivation",
             "example": "DAMAGED",
             "enum": [
-              "NEW_BUILDING",
-              "CELL_RECLAIMS",
-              "CHANGE_OF_USE",
               "REFURBISHMENT",
-              "CLOSURE",
-              "OTHER",
               "LOCAL_WORK",
               "STAFF_SHORTAGE",
               "MOTHBALLED",
               "DAMAGED",
+              "NEW_BUILDING",
+              "CELL_RECLAIMS",
+              "CHANGE_OF_USE",
+              "CLOSURE",
               "OUT_OF_USE",
-              "CELLS_RETURNING_TO_USE"
+              "CELLS_RETURNING_TO_USE",
+              "OTHER"
             ]
           },
           "proposedReactivationDate": {
@@ -2323,18 +3052,18 @@
             "description": "Reason for deactivation",
             "example": "DAMAGED",
             "enum": [
-              "NEW_BUILDING",
-              "CELL_RECLAIMS",
-              "CHANGE_OF_USE",
               "REFURBISHMENT",
-              "CLOSURE",
-              "OTHER",
               "LOCAL_WORK",
               "STAFF_SHORTAGE",
               "MOTHBALLED",
               "DAMAGED",
+              "NEW_BUILDING",
+              "CELL_RECLAIMS",
+              "CHANGE_OF_USE",
+              "CLOSURE",
               "OUT_OF_USE",
-              "CELLS_RETURNING_TO_USE"
+              "CELLS_RETURNING_TO_USE",
+              "OTHER"
             ]
           },
           "proposedReactivationDate": {
@@ -2710,6 +3439,16 @@
               ]
             }
           },
+          "accommodationType": {
+            "type": "string",
+            "description": "Accommodation Type",
+            "enum": [
+              "NORMAL_ACCOMMODATION",
+              "HEALTHCARE_INPATIENTS",
+              "CARE_AND_SEPARATION",
+              "OTHER_NON_RESIDENTIAL"
+            ]
+          },
           "isCell": {
             "type": "boolean"
           }
@@ -2988,7 +3727,6 @@
         "required": [
           "code",
           "isCell",
-          "isDeactivated",
           "locationType"
         ],
         "type": "object",
@@ -3193,41 +3931,71 @@
               "$ref": "#/components/schemas/NonResidentialUsageDto"
             }
           },
-          "deactivationReason": {
+          "accommodationType": {
             "type": "string",
-            "description": "Reason for deactivation",
-            "example": "DAMAGED",
+            "description": "Accommodation Type",
+            "example": "NORMAL_ACCOMMODATION",
             "enum": [
-              "NEW_BUILDING",
-              "CELL_RECLAIMS",
-              "CHANGE_OF_USE",
-              "REFURBISHMENT",
-              "CLOSURE",
-              "OTHER",
-              "LOCAL_WORK",
-              "STAFF_SHORTAGE",
-              "MOTHBALLED",
-              "DAMAGED",
-              "OUT_OF_USE",
-              "CELLS_RETURNING_TO_USE"
+              "NORMAL_ACCOMMODATION",
+              "HEALTHCARE_INPATIENTS",
+              "CARE_AND_SEPARATION",
+              "OTHER_NON_RESIDENTIAL"
             ]
           },
-          "proposedReactivationDate": {
-            "type": "string",
-            "description": "Proposed re-activation date",
-            "format": "date",
-            "example": "2025-01-05"
+          "usedFor": {
+            "uniqueItems": true,
+            "type": "array",
+            "description": "Used For Types",
+            "items": {
+              "type": "string",
+              "description": "Used For Types",
+              "enum": [
+                "STANDARD_ACCOMMODATION",
+                "PERSONALITY_DISORDER",
+                "THERAPEUTIC_COMMUNITY",
+                "PIPE",
+                "SUB_MISUSE_DRUG_RECOVERY",
+                "VULNERABLE_PRISONERS",
+                "FIRST_NIGHT_CENTRE",
+                "REMAND",
+                "MOTHER_AND_BABY",
+                "YOUNG_PERSONS",
+                "HIGH_SECURITY",
+                "CLOSE_SUPERVISION_CENTRE",
+                "PATHWAY_TO_PROG",
+                "IPP_LONG_TERM_SENTENCES"
+              ]
+            }
           },
-          "deactivatedDate": {
-            "type": "string",
-            "description": "Date deactivation occurred",
-            "format": "date",
-            "example": "2023-01-05"
+          "specialistCellTypes": {
+            "uniqueItems": true,
+            "type": "array",
+            "description": "Specialist Cell Types",
+            "items": {
+              "type": "string",
+              "description": "Specialist Cell Types",
+              "enum": [
+                "BIOHAZARD_DIRTY_PROTEST",
+                "CAT_A",
+                "CONSTANT_SUPERVISION",
+                "CSU",
+                "DRY",
+                "ESCAPE_LIST",
+                "FIRE_RESISTANT",
+                "FIXES_FURNITURE",
+                "ISOLATION_DISEASES",
+                "LIGATURE_RESISTANT",
+                "LISTENER_CRISIS",
+                "LOW_MOBILITY",
+                "MEDICAL",
+                "MOTHER_AND_BABY",
+                "SOUND_RESISTANT",
+                "UNFURNISHED",
+                "WHEELCHAIR_ACCESSIBLE"
+              ]
+            }
           },
           "isCell": {
-            "type": "boolean"
-          },
-          "isDeactivated": {
             "type": "boolean"
           }
         },
@@ -3319,6 +4087,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
+          "unpaged": {
+            "type": "boolean"
+          },
+          "paged": {
+            "type": "boolean"
+          },
           "pageSize": {
             "type": "integer",
             "format": "int32"
@@ -3326,12 +4100,6 @@
           "pageNumber": {
             "type": "integer",
             "format": "int32"
-          },
-          "unpaged": {
-            "type": "boolean"
-          },
-          "paged": {
-            "type": "boolean"
           }
         }
       },

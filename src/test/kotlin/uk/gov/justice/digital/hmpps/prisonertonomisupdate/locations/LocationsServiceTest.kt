@@ -145,6 +145,7 @@ internal class LocationsServiceTest {
       //      childLocations = ,
       permanentlyInactive = false,
       deactivatedByParent = false,
+      status = Location.Status.ACTIVE,
     )
   }
 }

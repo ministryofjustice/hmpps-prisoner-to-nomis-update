@@ -64,6 +64,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",
       "parentId": "$PARENT_ID",
       "key": "MDI-A-1-001",
+      "status": "ACTIVE",
       "isResidential": true
     }
   """.trimIndent()
@@ -473,9 +474,10 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       "orderWithinParentLocation": 1,
       "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",
       "key": "MDI-A-1-001",
+      "status": "INACTIVE",
       "isResidential": true,
       "deactivatedDate": "2024-02-01",
-      "deactivatedReason": "CELL_RECLAIMS",
+      "deactivatedReason": "MOTHBALLED",
       "proposedReactivationDate": "2024-02-14"
     }
     """.trimIndent()
@@ -509,7 +511,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           nomisApi.verify(
             putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/deactivate"))
-              .withRequestBody(matchingJsonPath("reasonCode", equalTo("B")))
+              .withRequestBody(matchingJsonPath("reasonCode", equalTo("I")))
               .withRequestBody(matchingJsonPath("reactivateDate", equalTo("2024-02-14")))
               .withRequestBody(matchingJsonPath("deactivateDate", equalTo("2024-02-01"))),
           )

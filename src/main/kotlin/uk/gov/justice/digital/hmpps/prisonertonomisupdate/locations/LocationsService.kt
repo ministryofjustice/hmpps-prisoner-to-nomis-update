@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
@@ -357,18 +356,12 @@ class LocationsService(
   private fun toDeactivateRequest(location: Location): DeactivateRequest = DeactivateRequest(
     deactivateDate = location.deactivatedDate,
     reasonCode = when (location.deactivatedReason) {
-      Location.DeactivatedReason.NEW_BUILDING -> DeactivateRequest.ReasonCode.A
-      Location.DeactivatedReason.CELL_RECLAIMS -> DeactivateRequest.ReasonCode.B
-      Location.DeactivatedReason.CHANGE_OF_USE -> DeactivateRequest.ReasonCode.C
       Location.DeactivatedReason.REFURBISHMENT -> DeactivateRequest.ReasonCode.D
-      Location.DeactivatedReason.CLOSURE -> DeactivateRequest.ReasonCode.E
       Location.DeactivatedReason.OTHER -> DeactivateRequest.ReasonCode.F
-      Location.DeactivatedReason.LOCAL_WORK -> DeactivateRequest.ReasonCode.G
+      Location.DeactivatedReason.MAINTENANCE -> DeactivateRequest.ReasonCode.G
       Location.DeactivatedReason.STAFF_SHORTAGE -> DeactivateRequest.ReasonCode.H
       Location.DeactivatedReason.MOTHBALLED -> DeactivateRequest.ReasonCode.I
       Location.DeactivatedReason.DAMAGED -> DeactivateRequest.ReasonCode.J
-      Location.DeactivatedReason.OUT_OF_USE -> DeactivateRequest.ReasonCode.K
-      Location.DeactivatedReason.CELLS_RETURNING_TO_USE -> DeactivateRequest.ReasonCode.L
       else -> null
     },
     reactivateDate = location.proposedReactivationDate,
@@ -389,12 +382,7 @@ class LocationsService(
 
   override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
 
-  private inline fun <reified T> String.fromJson(): T =
-    objectMapper.readValue(this)
-
-  companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
-  }
+  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
 
 data class LocationDomainEvent(
