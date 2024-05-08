@@ -210,5 +210,6 @@ class LocationsReconciliationServiceTest {
     parentId = UUID.fromString(PARENT_DPS_LOCATION_ID),
     permanentlyInactive = false,
     deactivatedByParent = false,
+    status = Location.Status.ACTIVE,
   )
 }

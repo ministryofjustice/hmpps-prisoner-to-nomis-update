@@ -48,6 +48,7 @@ internal class LocationsApiServiceTest {
       "topLevelId": "57718979-573c-433a-9e51-2d83f887c11c",
       "parentId": "57718979-573c-433a-9e51-2d83f887c11c",
       "key": "MDI-A-1-001",
+      "status": "ACTIVE",
       "isResidential": true
     }
   """.trimIndent()
