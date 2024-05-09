@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
+import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AlertR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NomisAudit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerAlertsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -62,6 +64,17 @@ class AlertsNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
 
+  fun stubGetAlertsForReconciliation(offenderNo: String, response: PrisonerAlertsResponse = PrisonerAlertsResponse(latestBookingAlerts = emptyList(), previousBookingsAlerts = emptyList())) {
+    nomisApi.stubFor(
+      get(urlEqualTo("/prisoners/$offenderNo/alerts/reconciliation")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }
@@ -75,6 +88,7 @@ fun createAlertResponse(bookingId: Long = 12345, alertSequence: Long = 1) = Crea
 fun alertResponse() = AlertResponse(
   bookingId = 12345678,
   alertSequence = 3,
+  bookingSequence = 1,
   alertCode = CodeDescription("XA", "TACT"),
   type = CodeDescription("X", "Security"),
   date = LocalDate.now(),

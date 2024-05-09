@@ -6,16 +6,20 @@ import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.Alert
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.AlertCodeSummary
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.math.min
 
 class AlertsDpsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
   companion object {
@@ -66,6 +70,24 @@ class AlertsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withBody(alert)
+            .withStatus(200),
+        ),
+    )
+  }
+
+  fun stubGetActiveAlertsForPrisoner(offenderNo: String, count: Int = 1) {
+    stubFor(
+      get(urlPathEqualTo("/prisoners/$offenderNo/alerts"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              PageImpl(
+                (1..min(count, 1000)).map { dpsAlert() },
+                Pageable.ofSize(1000),
+                count.toLong(),
+              ),
+            )
             .withStatus(200),
         ),
     )

@@ -150,10 +150,10 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
                     { "profileType" : "HOU_UNIT_ATT", "profileCode" : "NSMC" }
                   ],
                   "usages" : [
-                    { "internalLocationUsageType": "APP",      "usageLocationType" : null, "capacity": 3, "sequence": 1 },
-                    { "internalLocationUsageType": "VISIT",    "usageLocationType" : null, "capacity": 3, "sequence": 2 },
-                    { "internalLocationUsageType": "MOVEMENT", "usageLocationType" : null, "capacity" : null, "sequence": 3 },
-                    { "internalLocationUsageType": "OCCUR",    "usageLocationType" : null, "capacity" : null, "sequence": 4 }
+                    { "internalLocationUsageType": "APP",      "capacity": 3, "sequence": 1 },
+                    { "internalLocationUsageType": "VISIT",    "capacity": 3, "sequence": 2 },
+                    { "internalLocationUsageType": "MOVEMENT", "capacity" : null, "sequence": 3 },
+                    { "internalLocationUsageType": "OCCUR",    "capacity" : null, "sequence": 4 }
                   ]
                 }
                 """.trimIndent(),
