@@ -27,7 +27,7 @@ generic-service:
 generic-prometheus-alerts:
   businessHoursOnly: true
   alertSeverity: syscon-nonprod
-  sqsAlertsQueueNames:
+  sqsNumberAlertQueueNames:
     - "syscon-devs-dev-hmpps_prisoner_to_nomis_visit_queue"
     - "syscon-devs-dev-hmpps_prisoner_to_nomis_visit_dlq"
     - "syscon-devs-dev-hmpps_prisoner_to_nomis_incentive_queue"
@@ -48,5 +48,3 @@ generic-prometheus-alerts:
     - "syscon-devs-dev-hmpps_prisoner_to_nomis_court_sentencing_dlq"
     - "syscon-devs-dev-hmpps_prisoner_to_nomis_alerts_queue"
     - "syscon-devs-dev-hmpps_prisoner_to_nomis_alerts_dlq"
-  sqsAlertsOldestThreshold: 2
-  sqsAlertsTotalMessagesThreshold: 1

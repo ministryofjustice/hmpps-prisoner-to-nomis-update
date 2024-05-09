@@ -30,7 +30,7 @@ generic-service:
     FEATURE_EVENT_PRISONER_ALERTS_ALERT_DELETED: false
 
 generic-prometheus-alerts:
-  sqsAlertsQueueNames:
+  sqsNumberAlertQueueNames:
     - "syscon-devs-prod-hmpps_prisoner_to_nomis_visit_queue"
     - "syscon-devs-prod-hmpps_prisoner_to_nomis_visit_dlq"
     - "syscon-devs-prod-hmpps_prisoner_to_nomis_incentive_queue"
@@ -51,5 +51,3 @@ generic-prometheus-alerts:
     - "syscon-devs-prod-hmpps_prisoner_to_nomis_court_sentencing_dlq"
     - "syscon-devs-prod-hmpps_prisoner_to_nomis_alerts_queue"
     - "syscon-devs-prod-hmpps_prisoner_to_nomis_alerts_dlq"
-  sqsAlertsOldestThreshold: 2
-  sqsAlertsTotalMessagesThreshold: 1
