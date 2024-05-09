@@ -133,7 +133,7 @@ class LocationsReconciliationServiceTest {
       ProfileRequest(ProfileRequest.ProfileType.NON_ASSO_TYP, "not-migrated-to-dps"),
     ),
     usages = listOf(
-      UsageRequest(UsageRequest.InternalLocationUsageType.OCCUR, UsageRequest.UsageLocationType.MEDI, 42, 5),
+      UsageRequest(UsageRequest.InternalLocationUsageType.OCCUR, 42, 5),
     ),
     amendments = listOf(
       AmendmentResponse(

@@ -553,6 +553,7 @@ internal fun keyDateAdjustment(
   active = true,
   comment = null,
   hasBeenReleased = false,
+  prisonId = "MDI",
 )
 
 internal fun sentenceAdjustment(
@@ -573,6 +574,7 @@ internal fun sentenceAdjustment(
   hiddenFromUsers = false,
   comment = null,
   hasBeenReleased = false,
+  prisonId = "MDI",
 )
 
 const val ADJUSTMENT_BOOKING_ID = 123456L

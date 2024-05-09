@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
@@ -154,6 +155,31 @@ class AlertsNomisApiServiceTest {
 
       alertsNomisApiMockServer.verify(
         deleteRequestedFor(urlPathEqualTo("/prisoners/booking-id/1234567/alerts/4")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetAlertsForReconciliation {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsNomisApiMockServer.stubGetAlertsForReconciliation(offenderNo = "A1234KT")
+
+      apiService.getAlertsForReconciliation("A1234KT")
+
+      alertsNomisApiMockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass offenderNo to service`() = runTest {
+      alertsNomisApiMockServer.stubGetAlertsForReconciliation(offenderNo = "A1234KT")
+
+      apiService.getAlertsForReconciliation("A1234KT")
+
+      alertsNomisApiMockServer.verify(
+        getRequestedFor(urlPathEqualTo("/prisoners/A1234KT/alerts/reconciliation")),
       )
     }
   }

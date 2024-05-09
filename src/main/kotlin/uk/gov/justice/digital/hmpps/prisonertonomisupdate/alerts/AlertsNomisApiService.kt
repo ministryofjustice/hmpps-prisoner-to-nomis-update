@@ -8,6 +8,7 @@ import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AlertResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerAlertsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAlertRequest
 
 @Service
@@ -39,4 +40,12 @@ class AlertsNomisApiService(@Qualifier("nomisApiWebClient") private val webClien
       .retrieve()
       .awaitBodilessEntity()
   }
+
+  suspend fun getAlertsForReconciliation(offenderNo: String): PrisonerAlertsResponse =
+    webClient.get().uri(
+      "/prisoners/{offenderNo}/alerts/reconciliation",
+      offenderNo,
+    )
+      .retrieve()
+      .awaitBody()
 }

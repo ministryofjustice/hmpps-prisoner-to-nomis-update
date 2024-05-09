@@ -4,10 +4,12 @@ import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension.Companion.alertsDpsApi
@@ -55,6 +57,73 @@ class AlertsDpsApiServiceTest {
 
       assertThat(alert.alertUuid.toString()).isEqualTo(dpsAlertId)
       assertThat(alert.authorisedBy).isEqualTo("Bobby Beans")
+    }
+  }
+
+  @Nested
+  inner class GetActiveAlertsForPrisoner {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsDpsApi.stubGetActiveAlertsForPrisoner("A1234TK")
+
+      apiService.getActiveAlertsForPrisoner("A1234TK")
+
+      alertsDpsApi.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass offenderNo to service`() = runTest {
+      alertsDpsApi.stubGetActiveAlertsForPrisoner("A1234TK")
+
+      apiService.getActiveAlertsForPrisoner("A1234TK")
+
+      alertsDpsApi.verify(
+        getRequestedFor(urlPathEqualTo("/prisoners/A1234TK/alerts")),
+      )
+    }
+
+    @Test
+    internal fun `will always supply large page size big enough for all possible alerts`() = runTest {
+      alertsDpsApi.stubGetActiveAlertsForPrisoner("A1234TK")
+
+      apiService.getActiveAlertsForPrisoner("A1234TK")
+
+      alertsDpsApi.verify(
+        getRequestedFor(anyUrl())
+          .withQueryParam("size", equalTo("1000"))
+          .withQueryParam("page", equalTo("0")),
+      )
+    }
+
+    @Test
+    internal fun `will always request active alerts`() = runTest {
+      alertsDpsApi.stubGetActiveAlertsForPrisoner("A1234TK")
+
+      apiService.getActiveAlertsForPrisoner("A1234TK")
+
+      alertsDpsApi.verify(
+        getRequestedFor(anyUrl())
+          .withQueryParam("isActive", equalTo("true")),
+      )
+    }
+
+    @Test
+    fun `will return alert`() = runTest {
+      alertsDpsApi.stubGetActiveAlertsForPrisoner("A1234TK", count = 300)
+
+      val alerts = apiService.getActiveAlertsForPrisoner("A1234TK")
+
+      assertThat(alerts).hasSize(300)
+    }
+
+    @Test
+    fun `will throw exception if there are more alerts than hard coded page size`() = runTest {
+      alertsDpsApi.stubGetActiveAlertsForPrisoner("A1234TK", count = 1001)
+
+      assertThrows<IllegalStateException> { apiService.getActiveAlertsForPrisoner("A1234TK") }
     }
   }
 }
