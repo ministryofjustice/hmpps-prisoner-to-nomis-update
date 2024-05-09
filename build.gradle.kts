@@ -37,8 +37,8 @@ dependencies {
 
   testImplementation("org.wiremock:wiremock-standalone:3.5.4")
   testImplementation("org.mockito:mockito-inline:5.2.0")
-  testImplementation("org.testcontainers:localstack:1.19.7")
-  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.710")
+  testImplementation("org.testcontainers:localstack:1.19.8")
+  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.718")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.1")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 }
