@@ -128,9 +128,15 @@ reports:
   incentives:
     reconciliation:
       page-size: 20
-  sentencing:
+  adjudications:
     reconciliation:
       migration-date: 2024-01-28
+      page-size: 20
+  sentencing:
+    reconciliation:
+      page-size: 20
+  alerts:
+    reconciliation:
       page-size: 20
   non-associations:
     reconciliation:

@@ -25,9 +25,9 @@ class AdjudicationsReconciliationService(
   private val nomisApiService: NomisApiService,
   private val adjudicationsApiService: AdjudicationsApiService,
   private val adjudicationsMappingService: AdjudicationsMappingService,
-  @Value("\${reports.sentencing.reconciliation.page-size}")
+  @Value("\${reports.adjudications.reconciliation.page-size}")
   private val pageSize: Long = 20,
-  @Value("\${reports.sentencing.reconciliation.migration-date}")
+  @Value("\${reports.adjudications.reconciliation.migration-date}")
   private val nomisMigrationDate: LocalDate,
 ) {
   private companion object {

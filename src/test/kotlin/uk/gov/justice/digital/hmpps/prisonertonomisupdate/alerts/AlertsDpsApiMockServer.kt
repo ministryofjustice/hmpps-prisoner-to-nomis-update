@@ -13,9 +13,11 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
+import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.Alert
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.AlertCodeSummary
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -92,18 +94,42 @@ class AlertsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         ),
     )
   }
+
+  fun stubGetActiveAlertsForPrisoner(offenderNo: String, vararg alerts: Alert) {
+    stubFor(
+      get(urlPathEqualTo("/prisoners/$offenderNo/alerts"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              PageImpl(
+                alerts.toList(),
+                Pageable.ofSize(1000),
+                alerts.size.toLong(),
+              ),
+            )
+            .withStatus(200),
+        ),
+    )
+  }
+
+  fun stubGetActiveAlertsForPrisoner(offenderNo: String, status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    stubFor(
+      get(urlPathEqualTo("/prisoners/$offenderNo/alerts"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(error),
+        ),
+    )
+  }
 }
 
 fun dpsAlert(): Alert = Alert(
   alertUuid = UUID.randomUUID(),
   prisonNumber = "A1234AA",
-  alertCode = AlertCodeSummary(
-    alertTypeCode = "A",
-    code = "ABC",
-    description = "Alert code description",
-    listSequence = 3,
-    isActive = true,
-  ),
+  alertCode = dpsAlertCode("A"),
   description = "Alert description",
   authorisedBy = "A. Nurse, An Agency",
   activeFrom = LocalDate.parse("2021-09-27"),
@@ -116,4 +142,12 @@ fun dpsAlert(): Alert = Alert(
   lastModifiedAt = LocalDateTime.parse("2024-02-28T13:56:10"),
   lastModifiedBy = "USER1234",
   lastModifiedByDisplayName = "Firstname Lastname",
+)
+
+fun dpsAlertCode(code: String) = AlertCodeSummary(
+  alertTypeCode = "A",
+  code = code,
+  description = "Alert code description",
+  listSequence = 3,
+  isActive = true,
 )

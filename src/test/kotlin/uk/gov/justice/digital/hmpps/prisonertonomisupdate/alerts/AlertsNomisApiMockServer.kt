@@ -99,3 +99,5 @@ fun alertResponse() = AlertResponse(
     createUsername = "Q1251T",
   ),
 )
+
+fun alertCode(code: String) = CodeDescription(code = code, description = "Description for $code")
