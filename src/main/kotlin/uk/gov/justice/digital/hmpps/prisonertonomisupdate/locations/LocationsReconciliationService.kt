@@ -249,39 +249,38 @@ class LocationsReconciliationService(
   }
 
   fun historyDoesNotMatch(nomis: LocationResponse, dps: Location): Boolean {
-    if (expectedDpsHistorySize(nomis.amendments) == (dps.changeHistory?.size ?: 0)) {
-      return false
+    val filteredAmendmentResponses = filterAmendmentResponses(nomis.amendments)
+    if ((filteredAmendmentResponses?.size ?: 0) != (dps.changeHistory?.size ?: 0)) {
+      return true
     }
-    val nomisListConverted = nomis.amendments!!.map { a ->
+    val nomisListConverted = filteredAmendmentResponses!!.map { a ->
       ChangeHistory(toHistoryAttribute(a.columnName), a.amendedBy, a.amendDateTime, a.oldValue, a.newValue)
     }
     val nomisSetSorted = nomisListConverted.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
     val dpsSetSorted = dps.changeHistory!!.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
 
-    var dpsIndex = 0
-    nomisSetSorted.forEach { nomisItem ->
-      val dpsItem = dpsSetSorted.elementAtOrNull(dpsIndex)
-      if (dpsItem != null) {
-        if (nomisItem.attribute == dpsItem.attribute &&
-          nomisItem.amendedBy == dpsItem.amendedBy &&
-          nomisItem.amendedDate == dpsItem.amendedDate &&
-          nomisItem.oldValue == dpsItem.oldValue &&
-          nomisItem.newValue == dpsItem.newValue
-        ) {
-          // matches
-        } else {
-          return true
-        }
+    if (dpsSetSorted.size > nomisSetSorted.size) {
+      return true
+    }
+    nomisSetSorted.zip(dpsSetSorted).forEach {
+      val nomisItem = it.first
+      val dpsItem = it.second
+      if (nomisItem.attribute == dpsItem.attribute &&
+        nomisItem.amendedBy == dpsItem.amendedBy &&
+        nomisItem.amendedDate == dpsItem.amendedDate &&
+        nomisItem.oldValue == dpsItem.oldValue &&
+        nomisItem.newValue == dpsItem.newValue
+      ) {
+        // matches
       } else {
         return true
       }
-      dpsIndex++
     }
     return false
   }
 
   private fun reportHistory(nomisList: List<AmendmentResponse>?, dpsList: List<ChangeHistory>?): String {
-    val nomisListConverted = nomisList!!.map { nomis ->
+    val nomisListConverted = filterAmendmentResponses(nomisList)!!.map { nomis ->
       ChangeHistory(toHistoryAttribute(nomis.columnName), nomis.amendedBy, nomis.amendDateTime, nomis.oldValue, nomis.newValue)
     }
 
@@ -297,26 +296,21 @@ class LocationsReconciliationService(
     val nomisSetSorted = nomisListConverted.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
     val dpsSetSorted = dpsList.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
 
-    nomisSetSorted.forEachIndexed { index, nomisItem ->
-      val dpsItem = dpsSetSorted.elementAtOrNull(index)
-      if (dpsItem != null) {
-        if (nomisItem.attribute == dpsItem.attribute &&
-          nomisItem.amendedBy == dpsItem.amendedBy &&
-          nomisItem.amendedDate == dpsItem.amendedDate &&
-          nomisItem.oldValue == dpsItem.oldValue &&
-          nomisItem.newValue == dpsItem.newValue
-        ) {
-          // matches
-        } else {
-          return """Item at index $index doesn't match :
+    nomisSetSorted.zip(dpsSetSorted).forEachIndexed { index, it ->
+      val nomisItem = it.first
+      val dpsItem = it.second
+      if (nomisItem.attribute == dpsItem.attribute &&
+        nomisItem.amendedBy == dpsItem.amendedBy &&
+        nomisItem.amendedDate == dpsItem.amendedDate &&
+        nomisItem.oldValue == dpsItem.oldValue &&
+        nomisItem.newValue == dpsItem.newValue
+      ) {
+        // matches
+      } else {
+        return """Item at index $index doesn't match :
             | prev  ${dpsSetSorted.elementAtOrNull(index - 1)}
             | nomis $nomisItem
             | dps   $dpsItem
-          """.trimMargin()
-        }
-      } else {
-        return """No corresponding element in dpsList for index $index: $nomisItem
-          | previous was ${dpsSetSorted.elementAtOrNull(index - 1)}
         """.trimMargin()
       }
     }
@@ -350,13 +344,15 @@ class LocationsReconciliationService(
       ?.size ?: 0
     )
 
-  private fun expectedDpsHistorySize(amendments: List<AmendmentResponse>?) = (
+  private fun expectedDpsHistorySize(amendments: List<AmendmentResponse>?) = filterAmendmentResponses(amendments)?.size ?: 0
+
+  private fun filterAmendmentResponses(amendments: List<AmendmentResponse>?) =
     amendments
       ?.filter { it.oldValue != it.newValue }
+      // user_desc not recorded in Nomis history
+      ?.filterNot { it.columnName == "DESCRIPTION" }
       // eliminate duplicate entries with timestamps within same second (about 120)
       ?.toSet()
-      ?.size ?: 0
-    )
 
   private fun toHistoryAttribute(columnName: String?): String =
     when (columnName) {
