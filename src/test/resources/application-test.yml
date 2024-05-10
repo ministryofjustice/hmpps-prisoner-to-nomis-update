@@ -141,6 +141,12 @@ reports:
   incentives:
     reconciliation:
       page-size: 10
+  adjudications:
+    reconciliation:
+      page-size: 10
+  alerts:
+    reconciliation:
+      page-size: 10
   sentencing:
     reconciliation:
       page-size: 10

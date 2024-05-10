@@ -18,6 +18,7 @@ class ResourceServerConfiguration {
         "/attendances/reports/reconciliation",
         "/sentencing/reports/reconciliation",
         "/adjudications/reports/reconciliation",
+        "/alerts/reports/reconciliation",
       )
     }
   }
