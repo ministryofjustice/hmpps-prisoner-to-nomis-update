@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExt
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerAlertsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import java.time.LocalDate
 
 class AlertsResourceIntTest : IntegrationTestBase() {
 
@@ -74,6 +75,22 @@ class AlertsResourceIntTest : IntegrationTestBase() {
       )
 
       alertsDpsApi.stubGetActiveAlertsForPrisoner(
+        "A0003TZ",
+        dpsAlert().copy(alertCode = dpsAlertCode("HPI")),
+      )
+      alertsNomisApi.stubGetAlertsForReconciliation(
+        "A0003TZ",
+        response = PrisonerAlertsResponse(
+          // include an active alert that has expired and active alert not started
+          latestBookingAlerts = listOf(
+            alertResponse().copy(alertCode = alertCode("XA")).copy(expiryDate = LocalDate.now().minusDays(1)),
+            alertResponse().copy(alertCode = alertCode("HA1")).copy(date = LocalDate.now().plusDays(1)),
+          ),
+          previousBookingsAlerts = listOf(alertResponse().copy(alertCode = alertCode("HPI"))),
+        ),
+      )
+
+      alertsDpsApi.stubGetActiveAlertsForPrisoner(
         "A0034TZ",
         dpsAlert().copy(alertCode = dpsAlertCode("HPI")),
         dpsAlert().copy(alertCode = dpsAlertCode("HA1")),
@@ -87,7 +104,7 @@ class AlertsResourceIntTest : IntegrationTestBase() {
       )
 
       // all others have alerts
-      (3..<numberOfActivePrisoners).forEach {
+      (4..<numberOfActivePrisoners).forEach {
         val offenderNo = "A${it.toString().padStart(4, '0')}TZ"
         alertsDpsApi.stubGetActiveAlertsForPrisoner(
           offenderNo,
@@ -178,6 +195,25 @@ class AlertsResourceIntTest : IntegrationTestBase() {
         assertThat(this).containsEntry("missingFromDps", "HA2, XA")
         assertThat(this).containsEntry("missingFromNomis", "HA1")
       }
+    }
+
+    @Test
+    fun `should emit a warning indicating active alerts found in NOMIS that should inactive`() {
+      webTestClient.put().uri("/alerts/reports/reconciliation")
+        .exchange()
+        .expectStatus().isAccepted
+
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("alerts-reports-reconciliation-incorrectly-active"),
+        check {
+          assertThat(it).containsEntry("offenderNo", "A0003TZ")
+          assertThat(it).containsEntry("bookingId", "3")
+          assertThat(it).containsEntry("incorrectly-active", "HA1, XA")
+        },
+        isNull(),
+      )
     }
 
     @Test
