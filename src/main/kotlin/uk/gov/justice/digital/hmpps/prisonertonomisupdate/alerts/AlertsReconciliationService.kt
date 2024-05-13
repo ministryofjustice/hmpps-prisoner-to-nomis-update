@@ -57,8 +57,8 @@ class AlertsReconciliationService(
   suspend fun checkActiveAlertsMatch(prisonerId: ActivePrisonerId): MismatchAlerts? = runCatching {
     val nomisActiveAlerts = doApiCallWithRetries { nomisAlertsApiService.getAlertsForReconciliation(prisonerId.offenderNo) }.let { it.latestBookingAlerts + it.previousBookingsAlerts }
     val nomisAlerts = nomisActiveAlerts.map { it.alertCode.code }.toSortedSet()
-    val expiredActiveNomisAlerts = nomisActiveAlerts.filter { it.shouldBeInactive() }.map { it.alertCode.code }.toSortedSet()
-    val nomisNotExpiredAlerts = nomisAlerts - expiredActiveNomisAlerts
+    val nomisNotExpiredAlerts = nomisActiveAlerts.filterNot { it.shouldBeInactive() }.map { it.alertCode.code }.toSortedSet()
+    val expiredActiveNomisAlerts = nomisAlerts - nomisNotExpiredAlerts
     val dpsAlerts = doApiCallWithRetries { dpsAlertsApiService.getActiveAlertsForPrisoner(prisonerId.offenderNo) }.map { it.alertCode.code }.toSortedSet()
 
     if (expiredActiveNomisAlerts.isNotEmpty()) {
