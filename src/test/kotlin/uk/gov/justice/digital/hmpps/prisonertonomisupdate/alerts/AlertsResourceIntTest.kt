@@ -98,7 +98,12 @@ class AlertsResourceIntTest : IntegrationTestBase() {
       alertsNomisApi.stubGetAlertsForReconciliation(
         "A0034TZ",
         response = PrisonerAlertsResponse(
-          latestBookingAlerts = listOf(alertResponse().copy(alertCode = alertCode("HPI")), alertResponse().copy(alertCode = alertCode("HA2"))),
+          latestBookingAlerts = listOf(
+            alertResponse().copy(alertCode = alertCode("HPI")),
+            alertResponse().copy(alertCode = alertCode("HA2")),
+            // add an active but expired alert that should have no effect given we have a real active HPI alert above
+            alertResponse().copy(alertCode = alertCode("HPI")).copy(expiryDate = LocalDate.now().minusDays(1)),
+          ),
           previousBookingsAlerts = listOf(alertResponse().copy(alertCode = alertCode("XA"))),
         ),
       )
