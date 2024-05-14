@@ -178,7 +178,7 @@ generic-prometheus-alerts:
   targetApplication: hmpps-prisoner-to-nomis-update
   alertSeverity: syscon
   cronjobTargetOverride: "hmpps-prisoner-to-nomis-update-queue-.*"
-  sqsAlertsTotalMessagesThreshold: 0
+  sqsAlertsTotalMessagesThreshold: "0"
 
 cron:
   allocationReconReportSchedule: "5 7 * * *"
