@@ -98,6 +98,7 @@ fun alertResponse() = AlertResponse(
     createDatetime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
     createUsername = "Q1251T",
   ),
+  isAlertFromPreviousBookingRelevant = false,
 )
 
 fun alertCode(code: String) = CodeDescription(code = code, description = "Description for $code")

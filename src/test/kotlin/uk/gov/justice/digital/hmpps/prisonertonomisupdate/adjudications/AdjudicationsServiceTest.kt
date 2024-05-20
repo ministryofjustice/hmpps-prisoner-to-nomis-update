@@ -123,6 +123,7 @@ internal class AdjudicationsServiceTest {
         offenceDetails = OffenceDto(
           offenceCode = 7003,
           offenceRule = OffenceRuleDto(paragraphDescription = "7", paragraphNumber = "8"),
+          protectedCharacteristics = emptyList(),
         ),
         incidentStatement = IncidentStatementDto(statement = "s"),
         createdByUserId = "me",
@@ -168,6 +169,7 @@ internal class AdjudicationsServiceTest {
         outcomeEnteredInNomis = false,
         originatingAgencyId = "MDI",
         linkedChargeNumbers = emptyList(),
+        canActionFromHistory = false,
       ),
     )
 }
