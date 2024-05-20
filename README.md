@@ -186,7 +186,7 @@ A duplicate visit is serious since for sentenced prisoners they will have one le
 * Check the offender's visits in production Nomis to prove there is a duplicate, e.g. `https://digital.prison.service.justice.gov.uk/prisoner/<offenderNo>/visits-details`
 * Grab an auth token with role `NOMIS_VISITS` and call the following API to cancel the duplicate visit:
 ```
-curl --location --request PUT 'https://nomis-prisoner.aks-live-1.studio-hosting.service.justice.gov.uk/prisoners/<offenderNo>/visits/<duplicateNomisId>/cancel' \
+curl --location --request PUT 'https://nomis-prisoner-api.prison.service.justice.gov.uk/prisoners/<offenderNo>/visits/<duplicateNomisId>/cancel' \
 --header 'Content-Type: application/json' \
 --header 'Accept: application/json' \
 --header 'Authorization: Bearer <token with role NOMIS_VISITS>' \
@@ -206,7 +206,7 @@ For sentence adjustment:
 
 ```
 curl -X 'DELETE' \
-  'https://nomis-prisoner.aks-live-1.studio-hosting.service.justice.gov.uk/sentence-adjustments/99999' \
+  'https://nomis-prisoner-api.prison.service.justice.gov.uk/sentence-adjustments/99999' \
   -H 'accept: */*' \
   -H 'Authorization: Bearer <token with role NOMIS_SENTENCING>'
 ```
@@ -215,7 +215,7 @@ For key date adjustment:
 
 ```
 curl -X 'DELETE' \
-  'https://nomis-prisoner.aks-live-1.studio-hosting.service.justice.gov.uk/key-date-adjustments/99999' \
+  'https://nomis-prisoner-api.prison.service.justice.gov.uk/key-date-adjustments/99999' \
   -H 'accept: */*' \
   -H 'Authorization: Bearer <token with role NOMIS_SENTENCING>'
 ```
@@ -235,7 +235,7 @@ First check the state of NOMIS and ths state of DPS.
 
 To check NOMIS you can run this endpoint:
 ```bash
-curl --location 'https://nomis-prisoner.aks-live-1.studio-hosting.service.justice.gov.uk/incentives/booking-id/{bookingId}}/current' \
+curl --location 'https://nomis-prisoner-api.prison.service.justice.gov.uk/incentives/booking-id/{bookingId}}/current' \
 --header 'Authorization: Bearer <token with ROLE_NOMIS_INCENTIVES>'
 ```
 This will return what NOMIS believes is the current IEP, for instance the snippet 

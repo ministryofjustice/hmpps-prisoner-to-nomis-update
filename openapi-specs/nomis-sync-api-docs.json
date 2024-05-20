@@ -19,7 +19,7 @@
       "description": "PreProd"
     },
     {
-      "url": "https://nomis-prisoner.aks-live-1.studio-hosting.service.justice.gov.uk",
+      "url": "https://nomis-prisoner-api.prison.service.justice.gov.uk",
       "description": "Prod"
     },
     {
