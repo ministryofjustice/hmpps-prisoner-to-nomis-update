@@ -61,18 +61,22 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             {
                 "id": 634,
                 "type": "CONFINEMENT",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
                     "startDate": "2023-10-04",
-                    "endDate": "2023-10-06"
+                    "endDate": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             },
             {
                 "id": 667,
                 "type": "EXTRA_WORK",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 12,
-                    "suspendedUntil": "2023-10-18"
+                    "suspendedUntil": "2023-10-18",
+                    "measurement": "DAYS"
                 }
             }
         ]
@@ -176,17 +180,21 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             {
                 "id": 634,
                 "type": "CONFINEMENT",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
                     "startDate": "2023-10-04",
-                    "endDate": "2023-10-06"
+                    "endDate": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             },
             {
                 "id": 689,
                 "type": "ADDITIONAL_DAYS",
+                "rehabilitativeActivities": [],
                 "schedule": {
-                    "days": 2
+                    "days": 2,
+                    "measurement": "DAYS"
                 },
                 "consecutiveChargeNumber": "$CONSECUTIVE_CHARGE_NUMBER",
                 "consecutiveReportAvailable": true
@@ -256,10 +264,12 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 "id": 1,
                 "type": "PRIVILEGE",
                 "privilegeType": "ASSOCIATION",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
                     "startDate": "2023-10-04",
-                    "endDate": "2023-10-06"
+                    "endDate": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             },
             {
@@ -267,29 +277,35 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 "type": "PRIVILEGE",
                 "privilegeType": "OTHER",
                 "otherPrivilege": "Daily walk",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
                     "startDate": "2023-10-04",
-                    "endDate": "2023-10-06"
+                    "endDate": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             },
             {
                 "id": 3,
                 "type": "CONFINEMENT",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
                     "startDate": "2023-10-04",
-                    "endDate": "2023-10-06"
+                    "endDate": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             },
             {
                 "id": 4,
                 "type": "DAMAGES_OWED",
                 "damagesOwedAmount": 45.1,
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
                     "startDate": "2023-10-04",
-                    "endDate": "2023-10-06"
+                    "endDate": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             }
           ]
@@ -330,47 +346,59 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             {
                 "id": 1,
                 "type": "PROSPECTIVE_DAYS",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
-                    "suspendedUntil": "2023-10-06"
+                    "suspendedUntil": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             },
             {
                 "id": 2,
                 "type": "PROSPECTIVE_DAYS",
+                "rehabilitativeActivities": [],
                 "schedule": {
-                    "days": 3
+                    "days": 3,
+                    "measurement": "DAYS"
                 }
             },
             {
                 "id": 3,
                 "type": "PROSPECTIVE_DAYS",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
-                    "startDate": "2023-10-06"
+                    "startDate": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             },
             {
                 "id": 4,
                 "type": "ADDITIONAL_DAYS",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
-                    "suspendedUntil": "2023-10-06"
+                    "suspendedUntil": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             },
             {
                 "id": 5,
                 "type": "ADDITIONAL_DAYS",
+                "rehabilitativeActivities": [],
                 "schedule": {
-                    "days": 3
+                    "days": 3,
+                    "measurement": "DAYS"
                 }
             },
             {
                 "id": 6,
                 "type": "ADDITIONAL_DAYS",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
-                    "startDate": "2023-10-06"
+                    "startDate": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             }
           ]
@@ -444,18 +472,22 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             {
                 "id": 634,
                 "type": "CONFINEMENT",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
                     "startDate": "2023-10-04",
-                    "endDate": "2023-10-06"
+                    "endDate": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             },
             {
                 "id": 667,
                 "type": "EXTRA_WORK",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 12,
-                    "suspendedUntil": "2023-10-18"
+                    "suspendedUntil": "2023-10-18",
+                    "measurement": "DAYS"
                 }
             }
         ]
@@ -529,18 +561,22 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             {
                 "id": 634,
                 "type": "CONFINEMENT",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
                     "startDate": "2023-10-04",
-                    "endDate": "2023-10-06"
+                    "endDate": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             },
             {
                 "id": 667,
                 "type": "EXTRA_WORK",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 12,
-                    "suspendedUntil": "2023-10-18"
+                    "suspendedUntil": "2023-10-18",
+                    "measurement": "DAYS"
                 }
             }
         ]
@@ -670,18 +706,22 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             {
                 "id": 634,
                 "type": "CONFINEMENT",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
                     "startDate": "2023-10-04",
-                    "endDate": "2023-10-06"
+                    "endDate": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             },
             {
                 "id": 667,
                 "type": "EXTRA_WORK",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 12,
-                    "suspendedUntil": "2023-10-18"
+                    "suspendedUntil": "2023-10-18",
+                    "measurement": "DAYS"
                 }
             }
         ]
@@ -915,6 +955,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             {
                 "id": 634,
                 "type": "CONFINEMENT",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
                     "startDate": "2023-10-04",
@@ -924,6 +965,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             {
                 "id": 667,
                 "type": "EXTRA_WORK",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 12,
                     "suspendedUntil": "2023-10-18"
@@ -1032,9 +1074,11 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             {
                 "id": 667,
                 "type": "EXTRA_WORK",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 12,
-                    "suspendedUntil": "2023-10-18"
+                    "suspendedUntil": "2023-10-18",
+                    "measurement": "DAYS"
                 }
             }
           ]
@@ -1127,9 +1171,11 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             {
                 "id": 667,
                 "type": "EXTRA_WORK",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 12,
-                    "suspendedUntil": "2023-10-18"
+                    "suspendedUntil": "2023-10-18",
+                    "measurement": "DAYS"
                 }
             }
           ]
@@ -1242,18 +1288,22 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             {
                 "id": 634,
                 "type": "CONFINEMENT",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
                     "startDate": "2023-10-04",
-                    "endDate": "2023-10-06"
+                    "endDate": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             },
             {
                 "id": 667,
                 "type": "EXTRA_WORK",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 12,
-                    "suspendedUntil": "2023-10-18"
+                    "suspendedUntil": "2023-10-18",
+                    "measurement": "DAYS"
                 }
             }
         ]
@@ -1356,18 +1406,22 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             {
                 "id": 634,
                 "type": "CONFINEMENT",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
                     "startDate": "2023-10-04",
-                    "endDate": "2023-10-06"
+                    "endDate": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             },
             {
                 "id": 667,
                 "type": "EXTRA_WORK",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 12,
-                    "suspendedUntil": "2023-10-18"
+                    "suspendedUntil": "2023-10-18",
+                    "measurement": "DAYS"
                 }
             }
         ]
@@ -1525,18 +1579,22 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             {
                 "id": 634,
                 "type": "CONFINEMENT",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
                     "startDate": "2023-10-04",
-                    "endDate": "2023-10-06"
+                    "endDate": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             },
             {
                 "id": 667,
                 "type": "EXTRA_WORK",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 12,
-                    "suspendedUntil": "2023-10-18"
+                    "suspendedUntil": "2023-10-18",
+                    "measurement": "DAYS"
                 }
             }
         ]

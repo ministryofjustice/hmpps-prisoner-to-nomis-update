@@ -86,7 +86,8 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "paragraphNumber": "1",
                 "paragraphDescription": "Commits any assault",
                 "nomisCode": "51:1B"
-            }
+            },
+            "protectedCharacteristics": []
         },
         "incidentStatement": {
             "statement": "12",
