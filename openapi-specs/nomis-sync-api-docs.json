@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-05-09.7552.2627111"
+    "version": "2024-05-20.7684.d87648f"
   },
   "servers": [
     {
@@ -560,6 +560,232 @@
           },
           "404": {
             "description": "Court appearance does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/booking-id/{bookingId}/sentencing/sentence-sequence/{sequence}": {
+      "get": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "get sentences for an offender using the given booking id and sentence sequence",
+        "description": "Requires role NOMIS_SENTENCING. Retrieves a court case by id",
+        "operationId": "getOffenderSentence",
+        "parameters": [
+          {
+            "name": "sequence",
+            "in": "path",
+            "description": "Sentence sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sentence sequence",
+              "example": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "Offender Booking Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender Booking Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the sentence details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentenceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offender booking not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "Updates Sentence",
+        "description": "Required role NOMIS_SENTENCING Updates a Sentence for the offender and latest booking",
+        "operationId": "updateSentence",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "Booking Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Booking Id",
+              "example": 4565456
+            },
+            "example": 4565456
+          },
+          {
+            "name": "sequence",
+            "in": "path",
+            "description": "Sentence sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sentence sequence",
+              "example": 1
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSentenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Sentence updated"
+          },
+          "400": {
+            "description": "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Sentence does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "deletes a specific sentence",
+        "description": "Requires role NOMIS_SENTENCING. Deletes a sentence by booking and sentence sequence",
+        "operationId": "deleteSentence",
+        "parameters": [
+          {
+            "name": "sequence",
+            "in": "path",
+            "description": "Sentence sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sentence sequence",
+              "example": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "Offender Booking Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender Booking Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "the sentence has been deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
             "content": {
               "application/json": {
                 "schema": {
@@ -3604,6 +3830,92 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/sentencing": {
+      "post": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "Creates a new Sentence",
+        "description": "Required role NOMIS_SENTENCING Creates a new Sentence for the offender and latest booking",
+        "operationId": "createSentence",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender number",
+              "example": "AB1234K"
+            },
+            "example": "AB1234K"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSentenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created Sentence",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateSentenceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offender does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/sentencing/court-cases": {
       "get": {
         "tags": [
@@ -3683,14 +3995,14 @@
           {
             "name": "offenderNo",
             "in": "path",
-            "description": "Booking Id",
+            "description": "Offender No",
             "required": true,
             "schema": {
               "type": "string",
-              "description": "Booking Id",
-              "example": 12345
+              "description": "Offender No",
+              "example": "AK1234B"
             },
-            "example": 12345
+            "example": "AK1234B"
           }
         ],
         "requestBody": {
@@ -6345,84 +6657,6 @@
           },
           "403": {
             "description": "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING not present",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/prisoners/booking-id/{bookingId}/sentencing/sentence-sequence/{sequence}": {
-      "get": {
-        "tags": [
-          "sentencing-resource"
-        ],
-        "summary": "get sentences for an offender using the given booking id and sentence sequence",
-        "description": "Requires role NOMIS_SENTENCING. Retrieves a court case by id",
-        "operationId": "getOffenderSentence",
-        "parameters": [
-          {
-            "name": "sequence",
-            "in": "path",
-            "description": "Sentence sequence",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Sentence sequence",
-              "example": 1
-            },
-            "example": 1
-          },
-          {
-            "name": "bookingId",
-            "in": "path",
-            "description": "Offender Booking Id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Offender Booking Id",
-              "example": 12345
-            },
-            "example": 12345
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "the sentence details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SentenceResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Offender booking not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -10018,6 +10252,103 @@
         },
         "description": "Create adjustment response"
       },
+      "CreateSentenceRequest": {
+        "required": [
+          "offenderChargeIds",
+          "sentenceCalcType",
+          "sentenceCategory",
+          "sentenceLevel",
+          "sentenceTerm",
+          "startDate",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string"
+          },
+          "sentenceCategory": {
+            "type": "string"
+          },
+          "sentenceCalcType": {
+            "type": "string"
+          },
+          "sentenceLevel": {
+            "type": "string"
+          },
+          "fine": {
+            "type": "number"
+          },
+          "sentenceTerm": {
+            "$ref": "#/components/schemas/SentenceTermRequest"
+          },
+          "caseId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offenderChargeIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        "description": "Sentence request"
+      },
+      "SentenceTermRequest": {
+        "required": [
+          "lifeSentenceFlag",
+          "sentenceTermType",
+          "startDate"
+        ],
+        "type": "object",
+        "properties": {
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "years": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "months": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weeks": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hours": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sentenceTermType": {
+            "type": "string"
+          },
+          "lifeSentenceFlag": {
+            "type": "boolean"
+          }
+        },
+        "description": "Sentence term request"
+      },
       "AlertResponse": {
         "required": [
           "alertCode",
@@ -10027,6 +10358,7 @@
           "bookingSequence",
           "date",
           "isActive",
+          "isAlertFromPreviousBookingRelevant",
           "isVerified",
           "type"
         ],
@@ -10082,6 +10414,10 @@
           },
           "audit": {
             "$ref": "#/components/schemas/NomisAudit"
+          },
+          "isAlertFromPreviousBookingRelevant": {
+            "type": "boolean",
+            "description": "True if this alert is on a previous booking and should have been latest booking and is potentially relevant to prisoner"
           }
         },
         "description": "The data held in NOMIS about an alert associated with a prisoner"
@@ -11103,7 +11439,8 @@
               "REMACT",
               "REMWIN",
               "STOP_EARN",
-              "STOP_PCT"
+              "STOP_PCT",
+              "PP"
             ]
           },
           "sanctionStatus": {
@@ -11714,6 +12051,24 @@
         },
         "description": "Visit creation response"
       },
+      "CreateSentenceResponse": {
+        "required": [
+          "sentenceSeq",
+          "termSeq"
+        ],
+        "type": "object",
+        "properties": {
+          "sentenceSeq": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "termSeq": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "Create sentence response"
+      },
       "CreateCourtCaseRequest": {
         "required": [
           "courtAppearance",
@@ -11785,7 +12140,7 @@
             }
           }
         },
-        "description": "Create adjustment response"
+        "description": "Create court case response"
       },
       "CreateAlertResponse": {
         "required": [
@@ -13630,10 +13985,10 @@
             "type": "integer",
             "format": "int32"
           },
-          "paged": {
+          "unpaged": {
             "type": "boolean"
           },
-          "unpaged": {
+          "paged": {
             "type": "boolean"
           }
         }
@@ -15505,6 +15860,8 @@
       },
       "History": {
         "required": [
+          "createDateTime",
+          "createdBy",
           "incidentChangeDate",
           "incidentChangeStaff",
           "questionnaireId",
@@ -15540,6 +15897,16 @@
           },
           "incidentChangeStaff": {
             "$ref": "#/components/schemas/Staff"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the historical incident questionnaire was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the historical incident questionnaire"
           }
         },
         "description": "Historical questionnaire details for the incident"
@@ -15602,6 +15969,11 @@
             "type": "string",
             "description": "Comment added to the response by recording staff"
           },
+          "responseDate": {
+            "type": "string",
+            "description": "Response date added to the response by recording staff",
+            "format": "date"
+          },
           "recordingStaff": {
             "$ref": "#/components/schemas/Staff"
           }
@@ -15610,6 +15982,8 @@
       },
       "IncidentResponse": {
         "required": [
+          "createDateTime",
+          "createdBy",
           "history",
           "incidentDateTime",
           "incidentId",
@@ -15664,6 +16038,31 @@
             "type": "string",
             "description": "The date and time of the incident",
             "example": "2021-07-05T10:35:17"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the incident was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the incident"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the incident was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the incident"
+          },
+          "followUpDate": {
+            "type": "string",
+            "description": "The follow up date for the incident",
+            "format": "date"
           },
           "reportingStaff": {
             "$ref": "#/components/schemas/Staff"
@@ -15764,6 +16163,8 @@
       },
       "OffenderParty": {
         "required": [
+          "createDateTime",
+          "createdBy",
           "offender",
           "role"
         ],
@@ -15781,6 +16182,26 @@
           "comment": {
             "type": "string",
             "description": "General information about the incident"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the offender party was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the offender party"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the offender party was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the offender party"
           }
         },
         "description": "Offenders involved in the incident"
@@ -15788,6 +16209,8 @@
       "Question": {
         "required": [
           "answers",
+          "createDateTime",
+          "createdBy",
           "question",
           "questionId",
           "sequence"
@@ -15814,12 +16237,24 @@
             "items": {
               "$ref": "#/components/schemas/Response"
             }
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the question was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the question"
           }
         },
         "description": "Questions asked for the incident"
       },
       "Requirement": {
         "required": [
+          "createDateTime",
+          "createdBy",
           "date",
           "prisonId",
           "staff"
@@ -15841,12 +16276,34 @@
           "prisonId": {
             "type": "string",
             "description": "The reporting location of the staff"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the requirement was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the requirement"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the requirement was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the requirement"
           }
         },
         "description": "Requirements for completing the incident report"
       },
       "Response": {
         "required": [
+          "createDateTime",
+          "createdBy",
           "recordingStaff",
           "sequence"
         ],
@@ -15870,14 +16327,41 @@
             "type": "string",
             "description": "Comment added to the response by recording staff"
           },
+          "responseDate": {
+            "type": "string",
+            "description": "Response date added to the response by recording staff",
+            "format": "date"
+          },
           "recordingStaff": {
             "$ref": "#/components/schemas/Staff"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the response was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the response"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the response was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the response"
           }
         },
         "description": "List of Responses to this question"
       },
       "StaffParty": {
         "required": [
+          "createDateTime",
+          "createdBy",
           "role",
           "staff"
         ],
@@ -15892,6 +16376,26 @@
           "comment": {
             "type": "string",
             "description": "General information about the incident"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the staff party was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the staff party"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the staff party was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the staff party"
           }
         },
         "description": "Staff involved in the incident"

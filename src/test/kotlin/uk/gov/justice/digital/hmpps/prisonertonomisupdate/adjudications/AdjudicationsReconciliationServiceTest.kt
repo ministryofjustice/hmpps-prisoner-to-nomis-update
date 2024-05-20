@@ -594,7 +594,7 @@ internal fun aDPSAdjudication(chargeNumber: String = "4000001", prisonerNumber: 
   incidentDetails = IncidentDetailsDto(locationId = 1234, dateTimeOfIncident = "2023-01-01T10:00", dateTimeOfDiscovery = "2023-01-01T10:00", handoverDeadline = "2023-01-01T10:00"),
   isYouthOffender = false,
   incidentRole = IncidentRoleDto(),
-  offenceDetails = OffenceDto(offenceCode = 1, offenceRule = OffenceRuleDto("51A", paragraphDescription = "")),
+  offenceDetails = OffenceDto(offenceCode = 1, offenceRule = OffenceRuleDto("51A", paragraphDescription = ""), protectedCharacteristics = emptyList()),
   incidentStatement = IncidentStatementDto("Fight", completed = true),
   createdByUserId = "JANE",
   createdDateTime = "2023-01-01T10:00",
@@ -620,10 +620,11 @@ internal fun aDPSAdjudication(chargeNumber: String = "4000001", prisonerNumber: 
   createdOnBehalfOfOfficer = null,
   createdOnBehalfOfReason = null,
   linkedChargeNumbers = emptyList(),
+  canActionFromHistory = false,
 )
 
 internal fun adaPunishment(days: Int, startDate: LocalDate = LocalDate.now(), type: PunishmentDto.Type = ADDITIONAL_DAYS) =
-  PunishmentDto(type = type, schedule = PunishmentScheduleDto(days = days, startDate = startDate), canRemove = true)
+  PunishmentDto(type = type, schedule = PunishmentScheduleDto(days = days, startDate = startDate, measurement = PunishmentScheduleDto.Measurement.DAYS), canRemove = true, canEdit = false, rehabilitativeActivities = emptyList())
 
 internal fun nomisSummary(days: Int, effectiveDate: LocalDate = LocalDate.now(), adjudicationNumber: Long = 4000001): ADASummary = ADASummary(
   adjudicationNumber = adjudicationNumber,

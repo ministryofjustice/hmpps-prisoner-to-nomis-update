@@ -1034,6 +1034,7 @@ private fun Type.toNomisSanctionType(): HearingResultAwardRequest.SanctionType =
     Type.PROSPECTIVE_DAYS -> HearingResultAwardRequest.SanctionType.ADA
     Type.CAUTION -> HearingResultAwardRequest.SanctionType.CAUTION
     Type.DAMAGES_OWED -> HearingResultAwardRequest.SanctionType.OTHER
+    Type.PAYBACK -> HearingResultAwardRequest.SanctionType.PP
   }
 
 private fun HearingDto.toNomisUpdateHearing(): UpdateHearingRequest = UpdateHearingRequest(

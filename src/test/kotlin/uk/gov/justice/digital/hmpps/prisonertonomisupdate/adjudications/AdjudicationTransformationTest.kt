@@ -60,6 +60,7 @@ class AdjudicationTransformationTest {
             withOthersNomisCode = "51:25D",
           ),
           victimPrisonersNumber = "A1234AA",
+          protectedCharacteristics = emptyList(),
         ),
       ),
     )
@@ -80,6 +81,7 @@ class AdjudicationTransformationTest {
             paragraphDescription = "Commits any assault",
             nomisCode = null,
           ),
+          protectedCharacteristics = emptyList(),
         ),
       ),
     )
@@ -110,6 +112,7 @@ class AdjudicationTransformationTest {
             withOthersNomisCode = "51:25D",
           ),
           victimPrisonersNumber = "A1234AA",
+          protectedCharacteristics = emptyList(),
         ),
       ),
     )
@@ -140,6 +143,7 @@ class AdjudicationTransformationTest {
             withOthersNomisCode = null,
           ),
           victimPrisonersNumber = "A1234AA",
+          protectedCharacteristics = emptyList(),
         ),
       ),
     )
@@ -217,6 +221,7 @@ class AdjudicationTransformationTest {
             nomisCode = "51:1B",
           ),
           victimPrisonersNumber = "A1234AA",
+          protectedCharacteristics = emptyList(),
         ),
       ),
     )
@@ -238,6 +243,7 @@ class AdjudicationTransformationTest {
             nomisCode = "51:1B",
           ),
           victimPrisonersNumber = "A1234AA",
+          protectedCharacteristics = emptyList(),
         ),
       ),
     )
@@ -257,6 +263,7 @@ class AdjudicationTransformationTest {
             nomisCode = "51:1B",
           ),
           victimStaffUsername = "J.SMITH",
+          protectedCharacteristics = emptyList(),
         ),
       ),
     )
@@ -288,6 +295,7 @@ private fun dpsAdjudication() = ReportedAdjudicationResponse(
         withOthersNomisCode = "51:25D",
       ),
       victimPrisonersNumber = "A8349DY",
+      protectedCharacteristics = emptyList(),
     ),
     incidentStatement = IncidentStatementDto(
       statement = "A fight broke out and there was damage",
@@ -315,5 +323,6 @@ private fun dpsAdjudication() = ReportedAdjudicationResponse(
     overrideAgencyId = null,
     transferableActionsAllowed = null,
     linkedChargeNumbers = emptyList(),
+    canActionFromHistory = false,
   ),
 )
