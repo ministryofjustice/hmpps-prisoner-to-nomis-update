@@ -79,6 +79,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
                 "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
+                    "duration": 3,
                     "startDate": "2023-10-04",
                     "endDate": "2023-10-06",
                     "measurement": "DAYS"
@@ -90,6 +91,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
                 "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 12,
+                    "duration": 12,
                     "suspendedUntil": "2023-10-18",
                     "measurement": "DAYS"
                 }

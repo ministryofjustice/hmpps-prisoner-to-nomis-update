@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Ou
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeHistoryDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentDto.Type
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentScheduleDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
@@ -962,7 +963,7 @@ class AdjudicationsService(
     sanctionType = this.type.toNomisSanctionType(),
     sanctionStatus = this.toNomisSanctionStatus(),
     effectiveDate = this.schedule.startDate ?: this.schedule.suspendedUntil ?: LocalDate.now(),
-    sanctionDays = this.schedule.days,
+    sanctionDays = this.schedule.takeIf { it.measurement == PunishmentScheduleDto.Measurement.DAYS }?.duration ?: 0,
     compensationAmount = this.damagesOwedAmount?.toBigDecimal() ?: stoppagePercentage?.toBigDecimal(),
     commentText = this.toComment(),
     consecutiveCharge = this.consecutiveChargeNumber?.let { chargeNumber ->

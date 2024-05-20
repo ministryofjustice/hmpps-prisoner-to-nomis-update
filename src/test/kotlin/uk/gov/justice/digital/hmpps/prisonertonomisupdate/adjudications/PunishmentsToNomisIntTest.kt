@@ -64,6 +64,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
+                    "duration": 3,
                     "startDate": "2023-10-04",
                     "endDate": "2023-10-06",
                     "measurement": "DAYS"
@@ -75,8 +76,20 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 12,
+                    "duration": 12,
                     "suspendedUntil": "2023-10-18",
                     "measurement": "DAYS"
+                }
+            },
+            {
+                "id": 668,
+                "type": "PAYBACK",
+                "rehabilitativeActivities": [],
+                "schedule": {
+                    "days": 12,
+                    "duration": 12,
+                    "suspendedUntil": "2023-10-18",
+                    "measurement": "HOURS"
                 }
             }
         ]
@@ -86,7 +99,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
         nomisApi.stubAdjudicationAwardsCreate(
           ADJUDICATION_NUMBER,
           CHARGE_SEQ,
-          awardIds = listOf(12345L to 10, 12345L to 11),
+          awardIds = listOf(12345L to 10, 12345L to 11, 12345L to 12),
         )
         mappingServer.stubCreatePunishments()
         publishCreatePunishmentsDomainEvent()
@@ -111,7 +124,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
             assertThat(it["adjudicationNumber"]).isEqualTo(ADJUDICATION_NUMBER.toString())
             assertThat(it["chargeSequence"]).isEqualTo(CHARGE_SEQ.toString())
-            assertThat(it["punishmentsCount"]).isEqualTo("2")
+            assertThat(it["punishmentsCount"]).isEqualTo("3")
           },
           isNull(),
         )
@@ -125,7 +138,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will map DPS punishments to NOMIS awards`() {
+      fun `will map DPS punishments to NOMIS awards ignoring sanction lengths in hours`() {
         waitForCreatePunishmentProcessingToBeComplete()
 
         nomisApi.verify(
@@ -137,7 +150,11 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("awards[1].sanctionType", equalTo("EXTW")))
             .withRequestBody(matchingJsonPath("awards[1].sanctionStatus", equalTo("SUSPENDED")))
             .withRequestBody(matchingJsonPath("awards[1].effectiveDate", equalTo("2023-10-18")))
-            .withRequestBody(matchingJsonPath("awards[1].sanctionDays", equalTo("12"))),
+            .withRequestBody(matchingJsonPath("awards[1].sanctionDays", equalTo("12")))
+            .withRequestBody(matchingJsonPath("awards[2].sanctionType", equalTo("PP")))
+            .withRequestBody(matchingJsonPath("awards[2].sanctionStatus", equalTo("SUSPENDED")))
+            .withRequestBody(matchingJsonPath("awards[2].effectiveDate", equalTo("2023-10-18")))
+            .withRequestBody(matchingJsonPath("awards[2].sanctionDays", equalTo("0"))),
         )
       }
 
@@ -153,7 +170,10 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBody(matchingJsonPath("punishments[0].dpsPunishmentId", equalTo("634")))
               .withRequestBody(matchingJsonPath("punishments[1].nomisBookingId", equalTo("12345")))
               .withRequestBody(matchingJsonPath("punishments[1].nomisSanctionSequence", equalTo("11")))
-              .withRequestBody(matchingJsonPath("punishments[1].dpsPunishmentId", equalTo("667"))),
+              .withRequestBody(matchingJsonPath("punishments[1].dpsPunishmentId", equalTo("667")))
+              .withRequestBody(matchingJsonPath("punishments[2].nomisBookingId", equalTo("12345")))
+              .withRequestBody(matchingJsonPath("punishments[2].nomisSanctionSequence", equalTo("12")))
+              .withRequestBody(matchingJsonPath("punishments[2].dpsPunishmentId", equalTo("668"))),
           )
         }
       }
@@ -183,6 +203,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
+                    "duration": 3,
                     "startDate": "2023-10-04",
                     "endDate": "2023-10-06",
                     "measurement": "DAYS"
@@ -194,6 +215,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 2,
+                    "duration": 2,
                     "measurement": "DAYS"
                 },
                 "consecutiveChargeNumber": "$CONSECUTIVE_CHARGE_NUMBER",
@@ -564,6 +586,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
+                    "duration": 3,
                     "startDate": "2023-10-04",
                     "endDate": "2023-10-06",
                     "measurement": "DAYS"
@@ -575,6 +598,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 12,
+                    "duration": 12,
                     "suspendedUntil": "2023-10-18",
                     "measurement": "DAYS"
                 }
@@ -1291,6 +1315,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
+                    "duration": 3,
                     "startDate": "2023-10-04",
                     "endDate": "2023-10-06",
                     "measurement": "DAYS"
@@ -1302,6 +1327,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 12,
+                    "duration": 12,
                     "suspendedUntil": "2023-10-18",
                     "measurement": "DAYS"
                 }
@@ -1409,6 +1435,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
+                    "duration": 3,
                     "startDate": "2023-10-04",
                     "endDate": "2023-10-06",
                     "measurement": "DAYS"
@@ -1420,6 +1447,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 12,
+                    "duration": 12,
                     "suspendedUntil": "2023-10-18",
                     "measurement": "DAYS"
                 }
