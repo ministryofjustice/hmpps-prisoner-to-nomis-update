@@ -17,6 +17,7 @@ class AlertsDomainEventListener(
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
   private val alertsService: AlertsService,
+  private val alertsReferenceDataService: AlertsReferenceDataService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListener(
   service = alertsService,
@@ -43,6 +44,30 @@ class AlertsDomainEventListener(
 
       "prisoner-alerts.alert-deleted" ->
         alertsService.deleteAlert(message.fromJson())
+
+      "prisoner-alerts.alert-code-created" ->
+        alertsReferenceDataService.createAlertCode(message.fromJson())
+
+      "prisoner-alerts.alert-code-deactivated" ->
+        alertsReferenceDataService.deactivatingAlertCode(message.fromJson())
+
+      "prisoner-alerts.alert-code-reactivated" ->
+        alertsReferenceDataService.reactivatingAlertCode(message.fromJson())
+
+      "prisoner-alerts.alert-code-updated" ->
+        alertsReferenceDataService.updateAlertCode(message.fromJson())
+
+      "prisoner-alerts.alert-type-created" ->
+        alertsReferenceDataService.createAlertType(message.fromJson())
+
+      "prisoner-alerts.alert-type-deactivated" ->
+        alertsReferenceDataService.deactivatingAlertType(message.fromJson())
+
+      "prisoner-alerts.alert-type-reactivated" ->
+        alertsReferenceDataService.reactivatingAlertType(message.fromJson())
+
+      "prisoner-alerts.alert-type-updated" ->
+        alertsReferenceDataService.updateAlertType(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
