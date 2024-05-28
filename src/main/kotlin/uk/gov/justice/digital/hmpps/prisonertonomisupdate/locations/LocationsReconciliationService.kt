@@ -30,7 +30,7 @@ class LocationsReconciliationService(
   @Value("\${reports.locations.reconciliation.page-size}")
   private val pageSize: Long,
 ) {
-  private val invalidPrisons = listOf("ZZGHI", "UNKNWN", "TRN", "LT4", "ALI") // Albany defunct
+  private val invalidPrisons = listOf("ZZGHI", "UNKNWN", "TRN", "LT3", "LT4", "ALI") // Albany defunct
   private var nomisTotal = 0
   private var invalidPrisonsTotal = 0
 
@@ -233,10 +233,14 @@ class LocationsReconciliationService(
     if (nomis.userDescription != dps.localName) return "Local Name mismatch"
     if (nomis.comment != dps.comments) return "Comment mismatch"
     if (dps.residentialHousingType != null && dps.locationType == Location.LocationType.CELL) {
-      if (nomis.operationalCapacity != null && nomis.operationalCapacity > 0 && nomis.operationalCapacity != dps.capacity?.workingCapacity) return "Cell operational capacity mismatch"
-      if (nomis.capacity != null && nomis.capacity > 0 && nomis.capacity != dps.capacity?.maxCapacity) return "Cell max capacity mismatch"
-      if ((nomis.certified == true) != (dps.certification?.certified == true)) return "Cell certification mismatch"
-      if ((nomis.cnaCapacity ?: 0) != (dps.certification?.capacityOfCertifiedCell ?: 0)) return "Cell CNA capacity mismatch"
+      if (dps.residentialHousingType != Location.ResidentialHousingType.HOLDING_CELL) {
+        if (nomis.operationalCapacity != null && nomis.operationalCapacity > 0 && nomis.operationalCapacity != dps.capacity?.workingCapacity) return "Cell operational capacity mismatch"
+        if (nomis.capacity != null && nomis.capacity > 0 && nomis.capacity != dps.capacity?.maxCapacity) return "Cell max capacity mismatch"
+        if (nomis.cnaCapacity != null && nomis.cnaCapacity > 0) {
+          if ((nomis.certified == true) != (dps.certification?.certified == true)) return "Cell certification mismatch"
+          if (nomis.cnaCapacity != dps.certification?.capacityOfCertifiedCell) return "Cell CNA capacity mismatch"
+        }
+      }
       if (expectedDpsAttributesSize(nomis.profiles) != (dps.attributes?.size ?: 0)) return "Cell attributes mismatch"
     }
     if (dps.residentialHousingType == null && (nomis.usages?.size ?: 0) != (dps.usage?.size ?: 0)) return "Location usage mismatch"
@@ -250,42 +254,38 @@ class LocationsReconciliationService(
 
   fun historyDoesNotMatch(nomis: LocationResponse, dps: Location): Boolean {
     val filteredAmendmentResponses = filterAmendmentResponses(nomis.amendments)
-    if ((filteredAmendmentResponses?.size ?: 0) != (dps.changeHistory?.size ?: 0)) {
+    val filteredDpsHistoryResponses = dps.changeHistory?.filter { it.attribute != "Converted Cell Type" }
+    if ((filteredAmendmentResponses?.size ?: 0) != (filteredDpsHistoryResponses?.size ?: 0)) {
       return true
     }
-    val nomisListConverted = filteredAmendmentResponses!!.map { a ->
+    val nomisListConverted = filteredAmendmentResponses?.map { a ->
       ChangeHistory(toHistoryAttribute(a.columnName), a.amendedBy, a.amendDateTime, a.oldValue, a.newValue)
-    }
+    } ?: emptyList()
     val nomisSetSorted = nomisListConverted.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
-    val dpsSetSorted = dps.changeHistory!!.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
+    val dpsSetSorted = filteredDpsHistoryResponses?.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue } ?: emptyList()
 
     if (dpsSetSorted.size > nomisSetSorted.size) {
       return true
     }
-    nomisSetSorted.zip(dpsSetSorted).forEach {
-      val nomisItem = it.first
-      val dpsItem = it.second
-      if (nomisItem.attribute == dpsItem.attribute &&
-        nomisItem.amendedBy == dpsItem.amendedBy &&
-        nomisItem.amendedDate == dpsItem.amendedDate &&
-        nomisItem.oldValue == dpsItem.oldValue &&
-        nomisItem.newValue == dpsItem.newValue
-      ) {
-        // matches
-      } else {
-        return true
+
+    return nomisSetSorted.zip(dpsSetSorted)
+      .any { (nomisItem, dpsItem) ->
+        nomisItem.attribute != dpsItem.attribute ||
+          nomisItem.amendedBy != dpsItem.amendedBy ||
+          nomisItem.amendedDate != dpsItem.amendedDate ||
+          nomisItem.oldValue != dpsItem.oldValue ||
+          nomisItem.newValue != dpsItem.newValue
       }
-    }
-    return false
   }
 
   private fun reportHistory(nomisList: List<AmendmentResponse>?, dpsList: List<ChangeHistory>?): String {
-    val nomisListConverted = filterAmendmentResponses(nomisList)!!.map { nomis ->
+    val nomisListConverted = filterAmendmentResponses(nomisList)?.map { nomis ->
       ChangeHistory(toHistoryAttribute(nomis.columnName), nomis.amendedBy, nomis.amendDateTime, nomis.oldValue, nomis.newValue)
-    }
+    } ?: emptyList()
 
-    val onlyInDps = dpsList!! - nomisListConverted
-    val onlyInNomis = nomisListConverted - dpsList
+    val dpsListNonNull = dpsList ?: emptyList()
+    val onlyInDps = dpsListNonNull - nomisListConverted.toSet()
+    val onlyInNomis = nomisListConverted - dpsListNonNull.toSet()
 
     if (onlyInDps.isNotEmpty() || onlyInNomis.isNotEmpty()) {
       return """  Only in Dps: $onlyInDps
@@ -294,19 +294,15 @@ class LocationsReconciliationService(
     }
 
     val nomisSetSorted = nomisListConverted.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
-    val dpsSetSorted = dpsList.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
+    val dpsSetSorted = dpsListNonNull.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
 
-    nomisSetSorted.zip(dpsSetSorted).forEachIndexed { index, it ->
-      val nomisItem = it.first
-      val dpsItem = it.second
-      if (nomisItem.attribute == dpsItem.attribute &&
-        nomisItem.amendedBy == dpsItem.amendedBy &&
-        nomisItem.amendedDate == dpsItem.amendedDate &&
-        nomisItem.oldValue == dpsItem.oldValue &&
-        nomisItem.newValue == dpsItem.newValue
+    nomisSetSorted.zip(dpsSetSorted).forEachIndexed { index, (nomisItem, dpsItem) ->
+      if (nomisItem.attribute != dpsItem.attribute ||
+        nomisItem.amendedBy != dpsItem.amendedBy ||
+        nomisItem.amendedDate != dpsItem.amendedDate ||
+        nomisItem.oldValue != dpsItem.oldValue ||
+        nomisItem.newValue != dpsItem.newValue
       ) {
-        // matches
-      } else {
         return """Item at index $index doesn't match :
             | prev  ${dpsSetSorted.elementAtOrNull(index - 1)}
             | nomis $nomisItem

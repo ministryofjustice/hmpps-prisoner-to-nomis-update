@@ -27,35 +27,65 @@ hmpps.sqs:
       queueName: "visit-${random.uuid}"
       dlqName: "visit-dlq-${random.uuid}"
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"prison-visit.booked\", \"prison-visit.changed\", \"prison-visit.cancelled\"]}"
+      subscribeFilter: >-
+        { "eventType":[
+        "prison-visit.booked",
+        "prison-visit.changed",
+        "prison-visit.cancelled"]}
       dlqMaxReceiveCount: 1
       visibilityTimeout: 120
     incentive:
       queueName: "incentive-${random.uuid}"
       dlqName: "incentive-dlq-${random.uuid}"
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"incentives.iep-review.inserted\", \"incentives.level.changed\", \"incentives.levels.reordered\", \"incentives.prison-level.changed\"]}"
+      subscribeFilter: >-
+        { "eventType":[
+        "incentives.iep-review.inserted",
+        "incentives.level.changed",
+        "incentives.levels.reordered",
+        "incentives.prison-level.changed"]}
       dlqMaxReceiveCount: 2
       visibilityTimeout: 120
     activity:
       queueName: "activity-${random.uuid}"
       dlqName: "activity-dlq-${random.uuid}"
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"activities.activity-schedule.created\", \"activities.activity-schedule.amended\", \"activities.scheduled-instances.amended\", \"activities.scheduled-instance.amended\", \"activities.prisoner.allocated\", \"activities.prisoner.deallocated\", \"activities.prisoner.allocation-amended\", \"activities.prisoner.attendance-created\", \"activities.prisoner.attendance-amended\", \"activities.prisoner.attendance-expired\"]}"
+      subscribeFilter: >-
+        { "eventType":[
+        "activities.activity-schedule.created",
+        "activities.activity-schedule.amended",
+        "activities.scheduled-instance.amended",
+        "activities.prisoner.allocated",
+        "activities.prisoner.deallocated",
+        "activities.prisoner.allocation-amended",
+        "activities.prisoner.attendance-created",
+        "activities.prisoner.attendance-amended",
+        "activities.prisoner.attendance-expired"]}
       dlqMaxReceiveCount: 1
       visibilityTimeout: 120
     appointment:
       queueName: "appointment-${random.uuid}"
       dlqName: "appointment-dlq-${random.uuid}"
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"appointments.appointment-instance.created\", \"appointments.appointment-instance.updated\", \"appointments.appointment-instance.cancelled\", \"appointments.appointment-instance.uncancelled\", \"appointments.appointment-instance.deleted\"]}"
+      subscribeFilter: >-
+        { "eventType":[
+        "appointments.appointment-instance.created",
+        "appointments.appointment-instance.updated",
+        "appointments.appointment-instance.cancelled",
+        "appointments.appointment-instance.uncancelled",
+        "appointments.appointment-instance.deleted"]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
     nonassociation:
       queueName: "nonassociation-${random.uuid}"
       dlqName: "nonassociation-dlq-${random.uuid}"
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"non-associations.created\", \"non-associations.deleted\", \"non-associations.amended\", \"non-associations.closed\"]}"
+      subscribeFilter: >-
+        { "eventType":[
+        "non-associations.created",
+        "non-associations.deleted",
+        "non-associations.amended",
+        "non-associations.closed"]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
     location:
@@ -78,7 +108,11 @@ hmpps.sqs:
       queueName: "sentencing-${random.uuid}"
       dlqName: "sentencing-dlq-${random.uuid}"
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"release-date-adjustments.adjustment.inserted\", \"release-date-adjustments.adjustment.updated\", \"release-date-adjustments.adjustment.deleted\"]}"
+      subscribeFilter: >-
+        { "eventType":[
+        "release-date-adjustments.adjustment.inserted",
+        "release-date-adjustments.adjustment.updated",
+        "release-date-adjustments.adjustment.deleted"]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
     adjudication:
@@ -119,7 +153,11 @@ hmpps.sqs:
       queueName: "court-sentencing-${random.uuid}"
       dlqName: "court-sentencing-dlq-${random.uuid}"
       subscribeTopicId: domainevents
-      subscribeFilter: "{\"eventType\":[\"court-sentencing.court-case.created\", \"court-sentencing.court-appearance.created\", \"court-sentencing.court-appearance.updated\"]}"
+      subscribeFilter: >-
+        { "eventType":[
+        "court-sentencing.court-case.created",
+        "court-sentencing.court-appearance.created",
+        "court-sentencing.court-appearance.updated"]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
     alerts:
