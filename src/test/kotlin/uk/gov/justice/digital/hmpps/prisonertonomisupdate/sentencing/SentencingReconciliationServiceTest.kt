@@ -16,12 +16,12 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.KeyDateAdjustmentResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentenceAdjustmentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.model.AdjustmentDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.model.AdjustmentDto.AdjustmentType
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension.Companion.sentencingAdjustmentsApi
@@ -64,7 +64,7 @@ internal class SentencingReconciliationServiceTest {
       fun `will not report a mismatch`() = runTest {
         assertThat(
           service.checkBookingAdjustmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),
@@ -116,7 +116,7 @@ internal class SentencingReconciliationServiceTest {
       fun `will not report a mismatch`() = runTest {
         assertThat(
           service.checkBookingAdjustmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = ADJUSTMENT_BOOKING_ID,
               offenderNo = "offenderNo",
             ),
@@ -151,7 +151,7 @@ internal class SentencingReconciliationServiceTest {
       fun `will not report a mismatch`() = runTest {
         assertThat(
           service.checkBookingAdjustmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = ADJUSTMENT_BOOKING_ID,
               offenderNo = OFFENDER_NO,
             ),
@@ -186,7 +186,7 @@ internal class SentencingReconciliationServiceTest {
       fun `will not report a mismatch`() = runTest {
         assertThat(
           service.checkBookingAdjustmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = ADJUSTMENT_BOOKING_ID,
               offenderNo = OFFENDER_NO,
             ),
@@ -237,14 +237,14 @@ internal class SentencingReconciliationServiceTest {
       fun `will report a mismatch`() = runTest {
         assertThat(
           service.checkBookingAdjustmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = ADJUSTMENT_BOOKING_ID,
               offenderNo = OFFENDER_NO,
             ),
           ),
         ).isEqualTo(
           MismatchSentencingAdjustments(
-            prisonerId = ActivePrisonerId(
+            prisonerId = PrisonerIds(
               bookingId = ADJUSTMENT_BOOKING_ID,
               offenderNo = OFFENDER_NO,
             ),
@@ -315,14 +315,14 @@ internal class SentencingReconciliationServiceTest {
       fun `will report a mismatch`() = runTest {
         assertThat(
           service.checkBookingAdjustmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = ADJUSTMENT_BOOKING_ID,
               offenderNo = OFFENDER_NO,
             ),
           ),
         ).isEqualTo(
           MismatchSentencingAdjustments(
-            prisonerId = ActivePrisonerId(
+            prisonerId = PrisonerIds(
               bookingId = ADJUSTMENT_BOOKING_ID,
               offenderNo = OFFENDER_NO,
             ),
@@ -384,14 +384,14 @@ internal class SentencingReconciliationServiceTest {
       fun `will report a mismatch`() = runTest {
         assertThat(
           service.checkBookingAdjustmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = ADJUSTMENT_BOOKING_ID,
               offenderNo = OFFENDER_NO,
             ),
           ),
         ).isEqualTo(
           MismatchSentencingAdjustments(
-            prisonerId = ActivePrisonerId(
+            prisonerId = PrisonerIds(
               bookingId = ADJUSTMENT_BOOKING_ID,
               offenderNo = OFFENDER_NO,
             ),
