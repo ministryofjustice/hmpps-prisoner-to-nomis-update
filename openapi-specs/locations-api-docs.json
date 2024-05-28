@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-05-28.1447.e4dcb0f"
+    "version": "2024-05-28.1459.56d5540"
   },
   "servers": [
     {
@@ -2867,20 +2867,6 @@
               "TABLE"
             ]
           },
-          "residentialHousingType": {
-            "type": "string",
-            "description": "If residential location, its type",
-            "example": "NORMAL_ACCOMMODATION",
-            "enum": [
-              "NORMAL_ACCOMMODATION",
-              "HEALTHCARE",
-              "HOLDING_CELL",
-              "OTHER_USE",
-              "RECEPTION",
-              "SEGREGATION",
-              "SPECIALIST_CELL"
-            ]
-          },
           "localName": {
             "type": "string",
             "description": "Alternative description to display for location, (Not Cells)",
@@ -2906,99 +2892,6 @@
           },
           "certification": {
             "$ref": "#/components/schemas/Certification"
-          },
-          "attributes": {
-            "type": "array",
-            "description": "Location Attributes",
-            "items": {
-              "type": "string",
-              "description": "Location Attributes",
-              "enum": [
-                "ANTI_BARRICADE_DOOR",
-                "AUDITABLE_CELL_BELL",
-                "FIXED_BED",
-                "METAL_DOOR",
-                "MOVABLE_BED",
-                "PRIVACY_CURTAIN",
-                "PRIVACY_SCREEN",
-                "STANDARD_CELL_BELL",
-                "SEPARATE_TOILET",
-                "WOODEN_DOOR",
-                "CAT_A_CELL",
-                "DOUBLE_OCCUPANCY",
-                "E_LIST_CELL",
-                "GATED_CELL",
-                "LISTENER_CELL",
-                "LOCATE_FLAT",
-                "MULTIPLE_OCCUPANCY",
-                "NON_SMOKER_CELL",
-                "OBSERVATION_CELL",
-                "SAFE_CELL",
-                "SINGLE_OCCUPANCY",
-                "SPECIAL_CELL",
-                "WHEELCHAIR_ACCESS",
-                "UNCONVICTED_JUVENILES",
-                "SENTENCED_JUVENILES",
-                "UNCONVICTED_18_20",
-                "SENTENCED_18_20",
-                "UNCONVICTED_ADULTS",
-                "SENTENCED_ADULTS",
-                "VULNERABLE_PRISONER_UNIT",
-                "SPECIAL_UNIT",
-                "RESETTLEMENT_HOSTEL",
-                "HEALTHCARE_CENTRE",
-                "NATIONAL_RESOURCE_HOSPITAL",
-                "OTHER_SPECIFIED",
-                "REMAND_CENTRE",
-                "LOCAL_PRISON",
-                "CLOSED_PRISON",
-                "OPEN_TRAINING",
-                "HOSTEL",
-                "CLOSED_YOUNG_OFFENDER",
-                "OPEN_YOUNG_OFFENDER",
-                "REMAND_UNDER_18",
-                "SENTENCED_UNDER_18",
-                "ECL_COMPONENT",
-                "ADDITIONAL_SPECIAL_UNIT",
-                "SECOND_CLOSED_TRAINER",
-                "IMMIGRATION_DETAINEES",
-                "CELL",
-                "LANDING",
-                "WING",
-                "CAT_A",
-                "CAT_A_EX",
-                "CAT_A_HI",
-                "CAT_B",
-                "CAT_C",
-                "CAT_D",
-                "ELIGIBLE",
-                "PAROLE_GRANTED",
-                "INELIGIBLE",
-                "YOI_CLOSED",
-                "YOI_OPEN",
-                "YOI_RESTRICTED",
-                "YOI_SHORT_SENTENCE",
-                "YOI_LONG_TERM_CLOSED",
-                "UNCLASSIFIED",
-                "UNCATEGORISED_SENTENCED_MALE",
-                "LOW",
-                "MEDIUM",
-                "HIGH",
-                "NOT_APPLICABLE",
-                "PROV_A",
-                "PENDING",
-                "REF_REVIEW",
-                "REFUSED_NO_REVIEW",
-                "STANDARD",
-                "FEMALE_RESTRICTED",
-                "FEMALE_CLOSED",
-                "FEMALE_SEMI",
-                "FEMALE_OPEN",
-                "UN_SENTENCED",
-                "YES",
-                "NO"
-              ]
-            }
           },
           "usage": {
             "type": "array",
@@ -3071,12 +2964,6 @@
                 "IPP_LONG_TERM_SENTENCES"
               ]
             }
-          },
-          "orderWithinParentLocation": {
-            "type": "integer",
-            "description": "Sequence of locations within the current parent location",
-            "format": "int32",
-            "example": 1
           },
           "status": {
             "type": "string",
@@ -4232,11 +4119,11 @@
       },
       "CreateResidentialLocationRequest": {
         "required": [
+          "accommodationType",
           "code",
           "isCell",
           "locationType",
-          "prisonId",
-          "residentialHousingType"
+          "prisonId"
         ],
         "type": "object",
         "properties": {
@@ -4254,18 +4141,15 @@
             "description": "Code of the location",
             "example": "001"
           },
-          "residentialHousingType": {
+          "accommodationType": {
             "type": "string",
-            "description": "residential location type",
+            "description": "Accommodation Type",
             "example": "NORMAL_ACCOMMODATION",
             "enum": [
               "NORMAL_ACCOMMODATION",
-              "HEALTHCARE",
-              "HOLDING_CELL",
-              "OTHER_USE",
-              "RECEPTION",
-              "SEGREGATION",
-              "SPECIALIST_CELL"
+              "HEALTHCARE_INPATIENTS",
+              "CARE_AND_SEPARATION",
+              "OTHER_NON_RESIDENTIAL"
             ]
           },
           "locationType": {
@@ -4321,19 +4205,6 @@
             "description": "Alternative description to display for location",
             "example": "Wing A"
           },
-          "comments": {
-            "maxLength": 255,
-            "minLength": 0,
-            "type": "string",
-            "description": "Additional comments that can be made about this location",
-            "example": "Not to be used"
-          },
-          "orderWithinParentLocation": {
-            "type": "integer",
-            "description": "Sequence of locations within the current parent location",
-            "format": "int32",
-            "example": 1
-          },
           "parentId": {
             "type": "string",
             "description": "ID of parent location",
@@ -4343,112 +4214,10 @@
           "capacity": {
             "$ref": "#/components/schemas/Capacity"
           },
-          "certification": {
-            "$ref": "#/components/schemas/Certification"
-          },
-          "attributes": {
-            "uniqueItems": true,
-            "type": "array",
-            "description": "Location Attributes",
-            "items": {
-              "type": "string",
-              "description": "Location Attributes",
-              "enum": [
-                "ANTI_BARRICADE_DOOR",
-                "AUDITABLE_CELL_BELL",
-                "FIXED_BED",
-                "METAL_DOOR",
-                "MOVABLE_BED",
-                "PRIVACY_CURTAIN",
-                "PRIVACY_SCREEN",
-                "STANDARD_CELL_BELL",
-                "SEPARATE_TOILET",
-                "WOODEN_DOOR",
-                "CAT_A_CELL",
-                "DOUBLE_OCCUPANCY",
-                "E_LIST_CELL",
-                "GATED_CELL",
-                "LISTENER_CELL",
-                "LOCATE_FLAT",
-                "MULTIPLE_OCCUPANCY",
-                "NON_SMOKER_CELL",
-                "OBSERVATION_CELL",
-                "SAFE_CELL",
-                "SINGLE_OCCUPANCY",
-                "SPECIAL_CELL",
-                "WHEELCHAIR_ACCESS",
-                "UNCONVICTED_JUVENILES",
-                "SENTENCED_JUVENILES",
-                "UNCONVICTED_18_20",
-                "SENTENCED_18_20",
-                "UNCONVICTED_ADULTS",
-                "SENTENCED_ADULTS",
-                "VULNERABLE_PRISONER_UNIT",
-                "SPECIAL_UNIT",
-                "RESETTLEMENT_HOSTEL",
-                "HEALTHCARE_CENTRE",
-                "NATIONAL_RESOURCE_HOSPITAL",
-                "OTHER_SPECIFIED",
-                "REMAND_CENTRE",
-                "LOCAL_PRISON",
-                "CLOSED_PRISON",
-                "OPEN_TRAINING",
-                "HOSTEL",
-                "CLOSED_YOUNG_OFFENDER",
-                "OPEN_YOUNG_OFFENDER",
-                "REMAND_UNDER_18",
-                "SENTENCED_UNDER_18",
-                "ECL_COMPONENT",
-                "ADDITIONAL_SPECIAL_UNIT",
-                "SECOND_CLOSED_TRAINER",
-                "IMMIGRATION_DETAINEES",
-                "CELL",
-                "LANDING",
-                "WING",
-                "CAT_A",
-                "CAT_A_EX",
-                "CAT_A_HI",
-                "CAT_B",
-                "CAT_C",
-                "CAT_D",
-                "ELIGIBLE",
-                "PAROLE_GRANTED",
-                "INELIGIBLE",
-                "YOI_CLOSED",
-                "YOI_OPEN",
-                "YOI_RESTRICTED",
-                "YOI_SHORT_SENTENCE",
-                "YOI_LONG_TERM_CLOSED",
-                "UNCLASSIFIED",
-                "UNCATEGORISED_SENTENCED_MALE",
-                "LOW",
-                "MEDIUM",
-                "HIGH",
-                "NOT_APPLICABLE",
-                "PROV_A",
-                "PENDING",
-                "REF_REVIEW",
-                "REFUSED_NO_REVIEW",
-                "STANDARD",
-                "FEMALE_RESTRICTED",
-                "FEMALE_CLOSED",
-                "FEMALE_SEMI",
-                "FEMALE_OPEN",
-                "UN_SENTENCED",
-                "YES",
-                "NO"
-              ]
-            }
-          },
-          "accommodationType": {
-            "type": "string",
-            "description": "Accommodation Type",
-            "enum": [
-              "NORMAL_ACCOMMODATION",
-              "HEALTHCARE_INPATIENTS",
-              "CARE_AND_SEPARATION",
-              "OTHER_NON_RESIDENTIAL"
-            ]
+          "certified": {
+            "type": "boolean",
+            "description": "Certified status of the residential location",
+            "default": false
           },
           "isCell": {
             "type": "boolean"
@@ -4532,19 +4301,6 @@
             "description": "Alternative description to display for location",
             "example": "Adj Room"
           },
-          "comments": {
-            "maxLength": 255,
-            "minLength": 0,
-            "type": "string",
-            "description": "Additional comments that can be made about this location",
-            "example": "Not to be used"
-          },
-          "orderWithinParentLocation": {
-            "type": "integer",
-            "description": "Sequence of locations within the current parent location",
-            "format": "int32",
-            "example": 1
-          },
           "parentId": {
             "type": "string",
             "description": "ID of parent location",
@@ -4624,102 +4380,6 @@
             "format": "int32",
             "example": 1,
             "default": 1
-          },
-          "defaultAttributesOfCells": {
-            "uniqueItems": true,
-            "type": "array",
-            "description": "Default set of attributes",
-            "example": "SINGLE_OCCUPANCY",
-            "items": {
-              "type": "string",
-              "description": "Default set of attributes",
-              "example": "SINGLE_OCCUPANCY",
-              "enum": [
-                "ANTI_BARRICADE_DOOR",
-                "AUDITABLE_CELL_BELL",
-                "FIXED_BED",
-                "METAL_DOOR",
-                "MOVABLE_BED",
-                "PRIVACY_CURTAIN",
-                "PRIVACY_SCREEN",
-                "STANDARD_CELL_BELL",
-                "SEPARATE_TOILET",
-                "WOODEN_DOOR",
-                "CAT_A_CELL",
-                "DOUBLE_OCCUPANCY",
-                "E_LIST_CELL",
-                "GATED_CELL",
-                "LISTENER_CELL",
-                "LOCATE_FLAT",
-                "MULTIPLE_OCCUPANCY",
-                "NON_SMOKER_CELL",
-                "OBSERVATION_CELL",
-                "SAFE_CELL",
-                "SINGLE_OCCUPANCY",
-                "SPECIAL_CELL",
-                "WHEELCHAIR_ACCESS",
-                "UNCONVICTED_JUVENILES",
-                "SENTENCED_JUVENILES",
-                "UNCONVICTED_18_20",
-                "SENTENCED_18_20",
-                "UNCONVICTED_ADULTS",
-                "SENTENCED_ADULTS",
-                "VULNERABLE_PRISONER_UNIT",
-                "SPECIAL_UNIT",
-                "RESETTLEMENT_HOSTEL",
-                "HEALTHCARE_CENTRE",
-                "NATIONAL_RESOURCE_HOSPITAL",
-                "OTHER_SPECIFIED",
-                "REMAND_CENTRE",
-                "LOCAL_PRISON",
-                "CLOSED_PRISON",
-                "OPEN_TRAINING",
-                "HOSTEL",
-                "CLOSED_YOUNG_OFFENDER",
-                "OPEN_YOUNG_OFFENDER",
-                "REMAND_UNDER_18",
-                "SENTENCED_UNDER_18",
-                "ECL_COMPONENT",
-                "ADDITIONAL_SPECIAL_UNIT",
-                "SECOND_CLOSED_TRAINER",
-                "IMMIGRATION_DETAINEES",
-                "CELL",
-                "LANDING",
-                "WING",
-                "CAT_A",
-                "CAT_A_EX",
-                "CAT_A_HI",
-                "CAT_B",
-                "CAT_C",
-                "CAT_D",
-                "ELIGIBLE",
-                "PAROLE_GRANTED",
-                "INELIGIBLE",
-                "YOI_CLOSED",
-                "YOI_OPEN",
-                "YOI_RESTRICTED",
-                "YOI_SHORT_SENTENCE",
-                "YOI_LONG_TERM_CLOSED",
-                "UNCLASSIFIED",
-                "UNCATEGORISED_SENTENCED_MALE",
-                "LOW",
-                "MEDIUM",
-                "HIGH",
-                "NOT_APPLICABLE",
-                "PROV_A",
-                "PENDING",
-                "REF_REVIEW",
-                "REFUSED_NO_REVIEW",
-                "STANDARD",
-                "FEMALE_RESTRICTED",
-                "FEMALE_CLOSED",
-                "FEMALE_SEMI",
-                "FEMALE_OPEN",
-                "UN_SENTENCED",
-                "YES",
-                "NO"
-              ]
-            }
           }
         },
         "description": "Request to create a wing"
@@ -5090,10 +4750,10 @@
             "type": "integer",
             "format": "int32"
           },
-          "paged": {
+          "unpaged": {
             "type": "boolean"
           },
-          "unpaged": {
+          "paged": {
             "type": "boolean"
           }
         }

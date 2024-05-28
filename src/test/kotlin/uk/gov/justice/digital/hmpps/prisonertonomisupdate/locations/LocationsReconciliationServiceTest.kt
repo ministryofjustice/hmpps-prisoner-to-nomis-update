@@ -9,7 +9,7 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Capacity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Certification
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.ChangeHistory
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.NonResidentialUsageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AmendmentResponse
@@ -211,18 +211,16 @@ class LocationsReconciliationServiceTest {
     ),
   )
 
-  private fun dpsResponse(id: String, comment: String? = null) = Location(
+  private fun dpsResponse(id: String, comment: String? = null) = LegacyLocation(
     id = UUID.fromString(id),
     prisonId = "MDI",
     code = "3",
     pathHierarchy = "B-3",
-    locationType = Location.LocationType.LANDING,
+    locationType = LegacyLocation.LocationType.LANDING,
     active = true,
     orderWithinParentLocation = 4,
-    topLevelId = UUID.fromString(PARENT_DPS_LOCATION_ID),
     key = DPS_KEY,
-    isResidential = true,
-    residentialHousingType = Location.ResidentialHousingType.NORMAL_ACCOMMODATION,
+    residentialHousingType = LegacyLocation.ResidentialHousingType.NORMAL_ACCOMMODATION,
     localName = "Wing C, landing 3",
     comments = comment,
     capacity = Capacity(
@@ -234,8 +232,8 @@ class LocationsReconciliationServiceTest {
       capacityOfCertifiedCell = 13,
     ),
     attributes = listOf(
-      Location.Attributes.CAT_C,
-      Location.Attributes.CAT_D,
+      LegacyLocation.Attributes.CAT_C,
+      LegacyLocation.Attributes.CAT_D,
     ),
     usage = listOf(
       NonResidentialUsageDto(
@@ -257,8 +255,7 @@ class LocationsReconciliationServiceTest {
     //    deactivatedReason = ,
     //    reactivatedDate = ,
     parentId = UUID.fromString(PARENT_DPS_LOCATION_ID),
-    permanentlyInactive = false,
-    deactivatedByParent = false,
-    status = Location.Status.ACTIVE,
+    lastModifiedBy = "me",
+    lastModifiedDate = "2024-05-25",
   )
 }

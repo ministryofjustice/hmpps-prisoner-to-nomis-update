@@ -141,7 +141,9 @@ class LocationsResourceIntTest : IntegrationTestBase() {
     "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",
     "key": "MDI-A-1-001",
     "status": "ACTIVE",
-    "isResidential": true
+    "isResidential": true,
+    "lastModifiedBy": "me",
+    "lastModifiedDate": "2024-05-25"
   }
   """.trimIndent()
 
@@ -164,6 +166,10 @@ class LocationsResourceIntTest : IntegrationTestBase() {
       locationsApi.stubGetLocationsPage(1, 10, locationsDpsPagedResponse(37, 10, 10, 1))
       locationsApi.stubGetLocationsPage(2, 10, locationsDpsPagedResponse(37, 10, 10, 2))
       locationsApi.stubGetLocationsPage(3, 10, locationsDpsPagedResponse(37, 7, 10, 3))
+
+      locationsApi.stubGetLocation(generateUUID(35), true, locationDpsJson("035", generateUUID(35)))
+      locationsApi.stubGetLocation(generateUUID(36), true, locationDpsJson("036", generateUUID(36)))
+      locationsApi.stubGetLocation(generateUUID(37), true, locationDpsJson("037", generateUUID(37)))
 
       (1..numberOfLocations).forEach {
         val nomisId = it.toLong()
@@ -249,15 +255,15 @@ class LocationsResourceIntTest : IntegrationTestBase() {
           )
           assertThat(it).containsEntry(
             "null,${generateUUID(35)}",
-            "nomis=null, dps=LocationReportDetail(code=001, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
+            "nomis=null, dps=LocationReportDetail(code=035, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
           )
           assertThat(it).containsEntry(
             "null,${generateUUID(36)}",
-            "nomis=null, dps=LocationReportDetail(code=001, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
+            "nomis=null, dps=LocationReportDetail(code=036, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
           )
           assertThat(it).containsEntry(
             "null,${generateUUID(37)}",
-            "nomis=null, dps=LocationReportDetail(code=001, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
+            "nomis=null, dps=LocationReportDetail(code=037, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
           )
         },
         isNull(),
@@ -314,21 +320,21 @@ class LocationsResourceIntTest : IntegrationTestBase() {
         assertThat(this).doesNotContainKey("nomis")
         assertThat(this).containsEntry(
           "dps",
-          "LocationReportDetail(code=001, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
+          "LocationReportDetail(code=035, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
         )
       }
       with(telemetryCaptor.allValues[4]) {
         assertThat(this).containsEntry("dpsId", "de91dfa7-821f-4552-a427-111111000036")
         assertThat(this).containsEntry(
           "dps",
-          "LocationReportDetail(code=001, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
+          "LocationReportDetail(code=036, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
         )
       }
       with(telemetryCaptor.allValues[5]) {
         assertThat(this).containsEntry("dpsId", "de91dfa7-821f-4552-a427-111111000037")
         assertThat(this).containsEntry(
           "dps",
-          "LocationReportDetail(code=001, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
+          "LocationReportDetail(code=037, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
         )
       }
     }

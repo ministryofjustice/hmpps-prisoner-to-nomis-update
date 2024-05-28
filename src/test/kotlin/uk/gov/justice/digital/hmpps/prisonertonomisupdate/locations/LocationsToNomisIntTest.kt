@@ -65,7 +65,9 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       "parentId": "$PARENT_ID",
       "key": "MDI-A-1-001",
       "status": "ACTIVE",
-      "isResidential": true
+      "isResidential": true,
+      "lastModifiedBy": "me",
+      "lastModifiedDate": "2024-05-25"
     }
   """.trimIndent()
 
@@ -103,7 +105,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will callback back to location service to get more details`() {
         waitForCreateProcessingToBeComplete()
 
-        locationsApi.verify(getRequestedFor(urlEqualTo("/locations/$DPS_ID?includeHistory=false")))
+        locationsApi.verify(getRequestedFor(urlEqualTo("/sync/id/$DPS_ID?includeHistory=false")))
       }
 
       @Test
@@ -288,7 +290,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
         publishLocationDomainEvent("location.inside.prison.created")
 
-        await untilCallTo { locationsApi.getCountFor("/locations/$DPS_ID?includeHistory=false") } matches { it == 1 }
+        await untilCallTo { locationsApi.getCountFor("/sync/id/$DPS_ID?includeHistory=false") } matches { it == 1 }
         await untilCallTo { nomisApi.postCountFor("/locations") } matches { it == 1 }
       }
 
@@ -350,7 +352,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to location service to get more details`() {
         await untilAsserted {
-          locationsApi.verify(getRequestedFor(urlEqualTo("/locations/$DPS_ID?includeHistory=false")))
+          locationsApi.verify(getRequestedFor(urlEqualTo("/sync/id/$DPS_ID?includeHistory=false")))
         }
       }
 
@@ -403,7 +405,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to location service twice to get more details`() {
           await untilAsserted {
-            locationsApi.verify(2, getRequestedFor(urlEqualTo("/locations/$DPS_ID?includeHistory=false")))
+            locationsApi.verify(2, getRequestedFor(urlEqualTo("/sync/id/$DPS_ID?includeHistory=false")))
             verify(telemetryClient).trackEvent(Mockito.eq("location-amend-success"), any(), isNull())
           }
         }
@@ -433,7 +435,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will callback back to location service 3 times before given up`() {
           await untilAsserted {
-            locationsApi.verify(3, getRequestedFor(urlEqualTo("/locations/$DPS_ID?includeHistory=false")))
+            locationsApi.verify(3, getRequestedFor(urlEqualTo("/sync/id/$DPS_ID?includeHistory=false")))
           }
         }
 
@@ -478,7 +480,9 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       "isResidential": true,
       "deactivatedDate": "2024-02-01",
       "deactivatedReason": "MOTHBALLED",
-      "proposedReactivationDate": "2024-02-14"
+      "proposedReactivationDate": "2024-02-14",
+      "lastModifiedBy": "me",
+      "lastModifiedDate": "2024-05-25"
     }
     """.trimIndent()
 

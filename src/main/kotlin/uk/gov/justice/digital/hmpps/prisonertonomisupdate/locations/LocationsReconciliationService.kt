@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.ChangeHistory
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AmendmentResponse
@@ -90,23 +91,24 @@ class LocationsReconciliationService(
           allDpsIdsInNomis.contains((it.id.toString()))
         }
         .map { dpsRecord ->
+          val legacyRecord = locationsApiService.getLocation(dpsRecord.id.toString(), true)
           val mismatch = MismatchLocation(
             dpsId = dpsRecord.id.toString(),
             dpsLocation =
             LocationReportDetail(
-              dpsRecord.code,
+              legacyRecord.code,
               "${dpsRecord.prisonId}-${dpsRecord.pathHierarchy}",
-              dpsRecord.residentialHousingType?.name,
-              dpsRecord.localName,
-              dpsRecord.comments,
-              dpsRecord.capacity?.workingCapacity,
-              dpsRecord.capacity?.maxCapacity,
-              dpsRecord.certification?.certified,
-              dpsRecord.certification?.capacityOfCertifiedCell,
-              dpsRecord.active,
-              dpsRecord.attributes?.size,
-              dpsRecord.usage?.size,
-              dpsRecord.changeHistory?.size,
+              legacyRecord.residentialHousingType?.name,
+              legacyRecord.localName,
+              legacyRecord.comments,
+              legacyRecord.capacity?.workingCapacity,
+              legacyRecord.capacity?.maxCapacity,
+              legacyRecord.certification?.certified,
+              legacyRecord.certification?.capacityOfCertifiedCell,
+              legacyRecord.active,
+              legacyRecord.attributes?.size,
+              legacyRecord.usage?.size,
+              legacyRecord.changeHistory?.size,
             ),
           )
           log.info("Location Mismatch found extra DPS location $dpsRecord")
@@ -222,7 +224,7 @@ class LocationsReconciliationService(
 
   internal fun doesNotMatch(
     nomis: LocationResponse,
-    dps: Location,
+    dps: LegacyLocation,
   ): String? {
     if (nomis.locationCode != dps.code) return "Location code mismatch"
     if (nomis.prisonId != dps.prisonId) return "Prison id mismatch"
@@ -232,8 +234,8 @@ class LocationsReconciliationService(
     if ((nomis.unitType == null) != (dps.residentialHousingType == null)) return "Housing type mismatch"
     if (nomis.userDescription != dps.localName) return "Local Name mismatch"
     if (nomis.comment != dps.comments) return "Comment mismatch"
-    if (dps.residentialHousingType != null && dps.locationType == Location.LocationType.CELL) {
-      if (dps.residentialHousingType != Location.ResidentialHousingType.HOLDING_CELL) {
+    if (dps.residentialHousingType != null && dps.locationType == LegacyLocation.LocationType.CELL) {
+      if (dps.residentialHousingType != LegacyLocation.ResidentialHousingType.HOLDING_CELL) {
         if (nomis.operationalCapacity != null && nomis.operationalCapacity > 0 && nomis.operationalCapacity != dps.capacity?.workingCapacity) return "Cell operational capacity mismatch"
         if (nomis.capacity != null && nomis.capacity > 0 && nomis.capacity != dps.capacity?.maxCapacity) return "Cell max capacity mismatch"
         if (nomis.cnaCapacity != null && nomis.cnaCapacity > 0) {
@@ -252,7 +254,7 @@ class LocationsReconciliationService(
     return null
   }
 
-  fun historyDoesNotMatch(nomis: LocationResponse, dps: Location): Boolean {
+  fun historyDoesNotMatch(nomis: LocationResponse, dps: LegacyLocation): Boolean {
     val filteredAmendmentResponses = filterAmendmentResponses(nomis.amendments)
     val filteredDpsHistoryResponses = dps.changeHistory?.filter { it.attribute != "Converted Cell Type" }
     if ((filteredAmendmentResponses?.size ?: 0) != (filteredDpsHistoryResponses?.size ?: 0)) {
