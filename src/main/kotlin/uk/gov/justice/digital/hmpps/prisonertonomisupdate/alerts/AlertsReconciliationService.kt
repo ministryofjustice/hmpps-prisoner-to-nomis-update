@@ -10,12 +10,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AlertResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
-import java.time.LocalDate
 
 @Service
 class AlertsReconciliationService(
@@ -55,25 +53,13 @@ class AlertsReconciliationService(
       .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
   suspend fun checkActiveAlertsMatch(prisonerId: PrisonerIds): MismatchAlerts? = runCatching {
-    val nomisActiveAlerts = doApiCallWithRetries { nomisAlertsApiService.getAlertsForReconciliation(prisonerId.offenderNo) }.let { it.latestBookingAlerts + it.previousBookingsAlerts }
-    val nomisAlerts = nomisActiveAlerts.map { it.alertCode.code }.toSortedSet()
-    val nomisNotExpiredAlerts = nomisActiveAlerts.filterNot { it.shouldBeInactive() }.map { it.alertCode.code }.toSortedSet()
-    val expiredActiveNomisAlerts = nomisAlerts - nomisNotExpiredAlerts
-    val dpsAlerts = doApiCallWithRetries { dpsAlertsApiService.getActiveAlertsForPrisoner(prisonerId.offenderNo) }.map { it.alertCode.code }.toSortedSet()
+    val nomisAlerts = doApiCallWithRetries { nomisAlertsApiService.getAlertsForReconciliation(prisonerId.offenderNo) }.let { it.latestBookingAlerts + it.previousBookingsAlerts }
+      .map { it.alertCode.code }.toSortedSet()
+    val dpsAlerts = doApiCallWithRetries { dpsAlertsApiService.getActiveAlertsForPrisoner(prisonerId.offenderNo) }
+      .map { it.alertCode.code }.toSortedSet()
 
-    if (expiredActiveNomisAlerts.isNotEmpty()) {
-      telemetryClient.trackEvent(
-        "alerts-reports-reconciliation-incorrectly-active",
-        mapOf(
-          "offenderNo" to prisonerId.offenderNo,
-          "bookingId" to prisonerId.bookingId.toString(),
-          "incorrectly-active" to (expiredActiveNomisAlerts.joinToString()),
-        ),
-      )
-    }
-
-    val missingFromNomis = dpsAlerts - nomisNotExpiredAlerts
-    val missingFromDps = nomisNotExpiredAlerts - dpsAlerts
+    val missingFromNomis = dpsAlerts - nomisAlerts
+    val missingFromDps = nomisAlerts - dpsAlerts
     return if (missingFromNomis.isNotEmpty() || missingFromDps.isNotEmpty()) {
       MismatchAlerts(offenderNo = prisonerId.offenderNo, missingFromDps = missingFromDps, missingFromNomis = missingFromNomis).also { mismatch ->
         log.info("Alerts Mismatch found  $mismatch")
@@ -101,10 +87,6 @@ class AlertsReconciliationService(
     )
   }.getOrNull()
 }
-
-private fun AlertResponse.shouldBeInactive(): Boolean = this.hasNotStarted() || this.hasExpired()
-private fun AlertResponse.hasNotStarted(): Boolean = this.date.isAfter(LocalDate.now())
-private fun AlertResponse.hasExpired(): Boolean = this.expiryDate != null && this.expiryDate.isBefore(LocalDate.now())
 
 data class MismatchAlerts(
   val offenderNo: String,
