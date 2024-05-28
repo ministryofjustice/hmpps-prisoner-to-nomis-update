@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.model.AdjustmentDto.AdjustmentType
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
@@ -55,7 +55,7 @@ class SentencingReconciliationService(
       .getOrElse { emptyList() }
       .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
-  suspend fun checkBookingAdjustmentsMatch(prisonerId: ActivePrisonerId): MismatchSentencingAdjustments? = runCatching {
+  suspend fun checkBookingAdjustmentsMatch(prisonerId: PrisonerIds): MismatchSentencingAdjustments? = runCatching {
     val (nomisAdjustments, dpsAdjustments) = withContext(Dispatchers.Unconfined) {
       async { doApiCallWithRetries { nomisApiService.getAdjustments(prisonerId.bookingId) } } to
         async {
@@ -124,7 +124,7 @@ class SentencingReconciliationService(
 }
 
 data class MismatchSentencingAdjustments(
-  val prisonerId: ActivePrisonerId,
+  val prisonerId: PrisonerIds,
   val dpsCounts: AdjustmentCounts,
   val nomisCounts: AdjustmentCounts,
 )

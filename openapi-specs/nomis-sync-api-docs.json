@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-05-20.7684.d87648f"
+    "version": "2024-05-28.7822.24296ec"
   },
   "servers": [
     {
@@ -15,7 +15,7 @@
       "description": "Development"
     },
     {
-      "url": "https://nomis-prsner-pp.aks-live-1.studio-hosting.service.justice.gov.uk",
+      "url": "https://nomis-prisoner-api-preprod.prison.service.justice.gov.uk",
       "description": "PreProd"
     },
     {
@@ -6640,7 +6640,112 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "$ref": "#/components/schemas/PagePrisonerIds"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/prisoners/ids/all": {
+      "get": {
+        "tags": [
+          "prisoners-resource"
+        ],
+        "summary": "Gets the identifier for all prisoners.",
+        "description": "Requires role SYNCHRONISATION_REPORTING.",
+        "operationId": "getAllPrisoners",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "paged list of prisoner ids",
+            "content": {
+              "application/json": {
+                "schema": {
                   "$ref": "#/components/schemas/PagePrisonerId"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING or ROLE_NOMIS_ALERTS not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/ids/active": {
+      "get": {
+        "tags": [
+          "prisoners-resource"
+        ],
+        "summary": "Gets the identifiers for all active prisoners",
+        "description": "Requires role SYNCHRONISATION_REPORTING.",
+        "operationId": "getActivePrisonerIdentifiers",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "paged list of prisoner ids",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagePrisonerIds"
                 }
               }
             }
@@ -7549,6 +7654,107 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/incidents/reconciliation/agencyLocations": {
+      "get": {
+        "tags": [
+          "incident-resource"
+        ],
+        "summary": "Retrieve a list of all agency locations that have raised incidents)",
+        "description": "Retrieve a list of all agency locations that have raised incidents, including prisons and PECS. Requires authorised access",
+        "operationId": "getIncidentLocations",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IncidentAgencyLocationId"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/incidents/reconciliation/agencyLocation/{agencyLocationId}": {
+      "get": {
+        "tags": [
+          "incident-resource"
+        ],
+        "summary": "Gets incident counts",
+        "description": "Retrieves open and closed incident counts for a prison.",
+        "operationId": "getIncidentCountsForReconciliation",
+        "parameters": [
+          {
+            "name": "agencyLocationId",
+            "in": "path",
+            "description": "Agency Location Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Agency Location Id",
+              "example": "LEI"
+            },
+            "example": "LEI"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reconciliation data returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentsReconciliationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_INCIDENTS",
             "content": {
               "application/json": {
                 "schema": {
@@ -14954,6 +15160,76 @@
         },
         "description": "The list of unique alerts held against a prisoner"
       },
+      "PagePrisonerIds": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrisonerIds"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SortObject"
+            }
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PrisonerIds": {
+        "required": [
+          "bookingId",
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "Latest booking id",
+            "format": "int64",
+            "example": 12345
+          },
+          "offenderNo": {
+            "type": "string",
+            "description": "The NOMIS reference AKA prisoner number",
+            "example": "A1234AA"
+          }
+        },
+        "description": "Prisoner identifiers"
+      },
       "PagePrisonerId": {
         "type": "object",
         "properties": {
@@ -15005,27 +15281,14 @@
       },
       "PrisonerId": {
         "required": [
-          "bookingId",
-          "offenderNo",
-          "status"
+          "offenderNo"
         ],
         "type": "object",
         "properties": {
-          "bookingId": {
-            "type": "integer",
-            "description": "Latest booking id",
-            "format": "int64",
-            "example": 12345
-          },
           "offenderNo": {
             "type": "string",
             "description": "The NOMIS reference AKA prisoner number",
             "example": "A1234AA"
-          },
-          "status": {
-            "type": "string",
-            "description": "The prisoner's current status",
-            "example": "ACTIVE IN"
           }
         },
         "description": "Prisoner identifier"
@@ -15987,9 +16250,9 @@
           "history",
           "incidentDateTime",
           "incidentId",
+          "location",
           "lockedResponse",
           "offenderParties",
-          "prison",
           "questionnaireId",
           "questions",
           "reportedDateTime",
@@ -16019,7 +16282,7 @@
             "type": "string",
             "description": "The incident details"
           },
-          "prison": {
+          "location": {
             "$ref": "#/components/schemas/CodeDescription"
           },
           "status": {
@@ -16256,7 +16519,7 @@
           "createDateTime",
           "createdBy",
           "date",
-          "prisonId",
+          "locationId",
           "staff"
         ],
         "type": "object",
@@ -16273,7 +16536,7 @@
           "staff": {
             "$ref": "#/components/schemas/Staff"
           },
-          "prisonId": {
+          "locationId": {
             "type": "string",
             "description": "The reporting location of the staff"
           },
@@ -16399,6 +16662,60 @@
           }
         },
         "description": "Staff involved in the incident"
+      },
+      "IncidentAgencyLocationId": {
+        "required": [
+          "locationId"
+        ],
+        "type": "object",
+        "properties": {
+          "locationId": {
+            "type": "string",
+            "description": "The agency location id",
+            "example": "BXI"
+          }
+        },
+        "description": "Incident Agency Location Id"
+      },
+      "IncidentsCount": {
+        "required": [
+          "closedIncidents",
+          "openIncidents"
+        ],
+        "type": "object",
+        "properties": {
+          "openIncidents": {
+            "type": "integer",
+            "description": "A count for the number of open incidents i.e. all incidents that are not closed or duplicates",
+            "format": "int64",
+            "example": 4
+          },
+          "closedIncidents": {
+            "type": "integer",
+            "description": "A count for the number of closed or duplicate incidents",
+            "format": "int64",
+            "example": 2
+          }
+        },
+        "description": "A count for incidents at an agency location"
+      },
+      "IncidentsReconciliationResponse": {
+        "required": [
+          "incidentCount",
+          "locationId"
+        ],
+        "type": "object",
+        "properties": {
+          "locationId": {
+            "type": "string",
+            "description": "The agency location we checked the incidents for",
+            "example": "BXI"
+          },
+          "incidentCount": {
+            "$ref": "#/components/schemas/IncidentsCount"
+          }
+        },
+        "description": "Incidents reconciliation count response"
       },
       "IncidentIdResponse": {
         "required": [

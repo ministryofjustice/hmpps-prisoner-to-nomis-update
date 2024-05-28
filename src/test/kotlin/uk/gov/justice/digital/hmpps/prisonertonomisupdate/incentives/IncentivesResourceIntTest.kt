@@ -68,16 +68,14 @@ class IncentivesResourceIntTest : IntegrationTestBase() {
 
       awaitReportFinished()
       nomisApi.verify(
-        WireMock.getRequestedFor(urlPathEqualTo("/prisoners/ids"))
-          .withQueryParam("size", WireMock.equalTo("1"))
-          .withQueryParam("active", WireMock.equalTo("true")),
+        WireMock.getRequestedFor(urlPathEqualTo("/prisoners/ids/active"))
+          .withQueryParam("size", WireMock.equalTo("1")),
       )
       nomisApi.verify(
         // 34 prisoners will be spread over 4 pages of 10 prisoners each
         4,
-        WireMock.getRequestedFor(urlPathEqualTo("/prisoners/ids"))
-          .withQueryParam("size", WireMock.equalTo("10"))
-          .withQueryParam("active", WireMock.equalTo("true")),
+        WireMock.getRequestedFor(urlPathEqualTo("/prisoners/ids/active"))
+          .withQueryParam("size", WireMock.equalTo("10")),
       )
     }
 

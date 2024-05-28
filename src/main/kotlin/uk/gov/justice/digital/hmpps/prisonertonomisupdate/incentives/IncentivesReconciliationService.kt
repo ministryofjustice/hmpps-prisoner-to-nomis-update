@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
@@ -51,7 +51,7 @@ class IncentivesReconciliationService(
       .getOrElse { emptyList() }
       .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
-  private suspend fun checkBookingIncentiveMatch(prisonerId: ActivePrisonerId): MismatchIncentiveLevel? = runCatching {
+  private suspend fun checkBookingIncentiveMatch(prisonerId: PrisonerIds): MismatchIncentiveLevel? = runCatching {
     // log.debug("Checking booking: ${prisonerId.bookingId}")
     val (nomisIncentiveLevel, dpsIncentiveLevel) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getCurrentIncentive(prisonerId.bookingId) } to
@@ -86,4 +86,4 @@ class IncentivesReconciliationService(
   }.getOrNull()
 }
 
-data class MismatchIncentiveLevel(val prisonerId: ActivePrisonerId, val nomisIncentiveLevel: String?, val dpsIncentiveLevel: String?)
+data class MismatchIncentiveLevel(val prisonerId: PrisonerIds, val nomisIncentiveLevel: String?, val dpsIncentiveLevel: String?)

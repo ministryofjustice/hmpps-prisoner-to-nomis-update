@@ -34,7 +34,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ADASum
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension.Companion.adjudicationsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
@@ -78,7 +78,7 @@ internal class AdjudicationsReconciliationServiceTest {
       fun `will not report a mismatch`() = runTest {
         assertThat(
           service.checkADAPunishmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),
@@ -106,7 +106,7 @@ internal class AdjudicationsReconciliationServiceTest {
       fun `will not report a mismatch`() = runTest {
         assertThat(
           service.checkADAPunishmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),
@@ -141,7 +141,7 @@ internal class AdjudicationsReconciliationServiceTest {
       fun `will not report a mismatch`() = runTest {
         assertThat(
           service.checkADAPunishmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),
@@ -180,7 +180,7 @@ internal class AdjudicationsReconciliationServiceTest {
       fun `will not report a mismatch ignoring the ADA dates`() = runTest {
         assertThat(
           service.checkADAPunishmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),
@@ -208,7 +208,7 @@ internal class AdjudicationsReconciliationServiceTest {
       fun `will not report a mismatch`() = runTest {
         assertThat(
           service.checkADAPunishmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),
@@ -239,7 +239,7 @@ internal class AdjudicationsReconciliationServiceTest {
       fun `will not report a mismatch`() = runTest {
         assertThat(
           service.checkADAPunishmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),
@@ -273,7 +273,7 @@ internal class AdjudicationsReconciliationServiceTest {
         @Test
         fun `will retrieve merges since the NOMIS migration`() = runTest {
           service.checkADAPunishmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),
@@ -284,7 +284,7 @@ internal class AdjudicationsReconciliationServiceTest {
         @Test
         fun `will report a mismatch`() = runTest {
           val mismatch = service.checkADAPunishmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),
@@ -313,7 +313,7 @@ internal class AdjudicationsReconciliationServiceTest {
         @Test
         fun `will report a mismatch`() = runTest {
           val mismatch = service.checkADAPunishmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),
@@ -362,7 +362,7 @@ internal class AdjudicationsReconciliationServiceTest {
         @Test
         fun `will report a mismatch`() = runTest {
           val mismatch = service.checkADAPunishmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),
@@ -394,7 +394,7 @@ internal class AdjudicationsReconciliationServiceTest {
         @Test
         fun `will not report a mismatch assume it is due to the merge`() = runTest {
           val mismatch = service.checkADAPunishmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),
@@ -405,7 +405,7 @@ internal class AdjudicationsReconciliationServiceTest {
         @Test
         fun `will track telemetry with mismatch resolved`() = runTest {
           service.checkADAPunishmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),
@@ -440,7 +440,7 @@ internal class AdjudicationsReconciliationServiceTest {
         @Test
         fun `will report a mismatch even though there has been a merge`() = runTest {
           val mismatch = service.checkADAPunishmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),
@@ -451,7 +451,7 @@ internal class AdjudicationsReconciliationServiceTest {
         @Test
         fun `will track telemetry with mismatch not resolved`() = runTest {
           service.checkADAPunishmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),
@@ -502,7 +502,7 @@ internal class AdjudicationsReconciliationServiceTest {
         @Test
         fun `will report a mismatch`() = runTest {
           val mismatch = service.checkADAPunishmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),
@@ -529,7 +529,7 @@ internal class AdjudicationsReconciliationServiceTest {
         @Test
         fun `will report a mismatch`() = runTest {
           val mismatch = service.checkADAPunishmentsMatch(
-            ActivePrisonerId(
+            PrisonerIds(
               bookingId = 123456L,
               offenderNo = "A1234AA",
             ),

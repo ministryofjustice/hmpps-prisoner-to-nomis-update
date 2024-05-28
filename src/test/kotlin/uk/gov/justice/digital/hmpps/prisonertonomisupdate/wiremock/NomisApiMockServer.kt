@@ -21,8 +21,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
 import java.time.LocalDate
 
 class NomisApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
@@ -834,7 +834,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetActivePrisonersInitialCount(totalElements: Long) {
     stubFor(
       get(
-        urlPathEqualTo("/prisoners/ids"),
+        urlPathEqualTo("/prisoners/ids/active"),
       )
         .withQueryParam("page", WireMock.equalTo("0"))
         .withQueryParam("size", WireMock.equalTo("1"))
@@ -855,7 +855,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   ) {
     stubFor(
       get(
-        urlPathEqualTo("/prisoners/ids"),
+        urlPathEqualTo("/prisoners/ids/active"),
       )
         .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
         .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
@@ -879,7 +879,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetActivePrisonersPageWithError(pageNumber: Long, responseCode: Int) {
     stubFor(
       get(
-        urlPathEqualTo("/prisoners/ids"),
+        urlPathEqualTo("/prisoners/ids/active"),
       )
         .withQueryParam("page", WireMock.equalTo(pageNumber.toString())).willReturn(
           aResponse()
@@ -920,7 +920,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     pageNumber: Long = 0,
   ): String {
     val activePrisonerId = (1..numberOfElements).map { it + (pageNumber * pageSize) }
-      .map { ActivePrisonerId(bookingId = it, offenderNo = "A${it.toString().padStart(4, '0')}TZ") }
+      .map { PrisonerIds(bookingId = it, offenderNo = "A${it.toString().padStart(4, '0')}TZ") }
     val content = activePrisonerId.map { """{ "bookingId": ${it.bookingId}, "offenderNo": "${it.offenderNo}" }""" }
       .joinToString { it }
     return """
