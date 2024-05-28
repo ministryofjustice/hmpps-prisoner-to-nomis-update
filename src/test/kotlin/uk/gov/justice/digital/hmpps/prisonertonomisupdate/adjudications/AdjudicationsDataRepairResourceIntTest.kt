@@ -76,18 +76,24 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
             {
                 "id": 634,
                 "type": "CONFINEMENT",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 3,
+                    "duration": 3,
                     "startDate": "2023-10-04",
-                    "endDate": "2023-10-06"
+                    "endDate": "2023-10-06",
+                    "measurement": "DAYS"
                 }
             },
             {
                 "id": 667,
                 "type": "EXTRA_WORK",
+                "rehabilitativeActivities": [],
                 "schedule": {
                     "days": 12,
-                    "suspendedUntil": "2023-10-18"
+                    "duration": 12,
+                    "suspendedUntil": "2023-10-18",
+                    "measurement": "DAYS"
                 }
             }
         ]

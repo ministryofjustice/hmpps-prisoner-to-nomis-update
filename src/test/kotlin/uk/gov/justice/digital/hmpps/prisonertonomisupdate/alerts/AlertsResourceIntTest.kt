@@ -81,7 +81,10 @@ class AlertsResourceIntTest : IntegrationTestBase() {
       alertsNomisApi.stubGetAlertsForReconciliation(
         "A0034TZ",
         response = PrisonerAlertsResponse(
-          latestBookingAlerts = listOf(alertResponse().copy(alertCode = alertCode("HPI")), alertResponse().copy(alertCode = alertCode("HA2"))),
+          latestBookingAlerts = listOf(
+            alertResponse().copy(alertCode = alertCode("HPI")),
+            alertResponse().copy(alertCode = alertCode("HA2")),
+          ),
           previousBookingsAlerts = listOf(alertResponse().copy(alertCode = alertCode("XA"))),
         ),
       )
@@ -122,16 +125,14 @@ class AlertsResourceIntTest : IntegrationTestBase() {
 
       awaitReportFinished()
       nomisApi.verify(
-        WireMock.getRequestedFor(urlPathEqualTo("/prisoners/ids"))
-          .withQueryParam("size", WireMock.equalTo("1"))
-          .withQueryParam("active", WireMock.equalTo("true")),
+        WireMock.getRequestedFor(urlPathEqualTo("/prisoners/ids/active"))
+          .withQueryParam("size", WireMock.equalTo("1")),
       )
       nomisApi.verify(
         // 34 prisoners will be spread over 4 pages of 10 prisoners each
         4,
-        WireMock.getRequestedFor(urlPathEqualTo("/prisoners/ids"))
-          .withQueryParam("size", WireMock.equalTo("10"))
-          .withQueryParam("active", WireMock.equalTo("true")),
+        WireMock.getRequestedFor(urlPathEqualTo("/prisoners/ids/active"))
+          .withQueryParam("size", WireMock.equalTo("10")),
       )
     }
 

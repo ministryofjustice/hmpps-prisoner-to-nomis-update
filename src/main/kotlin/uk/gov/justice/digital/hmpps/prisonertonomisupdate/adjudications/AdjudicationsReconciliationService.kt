@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Pu
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
@@ -58,7 +58,7 @@ class AdjudicationsReconciliationService(
       .getOrElse { emptyList() }
       .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
-  suspend fun checkADAPunishmentsMatch(prisonerId: ActivePrisonerId): MismatchAdjudicationAdaPunishments? = runCatching {
+  suspend fun checkADAPunishmentsMatch(prisonerId: PrisonerIds): MismatchAdjudicationAdaPunishments? = runCatching {
     val nomisSummary = doApiCallWithRetries { nomisApiService.getAdaAwardsSummary(prisonerId.bookingId) }
     val dpsAdjudications = doApiCallWithRetries { adjudicationsApiService.getAdjudicationsByBookingId(prisonerId.bookingId) }
 
@@ -93,7 +93,7 @@ class AdjudicationsReconciliationService(
     )
   }.getOrNull()
 
-  private suspend fun mismatchNotDueToAMerge(prisonerId: ActivePrisonerId, nomisSummary: AdjudicationADAAwardSummaryResponse, dpsAdjudications: List<ReportedAdjudicationDto>): Boolean {
+  private suspend fun mismatchNotDueToAMerge(prisonerId: PrisonerIds, nomisSummary: AdjudicationADAAwardSummaryResponse, dpsAdjudications: List<ReportedAdjudicationDto>): Boolean {
     val merges = nomisApiService.mergesSinceDate(prisonerId.offenderNo, nomisMigrationDate)
     if (merges.isNotEmpty()) {
       val adjudicationsNotPresentOnDPSBooking = adjudicationsNotPresentOnDPSBooking(nomisSummary, dpsAdjudications)
@@ -145,7 +145,7 @@ private fun AdjudicationADAAwardSummaryResponse.toAdaSummary(): AdaSummary {
 }
 
 data class MismatchAdjudicationAdaPunishments(
-  val prisonerId: ActivePrisonerId,
+  val prisonerId: PrisonerIds,
   val dpsAdas: AdaSummary,
   val nomisAda: AdaSummary,
 )

@@ -12,7 +12,7 @@
       "name": "MIT",
       "url": "https://opensource.org/license/mit-0"
     },
-    "version": "2024-02-05.10537.d771434"
+    "version": "2024-05-17.12186.55d3f6d"
   },
   "servers": [
     {
@@ -493,10 +493,210 @@
         }
       ]
     },
-    "/reported-adjudications/{chargeNumber}/punishments/comment": {
+    "/reported-adjudications/{chargeNumber}/punishments/rehabilitative-activity/{id}": {
       "put": {
         "tags": [
           "30. Punishments"
+        ],
+        "summary": "updates a rehabilitative activity",
+        "operationId": "updateRehabilitativeActivity",
+        "parameters": [
+          {
+            "name": "chargeNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RehabilitativeActivityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportedAdjudicationResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not able to process the request because the header “Accept” does not match with any of the content types this endpoint can handle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "30. Punishments"
+        ],
+        "summary": "deletes a rehabilitative activity",
+        "operationId": "deleteRehabilitativeActivity",
+        "parameters": [
+          {
+            "name": "chargeNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportedAdjudicationResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not able to process the request because the header “Accept” does not match with any of the content types this endpoint can handle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "Active-Caseload",
+          "in": "header",
+          "description": "Current Caseload for request, to be used when making calls to a specific report",
+          "required": false,
+          "schema": {
+            "type": "string"
+          },
+          "example": "MDI"
+        }
+      ]
+    },
+    "/reported-adjudications/{chargeNumber}/punishments/comment": {
+      "put": {
+        "tags": [
+          "31. Punishments comments"
         ],
         "summary": "update punishment comment",
         "operationId": "updatePunishmentComment",
@@ -595,7 +795,7 @@
       },
       "post": {
         "tags": [
-          "30. Punishments"
+          "31. Punishments comments"
         ],
         "summary": "create punishment comment",
         "operationId": "createPunishmentComment",
@@ -710,7 +910,7 @@
         "tags": [
           "31. Outcomes"
         ],
-        "summary": "amend outcome without a hearing (refer police, not proceed or quashed), unless its a referral outcome - not proceed",
+        "summary": "amend outcome without a hearing (refer police, not proceed or quashed), unless its a referral outcome from next steps",
         "operationId": "amendOutcome",
         "parameters": [
           {
@@ -3365,7 +3565,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReferralDetailsRequest"
+                "$ref": "#/components/schemas/ReferralGovRequest"
               }
             }
           },
@@ -4843,6 +5043,160 @@
         }
       ]
     },
+    "/subject-access-request": {
+      "get": {
+        "tags": [
+          "Subject Access Request"
+        ],
+        "summary": "Provides content for a prisoner to satisfy the needs of a subject access request on their behalf",
+        "description": "Requires role SAR_DATA_ACCESS or additional role as specified by hmpps.sar.additionalAccessRole configuration.",
+        "operationId": "getSarContentByReference",
+        "parameters": [
+          {
+            "name": "prn",
+            "in": "query",
+            "description": "NOMIS Prison Reference Number",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "crn",
+            "in": "query",
+            "description": "nDelius Case Reference Number",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "description": "Optional parameter denoting minimum date of event occurrence which should be returned in the response",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "description": "Optional parameter denoting maximum date of event occurrence which should be returned in the response",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Request successfully processed - no content found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "209": {
+            "description": "Subject Identifier is not recognised by this service",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Request successfully processed - content found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HmppsSubjectAccessRequestContent"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not able to process the request because the header “Accept” does not match with any of the content types this endpoint can handle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "Active-Caseload",
+          "in": "header",
+          "description": "Current Caseload for request, to be used when making calls to a specific report",
+          "required": false,
+          "schema": {
+            "type": "string"
+          },
+          "example": "MDI"
+        }
+      ]
+    },
     "/reported-adjudications/{chargeNumber}/v2": {
       "get": {
         "tags": [
@@ -4857,6 +5211,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "includeActivated",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -4866,6 +5228,264 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ReportedAdjudicationResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not able to process the request because the header “Accept” does not match with any of the content types this endpoint can handle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "Active-Caseload",
+          "in": "header",
+          "description": "Current Caseload for request, to be used when making calls to a specific report",
+          "required": false,
+          "schema": {
+            "type": "string"
+          },
+          "example": "MDI"
+        }
+      ]
+    },
+    "/reported-adjudications/{chargeNumber}/print-support/dis5": {
+      "get": {
+        "tags": [
+          "02. Print Support for DIS forms"
+        ],
+        "summary": "Gets the data required to populate the dis5 form",
+        "operationId": "getDis5Data",
+        "parameters": [
+          {
+            "name": "chargeNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DIS5 data model for pdf",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dis5PrintSupportDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Report not found",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dis5PrintSupportDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not able to process the request because the header “Accept” does not match with any of the content types this endpoint can handle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "Active-Caseload",
+          "in": "header",
+          "description": "Current Caseload for request, to be used when making calls to a specific report",
+          "required": false,
+          "schema": {
+            "type": "string"
+          },
+          "example": "MDI"
+        }
+      ]
+    },
+    "/reported-adjudications/transfer-reports": {
+      "get": {
+        "tags": [
+          "40. Reports"
+        ],
+        "summary": "Get transfer reported adjudications for caseload",
+        "operationId": "getReportedAdjudicationsForTransfer",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "list of status filter for reports",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "reported adjudication status codes",
+                "enum": [
+                  "ACCEPTED",
+                  "REJECTED",
+                  "AWAITING_REVIEW",
+                  "RETURNED",
+                  "UNSCHEDULED",
+                  "SCHEDULED",
+                  "REFER_POLICE",
+                  "REFER_INAD",
+                  "REFER_GOV",
+                  "PROSECUTION",
+                  "DISMISSED",
+                  "NOT_PROCEED",
+                  "ADJOURNED",
+                  "CHARGE_PROVED",
+                  "QUASHED",
+                  "INVALID_OUTCOME",
+                  "INVALID_SUSPENDED",
+                  "INVALID_ADA"
+                ]
+              }
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "TransferType, IN OUT or ALL",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "IN",
+                "OUT",
+                "ALL"
+              ]
+            }
+          },
+          {
+            "name": "pageable",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Results page you want to retrieve (0..N). Default 0, e.g. the first page"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Number of records per page. Default 20"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort as combined comma separated property and uppercase direction. Multiple sort params allowed to sort by multiple properties. Default to dateTimeOfDiscovery DESC"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageReportedAdjudicationDto"
                 }
               }
             }
@@ -4994,15 +5614,6 @@
                   "INVALID_ADA"
                 ]
               }
-            }
-          },
-          {
-            "name": "transfersOnly",
-            "in": "query",
-            "description": "optional filter for transferred reports only",
-            "required": false,
-            "schema": {
-              "type": "boolean"
             }
           },
           {
@@ -5191,7 +5802,7 @@
     "/reported-adjudications/punishments/{prisonerNumber}/suspended/v2": {
       "get": {
         "tags": [
-          "30. Punishments"
+          "32. Punishments reports"
         ],
         "summary": "get a list of suspended punishments by prisoner",
         "operationId": "getSuspendedPunishments",
@@ -5295,7 +5906,7 @@
     "/reported-adjudications/punishments/{prisonerNumber}/for-consecutive": {
       "get": {
         "tags": [
-          "30. Punishments"
+          "32. Punishments reports"
         ],
         "summary": "get a list of active additional days reports by prisoner for a consecutive punishment",
         "operationId": "getActiveAdditionalDaysReports",
@@ -5325,7 +5936,8 @@
                 "ADDITIONAL_DAYS",
                 "PROSPECTIVE_DAYS",
                 "CAUTION",
-                "DAMAGES_OWED"
+                "DAMAGES_OWED",
+                "PAYBACK"
               ]
             }
           },
@@ -5420,7 +6032,7 @@
     "/reported-adjudications/punishments/{offenderBookingId}/active": {
       "get": {
         "tags": [
-          "30. Punishments"
+          "32. Punishments reports"
         ],
         "summary": "get a list of active punishments by offenderBookingId",
         "operationId": "getActivePunishments",
@@ -5918,7 +6530,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/IssuableAdjudicationsResponse"
+                  "$ref": "#/components/schemas/PrintableAdjudicationsResponse"
                 }
               }
             }
@@ -5988,7 +6600,7 @@
         }
       ]
     },
-    "/reported-adjudications/for-issue": {
+    "/reported-adjudications/for-issue/v2": {
       "get": {
         "tags": [
           "40. Reports"
@@ -6023,7 +6635,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/IssuableAdjudicationsResponse"
+                  "$ref": "#/components/schemas/IssuableAdjudicationsResponseV2"
                 }
               }
             }
@@ -6133,8 +6745,8 @@
           {
             "name": "status",
             "in": "query",
-            "description": "list of status filter for reports",
-            "required": true,
+            "description": "list of status filter for reports, if null will return all",
+            "required": false,
             "schema": {
               "type": "array",
               "items": {
@@ -6161,6 +6773,33 @@
                   "INVALID_ADA"
                 ]
               }
+            }
+          },
+          {
+            "name": "ada",
+            "in": "query",
+            "description": "show reports with ADA",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "pada",
+            "in": "query",
+            "description": "show reports with PADA",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "suspended",
+            "in": "query",
+            "description": "show reports with suspended",
+            "required": false,
+            "schema": {
+              "type": "boolean"
             }
           },
           {
@@ -6304,8 +6943,8 @@
           {
             "name": "status",
             "in": "query",
-            "description": "list of status filter for reports",
-            "required": true,
+            "description": "list of status filter for reports, if null will return all",
+            "required": false,
             "schema": {
               "type": "array",
               "items": {
@@ -6344,6 +6983,33 @@
               "items": {
                 "type": "string"
               }
+            }
+          },
+          {
+            "name": "ada",
+            "in": "query",
+            "description": "show reports with ADA",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "pada",
+            "in": "query",
+            "description": "show reports with PADA",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "suspended",
+            "in": "query",
+            "description": "show reports with suspended",
+            "required": false,
+            "schema": {
+              "type": "boolean"
             }
           },
           {
@@ -6840,6 +7506,15 @@
                 "FEMALE"
               ]
             }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
           }
         ],
         "responses": {
@@ -7164,306 +7839,6 @@
         }
       ]
     },
-    "/adjudications/{prisonerNumber}/charge/{chargeId}": {
-      "get": {
-        "tags": [
-          "01. Adjudication Summary"
-        ],
-        "summary": "Return a specific adjudication for a prisoner reference by charge ID",
-        "operationId": "getAdjudication",
-        "parameters": [
-          {
-            "name": "prisonerNumber",
-            "in": "path",
-            "description": "prisonerNumber",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "example": "A1234AA"
-          },
-          {
-            "name": "chargeId",
-            "in": "path",
-            "description": "chargeId",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Adjudication returned",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/IndividualAdjudication"
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "406": {
-            "description": "Not able to process the request because the header “Accept” does not match with any of the content types this endpoint can handle",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too many requests",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "parameters": [
-        {
-          "name": "Active-Caseload",
-          "in": "header",
-          "description": "Current Caseload for request, to be used when making calls to a specific report",
-          "required": false,
-          "schema": {
-            "type": "string"
-          },
-          "example": "MDI"
-        }
-      ]
-    },
-    "/adjudications/{prisonerNumber}/adjudications": {
-      "get": {
-        "tags": [
-          "01. Adjudication Summary"
-        ],
-        "summary": "Return a list of adjudications for a given prisoner",
-        "operationId": "getAdjudicationsByPrisonerNumber",
-        "parameters": [
-          {
-            "name": "prisonerNumber",
-            "in": "path",
-            "description": "prisonerNumber",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "example": "A1234AA"
-          },
-          {
-            "name": "offenceId",
-            "in": "query",
-            "description": "An offence id to allow optionally filtering by type of offence",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "agencyId",
-            "in": "query",
-            "description": "An agency id to allow optionally filtering by the prison in which the offence occurred",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "finding",
-            "in": "query",
-            "description": "Finding code to allow optionally filtering by type of finding",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "APPEAL",
-                "D",
-                "DISMISSED",
-                "GUILTY",
-                "NOT_GUILTY",
-                "NOT_PROCEED",
-                "NOT_PROVEN",
-                "PROSECUTED",
-                "PROVED",
-                "QUASHED",
-                "REFUSED",
-                "REF_POLICE",
-                "S",
-                "UNFIT",
-                "ADJOURNED"
-              ]
-            },
-            "example": "NOT_PROVEN"
-          },
-          {
-            "name": "fromDate",
-            "in": "query",
-            "description": "Adjudications must have been reported on or after this date (in YYYY-MM-DD format).",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
-            "name": "toDate",
-            "in": "query",
-            "description": "Adjudications must have been reported on or before this date (in YYYY-MM-DD format).",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "description": "Zero-based page index (0..N)",
-            "required": false,
-            "schema": {
-              "minimum": 0,
-              "type": "integer",
-              "default": 0
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "description": "The size of the page to be returned",
-            "required": false,
-            "schema": {
-              "minimum": 1,
-              "type": "integer",
-              "default": 20
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Adjudications returned",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/AdjudicationSearchResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "406": {
-            "description": "Not able to process the request because the header “Accept” does not match with any of the content types this endpoint can handle",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too many requests",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "parameters": [
-        {
-          "name": "Active-Caseload",
-          "in": "header",
-          "description": "Current Caseload for request, to be used when making calls to a specific report",
-          "required": false,
-          "schema": {
-            "type": "string"
-          },
-          "example": "MDI"
-        }
-      ]
-    },
     "/adjudications/by-booking-id/{bookingId}": {
       "get": {
         "tags": [
@@ -7511,6 +7886,102 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/AdjudicationSummary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not able to process the request because the header “Accept” does not match with any of the content types this endpoint can handle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "Active-Caseload",
+          "in": "header",
+          "description": "Current Caseload for request, to be used when making calls to a specific report",
+          "required": false,
+          "schema": {
+            "type": "string"
+          },
+          "example": "MDI"
+        }
+      ]
+    },
+    "/adjudications/booking/{bookingId}/exists": {
+      "get": {
+        "tags": [
+          "01. Adjudication Summary"
+        ],
+        "summary": "Does the booking id have any adjudications",
+        "description": "Does the booking id have any adjudications",
+        "operationId": "hasAdjudications",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "The prisoner booking id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Has adjudications",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/HasAdjudicationsResponse"
                 }
               }
             }
@@ -7769,7 +8240,7 @@
     "/reported-adjudications/{chargeNumber}/punishments/comment/{punishmentCommentId}": {
       "delete": {
         "tags": [
-          "30. Punishments"
+          "31. Punishments comments"
         ],
         "summary": "delete punishment comment",
         "operationId": "deletePunishmentComment",
@@ -8102,7 +8573,7 @@
           "dateTimeOfDiscovery": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
-            "description": "Date time if discovery date different to incident date",
+            "description": "Date time of discovery if date different to incident date",
             "example": "2021-07-05T10:35:17"
           },
           "handoverDeadline": {
@@ -8161,7 +8632,8 @@
       "OffenceDto": {
         "required": [
           "offenceCode",
-          "offenceRule"
+          "offenceRule",
+          "protectedCharacteristics"
         ],
         "type": "object",
         "properties": {
@@ -8188,6 +8660,25 @@
             "type": "string",
             "description": "The name of the victim (who is not a member of staff or a prisoner) involved in the incident, if relevant",
             "example": "Bob Hope"
+          },
+          "protectedCharacteristics": {
+            "type": "array",
+            "description": "list of protected characteristics for offence, empty if non involved in offence",
+            "items": {
+              "type": "string",
+              "description": "list of protected characteristics for offence, empty if non involved in offence",
+              "enum": [
+                "AGE",
+                "DISABILITY",
+                "GENDER_REASSIGN",
+                "MARRIAGE_AND_CP",
+                "PREGNANCY_AND_MAT",
+                "RACE",
+                "RELIGION",
+                "SEX",
+                "SEX_ORIENTATION"
+              ]
+            }
           }
         },
         "additionalProperties": false,
@@ -8299,6 +8790,15 @@
               "OTHER"
             ]
           },
+          "referGovReason": {
+            "type": "string",
+            "description": "optional refer to gov reason",
+            "enum": [
+              "REVIEW_FOR_REFER_POLICE",
+              "GOV_INQUIRY",
+              "OTHER"
+            ]
+          },
           "canRemove": {
             "type": "boolean",
             "description": "flag to indicate if the outcome can be removed"
@@ -8361,7 +8861,9 @@
       },
       "PunishmentDto": {
         "required": [
+          "canEdit",
           "canRemove",
+          "rehabilitativeActivities",
           "schedule",
           "type"
         ],
@@ -8386,7 +8888,8 @@
               "ADDITIONAL_DAYS",
               "PROSPECTIVE_DAYS",
               "CAUTION",
-              "DAMAGES_OWED"
+              "DAMAGES_OWED",
+              "PAYBACK"
             ]
           },
           "privilegeType": {
@@ -8424,7 +8927,7 @@
           },
           "consecutiveChargeNumber": {
             "type": "string",
-            "description": "optional consecutive charge number"
+            "description": "optional consecutive to charge number"
           },
           "consecutiveReportAvailable": {
             "type": "boolean",
@@ -8438,6 +8941,21 @@
           "canRemove": {
             "type": "boolean",
             "description": "flag to indicate if the punishment can be removed"
+          },
+          "canEdit": {
+            "type": "boolean",
+            "description": "flag to indicate if the punishment can be edited"
+          },
+          "paybackNotes": {
+            "type": "string",
+            "description": "payback notes"
+          },
+          "rehabilitativeActivities": {
+            "type": "array",
+            "description": "rehabilitative activities associated to suspended punishment",
+            "items": {
+              "$ref": "#/components/schemas/RehabilitativeActivityDto"
+            }
           }
         },
         "additionalProperties": false,
@@ -8445,14 +8963,28 @@
       },
       "PunishmentScheduleDto": {
         "required": [
-          "days"
+          "days",
+          "measurement"
         ],
         "type": "object",
         "properties": {
           "days": {
             "type": "integer",
-            "description": "days punishment will last",
+            "description": "days punishment will last - use duration for new integrations",
             "format": "int32"
+          },
+          "duration": {
+            "type": "integer",
+            "description": "duration of punishment",
+            "format": "int32"
+          },
+          "measurement": {
+            "type": "string",
+            "description": "measurement of duration",
+            "enum": [
+              "DAYS",
+              "HOURS"
+            ]
           },
           "startDate": {
             "type": "string",
@@ -8473,8 +9005,53 @@
         "additionalProperties": false,
         "description": "punishment schedule"
       },
+      "RehabilitativeActivityDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "id",
+            "format": "int64"
+          },
+          "details": {
+            "type": "string",
+            "description": "details"
+          },
+          "monitor": {
+            "type": "string",
+            "description": "who is monitoring it"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "end date",
+            "format": "date"
+          },
+          "totalSessions": {
+            "type": "integer",
+            "description": "optional number of sessions",
+            "format": "int32"
+          },
+          "completed": {
+            "type": "boolean",
+            "description": "completed"
+          },
+          "outcome": {
+            "type": "string",
+            "description": "outcome",
+            "enum": [
+              "ACTIVATED",
+              "PARTIAL_ACTIVATED",
+              "EXTENDED",
+              "NO_ACTION"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "description": "rehabilitative activity dto"
+      },
       "ReportedAdjudicationDto": {
         "required": [
+          "canActionFromHistory",
           "chargeNumber",
           "createdByUserId",
           "createdDateTime",
@@ -8683,6 +9260,10 @@
               "type": "string",
               "description": "list of linked nomis charges, where multiple offences recorded on a single charge"
             }
+          },
+          "canActionFromHistory": {
+            "type": "boolean",
+            "description": "flag to indicate if the user can action this item via the history page"
           }
         },
         "additionalProperties": false,
@@ -8864,6 +9445,7 @@
       },
       "PunishmentRequest": {
         "required": [
+          "rehabilitativeActivities",
           "type"
         ],
         "type": "object",
@@ -8887,7 +9469,8 @@
               "ADDITIONAL_DAYS",
               "PROSPECTIVE_DAYS",
               "CAUTION",
-              "DAMAGES_OWED"
+              "DAMAGES_OWED",
+              "PAYBACK"
             ]
           },
           "privilegeType": {
@@ -8912,9 +9495,9 @@
             "description": "stoppage percentage - use if punishment type is EARNINGS",
             "format": "int32"
           },
-          "days": {
+          "duration": {
             "type": "integer",
-            "description": "days punishment to last",
+            "description": "duration of punishment",
             "format": "int32"
           },
           "startDate": {
@@ -8944,6 +9527,17 @@
             "type": "number",
             "description": "optional amount - money being recovered for damages - only use if type is DAMAGED_OWED",
             "format": "double"
+          },
+          "paybackNotes": {
+            "type": "string",
+            "description": "payback punishment notes"
+          },
+          "rehabilitativeActivities": {
+            "type": "array",
+            "description": "optional rehabilitative activities associated to suspended punishment",
+            "items": {
+              "$ref": "#/components/schemas/RehabilitativeActivityRequest"
+            }
           }
         },
         "additionalProperties": false,
@@ -8966,6 +9560,36 @@
         "additionalProperties": false,
         "description": "punishments request"
       },
+      "RehabilitativeActivityRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "id",
+            "format": "int64"
+          },
+          "details": {
+            "type": "string",
+            "description": "details"
+          },
+          "monitor": {
+            "type": "string",
+            "description": "who is monitoring it"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "end date",
+            "format": "date"
+          },
+          "totalSessions": {
+            "type": "integer",
+            "description": "optional number of sessions",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false,
+        "description": "rehabilitative activity"
+      },
       "ErrorResponse": {
         "required": [
           "status"
@@ -8974,40 +9598,22 @@
         "properties": {
           "status": {
             "type": "integer",
-            "description": "Status of Error",
-            "format": "int32",
-            "example": 500
+            "format": "int32"
           },
           "errorCode": {
-            "type": "integer",
-            "description": "Error Code",
-            "format": "int32",
-            "example": 500
+            "type": "string"
           },
           "userMessage": {
-            "maxLength": 200,
-            "pattern": "^[a-zA-Z\\d. _-]{1,200}$",
-            "type": "string",
-            "description": "User Message of error",
-            "example": "Bad Data"
+            "type": "string"
           },
           "developerMessage": {
-            "maxLength": 4000,
-            "pattern": "^[a-zA-Z\\d. _-]*$",
-            "type": "string",
-            "description": "More detailed error message",
-            "example": "This is a stack trace"
+            "type": "string"
           },
           "moreInfo": {
-            "maxLength": 4000,
-            "pattern": "^[a-zA-Z\\d. _-]*$",
-            "type": "string",
-            "description": "More information about the error",
-            "example": "More info"
+            "type": "string"
           }
         },
-        "additionalProperties": false,
-        "description": "Error Response"
+        "additionalProperties": false
       },
       "PunishmentCommentRequest": {
         "required": [
@@ -9070,6 +9676,15 @@
               "FLAWED_CASE",
               "JUDICIAL_REVIEW",
               "APPEAL_UPHELD",
+              "OTHER"
+            ]
+          },
+          "referGovReason": {
+            "type": "string",
+            "description": "refer back to gov reason",
+            "enum": [
+              "REVIEW_FOR_REFER_POLICE",
+              "GOV_INQUIRY",
               "OTHER"
             ]
           }
@@ -9163,6 +9778,15 @@
               "EXPIRED_NOTICE",
               "EXPIRED_HEARING",
               "NOT_FAIR",
+              "OTHER"
+            ]
+          },
+          "referGovReason": {
+            "type": "string",
+            "description": "refer back to gov reason",
+            "enum": [
+              "REVIEW_FOR_REFER_POLICE",
+              "GOV_INQUIRY",
               "OTHER"
             ]
           },
@@ -9561,7 +10185,8 @@
       "OffenceDetailsDto": {
         "required": [
           "offenceCode",
-          "offenceRule"
+          "offenceRule",
+          "protectedCharacteristics"
         ],
         "type": "object",
         "properties": {
@@ -9588,6 +10213,25 @@
             "type": "string",
             "description": "The name of the victim (who is not a member of staff or a prisoner) involved in the incident, if relevant",
             "example": "Bob Hope"
+          },
+          "protectedCharacteristics": {
+            "type": "array",
+            "description": "list of protected characteristics for offence, empty if non involved in offence",
+            "items": {
+              "type": "string",
+              "description": "list of protected characteristics for offence, empty if non involved in offence",
+              "enum": [
+                "AGE",
+                "DISABILITY",
+                "GENDER_REASSIGN",
+                "MARRIAGE_AND_CP",
+                "PREGNANCY_AND_MAT",
+                "RACE",
+                "RELIGION",
+                "SEX",
+                "SEX_ORIENTATION"
+              ]
+            }
           }
         },
         "additionalProperties": false,
@@ -9673,6 +10317,25 @@
             "type": "string",
             "description": "The name of the victim (who is not a member of staff or a prisoner) involved in the incident, if relevant",
             "example": "Bob Hope"
+          },
+          "protectedCharacteristics": {
+            "type": "array",
+            "description": "optional list of protected characteristics involved in the offence",
+            "items": {
+              "type": "string",
+              "description": "optional list of protected characteristics involved in the offence",
+              "enum": [
+                "AGE",
+                "DISABILITY",
+                "GENDER_REASSIGN",
+                "MARRIAGE_AND_CP",
+                "PREGNANCY_AND_MAT",
+                "RACE",
+                "RELIGION",
+                "SEX",
+                "SEX_ORIENTATION"
+              ]
+            }
           }
         },
         "additionalProperties": false,
@@ -9824,7 +10487,31 @@
           }
         },
         "additionalProperties": false,
-        "description": "Request to add a police referral, or refer gov request"
+        "description": "Request to add a police referral"
+      },
+      "ReferralGovRequest": {
+        "required": [
+          "details",
+          "referGovReason"
+        ],
+        "type": "object",
+        "properties": {
+          "referGovReason": {
+            "type": "string",
+            "description": "refer back to gov reason",
+            "enum": [
+              "REVIEW_FOR_REFER_POLICE",
+              "GOV_INQUIRY",
+              "OTHER"
+            ]
+          },
+          "details": {
+            "type": "string",
+            "description": "details"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request to add a gov referral"
       },
       "QuashedRequest": {
         "required": [
@@ -9903,6 +10590,15 @@
               "ADJOURN",
               "NOMIS",
               "REFER_GOV"
+            ]
+          },
+          "referGovReason": {
+            "type": "string",
+            "description": "optional refer back to gov reason",
+            "enum": [
+              "REVIEW_FOR_REFER_POLICE",
+              "GOV_INQUIRY",
+              "OTHER"
             ]
           },
           "details": {
@@ -10126,6 +10822,159 @@
         "additionalProperties": false,
         "description": "Request to create a new draft adjudication"
       },
+      "HmppsSubjectAccessRequestContent": {
+        "required": [
+          "content"
+        ],
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "object",
+            "description": "The content of the subject access request response"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChargeWithSuspendedPunishments": {
+        "required": [
+          "chargeNumber",
+          "dateOfDiscovery",
+          "dateOfIncident",
+          "offenceDetails",
+          "suspendedPunishments"
+        ],
+        "type": "object",
+        "properties": {
+          "dateOfIncident": {
+            "type": "string",
+            "description": "Date the incident occurred",
+            "format": "date"
+          },
+          "dateOfDiscovery": {
+            "type": "string",
+            "description": "Date of discovery if date different to incident date",
+            "format": "date"
+          },
+          "chargeNumber": {
+            "type": "string",
+            "description": "charge number"
+          },
+          "offenceDetails": {
+            "$ref": "#/components/schemas/OffenceDto"
+          },
+          "suspendedPunishments": {
+            "type": "array",
+            "description": "list of suspended punishments",
+            "items": {
+              "$ref": "#/components/schemas/PunishmentDto"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "description": "suspended punishments on charge"
+      },
+      "Dis5PrintSupportDto": {
+        "required": [
+          "chargeNumber",
+          "chargesWithSuspendedPunishments",
+          "dateOfDiscovery",
+          "dateOfIncident",
+          "existingPunishments",
+          "previousAtCurrentEstablishmentCount",
+          "previousCount",
+          "sameOffenceCount"
+        ],
+        "type": "object",
+        "properties": {
+          "chargeNumber": {
+            "type": "string",
+            "description": "charge number"
+          },
+          "dateOfIncident": {
+            "type": "string",
+            "description": "Date the incident occurred",
+            "format": "date"
+          },
+          "dateOfDiscovery": {
+            "type": "string",
+            "description": "Date of discovery if date different to incident date",
+            "format": "date"
+          },
+          "previousCount": {
+            "type": "integer",
+            "description": "total number of charge proved on current sentence",
+            "format": "int32"
+          },
+          "previousAtCurrentEstablishmentCount": {
+            "type": "integer",
+            "description": "total number of charge proved on current sentence at current establishment",
+            "format": "int32"
+          },
+          "sameOffenceCount": {
+            "type": "integer",
+            "description": "total number of charge proved for same offence",
+            "format": "int32"
+          },
+          "lastReportedOffence": {
+            "$ref": "#/components/schemas/LastReportedOffence"
+          },
+          "chargesWithSuspendedPunishments": {
+            "type": "array",
+            "description": "charges with suspended punishments that are active",
+            "items": {
+              "$ref": "#/components/schemas/ChargeWithSuspendedPunishments"
+            }
+          },
+          "existingPunishments": {
+            "type": "array",
+            "description": "existing active punishments",
+            "items": {
+              "$ref": "#/components/schemas/PunishmentDto"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "description": "dis5 data model"
+      },
+      "LastReportedOffence": {
+        "required": [
+          "chargeNumber",
+          "dateOfDiscovery",
+          "dateOfIncident",
+          "punishments",
+          "statement"
+        ],
+        "type": "object",
+        "properties": {
+          "dateOfIncident": {
+            "type": "string",
+            "description": "Date the incident occurred",
+            "format": "date"
+          },
+          "dateOfDiscovery": {
+            "type": "string",
+            "description": "Date of discovery if date different to incident date",
+            "format": "date"
+          },
+          "chargeNumber": {
+            "type": "string",
+            "description": "last reported same offence charge number"
+          },
+          "statement": {
+            "type": "string",
+            "description": "The statement regarding the last reported incident"
+          },
+          "punishments": {
+            "type": "array",
+            "description": "punishments awarded on the last reported same offence",
+            "items": {
+              "$ref": "#/components/schemas/PunishmentDto"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "description": "optional last reported same offence charge"
+      },
       "Pageable": {
         "type": "object",
         "properties": {
@@ -10159,6 +11008,19 @@
             "type": "integer",
             "format": "int64"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -10174,20 +11036,10 @@
             "format": "int32"
           },
           "sort": {
-            "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SortObject"
+            }
           },
           "empty": {
             "type": "boolean"
@@ -10198,26 +11050,29 @@
       "PageableObject": {
         "type": "object",
         "properties": {
-          "offset": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
-          },
           "paged": {
             "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
           },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
           "pageSize": {
             "type": "integer",
             "format": "int32"
           },
-          "pageNumber": {
+          "offset": {
             "type": "integer",
-            "format": "int32"
+            "format": "int64"
+          },
+          "sort": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SortObject"
+            }
           }
         },
         "additionalProperties": false
@@ -10225,13 +11080,19 @@
       "SortObject": {
         "type": "object",
         "properties": {
-          "empty": {
+          "direction": {
+            "type": "string"
+          },
+          "nullHandling": {
+            "type": "string"
+          },
+          "ascending": {
             "type": "boolean"
           },
-          "unsorted": {
-            "type": "boolean"
+          "property": {
+            "type": "string"
           },
-          "sorted": {
+          "ignoreCase": {
             "type": "boolean"
           }
         },
@@ -10239,7 +11100,9 @@
       },
       "AgencyReportCountsDto": {
         "required": [
+          "hearingsToScheduleTotal",
           "reviewTotal",
+          "transferOutTotal",
           "transferReviewTotal"
         ],
         "type": "object",
@@ -10251,7 +11114,22 @@
           },
           "transferReviewTotal": {
             "type": "integer",
-            "description": "total transferable reports to review for agency",
+            "description": "total transferable in reports to action",
+            "format": "int64"
+          },
+          "transferOutTotal": {
+            "type": "integer",
+            "description": "total transferable reports to action",
+            "format": "int64"
+          },
+          "transferAllTotal": {
+            "type": "integer",
+            "description": "total transfer in and out to action",
+            "format": "int64"
+          },
+          "hearingsToScheduleTotal": {
+            "type": "integer",
+            "description": "hearings to schedule count",
             "format": "int64"
           }
         },
@@ -10330,7 +11208,8 @@
               "ADDITIONAL_DAYS",
               "PROSPECTIVE_DAYS",
               "CAUTION",
-              "DAMAGES_OWED"
+              "DAMAGES_OWED",
+              "PAYBACK"
             ]
           },
           "privilegeType": {
@@ -10350,10 +11229,18 @@
             "type": "string",
             "description": "other privilege description"
           },
-          "days": {
+          "duration": {
             "type": "integer",
-            "description": "days applied",
+            "description": "duration of punishment",
             "format": "int32"
+          },
+          "measurement": {
+            "type": "string",
+            "description": "measurement of duration",
+            "enum": [
+              "DAYS",
+              "HOURS"
+            ]
           },
           "startDate": {
             "type": "string",
@@ -10476,7 +11363,7 @@
         "additionalProperties": false,
         "description": "All hearings response"
       },
-      "IssuableAdjudicationsResponse": {
+      "PrintableAdjudicationsResponse": {
         "required": [
           "reportedAdjudications"
         ],
@@ -10491,7 +11378,82 @@
           }
         },
         "additionalProperties": false,
-        "description": "All issuable adjudications response"
+        "description": "All adjudications for print response"
+      },
+      "IssuableAdjudicationsResponseV2": {
+        "required": [
+          "reportedAdjudications"
+        ],
+        "type": "object",
+        "properties": {
+          "reportedAdjudications": {
+            "type": "array",
+            "description": "Th reported adjudications response",
+            "items": {
+              "$ref": "#/components/schemas/ReportsForIssueDto"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "description": "All issuable adjudications response v2"
+      },
+      "ReportsForIssueDto": {
+        "required": [
+          "chargeNumber",
+          "dateTimeOfDiscovery",
+          "dateTimeOfIncident",
+          "disIssueHistory",
+          "prisonerNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "chargeNumber": {
+            "type": "string",
+            "description": "The charge number for the reported adjudication"
+          },
+          "prisonerNumber": {
+            "type": "string",
+            "description": "Prison number assigned to a prisoner",
+            "example": "G2996UX"
+          },
+          "dateTimeOfIncident": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date and time the incident occurred",
+            "example": "2021-07-05T10:35:17"
+          },
+          "dateTimeOfDiscovery": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date time of discovery if date different to incident date",
+            "example": "2021-07-05T10:35:17"
+          },
+          "issuingOfficer": {
+            "type": "string",
+            "description": "The last issuing officer"
+          },
+          "dateTimeOfIssue": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The last date time of form issued",
+            "example": "2021-07-05T10:35:17"
+          },
+          "disIssueHistory": {
+            "type": "array",
+            "description": "Previous DIS1/2 issues",
+            "items": {
+              "$ref": "#/components/schemas/DisIssueHistoryDto"
+            }
+          },
+          "dateTimeOfFirstHearing": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "date time of first hearing",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "additionalProperties": false,
+        "description": "reports for issue DTO"
       },
       "GetDlqResult": {
         "required": [
@@ -10529,6 +11491,19 @@
             "type": "integer",
             "format": "int64"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -10544,461 +11519,16 @@
             "format": "int32"
           },
           "sort": {
-            "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SortObject"
+            }
           },
           "empty": {
             "type": "boolean"
           }
         },
         "additionalProperties": false
-      },
-      "Hearing": {
-        "type": "object",
-        "properties": {
-          "oicHearingId": {
-            "type": "integer",
-            "description": "OIC Hearing ID",
-            "format": "int64",
-            "example": 1985937
-          },
-          "hearingType": {
-            "type": "string",
-            "description": "Hearing Type",
-            "example": "Governor's Hearing Adult"
-          },
-          "hearingTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Hearing Time",
-            "example": "2021-07-05T10:35:17"
-          },
-          "establishment": {
-            "type": "string",
-            "description": "Establishment",
-            "example": "Moorland (HMP & YOI)"
-          },
-          "location": {
-            "type": "string",
-            "description": "Hearing Location",
-            "example": "Adjudication Room"
-          },
-          "heardByFirstName": {
-            "type": "string",
-            "description": "Adjudicator First name",
-            "example": "Bob"
-          },
-          "heardByLastName": {
-            "type": "string",
-            "description": "Adjudicator Last name",
-            "example": "Smith"
-          },
-          "otherRepresentatives": {
-            "type": "string",
-            "description": "Other Representatives",
-            "example": "Councillor Adams"
-          },
-          "comment": {
-            "type": "string",
-            "description": "Comment",
-            "example": "The defendant conducted themselves in a manner..."
-          },
-          "results": {
-            "type": "array",
-            "description": "Hearing Results",
-            "items": {
-              "$ref": "#/components/schemas/HearingResult"
-            }
-          }
-        },
-        "additionalProperties": false,
-        "description": "An Adjudication Hearing"
-      },
-      "HearingResult": {
-        "type": "object",
-        "properties": {
-          "oicOffenceCode": {
-            "type": "string",
-            "description": "OIC Offence Code",
-            "example": "51:22"
-          },
-          "offenceType": {
-            "type": "string",
-            "description": "Offence Type",
-            "example": "Prison Rule 51"
-          },
-          "offenceDescription": {
-            "type": "string",
-            "description": "Offence Description",
-            "example": "Disobeys any lawful order"
-          },
-          "plea": {
-            "type": "string",
-            "description": "Plea",
-            "example": "Guilty"
-          },
-          "finding": {
-            "type": "string",
-            "description": "Finding",
-            "example": "Charge Proved"
-          },
-          "sanctions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Sanction"
-            }
-          }
-        },
-        "additionalProperties": false,
-        "description": "A result from a hearing"
-      },
-      "IndividualAdjudication": {
-        "required": [
-          "adjudicationNumber"
-        ],
-        "type": "object",
-        "properties": {
-          "adjudicationNumber": {
-            "type": "integer",
-            "description": "Adjudication Number",
-            "format": "int64",
-            "example": 1234567
-          },
-          "incidentTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Incident Time",
-            "example": "2021-07-05T10:35:17"
-          },
-          "establishment": {
-            "type": "string",
-            "description": "Establishment",
-            "example": "Moorland (HMP & YOI)"
-          },
-          "interiorLocation": {
-            "type": "string",
-            "description": "Interior Location",
-            "example": "Wing A"
-          },
-          "incidentDetails": {
-            "type": "string",
-            "description": "Incident Details",
-            "example": "Whilst conducting an intelligence cell search..."
-          },
-          "reportNumber": {
-            "type": "integer",
-            "description": "Report Number",
-            "format": "int64",
-            "example": 1234567
-          },
-          "reportType": {
-            "type": "string",
-            "description": "Report Type",
-            "example": "Governor's Report"
-          },
-          "reporterFirstName": {
-            "type": "string",
-            "description": "Reporter First Name",
-            "example": "John"
-          },
-          "reporterLastName": {
-            "type": "string",
-            "description": "Reporter Last Name",
-            "example": "Smith"
-          },
-          "reportTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Report Time",
-            "example": "2021-07-05T10:35:17"
-          },
-          "hearings": {
-            "type": "array",
-            "description": "Hearings",
-            "items": {
-              "$ref": "#/components/schemas/Hearing"
-            }
-          }
-        },
-        "additionalProperties": false,
-        "description": "Detail about an individual Adjudication"
-      },
-      "Sanction": {
-        "type": "object",
-        "properties": {
-          "sanctionType": {
-            "type": "string",
-            "description": "Sanction Type",
-            "example": "Stoppage of Earnings (amount)"
-          },
-          "sanctionDays": {
-            "type": "integer",
-            "description": "Sanction Days",
-            "format": "int64",
-            "example": 14
-          },
-          "sanctionMonths": {
-            "type": "integer",
-            "description": "Sanction Months",
-            "format": "int64",
-            "example": 1
-          },
-          "compensationAmount": {
-            "type": "integer",
-            "description": "Compensation Amount",
-            "format": "int64",
-            "example": 50
-          },
-          "effectiveDate": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Effective",
-            "example": "2021-07-05T10:35:17"
-          },
-          "status": {
-            "type": "string",
-            "description": "Sanction status",
-            "example": "Immediate"
-          },
-          "statusDate": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Status Date",
-            "example": "2021-07-05T10:35:17"
-          },
-          "comment": {
-            "type": "string",
-            "description": "Comment",
-            "example": "14x LOTV, 14x LOGYM, 14x LOC, 14x LOA, 14x LOE 50%, 14x CC"
-          },
-          "sanctionSeq": {
-            "type": "integer",
-            "description": "Sanction Seq",
-            "format": "int64",
-            "example": 1
-          },
-          "consecutiveSanctionSeq": {
-            "type": "integer",
-            "description": "Consecutive Sanction Seq",
-            "format": "int64",
-            "example": 1
-          }
-        },
-        "additionalProperties": false,
-        "description": "An Adjudication Sanction"
-      },
-      "Adjudication": {
-        "required": [
-          "adjudicationNumber",
-          "agencyIncidentId",
-          "partySeq",
-          "reportTime"
-        ],
-        "type": "object",
-        "properties": {
-          "adjudicationNumber": {
-            "type": "integer",
-            "description": "Adjudication Number",
-            "format": "int64",
-            "example": 1234567
-          },
-          "reportTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Report Time",
-            "example": "2021-07-05T10:35:17"
-          },
-          "agencyIncidentId": {
-            "type": "integer",
-            "description": "Agency Incident Id",
-            "format": "int64",
-            "example": 1484302
-          },
-          "agencyId": {
-            "type": "string",
-            "description": "Agency Id",
-            "example": "MDI"
-          },
-          "partySeq": {
-            "type": "integer",
-            "description": "Party Sequence",
-            "format": "int64",
-            "example": 1
-          },
-          "adjudicationCharges": {
-            "type": "array",
-            "description": "Charges made as part of the adjudication",
-            "items": {
-              "$ref": "#/components/schemas/AdjudicationCharge"
-            }
-          }
-        },
-        "additionalProperties": false,
-        "description": "An overview of an adjudication"
-      },
-      "AdjudicationCharge": {
-        "type": "object",
-        "properties": {
-          "oicChargeId": {
-            "type": "string",
-            "description": "Charge Id",
-            "example": "1506763/1"
-          },
-          "offenceCode": {
-            "type": "string",
-            "description": "Offence Code",
-            "example": "51:22"
-          },
-          "offenceDescription": {
-            "type": "string",
-            "description": "Offence Description",
-            "example": "Disobeys any lawful order"
-          },
-          "findingCode": {
-            "type": "string",
-            "description": "Offence Finding Code",
-            "example": "PROVED"
-          }
-        },
-        "additionalProperties": false,
-        "description": "A charge which was made as part of an adjudication"
-      },
-      "AdjudicationOffence": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Offence Id",
-            "example": "8"
-          },
-          "code": {
-            "type": "string",
-            "description": "Offence Code",
-            "example": "51:7"
-          },
-          "description": {
-            "type": "string",
-            "description": "Offence Description",
-            "example": "Escapes or absconds from prison or from legal custody"
-          }
-        },
-        "additionalProperties": false,
-        "description": "A complete list of the type of offences that this offender has had adjudications for"
-      },
-      "AdjudicationSearchResponse": {
-        "required": [
-          "agencies",
-          "offences",
-          "results"
-        ],
-        "type": "object",
-        "properties": {
-          "results": {
-            "$ref": "#/components/schemas/PageAdjudication"
-          },
-          "offences": {
-            "type": "array",
-            "description": "A complete list of the type of offences that this offender has had adjudications for",
-            "items": {
-              "$ref": "#/components/schemas/AdjudicationOffence"
-            }
-          },
-          "agencies": {
-            "type": "array",
-            "description": "Complete list of agencies where this offender has had adjudications",
-            "items": {
-              "$ref": "#/components/schemas/Prison"
-            }
-          }
-        },
-        "additionalProperties": false
-      },
-      "PageAdjudication": {
-        "type": "object",
-        "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "size": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "content": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Adjudication"
-            }
-          },
-          "number": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
-          "empty": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false,
-        "description": "Search results"
-      },
-      "Prison": {
-        "required": [
-          "active",
-          "agencyId",
-          "description"
-        ],
-        "type": "object",
-        "properties": {
-          "agencyId": {
-            "type": "string",
-            "description": "Agency identifier.",
-            "example": "MDI"
-          },
-          "description": {
-            "type": "string",
-            "description": "Agency description.",
-            "example": "Moorland (HMP & YOI)"
-          },
-          "active": {
-            "type": "boolean",
-            "description": "Indicates the Agency is active",
-            "example": true
-          }
-        },
-        "additionalProperties": false,
-        "description": "Complete list of agencies where this offender has had adjudications"
       },
       "AdjudicationSummary": {
         "required": [
@@ -11096,11 +11626,27 @@
         },
         "additionalProperties": false,
         "description": "Adjudication award / sanction"
+      },
+      "HasAdjudicationsResponse": {
+        "required": [
+          "hasAdjudications"
+        ],
+        "type": "object",
+        "properties": {
+          "hasAdjudications": {
+            "type": "boolean",
+            "description": "flag to indicate the booking id has adjudications"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Has Adjudications Response"
       }
     },
     "securitySchemes": {
       "bearer-jwt": {
         "type": "http",
+        "name": "Authorization",
+        "in": "header",
         "scheme": "bearer",
         "bearerFormat": "JWT"
       }

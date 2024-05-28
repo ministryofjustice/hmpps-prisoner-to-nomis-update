@@ -50,6 +50,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAss
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UnquashHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
@@ -337,17 +338,16 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
   suspend fun getActivePrisoners(
     pageNumber: Long,
     pageSize: Long,
-  ): PageImpl<ActivePrisonerId> =
+  ): PageImpl<PrisonerIds> =
     webClient.get()
       .uri {
-        it.path("/prisoners/ids")
-          .queryParam("active", true)
+        it.path("/prisoners/ids/active")
           .queryParam("page", pageNumber)
           .queryParam("size", pageSize)
           .build()
       }
       .retrieve()
-      .bodyToMono(typeReference<RestResponsePage<ActivePrisonerId>>())
+      .bodyToMono(typeReference<RestResponsePage<PrisonerIds>>())
       .awaitSingle()
 
   suspend fun updatePrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest) =
@@ -845,11 +845,6 @@ data class ReferenceCode(
   val domain: String,
   val description: String,
   val active: Boolean,
-)
-
-data class ActivePrisonerId(
-  val bookingId: Long,
-  val offenderNo: String,
 )
 
 data class NomisIncentive(

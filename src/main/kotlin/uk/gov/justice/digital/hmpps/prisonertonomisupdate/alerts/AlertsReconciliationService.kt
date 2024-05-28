@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ActivePrisonerId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
@@ -52,10 +52,11 @@ class AlertsReconciliationService(
       .getOrElse { emptyList() }
       .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
-  suspend fun checkActiveAlertsMatch(prisonerId: ActivePrisonerId): MismatchAlerts? = runCatching {
+  suspend fun checkActiveAlertsMatch(prisonerId: PrisonerIds): MismatchAlerts? = runCatching {
     val nomisAlerts = doApiCallWithRetries { nomisAlertsApiService.getAlertsForReconciliation(prisonerId.offenderNo) }.let { it.latestBookingAlerts + it.previousBookingsAlerts }
       .map { it.alertCode.code }.toSortedSet()
-    val dpsAlerts = doApiCallWithRetries { dpsAlertsApiService.getActiveAlertsForPrisoner(prisonerId.offenderNo) }.map { it.alertCode.code }.toSortedSet()
+    val dpsAlerts = doApiCallWithRetries { dpsAlertsApiService.getActiveAlertsForPrisoner(prisonerId.offenderNo) }
+      .map { it.alertCode.code }.toSortedSet()
 
     val missingFromNomis = dpsAlerts - nomisAlerts
     val missingFromDps = nomisAlerts - dpsAlerts
