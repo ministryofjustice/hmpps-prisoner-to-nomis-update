@@ -457,7 +457,6 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("isActive", false)
               .withRequestBodyJsonPath("updateUsername", "RASHEED.BAKE")
               .withRequestBodyJsonPath("expiryDate", "2023-07-19")
-              // TODO likely to do something when there are loads of comments for now use description
               .withRequestBodyJsonPath("comment", "Alert added for good reasons")
               .withRequestBodyJsonPath("authorisedBy", "Rasheed"),
           )
