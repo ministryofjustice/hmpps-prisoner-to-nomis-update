@@ -49,7 +49,7 @@ class LocationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetLocation(id: String, includeHistory: Boolean, response: String) {
     stubFor(
-      get(urlPathEqualTo("/locations/$id"))
+      get(urlPathEqualTo("/sync/id/$id"))
         .withQueryParam("includeHistory", equalTo(includeHistory.toString()))
         .willReturn(okJson(response)),
     )
@@ -57,7 +57,7 @@ class LocationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetLocationWithError(id: String, includeHistory: Boolean, status: Int = 500) {
     stubFor(
-      get(urlPathEqualTo("/locations/$id"))
+      get(urlPathEqualTo("/sync/id/$id"))
         .withQueryParam("includeHistory", equalTo(includeHistory.toString()))
         .willReturn(jsonResponse("""{ "error": "some error" }""", status)),
     )
@@ -65,7 +65,7 @@ class LocationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetLocationWithErrorFollowedBySlowSuccess(id: String, includeHistory: Boolean, response: String) {
     stubFor(
-      get(urlPathEqualTo("/locations/$id"))
+      get(urlPathEqualTo("/sync/id/$id"))
         .withQueryParam("includeHistory", equalTo(includeHistory.toString()))
         .inScenario("Retry Locations Scenario")
         .whenScenarioStateIs(Scenario.STARTED)
@@ -78,7 +78,7 @@ class LocationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
 
     stubFor(
-      get(urlPathEqualTo("/locations/$id"))
+      get(urlPathEqualTo("/sync/id/$id"))
         .withQueryParam("includeHistory", equalTo(includeHistory.toString()))
         .inScenario("Retry Locations Scenario")
         .whenScenarioStateIs("Cause Locations Success")

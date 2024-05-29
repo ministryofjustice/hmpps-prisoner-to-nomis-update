@@ -9,7 +9,7 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Capacity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Certification
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.ChangeHistory
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.NonResidentialUsageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AmendmentResponse
@@ -43,31 +43,18 @@ class LocationsReconciliationServiceTest {
 
   @Test
   fun `will not report mismatch where details match`() = runTest {
-    whenever(locationsMappingService.getMappingGivenNomisIdOrNull(NOMIS_LOCATION_ID)).thenReturn(
-      locationMappingDto,
-    )
-    whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID)).thenReturn(
-      nomisResponse("comment1"),
-    )
-    whenever(locationsApiService.getLocation(DPS_LOCATION_ID, true)).thenReturn(
-      dpsResponse(DPS_LOCATION_ID, "comment1"),
-    )
+    whenever(locationsMappingService.getMappingGivenNomisIdOrNull(NOMIS_LOCATION_ID)).thenReturn(locationMappingDto)
+    whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID)).thenReturn(nomisResponse())
+    whenever(locationsApiService.getLocation(DPS_LOCATION_ID, true)).thenReturn(dpsResponse(DPS_LOCATION_ID))
 
     assertThat(locationsReconciliationService.checkMatch(locationMappingDto)).isNull()
   }
 
   @Test
-  fun `will report mismatch where locations have a difference`() = runTest {
-    whenever(locationsMappingService.getMappingGivenNomisIdOrNull(NOMIS_LOCATION_ID)).thenReturn(
-      locationMappingDto,
-    )
-    whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID)).thenReturn(
-      nomisResponse("comment1"),
-    )
-
-    whenever(locationsApiService.getLocation(DPS_LOCATION_ID, true)).thenReturn(
-      dpsResponse(DPS_LOCATION_ID, "comment3"),
-    )
+  fun `will report mismatch where locations have a different comment`() = runTest {
+    whenever(locationsMappingService.getMappingGivenNomisIdOrNull(NOMIS_LOCATION_ID)).thenReturn(locationMappingDto)
+    whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID)).thenReturn(nomisResponse("comment1"))
+    whenever(locationsApiService.getLocation(DPS_LOCATION_ID, true)).thenReturn(dpsResponse(DPS_LOCATION_ID, "comment3"))
 
     assertThat(locationsReconciliationService.checkMatch(locationMappingDto))
       .isEqualTo(
@@ -108,6 +95,68 @@ class LocationsReconciliationServiceTest {
       )
   }
 
+  @Test
+  fun `will report mismatch where locations have a different history count`() = runTest {
+    whenever(locationsMappingService.getMappingGivenNomisIdOrNull(NOMIS_LOCATION_ID)).thenReturn(locationMappingDto)
+    whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID)).thenReturn(nomisResponse())
+
+    whenever(locationsApiService.getLocation(DPS_LOCATION_ID, true)).thenReturn(
+      dpsResponse(DPS_LOCATION_ID).apply {
+        (changeHistory as MutableList).add(
+          ChangeHistory(
+            amendedDate = "2023-09-25T11:12:45",
+            amendedBy = "STEVE_ADM",
+            attribute = "NEW attribute",
+            oldValue = "old",
+            newValue = "new",
+          ),
+        )
+      },
+    )
+
+    with(locationsReconciliationService.checkMatch(locationMappingDto)!!) {
+      assertThat(nomisLocation?.history).isEqualTo(1)
+      assertThat(dpsLocation?.history).isEqualTo(2)
+    }
+  }
+
+  @Test
+  fun `will report mismatch where locations have a different history item`() = runTest {
+    whenever(locationsMappingService.getMappingGivenNomisIdOrNull(NOMIS_LOCATION_ID)).thenReturn(locationMappingDto)
+    whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID)).thenReturn(
+      nomisResponse().apply {
+        (amendments as MutableList).add(
+          AmendmentResponse(
+            amendDateTime = "2023-09-25T11:12:45",
+            columnName = "Baseline CNA",
+            oldValue = "5",
+            newValue = "6",
+            amendedBy = "STEVE_ADM",
+          ),
+        )
+      },
+    )
+
+    whenever(locationsApiService.getLocation(DPS_LOCATION_ID, true)).thenReturn(
+      dpsResponse(DPS_LOCATION_ID).apply {
+        (changeHistory as MutableList).add(
+          ChangeHistory(
+            amendedDate = "2023-09-25T11:12:45",
+            amendedBy = "STEVE_ADM",
+            attribute = "NEW dps attribute",
+            oldValue = "old",
+            newValue = "new",
+          ),
+        )
+      },
+    )
+
+    with(locationsReconciliationService.checkMatch(locationMappingDto)!!) {
+      assertThat(nomisLocation?.history).isEqualTo(2)
+      assertThat(dpsLocation?.history).isEqualTo(2)
+    }
+  }
+
   private fun nomisResponse(comment: String? = null) = LocationResponse(
     locationId = NOMIS_LOCATION_ID,
     comment = comment,
@@ -135,7 +184,7 @@ class LocationsReconciliationServiceTest {
     usages = listOf(
       UsageRequest(UsageRequest.InternalLocationUsageType.OCCUR, 42, 5),
     ),
-    amendments = listOf(
+    amendments = mutableListOf(
       AmendmentResponse(
         amendDateTime = "2023-09-25T11:12:45",
         columnName = "Accommodation Type",
@@ -162,18 +211,16 @@ class LocationsReconciliationServiceTest {
     ),
   )
 
-  private fun dpsResponse(id: String, comment: String = "comment") = Location(
+  private fun dpsResponse(id: String, comment: String? = null) = LegacyLocation(
     id = UUID.fromString(id),
     prisonId = "MDI",
     code = "3",
     pathHierarchy = "B-3",
-    locationType = Location.LocationType.LANDING,
+    locationType = LegacyLocation.LocationType.LANDING,
     active = true,
     orderWithinParentLocation = 4,
-    topLevelId = UUID.fromString(PARENT_DPS_LOCATION_ID),
     key = DPS_KEY,
-    isResidential = true,
-    residentialHousingType = Location.ResidentialHousingType.NORMAL_ACCOMMODATION,
+    residentialHousingType = LegacyLocation.ResidentialHousingType.NORMAL_ACCOMMODATION,
     localName = "Wing C, landing 3",
     comments = comment,
     capacity = Capacity(
@@ -185,8 +232,8 @@ class LocationsReconciliationServiceTest {
       capacityOfCertifiedCell = 13,
     ),
     attributes = listOf(
-      Location.Attributes.CAT_C,
-      Location.Attributes.CAT_D,
+      LegacyLocation.Attributes.CAT_C,
+      LegacyLocation.Attributes.CAT_D,
     ),
     usage = listOf(
       NonResidentialUsageDto(
@@ -195,11 +242,11 @@ class LocationsReconciliationServiceTest {
         capacity = 42,
       ),
     ),
-    changeHistory = listOf(
+    changeHistory = mutableListOf(
       ChangeHistory(
         amendedDate = "2023-09-25T11:12:45",
         amendedBy = "STEVE_ADM",
-        attribute = "Accommodation Type",
+        attribute = "Location Type",
         oldValue = "41",
         newValue = "42",
       ),
@@ -208,8 +255,7 @@ class LocationsReconciliationServiceTest {
     //    deactivatedReason = ,
     //    reactivatedDate = ,
     parentId = UUID.fromString(PARENT_DPS_LOCATION_ID),
-    permanentlyInactive = false,
-    deactivatedByParent = false,
-    status = Location.Status.ACTIVE,
+    lastModifiedBy = "me",
+    lastModifiedDate = "2024-05-25",
   )
 }
