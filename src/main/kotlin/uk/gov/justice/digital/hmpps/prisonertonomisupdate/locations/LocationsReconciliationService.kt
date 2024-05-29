@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.ChangeHistory
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AmendmentResponse
@@ -30,7 +31,7 @@ class LocationsReconciliationService(
   @Value("\${reports.locations.reconciliation.page-size}")
   private val pageSize: Long,
 ) {
-  private val invalidPrisons = listOf("ZZGHI", "UNKNWN", "TRN", "LT4", "ALI") // Albany defunct
+  private val invalidPrisons = listOf("ZZGHI", "UNKNWN", "TRN", "LT3", "LT4", "ALI") // Albany defunct
   private var nomisTotal = 0
   private var invalidPrisonsTotal = 0
 
@@ -90,23 +91,24 @@ class LocationsReconciliationService(
           allDpsIdsInNomis.contains((it.id.toString()))
         }
         .map { dpsRecord ->
+          val legacyRecord = locationsApiService.getLocation(dpsRecord.id.toString(), true)
           val mismatch = MismatchLocation(
             dpsId = dpsRecord.id.toString(),
             dpsLocation =
             LocationReportDetail(
-              dpsRecord.code,
+              legacyRecord.code,
               "${dpsRecord.prisonId}-${dpsRecord.pathHierarchy}",
-              dpsRecord.residentialHousingType?.name,
-              dpsRecord.localName,
-              dpsRecord.comments,
-              dpsRecord.capacity?.workingCapacity,
-              dpsRecord.capacity?.maxCapacity,
-              dpsRecord.certification?.certified,
-              dpsRecord.certification?.capacityOfCertifiedCell,
-              dpsRecord.active,
-              dpsRecord.attributes?.size,
-              dpsRecord.usage?.size,
-              dpsRecord.changeHistory?.size,
+              legacyRecord.residentialHousingType?.name,
+              legacyRecord.localName,
+              legacyRecord.comments,
+              legacyRecord.capacity?.workingCapacity,
+              legacyRecord.capacity?.maxCapacity,
+              legacyRecord.certification?.certified,
+              legacyRecord.certification?.capacityOfCertifiedCell,
+              legacyRecord.active,
+              legacyRecord.attributes?.size,
+              legacyRecord.usage?.size,
+              legacyRecord.changeHistory?.size,
             ),
           )
           log.info("Location Mismatch found extra DPS location $dpsRecord")
@@ -222,7 +224,7 @@ class LocationsReconciliationService(
 
   internal fun doesNotMatch(
     nomis: LocationResponse,
-    dps: Location,
+    dps: LegacyLocation,
   ): String? {
     if (nomis.locationCode != dps.code) return "Location code mismatch"
     if (nomis.prisonId != dps.prisonId) return "Prison id mismatch"
@@ -232,11 +234,15 @@ class LocationsReconciliationService(
     if ((nomis.unitType == null) != (dps.residentialHousingType == null)) return "Housing type mismatch"
     if (nomis.userDescription != dps.localName) return "Local Name mismatch"
     if (nomis.comment != dps.comments) return "Comment mismatch"
-    if (dps.residentialHousingType != null && dps.locationType == Location.LocationType.CELL) {
-      if (nomis.operationalCapacity != null && nomis.operationalCapacity > 0 && nomis.operationalCapacity != dps.capacity?.workingCapacity) return "Cell operational capacity mismatch"
-      if (nomis.capacity != null && nomis.capacity > 0 && nomis.capacity != dps.capacity?.maxCapacity) return "Cell max capacity mismatch"
-      if ((nomis.certified == true) != (dps.certification?.certified == true)) return "Cell certification mismatch"
-      if ((nomis.cnaCapacity ?: 0) != (dps.certification?.capacityOfCertifiedCell ?: 0)) return "Cell CNA capacity mismatch"
+    if (dps.residentialHousingType != null && dps.locationType == LegacyLocation.LocationType.CELL) {
+      if (dps.residentialHousingType != LegacyLocation.ResidentialHousingType.HOLDING_CELL) {
+        if (nomis.operationalCapacity != null && nomis.operationalCapacity > 0 && nomis.operationalCapacity != dps.capacity?.workingCapacity) return "Cell operational capacity mismatch"
+        if (nomis.capacity != null && nomis.capacity > 0 && nomis.capacity != dps.capacity?.maxCapacity) return "Cell max capacity mismatch"
+        if (nomis.cnaCapacity != null && nomis.cnaCapacity > 0) {
+          if ((nomis.certified == true) != (dps.certification?.certified == true)) return "Cell certification mismatch"
+          if (nomis.cnaCapacity != dps.certification?.capacityOfCertifiedCell) return "Cell CNA capacity mismatch"
+        }
+      }
       if (expectedDpsAttributesSize(nomis.profiles) != (dps.attributes?.size ?: 0)) return "Cell attributes mismatch"
     }
     if (dps.residentialHousingType == null && (nomis.usages?.size ?: 0) != (dps.usage?.size ?: 0)) return "Location usage mismatch"
@@ -248,45 +254,40 @@ class LocationsReconciliationService(
     return null
   }
 
-  fun historyDoesNotMatch(nomis: LocationResponse, dps: Location): Boolean {
-    if (expectedDpsHistorySize(nomis.amendments) == (dps.changeHistory?.size ?: 0)) {
-      return false
+  fun historyDoesNotMatch(nomis: LocationResponse, dps: LegacyLocation): Boolean {
+    val filteredAmendmentResponses = filterAmendmentResponses(nomis.amendments)
+    val filteredDpsHistoryResponses = dps.changeHistory?.filter { it.attribute != "Converted Cell Type" }
+    if ((filteredAmendmentResponses?.size ?: 0) != (filteredDpsHistoryResponses?.size ?: 0)) {
+      return true
     }
-    val nomisListConverted = nomis.amendments!!.map { a ->
+    val nomisListConverted = filteredAmendmentResponses?.map { a ->
       ChangeHistory(toHistoryAttribute(a.columnName), a.amendedBy, a.amendDateTime, a.oldValue, a.newValue)
-    }
+    } ?: emptyList()
     val nomisSetSorted = nomisListConverted.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
-    val dpsSetSorted = dps.changeHistory!!.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
+    val dpsSetSorted = filteredDpsHistoryResponses?.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue } ?: emptyList()
 
-    var dpsIndex = 0
-    nomisSetSorted.forEach { nomisItem ->
-      val dpsItem = dpsSetSorted.elementAtOrNull(dpsIndex)
-      if (dpsItem != null) {
-        if (nomisItem.attribute == dpsItem.attribute &&
-          nomisItem.amendedBy == dpsItem.amendedBy &&
-          nomisItem.amendedDate == dpsItem.amendedDate &&
-          nomisItem.oldValue == dpsItem.oldValue &&
-          nomisItem.newValue == dpsItem.newValue
-        ) {
-          // matches
-        } else {
-          return true
-        }
-      } else {
-        return true
-      }
-      dpsIndex++
+    if (dpsSetSorted.size > nomisSetSorted.size) {
+      return true
     }
-    return false
+
+    return nomisSetSorted.zip(dpsSetSorted)
+      .any { (nomisItem, dpsItem) ->
+        nomisItem.attribute != dpsItem.attribute ||
+          nomisItem.amendedBy != dpsItem.amendedBy ||
+          nomisItem.amendedDate != dpsItem.amendedDate ||
+          nomisItem.oldValue != dpsItem.oldValue ||
+          nomisItem.newValue != dpsItem.newValue
+      }
   }
 
   private fun reportHistory(nomisList: List<AmendmentResponse>?, dpsList: List<ChangeHistory>?): String {
-    val nomisListConverted = nomisList!!.map { nomis ->
+    val nomisListConverted = filterAmendmentResponses(nomisList)?.map { nomis ->
       ChangeHistory(toHistoryAttribute(nomis.columnName), nomis.amendedBy, nomis.amendDateTime, nomis.oldValue, nomis.newValue)
-    }
+    } ?: emptyList()
 
-    val onlyInDps = dpsList!! - nomisListConverted
-    val onlyInNomis = nomisListConverted - dpsList
+    val dpsListNonNull = dpsList ?: emptyList()
+    val onlyInDps = dpsListNonNull - nomisListConverted.toSet()
+    val onlyInNomis = nomisListConverted - dpsListNonNull.toSet()
 
     if (onlyInDps.isNotEmpty() || onlyInNomis.isNotEmpty()) {
       return """  Only in Dps: $onlyInDps
@@ -295,28 +296,19 @@ class LocationsReconciliationService(
     }
 
     val nomisSetSorted = nomisListConverted.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
-    val dpsSetSorted = dpsList.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
+    val dpsSetSorted = dpsListNonNull.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
 
-    nomisSetSorted.forEachIndexed { index, nomisItem ->
-      val dpsItem = dpsSetSorted.elementAtOrNull(index)
-      if (dpsItem != null) {
-        if (nomisItem.attribute == dpsItem.attribute &&
-          nomisItem.amendedBy == dpsItem.amendedBy &&
-          nomisItem.amendedDate == dpsItem.amendedDate &&
-          nomisItem.oldValue == dpsItem.oldValue &&
-          nomisItem.newValue == dpsItem.newValue
-        ) {
-          // matches
-        } else {
-          return """Item at index $index doesn't match :
+    nomisSetSorted.zip(dpsSetSorted).forEachIndexed { index, (nomisItem, dpsItem) ->
+      if (nomisItem.attribute != dpsItem.attribute ||
+        nomisItem.amendedBy != dpsItem.amendedBy ||
+        nomisItem.amendedDate != dpsItem.amendedDate ||
+        nomisItem.oldValue != dpsItem.oldValue ||
+        nomisItem.newValue != dpsItem.newValue
+      ) {
+        return """Item at index $index doesn't match :
             | prev  ${dpsSetSorted.elementAtOrNull(index - 1)}
             | nomis $nomisItem
             | dps   $dpsItem
-          """.trimMargin()
-        }
-      } else {
-        return """No corresponding element in dpsList for index $index: $nomisItem
-          | previous was ${dpsSetSorted.elementAtOrNull(index - 1)}
         """.trimMargin()
       }
     }
@@ -350,13 +342,15 @@ class LocationsReconciliationService(
       ?.size ?: 0
     )
 
-  private fun expectedDpsHistorySize(amendments: List<AmendmentResponse>?) = (
+  private fun expectedDpsHistorySize(amendments: List<AmendmentResponse>?) = filterAmendmentResponses(amendments)?.size ?: 0
+
+  private fun filterAmendmentResponses(amendments: List<AmendmentResponse>?) =
     amendments
       ?.filter { it.oldValue != it.newValue }
+      // user_desc not recorded in Nomis history
+      ?.filterNot { it.columnName == "DESCRIPTION" }
       // eliminate duplicate entries with timestamps within same second (about 120)
       ?.toSet()
-      ?.size ?: 0
-    )
 
   private fun toHistoryAttribute(columnName: String?): String =
     when (columnName) {

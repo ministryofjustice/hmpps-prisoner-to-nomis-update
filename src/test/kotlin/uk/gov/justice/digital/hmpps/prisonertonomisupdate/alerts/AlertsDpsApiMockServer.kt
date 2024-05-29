@@ -16,7 +16,9 @@ import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.Alert
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.AlertCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.AlertCodeSummary
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.AlertType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -124,6 +126,30 @@ class AlertsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         ),
     )
   }
+
+  fun stubGetAlertCode(code: String = "ABC", alertCode: AlertCode = dpsAlertCodeReferenceData(code)) {
+    stubFor(
+      get(urlMatching("/alert-codes/$code"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(alertCode)
+            .withStatus(200),
+        ),
+    )
+  }
+
+  fun stubGetAlertType(code: String = "XYZ", alertCode: AlertType = dpsAlertTypeReferenceData(code)) {
+    stubFor(
+      get(urlMatching("/alert-types/$code"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(alertCode)
+            .withStatus(200),
+        ),
+    )
+  }
 }
 
 fun dpsAlert(): Alert = Alert(
@@ -150,4 +176,32 @@ fun dpsAlertCode(code: String) = AlertCodeSummary(
   description = "Alert code description",
   listSequence = 3,
   isActive = true,
+)
+
+fun dpsAlertCodeReferenceData(code: String = "ABC") = AlertCode(
+  code = code,
+  description = "Alert code description for $code",
+  alertTypeCode = "XYZ",
+  listSequence = 1,
+  isActive = true,
+  createdAt = LocalDateTime.parse("2022-02-28T13:56:10"),
+  createdBy = "JANE.BEEK",
+  modifiedAt = LocalDateTime.parse("2022-02-28T13:56:10"),
+  modifiedBy = "JANE.BEEK",
+  deactivatedAt = LocalDateTime.parse("2022-02-28T13:56:10"),
+  deactivatedBy = "JANE.BEEK",
+)
+
+fun dpsAlertTypeReferenceData(code: String = "ABC") = AlertType(
+  code = code,
+  description = "Alert code description for $code",
+  listSequence = 1,
+  isActive = true,
+  createdAt = LocalDateTime.parse("2022-02-28T13:56:10"),
+  createdBy = "JANE.BEEK",
+  modifiedAt = LocalDateTime.parse("2022-02-28T13:56:10"),
+  modifiedBy = "JANE.BEEK",
+  deactivatedAt = LocalDateTime.parse("2022-02-28T13:56:10"),
+  deactivatedBy = "JANE.BEEK",
+  alertCodes = emptyList(),
 )

@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiExtension.Companion.locationsApi
 
 private const val LOCATION_ID = "2475f250-434a-4257-afe7-b911f1773a4d"
@@ -45,16 +45,15 @@ internal class LocationsApiServiceTest {
       },
       "attributes": ["LOCATE_FLAT", "ELIGIBLE"],
       "orderWithinParentLocation": 1,
-      "topLevelId": "57718979-573c-433a-9e51-2d83f887c11c",
       "parentId": "57718979-573c-433a-9e51-2d83f887c11c",
       "key": "MDI-A-1-001",
-      "status": "ACTIVE",
-      "isResidential": true
+      "lastModifiedBy": "me",
+      "lastModifiedDate": "2024-05-25"
     }
   """.trimIndent()
 
   @Nested
-  @DisplayName("GET /locations/{id}")
+  @DisplayName("GET /sync/id/{id}")
   inner class GetLocation {
     @BeforeEach
     internal fun setUp() {
@@ -66,7 +65,7 @@ internal class LocationsApiServiceTest {
       locationsApiService.getLocation(LOCATION_ID)
 
       locationsApi.verify(
-        WireMock.getRequestedFor(WireMock.urlEqualTo("/locations/$LOCATION_ID?includeHistory=false"))
+        WireMock.getRequestedFor(WireMock.urlEqualTo("/sync/id/$LOCATION_ID?includeHistory=false"))
           .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
       )
     }
@@ -76,7 +75,7 @@ internal class LocationsApiServiceTest {
       val location = locationsApiService.getLocation(LOCATION_ID)
 
       assertThat(location.pathHierarchy).isEqualTo("A-1-001")
-      assertThat(location.attributes).containsExactlyInAnyOrder(Location.Attributes.LOCATE_FLAT, Location.Attributes.ELIGIBLE)
+      assertThat(location.attributes).containsExactlyInAnyOrder(LegacyLocation.Attributes.LOCATE_FLAT, LegacyLocation.Attributes.ELIGIBLE)
     }
 
     @Test

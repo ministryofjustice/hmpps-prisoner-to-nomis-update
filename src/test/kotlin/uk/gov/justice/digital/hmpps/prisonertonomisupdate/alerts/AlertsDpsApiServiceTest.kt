@@ -126,4 +126,80 @@ class AlertsDpsApiServiceTest {
       assertThrows<IllegalStateException> { apiService.getActiveAlertsForPrisoner("A1234TK") }
     }
   }
+
+  @Nested
+  inner class GetAlertCode {
+    private val code = "ABC"
+
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsDpsApi.stubGetAlertCode(code)
+
+      apiService.getAlertCode(code)
+
+      alertsDpsApi.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass alert code to service`() = runTest {
+      alertsDpsApi.stubGetAlertCode(code)
+
+      apiService.getAlertCode(code)
+
+      alertsDpsApi.verify(
+        getRequestedFor(urlEqualTo("/alert-codes/$code")),
+      )
+    }
+
+    @Test
+    fun `will return alert code`() = runTest {
+      alertsDpsApi.stubGetAlertCode(code, dpsAlertCodeReferenceData(code).copy(description = "An alert code"))
+
+      val alertCode = apiService.getAlertCode(code)
+
+      assertThat(alertCode.code).isEqualTo(code)
+      assertThat(alertCode.description).isEqualTo("An alert code")
+    }
+  }
+
+  @Nested
+  inner class GetAlertType {
+    private val code = "ABC"
+
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsDpsApi.stubGetAlertType(code)
+
+      apiService.getAlertType(code)
+
+      alertsDpsApi.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass alert type to service`() = runTest {
+      alertsDpsApi.stubGetAlertType(code)
+
+      apiService.getAlertType(code)
+
+      alertsDpsApi.verify(
+        getRequestedFor(urlEqualTo("/alert-types/$code")),
+      )
+    }
+
+    @Test
+    fun `will return alert type`() = runTest {
+      alertsDpsApi.stubGetAlertType(code, dpsAlertTypeReferenceData(code).copy(description = "An alert type"))
+
+      val alertCode = apiService.getAlertType(code)
+
+      assertThat(alertCode.code).isEqualTo(code)
+      assertThat(alertCode.description).isEqualTo("An alert type")
+    }
+  }
 }

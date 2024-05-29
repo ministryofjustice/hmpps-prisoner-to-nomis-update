@@ -5,7 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.NonResidentialUsageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateLocationRequest
@@ -112,7 +112,7 @@ class LocationsService(
     }
   }
 
-  private suspend fun doUpdateLocation(event: LocationDomainEvent, name: String, update: suspend (Long, Location) -> Unit) {
+  private suspend fun doUpdateLocation(event: LocationDomainEvent, name: String, update: suspend (Long, LegacyLocation) -> Unit) {
     val telemetryMap = mutableMapOf("dpsId" to event.additionalInformation.id)
     telemetryMap["key"] = event.additionalInformation.key
     if (isDpsCreated(event.additionalInformation)) {
@@ -135,7 +135,7 @@ class LocationsService(
     }
   }
 
-  private suspend fun toCreateLocationRequest(instance: Location) = CreateLocationRequest(
+  private suspend fun toCreateLocationRequest(instance: LegacyLocation) = CreateLocationRequest(
     locationCode = instance.code,
     certified = instance.certification?.certified ?: false,
     cnaCapacity = instance.certification?.capacityOfCertifiedCell,
@@ -153,22 +153,22 @@ class LocationsService(
     usages = instance.usage?.map { toUsage(it) },
   )
 
-  private fun toAttribute(attribute: Location.Attributes): ProfileRequest {
+  private fun toAttribute(attribute: LegacyLocation.Attributes): ProfileRequest {
     val fullAttribute = ResidentialAttributeValue.valueOf(attribute.name)
     var code: String? = null
     val type: ProfileRequest.ProfileType = when (fullAttribute.type) {
       ResidentialAttributeType.SANITATION_FITTINGS -> {
         code = when (attribute) {
-          Location.Attributes.ANTI_BARRICADE_DOOR -> "ABD"
-          Location.Attributes.AUDITABLE_CELL_BELL -> "ACB"
-          Location.Attributes.FIXED_BED -> "FIB"
-          Location.Attributes.METAL_DOOR -> "MD"
-          Location.Attributes.MOVABLE_BED -> "MOB"
-          Location.Attributes.PRIVACY_CURTAIN -> "PC"
-          Location.Attributes.PRIVACY_SCREEN -> "PS"
-          Location.Attributes.STANDARD_CELL_BELL -> "SCB"
-          Location.Attributes.SEPARATE_TOILET -> "SETO"
-          Location.Attributes.WOODEN_DOOR -> "WD"
+          LegacyLocation.Attributes.ANTI_BARRICADE_DOOR -> "ABD"
+          LegacyLocation.Attributes.AUDITABLE_CELL_BELL -> "ACB"
+          LegacyLocation.Attributes.FIXED_BED -> "FIB"
+          LegacyLocation.Attributes.METAL_DOOR -> "MD"
+          LegacyLocation.Attributes.MOVABLE_BED -> "MOB"
+          LegacyLocation.Attributes.PRIVACY_CURTAIN -> "PC"
+          LegacyLocation.Attributes.PRIVACY_SCREEN -> "PS"
+          LegacyLocation.Attributes.STANDARD_CELL_BELL -> "SCB"
+          LegacyLocation.Attributes.SEPARATE_TOILET -> "SETO"
+          LegacyLocation.Attributes.WOODEN_DOOR -> "WD"
           else -> null
         }
         ProfileRequest.ProfileType.HOU_SANI_FIT
@@ -176,19 +176,19 @@ class LocationsService(
 
       ResidentialAttributeType.LOCATION_ATTRIBUTE -> {
         code = when (attribute) {
-          Location.Attributes.CAT_A_CELL -> "A"
-          Location.Attributes.DOUBLE_OCCUPANCY -> "DO"
-          Location.Attributes.E_LIST_CELL -> "ELC"
-          Location.Attributes.GATED_CELL -> "GC"
-          Location.Attributes.LISTENER_CELL -> "LC"
-          Location.Attributes.LOCATE_FLAT -> "LF"
-          Location.Attributes.MULTIPLE_OCCUPANCY -> "MO"
-          Location.Attributes.NON_SMOKER_CELL -> "NSMC"
-          Location.Attributes.OBSERVATION_CELL -> "OC"
-          Location.Attributes.SAFE_CELL -> "SAFE_CELL"
-          Location.Attributes.SINGLE_OCCUPANCY -> "SO"
-          Location.Attributes.SPECIAL_CELL -> "SPC"
-          Location.Attributes.WHEELCHAIR_ACCESS -> "WA"
+          LegacyLocation.Attributes.CAT_A_CELL -> "A"
+          LegacyLocation.Attributes.DOUBLE_OCCUPANCY -> "DO"
+          LegacyLocation.Attributes.E_LIST_CELL -> "ELC"
+          LegacyLocation.Attributes.GATED_CELL -> "GC"
+          LegacyLocation.Attributes.LISTENER_CELL -> "LC"
+          LegacyLocation.Attributes.LOCATE_FLAT -> "LF"
+          LegacyLocation.Attributes.MULTIPLE_OCCUPANCY -> "MO"
+          LegacyLocation.Attributes.NON_SMOKER_CELL -> "NSMC"
+          LegacyLocation.Attributes.OBSERVATION_CELL -> "OC"
+          LegacyLocation.Attributes.SAFE_CELL -> "SAFE_CELL"
+          LegacyLocation.Attributes.SINGLE_OCCUPANCY -> "SO"
+          LegacyLocation.Attributes.SPECIAL_CELL -> "SPC"
+          LegacyLocation.Attributes.WHEELCHAIR_ACCESS -> "WA"
           else -> null
         }
         ProfileRequest.ProfileType.HOU_UNIT_ATT
@@ -196,31 +196,31 @@ class LocationsService(
 
       ResidentialAttributeType.USED_FOR -> {
         code = when (attribute) {
-          Location.Attributes.UNCONVICTED_JUVENILES -> "1"
-          Location.Attributes.SENTENCED_JUVENILES -> "2"
-          Location.Attributes.UNCONVICTED_18_20 -> "3"
-          Location.Attributes.SENTENCED_18_20 -> "4"
-          Location.Attributes.UNCONVICTED_ADULTS -> "5"
-          Location.Attributes.SENTENCED_ADULTS -> "6"
-          Location.Attributes.VULNERABLE_PRISONER_UNIT -> "7"
-          Location.Attributes.SPECIAL_UNIT -> "8"
-          Location.Attributes.RESETTLEMENT_HOSTEL -> "9"
-          Location.Attributes.HEALTHCARE_CENTRE -> "10"
-          Location.Attributes.NATIONAL_RESOURCE_HOSPITAL -> "11"
-          Location.Attributes.OTHER_SPECIFIED -> "12"
-          Location.Attributes.REMAND_CENTRE -> "A"
-          Location.Attributes.LOCAL_PRISON -> "B"
-          Location.Attributes.CLOSED_PRISON -> "C"
-          Location.Attributes.OPEN_TRAINING -> "D"
-          Location.Attributes.HOSTEL -> "E"
-          Location.Attributes.CLOSED_YOUNG_OFFENDER -> "I"
-          Location.Attributes.OPEN_YOUNG_OFFENDER -> "J"
-          Location.Attributes.REMAND_UNDER_18 -> "K"
-          Location.Attributes.SENTENCED_UNDER_18 -> "L"
-          Location.Attributes.ECL_COMPONENT -> "R"
-          Location.Attributes.ADDITIONAL_SPECIAL_UNIT -> "T"
-          Location.Attributes.SECOND_CLOSED_TRAINER -> "Y"
-          Location.Attributes.IMMIGRATION_DETAINEES -> "Z"
+          LegacyLocation.Attributes.UNCONVICTED_JUVENILES -> "1"
+          LegacyLocation.Attributes.SENTENCED_JUVENILES -> "2"
+          LegacyLocation.Attributes.UNCONVICTED_18_20 -> "3"
+          LegacyLocation.Attributes.SENTENCED_18_20 -> "4"
+          LegacyLocation.Attributes.UNCONVICTED_ADULTS -> "5"
+          LegacyLocation.Attributes.SENTENCED_ADULTS -> "6"
+          LegacyLocation.Attributes.VULNERABLE_PRISONER_UNIT -> "7"
+          LegacyLocation.Attributes.SPECIAL_UNIT -> "8"
+          LegacyLocation.Attributes.RESETTLEMENT_HOSTEL -> "9"
+          LegacyLocation.Attributes.HEALTHCARE_CENTRE -> "10"
+          LegacyLocation.Attributes.NATIONAL_RESOURCE_HOSPITAL -> "11"
+          LegacyLocation.Attributes.OTHER_SPECIFIED -> "12"
+          LegacyLocation.Attributes.REMAND_CENTRE -> "A"
+          LegacyLocation.Attributes.LOCAL_PRISON -> "B"
+          LegacyLocation.Attributes.CLOSED_PRISON -> "C"
+          LegacyLocation.Attributes.OPEN_TRAINING -> "D"
+          LegacyLocation.Attributes.HOSTEL -> "E"
+          LegacyLocation.Attributes.CLOSED_YOUNG_OFFENDER -> "I"
+          LegacyLocation.Attributes.OPEN_YOUNG_OFFENDER -> "J"
+          LegacyLocation.Attributes.REMAND_UNDER_18 -> "K"
+          LegacyLocation.Attributes.SENTENCED_UNDER_18 -> "L"
+          LegacyLocation.Attributes.ECL_COMPONENT -> "R"
+          LegacyLocation.Attributes.ADDITIONAL_SPECIAL_UNIT -> "T"
+          LegacyLocation.Attributes.SECOND_CLOSED_TRAINER -> "Y"
+          LegacyLocation.Attributes.IMMIGRATION_DETAINEES -> "Z"
           else -> null
         }
         ProfileRequest.ProfileType.HOU_USED_FOR
@@ -228,38 +228,38 @@ class LocationsService(
 
       ResidentialAttributeType.SECURITY -> {
         code = when (attribute) {
-          Location.Attributes.CAT_A -> "A"
-          Location.Attributes.CAT_A_EX -> "E"
-          Location.Attributes.CAT_A_HI -> "H"
-          Location.Attributes.CAT_B -> "B"
-          Location.Attributes.CAT_C -> "C"
-          Location.Attributes.CAT_D -> "D"
-          Location.Attributes.ELIGIBLE -> null
-          Location.Attributes.PAROLE_GRANTED -> "GRANTED"
-          Location.Attributes.INELIGIBLE -> null
-          Location.Attributes.YOI_CLOSED -> "I"
-          Location.Attributes.YOI_OPEN -> "J"
-          Location.Attributes.YOI_RESTRICTED -> "V"
-          Location.Attributes.YOI_SHORT_SENTENCE -> "K"
-          Location.Attributes.YOI_LONG_TERM_CLOSED -> "L"
-          Location.Attributes.UNCLASSIFIED -> "Z"
-          Location.Attributes.UNCATEGORISED_SENTENCED_MALE -> "X"
-          Location.Attributes.LOW -> "LOW"
-          Location.Attributes.MEDIUM -> "MED"
-          Location.Attributes.HIGH -> "HI"
-          Location.Attributes.NOT_APPLICABLE -> "N/A"
-          Location.Attributes.PROV_A -> "P"
-          Location.Attributes.PENDING -> "PEND"
-          Location.Attributes.REF_REVIEW -> "REF/REVIEW"
-          Location.Attributes.REFUSED_NO_REVIEW -> "REFUSED"
-          Location.Attributes.STANDARD -> "STANDARD"
-          Location.Attributes.FEMALE_RESTRICTED -> "Q"
-          Location.Attributes.FEMALE_CLOSED -> "R"
-          Location.Attributes.FEMALE_SEMI -> "S"
-          Location.Attributes.FEMALE_OPEN -> "T"
-          Location.Attributes.UN_SENTENCED -> "U"
-          Location.Attributes.YES -> "Y"
-          Location.Attributes.NO -> "N"
+          LegacyLocation.Attributes.CAT_A -> "A"
+          LegacyLocation.Attributes.CAT_A_EX -> "E"
+          LegacyLocation.Attributes.CAT_A_HI -> "H"
+          LegacyLocation.Attributes.CAT_B -> "B"
+          LegacyLocation.Attributes.CAT_C -> "C"
+          LegacyLocation.Attributes.CAT_D -> "D"
+          LegacyLocation.Attributes.ELIGIBLE -> null
+          LegacyLocation.Attributes.PAROLE_GRANTED -> "GRANTED"
+          LegacyLocation.Attributes.INELIGIBLE -> null
+          LegacyLocation.Attributes.YOI_CLOSED -> "I"
+          LegacyLocation.Attributes.YOI_OPEN -> "J"
+          LegacyLocation.Attributes.YOI_RESTRICTED -> "V"
+          LegacyLocation.Attributes.YOI_SHORT_SENTENCE -> "K"
+          LegacyLocation.Attributes.YOI_LONG_TERM_CLOSED -> "L"
+          LegacyLocation.Attributes.UNCLASSIFIED -> "Z"
+          LegacyLocation.Attributes.UNCATEGORISED_SENTENCED_MALE -> "X"
+          LegacyLocation.Attributes.LOW -> "LOW"
+          LegacyLocation.Attributes.MEDIUM -> "MED"
+          LegacyLocation.Attributes.HIGH -> "HI"
+          LegacyLocation.Attributes.NOT_APPLICABLE -> "N/A"
+          LegacyLocation.Attributes.PROV_A -> "P"
+          LegacyLocation.Attributes.PENDING -> "PEND"
+          LegacyLocation.Attributes.REF_REVIEW -> "REF/REVIEW"
+          LegacyLocation.Attributes.REFUSED_NO_REVIEW -> "REFUSED"
+          LegacyLocation.Attributes.STANDARD -> "STANDARD"
+          LegacyLocation.Attributes.FEMALE_RESTRICTED -> "Q"
+          LegacyLocation.Attributes.FEMALE_CLOSED -> "R"
+          LegacyLocation.Attributes.FEMALE_SEMI -> "S"
+          LegacyLocation.Attributes.FEMALE_OPEN -> "T"
+          LegacyLocation.Attributes.UN_SENTENCED -> "U"
+          LegacyLocation.Attributes.YES -> "Y"
+          LegacyLocation.Attributes.NO -> "N"
           else -> null
         }
         ProfileRequest.ProfileType.SUP_LVL_TYPE
@@ -286,7 +286,7 @@ class LocationsService(
     capacity = u.capacity,
   )
 
-  private suspend fun toUpdateLocationRequest(instance: Location) = UpdateLocationRequest(
+  private suspend fun toUpdateLocationRequest(instance: LegacyLocation) = UpdateLocationRequest(
     locationCode = instance.code,
     locationType = UpdateLocationRequest.LocationType.valueOf(toLocationType(instance.locationType)),
     description = instance.key,
@@ -299,69 +299,69 @@ class LocationsService(
     usages = instance.usage?.map { toUsage(it) },
   )
 
-  private fun toUnitType(residentialHousingType: Location.ResidentialHousingType) = when (residentialHousingType) {
-    Location.ResidentialHousingType.HEALTHCARE -> "HC"
-    Location.ResidentialHousingType.HOLDING_CELL -> "HOLC"
-    Location.ResidentialHousingType.NORMAL_ACCOMMODATION -> "NA"
-    Location.ResidentialHousingType.OTHER_USE -> "OU"
-    Location.ResidentialHousingType.RECEPTION -> "REC"
-    Location.ResidentialHousingType.SEGREGATION -> "SEG"
-    Location.ResidentialHousingType.SPECIALIST_CELL -> "SPLC"
+  private fun toUnitType(residentialHousingType: LegacyLocation.ResidentialHousingType) = when (residentialHousingType) {
+    LegacyLocation.ResidentialHousingType.HEALTHCARE -> "HC"
+    LegacyLocation.ResidentialHousingType.HOLDING_CELL -> "HOLC"
+    LegacyLocation.ResidentialHousingType.NORMAL_ACCOMMODATION -> "NA"
+    LegacyLocation.ResidentialHousingType.OTHER_USE -> "OU"
+    LegacyLocation.ResidentialHousingType.RECEPTION -> "REC"
+    LegacyLocation.ResidentialHousingType.SEGREGATION -> "SEG"
+    LegacyLocation.ResidentialHousingType.SPECIALIST_CELL -> "SPLC"
   }
 
-  private fun toLocationType(locationtype: Location.LocationType) = when (locationtype) {
-    Location.LocationType.WING -> "WING"
-    Location.LocationType.SPUR -> "SPUR"
-    Location.LocationType.LANDING,
+  private fun toLocationType(locationtype: LegacyLocation.LocationType) = when (locationtype) {
+    LegacyLocation.LocationType.WING -> "WING"
+    LegacyLocation.LocationType.SPUR -> "SPUR"
+    LegacyLocation.LocationType.LANDING,
     -> "LAND"
 
-    Location.LocationType.CELL -> "CELL"
-    Location.LocationType.ADJUDICATION_ROOM -> "ADJU"
-    Location.LocationType.ADMINISTRATION_AREA -> "ADMI"
-    Location.LocationType.APPOINTMENTS -> "APP"
-    Location.LocationType.AREA -> "AREA"
-    Location.LocationType.ASSOCIATION -> "ASSO"
-    Location.LocationType.BOOTH -> "BOOT"
-    Location.LocationType.BOX -> "BOX"
-    Location.LocationType.CLASSROOM -> "CLAS"
-    Location.LocationType.EXERCISE_AREA -> "EXER"
-    Location.LocationType.EXTERNAL_GROUNDS -> "EXTE"
-    Location.LocationType.FAITH_AREA -> "FAIT"
-    Location.LocationType.GROUP -> "GROU"
-    Location.LocationType.HOLDING_CELL -> "HCEL"
-    Location.LocationType.HOLDING_AREA -> "HOLD"
-    Location.LocationType.INTERNAL_GROUNDS -> "IGRO"
-    Location.LocationType.INSIDE_PARTY -> "INSI"
-    Location.LocationType.INTERVIEW -> "INTE"
-    Location.LocationType.LOCATION -> "LOCA"
-    Location.LocationType.MEDICAL -> "MEDI"
-    Location.LocationType.MOVEMENT_AREA -> "MOVE"
-    Location.LocationType.OFFICE -> "OFFI"
-    Location.LocationType.OUTSIDE_PARTY -> "OUTS"
-    Location.LocationType.POSITION -> "POSI"
-    Location.LocationType.RESIDENTIAL_UNIT -> "RESI"
-    Location.LocationType.ROOM -> "ROOM"
-    Location.LocationType.RETURN_TO_UNIT -> "RTU"
-    Location.LocationType.SHELF -> "SHEL"
-    Location.LocationType.SPORTS -> "SPOR"
-    Location.LocationType.STORE -> "STOR"
-    Location.LocationType.TABLE -> "TABL"
-    Location.LocationType.TRAINING_AREA -> "TRAI"
-    Location.LocationType.TRAINING_ROOM -> "TRRM"
-    Location.LocationType.VIDEO_LINK -> "VIDE"
-    Location.LocationType.VISITS -> "VISIT"
-    Location.LocationType.WORKSHOP -> "WORK"
+    LegacyLocation.LocationType.CELL -> "CELL"
+    LegacyLocation.LocationType.ADJUDICATION_ROOM -> "ADJU"
+    LegacyLocation.LocationType.ADMINISTRATION_AREA -> "ADMI"
+    LegacyLocation.LocationType.APPOINTMENTS -> "APP"
+    LegacyLocation.LocationType.AREA -> "AREA"
+    LegacyLocation.LocationType.ASSOCIATION -> "ASSO"
+    LegacyLocation.LocationType.BOOTH -> "BOOT"
+    LegacyLocation.LocationType.BOX -> "BOX"
+    LegacyLocation.LocationType.CLASSROOM -> "CLAS"
+    LegacyLocation.LocationType.EXERCISE_AREA -> "EXER"
+    LegacyLocation.LocationType.EXTERNAL_GROUNDS -> "EXTE"
+    LegacyLocation.LocationType.FAITH_AREA -> "FAIT"
+    LegacyLocation.LocationType.GROUP -> "GROU"
+    LegacyLocation.LocationType.HOLDING_CELL -> "HCEL"
+    LegacyLocation.LocationType.HOLDING_AREA -> "HOLD"
+    LegacyLocation.LocationType.INTERNAL_GROUNDS -> "IGRO"
+    LegacyLocation.LocationType.INSIDE_PARTY -> "INSI"
+    LegacyLocation.LocationType.INTERVIEW -> "INTE"
+    LegacyLocation.LocationType.LOCATION -> "LOCA"
+    LegacyLocation.LocationType.MEDICAL -> "MEDI"
+    LegacyLocation.LocationType.MOVEMENT_AREA -> "MOVE"
+    LegacyLocation.LocationType.OFFICE -> "OFFI"
+    LegacyLocation.LocationType.OUTSIDE_PARTY -> "OUTS"
+    LegacyLocation.LocationType.POSITION -> "POSI"
+    LegacyLocation.LocationType.RESIDENTIAL_UNIT -> "RESI"
+    LegacyLocation.LocationType.ROOM -> "ROOM"
+    LegacyLocation.LocationType.RETURN_TO_UNIT -> "RTU"
+    LegacyLocation.LocationType.SHELF -> "SHEL"
+    LegacyLocation.LocationType.SPORTS -> "SPOR"
+    LegacyLocation.LocationType.STORE -> "STOR"
+    LegacyLocation.LocationType.TABLE -> "TABL"
+    LegacyLocation.LocationType.TRAINING_AREA -> "TRAI"
+    LegacyLocation.LocationType.TRAINING_ROOM -> "TRRM"
+    LegacyLocation.LocationType.VIDEO_LINK -> "VIDE"
+    LegacyLocation.LocationType.VISITS -> "VISIT"
+    LegacyLocation.LocationType.WORKSHOP -> "WORK"
   }
 
-  private fun toDeactivateRequest(location: Location): DeactivateRequest = DeactivateRequest(
+  private fun toDeactivateRequest(location: LegacyLocation): DeactivateRequest = DeactivateRequest(
     deactivateDate = location.deactivatedDate,
     reasonCode = when (location.deactivatedReason) {
-      Location.DeactivatedReason.REFURBISHMENT -> DeactivateRequest.ReasonCode.D
-      Location.DeactivatedReason.OTHER -> DeactivateRequest.ReasonCode.F
-      Location.DeactivatedReason.MAINTENANCE -> DeactivateRequest.ReasonCode.G
-      Location.DeactivatedReason.STAFF_SHORTAGE -> DeactivateRequest.ReasonCode.H
-      Location.DeactivatedReason.MOTHBALLED -> DeactivateRequest.ReasonCode.I
-      Location.DeactivatedReason.DAMAGED -> DeactivateRequest.ReasonCode.J
+      LegacyLocation.DeactivatedReason.REFURBISHMENT -> DeactivateRequest.ReasonCode.D
+      LegacyLocation.DeactivatedReason.OTHER -> DeactivateRequest.ReasonCode.F
+      LegacyLocation.DeactivatedReason.MAINTENANCE -> DeactivateRequest.ReasonCode.G
+      LegacyLocation.DeactivatedReason.STAFF_SHORTAGE -> DeactivateRequest.ReasonCode.H
+      LegacyLocation.DeactivatedReason.MOTHBALLED -> DeactivateRequest.ReasonCode.I
+      LegacyLocation.DeactivatedReason.DAMAGED -> DeactivateRequest.ReasonCode.J
       else -> null
     },
     reactivateDate = location.proposedReactivationDate,

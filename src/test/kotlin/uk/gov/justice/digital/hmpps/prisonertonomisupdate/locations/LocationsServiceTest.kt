@@ -14,7 +14,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Capacity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Certification
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.NonResidentialUsageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateLocationRequest
@@ -103,49 +103,44 @@ internal class LocationsServiceTest {
     locationsService.createLocation(location)
   }
 
-  private fun newLocation(): Location {
-    return Location(
-      id = UUID.fromString(DPS_LOCATION_ID),
-      prisonId = "LEI",
-      code = "003",
-      pathHierarchy = "B-3-003",
-      locationType = Location.LocationType.CELL,
-      active = true,
-      topLevelId = UUID.fromString(PARENT_DPS_LOCATION_ID),
-      key = DPS_KEY,
-      isResidential = true,
-      residentialHousingType = Location.ResidentialHousingType.NORMAL_ACCOMMODATION,
-      localName = "description",
-      comments = "comments",
-      capacity = Capacity(
-        workingCapacity = 12,
-        maxCapacity = 14,
+  private fun newLocation() = LegacyLocation(
+    id = UUID.fromString(DPS_LOCATION_ID),
+    prisonId = "LEI",
+    code = "003",
+    pathHierarchy = "B-3-003",
+    locationType = LegacyLocation.LocationType.CELL,
+    active = true,
+    key = DPS_KEY,
+    residentialHousingType = LegacyLocation.ResidentialHousingType.NORMAL_ACCOMMODATION,
+    localName = "description",
+    comments = "comments",
+    capacity = Capacity(
+      workingCapacity = 12,
+      maxCapacity = 14,
+    ),
+    certification = Certification(
+      certified = true,
+      capacityOfCertifiedCell = 13,
+    ),
+    attributes = listOf(
+      LegacyLocation.Attributes.GATED_CELL,
+      LegacyLocation.Attributes.VULNERABLE_PRISONER_UNIT,
+    ),
+    usage = listOf(
+      NonResidentialUsageDto(
+        usageType = NonResidentialUsageDto.UsageType.MOVEMENT,
+        sequence = 3,
+        capacity = 11,
       ),
-      certification = Certification(
-        certified = true,
-        capacityOfCertifiedCell = 13,
-      ),
-      attributes = listOf(
-        Location.Attributes.GATED_CELL,
-        Location.Attributes.VULNERABLE_PRISONER_UNIT,
-      ),
-      usage = listOf(
-        NonResidentialUsageDto(
-          usageType = NonResidentialUsageDto.UsageType.MOVEMENT,
-          sequence = 3,
-          capacity = 11,
-        ),
-      ),
-      orderWithinParentLocation = 4,
-      //    deactivatedDate = ,
-      //    deactivatedReason = ,
-      //    reactivatedDate = ,
-      parentId = UUID.fromString(PARENT_DPS_LOCATION_ID),
-      //      parentLocation = ,
-      //      childLocations = ,
-      permanentlyInactive = false,
-      deactivatedByParent = false,
-      status = Location.Status.ACTIVE,
-    )
-  }
+    ),
+    orderWithinParentLocation = 4,
+    //    deactivatedDate = ,
+    //    deactivatedReason = ,
+    //    reactivatedDate = ,
+    parentId = UUID.fromString(PARENT_DPS_LOCATION_ID),
+    //      parentLocation = ,
+    //      childLocations = ,
+    lastModifiedBy = "me",
+    lastModifiedDate = "2024-05-25",
+  )
 }
