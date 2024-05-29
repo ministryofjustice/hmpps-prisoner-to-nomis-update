@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.Alert
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.AlertCode
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.AlertType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RestResponsePage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.typeReference
 
@@ -36,4 +38,16 @@ class AlertsDpsApiService(@Qualifier("alertsApiWebClient") private val webClient
         if (it.totalElements != it.numberOfElements.toLong()) throw IllegalStateException("Page size of 1000 for /prisoners/{offenderNo}/alerts not big enough ${it.totalElements} not equal to ${it.numberOfElements}")
         it.content
       }
+
+  suspend fun getAlertCode(code: String): AlertCode = webClient
+    .get()
+    .uri("/alert-codes/{code}", code)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun getAlertType(code: String): AlertType = webClient
+    .get()
+    .uri("/alert-types/{code}", code)
+    .retrieve()
+    .awaitBody()
 }

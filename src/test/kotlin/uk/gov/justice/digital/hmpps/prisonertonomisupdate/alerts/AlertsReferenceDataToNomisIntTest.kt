@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts
 
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -10,6 +12,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension.Companion.alertsDpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 
 class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
@@ -19,10 +22,18 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
     @Nested
     @DisplayName("when all goes ok")
     inner class HappyPath {
+      val code = "ABC"
+
       @BeforeEach
       fun setUp() {
-        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-code-created", alertCode = "ABC")
+        alertsDpsApi.stubGetAlertCode(code)
+        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-code-created", alertCode = code)
         waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will retrieve the data from DPS`() {
+        alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-codes/$code")))
       }
 
       @Test
@@ -42,10 +53,18 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
     @Nested
     @DisplayName("when all goes ok")
     inner class HappyPath {
+      val code = "ABC"
+
       @BeforeEach
       fun setUp() {
-        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-code-updated", alertCode = "ABC")
+        alertsDpsApi.stubGetAlertCode(code)
+        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-code-updated", alertCode = code)
         waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will retrieve the data from DPS`() {
+        alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-codes/$code")))
       }
 
       @Test
@@ -65,10 +84,18 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
     @Nested
     @DisplayName("when all goes ok")
     inner class HappyPath {
+      val code = "ABC"
+
       @BeforeEach
       fun setUp() {
-        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-code-deactivated", alertCode = "ABC")
+        alertsDpsApi.stubGetAlertCode(code, dpsAlertCodeReferenceData(code).copy(isActive = false))
+        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-code-deactivated", alertCode = code)
         waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will retrieve the data from DPS`() {
+        alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-codes/$code")))
       }
 
       @Test
@@ -80,18 +107,53 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
         )
       }
     }
+
+    @Nested
+    @DisplayName("when code is no longer inactive")
+    inner class NoLongerInactive {
+      val code = "ABC"
+
+      @BeforeEach
+      fun setUp() {
+        alertsDpsApi.stubGetAlertCode(code, dpsAlertCodeReferenceData(code).copy(isActive = true))
+        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-code-deactivated", alertCode = code)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will retrieve the data from DPS`() {
+        alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-codes/$code")))
+      }
+
+      @Test
+      fun `will send telemetry event showing the deactivate event is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("alert-code-deactivate-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
   }
 
   @Nested
   @DisplayName("prisoner-alerts.alert-code-reactivated")
   inner class AlertCodeReactivated {
+    val code = "ABC"
+
     @Nested
     @DisplayName("when all goes ok")
     inner class HappyPath {
       @BeforeEach
       fun setUp() {
-        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-code-reactivated", alertCode = "ABC")
+        alertsDpsApi.stubGetAlertCode(code, dpsAlertCodeReferenceData(code).copy(isActive = true))
+        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-code-reactivated", alertCode = code)
         waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will retrieve the data from DPS`() {
+        alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-codes/$code")))
       }
 
       @Test
@@ -103,18 +165,51 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
         )
       }
     }
+
+    @Nested
+    @DisplayName("when code is inactive again")
+    inner class WhenInactiveAgain {
+      @BeforeEach
+      fun setUp() {
+        alertsDpsApi.stubGetAlertCode(code, dpsAlertCodeReferenceData(code).copy(isActive = false))
+        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-code-reactivated", alertCode = code)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will retrieve the data from DPS`() {
+        alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-codes/$code")))
+      }
+
+      @Test
+      fun `will send telemetry event showing the reactivate is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("alert-code-reactivate-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
   }
 
   @Nested
   @DisplayName("prisoner-alerts.alert-type-created")
   inner class AlertTypeCreated {
+    val code = "XYZ"
+
     @Nested
     @DisplayName("when all goes ok")
     inner class HappyPath {
       @BeforeEach
       fun setUp() {
-        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-type-created", alertCode = "ABC")
+        alertsDpsApi.stubGetAlertType(code)
+        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-type-created", alertCode = code)
         waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will retrieve the data from DPS`() {
+        alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-types/$code")))
       }
 
       @Test
@@ -131,13 +226,21 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
   @Nested
   @DisplayName("prisoner-alerts.alert-type-updated")
   inner class AlertTypeUpdated {
+    val code = "XYZ"
+
     @Nested
     @DisplayName("when all goes ok")
     inner class HappyPath {
       @BeforeEach
       fun setUp() {
-        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-type-updated", alertCode = "ABC")
+        alertsDpsApi.stubGetAlertType(code)
+        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-type-updated", alertCode = code)
         waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will retrieve the data from DPS`() {
+        alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-types/$code")))
       }
 
       @Test
@@ -154,13 +257,21 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
   @Nested
   @DisplayName("prisoner-alerts.alert-type-deactivated")
   inner class AlertTypeDeactivated {
+    val code = "XYZ"
+
     @Nested
     @DisplayName("when all goes ok")
     inner class HappyPath {
       @BeforeEach
       fun setUp() {
-        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-type-deactivated", alertCode = "ABC")
+        alertsDpsApi.stubGetAlertType(code, dpsAlertTypeReferenceData(code).copy(isActive = false))
+        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-type-deactivated", alertCode = code)
         waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will retrieve the data from DPS`() {
+        alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-types/$code")))
       }
 
       @Test
@@ -172,24 +283,82 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
         )
       }
     }
+
+    @Nested
+    @DisplayName("when type is active again")
+    inner class WhenTypeActive {
+      @BeforeEach
+      fun setUp() {
+        alertsDpsApi.stubGetAlertType(code, dpsAlertTypeReferenceData(code).copy(isActive = true))
+        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-type-deactivated", alertCode = code)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will retrieve the data from DPS`() {
+        alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-types/$code")))
+      }
+
+      @Test
+      fun `will send telemetry event showing the deactivate is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("alert-type-deactivate-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
   }
 
   @Nested
   @DisplayName("prisoner-alerts.alert-type-reactivated")
   inner class AlertTypeReactivated {
+    val code = "XYZ"
+
     @Nested
     @DisplayName("when all goes ok")
     inner class HappyPath {
       @BeforeEach
       fun setUp() {
-        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-type-reactivated", alertCode = "ABC")
+        alertsDpsApi.stubGetAlertType(code, dpsAlertTypeReferenceData(code).copy(isActive = true))
+        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-type-reactivated", alertCode = code)
         waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will retrieve the data from DPS`() {
+        alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-types/$code")))
       }
 
       @Test
       fun `will send telemetry event showing the reactivate`() {
         verify(telemetryClient).trackEvent(
           eq("alert-type-reactivate-success"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when type is inactive again")
+    inner class WhenTypeInActive {
+      @BeforeEach
+      fun setUp() {
+        alertsDpsApi.stubGetAlertType(code, dpsAlertTypeReferenceData(code).copy(isActive = false))
+        publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-type-reactivated", alertCode = code)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will retrieve the data from DPS`() {
+        alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-types/$code")))
+      }
+
+      @Test
+      fun `will send telemetry event showing the reactivate is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("alert-type-reactivate-ignored"),
           any(),
           isNull(),
         )
