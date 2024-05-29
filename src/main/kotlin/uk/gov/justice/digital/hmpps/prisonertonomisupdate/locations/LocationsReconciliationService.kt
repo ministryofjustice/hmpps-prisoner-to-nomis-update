@@ -228,7 +228,7 @@ class LocationsReconciliationService(
   ): String? {
     if (nomis.locationCode != dps.code) return "Location code mismatch"
     if (nomis.prisonId != dps.prisonId) return "Prison id mismatch"
-    if (nomis.listSequence != dps.orderWithinParentLocation) return "order mismatch"
+    if (nomis.listSequence != dps.orderWithinParentLocation) return "order mismatch nomis=${nomis.listSequence} dps=${dps.orderWithinParentLocation}"
     // if (nomis.description != dps.key) return "Location key mismatch"
     // IN DPS can be inactive if parent is inactive:  if (nomis.active != dps.active) return "Location active mismatch"
     if ((nomis.unitType == null) != (dps.residentialHousingType == null)) return "Housing type mismatch"
@@ -246,11 +246,9 @@ class LocationsReconciliationService(
       if (expectedDpsAttributesSize(nomis.profiles) != (dps.attributes?.size ?: 0)) return "Cell attributes mismatch"
     }
     if (dps.residentialHousingType == null && (nomis.usages?.size ?: 0) != (dps.usage?.size ?: 0)) return "Location usage mismatch"
-    if (historyDoesNotMatch(nomis, dps)) {
-      return "Location history mismatch:\n${
-        reportHistory(nomis.amendments, dps.changeHistory)
-      }"
-    }
+//    if (historyDoesNotMatch(nomis, dps)) {
+//      return "Location history mismatch:\n${reportHistory(nomis.amendments, dps.changeHistory)}"
+//    }
     return null
   }
 

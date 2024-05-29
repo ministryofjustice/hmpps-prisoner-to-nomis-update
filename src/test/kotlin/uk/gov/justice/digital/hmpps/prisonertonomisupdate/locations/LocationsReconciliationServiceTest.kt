@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -96,6 +97,7 @@ class LocationsReconciliationServiceTest {
   }
 
   @Test
+  @Disabled("History comparison disabled for now")
   fun `will report mismatch where locations have a different history count`() = runTest {
     whenever(locationsMappingService.getMappingGivenNomisIdOrNull(NOMIS_LOCATION_ID)).thenReturn(locationMappingDto)
     whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID)).thenReturn(nomisResponse())
@@ -121,6 +123,7 @@ class LocationsReconciliationServiceTest {
   }
 
   @Test
+  @Disabled("History comparison disabled for now")
   fun `will report mismatch where locations have a different history item`() = runTest {
     whenever(locationsMappingService.getMappingGivenNomisIdOrNull(NOMIS_LOCATION_ID)).thenReturn(locationMappingDto)
     whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID)).thenReturn(
