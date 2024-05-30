@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-05-28.7822.24296ec"
+    "version": "2024-05-30.7889.9611d9d"
   },
   "servers": [
     {
@@ -2364,6 +2364,376 @@
           },
           "403": {
             "description": "Forbidden, requires role NOMIS_APPOINTMENTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alerts/types/{code}": {
+      "put": {
+        "tags": [
+          "alerts-resource"
+        ],
+        "summary": "Update an alert type",
+        "description": "Updates an alert type in the NOMIS reference data, specifically the description. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "updateAlertType",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAlertType"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Alert type updated"
+          },
+          "400": {
+            "description": "One or more fields in the request contains invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ALERTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Alert type does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alerts/types/{code}/reactivate": {
+      "put": {
+        "tags": [
+          "alerts-resource"
+        ],
+        "summary": "Update an alert type to be active",
+        "description": "Updates an alert type in the NOMIS reference data to be active, specifically the description. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "reactivateAlertType",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Alert code reactivated"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ALERTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Alert code does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alerts/types/{code}/deactivate": {
+      "put": {
+        "tags": [
+          "alerts-resource"
+        ],
+        "summary": "Update an alert type to be inactive",
+        "description": "Updates an alert type in the NOMIS reference data to be inactive, specifically the description. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "deactivateAlertType",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Alert type deactivated"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ALERTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Alert type does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alerts/codes/{code}": {
+      "put": {
+        "tags": [
+          "alerts-resource"
+        ],
+        "summary": "Update an alert code",
+        "description": "Updates an alert code in the NOMIS reference data, specifically the description. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "updateAlertCode",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAlertCode"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Alert code updated"
+          },
+          "400": {
+            "description": "One or more fields in the request contains invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ALERTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Alert code does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alerts/codes/{code}/reactivate": {
+      "put": {
+        "tags": [
+          "alerts-resource"
+        ],
+        "summary": "Update an alert code to be active",
+        "description": "Updates an alert code in the NOMIS reference data to be active, specifically the description. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "reactivateAlertCode",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Alert code reactivated"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ALERTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Alert code does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alerts/codes/{code}/deactivate": {
+      "put": {
+        "tags": [
+          "alerts-resource"
+        ],
+        "summary": "Update an alert code to be inactive",
+        "description": "Updates an alert code in the NOMIS reference data to be inactive, specifically the description. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "deactivateAlertCode",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Alert code deactivated"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ALERTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Alert code does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -5074,6 +5444,136 @@
         }
       }
     },
+    "/alerts/types": {
+      "post": {
+        "tags": [
+          "alerts-resource"
+        ],
+        "summary": "Creates an alert type",
+        "description": "Creates an alert type in the NOMIS reference data. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "createAlertType",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAlertType"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Alert type Created"
+          },
+          "400": {
+            "description": "One or more fields in the request contains invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ALERTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Type already exits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alerts/codes": {
+      "post": {
+        "tags": [
+          "alerts-resource"
+        ],
+        "summary": "Creates an alert code",
+        "description": "Creates an alert code in the NOMIS reference data. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "createAlertCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAlertCode"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Alert code Created"
+          },
+          "400": {
+            "description": "One or more fields in the request contains invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ALERTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Code already exits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/adjudications/adjudication-number/{adjudicationNumber}/hearings": {
       "post": {
         "tags": [
@@ -7665,42 +8165,7 @@
         }
       }
     },
-    "/incidents/reconciliation/agencyLocations": {
-      "get": {
-        "tags": [
-          "incident-resource"
-        ],
-        "summary": "Retrieve a list of all agency locations that have raised incidents)",
-        "description": "Retrieve a list of all agency locations that have raised incidents, including prisons and PECS. Requires authorised access",
-        "operationId": "getIncidentLocations",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IncidentAgencyLocationId"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/incidents/reconciliation/agencyLocation/{agencyLocationId}": {
+    "/incidents/reconciliation/agency/{agencyId}": {
       "get": {
         "tags": [
           "incident-resource"
@@ -7710,13 +8175,13 @@
         "operationId": "getIncidentCountsForReconciliation",
         "parameters": [
           {
-            "name": "agencyLocationId",
+            "name": "agencyId",
             "in": "path",
-            "description": "Agency Location Id",
+            "description": "Agency Id",
             "required": true,
             "schema": {
               "type": "string",
-              "description": "Agency Location Id",
+              "description": "Agency Id",
               "example": "LEI"
             },
             "example": "LEI"
@@ -7755,6 +8220,41 @@
           },
           "403": {
             "description": "Forbidden, requires role NOMIS_INCIDENTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/incidents/reconciliation/agencies": {
+      "get": {
+        "tags": [
+          "incident-resource"
+        ],
+        "summary": "Retrieve a list of all agencies that have raised incidents)",
+        "description": "Retrieve a list of all agencies that have raised incidents, including prisons and PECS. Requires authorised access",
+        "operationId": "getIncidentAgencies",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IncidentAgencyId"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
             "content": {
               "application/json": {
                 "schema": {
@@ -11344,6 +11844,32 @@
         },
         "description": "Offender individual schedule update request"
       },
+      "UpdateAlertType": {
+        "required": [
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "The alert type description"
+          }
+        },
+        "description": "A request to update an alert type reference data in NOMIS"
+      },
+      "UpdateAlertCode": {
+        "required": [
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "The alert description"
+          }
+        },
+        "description": "A request to update an alert code reference data in NOMIS"
+      },
       "Repair": {
         "required": [
           "createdByUsername",
@@ -13706,6 +14232,59 @@
         },
         "description": "Offender individual schedule creation response"
       },
+      "CreateAlertType": {
+        "required": [
+          "code",
+          "description",
+          "listSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "The alert type code"
+          },
+          "description": {
+            "type": "string",
+            "description": "The alert type description"
+          },
+          "listSequence": {
+            "type": "integer",
+            "description": "The sequence in a UI list",
+            "format": "int32"
+          }
+        },
+        "description": "A request to create an alert type reference data in NOMIS"
+      },
+      "CreateAlertCode": {
+        "required": [
+          "code",
+          "description",
+          "listSequence",
+          "typeCode"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "The alert code"
+          },
+          "typeCode": {
+            "type": "string",
+            "description": "The parent type code"
+          },
+          "description": {
+            "type": "string",
+            "description": "The alert description"
+          },
+          "listSequence": {
+            "type": "integer",
+            "description": "The sequence in a UI list",
+            "format": "int32"
+          }
+        },
+        "description": "A request to create an alert code reference data in NOMIS"
+      },
       "CreateHearingResponse": {
         "required": [
           "hearingId"
@@ -14187,14 +14766,14 @@
             "type": "integer",
             "format": "int32"
           },
+          "paged": {
+            "type": "boolean"
+          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
           },
           "unpaged": {
-            "type": "boolean"
-          },
-          "paged": {
             "type": "boolean"
           }
         }
@@ -16245,12 +16824,12 @@
       },
       "IncidentResponse": {
         "required": [
+          "agency",
           "createDateTime",
           "createdBy",
           "history",
           "incidentDateTime",
           "incidentId",
-          "location",
           "lockedResponse",
           "offenderParties",
           "questionnaireId",
@@ -16282,7 +16861,7 @@
             "type": "string",
             "description": "The incident details"
           },
-          "location": {
+          "agency": {
             "$ref": "#/components/schemas/CodeDescription"
           },
           "status": {
@@ -16516,10 +17095,10 @@
       },
       "Requirement": {
         "required": [
+          "agencyId",
           "createDateTime",
           "createdBy",
           "date",
-          "locationId",
           "staff"
         ],
         "type": "object",
@@ -16536,9 +17115,9 @@
           "staff": {
             "$ref": "#/components/schemas/Staff"
           },
-          "locationId": {
+          "agencyId": {
             "type": "string",
-            "description": "The reporting location of the staff"
+            "description": "The reporting agency of the staff"
           },
           "createDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
@@ -16663,20 +17242,6 @@
         },
         "description": "Staff involved in the incident"
       },
-      "IncidentAgencyLocationId": {
-        "required": [
-          "locationId"
-        ],
-        "type": "object",
-        "properties": {
-          "locationId": {
-            "type": "string",
-            "description": "The agency location id",
-            "example": "BXI"
-          }
-        },
-        "description": "Incident Agency Location Id"
-      },
       "IncidentsCount": {
         "required": [
           "closedIncidents",
@@ -16697,18 +17262,18 @@
             "example": 2
           }
         },
-        "description": "A count for incidents at an agency location"
+        "description": "A count for incidents at an agency"
       },
       "IncidentsReconciliationResponse": {
         "required": [
-          "incidentCount",
-          "locationId"
+          "agencyId",
+          "incidentCount"
         ],
         "type": "object",
         "properties": {
-          "locationId": {
+          "agencyId": {
             "type": "string",
-            "description": "The agency location we checked the incidents for",
+            "description": "The agency we checked the incidents for",
             "example": "BXI"
           },
           "incidentCount": {
@@ -16716,6 +17281,20 @@
           }
         },
         "description": "Incidents reconciliation count response"
+      },
+      "IncidentAgencyId": {
+        "required": [
+          "agencyId"
+        ],
+        "type": "object",
+        "properties": {
+          "agencyId": {
+            "type": "string",
+            "description": "The agency id",
+            "example": "BXI"
+          }
+        },
+        "description": "Incident Agency Id"
       },
       "IncidentIdResponse": {
         "required": [
@@ -16983,6 +17562,8 @@
       "Attendee": {
         "required": [
           "If attended (otherwise contributor)",
+          "createDateTime",
+          "createdBy",
           "id"
         ],
         "type": "object",
@@ -17004,6 +17585,26 @@
           },
           "Contribution": {
             "type": "string"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the attendee was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the attendee"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the attendee was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the attendee"
           }
         },
         "description": "Summary details"
@@ -17012,6 +17613,8 @@
         "required": [
           "areaOfWork",
           "bookingId",
+          "createDateTime",
+          "createdBy",
           "decision",
           "documents",
           "id",
@@ -17131,6 +17734,26 @@
             "items": {
               "$ref": "#/components/schemas/DocumentIdResponse"
             }
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the report was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the report"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the report was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the report"
           }
         },
         "description": "CSIP Details"
@@ -17176,6 +17799,8 @@
       },
       "FactorResponse": {
         "required": [
+          "createDateTime",
+          "createdBy",
           "id",
           "type"
         ],
@@ -17192,12 +17817,34 @@
           "comment": {
             "type": "string",
             "description": "Factor comment"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the report was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the report"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the report was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the report"
           }
         },
         "description": "Contributory factors"
       },
       "InterviewDetails": {
         "required": [
+          "createDateTime",
+          "createdBy",
           "date",
           "interviewee",
           "role"
@@ -17219,6 +17866,26 @@
           "comments": {
             "type": "string",
             "description": "Additional data regarding the interview"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the interview was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the interview"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the interview was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the interview"
           }
         },
         "description": "Interview"
@@ -17262,6 +17929,8 @@
       },
       "Plan": {
         "required": [
+          "createDateTime",
+          "createdBy",
           "createdDate",
           "id",
           "identifiedNeed",
@@ -17305,6 +17974,26 @@
             "type": "string",
             "description": "Plan closed date",
             "format": "date"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the plan was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the plan"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the plan was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the plan"
           }
         },
         "description": "CSIP Plans"
@@ -17369,6 +18058,8 @@
           "attendees",
           "caseNote",
           "closeCSIP",
+          "createDateTime",
+          "createdBy",
           "csipUpdated",
           "id",
           "peopleInformed",
@@ -17427,6 +18118,26 @@
             "type": "string",
             "description": "Review closed date",
             "format": "date"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the review was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the review"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the review was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the review"
           }
         },
         "description": "CSIP Reviews"
