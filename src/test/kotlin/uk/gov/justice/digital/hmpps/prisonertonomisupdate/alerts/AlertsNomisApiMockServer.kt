@@ -75,6 +75,86 @@ class AlertsNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
 
+  fun stubCreateAlertCode() {
+    nomisApi.stubFor(
+      post(urlEqualTo("/alerts/codes")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CREATED.value()),
+      ),
+    )
+  }
+
+  fun stubUpdateAlertCode(code: String) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/alerts/codes/$code")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
+  fun stubDeactivateAlertCode(code: String) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/alerts/codes/$code/deactivate")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
+  fun stubReactivateAlertCode(code: String) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/alerts/codes/$code/reactivate")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
+  fun stubCreateAlertType() {
+    nomisApi.stubFor(
+      post(urlEqualTo("/alerts/types")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CREATED.value()),
+      ),
+    )
+  }
+
+  fun stubUpdateAlertType(code: String) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/alerts/types/$code")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
+  fun stubDeactivateAlertType(code: String) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/alerts/types/$code/deactivate")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
+  fun stubReactivateAlertType(code: String) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/alerts/types/$code/reactivate")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }

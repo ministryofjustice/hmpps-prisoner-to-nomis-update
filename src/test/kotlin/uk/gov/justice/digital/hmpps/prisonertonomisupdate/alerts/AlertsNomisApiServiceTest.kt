@@ -15,9 +15,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAlertCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAlertRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAlertType
 import java.time.LocalDate
 
 @SpringAPIServiceTest
@@ -180,6 +184,237 @@ class AlertsNomisApiServiceTest {
 
       alertsNomisApiMockServer.verify(
         getRequestedFor(urlPathEqualTo("/prisoners/A1234KT/alerts/reconciliation")),
+      )
+    }
+  }
+
+  @Nested
+  inner class CreateAlertCode {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsNomisApiMockServer.stubCreateAlertCode()
+
+      apiService.createAlertCode(createAlertCodeRequest())
+
+      alertsNomisApiMockServer.verify(
+        postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will POST code details`() = runTest {
+      alertsNomisApiMockServer.stubCreateAlertCode()
+
+      apiService.createAlertCode(createAlertCodeRequest())
+
+      alertsNomisApiMockServer.verify(
+        postRequestedFor(urlPathEqualTo("/alerts/codes")),
+      )
+    }
+
+    private fun createAlertCodeRequest() = CreateAlertCode(
+      code = "ABC",
+      description = "Description for ABC",
+      listSequence = 12,
+      typeCode = "XYZ",
+    )
+  }
+
+  @Nested
+  inner class UpdateAlertCode {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsNomisApiMockServer.stubUpdateAlertCode("ABC")
+
+      apiService.updateAlertCode("ABC", updateAlertCodeRequest())
+
+      alertsNomisApiMockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will PUT code details`() = runTest {
+      alertsNomisApiMockServer.stubUpdateAlertCode("ABC")
+
+      apiService.updateAlertCode(
+        "ABC",
+        UpdateAlertCode(
+          description = "Description for ABC",
+        ),
+      )
+
+      alertsNomisApiMockServer.verify(
+        putRequestedFor(urlPathEqualTo("/alerts/codes/ABC")).withRequestBodyJsonPath("description", "Description for ABC"),
+      )
+    }
+
+    private fun updateAlertCodeRequest() = UpdateAlertCode(
+      description = "Description for ABC",
+    )
+  }
+
+  @Nested
+  inner class DeactivateAlertCode {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsNomisApiMockServer.stubDeactivateAlertCode("ABC")
+
+      apiService.deactivateAlertCode("ABC")
+
+      alertsNomisApiMockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will PUT code to deactivate`() = runTest {
+      alertsNomisApiMockServer.stubDeactivateAlertCode("ABC")
+
+      apiService.deactivateAlertCode("ABC")
+
+      alertsNomisApiMockServer.verify(
+        putRequestedFor(urlPathEqualTo("/alerts/codes/ABC/deactivate")),
+      )
+    }
+  }
+
+  @Nested
+  inner class ReactivateAlertCode {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsNomisApiMockServer.stubReactivateAlertCode("ABC")
+
+      apiService.reactivateAlertCode("ABC")
+
+      alertsNomisApiMockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will PUT code to reactivate`() = runTest {
+      alertsNomisApiMockServer.stubReactivateAlertCode("ABC")
+
+      apiService.reactivateAlertCode("ABC")
+
+      alertsNomisApiMockServer.verify(
+        putRequestedFor(urlPathEqualTo("/alerts/codes/ABC/reactivate")),
+      )
+    }
+  }
+
+  @Nested
+  inner class CreateAlertType {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsNomisApiMockServer.stubCreateAlertType()
+
+      apiService.createAlertType(createAlertTypeRequest())
+
+      alertsNomisApiMockServer.verify(
+        postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will POST code details`() = runTest {
+      alertsNomisApiMockServer.stubCreateAlertType()
+
+      apiService.createAlertType(createAlertTypeRequest())
+
+      alertsNomisApiMockServer.verify(
+        postRequestedFor(urlPathEqualTo("/alerts/types")),
+      )
+    }
+
+    private fun createAlertTypeRequest() = CreateAlertType(
+      code = "ABC",
+      description = "Description for ABC",
+      listSequence = 12,
+    )
+  }
+
+  @Nested
+  inner class UpdateAlertTypeTest {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsNomisApiMockServer.stubUpdateAlertType("ABC")
+
+      apiService.updateAlertType("ABC", updateAlertTypeRequest())
+
+      alertsNomisApiMockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will PUT code details`() = runTest {
+      alertsNomisApiMockServer.stubUpdateAlertType("ABC")
+
+      apiService.updateAlertType(
+        "ABC",
+        UpdateAlertType(
+          description = "Description for ABC",
+        ),
+      )
+
+      alertsNomisApiMockServer.verify(
+        putRequestedFor(urlPathEqualTo("/alerts/types/ABC")).withRequestBodyJsonPath("description", "Description for ABC"),
+      )
+    }
+
+    private fun updateAlertTypeRequest() = UpdateAlertType(
+      description = "Description for ABC",
+    )
+  }
+
+  @Nested
+  inner class DeactivateAlertType {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsNomisApiMockServer.stubDeactivateAlertType("ABC")
+
+      apiService.deactivateAlertType("ABC")
+
+      alertsNomisApiMockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will PUT code to deactivate`() = runTest {
+      alertsNomisApiMockServer.stubDeactivateAlertType("ABC")
+
+      apiService.deactivateAlertType("ABC")
+
+      alertsNomisApiMockServer.verify(
+        putRequestedFor(urlPathEqualTo("/alerts/types/ABC/deactivate")),
+      )
+    }
+  }
+
+  @Nested
+  inner class ReactivateAlertType {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsNomisApiMockServer.stubReactivateAlertType("ABC")
+
+      apiService.reactivateAlertType("ABC")
+
+      alertsNomisApiMockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will PUT code to reactivate`() = runTest {
+      alertsNomisApiMockServer.stubReactivateAlertType("ABC")
+
+      apiService.reactivateAlertType("ABC")
+
+      alertsNomisApiMockServer.verify(
+        putRequestedFor(urlPathEqualTo("/alerts/types/ABC/reactivate")),
       )
     }
   }
