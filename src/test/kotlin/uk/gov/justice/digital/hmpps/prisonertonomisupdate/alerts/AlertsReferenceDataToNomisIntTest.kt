@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts
 
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -10,12 +12,16 @@ import org.mockito.Mockito.eq
 import org.mockito.kotlin.any
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
+import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension.Companion.alertsDpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 
 class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
+  @Autowired
+  private lateinit var alertsNomisApiMockServer: AlertsNomisApiMockServer
+
   @Nested
   @DisplayName("prisoner-alerts.alert-code-created")
   inner class AlertCodeCreated {
@@ -27,6 +33,7 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         alertsDpsApi.stubGetAlertCode(code)
+        alertsNomisApiMockServer.stubCreateAlertCode()
         publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-code-created", alertCode = code)
         waitForAnyProcessingToComplete()
       }
@@ -34,6 +41,16 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will retrieve the data from DPS`() {
         alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-codes/$code")))
+      }
+
+      @Test
+      fun `will POST the data to NOMIS`() {
+        alertsNomisApiMockServer.verify(
+          postRequestedFor(urlMatching("/alerts/codes"))
+            .withRequestBodyJsonPath("code", code)
+            .withRequestBodyJsonPath("description", dpsAlertCodeReferenceData(code).description)
+            .withRequestBodyJsonPath("listSequence", dpsAlertCodeReferenceData(code).listSequence),
+        )
       }
 
       @Test
@@ -58,6 +75,7 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         alertsDpsApi.stubGetAlertCode(code)
+        alertsNomisApiMockServer.stubUpdateAlertCode(code)
         publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-code-updated", alertCode = code)
         waitForAnyProcessingToComplete()
       }
@@ -65,6 +83,14 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will retrieve the data from DPS`() {
         alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-codes/$code")))
+      }
+
+      @Test
+      fun `will PUT the data to NOMIS`() {
+        alertsNomisApiMockServer.verify(
+          putRequestedFor(urlMatching("/alerts/codes/$code"))
+            .withRequestBodyJsonPath("description", dpsAlertCodeReferenceData(code).description),
+        )
       }
 
       @Test
@@ -89,6 +115,7 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         alertsDpsApi.stubGetAlertCode(code, dpsAlertCodeReferenceData(code).copy(isActive = false))
+        alertsNomisApiMockServer.stubDeactivateAlertCode(code)
         publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-code-deactivated", alertCode = code)
         waitForAnyProcessingToComplete()
       }
@@ -96,6 +123,13 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will retrieve the data from DPS`() {
         alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-codes/$code")))
+      }
+
+      @Test
+      fun `will PUT the deactivate request NOMIS`() {
+        alertsNomisApiMockServer.verify(
+          putRequestedFor(urlMatching("/alerts/codes/$code/deactivate")),
+        )
       }
 
       @Test
@@ -126,6 +160,14 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
+      fun `will not PUT the deactivate request NOMIS`() {
+        alertsNomisApiMockServer.verify(
+          0,
+          putRequestedFor(urlMatching("/alerts/codes/$code/deactivate")),
+        )
+      }
+
+      @Test
       fun `will send telemetry event showing the deactivate event is ignored`() {
         verify(telemetryClient).trackEvent(
           eq("alert-code-deactivate-ignored"),
@@ -147,6 +189,7 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         alertsDpsApi.stubGetAlertCode(code, dpsAlertCodeReferenceData(code).copy(isActive = true))
+        alertsNomisApiMockServer.stubReactivateAlertCode(code)
         publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-code-reactivated", alertCode = code)
         waitForAnyProcessingToComplete()
       }
@@ -154,6 +197,13 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will retrieve the data from DPS`() {
         alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-codes/$code")))
+      }
+
+      @Test
+      fun `will PUT the reactivate request NOMIS`() {
+        alertsNomisApiMockServer.verify(
+          putRequestedFor(urlMatching("/alerts/codes/$code/reactivate")),
+        )
       }
 
       @Test
@@ -182,6 +232,14 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
+      fun `will not PUT the reactivate request NOMIS`() {
+        alertsNomisApiMockServer.verify(
+          0,
+          putRequestedFor(urlMatching("/alerts/codes/$code/deactivate")),
+        )
+      }
+
+      @Test
       fun `will send telemetry event showing the reactivate is ignored`() {
         verify(telemetryClient).trackEvent(
           eq("alert-code-reactivate-ignored"),
@@ -203,6 +261,7 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         alertsDpsApi.stubGetAlertType(code)
+        alertsNomisApiMockServer.stubCreateAlertType()
         publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-type-created", alertCode = code)
         waitForAnyProcessingToComplete()
       }
@@ -210,6 +269,16 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will retrieve the data from DPS`() {
         alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-types/$code")))
+      }
+
+      @Test
+      fun `will POST the data to NOMIS`() {
+        alertsNomisApiMockServer.verify(
+          postRequestedFor(urlMatching("/alerts/types"))
+            .withRequestBodyJsonPath("code", code)
+            .withRequestBodyJsonPath("description", dpsAlertTypeReferenceData(code).description)
+            .withRequestBodyJsonPath("listSequence", dpsAlertTypeReferenceData(code).listSequence),
+        )
       }
 
       @Test
@@ -234,6 +303,7 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         alertsDpsApi.stubGetAlertType(code)
+        alertsNomisApiMockServer.stubUpdateAlertType(code)
         publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-type-updated", alertCode = code)
         waitForAnyProcessingToComplete()
       }
@@ -241,6 +311,14 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will retrieve the data from DPS`() {
         alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-types/$code")))
+      }
+
+      @Test
+      fun `will PUT the data to NOMIS`() {
+        alertsNomisApiMockServer.verify(
+          putRequestedFor(urlMatching("/alerts/types/$code"))
+            .withRequestBodyJsonPath("description", dpsAlertTypeReferenceData(code).description),
+        )
       }
 
       @Test
@@ -265,6 +343,7 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         alertsDpsApi.stubGetAlertType(code, dpsAlertTypeReferenceData(code).copy(isActive = false))
+        alertsNomisApiMockServer.stubDeactivateAlertType(code)
         publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-type-deactivated", alertCode = code)
         waitForAnyProcessingToComplete()
       }
@@ -272,6 +351,13 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will retrieve the data from DPS`() {
         alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-types/$code")))
+      }
+
+      @Test
+      fun `will PUT the deactivate request NOMIS`() {
+        alertsNomisApiMockServer.verify(
+          putRequestedFor(urlMatching("/alerts/types/$code/deactivate")),
+        )
       }
 
       @Test
@@ -300,6 +386,14 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
+      fun `will not PUT the deactivate request NOMIS`() {
+        alertsNomisApiMockServer.verify(
+          0,
+          putRequestedFor(urlMatching("/alerts/types/$code/deactivate")),
+        )
+      }
+
+      @Test
       fun `will send telemetry event showing the deactivate is ignored`() {
         verify(telemetryClient).trackEvent(
           eq("alert-type-deactivate-ignored"),
@@ -321,6 +415,7 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         alertsDpsApi.stubGetAlertType(code, dpsAlertTypeReferenceData(code).copy(isActive = true))
+        alertsNomisApiMockServer.stubReactivateAlertType(code)
         publishAlertReferenceDataDomainEvent(eventType = "prisoner-alerts.alert-type-reactivated", alertCode = code)
         waitForAnyProcessingToComplete()
       }
@@ -328,6 +423,13 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will retrieve the data from DPS`() {
         alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-types/$code")))
+      }
+
+      @Test
+      fun `will PUT the reactivate request NOMIS`() {
+        alertsNomisApiMockServer.verify(
+          putRequestedFor(urlMatching("/alerts/types/$code/reactivate")),
+        )
       }
 
       @Test
@@ -353,6 +455,14 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will retrieve the data from DPS`() {
         alertsDpsApi.verify(getRequestedFor(urlMatching("/alert-types/$code")))
+      }
+
+      @Test
+      fun `will not PUT the reactivate request NOMIS`() {
+        alertsNomisApiMockServer.verify(
+          0,
+          putRequestedFor(urlMatching("/alerts/types/$code/deactivate")),
+        )
       }
 
       @Test
