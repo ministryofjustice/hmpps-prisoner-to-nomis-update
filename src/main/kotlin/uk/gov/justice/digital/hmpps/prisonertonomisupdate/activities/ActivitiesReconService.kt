@@ -8,7 +8,6 @@ import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AllocationReconciliationResponse as DpsAllocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceReconciliationResponse as DpsAttendanceResponse
@@ -18,7 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Attend
 @Service
 class ActivitiesReconService(
   private val telemetryClient: TelemetryClient,
-  private val nomisApiService: NomisApiService,
+  private val activitiesNomisApiService: ActivitiesNomisApiService,
   private val reportScope: CoroutineScope,
   private val activitiesApiService: ActivitiesApiService,
 ) {
@@ -26,7 +25,7 @@ class ActivitiesReconService(
 
   suspend fun allocationReconciliationReport() {
     val prisons = try {
-      nomisApiService.getServicePrisons("ACTIVITY")
+      activitiesNomisApiService.getServicePrisons("ACTIVITY")
         .also {
           telemetryClient.trackEvent(
             "activity-allocation-reconciliation-report-requested",
@@ -44,7 +43,7 @@ class ActivitiesReconService(
   suspend fun allocationsReconciliationReport(prisonId: String) =
     try {
       coroutineScope {
-        val nomisBookingCounts = async { nomisApiService.getAllocationReconciliation(prisonId) }
+        val nomisBookingCounts = async { activitiesNomisApiService.getAllocationReconciliation(prisonId) }
         val dpsBookingCounts = async { activitiesApiService.getAllocationReconciliation(prisonId) }
         val compareResults = compareBookingCounts(nomisBookingCounts.await(), dpsBookingCounts.await())
 
@@ -57,7 +56,7 @@ class ActivitiesReconService(
 
   suspend fun attendanceReconciliationReport(date: LocalDate) {
     val prisons = try {
-      nomisApiService.getServicePrisons("ACTIVITY")
+      activitiesNomisApiService.getServicePrisons("ACTIVITY")
         .also {
           telemetryClient.trackEvent(
             "activity-attendance-reconciliation-report-requested",
@@ -75,7 +74,7 @@ class ActivitiesReconService(
   suspend fun attendancesReconciliationReport(prisonId: String, date: LocalDate) =
     try {
       coroutineScope {
-        val nomisBookingCounts = async { nomisApiService.getAttendanceReconciliation(prisonId, date) }
+        val nomisBookingCounts = async { activitiesNomisApiService.getAttendanceReconciliation(prisonId, date) }
         val dpsBookingCounts = async { activitiesApiService.getAttendanceReconciliation(prisonId, date) }
         val differences = compareBookingCounts(nomisBookingCounts.await(), dpsBookingCounts.await())
 
@@ -119,7 +118,7 @@ class ActivitiesReconService(
     date: LocalDate? = null,
   ) {
     val differencesWithDetails = with(differences.all()) {
-      if (isNotEmpty()) nomisApiService.getPrisonerDetails(this) else listOf()
+      if (isNotEmpty()) activitiesNomisApiService.getPrisonerDetails(this) else listOf()
     }
 
     val ignoredBookings = differencesWithDetails

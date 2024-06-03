@@ -18,15 +18,9 @@ import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrUpsertAttendanceError
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationReconciliationResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AttendanceReconciliationResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourseScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtAppearanceRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseRequest
@@ -48,15 +42,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Locati
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UnquashHearingResultAwardRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCapacityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCertificationRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateEvidenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateEvidenceResponse
@@ -67,10 +57,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Update
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -126,89 +112,6 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .uri("/incentives/booking-id/{bookingId}/current", bookingId)
       .retrieve()
       .awaitBodyOrNullForNotFound()
-
-  // ////////// ACTIVITIES //////////////
-
-  suspend fun createActivity(request: CreateActivityRequest): CreateActivityResponse =
-    webClient.post()
-      .uri("/activities")
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
-
-  suspend fun updateActivity(courseActivityId: Long, request: UpdateActivityRequest): CreateActivityResponse =
-    webClient.put()
-      .uri("/activities/{courseActivityId}", courseActivityId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
-
-  suspend fun deleteActivity(courseActivityId: Long) {
-    webClient.delete()
-      .uri("/activities/{courseActivityId}", courseActivityId)
-      .retrieve()
-      .awaitBodilessEntity()
-  }
-
-  suspend fun updateScheduledInstance(
-    courseActivityId: Long,
-    request: CourseScheduleRequest,
-  ): UpdateCourseScheduleResponse =
-    webClient.put()
-      .uri("/activities/{courseActivityId}/schedule", courseActivityId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
-
-  suspend fun upsertAllocation(
-    courseActivityId: Long,
-    request: UpsertAllocationRequest,
-  ): UpsertAllocationResponse =
-    webClient.put()
-      .uri("/activities/{courseActivityId}/allocation", courseActivityId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
-
-  suspend fun upsertAttendance(
-    courseScheduleId: Long,
-    bookingId: Long,
-    request: UpsertAttendanceRequest,
-  ): UpsertAttendanceResponse =
-    webClient.put()
-      .uri("/schedules/{courseScheduleId}/booking/{bookingId}/attendance", courseScheduleId, bookingId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBodyOrUpsertAttendanceError()
-
-  suspend fun getAllocationReconciliation(prisonId: String): AllocationReconciliationResponse =
-    webClient.get()
-      .uri("/allocations/reconciliation/{prisonId}", prisonId)
-      .retrieve()
-      .awaitBody()
-
-  suspend fun getAttendanceReconciliation(prisonId: String, date: LocalDate): AttendanceReconciliationResponse =
-    webClient.get()
-      .uri {
-        it.path("/attendances/reconciliation/{prisonId}")
-          .queryParam("date", date)
-          .build(prisonId)
-      }
-      .retrieve()
-      .awaitBody()
-
-  suspend fun getServicePrisons(serviceCode: String): List<PrisonDetails> =
-    webClient.get()
-      .uri("/service-prisons/{serviceCode}", serviceCode)
-      .retrieve()
-      .awaitBody()
-
-  suspend fun getPrisonerDetails(bookingIds: List<Long>): List<PrisonerDetails> =
-    webClient.post()
-      .uri("/prisoners/bookings")
-      .bodyValue(bookingIds)
-      .retrieve()
-      .awaitBody()
 
   // //////////////////// APPOINTMENTS /////////////////////////
 

@@ -28,7 +28,6 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.WebClientResponseException.Forbidden
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -36,7 +35,7 @@ import java.time.LocalDate
 class AttendanceServiceTest {
 
   private val activitiesApiService: ActivitiesApiService = mock()
-  private val nomisApiService: NomisApiService = mock()
+  private val nomisApiService: ActivitiesNomisApiService = mock()
   private val mappingService: ActivitiesMappingService = mock()
   private val telemetryClient: TelemetryClient = mock()
   private val attendanceService =
