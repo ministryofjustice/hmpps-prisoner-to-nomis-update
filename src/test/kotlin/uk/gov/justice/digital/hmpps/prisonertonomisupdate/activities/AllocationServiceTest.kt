@@ -21,13 +21,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Priso
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Slot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationExclusion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
 
 class AllocationServiceTest {
 
   private val activitiesApiService: ActivitiesApiService = mock()
-  private val nomisApiService: NomisApiService = mock()
+  private val nomisApiService: ActivitiesNomisApiService = mock()
   private val mappingService: ActivitiesMappingService = mock()
   private val telemetryClient: TelemetryClient = mock()
   private val allocationService = AllocationService(activitiesApiService, nomisApiService, mappingService, telemetryClient)

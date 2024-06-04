@@ -22,7 +22,6 @@ import org.mockito.kotlin.verifyBlocking
 import org.mockito.kotlin.whenever
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadGateway
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AllocationReconciliationResponse as DpsAllocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceReconciliationResponse as DpsAttendanceResponse
@@ -34,7 +33,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Bookin
 class ActivitiesReconTest {
 
   private val telemetryClient: TelemetryClient = mock()
-  private val nomisApiService: NomisApiService = mock()
+  private val nomisApiService: ActivitiesNomisApiService = mock()
   private val reportScope: CoroutineScope = mock()
   private val activitiesApiService: ActivitiesApiService = mock()
   private val activitiesReconService = ActivitiesReconService(telemetryClient, nomisApiService, reportScope, activitiesApiService)

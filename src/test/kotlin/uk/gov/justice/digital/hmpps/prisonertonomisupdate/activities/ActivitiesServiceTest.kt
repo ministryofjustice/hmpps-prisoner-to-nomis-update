@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PayRateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -41,7 +40,7 @@ import java.time.LocalDateTime
 internal class ActivitiesServiceTest {
 
   private val activitiesApiService: ActivitiesApiService = mock()
-  private val nomisApiService: NomisApiService = mock()
+  private val nomisApiService: ActivitiesNomisApiService = mock()
   private val mappingService: ActivitiesMappingService = mock()
   private val updateQueueService: ActivitiesRetryQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()

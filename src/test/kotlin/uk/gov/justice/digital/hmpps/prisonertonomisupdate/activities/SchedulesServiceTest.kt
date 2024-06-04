@@ -24,14 +24,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleLite
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 class SchedulesServiceTest {
 
   private val activitiesApiService: ActivitiesApiService = mock()
-  private val nomisApiService: NomisApiService = mock()
+  private val nomisApiService: ActivitiesNomisApiService = mock()
   private val mappingService: ActivitiesMappingService = mock()
   private val telemetryClient: TelemetryClient = mock()
   private val schedulesService = SchedulesService(activitiesApiService, nomisApiService, mappingService, telemetryClient)

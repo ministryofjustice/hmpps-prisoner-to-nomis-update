@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Atten
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.AttendancePaidException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerMovedAllocationEndedException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -15,7 +14,7 @@ import java.time.LocalDate
 @Service
 class AttendanceService(
   private val activitiesApiService: ActivitiesApiService,
-  private val nomisApiService: NomisApiService,
+  private val activitiesNomisApiService: ActivitiesNomisApiService,
   private val mappingService: ActivitiesMappingService,
   private val telemetryClient: TelemetryClient,
 ) {
@@ -41,7 +40,7 @@ class AttendanceService(
         ?.also { telemetryMap["nomisCourseScheduleId"] = it.toString() }
         ?: throw ValidationException("Mapping for Activity's scheduled instance id not found: ${attendanceSync.scheduledInstanceId}")
 
-      nomisApiService.upsertAttendance(
+      activitiesNomisApiService.upsertAttendance(
         nomisCourseScheduleId,
         attendanceSync.bookingId,
         attendanceSync.toUpsertAttendanceRequest(),

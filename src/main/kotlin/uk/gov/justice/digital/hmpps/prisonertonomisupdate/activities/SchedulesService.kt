@@ -6,12 +6,11 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourseScheduleRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 
 @Service
 class SchedulesService(
   private val activitiesApiService: ActivitiesApiService,
-  private val nomisApiService: NomisApiService,
+  private val activitiesNomisApiService: ActivitiesNomisApiService,
   private val mappingService: ActivitiesMappingService,
   private val telemetryClient: TelemetryClient,
 ) {
@@ -41,7 +40,7 @@ class SchedulesService(
         ?: throw ValidationException("Mapping for Activity's scheduled instance id not found: $scheduledInstanceId")
 
       scheduledInstance.toCourseScheduleRequest(nomisCourseScheduleId)
-        .let { nomisApiService.updateScheduledInstance(nomisCourseActivityId, it) }
+        .let { activitiesNomisApiService.updateScheduledInstance(nomisCourseActivityId, it) }
     }.onSuccess {
       telemetryClient.trackEvent("activity-scheduled-instance-amend-success", telemetryMap, null)
     }.onFailure { e ->
