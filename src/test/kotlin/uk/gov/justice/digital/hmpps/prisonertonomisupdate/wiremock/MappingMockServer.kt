@@ -344,6 +344,27 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubDeleteMappingsGreaterThan(maxCourseScheduleId: Long) {
+    stubFor(
+      delete("/mapping/schedules/max-nomis-schedule-id/$maxCourseScheduleId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
+
+  fun stubDeleteMappingsGreaterThanError(maxCourseScheduleId: Long, status: Int = 503) {
+    stubFor(
+      delete("/mapping/schedules/max-nomis-schedule-id/$maxCourseScheduleId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
+          .withStatus(status),
+      ),
+    )
+  }
+
   fun stubGetAllActivityMappings(response: String) {
     stubFor(
       get("/mapping/activities").willReturn(

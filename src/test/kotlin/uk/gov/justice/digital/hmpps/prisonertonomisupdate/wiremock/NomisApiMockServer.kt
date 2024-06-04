@@ -381,6 +381,30 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetMaxCourseScheduleId(response: Long) {
+    stubFor(
+      get("/schedules/max-id")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-type", "application/json")
+            .withBody(response)
+            .withStatus(200),
+        ),
+    )
+  }
+
+  fun stubGetMaxCourseScheduleIdWithError(status: Int = 500) {
+    stubFor(
+      get("/schedules/max-id")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-type", "application/json")
+            .withBody(ERROR_RESPONSE)
+            .withStatus(status),
+        ),
+    )
+  }
+
   // *************************************************** Appointments **********************************************
 
   fun stubAppointmentCreate(response: String) {

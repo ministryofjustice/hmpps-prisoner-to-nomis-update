@@ -104,4 +104,10 @@ class ActivitiesNomisApiService(@Qualifier("nomisApiWebClient") private val webC
       .bodyValue(bookingIds)
       .retrieve()
       .awaitBody()
+
+  suspend fun getMaxCourseScheduleId(): Long =
+    webClient.get()
+      .uri("/schedules/max-id")
+      .retrieve()
+      .awaitBody()
 }

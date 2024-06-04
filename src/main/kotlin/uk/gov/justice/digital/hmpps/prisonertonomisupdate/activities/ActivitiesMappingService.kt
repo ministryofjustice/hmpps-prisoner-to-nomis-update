@@ -54,6 +54,13 @@ class ActivitiesMappingService(
       .retrieve()
       .awaitBodilessEntity()
   }
+
+  suspend fun deleteMappingsGreaterThan(maxNomisCourseScheduleId: Long) {
+    webClient.delete()
+      .uri("/mapping/schedules/max-nomis-schedule-id/{maxCourseScheduleId}", maxNomisCourseScheduleId)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 }
 
 data class ActivityMappingDto(
