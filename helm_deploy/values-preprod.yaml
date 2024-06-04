@@ -52,4 +52,4 @@ generic-prometheus-alerts:
     - "syscon-devs-preprod-hmpps_prisoner_to_nomis_alerts_dlq"
 
 cron:
-  activitiesTidyMappingsSuspend: "false"
+  activitiesTidyMappingsSuspend: false
