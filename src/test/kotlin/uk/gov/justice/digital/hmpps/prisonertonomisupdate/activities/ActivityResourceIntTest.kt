@@ -2,8 +2,9 @@
 
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
-import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -403,11 +404,31 @@ class ActivityResourceIntTest : IntegrationTestBase() {
         .isNoContent
 
       await untilAsserted {
-        mappingServer.verify(WireMock.deleteRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/101")))
-        mappingServer.verify(WireMock.deleteRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/102")))
-        nomisApi.verify(WireMock.deleteRequestedFor(urlEqualTo("/activities/201")))
-        nomisApi.verify(WireMock.deleteRequestedFor(urlEqualTo("/activities/202")))
+        mappingServer.verify(deleteRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/101")))
+        mappingServer.verify(deleteRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/102")))
+        nomisApi.verify(deleteRequestedFor(urlEqualTo("/activities/201")))
+        nomisApi.verify(deleteRequestedFor(urlEqualTo("/activities/202")))
       }
+    }
+  }
+
+  @Nested
+  inner class DeleteUnknownActivityMappings {
+    @Test
+    fun `should delete unknown mappings`() {
+      nomisApi.stubGetMaxCourseScheduleId(100)
+      mappingServer.stubDeleteMappingsGreaterThan(100)
+
+      webTestClient.delete().uri("/activities/mappings/unknown-mappings")
+        .exchange()
+        .expectStatus().isOk
+
+      nomisApi.verify(
+        getRequestedFor(urlEqualTo("/schedules/max-id")),
+      )
+      mappingServer.verify(
+        deleteRequestedFor(urlEqualTo("/mapping/schedules/max-nomis-schedule-id/100")),
+      )
     }
   }
 }

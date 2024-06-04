@@ -48,6 +48,11 @@ class SchedulesService(
       throw e
     }
   }
+
+  suspend fun deleteUnknownMappings() =
+    activitiesNomisApiService.getMaxCourseScheduleId().apply {
+      mappingService.deleteMappingsGreaterThan(this)
+    }
 }
 
 fun List<ScheduledInstance>.toCourseScheduleRequests(mappings: List<ActivityScheduleMappingDto>? = null) =
