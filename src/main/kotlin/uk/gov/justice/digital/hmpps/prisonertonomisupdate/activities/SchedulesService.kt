@@ -50,8 +50,8 @@ class SchedulesService(
   }
 
   suspend fun deleteUnknownMappings() =
-    activitiesNomisApiService.getMaxCourseScheduleId().also { maxCourseScheduleId ->
-      mappingService.deleteMappingsGreaterThan(maxCourseScheduleId)
+    activitiesNomisApiService.getMaxCourseScheduleId().apply {
+      mappingService.deleteMappingsGreaterThan(this)
     }
 }
 
