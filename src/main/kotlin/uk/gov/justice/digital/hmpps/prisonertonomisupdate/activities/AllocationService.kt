@@ -10,14 +10,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Slot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationExclusion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
 class AllocationService(
   private val activitiesApiService: ActivitiesApiService,
-  private val nomisApiService: NomisApiService,
+  private val activitiesNomisApiService: ActivitiesNomisApiService,
   private val mappingService: ActivitiesMappingService,
   private val telemetryClient: TelemetryClient,
 ) {
@@ -40,7 +39,7 @@ class AllocationService(
         mappingService.getMappings(allocation.scheduleId)
           .also { telemetryMap["nomisCourseActivityId"] = it.nomisCourseActivityId.toString() }
           .let { mapping ->
-            nomisApiService.upsertAllocation(
+            activitiesNomisApiService.upsertAllocation(
               mapping.nomisCourseActivityId,
               toUpsertAllocationRequest(allocation),
             ).also {

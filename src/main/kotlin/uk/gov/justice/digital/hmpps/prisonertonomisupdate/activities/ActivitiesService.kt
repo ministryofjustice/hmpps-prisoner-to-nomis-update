@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Schedu
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.lang.Integer.min
 import java.math.BigDecimal
@@ -28,7 +27,7 @@ import java.time.LocalTime
 @Service
 class ActivitiesService(
   private val activitiesApiService: ActivitiesApiService,
-  private val nomisApiService: NomisApiService,
+  private val activitiesNomisApiService: ActivitiesNomisApiService,
   private val mappingService: ActivitiesMappingService,
   private val activitiesRetryQueueService: ActivitiesRetryQueueService,
   private val telemetryClient: TelemetryClient,
@@ -113,7 +112,7 @@ class ActivitiesService(
   private fun String.toLocalTime() = LocalTime.parse(this)
   private suspend fun createTransformedActivity(activitySchedule: ActivitySchedule) =
     activitiesApiService.getActivity(activitySchedule.activity.id).let {
-      nomisApiService.createActivity(toCreateActivityRequest(activitySchedule, it))
+      activitiesNomisApiService.createActivity(toCreateActivityRequest(activitySchedule, it))
     }
 
   suspend fun updateActivityEvent(event: ScheduleDomainEvent) {
@@ -136,7 +135,7 @@ class ActivitiesService(
       val activity = activitiesApiService.getActivity(activitySchedule.activity.id)
 
       activitySchedule.toUpdateActivityRequest(activity.pay, activity.category.code, activity.outsideWork, mappings)
-        .let { nomisApiService.updateActivity(mappings.nomisCourseActivityId, it) }
+        .let { activitiesNomisApiService.updateActivity(mappings.nomisCourseActivityId, it) }
         .let { nomisResponse -> buildActivityMappingDto(nomisResponse, activitySchedule, mappings, "ACTIVITY_UPDATED") }
         .also { mappingRequest -> mappingService.updateMapping(mappingRequest) }
     }.onSuccess {
@@ -223,7 +222,7 @@ class ActivitiesService(
   suspend fun deleteAllActivities() {
     mappingService.getAllMappings().forEach { mapping ->
       runCatching {
-        nomisApiService.deleteActivity(mapping.nomisCourseActivityId)
+        activitiesNomisApiService.deleteActivity(mapping.nomisCourseActivityId)
         mappingService.deleteMapping(mapping.activityScheduleId)
       }.onSuccess {
         telemetryClient.trackEvent(
