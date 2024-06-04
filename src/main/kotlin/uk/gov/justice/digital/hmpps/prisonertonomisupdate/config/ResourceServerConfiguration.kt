@@ -19,6 +19,7 @@ class ResourceServerConfiguration {
         "/sentencing/reports/reconciliation",
         "/adjudications/reports/reconciliation",
         "/alerts/reports/reconciliation",
+        "/activities/mappings/unknown-mappings",
       )
     }
   }
