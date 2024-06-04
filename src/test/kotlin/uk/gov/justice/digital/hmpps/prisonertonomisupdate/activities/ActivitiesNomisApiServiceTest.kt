@@ -487,6 +487,40 @@ class ActivitiesNomisApiServiceTest {
       }
     }
   }
+
+  @Nested
+  inner class GetMaxCourseScheduleId {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stubGetMaxCourseScheduleId(123)
+
+      activitiesNomisApiService.getMaxCourseScheduleId()
+
+      nomisApi.verify(
+        getRequestedFor(urlEqualTo("/schedules/max-id"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should parse response`() = runTest {
+      nomisApi.stubGetMaxCourseScheduleId(123)
+
+      val response = activitiesNomisApiService.getMaxCourseScheduleId()
+
+      assertThat(response).isEqualTo(123)
+    }
+
+    @Test
+    fun `should throw exception on error`() = runTest {
+      nomisApi.stubGetMaxCourseScheduleIdWithError(400)
+
+      assertThrows<BadRequest> {
+        activitiesNomisApiService.getMaxCourseScheduleId()
+      }
+    }
+  }
 }
 
 private fun newAttendance() = UpsertAttendanceRequest(

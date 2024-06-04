@@ -2,6 +2,7 @@
 
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
@@ -120,6 +121,31 @@ internal class ActivitiesMappingServiceTest {
 
       assertThrows<ServiceUnavailable> {
         mappingService.getMappings(123)
+      }
+    }
+  }
+
+  @Nested
+  inner class DeleteMappingsGreaterThanNomisCourseScheduleId {
+
+    @Test
+    fun `should call api with OAuth2 token`() = runTest {
+      MappingExtension.mappingServer.stubDeleteMappingsGreaterThan(1234)
+
+      mappingService.deleteMappingsGreaterThan(1234)
+
+      MappingExtension.mappingServer.verify(
+        deleteRequestedFor(urlEqualTo("/mapping/schedules/max-nomis-schedule-id/1234"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `when any bad response is received an exception is thrown`() = runTest {
+      MappingExtension.mappingServer.stubDeleteMappingsGreaterThanError(1234)
+
+      assertThrows<ServiceUnavailable> {
+        mappingService.deleteMappingsGreaterThan(1234)
       }
     }
   }
