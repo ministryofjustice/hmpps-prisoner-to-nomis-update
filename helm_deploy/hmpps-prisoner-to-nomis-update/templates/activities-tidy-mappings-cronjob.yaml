@@ -14,7 +14,7 @@ spec:
     spec:
       # Tidy up all jobs after 4 days
       ttlSecondsAfterFinished: 345600
-      suspend: "{{ .Values.cron.activitiesTidyMappingsSuspend }}"
+      suspend: {{ .Values.cron.activitiesTidyMappingsSuspend }}
       template:
         spec:
           containers:
