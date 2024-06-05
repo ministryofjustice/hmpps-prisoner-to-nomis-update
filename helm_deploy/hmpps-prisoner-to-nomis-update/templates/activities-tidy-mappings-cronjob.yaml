@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "app.fullname" . }}-activities-tidy-mappings
+  name: {{ include "app.fullname" . }}-activities-mappings
   labels:
     {{- include "app.labels" . | nindent 4 }}
 spec:
