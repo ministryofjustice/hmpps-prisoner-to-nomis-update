@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-05-30.7889.9611d9d"
+    "version": "2024-06-06.7961.60de179"
   },
   "servers": [
     {
@@ -804,7 +804,7 @@
         ],
         "summary": "get an alert by bookingId and alert sequence",
         "description": "Retrieves an prisoner alert. Requires ROLE_NOMIS_ALERTS",
-        "operationId": "getAlert_1",
+        "operationId": "getAlert",
         "parameters": [
           {
             "name": "bookingId",
@@ -6366,6 +6366,59 @@
         }
       }
     },
+    "/schedules/max-id": {
+      "get": {
+        "tags": [
+          "activities-resource"
+        ],
+        "summary": "Get the highest value of CRS_SCH_ID in NOMIS",
+        "description": "Retrieves the last course schedule ID so we can identify mappings records in preprod that have been copied from prod but don't have any NOMIS data.",
+        "operationId": "getMaxCourseScheduleId",
+        "responses": {
+          "200": {
+            "description": "Max CRS_SCH_ID returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/questionnaires/{questionnaireId}": {
       "get": {
         "tags": [
@@ -6979,8 +7032,8 @@
         "tags": [
           "alerts-resource"
         ],
-        "summary": "Gets alert for latest booking plus unique list of alerts from previous bookings for a prisoner",
-        "description": "Retrieves alerts for a prisoner across all bookings. The latest booking all alerts will be returned, from the previous bookings the list will contain at most one alert per alert code type ordered by alert date with latest alert taken. Requires ROLE_NOMIS_ALERTS",
+        "summary": "Gets alert for latest booking",
+        "description": "Retrieves alerts for a prisoner from latest all bookings. Requires ROLE_NOMIS_ALERTS",
         "operationId": "getAlertsToMigrate",
         "parameters": [
           {
@@ -7045,8 +7098,8 @@
         "tags": [
           "alerts-resource"
         ],
-        "summary": "Gets active alerts for latest booking plus unique list of alerts from previous bookings for a prisoner",
-        "description": "Retrieves active alerts for a prisoner across all bookings. The latest booking all active alerts will be returned, from the previous bookings the list will contain at most one alert per alert code that is active type ordered by alert date with latest alert taken. Requires ROLE_NOMIS_ALERTS",
+        "summary": "Gets active alerts for latest booking",
+        "description": "Retrieves active alerts for latest booking. Requires ROLE_NOMIS_ALERTS",
         "operationId": "getActiveAlertsForReconciliation",
         "parameters": [
           {
@@ -7618,84 +7671,6 @@
         }
       }
     },
-    "/prisoner/booking-id/{bookingId}/alerts/{alertSequence}": {
-      "get": {
-        "tags": [
-          "alerts-resource"
-        ],
-        "summary": "get an alert by bookingId and alert sequence",
-        "description": "Retrieves an prisoner alert. Requires ROLE_NOMIS_ALERTS",
-        "operationId": "getAlert",
-        "parameters": [
-          {
-            "name": "bookingId",
-            "in": "path",
-            "description": "Booking Id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Booking Id",
-              "example": 12345
-            },
-            "example": 12345
-          },
-          {
-            "name": "alertSequence",
-            "in": "path",
-            "description": "Alert sequence",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Alert sequence",
-              "example": 3
-            },
-            "example": 3
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Alert Information Returned",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AlertResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ALERTS",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Alert does not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}": {
       "get": {
         "tags": [
@@ -8165,13 +8140,87 @@
         }
       }
     },
-    "/incidents/reconciliation/agency/{agencyId}": {
+    "/incidents/reconciliation/agency/{agencyId}/ids": {
+      "get": {
+        "tags": [
+          "incident-resource"
+        ],
+        "summary": "Gets ids of open incidents at an agency",
+        "description": "Retrieves paged ids for open incidents for an agency.",
+        "operationId": "getOpenIncidentIdsForReconciliation",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          },
+          {
+            "name": "agencyId",
+            "in": "path",
+            "description": "Agency Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Agency Id",
+              "example": "LEI"
+            },
+            "example": "LEI"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pageable list of reconciliation ids are returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageLong"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_INCIDENTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/incidents/reconciliation/agency/{agencyId}/counts": {
       "get": {
         "tags": [
           "incident-resource"
         ],
         "summary": "Gets incident counts",
-        "description": "Retrieves open and closed incident counts for a prison.",
+        "description": "Retrieves open and closed incident counts for an agency.",
         "operationId": "getIncidentCountsForReconciliation",
         "parameters": [
           {
@@ -9707,80 +9756,6 @@
         }
       }
     },
-    "/alerts/ids": {
-      "get": {
-        "tags": [
-          "alerts-resource"
-        ],
-        "summary": "Get alert IDs by filter",
-        "description": "Retrieves a paged list of alert ids by filter. Requires ROLE_NOMIS_ALERTS.",
-        "operationId": "getAlertIdsByFilter",
-        "parameters": [
-          {
-            "name": "pageRequest",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/Pageable"
-            }
-          },
-          {
-            "name": "fromDate",
-            "in": "query",
-            "description": "Filter results by alerts that were created on or after the given date",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            },
-            "example": "2021-11-03"
-          },
-          {
-            "name": "toDate",
-            "in": "query",
-            "description": "Filter results by alerts that were created on or before the given date",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            },
-            "example": "2021-11-03"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Pageable list of ids are returned",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PageAlertIdResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden to access this endpoint when role ROLE_NOMIS_ALERTS not present",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/adjustments/ids": {
       "get": {
         "tags": [
@@ -11064,7 +11039,6 @@
           "bookingSequence",
           "date",
           "isActive",
-          "isAlertFromPreviousBookingRelevant",
           "isVerified",
           "type"
         ],
@@ -11120,10 +11094,6 @@
           },
           "audit": {
             "$ref": "#/components/schemas/NomisAudit"
-          },
-          "isAlertFromPreviousBookingRelevant": {
-            "type": "boolean",
-            "description": "True if this alert is on a previous booking and should have been latest booking and is potentially relevant to prisoner"
           }
         },
         "description": "The data held in NOMIS about an alert associated with a prisoner"
@@ -15719,18 +15689,11 @@
       },
       "PrisonerAlertsResponse": {
         "required": [
-          "latestBookingAlerts",
-          "previousBookingsAlerts"
+          "latestBookingAlerts"
         ],
         "type": "object",
         "properties": {
           "latestBookingAlerts": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AlertResponse"
-            }
-          },
-          "previousBookingsAlerts": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AlertResponse"
@@ -17242,6 +17205,56 @@
         },
         "description": "Staff involved in the incident"
       },
+      "PageLong": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SortObject"
+            }
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
       "IncidentsCount": {
         "required": [
           "closedIncidents",
@@ -18728,80 +18741,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/FindActiveAllocationIdsResponse"
-            }
-          },
-          "number": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
-          },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
-          "empty": {
-            "type": "boolean"
-          }
-        }
-      },
-      "AlertIdResponse": {
-        "required": [
-          "alertSequence",
-          "bookingId",
-          "offenderNo"
-        ],
-        "type": "object",
-        "properties": {
-          "bookingId": {
-            "type": "integer",
-            "description": "The booking id",
-            "format": "int64"
-          },
-          "alertSequence": {
-            "type": "integer",
-            "description": "The alert sequence",
-            "format": "int64"
-          },
-          "offenderNo": {
-            "type": "string",
-            "description": "The prisoner number"
-          }
-        },
-        "description": "Alert id"
-      },
-      "PageAlertIdResponse": {
-        "type": "object",
-        "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "size": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "content": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AlertIdResponse"
             }
           },
           "number": {

@@ -53,7 +53,7 @@ class AlertsReconciliationService(
       .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
   suspend fun checkActiveAlertsMatch(prisonerId: PrisonerIds): MismatchAlerts? = runCatching {
-    val nomisAlerts = doApiCallWithRetries { nomisAlertsApiService.getAlertsForReconciliation(prisonerId.offenderNo) }.let { it.latestBookingAlerts + it.previousBookingsAlerts }
+    val nomisAlerts = doApiCallWithRetries { nomisAlertsApiService.getAlertsForReconciliation(prisonerId.offenderNo) }.latestBookingAlerts
       .map { it.alertCode.code }.toSortedSet()
     val dpsAlerts = doApiCallWithRetries { dpsAlertsApiService.getActiveAlertsForPrisoner(prisonerId.offenderNo) }
       .map { it.alertCode.code }.toSortedSet()
