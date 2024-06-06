@@ -38,24 +38,33 @@ generic-service:
     FEATURE_EVENT_PRISONER_ALERTS_ALERT_TYPE_REACTIVATED: false
 
 generic-prometheus-alerts:
-  sqsNumberAlertQueueNames:
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_visit_queue"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_visit_dlq"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_incentive_queue"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_incentive_dlq"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_activity_queue"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_activity_dlq"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_appointment_queue"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_appointment_dlq"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_sentencing_queue"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_sentencing_dlq"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_adjudication_dead_letter_queue"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_adjudication_queue"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_nonassociation_queue"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_nonassociation_dead_letter_queue"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_location_queue"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_location_dead_letter_queue"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_court_sentencing_queue"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_court_sentencing_dlq"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_alerts_queue"
-    - "syscon-devs-prod-hmpps_prisoner_to_nomis_alerts_dlq"
+  sqsNumberAlertQueueMappings:
+    visits:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_visit_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_visit_dlq"
+    incentives:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_incentive_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_incentive_dlq"
+    activities:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_activity_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_activity_dlq"
+    appointments:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_appointment_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_appointment_dlq"
+    sentencing:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_sentencing_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_sentencing_dlq"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_court_sentencing_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_court_sentencing_dlq"
+    adjudications:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_adjudication_dead_letter_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_adjudication_queue"
+    nonassociations:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_nonassociation_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_nonassociation_dead_letter_queue"
+    locations:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_location_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_location_dead_letter_queue"
+    alerts:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_alerts_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_alerts_dlq"
