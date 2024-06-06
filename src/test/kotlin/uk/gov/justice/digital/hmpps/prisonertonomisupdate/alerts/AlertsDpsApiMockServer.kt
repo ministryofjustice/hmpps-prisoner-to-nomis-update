@@ -172,10 +172,9 @@ fun dpsAlert(): Alert = Alert(
 
 fun dpsAlertCode(code: String) = AlertCodeSummary(
   alertTypeCode = "A",
+  alertTypeDescription = "A",
   code = code,
   description = "Alert code description",
-  listSequence = 3,
-  isActive = true,
 )
 
 fun dpsAlertCodeReferenceData(code: String = "ABC") = AlertCode(

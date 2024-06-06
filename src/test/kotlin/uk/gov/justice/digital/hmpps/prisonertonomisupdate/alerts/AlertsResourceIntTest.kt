@@ -56,7 +56,6 @@ class AlertsResourceIntTest : IntegrationTestBase() {
         "A0001TZ",
         response = PrisonerAlertsResponse(
           latestBookingAlerts = listOf(alertResponse().copy(alertCode = alertCode("HPI"))),
-          previousBookingsAlerts = emptyList(),
         ),
       )
 
@@ -68,8 +67,7 @@ class AlertsResourceIntTest : IntegrationTestBase() {
       alertsNomisApi.stubGetAlertsForReconciliation(
         "A0002TZ",
         response = PrisonerAlertsResponse(
-          latestBookingAlerts = emptyList(),
-          previousBookingsAlerts = listOf(alertResponse().copy(alertCode = alertCode("HPI"))),
+          latestBookingAlerts = listOf(alertResponse().copy(alertCode = alertCode("HPI"))),
         ),
       )
 
@@ -84,8 +82,8 @@ class AlertsResourceIntTest : IntegrationTestBase() {
           latestBookingAlerts = listOf(
             alertResponse().copy(alertCode = alertCode("HPI")),
             alertResponse().copy(alertCode = alertCode("HA2")),
+            alertResponse().copy(alertCode = alertCode("XA")),
           ),
-          previousBookingsAlerts = listOf(alertResponse().copy(alertCode = alertCode("XA"))),
         ),
       )
 
@@ -100,7 +98,6 @@ class AlertsResourceIntTest : IntegrationTestBase() {
           offenderNo,
           response = PrisonerAlertsResponse(
             latestBookingAlerts = listOf(alertResponse().copy(alertCode = alertCode("HPI"))),
-            previousBookingsAlerts = emptyList(),
           ),
         )
       }
