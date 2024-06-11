@@ -493,37 +493,6 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
           alertsNomisApi.verify(0, deleteRequestedFor(anyUrl()))
         }
       }
-
-      @Nested
-      inner class WhenDeletedDueToMerge {
-        private val dpsAlertId = "bd91f2ac-6840-4fa1-8d7b-90d5a85d35c2"
-
-        @BeforeEach
-        fun setup() {
-          alertsMappingApi.stubDeleteByDpsId(dpsAlertId)
-          publishDeleteAlertDomainEvent(source = AlertSource.NOMIS, reason = AlertReason.MERGE, alertUuid = dpsAlertId)
-          waitForAnyProcessingToComplete()
-        }
-
-        @Test
-        fun `will send telemetry event showing it removed the mapping`() {
-          verify(telemetryClient).trackEvent(
-            eq("alert-deleted-merge"),
-            any(),
-            isNull(),
-          )
-        }
-
-        @Test
-        fun `will not try to delete the Alert in NOMIS`() {
-          alertsNomisApi.verify(0, deleteRequestedFor(anyUrl()))
-        }
-
-        @Test
-        fun `will delete the alert mapping`() {
-          alertsMappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/alerts/dps-alert-id/$dpsAlertId")))
-        }
-      }
     }
 
     @Nested

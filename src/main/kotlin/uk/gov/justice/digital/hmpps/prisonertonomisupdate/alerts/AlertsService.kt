@@ -128,12 +128,7 @@ class AlertsService(
         throw e
       }
     } else {
-      if (alertEvent.wasDeletedDueToMerge()) {
-        tryToDeletedMapping(dpsAlertId)
-        telemetryClient.trackEvent("alert-deleted-merge", telemetryMap)
-      } else {
-        telemetryClient.trackEvent("alert-deleted-ignored", telemetryMap)
-      }
+      telemetryClient.trackEvent("alert-deleted-ignored", telemetryMap)
     }
   }
 
@@ -176,5 +171,4 @@ enum class AlertReason {
 fun AlertEvent.wasCreatedInDPS() = wasSourceDPS()
 fun AlertEvent.wasUpdateInDPS() = wasSourceDPS()
 fun AlertEvent.wasDeletedInDPS() = wasSourceDPS()
-fun AlertEvent.wasDeletedDueToMerge() = this.additionalInformation.reason == AlertReason.MERGE
 fun AlertEvent.wasSourceDPS() = this.additionalInformation.source == AlertSource.DPS
