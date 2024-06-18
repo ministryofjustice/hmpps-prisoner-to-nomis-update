@@ -39,8 +39,6 @@ class LocationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     private const val WIREMOCK_PORT = 8093
   }
 
-  // WIP /////////////////////////////////////////////////
-
   fun stubHealthPing(status: Int) {
     stubFor(
       get("/health/ping").willReturn(okJson(if (status == 200) "pong" else "some error")),
