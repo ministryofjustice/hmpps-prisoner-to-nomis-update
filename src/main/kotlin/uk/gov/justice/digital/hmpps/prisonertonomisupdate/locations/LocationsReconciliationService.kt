@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.ChangeHistory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AmendmentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationResponse
@@ -91,24 +90,23 @@ class LocationsReconciliationService(
           allDpsIdsInNomis.contains((it.id.toString()))
         }
         .map { dpsRecord ->
-          val legacyRecord = locationsApiService.getLocation(dpsRecord.id.toString(), true)
           val mismatch = MismatchLocation(
             dpsId = dpsRecord.id.toString(),
             dpsLocation =
             LocationReportDetail(
-              legacyRecord.code,
+              dpsRecord.code,
               "${dpsRecord.prisonId}-${dpsRecord.pathHierarchy}",
-              legacyRecord.residentialHousingType?.name,
-              legacyRecord.localName,
-              legacyRecord.comments,
-              legacyRecord.capacity?.workingCapacity,
-              legacyRecord.capacity?.maxCapacity,
-              legacyRecord.certification?.certified,
-              legacyRecord.certification?.capacityOfCertifiedCell,
-              legacyRecord.active,
-              legacyRecord.attributes?.size,
-              legacyRecord.usage?.size,
-              legacyRecord.changeHistory?.size,
+              dpsRecord.residentialHousingType?.name,
+              dpsRecord.localName,
+              dpsRecord.comments,
+              dpsRecord.capacity?.workingCapacity,
+              dpsRecord.capacity?.maxCapacity,
+              dpsRecord.certification?.certified,
+              dpsRecord.certification?.capacityOfCertifiedCell,
+              dpsRecord.active,
+              dpsRecord.attributes?.size,
+              dpsRecord.usage?.size,
+              dpsRecord.changeHistory?.size,
             ),
           )
           log.info("Location Mismatch found extra DPS location $dpsRecord")
@@ -137,7 +135,7 @@ class LocationsReconciliationService(
       .getOrElse { emptyList() }
       .also { log.info("Nomis Page requested: $page, with ${it.size} locations") }
 
-  internal suspend fun getDpsLocationsForPage(page: Pair<Long, Long>): List<Location> =
+  internal suspend fun getDpsLocationsForPage(page: Pair<Long, Long>): List<LegacyLocation> =
     runCatching { doApiCallWithRetries { locationsApiService.getLocations(page.first, page.second).content } }
       .onFailure {
         telemetryClient.trackEvent(

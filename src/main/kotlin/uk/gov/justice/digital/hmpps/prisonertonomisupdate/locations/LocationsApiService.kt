@@ -2,11 +2,10 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations
 
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Page
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RestResponsePage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.typeReference
 
@@ -27,7 +26,7 @@ class LocationsApiService(@Qualifier("locationsApiWebClient") private val webCli
   suspend fun getLocations(
     pageNumber: Long,
     pageSize: Long,
-  ): PageImpl<Location> {
+  ): Page<LegacyLocation> {
     return webClient.get()
       .uri {
         it.path("/locations")
@@ -36,7 +35,7 @@ class LocationsApiService(@Qualifier("locationsApiWebClient") private val webCli
           .build()
       }
       .retrieve()
-      .bodyToMono(typeReference<RestResponsePage<Location>>())
+      .bodyToMono(typeReference<RestResponsePage<LegacyLocation>>())
       .awaitSingle()
   }
 }
