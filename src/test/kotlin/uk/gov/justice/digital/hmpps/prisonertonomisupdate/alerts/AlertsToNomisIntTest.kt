@@ -654,10 +654,9 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
     offenderNo: String = "A1234KT",
     alertUuid: String = UUID.randomUUID().toString(),
     source: AlertSource = AlertSource.DPS,
-    reason: AlertReason = AlertReason.USER,
     alertCode: String = "HPI",
   ) {
-    publishAlertDomainEvent("prisoner-alerts.alert-deleted", offenderNo, alertUuid, source, alertCode, reason)
+    publishAlertDomainEvent("prisoner-alerts.alert-deleted", offenderNo, alertUuid, source, alertCode)
   }
 
   private fun publishAlertDomainEvent(
@@ -666,7 +665,6 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
     alertUuid: String,
     source: AlertSource,
     alertCode: String,
-    reason: AlertReason = AlertReason.USER,
   ) {
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -677,7 +675,6 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
             alertUuid = alertUuid,
             source = source,
             alertCode = alertCode,
-            reason = reason,
           ),
         )
         .messageAttributes(
@@ -696,7 +693,6 @@ fun alertMessagePayload(
   alertUuid: String,
   source: AlertSource,
   alertCode: String,
-  reason: AlertReason,
 ) =
   //language=JSON
   """
@@ -707,8 +703,7 @@ fun alertMessagePayload(
         "alertUuid": "$alertUuid",
         "prisonNumber": "$offenderNo", 
         "source": "${source.name}",
-        "alertCode": "$alertCode",
-        "reason": "${reason.name}"
+        "alertCode": "$alertCode"
       }
     }
     """

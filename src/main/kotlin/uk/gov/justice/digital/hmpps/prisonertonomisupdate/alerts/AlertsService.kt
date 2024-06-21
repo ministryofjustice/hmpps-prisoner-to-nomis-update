@@ -155,17 +155,11 @@ data class AlertAdditionalInformation(
   val prisonNumber: String,
   val alertCode: String,
   val source: AlertSource,
-  val reason: AlertReason,
 )
 
 enum class AlertSource {
   DPS,
   NOMIS,
-}
-
-enum class AlertReason {
-  USER,
-  MERGE,
 }
 
 fun AlertEvent.wasCreatedInDPS() = wasSourceDPS()
