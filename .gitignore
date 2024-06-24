@@ -74,3 +74,4 @@ ecr.repo
 /send-visit-cancel-message-sns.bash
 helm_deploy/hmpps-prisoner-to-nomis-update/charts/
 volume
+.kotlin
