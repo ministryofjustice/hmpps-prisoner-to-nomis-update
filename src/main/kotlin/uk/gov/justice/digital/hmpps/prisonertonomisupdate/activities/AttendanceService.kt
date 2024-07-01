@@ -103,9 +103,7 @@ data class EventOutcome(
 
 fun AttendanceSync.toEventOutcome() = attendanceReasonCode?.let {
   when {
-    it == "ATTENDED" && issuePayment == true -> EventOutcome("ATT", unexcusedAbsence = false, authorisedAbsence = false)
-
-    it == "ATTENDED" && issuePayment != true -> EventOutcome("UNBEH", unexcusedAbsence = false, authorisedAbsence = false)
+    it == "ATTENDED" -> EventOutcome("ATT", unexcusedAbsence = false, authorisedAbsence = false)
 
     it == "CANCELLED" -> EventOutcome("CANC", unexcusedAbsence = false, authorisedAbsence = true)
 

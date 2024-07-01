@@ -347,7 +347,7 @@ class AttendanceServiceTest {
     @CsvSource(
       value = [
         "ATTENDED,true,ATT,false,false",
-        "ATTENDED,false,UNBEH,false,false",
+        "ATTENDED,false,ATT,false,false",
         "CANCELLED,true,CANC,false,true",
         "SUSPENDED,false,SUS,false,true",
         "AUTO_SUSPENDED,false,SUS,false,true",
