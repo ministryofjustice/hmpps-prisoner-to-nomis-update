@@ -47,7 +47,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
   private lateinit var alertsMappingApi: AlertsMappingApiMockServer
 
   @Nested
-  @DisplayName("prisoner-alerts.alert-created")
+  @DisplayName("person.alert.created")
   inner class AlertCreated {
     @Nested
     @DisplayName("when NOMIS is the origin of a Alert create")
@@ -308,7 +308,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
-  @DisplayName("prisoner-alerts.alert-updated")
+  @DisplayName("person.alert.updated")
   inner class AlertUpdated {
     @Nested
     @DisplayName("when NOMIS is the origin of the Alert update")
@@ -466,7 +466,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
-  @DisplayName("prisoner-alerts.alert-deleted")
+  @DisplayName("person.alert.deleted")
   inner class AlertDeleted {
     @Nested
     @DisplayName("when NOMIS is the origin of the Alert delete")
@@ -638,7 +638,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
     source: AlertSource = AlertSource.DPS,
     alertCode: String = "HPI",
   ) {
-    publishAlertDomainEvent("prisoner-alerts.alert-created", offenderNo, alertUuid, source, alertCode)
+    publishAlertDomainEvent("person.alert.created", offenderNo, alertUuid, source, alertCode)
   }
 
   private fun publishUpdateAlertDomainEvent(
@@ -647,7 +647,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
     source: AlertSource = AlertSource.DPS,
     alertCode: String = "HPI",
   ) {
-    publishAlertDomainEvent("prisoner-alerts.alert-updated", offenderNo, alertUuid, source, alertCode)
+    publishAlertDomainEvent("person.alert.updated", offenderNo, alertUuid, source, alertCode)
   }
 
   private fun publishDeleteAlertDomainEvent(
@@ -656,7 +656,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
     source: AlertSource = AlertSource.DPS,
     alertCode: String = "HPI",
   ) {
-    publishAlertDomainEvent("prisoner-alerts.alert-deleted", offenderNo, alertUuid, source, alertCode)
+    publishAlertDomainEvent("person.alert.deleted", offenderNo, alertUuid, source, alertCode)
   }
 
   private fun publishAlertDomainEvent(
