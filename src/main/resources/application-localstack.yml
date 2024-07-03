@@ -126,9 +126,9 @@ hmpps.sqs:
       subscribeTopicId: domainevents
       subscribeFilter: >-
         { "eventType":[
-          "prisoner-alerts.alert-created",
-          "prisoner-alerts.alert-updated",
-          "prisoner-alerts.alert-deleted"]}
+          "person.alert.created",
+          "person.alert.updated",
+          "person.alert.deleted"]}
 
   topics:
     domainevents:

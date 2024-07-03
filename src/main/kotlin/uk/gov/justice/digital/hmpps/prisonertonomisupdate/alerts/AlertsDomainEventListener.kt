@@ -36,14 +36,17 @@ class AlertsDomainEventListener(
     rawMessage: String,
   ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
-      "prisoner-alerts.alert-created" ->
-        alertsService.createAlert(message.fromJson())
+      "person.alert.created",
+      "prisoner-alerts.alert-created",
+      -> alertsService.createAlert(message.fromJson())
 
-      "prisoner-alerts.alert-updated" ->
-        alertsService.updateAlert(message.fromJson())
+      "person.alert.updated",
+      "prisoner-alerts.alert-updated",
+      -> alertsService.updateAlert(message.fromJson())
 
-      "prisoner-alerts.alert-deleted" ->
-        alertsService.deleteAlert(message.fromJson())
+      "person.alert.deleted",
+      "prisoner-alerts.alert-deleted",
+      -> alertsService.deleteAlert(message.fromJson())
 
       "prisoner-alerts.alert-code-created" ->
         alertsReferenceDataService.createAlertCode(message.fromJson())
