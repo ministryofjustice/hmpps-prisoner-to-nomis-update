@@ -33,6 +33,8 @@ import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 private const val NON_ASSOCIATION_ID = 12345L
 private const val OFFENDER_NO_1 = "A1234AA"
 private const val OFFENDER_NO_2 = "B1234BB"
+private const val OFFENDER_TO_REMOVE = "A4567ZQ"
+private const val OFFENDER_TO_SURVIVE = "A7869AW"
 
 class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
@@ -90,7 +92,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         waitForCreateProcessingToBeComplete()
 
         verify(telemetryClient).trackEvent(
-          eq("nonAssociation-create-success"),
+          eq("non-association-create-success"),
           org.mockito.kotlin.check {
             assertThat(it["nonAssociationId"]).isEqualTo("$NON_ASSOCIATION_ID")
             assertThat(it["firstOffenderNo"]).isEqualTo(OFFENDER_NO_1)
@@ -140,7 +142,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         waitForCreateProcessingToBeComplete()
 
         verify(telemetryClient).trackEvent(
-          eq("nonAssociation-create-duplicate"),
+          eq("non-association-create-duplicate"),
           org.mockito.kotlin.check {
             assertThat(it["nonAssociationId"]).isEqualTo("$NON_ASSOCIATION_ID")
           },
@@ -250,7 +252,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will create success telemetry`() {
         await untilAsserted {
           verify(telemetryClient).trackEvent(
-            Mockito.eq("nonAssociation-amend-success"),
+            Mockito.eq("non-association-amend-success"),
             org.mockito.kotlin.check {
               assertThat(it["nonAssociationId"]).isEqualTo(NON_ASSOCIATION_ID.toString())
               assertThat(it["offender1"]).isEqualTo(OFFENDER_NO_1)
@@ -284,7 +286,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will callback back to nonAssociation service twice to get more details`() {
           await untilAsserted {
             nonAssociationsApiServer.verify(2, getRequestedFor(urlEqualTo("/legacy/api/non-associations/$NON_ASSOCIATION_ID")))
-            verify(telemetryClient).trackEvent(Mockito.eq("nonAssociation-amend-success"), any(), isNull())
+            verify(telemetryClient).trackEvent(Mockito.eq("non-association-amend-success"), any(), isNull())
           }
         }
 
@@ -292,8 +294,8 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will eventually update the nonAssociation in NOMIS`() {
           await untilAsserted {
             NomisApiExtension.nomisApi.verify(1, putRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1")))
-            verify(telemetryClient).trackEvent(Mockito.eq("nonAssociation-amend-failed"), any(), isNull())
-            verify(telemetryClient).trackEvent(Mockito.eq("nonAssociation-amend-success"), any(), isNull())
+            verify(telemetryClient).trackEvent(Mockito.eq("non-association-amend-failed"), any(), isNull())
+            verify(telemetryClient).trackEvent(Mockito.eq("non-association-amend-success"), any(), isNull())
           }
         }
       }
@@ -320,7 +322,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will create failure telemetry`() {
           await untilAsserted {
             verify(telemetryClient, times(3)).trackEvent(
-              Mockito.eq("nonAssociation-amend-failed"),
+              Mockito.eq("non-association-amend-failed"),
               org.mockito.kotlin.check {
                 assertThat(it["nonAssociationId"]).isEqualTo(NON_ASSOCIATION_ID.toString())
                 assertThat(it["offender1"]).isEqualTo(OFFENDER_NO_1)
@@ -365,7 +367,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will create success telemetry`() {
         await untilAsserted {
           verify(telemetryClient).trackEvent(
-            Mockito.eq("nonAssociation-close-success"),
+            Mockito.eq("non-association-close-success"),
             org.mockito.kotlin.check {
               assertThat(it["nonAssociationId"]).isEqualTo(NON_ASSOCIATION_ID.toString())
               assertThat(it["offender1"]).isEqualTo(OFFENDER_NO_1)
@@ -402,8 +404,8 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will eventually close the non-association in NOMIS`() {
           await untilAsserted {
             NomisApiExtension.nomisApi.verify(2, putRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1/close")))
-            verify(telemetryClient).trackEvent(Mockito.eq("nonAssociation-close-failed"), any(), isNull())
-            verify(telemetryClient).trackEvent(Mockito.eq("nonAssociation-close-success"), any(), isNull())
+            verify(telemetryClient).trackEvent(Mockito.eq("non-association-close-failed"), any(), isNull())
+            verify(telemetryClient).trackEvent(Mockito.eq("non-association-close-success"), any(), isNull())
           }
         }
       }
@@ -429,7 +431,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will create failure telemetry`() {
           await untilAsserted {
             verify(telemetryClient, atLeast(3)).trackEvent(
-              Mockito.eq("nonAssociation-close-failed"),
+              Mockito.eq("non-association-close-failed"),
               org.mockito.kotlin.check {
                 assertThat(it["nonAssociationId"]).isEqualTo(NON_ASSOCIATION_ID.toString())
                 assertThat(it["offender1"]).isEqualTo(OFFENDER_NO_1)
@@ -482,7 +484,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will create success telemetry`() {
         await untilAsserted {
           verify(telemetryClient).trackEvent(
-            Mockito.eq("nonAssociation-delete-success"),
+            Mockito.eq("non-association-delete-success"),
             org.mockito.kotlin.check {
               assertThat(it["nonAssociationId"]).isEqualTo(NON_ASSOCIATION_ID.toString())
               assertThat(it["offender1"]).isEqualTo(OFFENDER_NO_1)
@@ -492,6 +494,39 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
             isNull(),
           )
         }
+      }
+    }
+  }
+
+  @Nested
+  inner class Merge {
+    @BeforeEach
+    fun setUp() {
+      MappingExtension.mappingServer.stubPutMergeNonAssociation(OFFENDER_TO_REMOVE, OFFENDER_TO_SURVIVE)
+      publishMergeEvent(OFFENDER_TO_REMOVE, OFFENDER_TO_SURVIVE)
+    }
+
+    @Test
+    fun `will correct the mapping`() {
+      await untilAsserted {
+        MappingExtension.mappingServer.verify(
+          putRequestedFor(urlEqualTo("/mapping/non-associations/merge/from/$OFFENDER_TO_REMOVE/to/$OFFENDER_TO_SURVIVE")),
+        )
+      }
+    }
+
+    @Test
+    fun `will create success telemetry`() {
+      await untilAsserted {
+        verify(telemetryClient).trackEvent(
+          Mockito.eq("non-association-merge-success"),
+          org.mockito.kotlin.check {
+            assertThat(it["removedNomsNumber"]).isEqualTo(OFFENDER_TO_REMOVE)
+            assertThat(it["nomsNumber"]).isEqualTo(OFFENDER_TO_SURVIVE)
+            assertThat(it["reason"]).isEqualTo("MERGE")
+          },
+          isNull(),
+        )
       }
     }
   }
@@ -508,4 +543,25 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
   fun nonAssociationMessagePayload(nonAssociationId: Long, eventType: String) =
     """{"eventType":"$eventType", "additionalInformation": {"id":"$nonAssociationId"}, "version": "1.0", "description": "description", "occurredAt": "2023-09-01T17:09:56.199944267+01:00"}"""
+
+  private fun publishMergeEvent(old: String, new: String) {
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(mergeEventPayload(old, new))
+        .messageAttributes(
+          mapOf("eventType" to MessageAttributeValue.builder().dataType("String").stringValue("prison-offender-events.prisoner.merged").build()),
+        ).build(),
+    ).get()
+  }
+
+  private fun mergeEventPayload(old: String, new: String) =
+    """{
+      "eventType":"prison-offender-events.prisoner.merged",
+      "version":1,
+      "description":"A prisoner has been merged from $old to $new",
+      "occurredAt":"2024-07-03T12:24:56+01:00",
+      "publishedAt":"2024-07-03T12:24:59.097648582+01:00",
+      "personReference":{"identifiers":[{"type":"NOMS","value":"$new"}]},
+      "additionalInformation":{"bookingId":"2937673","nomsNumber":"$new","removedNomsNumber":"$old","reason":"MERGE"}}
+    """
 }

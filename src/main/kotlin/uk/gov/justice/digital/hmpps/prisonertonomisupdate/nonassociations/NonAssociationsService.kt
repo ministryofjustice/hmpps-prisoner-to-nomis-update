@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.model.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MergeEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDateTime
@@ -56,7 +57,7 @@ class NonAssociationsService(
         saveMapping { mappingService.createMapping(it) }
       }
     } else {
-      telemetryClient.trackEvent("nonAssociation-create-ignored", telemetryMap)
+      telemetryClient.trackEvent("non-association-create-ignored", telemetryMap)
     }
   }
 
@@ -75,13 +76,13 @@ class NonAssociationsService(
             nomisApiService.amendNonAssociation(firstOffenderNo, secondOffenderNo, nomisTypeSequence, toUpdateNonAssociationRequest(nonAssociation))
           }
       }.onSuccess {
-        telemetryClient.trackEvent("nonAssociation-amend-success", telemetryMap)
+        telemetryClient.trackEvent("non-association-amend-success", telemetryMap)
       }.onFailure { e ->
-        telemetryClient.trackEvent("nonAssociation-amend-failed", telemetryMap)
+        telemetryClient.trackEvent("non-association-amend-failed", telemetryMap)
         throw e
       }
     } else {
-      telemetryClient.trackEvent("nonAssociation-amend-ignored", telemetryMap)
+      telemetryClient.trackEvent("non-association-amend-ignored", telemetryMap)
     }
   }
 
@@ -98,13 +99,13 @@ class NonAssociationsService(
             nomisApiService.closeNonAssociation(firstOffenderNo, secondOffenderNo, nomisTypeSequence)
           }
       }.onSuccess {
-        telemetryClient.trackEvent("nonAssociation-close-success", telemetryMap)
+        telemetryClient.trackEvent("non-association-close-success", telemetryMap)
       }.onFailure { e ->
-        telemetryClient.trackEvent("nonAssociation-close-failed", telemetryMap)
+        telemetryClient.trackEvent("non-association-close-failed", telemetryMap)
         throw e
       }
     } else {
-      telemetryClient.trackEvent("nonAssociation-close-ignored", telemetryMap)
+      telemetryClient.trackEvent("non-association-close-ignored", telemetryMap)
     }
   }
 
@@ -122,14 +123,28 @@ class NonAssociationsService(
             mappingService.deleteNonAssociation(nonAssociationId)
           }
       }.onSuccess {
-        telemetryClient.trackEvent("nonAssociation-delete-success", telemetryMap)
+        telemetryClient.trackEvent("non-association-delete-success", telemetryMap)
       }.onFailure { e ->
-        telemetryClient.trackEvent("nonAssociation-delete-failed", telemetryMap)
+        telemetryClient.trackEvent("non-association-delete-failed", telemetryMap)
         throw e
       }
     } else {
-      telemetryClient.trackEvent("nonAssociation-delete-ignored", telemetryMap)
+      telemetryClient.trackEvent("non-association-delete-ignored", telemetryMap)
     }
+  }
+
+  suspend fun processMerge(event: MergeEvent) {
+    if (event.additionalInformation.reason == "MERGE") {
+      mappingService.mergeNomsNumber(event.additionalInformation.removedNomsNumber, event.additionalInformation.nomsNumber)
+    }
+    telemetryClient.trackEvent(
+      "non-association-merge-success",
+      mapOf(
+        "removedNomsNumber" to event.additionalInformation.removedNomsNumber,
+        "nomsNumber" to event.additionalInformation.nomsNumber,
+        "reason" to event.additionalInformation.reason,
+      ),
+    )
   }
 
   private fun toCreateNonAssociationRequest(instance: LegacyNonAssociation) = CreateNonAssociationRequest(
