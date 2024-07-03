@@ -23,6 +23,8 @@ class AlertsMappingApiMockServer(private val objectMapper: ObjectMapper) {
   fun stubGetByDpsId(
     dpsAlertId: String = UUID.randomUUID().toString(),
     mapping: AlertMappingDto = AlertMappingDto(
+      offenderNo = "A1234AA",
+      // TODO
       nomisBookingId = 123456,
       nomisAlertSequence = 1,
       dpsAlertId = UUID.randomUUID().toString(),
