@@ -136,15 +136,15 @@ class NonAssociationsService(
   suspend fun processMerge(event: MergeEvent) {
     if (event.additionalInformation.reason == "MERGE") {
       mappingService.mergeNomsNumber(event.additionalInformation.removedNomsNumber, event.additionalInformation.nomsNumber)
+      telemetryClient.trackEvent(
+        "non-association-merge-success",
+        mapOf(
+          "removedNomsNumber" to event.additionalInformation.removedNomsNumber,
+          "nomsNumber" to event.additionalInformation.nomsNumber,
+          "reason" to event.additionalInformation.reason,
+        ),
+      )
     }
-    telemetryClient.trackEvent(
-      "non-association-merge-success",
-      mapOf(
-        "removedNomsNumber" to event.additionalInformation.removedNomsNumber,
-        "nomsNumber" to event.additionalInformation.nomsNumber,
-        "reason" to event.additionalInformation.reason,
-      ),
-    )
   }
 
   private fun toCreateNonAssociationRequest(instance: LegacyNonAssociation) = CreateNonAssociationRequest(
