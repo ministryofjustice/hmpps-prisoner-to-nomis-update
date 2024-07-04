@@ -721,7 +721,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   private fun publishCreateCourtCaseDomainEvent() {
-    val eventType = "court-sentencing.court-case.created"
+    val eventType = "court-case.inserted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(
