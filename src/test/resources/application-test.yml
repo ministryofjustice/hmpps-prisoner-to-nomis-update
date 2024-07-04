@@ -155,7 +155,7 @@ hmpps.sqs:
       subscribeTopicId: domainevents
       subscribeFilter: >-
         { "eventType":[
-        "court-sentencing.court-case.created",
+        "court-case.inserted",
         "court-sentencing.court-appearance.created",
         "court-sentencing.court-appearance.updated"]}
       dlqMaxReceiveCount: 3
