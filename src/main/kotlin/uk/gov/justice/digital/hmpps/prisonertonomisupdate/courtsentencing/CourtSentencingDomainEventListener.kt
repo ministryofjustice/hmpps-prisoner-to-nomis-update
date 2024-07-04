@@ -35,7 +35,7 @@ class CourtSentencingDomainEventListener(
     rawMessage: String,
   ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
-      "court-sentencing.court-case.created" ->
+      "court-case.inserted" ->
         courtSentencingService.createCourtCase(message.fromJson())
       "court-sentencing.court-appearance.created" ->
         courtSentencingService.createCourtAppearance(message.fromJson())
