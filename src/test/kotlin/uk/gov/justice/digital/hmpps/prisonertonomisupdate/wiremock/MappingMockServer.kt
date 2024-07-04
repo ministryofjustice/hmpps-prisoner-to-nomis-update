@@ -1090,6 +1090,16 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubPutMergeNonAssociation(from: String, to: String) {
+    stubFor(
+      put("/mapping/non-associations/merge/from/$from/to/$to").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200),
+      ),
+    )
+  }
+
   // *************************************************** Locations **********************************************
 
   fun stubCreateLocation() {

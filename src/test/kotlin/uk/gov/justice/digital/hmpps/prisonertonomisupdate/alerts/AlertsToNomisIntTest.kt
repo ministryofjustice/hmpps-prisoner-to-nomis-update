@@ -286,6 +286,8 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
             AlertMappingDto(
               dpsAlertId = dpsAlertId,
               nomisBookingId = nomisBookingId,
+              offenderNo = "A1234AA",
+              // TODO
               nomisAlertSequence = nomisAlertSequence,
               mappingType = AlertMappingDto.MappingType.DPS_CREATED,
             ),
@@ -380,6 +382,8 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
             AlertMappingDto(
               dpsAlertId = dpsAlertId,
               nomisBookingId = nomisBookingId,
+              offenderNo = "A1234AA",
+              // TODO
               nomisAlertSequence = nomisAlertSequence,
               mappingType = AlertMappingDto.MappingType.DPS_CREATED,
             ),
@@ -533,6 +537,8 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
             AlertMappingDto(
               dpsAlertId = dpsAlertId,
               nomisBookingId = nomisBookingId,
+              offenderNo = "A1234AA",
+              // TODO
               nomisAlertSequence = nomisAlertSequence,
               mappingType = AlertMappingDto.MappingType.DPS_CREATED,
             ),
@@ -598,6 +604,8 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
             AlertMappingDto(
               dpsAlertId = dpsAlertId,
               nomisBookingId = nomisBookingId,
+              offenderNo = "A1234AA",
+              // TODO
               nomisAlertSequence = nomisAlertSequence,
               mappingType = AlertMappingDto.MappingType.DPS_CREATED,
             ),

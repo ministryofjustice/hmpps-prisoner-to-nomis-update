@@ -63,6 +63,8 @@ class AlertsMappingApiServiceTest {
         mapping = AlertMappingDto(
           dpsAlertId = dpsAlertId,
           nomisBookingId = 123456,
+          offenderNo = "A1234AA",
+          // TODO
           nomisAlertSequence = 1,
           mappingType = AlertMappingDto.MappingType.MIGRATED,
         ),
@@ -100,6 +102,8 @@ class AlertsMappingApiServiceTest {
       apiService.createMapping(
         AlertMappingDto(
           nomisBookingId = 123456,
+          offenderNo = "A1234AA",
+          // TODO
           nomisAlertSequence = 1,
           dpsAlertId = UUID.randomUUID().toString(),
           mappingType = AlertMappingDto.MappingType.DPS_CREATED,
@@ -119,6 +123,8 @@ class AlertsMappingApiServiceTest {
       apiService.createMapping(
         AlertMappingDto(
           nomisBookingId = 123456,
+          offenderNo = "A1234AA",
+          // TODO
           nomisAlertSequence = 1,
           dpsAlertId = dpsAlertId,
           mappingType = AlertMappingDto.MappingType.DPS_CREATED,

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
+import io.swagger.v3.oas.annotations.media.Schema
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.future
@@ -71,3 +72,19 @@ private fun asCompletableFuture(
 interface CreateMappingRetryable {
   suspend fun retryCreateMapping(message: String)
 }
+
+data class MergeEvent(
+  val eventType: String,
+  val version: String,
+  val description: String,
+  val additionalInformation: MergeAdditionalInformation,
+)
+
+data class MergeAdditionalInformation(
+  @Schema(description = "enum - 'MERGE' indicates the prisoner records have been merged")
+  val reason: String,
+  @Schema(description = "NOMS number of the prisoner (this will be the value that the prisoner record now holds)")
+  val nomsNumber: String,
+  @Schema(description = "NOMS number that was MERGED into nomsNumber and then removed")
+  val removedNomsNumber: String,
+)

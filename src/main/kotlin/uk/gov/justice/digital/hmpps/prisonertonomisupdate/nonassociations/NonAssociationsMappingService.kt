@@ -40,6 +40,13 @@ class NonAssociationMappingService(
       .retrieve()
       .awaitBodilessEntity()
   }
+
+  suspend fun mergeNomsNumber(from: String, to: String) {
+    webClient.put()
+      .uri("/mapping/non-associations/merge/from/{from}/to/{to}", from, to)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 }
 
 data class NonAssociationMappingDto(
