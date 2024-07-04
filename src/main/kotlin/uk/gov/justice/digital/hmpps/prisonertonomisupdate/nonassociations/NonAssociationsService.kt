@@ -30,7 +30,7 @@ class NonAssociationsService(
     val telemetryMap = mapOf("nonAssociationId" to event.additionalInformation.id.toString())
     if (isDpsCreated(event.additionalInformation)) {
       synchronise {
-        name = "nonAssociation"
+        name = "non-association"
         telemetryClient = this@NonAssociationsService.telemetryClient
         retryQueueService = nonAssociationsUpdateQueueService
         eventTelemetry = telemetryMap

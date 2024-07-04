@@ -85,7 +85,8 @@ hmpps.sqs:
         "non-associations.created",
         "non-associations.deleted",
         "non-associations.amended",
-        "non-associations.closed"]}
+        "non-associations.closed",
+        "prison-offender-events.prisoner.merged"]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
     location:
