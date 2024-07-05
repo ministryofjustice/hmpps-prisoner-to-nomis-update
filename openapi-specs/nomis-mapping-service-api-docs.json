@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-04-18.4083.0c8b514"
+    "version": "2024-07-03.4594.1802173"
   },
   "servers": [
     {
@@ -110,6 +110,67 @@
         }
       }
     },
+    "/mapping/non-associations/merge/from/{oldOffenderNo}/to/{newOffenderNo}": {
+      "put": {
+        "tags": [
+          "non-associations-mapping-resource"
+        ],
+        "summary": "Replaces all occurrences of the 'from' id with the 'to' id in the mapping table",
+        "description": "Used for update after a prisoner number merge. Requires role NOMIS_NON_ASSOCIATIONS",
+        "operationId": "updateMappingsByNomisId",
+        "parameters": [
+          {
+            "name": "oldOffenderNo",
+            "in": "path",
+            "description": "Old prisoner number to replace",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Old prisoner number to replace",
+              "example": "A3456KM"
+            },
+            "example": "A3456KM"
+          },
+          {
+            "name": "newOffenderNo",
+            "in": "path",
+            "description": "New prisoner number to use",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "New prisoner number to use",
+              "example": "A3457LZ"
+            },
+            "example": "A3457LZ"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Replacement made, or not present in table"
+          },
+          "400": {
+            "description": "Replacement would result in an NA with both prisoner numbers the same - requires manual intervention",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/court-sentencing/court-charges": {
       "put": {
         "tags": [
@@ -137,6 +198,449 @@
           },
           "401": {
             "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "court-sentencing-mapping-resource"
+        ],
+        "summary": "Creates a new single charge mapping",
+        "description": "Creates a mapping between nomis offender charge ID and DPS charge ID. Requires ROLE_NOMIS_COURT_SENTENCING",
+        "operationId": "createCourtChargeMapping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourtChargeMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtChargeMapping"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/alerts/{offenderNo}/merge": {
+      "put": {
+        "tags": [
+          "alerts-mapping-resource"
+        ],
+        "summary": "Replaces a set of new alert mappings for a prisoner and removes mappings for the removed prisoner record",
+        "description": "Replaces the mappings between all the nomis alert ids and dps alert id. Any mappings on the removed prisoner record are deleted. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "replaceMappingsForPrisonerAfterMerge",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Retained NOMIS offender no",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Retained NOMIS offender no",
+              "example": "A1234KT"
+            },
+            "example": "A1234KT"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergedPrisonerAlertMappingsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Mappings replaced"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/alerts/{offenderNo}/all": {
+      "get": {
+        "tags": [
+          "alerts-mapping-resource"
+        ],
+        "summary": "Gets all alert mappings for a prisoner",
+        "description": "Gets all the mapping between nomis alert ids and dps alert id related to specific prisoner created either via migration or synchronisation. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "getMappingsForPrisoner_1",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "NOMIS offender no",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS offender no",
+              "example": "A1234KT"
+            },
+            "example": "A1234KT"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mappings for prisoner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllPrisonerAlertMappingsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "alerts-mapping-resource"
+        ],
+        "summary": "Replaces a set of new alert mapping for a prisoner",
+        "description": "Replaces the mappings between all the nomis alert ids and dps alert id. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "replaceMappingsForPrisoner",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "NOMIS offender no",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS offender no",
+              "example": "A1234KT"
+            },
+            "example": "A1234KT"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrisonerAlertMappingsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Mappings replaced"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "alerts-mapping-resource"
+        ],
+        "summary": "Creates a set of new alert mapping for a prisoner",
+        "description": "Creates a mapping between all the nomis alert ids and dps alert id. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "createMappingsForPrisoner_1",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "NOMIS offender no",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS offender no",
+              "example": "A1234KT"
+            },
+            "example": "A1234KT"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrisonerAlertMappingsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping created"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/alerts/nomis-booking-id/{bookingId}/nomis-alert-sequence/{alertSequence}": {
+      "get": {
+        "tags": [
+          "alerts-mapping-resource"
+        ],
+        "summary": "get mapping",
+        "description": "Retrieves a mapping by NOMIS id. Requires role NOMIS_ALERTS",
+        "operationId": "getMappingByNomisId_4",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "NOMIS booking id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS booking id",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "alertSequence",
+            "in": "path",
+            "description": "NOMIS booking id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS booking id",
+              "example": 2
+            },
+            "example": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "alerts-mapping-resource"
+        ],
+        "summary": "updates mapping",
+        "description": "Updates a mapping by NOMIS id setting a new NOMIS booking Id. Requires role NOMIS_ALERTS",
+        "operationId": "updateMappingBookingIdByNomisId",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "NOMIS booking id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS booking id",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "alertSequence",
+            "in": "path",
+            "description": "NOMIS booking id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS booking id",
+              "example": 2
+            },
+            "example": 2
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NomisMappingIdUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
             "content": {
               "application/json": {
                 "schema": {
@@ -248,7 +752,7 @@
         ],
         "summary": "Creates a new activity mapping",
         "description": "Creates a mapping between nomis id and Activity service id. Requires NOMIS_ACTIVITIES",
-        "operationId": "createMapping_13",
+        "operationId": "createMapping_15",
         "requestBody": {
           "content": {
             "application/json": {
@@ -854,7 +1358,7 @@
         ],
         "summary": "Deletes incident mappings.",
         "description": "Deletes all rows from the incidents mapping table. Requires role NOMIS_INCIDENTS",
-        "operationId": "deleteIncidentMappings",
+        "operationId": "deleteMappings_1",
         "parameters": [
           {
             "name": "onlyMigrated",
@@ -1035,6 +1539,201 @@
         }
       }
     },
+    "/mapping/csip/factors": {
+      "post": {
+        "tags": [
+          "csip-factor-mapping-resource"
+        ],
+        "summary": "Creates a new CSIP Factor mapping",
+        "description": "Creates a mapping between a Nomis CSIP factor id and DPS CSIP factor id. Requires role NOMIS_CSIP",
+        "operationId": "createFactorMapping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CSIPFactorMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping entry created"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate csip has been rejected. If Error code = 409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip": {
+      "post": {
+        "tags": [
+          "csip-mapping-resource"
+        ],
+        "summary": "Creates a new CSIP Report mapping",
+        "description": "Creates a mapping between a Nomis CSIP report id and DPS CSIP report id. Requires role NOMIS_CSIP",
+        "operationId": "createMapping_7",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CSIPMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping entry created"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate csip has been rejected. If Error code = 409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "csip-mapping-resource"
+        ],
+        "summary": "Deletes CSIP mappings.",
+        "description": "Deletes all rows from the csip mapping table. Requires role NOMIS_CSIP",
+        "operationId": "deleteAllMappings",
+        "parameters": [
+          {
+            "name": "onlyMigrated",
+            "in": "query",
+            "description": "if true delete mapping entries created by the migration process only (synchronisation records are unaffected)",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "example": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "CSIP mappings deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-sentencing/sentences": {
+      "post": {
+        "tags": [
+          "court-sentencing-mapping-resource"
+        ],
+        "summary": "Creates a new sentence hierarchical mapping",
+        "description": "Creates a mapping between nomis sentence ID (booking id and sentence seq) and DPS Sentence ID. Also maps child charge entities. Requires ROLE_NOMIS_COURT_SENTENCING",
+        "operationId": "createSentenceMapping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SentenceMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentenceMapping"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/court-sentencing/court-cases": {
       "post": {
         "tags": [
@@ -1042,7 +1741,7 @@
         ],
         "summary": "Creates a new court case hierarchical mapping",
         "description": "Creates a mapping between nomis Court Case ID and DPS Court Case ID. Also maps child entities: Court appearances and charges. Requires ROLE_NOMIS_COURT_SENTENCING",
-        "operationId": "createMapping_7",
+        "operationId": "createMapping_8",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1159,6 +1858,343 @@
         }
       }
     },
+    "/mapping/casenotes/{offenderNo}/all": {
+      "get": {
+        "tags": [
+          "case-notes-mapping-resource"
+        ],
+        "summary": "Gets all case note mappings for a prisoner",
+        "description": "Gets all the mapping between nomis case note ids and dps case note id related to specific prisoner created either via migration or synchronisation. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "getMappingsForPrisoner",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "NOMIS offender no",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS offender no",
+              "example": "A1234KT"
+            },
+            "example": "A1234KT"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mappings for prisoner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllPrisonerAlertMappingsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "case-notes-mapping-resource"
+        ],
+        "summary": "Creates a set of new case note mappings for a prisoner",
+        "description": "Creates a mapping between all the nomis case note ids and dps case note ids. Requires ROLE_NOMIS_CASENOTES",
+        "operationId": "createMappingsForPrisoner",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "NOMIS offender no",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS offender no",
+              "example": "A1234KT"
+            },
+            "example": "A1234KT"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrisonerCaseNoteMappingsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping created"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/casenotes/nomis-casenote-id": {
+      "post": {
+        "tags": [
+          "case-notes-mapping-resource"
+        ],
+        "summary": "get mappings by Nomis id",
+        "description": "Retrieves multiple mappings by NOMIS case note id. Requires role NOMIS_CASENOTES",
+        "operationId": "getMappingsByNomisId",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "description": "NOMIS booking id",
+                "example": 2
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseNoteMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/casenotes/batch": {
+      "post": {
+        "tags": [
+          "case-notes-mapping-resource"
+        ],
+        "summary": "Creates a batch of new casenote mappings",
+        "description": "Creates a mapping between a batch of nomis casenote ids and dps casenote id. Requires ROLE_NOMIS_CASENOTES",
+        "operationId": "createMappings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CaseNoteMappingDto"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mappings created"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/casenotes": {
+      "post": {
+        "tags": [
+          "case-notes-mapping-resource"
+        ],
+        "summary": "Creates a new casenote mapping",
+        "description": "Creates a mapping between nomis casenote id and dps casenote id. Requires ROLE_NOMIS_CASENOTES",
+        "operationId": "createMapping_9",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaseNoteMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping created"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "case-notes-mapping-resource"
+        ],
+        "summary": "Deletes all casenote mappings",
+        "description": "Deletes all casenote mappings regardless of source. This is expected to only ever been used in a non-production environment. Requires ROLE_NOMIS_CASENOTES",
+        "operationId": "deleteAllMappings_1",
+        "parameters": [
+          {
+            "name": "onlyMigrated",
+            "in": "query",
+            "description": "Only delete migrated mappings",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Only delete migrated mappings",
+              "example": true
+            },
+            "example": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Mappings deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/appointments": {
       "get": {
         "tags": [
@@ -1199,7 +2235,7 @@
         ],
         "summary": "Creates a new appointment mapping",
         "description": "Creates a mapping between nomis id and Appointment instance id. Requires NOMIS_APPOINTMENTS",
-        "operationId": "createMapping_8",
+        "operationId": "createMapping_10",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1254,7 +2290,7 @@
         ],
         "summary": "Creates a new allocation migration mapping",
         "description": "Creates a mapping between nomis allocation id and Actvities allocation id. Requires NOMIS_ACTIVITIES",
-        "operationId": "createMapping_9",
+        "operationId": "createMapping_11",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1292,33 +2328,22 @@
         }
       }
     },
-    "/mapping/alerts/{offenderNo}/all": {
+    "/mapping/alerts/batch": {
       "post": {
         "tags": [
           "alerts-mapping-resource"
         ],
-        "summary": "Creates a set of new alert mapping for a prisoner",
-        "description": "Creates a mapping between all the nomis alert ids and dps alert id. Requires ROLE_NOMIS_ALERTS",
-        "operationId": "createMappingsForPrisoner",
-        "parameters": [
-          {
-            "name": "offenderNo",
-            "in": "path",
-            "description": "NOMIS offender no",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "NOMIS offender no",
-              "example": "A1234KT"
-            },
-            "example": "A1234KT"
-          }
-        ],
+        "summary": "Creates a batch of new alert mappings",
+        "description": "Creates a mapping between a batch of nomis alert ids and dps alert id. Requires ROLE_NOMIS_ALERTS",
+        "operationId": "createMappings_1",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PrisonerAlertMappingsDto"
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AlertMappingDto"
+                }
               }
             }
           },
@@ -1326,7 +2351,7 @@
         },
         "responses": {
           "201": {
-            "description": "Mapping created"
+            "description": "Mappings created"
           },
           "401": {
             "description": "Unauthorized to access this endpoint",
@@ -1362,13 +2387,63 @@
       }
     },
     "/mapping/alerts": {
+      "get": {
+        "tags": [
+          "alerts-mapping-resource"
+        ],
+        "summary": "Get all paged mappings",
+        "description": "Retrieve all mappings. Results are paged.",
+        "operationId": "getMappings",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping page returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageAlertMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "alerts-mapping-resource"
         ],
         "summary": "Creates a new alert mapping",
         "description": "Creates a mapping between nomis alert ids and dps alert id. Requires ROLE_NOMIS_ALERTS",
-        "operationId": "createMapping_10",
+        "operationId": "createMapping_12",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1421,7 +2496,7 @@
         ],
         "summary": "Deletes all alert mappings",
         "description": "Deletes all alert mappings regardless of source. This is expected to only ever been used in a non-production environment. Requires ROLE_NOMIS_ALERTS",
-        "operationId": "deleteAllMappings",
+        "operationId": "deleteAllMappings_2",
         "responses": {
           "204": {
             "description": "Mappings deleted"
@@ -1499,7 +2574,7 @@
         ],
         "summary": "Delete all adjudication related mapping entries",
         "description": "Delete mapping entries created during any migration or synchronisation for adjudications and associated hearings and punishments",
-        "operationId": "deleteAllMappings_1",
+        "operationId": "deleteAllMappings_3",
         "parameters": [
           {
             "name": "migrationOnly",
@@ -1581,7 +2656,7 @@
         ],
         "summary": "Creates a new adjudication mapping",
         "description": "Creates a record of a adjudication number. Requires NOMIS_ADJUDICATIONS",
-        "operationId": "createMapping_11",
+        "operationId": "createMapping_13",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1626,7 +2701,7 @@
         ],
         "summary": "Creates a new activity migration mapping",
         "description": "Creates a mapping between nomis id and up to 2 Activity service ids. Requires NOMIS_ACTIVITIES",
-        "operationId": "createMapping_12",
+        "operationId": "createMapping_14",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2351,6 +3426,74 @@
         }
       }
     },
+    "/mapping/punishments/nomis-booking-id/{nomisBookingId}/nomis-sanction-sequence/{nomisSanctionSequence}": {
+      "get": {
+        "tags": [
+          "punishments-mapping-resource"
+        ],
+        "summary": "get mapping",
+        "description": "Retrieves a mapping by NOMIS booking id and sanction sequence. Requires role NOMIS_ADJUDICATIONS",
+        "operationId": "getMappingGivenNomisId",
+        "parameters": [
+          {
+            "name": "nomisBookingId",
+            "in": "path",
+            "description": "NOMIS Booking Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS Booking Id",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "nomisSanctionSequence",
+            "in": "path",
+            "description": "NOMIS sanction sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS sanction sequence",
+              "example": 12
+            },
+            "example": 12
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdjudicationPunishmentMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/non-associations/non-association-id/{nonAssociationId}": {
       "get": {
         "tags": [
@@ -2627,7 +3770,7 @@
         ],
         "summary": "get mapping",
         "description": "Retrieves a mapping by Nomis location id. Requires role NOMIS_LOCATIONS",
-        "operationId": "getMappingGivenNomisId",
+        "operationId": "getMappingGivenNomisId_1",
         "parameters": [
           {
             "name": "nomisLocationId",
@@ -2835,7 +3978,7 @@
         ],
         "summary": "get mapping",
         "description": "Retrieves a mapping by nomisIncidentId. Requires role NOMIS_INCIDENTS",
-        "operationId": "getIncidentMappingGivenNomisId",
+        "operationId": "getMappingByNomisId",
         "parameters": [
           {
             "name": "nomisIncidentId",
@@ -2889,7 +4032,7 @@
         ],
         "summary": "get paged mappings by migration id",
         "description": "Retrieve all mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged.",
-        "operationId": "getMigratedIncidentMappingsByMigrationId",
+        "operationId": "getMigratedMappingsByMigrationId",
         "parameters": [
           {
             "name": "pageRequest",
@@ -2943,7 +4086,7 @@
         ],
         "summary": "get the latest mapping for a migration",
         "description": "Requires role NOMIS_INCIDENTS",
-        "operationId": "getLatestMigratedIncidentMapping",
+        "operationId": "getMappingForLatestMigrated",
         "responses": {
           "200": {
             "description": "Mapping Information Returned",
@@ -2978,23 +4121,23 @@
         }
       }
     },
-    "/mapping/incidents/incident-id/{incidentId}": {
+    "/mapping/incidents/dps-incident-id/{dpsIncidentId}": {
       "get": {
         "tags": [
           "incident-mapping-resource"
         ],
         "summary": "get mapping",
         "description": "Retrieves a mapping by DPS Incident Id. Requires role NOMIS_INCIDENTS",
-        "operationId": "getIncidentMappingGivenIncidentId",
+        "operationId": "getMappingByDPSId",
         "parameters": [
           {
-            "name": "incidentId",
+            "name": "dpsIncidentId",
             "in": "path",
-            "description": "Incident id",
+            "description": "DPS Incident id",
             "required": true,
             "schema": {
               "type": "string",
-              "description": "Incident id",
+              "description": "DPS Incident id",
               "example": 12345
             },
             "example": 12345
@@ -3022,7 +4165,7 @@
             }
           },
           "404": {
-            "description": "Incident id does not exist in mapping table",
+            "description": "DPS Incident id does not exist in mapping table",
             "content": {
               "application/json": {
                 "schema": {
@@ -3037,18 +4180,18 @@
         "tags": [
           "incident-mapping-resource"
         ],
-        "summary": "Deletes a specific incident mapping by incident id",
+        "summary": "Deletes a specific incident mapping by DPS incident id",
         "description": "Deletes the incident from the mapping table. Requires role NOMIS_INCIDENTS",
-        "operationId": "deleteIncidentMapping",
+        "operationId": "deleteMapping",
         "parameters": [
           {
-            "name": "incidentId",
+            "name": "dpsIncidentId",
             "in": "path",
-            "description": "Incident Id",
+            "description": "DPS Incident Id",
             "required": true,
             "schema": {
               "type": "string",
-              "description": "Incident Id",
+              "description": "DPS Incident Id",
               "example": 4321
             },
             "example": 4321
@@ -3335,7 +4478,7 @@
         ],
         "summary": "get mapping",
         "description": "Retrieves a mapping by NOMIS hearing Id. Requires role NOMIS_ADJUDICATIONS",
-        "operationId": "getMappingGivenNomisId_1",
+        "operationId": "getMappingGivenNomisId_2",
         "parameters": [
           {
             "name": "id",
@@ -3477,6 +4620,610 @@
         }
       }
     },
+    "/mapping/csip/nomis-csip-id/{nomisCSIPId}": {
+      "get": {
+        "tags": [
+          "csip-mapping-resource"
+        ],
+        "summary": "get mapping",
+        "description": "Retrieves a mapping by nomisCSIPId. Requires role NOMIS_CSIP",
+        "operationId": "getMappingNomisId",
+        "parameters": [
+          {
+            "name": "nomisCSIPId",
+            "in": "path",
+            "description": "Nomis CSIP Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Nomis CSIP Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Nomis csip id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip/migration-id/{migrationId}": {
+      "get": {
+        "tags": [
+          "csip-mapping-resource"
+        ],
+        "summary": "get paged mappings by migration id",
+        "description": "Retrieve all mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged.",
+        "operationId": "getMigratedMappingsByMigrationId_1",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          },
+          {
+            "name": "migrationId",
+            "in": "path",
+            "description": "Migration Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Migration Id",
+              "example": "2020-03-24T12:00:00"
+            },
+            "example": "2020-03-24T12:00:00"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping page returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip/migrated/latest": {
+      "get": {
+        "tags": [
+          "csip-mapping-resource"
+        ],
+        "summary": "get the latest mapping for a migration",
+        "description": "Requires role NOMIS_CSIP",
+        "operationId": "getLatestMigratedCSIPMapping",
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No mappings found at all for any migration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip/factors/nomis-csip-factor-id/{nomisCSIPFactorId}": {
+      "get": {
+        "tags": [
+          "csip-factor-mapping-resource"
+        ],
+        "summary": "get CSIP Factor mapping",
+        "description": "Retrieves a CSIP Factor mapping by NOMIS id. Requires role NOMIS_CSIP",
+        "operationId": "getMappingByNomisId_1",
+        "parameters": [
+          {
+            "name": "nomisCSIPFactorId",
+            "in": "path",
+            "description": "NOMIS CSIP Factor id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS CSIP Factor id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPFactorMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip/factors/dps-csip-factor-id/{dpsCSIPFactorId}": {
+      "get": {
+        "tags": [
+          "csip-factor-mapping-resource"
+        ],
+        "summary": "get CSIP Factor mapping",
+        "description": "Retrieves a csip factor mapping by DPS id. Requires role NOMIS_CSIP",
+        "operationId": "getCSIPFactorMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsCSIPFactorId",
+            "in": "path",
+            "description": "DPS alert id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS alert id",
+              "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+            },
+            "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPFactorMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "csip-factor-mapping-resource"
+        ],
+        "summary": "Deletes CSIP Factor mapping",
+        "description": "Deletes a CSIP Factor mapping by DPS id. Requires role NOMIS_CSIP",
+        "operationId": "deleteCSIPFactorMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsCSIPFactorId",
+            "in": "path",
+            "description": "DPS CSIP Factor id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS CSIP Factor id",
+              "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+            },
+            "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Mapping Deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip/dps-csip-id/{csipId}": {
+      "get": {
+        "tags": [
+          "csip-mapping-resource"
+        ],
+        "summary": "get mapping",
+        "description": "Retrieves a mapping by DPS CSIP Id. Requires role NOMIS_CSIP",
+        "operationId": "getMappingByDPSId_1",
+        "parameters": [
+          {
+            "name": "csipId",
+            "in": "path",
+            "description": "DPS CSIP Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS CSIP Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "CSIP id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-sentencing/sentences/nomis-booking-id/{bookingId}/nomis-sentence-sequence/{sentenceSequence}": {
+      "get": {
+        "tags": [
+          "court-sentencing-mapping-resource"
+        ],
+        "summary": "get sentence mapping",
+        "description": "Retrieves a mapping by DPS id. Requires role NOMIS_COURT_SENTENCING",
+        "operationId": "getSentenceMappingByNomisId",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "NOMIS booking id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS booking id",
+              "example": 123432
+            },
+            "example": 123432
+          },
+          {
+            "name": "sentenceSequence",
+            "in": "path",
+            "description": "NOMIS sentence sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS sentence sequence",
+              "example": 1
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentenceMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "court-sentencing-mapping-resource"
+        ],
+        "summary": "Deletes a sentence mapping",
+        "description": "Deletes a sentence mapping by NOMIS id. Requires role NOMIS_COURT_SENTENCING",
+        "operationId": "deleteSentenceMappingByNomisId",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "NOMIS booking id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS booking id",
+              "example": 123432
+            },
+            "example": 123432
+          },
+          {
+            "name": "sentenceSequence",
+            "in": "path",
+            "description": "NOMIS sentence sequence",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS sentence sequence",
+              "example": 1
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Mapping Deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-sentencing/sentences/dps-sentence-id/{sentenceId}": {
+      "get": {
+        "tags": [
+          "court-sentencing-mapping-resource"
+        ],
+        "summary": "get sentence mapping",
+        "description": "Retrieves a mapping by DPS id. Requires role NOMIS_COURT_SENTENCING",
+        "operationId": "getSentenceMappingByDpsId",
+        "parameters": [
+          {
+            "name": "sentenceId",
+            "in": "path",
+            "description": "DPS sentence id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS sentence id",
+              "example": "D123"
+            },
+            "example": "D123"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentenceMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-sentencing/court-charges/nomis-court-charge-id/{courtChargeId}": {
+      "get": {
+        "tags": [
+          "court-sentencing-mapping-resource"
+        ],
+        "summary": "get court charge mapping",
+        "description": "Retrieves a mapping by NOMIS id. Requires role NOMIS_COURT_SENTENCING",
+        "operationId": "getCourtChargeMappingByNomisId",
+        "parameters": [
+          {
+            "name": "courtChargeId",
+            "in": "path",
+            "description": "NOMIS court charge id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS court charge id",
+              "example": 123
+            },
+            "example": 123
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtAppearanceAllMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/court-sentencing/court-charges/dps-court-charge-id/{courtChargeId}": {
       "get": {
         "tags": [
@@ -3540,7 +5287,7 @@
         ],
         "summary": "get court case mapping",
         "description": "Retrieves a mapping by DPS id. Requires role NOMIS_COURT_SENTENCING",
-        "operationId": "getMappingByNomisId",
+        "operationId": "getMappingByNomisId_2",
         "parameters": [
           {
             "name": "courtCaseId",
@@ -3690,6 +5437,271 @@
           },
           "404": {
             "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/casenotes/nomis-casenote-id/{caseNoteId}": {
+      "get": {
+        "tags": [
+          "case-notes-mapping-resource"
+        ],
+        "summary": "get mapping",
+        "description": "Retrieves a mapping by NOMIS id. Requires role NOMIS_CASENOTES",
+        "operationId": "getMappingByNomisId_3",
+        "parameters": [
+          {
+            "name": "caseNoteId",
+            "in": "path",
+            "description": "NOMIS case note id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS case note id",
+              "example": 23456789
+            },
+            "example": 23456789
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseNoteMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/casenotes/migration-id/{migrationId}/count-by-prisoner": {
+      "get": {
+        "tags": [
+          "case-notes-mapping-resource"
+        ],
+        "summary": "Get count of mappings by migration id grouped by prisoner",
+        "operationId": "getMappingsByMigrationIdGroupByPrisoner",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          },
+          {
+            "name": "migrationId",
+            "in": "path",
+            "description": "Migration Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Migration Id",
+              "example": "2020-03-24T12:00:00"
+            },
+            "example": "2020-03-24T12:00:00"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping page returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/casenotes/migrated/latest": {
+      "get": {
+        "tags": [
+          "case-notes-mapping-resource"
+        ],
+        "summary": "get the latest mapping for a migration",
+        "description": "Requires role NOMIS_CASENOTES",
+        "operationId": "getLatestMigratedCaseNoteMapping",
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseNoteMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No mappings found at all for any migration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/casenotes/dps-casenote-id/{dpsCaseNoteId}": {
+      "get": {
+        "tags": [
+          "case-notes-mapping-resource"
+        ],
+        "summary": "get mapping",
+        "description": "Retrieves a mapping by DPS id. Requires role NOMIS_CASENOTES",
+        "operationId": "getMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsCaseNoteId",
+            "in": "path",
+            "description": "DPS casenote id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS casenote id",
+              "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+            },
+            "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseNoteMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "case-notes-mapping-resource"
+        ],
+        "summary": "Deletes mapping",
+        "description": "Deletes a mapping by DPS id. Requires role NOMIS_CASENOTES",
+        "operationId": "deleteMappingByDpsId_2",
+        "parameters": [
+          {
+            "name": "dpsCaseNoteId",
+            "in": "path",
+            "description": "DPS casenote id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS casenote id",
+              "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+            },
+            "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Mapping Deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint",
             "content": {
               "application/json": {
                 "schema": {
@@ -4108,74 +6120,6 @@
         }
       }
     },
-    "/mapping/alerts/nomis-booking-id/{bookingId}/nomis-alert-sequence/{alertSequence}": {
-      "get": {
-        "tags": [
-          "alerts-mapping-resource"
-        ],
-        "summary": "get mapping",
-        "description": "Retrieves a mapping by NOMIS id. Requires role NOMIS_ALERTS",
-        "operationId": "getMappingByNomisId_1",
-        "parameters": [
-          {
-            "name": "bookingId",
-            "in": "path",
-            "description": "NOMIS booking id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "NOMIS booking id",
-              "example": 12345
-            },
-            "example": 12345
-          },
-          {
-            "name": "alertSequence",
-            "in": "path",
-            "description": "NOMIS booking id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "NOMIS booking id",
-              "example": 2
-            },
-            "example": 2
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Mapping Information Returned",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AlertMappingDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Id does not exist in mapping table",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/alerts/migration-id/{migrationId}/grouped-by-prisoner": {
       "get": {
         "tags": [
@@ -4183,7 +6127,7 @@
         ],
         "summary": "Get paged mappings by migration id grouped by prisoner",
         "description": "Retrieve all mappings of type 'MIGRATED' for the given migration id (identifies a single migration run) grouped by prisoner. Results are paged.",
-        "operationId": "getMappingsByMigrationIdGroupByPrisoner",
+        "operationId": "getMappingsByMigrationIdGroupByPrisoner_1",
         "parameters": [
           {
             "name": "pageRequest",
@@ -4311,7 +6255,7 @@
         ],
         "summary": "get mapping",
         "description": "Retrieves a mapping by DPS id. Requires role NOMIS_ALERTS",
-        "operationId": "getMappingByDpsId",
+        "operationId": "getMappingByDpsId_1",
         "parameters": [
           {
             "name": "dpsAlertId",
@@ -4365,7 +6309,7 @@
         ],
         "summary": "Deletes mapping",
         "description": "Deletes a mapping by DPS id. Requires role NOMIS_ALERTS",
-        "operationId": "deleteMappingByDpsId_2",
+        "operationId": "deleteMappingByDpsId_3",
         "parameters": [
           {
             "name": "dpsAlertId",
@@ -4510,7 +6454,7 @@
         ],
         "summary": "get mapping",
         "description": "Retrieves a mapping by DPS charge number. Requires role NOMIS_ADJUDICATIONS",
-        "operationId": "getMappingGivenNomisId_2",
+        "operationId": "getMappingGivenNomisId_3",
         "parameters": [
           {
             "name": "chargeNumber",
@@ -4564,7 +6508,7 @@
         ],
         "summary": "Deletes a specific mapping by DPS charge number",
         "description": "Deletes the mapping table row. Requires role NOMIS_ADJUDICATIONS",
-        "operationId": "deleteMapping_3",
+        "operationId": "deleteMapping_4",
         "parameters": [
           {
             "name": "chargeNumber",
@@ -5000,23 +6944,65 @@
         }
       }
     },
-    "/mapping/locations/dps/{locationId}": {
+    "/mapping/schedules/max-nomis-schedule-id/{maxCourseScheduleId}": {
+      "delete": {
+        "tags": [
+          "activity-mapping-resource"
+        ],
+        "summary": "Delete all mappings with a nomis schedule id greater than the given value",
+        "description": "Used to delete mappings records in preprod that have been copied from prod but don't have any NOMIS data.",
+        "operationId": "deleteCourseSchedulesAfterId",
+        "parameters": [
+          {
+            "name": "maxCourseScheduleId",
+            "in": "path",
+            "description": "Max NOMIS course schedule ID to retain",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Max NOMIS course schedule ID to retain",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/mapping/locations/nomis/{locationId}": {
       "delete": {
         "tags": [
           "location-mapping-resource"
         ],
-        "summary": "Deletes a specific location mapping by DPS location id",
+        "summary": "Deletes a specific location mapping by Nomis location id",
         "description": "Deletes the location from the mapping table. Requires role NOMIS_LOCATIONS",
-        "operationId": "deleteMapping",
+        "operationId": "deleteMappingGivenNomisId",
         "parameters": [
           {
             "name": "locationId",
             "in": "path",
-            "description": "DPS Location Id",
+            "description": "Nomis Location Id",
             "required": true,
             "schema": {
               "type": "string",
-              "description": "DPS Location Id",
+              "description": "Nomis Location Id",
               "example": 12345678
             },
             "example": 12345678
@@ -5028,6 +7014,182 @@
           },
           "401": {
             "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/locations/dps/{locationId}": {
+      "delete": {
+        "tags": [
+          "location-mapping-resource"
+        ],
+        "summary": "Deletes a specific location mapping by DPS location id",
+        "description": "Deletes the location from the mapping table. Requires role NOMIS_LOCATIONS",
+        "operationId": "deleteMappingGivenDpsId",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "path",
+            "description": "DPS Location Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS Location Id",
+              "example": "1234abcd-5678-1234-5678-0123456789ab"
+            },
+            "example": "1234abcd-5678-1234-5678-0123456789ab"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Location mapping deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip/dps-csip-id/{dpsCSIPId}": {
+      "delete": {
+        "tags": [
+          "csip-mapping-resource"
+        ],
+        "summary": "Deletes a specific CSIP mapping by DPS CSIP id",
+        "description": "Deletes a mapping by DPS id. Requires role NOMIS_CSIP",
+        "operationId": "deleteMapping_2",
+        "parameters": [
+          {
+            "name": "dpsCSIPId",
+            "in": "path",
+            "description": "DPS CSIP Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS CSIP Id",
+              "example": 4321
+            },
+            "example": 4321
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "CSIP mapping deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-sentencing/sentences/dps-sentence-id/{dpsSentenceId}": {
+      "delete": {
+        "tags": [
+          "court-sentencing-mapping-resource"
+        ],
+        "summary": "Deletes a sentence mapping",
+        "description": "Deletes a sentence mapping by DPS id. Requires role NOMIS_COURT_SENTENCING",
+        "operationId": "deleteSentenceMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsSentenceId",
+            "in": "path",
+            "description": "DPS sentence id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS sentence id",
+              "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+            },
+            "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Mapping Deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-sentencing/court-charges/nomis-court-charge-id/{nomisCourtChargeId}": {
+      "delete": {
+        "tags": [
+          "court-sentencing-mapping-resource"
+        ],
+        "summary": "Deletes court charge mapping",
+        "description": "Deletes a court charge mapping by NOMIS id. Requires role NOMIS_COURT_SENTENCING",
+        "operationId": "deleteCourtChargeMappingByNomisId",
+        "parameters": [
+          {
+            "name": "nomisCourtChargeId",
+            "in": "path",
+            "description": "NOMIS court charge id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS court charge id",
+              "example": 33
+            },
+            "example": 33
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Mapping Deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint",
             "content": {
               "application/json": {
                 "schema": {
@@ -5235,6 +7397,55 @@
         }
       }
     },
+    "/mapping/casenotes/nomis-casenote-id/{nomisCaseNoteId}": {
+      "delete": {
+        "tags": [
+          "case-notes-mapping-resource"
+        ],
+        "summary": "Deletes mapping",
+        "description": "Deletes a mapping by Nomis id. Requires role NOMIS_CASENOTES",
+        "operationId": "deleteMappingByNomisId_1",
+        "parameters": [
+          {
+            "name": "nomisCaseNoteId",
+            "in": "path",
+            "description": "Nomis casenote id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Nomis casenote id",
+              "example": 3344556677
+            },
+            "example": 3344556677
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Mapping Deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/appointments/appointment-instance-id/{id}": {
       "delete": {
         "tags": [
@@ -5242,7 +7453,7 @@
         ],
         "summary": "Deletes a specific mapping by appointment instance id",
         "description": "Deletes the mapping table row. Requires role NOMIS_APPOINTMENTS",
-        "operationId": "deleteMapping_2",
+        "operationId": "deleteMapping_3",
         "parameters": [
           {
             "name": "id",
@@ -5320,7 +7531,7 @@
         ],
         "summary": "Deletes a specific mapping by activity schedule id",
         "description": "Deletes the mapping table row. Requires role NOMIS_ACTIVITIES",
-        "operationId": "deleteMapping_4",
+        "operationId": "deleteMapping_5",
         "parameters": [
           {
             "name": "id",
@@ -5508,13 +7719,13 @@
         "properties": {
           "nomisCourtChargeId": {
             "type": "integer",
-            "description": "NOMIS court charge id",
+            "description": "NOMIS offender charge id",
             "format": "int64",
             "example": 123456
           },
           "dpsCourtChargeId": {
             "type": "string",
-            "description": "DPS court charge id",
+            "description": "DPS offender charge id",
             "example": "123456"
           },
           "label": {
@@ -5529,7 +7740,8 @@
             "default": "DPS_CREATED",
             "enum": [
               "MIGRATED",
-              "DPS_CREATED"
+              "DPS_CREATED",
+              "NOMIS_CREATED"
             ]
           },
           "whenCreated": {
@@ -5539,7 +7751,7 @@
             "example": "2021-07-05T10:35:17"
           }
         },
-        "description": "Court Charge mapping"
+        "description": "Offender Charge mapping"
       },
       "CourtChargeNomisIdDto": {
         "required": [
@@ -5555,6 +7767,147 @@
           }
         },
         "description": "ID of mapping identified by the NOMIS id for a Court Charge mapping"
+      },
+      "AlertMappingIdDto": {
+        "required": [
+          "dpsAlertId",
+          "nomisAlertSequence",
+          "nomisBookingId"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsAlertId": {
+            "type": "string",
+            "description": "DPS alert id"
+          },
+          "nomisBookingId": {
+            "type": "integer",
+            "description": "NOMIS booking id",
+            "format": "int64"
+          },
+          "nomisAlertSequence": {
+            "type": "integer",
+            "description": "NOMIS alert sequence",
+            "format": "int64"
+          }
+        },
+        "description": "NOMIS to Alert mapping IDs"
+      },
+      "MergedPrisonerAlertMappingsDto": {
+        "required": [
+          "prisonerMapping",
+          "removedOffenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "removedOffenderNo": {
+            "type": "string",
+            "description": "Prisoner whose mappings need removing"
+          },
+          "prisonerMapping": {
+            "$ref": "#/components/schemas/PrisonerAlertMappingsDto"
+          }
+        }
+      },
+      "PrisonerAlertMappingsDto": {
+        "required": [
+          "mappingType",
+          "mappings"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "Mapping type",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED",
+              "NOMIS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "mappings": {
+            "type": "array",
+            "description": "Mapping IDs",
+            "items": {
+              "$ref": "#/components/schemas/AlertMappingIdDto"
+            }
+          }
+        },
+        "description": "Mappings for a prisoner created during migration"
+      },
+      "AlertMappingDto": {
+        "required": [
+          "dpsAlertId",
+          "mappingType",
+          "nomisAlertSequence",
+          "nomisBookingId",
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsAlertId": {
+            "type": "string",
+            "description": "DPS alert id"
+          },
+          "nomisBookingId": {
+            "type": "integer",
+            "description": "NOMIS booking id",
+            "format": "int64"
+          },
+          "nomisAlertSequence": {
+            "type": "integer",
+            "description": "NOMIS alert sequence",
+            "format": "int64"
+          },
+          "offenderNo": {
+            "type": "string",
+            "description": "Prisoner number"
+          },
+          "label": {
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "Mapping type",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED",
+              "NOMIS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "NOMIS to Alert mapping"
+      },
+      "NomisMappingIdUpdate": {
+        "required": [
+          "bookingId"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "NOMIS booking id",
+            "format": "int64"
+          }
+        },
+        "description": "Update mapping NOMIS Ids"
       },
       "ActivityMappingDto": {
         "required": [
@@ -5945,7 +8298,7 @@
             "example": "2021-07-05T10:35:17"
           }
         },
-        "description": "Non-association mapping (same value for NOMIS and DPS)"
+        "description": "Non-association mapping"
       },
       "LocationMappingDto": {
         "required": [
@@ -5988,11 +8341,11 @@
             "example": "2021-07-05T10:35:17"
           }
         },
-        "description": "Location mapping (same value for NOMIS and DPS)"
+        "description": "Location mapping"
       },
       "IncidentMappingDto": {
         "required": [
-          "incidentId",
+          "dpsIncidentId",
           "mappingType",
           "nomisIncidentId"
         ],
@@ -6003,9 +8356,9 @@
             "description": "NOMIS Incident id",
             "format": "int64"
           },
-          "incidentId": {
+          "dpsIncidentId": {
             "type": "string",
-            "description": "Incident id from incidents service"
+            "description": "DPS Incident id from incident reporting service"
           },
           "label": {
             "maxLength": 20,
@@ -6021,7 +8374,7 @@
             "enum": [
               "MIGRATED",
               "NOMIS_CREATED",
-              "INCIDENT_CREATED"
+              "DPS_CREATED"
             ]
           },
           "whenCreated": {
@@ -6031,7 +8384,7 @@
             "example": "2021-07-05T10:35:17"
           }
         },
-        "description": "Incident mapping (same value for NOMIS and DPS)"
+        "description": "Incident mapping"
       },
       "IncentiveMappingDto": {
         "required": [
@@ -6133,6 +8486,235 @@
           }
         },
         "description": "Adjudication mapping (same value for NOMIS and DPS)"
+      },
+      "CSIPFactorMappingDto": {
+        "required": [
+          "dpsCSIPFactorId",
+          "mappingType",
+          "nomisCSIPFactorId"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisCSIPFactorId": {
+            "type": "integer",
+            "description": "NOMIS CSIP Factor id",
+            "format": "int64"
+          },
+          "dpsCSIPFactorId": {
+            "type": "string",
+            "description": "DPS CSIP Factor id"
+          },
+          "label": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "Mapping type",
+            "enum": [
+              "MIGRATED",
+              "NOMIS_CREATED",
+              "DPS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date-time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "CSIP Factor mapping"
+      },
+      "CSIPMappingDto": {
+        "required": [
+          "dpsCSIPId",
+          "mappingType",
+          "nomisCSIPId"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisCSIPId": {
+            "type": "integer",
+            "description": "NOMIS CSIP id",
+            "format": "int64"
+          },
+          "dpsCSIPId": {
+            "type": "string",
+            "description": "CSIP id from DPS csip service"
+          },
+          "label": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "Mapping type",
+            "enum": [
+              "MIGRATED",
+              "NOMIS_CREATED",
+              "DPS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date-time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "CSIP mapping"
+      },
+      "SentenceMappingDto": {
+        "required": [
+          "dpsSentenceId",
+          "nomisBookingId",
+          "nomisSentenceSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisBookingId": {
+            "type": "integer",
+            "description": "NOMIS booking id",
+            "format": "int64",
+            "example": 123456
+          },
+          "nomisSentenceSequence": {
+            "type": "integer",
+            "description": "NOMIS sentence sequence",
+            "format": "int32",
+            "example": 4
+          },
+          "dpsSentenceId": {
+            "type": "string",
+            "description": "DPS sentence id",
+            "example": "123456"
+          },
+          "label": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "Mapping type",
+            "default": "DPS_CREATED",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED",
+              "NOMIS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date-time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "Sentence mapping"
+      },
+      "SentenceMapping": {
+        "required": [
+          "dpsSentenceId",
+          "id",
+          "isNew",
+          "mappingType",
+          "new",
+          "nomisBookingId",
+          "nomisSentenceSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsSentenceId": {
+            "type": "string"
+          },
+          "nomisBookingId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nomisSentenceSequence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "label": {
+            "type": "string"
+          },
+          "mappingType": {
+            "type": "string",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED",
+              "NOMIS_CREATED"
+            ]
+          },
+          "new": {
+            "type": "boolean"
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          },
+          "id": {
+            "type": "string"
+          },
+          "isNew": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CourtChargeMapping": {
+        "required": [
+          "dpsCourtChargeId",
+          "id",
+          "isNew",
+          "mappingType",
+          "new",
+          "nomisCourtChargeId"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsCourtChargeId": {
+            "type": "string"
+          },
+          "nomisCourtChargeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "label": {
+            "type": "string"
+          },
+          "mappingType": {
+            "type": "string",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED",
+              "NOMIS_CREATED"
+            ]
+          },
+          "new": {
+            "type": "boolean"
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          },
+          "id": {
+            "type": "string"
+          },
+          "isNew": {
+            "type": "boolean"
+          }
+        }
       },
       "CourtAppearanceMappingDto": {
         "required": [
@@ -6393,6 +8975,119 @@
           }
         }
       },
+      "CaseNoteMappingIdDto": {
+        "required": [
+          "dpsCaseNoteId",
+          "nomisBookingId",
+          "nomisCaseNoteId"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsCaseNoteId": {
+            "type": "string",
+            "description": "DPS case note id"
+          },
+          "nomisCaseNoteId": {
+            "type": "integer",
+            "description": "NOMIS case note id",
+            "format": "int64"
+          },
+          "nomisBookingId": {
+            "type": "integer",
+            "description": "NOMIS booking id",
+            "format": "int64"
+          }
+        },
+        "description": "NOMIS to Case note mapping IDs"
+      },
+      "PrisonerCaseNoteMappingsDto": {
+        "required": [
+          "mappingType",
+          "mappings"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "Mapping type",
+            "enum": [
+              "MIGRATED",
+              "NOMIS_CREATED",
+              "DPS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "mappings": {
+            "type": "array",
+            "description": "Mapping IDs",
+            "items": {
+              "$ref": "#/components/schemas/CaseNoteMappingIdDto"
+            }
+          }
+        },
+        "description": "Mappings for a prisoner created during migration"
+      },
+      "CaseNoteMappingDto": {
+        "required": [
+          "dpsCaseNoteId",
+          "mappingType",
+          "nomisBookingId",
+          "nomisCaseNoteId",
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsCaseNoteId": {
+            "type": "string",
+            "description": "Case note id in DPS"
+          },
+          "nomisCaseNoteId": {
+            "type": "integer",
+            "description": "Case note id in Nomis",
+            "format": "int64"
+          },
+          "offenderNo": {
+            "type": "string",
+            "description": "Prisoner number in Nomis"
+          },
+          "nomisBookingId": {
+            "type": "integer",
+            "description": "Nomis booking id",
+            "format": "int64"
+          },
+          "label": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "Mapping type",
+            "enum": [
+              "MIGRATED",
+              "NOMIS_CREATED",
+              "DPS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date-time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "Case note mapping"
+      },
       "AppointmentMappingDto": {
         "required": [
           "appointmentInstanceId",
@@ -6474,116 +9169,6 @@
           }
         },
         "description": "NOMIS to Activities allocation mapping"
-      },
-      "AlertMappingIdDto": {
-        "required": [
-          "dpsAlertId",
-          "nomisAlertSequence",
-          "nomisBookingId"
-        ],
-        "type": "object",
-        "properties": {
-          "dpsAlertId": {
-            "type": "string",
-            "description": "DPS alert id"
-          },
-          "nomisBookingId": {
-            "type": "integer",
-            "description": "NOMIS booking id",
-            "format": "int64"
-          },
-          "nomisAlertSequence": {
-            "type": "integer",
-            "description": "NOMIS alert sequence",
-            "format": "int64"
-          }
-        },
-        "description": "NOMIS to Alert mapping IDs"
-      },
-      "PrisonerAlertMappingsDto": {
-        "required": [
-          "mappingType",
-          "mappings"
-        ],
-        "type": "object",
-        "properties": {
-          "label": {
-            "type": "string",
-            "description": "Label (a timestamp for migrated ids)"
-          },
-          "mappingType": {
-            "type": "string",
-            "description": "Mapping type",
-            "enum": [
-              "MIGRATED",
-              "DPS_CREATED",
-              "NOMIS_CREATED"
-            ]
-          },
-          "whenCreated": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Date time the mapping was created",
-            "example": "2021-07-05T10:35:17"
-          },
-          "mappings": {
-            "type": "array",
-            "description": "Mapping IDs",
-            "items": {
-              "$ref": "#/components/schemas/AlertMappingIdDto"
-            }
-          }
-        },
-        "description": "Mappings for a prisoner created during migration"
-      },
-      "AlertMappingDto": {
-        "required": [
-          "dpsAlertId",
-          "mappingType",
-          "nomisAlertSequence",
-          "nomisBookingId"
-        ],
-        "type": "object",
-        "properties": {
-          "dpsAlertId": {
-            "type": "string",
-            "description": "DPS alert id"
-          },
-          "nomisBookingId": {
-            "type": "integer",
-            "description": "NOMIS booking id",
-            "format": "int64"
-          },
-          "nomisAlertSequence": {
-            "type": "integer",
-            "description": "NOMIS alert sequence",
-            "format": "int64"
-          },
-          "offenderNo": {
-            "type": "string",
-            "description": "Prisoner number"
-          },
-          "label": {
-            "type": "string",
-            "description": "Label (a timestamp for migrated ids)"
-          },
-          "mappingType": {
-            "type": "string",
-            "description": "Mapping type",
-            "enum": [
-              "MIGRATED",
-              "DPS_CREATED",
-              "NOMIS_CREATED"
-            ]
-          },
-          "whenCreated": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Date time the mapping was created",
-            "example": "2021-07-05T10:35:17"
-          }
-        },
-        "description": "NOMIS to Alert mapping"
       },
       "AdjudicationAllMappingDto": {
         "required": [
@@ -6805,6 +9390,22 @@
         },
         "description": "Court case mapping"
       },
+      "AllPrisonerAlertMappingsDto": {
+        "required": [
+          "mappings"
+        ],
+        "type": "object",
+        "properties": {
+          "mappings": {
+            "type": "array",
+            "description": "Mappings",
+            "items": {
+              "$ref": "#/components/schemas/AlertMappingDto"
+            }
+          }
+        },
+        "description": "All mappings for a prisoner created either via migration or synchronisation"
+      },
       "PagePrisonerAlertMappingsSummaryDto": {
         "type": "object",
         "properties": {
@@ -6871,12 +9472,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "paged": {
+            "type": "boolean"
+          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
-          },
-          "paged": {
-            "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"

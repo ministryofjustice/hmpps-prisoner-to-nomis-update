@@ -55,7 +55,8 @@ hmpps.sqs:
         "non-associations.created",
         "non-associations.deleted",
         "non-associations.amended",
-        "non-associations.closed"]}
+        "non-associations.closed",
+        "prison-offender-events.prisoner.merged"]}
     location:
       queueName: hmpps_prisoner_to_nomis_location_queue
       dlqName: hmpps_prisoner_to_nomis_location_dlq
