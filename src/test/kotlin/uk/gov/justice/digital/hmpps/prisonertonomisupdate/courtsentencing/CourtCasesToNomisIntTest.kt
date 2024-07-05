@@ -189,6 +189,36 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
+    inner class WhenCourtCaseHasBeenCreatedInNOMIS {
+      @BeforeEach
+      fun setUp() {
+        CourtSentencingApiExtension.courtSentencingApi.stubCourtCaseGet(
+          COURT_CASE_ID_FOR_CREATION,
+          offenderNo = OFFENDER_NO,
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+          courtCharge1Id = DPS_COURT_CHARGE_ID,
+          courtCharge2Id = DPS_COURT_CHARGE_2_ID,
+        )
+        publishCreateCourtCaseDomainEvent(source = "NOMIS")
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-case-create-ignored"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["reason"]).isEqualTo("Court case created in NOMIS")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
     inner class WhenMappingAlreadyCreatedForCourtCase {
 
       @BeforeEach
@@ -720,7 +750,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
-  private fun publishCreateCourtCaseDomainEvent() {
+  private fun publishCreateCourtCaseDomainEvent(source: String = "DPS") {
     val eventType = "court-case.inserted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -729,6 +759,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             courtCaseId = COURT_CASE_ID_FOR_CREATION,
             offenderNo = OFFENDER_NO,
             eventType = eventType,
+            source = source,
           ),
         )
         .messageAttributes(
@@ -783,7 +814,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   fun courtCaseMessagePayload(courtCaseId: String, offenderNo: String, eventType: String, source: String = "DPS") =
-    """{"eventType":"$eventType", "additionalInformation": {"id":"$courtCaseId", "offenderNo": "$offenderNo", "source": "$source"}}"""
+    """{"eventType":"$eventType", "additionalInformation": {"courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun courtAppearanceMessagePayload(
     courtCaseId: String,

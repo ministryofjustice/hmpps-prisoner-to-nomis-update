@@ -20,9 +20,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtA
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ExistingOffenderChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.OffenderChargeRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.AdditionalInformation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDateTime
@@ -49,51 +52,63 @@ class CourtSentencingService(
   }
 
   suspend fun createCourtCase(createEvent: CourtCaseCreatedEvent) {
-    val courtCaseId = createEvent.additionalInformation.id
-    val offenderNo: String = createEvent.additionalInformation.offenderNo
+    val courtCaseId = createEvent.additionalInformation.courtCaseId
+    val offenderNo: String = createEvent.personReference.identifiers.first { it.type == "NOMS" }.value
     val telemetryMap = mutableMapOf(
       "dpsCourtCaseId" to courtCaseId,
       "offenderNo" to offenderNo,
     )
-    synchronise {
-      name = EntityType.COURT_CASE.displayName
-      telemetryClient = this@CourtSentencingService.telemetryClient
-      retryQueueService = courtSentencingRetryQueueService
-      eventTelemetry = telemetryMap
+    if (isDpsCreated(createEvent.additionalInformation)) {
+      synchronise {
+        name = EntityType.COURT_CASE.displayName
+        telemetryClient = this@CourtSentencingService.telemetryClient
+        retryQueueService = courtSentencingRetryQueueService
+        eventTelemetry = telemetryMap
 
-      checkMappingDoesNotExist {
-        courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(courtCaseId)
-      }
+        checkMappingDoesNotExist {
+          courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(courtCaseId)
+        }
 
-      transform {
-        val courtCase = courtSentencingApiService.getCourtCase(courtCaseId)
-        telemetryMap["offenderNo"] = offenderNo
-        val nomisResponse =
-          nomisApiService.createCourtCase(offenderNo, courtCase.toNomisCourtCase())
+        transform {
+          val courtCase = courtSentencingApiService.getCourtCase(courtCaseId)
+          telemetryMap["offenderNo"] = offenderNo
+          val nomisResponse =
+            nomisApiService.createCourtCase(offenderNo, courtCase.toNomisCourtCase())
 
-        val nomisCourtAppearanceResponse = nomisResponse.courtAppearanceIds.first()
-        CourtCaseAllMappingDto(
-          nomisCourtCaseId = nomisResponse.id,
-          dpsCourtCaseId = courtCaseId,
-          // expecting a court case with 1 court appearance - separate event for subsequent appearances
-          courtAppearances = listOf(
-            CourtAppearanceMappingDto(
-              dpsCourtAppearanceId = courtCase.latestAppearance.appearanceUuid.toString(),
-              nomisCourtAppearanceId = nomisCourtAppearanceResponse.id,
-              nomisNextCourtAppearanceId = nomisCourtAppearanceResponse.nextCourtAppearanceId,
+          val nomisCourtAppearanceResponse = nomisResponse.courtAppearanceIds.first()
+          CourtCaseAllMappingDto(
+            nomisCourtCaseId = nomisResponse.id,
+            dpsCourtCaseId = courtCaseId,
+            // expecting a court case with 1 court appearance - separate event for subsequent appearances
+            courtAppearances = listOf(
+              CourtAppearanceMappingDto(
+                dpsCourtAppearanceId = courtCase.latestAppearance.appearanceUuid.toString(),
+                nomisCourtAppearanceId = nomisCourtAppearanceResponse.id,
+                nomisNextCourtAppearanceId = nomisCourtAppearanceResponse.nextCourtAppearanceId,
+              ),
             ),
-          ),
-          courtCharges = courtCase.latestAppearance.charges.mapIndexed { index, dpsCharge ->
-            CourtChargeMappingDto(
-              nomisCourtChargeId = nomisCourtAppearanceResponse.courtEventChargesIds[index].offenderChargeId,
-              dpsCourtChargeId = dpsCharge.chargeUuid.toString(),
-            )
-          },
-        )
+            courtCharges = courtCase.latestAppearance.charges.mapIndexed { index, dpsCharge ->
+              CourtChargeMappingDto(
+                nomisCourtChargeId = nomisCourtAppearanceResponse.courtEventChargesIds[index].offenderChargeId,
+                dpsCourtChargeId = dpsCharge.chargeUuid.toString(),
+              )
+            },
+          )
+        }
+        saveMapping { courtCaseMappingService.createMapping(it) }
       }
-      saveMapping { courtCaseMappingService.createMapping(it) }
+    } else {
+      telemetryMap["reason"] = "Court case created in NOMIS"
+      telemetryClient.trackEvent(
+        "court-case-create-ignored",
+        telemetryMap,
+        null,
+      )
     }
   }
+
+  private fun isDpsCreated(additionalInformation: AdditionalInformation) =
+    additionalInformation.source != CreatingSystem.NOMIS.name
 
   suspend fun createCourtAppearance(createEvent: CourtAppearanceCreatedEvent) {
     val courtCaseId = createEvent.additionalInformation.courtCaseId
@@ -271,8 +286,7 @@ class CourtSentencingService(
     objectMapper.readValue(this)
 
   data class AdditionalInformation(
-    val id: String,
-    val offenderNo: String,
+    val courtCaseId: String,
     val source: String,
   )
 
@@ -285,6 +299,7 @@ class CourtSentencingService(
 
   data class CourtCaseCreatedEvent(
     val additionalInformation: AdditionalInformation,
+    val personReference: PersonReferenceList,
   )
 
   data class CourtAppearanceCreatedEvent(
