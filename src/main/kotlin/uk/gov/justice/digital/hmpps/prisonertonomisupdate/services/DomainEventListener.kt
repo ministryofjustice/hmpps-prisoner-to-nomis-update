@@ -88,3 +88,12 @@ data class MergeAdditionalInformation(
   @Schema(description = "NOMS number that was MERGED into nomsNumber and then removed")
   val removedNomsNumber: String,
 )
+
+data class PersonReferenceList(
+  val identifiers: List<PersonReference>,
+)
+
+data class PersonReference(
+  val type: String,
+  val value: String,
+)
