@@ -118,10 +118,18 @@ fun attendanceMessagePayload(eventType: String, attendanceId: Long) =
     }
   """.trimMargin()
 
-fun objectMapper(): ObjectMapper {
-  return ObjectMapper()
-    .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-    .registerModule(JavaTimeModule())
-    .registerKotlinModule()
-    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-}
+fun attendanceDeletedMessagePayload(eventType: String, scheduledInstanceId: Long, bookingId: Long) =
+  """{"eventType":"$eventType",
+    "version": "1.0", "description": "description", "occurredAt": "2021-03-05T11:23:56.031Z",
+    "additionalInformation": {
+        "scheduledInstanceId"  : "$scheduledInstanceId",
+        "bookingId"  : "$bookingId"
+      }
+    }
+  """.trimMargin()
+
+fun objectMapper(): ObjectMapper = ObjectMapper()
+  .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+  .registerModule(JavaTimeModule())
+  .registerKotlinModule()
+  .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)

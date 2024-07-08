@@ -93,6 +93,30 @@ class AttendanceService(
       bonusPay = bonusAmount?.let { BigDecimal(it).setScale(3, RoundingMode.HALF_UP) },
     )
   }
+
+  suspend fun deleteAttendanceEvent(attendanceEvent: DeleteAttendanceDomainEvent) {
+    deleteAttendance(attendanceEvent.additionalInformation.scheduledInstanceId, attendanceEvent.additionalInformation.bookingId)
+  }
+
+  suspend fun deleteAttendance(scheduledInstanceId: Long, bookingId: Long) {
+    val telemetryMap = mutableMapOf(
+      "dpsScheduledInstanceId" to scheduledInstanceId.toString(),
+      "bookingId" to bookingId.toString(),
+    )
+
+    runCatching {
+      val mapping = mappingService.getScheduledInstanceMappingOrNull(scheduledInstanceId)
+        ?: throw ValidationException("Mapping for Activity's scheduled instance id not found: $scheduledInstanceId}")
+      telemetryMap["nomisCourseScheduleId"] = mapping.nomisCourseScheduleId.toString()
+
+      activitiesNomisApiService.deleteAttendance(mapping.nomisCourseScheduleId, bookingId)
+    }.onSuccess {
+      telemetryClient.trackEvent("activity-attendance-delete-success", telemetryMap, null)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("activity-attendance-delete-failed", telemetryMap, null)
+      throw e
+    }
+  }
 }
 
 data class EventOutcome(
@@ -152,6 +176,18 @@ data class AttendanceDomainEvent(
 
 data class AttendanceAdditionalInformation(
   val attendanceId: Long,
+)
+
+data class DeleteAttendanceDomainEvent(
+  val eventType: String,
+  val additionalInformation: DeleteAttendanceAdditionalInformation,
+  val version: String,
+  val description: String,
+)
+
+data class DeleteAttendanceAdditionalInformation(
+  val scheduledInstanceId: Long,
+  val bookingId: Long,
 )
 
 class InvalidAttendanceReasonException(message: String) : IllegalStateException(message)
