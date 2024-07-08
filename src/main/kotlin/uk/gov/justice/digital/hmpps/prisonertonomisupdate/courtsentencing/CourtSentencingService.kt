@@ -310,21 +310,23 @@ class CourtSentencingService(
 fun CourtCase.toNomisCourtCase(): CreateCourtCaseRequest = CreateCourtCaseRequest(
   startDate = this.latestAppearance.appearanceDate,
   courtId = this.latestAppearance.courtCode,
-  // TODO fix LocalDateTime as string,
   courtAppearance = CourtAppearanceRequest(
     eventDateTime = LocalDateTime.of(
       this.latestAppearance.appearanceDate,
       LocalTime.MIDNIGHT,
     ).toString(),
     courtId = this.latestAppearance.courtCode,
-    courtEventType = "TBC",
+    // TODO these are MOV_RSN on NOMIS - defaulting to Court Appearance until DPS provide a mapping
+    courtEventType = "CA",
     courtEventChargesToUpdate = listOf(),
     courtEventChargesToCreate = this.latestAppearance.charges.mapIndexed { index, dpsCharge ->
       dpsCharge.toNomisCourtCharge()
     },
   ),
-  legalCaseType = "TBC",
-  status = "TBC",
+  // LEG_CASE_TYP on NOMIS - defaulting to Adult as suggested in the Sentencing document
+  legalCaseType = "A",
+  // CASE_STS on NOMIS - no decision from DPS yet - defaulting to Active
+  status = "A",
 )
 
 fun CourtAppearance.toNomisCourtAppearance(
@@ -332,12 +334,13 @@ fun CourtAppearance.toNomisCourtAppearance(
   courtEventChargesToUpdate: List<ExistingOffenderChargeRequest>,
 ): CourtAppearanceRequest {
   return CourtAppearanceRequest(
-    // expecting time to be added to the remand and sentencing model at some point
+    // Just date without time recorded against the DPS appearance
     eventDateTime = LocalDateTime.of(
       this.appearanceDate,
       LocalTime.MIDNIGHT,
     ).toString(),
-    courtEventType = "TBC",
+    // TODO these are MOV_RSN on NOMIS - defaulting to Court Appearance until DPS provide a mapping
+    courtEventType = "CA",
     courtId = this.courtCode,
     outcomeReasonCode = this.outcome,
     nextEventDateTime = nextCourtAppearance?.let {
