@@ -173,7 +173,6 @@ data class PersonReference(val identifiers: List<Identifier> = listOf()) {
   data class Identifier(val type: String, val value: String)
 }
 
-
 enum class AlertSource {
   DPS,
   NOMIS,
