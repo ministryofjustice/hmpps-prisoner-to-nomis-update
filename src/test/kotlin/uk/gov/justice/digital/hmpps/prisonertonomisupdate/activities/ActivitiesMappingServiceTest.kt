@@ -126,6 +126,63 @@ internal class ActivitiesMappingServiceTest {
   }
 
   @Nested
+  inner class GetScheduledInstanceMapping {
+
+    @Test
+    fun `should call api with OAuth2 token`() = runTest {
+      MappingExtension.mappingServer.stubGetScheduleInstanceMapping(
+        scheduledInstanceId = 456,
+        response = """{
+          "scheduledInstanceId": 456,
+          "nomisCourseScheduleId": 1234,
+          "mappingType": "TYPE"
+        }
+        """.trimMargin(),
+      )
+
+      mappingService.getScheduledInstanceMappingOrNull(456)
+
+      MappingExtension.mappingServer.verify(
+        getRequestedFor(urlEqualTo("/mapping/activities/schedules/scheduled-instance-id/456"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will return data`() = runTest {
+      MappingExtension.mappingServer.stubGetScheduleInstanceMapping(
+        scheduledInstanceId = 456,
+        response = """{
+          "scheduledInstanceId": 456,
+          "nomisCourseScheduleId": 1234,
+          "mappingType": "A_TYPE"
+        }
+        """.trimMargin(),
+      )
+
+      val data = mappingService.getScheduledInstanceMappingOrNull(456)
+
+      assertThat(data).isEqualTo(ActivityScheduleMappingDto(scheduledInstanceId = 456, nomisCourseScheduleId = 1234, mappingType = "A_TYPE"))
+    }
+
+    @Test
+    fun `when mapping is not found null is returned`() = runTest {
+      MappingExtension.mappingServer.stubGetScheduledInstanceMappingWithError(456, 404)
+
+      assertThat(mappingService.getScheduledInstanceMappingOrNull(456)).isNull()
+    }
+
+    @Test
+    fun `when any bad response is received an exception is thrown`() = runTest {
+      MappingExtension.mappingServer.stubGetScheduledInstanceMappingWithError(456, 503)
+
+      assertThrows<ServiceUnavailable> {
+        mappingService.getScheduledInstanceMappingOrNull(456)
+      }
+    }
+  }
+
+  @Nested
   inner class DeleteMappingsGreaterThanNomisCourseScheduleId {
 
     @Test

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
@@ -252,6 +253,31 @@ class ActivitiesNomisApiServiceTest {
 
       assertThrows<BadRequest> {
         activitiesNomisApiService.upsertAttendance(11, 22, newAttendance())
+      }
+    }
+  }
+
+  @Nested
+  inner class DeleteAttendance {
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stubDeleteAttendance(11, 22)
+
+      activitiesNomisApiService.deleteAttendance(11, 22)
+
+      nomisApi.verify(
+        deleteRequestedFor(urlEqualTo("/schedules/11/bookings/22/attendance"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `when any error response is received an exception is thrown`() = runTest {
+      nomisApi.stubDeleteAttendanceWithError(11, 22, 400)
+
+      assertThrows<BadRequest> {
+        activitiesNomisApiService.deleteAttendance(11, 22)
       }
     }
   }

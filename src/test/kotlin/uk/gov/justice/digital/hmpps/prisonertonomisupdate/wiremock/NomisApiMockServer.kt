@@ -25,7 +25,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Prison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import java.time.LocalDate
 
-class NomisApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
+class NomisApiExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
   companion object {
     @JvmField
     val nomisApi = NomisApiMockServer()
@@ -277,6 +280,27 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubUpsertAttendanceWithError(courseScheduleId: Long, bookingId: Long, status: Int = 500, body: String = ERROR_RESPONSE) {
     stubFor(
       put("/schedules/$courseScheduleId/booking/$bookingId/attendance").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(body)
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubDeleteAttendance(courseScheduleId: Long, bookingId: Long) {
+    stubFor(
+      delete("/schedules/$courseScheduleId/bookings/$bookingId/attendance").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
+
+  fun stubDeleteAttendanceWithError(courseScheduleId: Long, bookingId: Long, status: Int = 500, body: String = ERROR_RESPONSE) {
+    stubFor(
+      delete("/schedules/$courseScheduleId/bookings/$bookingId/attendance").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(body)

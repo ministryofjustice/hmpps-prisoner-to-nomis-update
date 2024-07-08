@@ -42,6 +42,12 @@ class ActivitiesMappingService(
       .retrieve()
       .awaitBody()
 
+  suspend fun getScheduledInstanceMappingOrNull(scheduledInstanceId: Long): ActivityScheduleMappingDto? =
+    webClient.get()
+      .uri("/mapping/activities/schedules/scheduled-instance-id/{scheduledInstanceId}", scheduledInstanceId)
+      .retrieve()
+      .awaitBodyOrNullForNotFound()
+
   suspend fun getAllMappings(): List<ActivityMappingDto> =
     webClient.get()
       .uri("/mapping/activities")

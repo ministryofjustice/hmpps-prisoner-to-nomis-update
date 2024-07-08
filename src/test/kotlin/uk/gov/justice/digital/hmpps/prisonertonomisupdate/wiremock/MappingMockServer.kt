@@ -16,7 +16,10 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 
-class MappingExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
+class MappingExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
   companion object {
     @JvmField
     val mappingServer = MappingMockServer()
@@ -326,6 +329,28 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetMappingsWithError(activityScheduleId: Long, status: Int = 500) {
     stubFor(
       get("/mapping/activities/activity-schedule-id/$activityScheduleId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubGetScheduleInstanceMapping(scheduledInstanceId: Long, response: String) {
+    stubFor(
+      get("/mapping/activities/schedules/scheduled-instance-id/$scheduledInstanceId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubGetScheduledInstanceMappingWithError(scheduledInstanceId: Long, status: Int = 500) {
+    stubFor(
+      get("/mapping/activities/schedules/scheduled-instance-id/$scheduledInstanceId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
