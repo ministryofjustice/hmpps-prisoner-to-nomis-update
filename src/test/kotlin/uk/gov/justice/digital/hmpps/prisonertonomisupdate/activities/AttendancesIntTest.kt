@@ -291,7 +291,7 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
       awsSnsClient.publishAttendanceDeleted()
 
       assertThat(MappingExtension.mappingServer.verify(getRequestedFor(urlEqualTo("/mapping/activities/schedules/scheduled-instance-id/$SCHEDULE_INSTANCE_ID"))))
-      assertThat(NomisApiExtension.nomisApi.verify(deleteRequestedFor(urlEqualTo("/schedules/$NOMIS_CRS_SCH_ID/bookings/$NOMIS_BOOKING_ID/attendance"))))
+      assertThat(NomisApiExtension.nomisApi.verify(deleteRequestedFor(urlEqualTo("/schedules/$NOMIS_CRS_SCH_ID/booking/$NOMIS_BOOKING_ID/attendance"))))
       verify(telemetryClient).trackEvent(
         eq("activity-attendance-delete-success"),
         check {
@@ -316,7 +316,7 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
       await untilAsserted {
         assertThat(awsSqsActivityDlqClient.countMessagesOnQueue(activityDlqUrl).get()).isEqualTo(1)
       }
-      NomisApiExtension.nomisApi.verify(0, deleteRequestedFor(urlEqualTo("/schedules/$NOMIS_CRS_SCH_ID/bookings/$NOMIS_BOOKING_ID/attendance")))
+      NomisApiExtension.nomisApi.verify(0, deleteRequestedFor(urlEqualTo("/schedules/$NOMIS_CRS_SCH_ID/booking/$NOMIS_BOOKING_ID/attendance")))
       verify(telemetryClient).trackEvent(
         eq("activity-attendance-delete-failed"),
         check {

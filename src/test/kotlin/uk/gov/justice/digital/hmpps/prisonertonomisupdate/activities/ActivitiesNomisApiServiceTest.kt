@@ -267,7 +267,7 @@ class ActivitiesNomisApiServiceTest {
       activitiesNomisApiService.deleteAttendance(11, 22)
 
       nomisApi.verify(
-        deleteRequestedFor(urlEqualTo("/schedules/11/bookings/22/attendance"))
+        deleteRequestedFor(urlEqualTo("/schedules/11/booking/22/attendance"))
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
