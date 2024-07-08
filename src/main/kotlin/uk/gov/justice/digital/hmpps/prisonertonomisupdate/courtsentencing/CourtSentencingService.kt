@@ -287,7 +287,8 @@ class CourtSentencingService(
 
   data class AdditionalInformation(
     val courtCaseId: String,
-    val source: String,
+    // TODO remove temporary default once DPS have implemented source parameter
+    val source: String = "DPS",
   )
 
   data class CourtAppearanceAdditionalInformation(
