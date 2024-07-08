@@ -60,7 +60,8 @@ hmpps.sqs:
         "activities.prisoner.allocation-amended",
         "activities.prisoner.attendance-created",
         "activities.prisoner.attendance-amended",
-        "activities.prisoner.attendance-expired"]}
+        "activities.prisoner.attendance-expired",
+        "activities.prisoner.attendance-deleted"]}
       dlqMaxReceiveCount: 1
       visibilityTimeout: 120
     appointment:

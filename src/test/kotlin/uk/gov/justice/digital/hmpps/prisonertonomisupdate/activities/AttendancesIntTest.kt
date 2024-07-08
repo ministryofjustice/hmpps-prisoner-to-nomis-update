@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -16,8 +18,10 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
+import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.attendanceDeletedMessagePayload
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.attendanceMessagePayload
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
@@ -276,6 +280,96 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
       assertThat(awsSqsActivityDlqClient.countMessagesOnQueue(activityDlqUrl).get()).isEqualTo(1)
     }
   }
+
+  @Nested
+  inner class DeleteAttendance {
+    @Test
+    fun `will delete an attendance`() {
+      MappingExtension.mappingServer.stubGetScheduleInstanceMapping(SCHEDULE_INSTANCE_ID, buildGetScheduleMappingResponse())
+      NomisApiExtension.nomisApi.stubDeleteAttendance(NOMIS_CRS_SCH_ID, NOMIS_BOOKING_ID)
+
+      awsSnsClient.publishAttendanceDeleted()
+
+      assertThat(MappingExtension.mappingServer.verify(getRequestedFor(urlEqualTo("/mapping/activities/schedules/scheduled-instance-id/$SCHEDULE_INSTANCE_ID"))))
+      assertThat(NomisApiExtension.nomisApi.verify(deleteRequestedFor(urlEqualTo("/schedules/$NOMIS_CRS_SCH_ID/bookings/$NOMIS_BOOKING_ID/attendance"))))
+      verify(telemetryClient).trackEvent(
+        eq("activity-attendance-delete-success"),
+        check {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "dpsScheduledInstanceId" to SCHEDULE_INSTANCE_ID.toString(),
+              "bookingId" to NOMIS_BOOKING_ID.toString(),
+              "nomisCourseScheduleId" to NOMIS_CRS_SCH_ID.toString(),
+            ),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will send message to the DLQ when mapping API fails`() {
+      MappingExtension.mappingServer.stubGetScheduledInstanceMappingWithError(SCHEDULE_INSTANCE_ID, 404)
+
+      awsSnsClient.publishAttendanceDeleted()
+
+      await untilAsserted {
+        assertThat(awsSqsActivityDlqClient.countMessagesOnQueue(activityDlqUrl).get()).isEqualTo(1)
+      }
+      NomisApiExtension.nomisApi.verify(0, deleteRequestedFor(urlEqualTo("/schedules/$NOMIS_CRS_SCH_ID/bookings/$NOMIS_BOOKING_ID/attendance")))
+      verify(telemetryClient).trackEvent(
+        eq("activity-attendance-delete-failed"),
+        check {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "dpsScheduledInstanceId" to SCHEDULE_INSTANCE_ID.toString(),
+              "bookingId" to NOMIS_BOOKING_ID.toString(),
+            ),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will send message to the DLQ when NOMIS API fails`() {
+      MappingExtension.mappingServer.stubGetScheduleInstanceMapping(SCHEDULE_INSTANCE_ID, buildGetScheduleMappingResponse())
+      NomisApiExtension.nomisApi.stubDeleteAttendanceWithError(NOMIS_CRS_SCH_ID, NOMIS_BOOKING_ID, 500)
+
+      awsSnsClient.publishAttendanceDeleted()
+
+      await untilAsserted {
+        assertThat(awsSqsActivityDlqClient.countMessagesOnQueue(activityDlqUrl).get()).isEqualTo(1)
+      }
+      verify(telemetryClient).trackEvent(
+        eq("activity-attendance-delete-failed"),
+        check {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "dpsScheduledInstanceId" to SCHEDULE_INSTANCE_ID.toString(),
+              "bookingId" to NOMIS_BOOKING_ID.toString(),
+              "nomisCourseScheduleId" to NOMIS_CRS_SCH_ID.toString(),
+            ),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    private fun SnsAsyncClient.publishAttendanceDeleted() = publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(attendanceDeletedMessagePayload("activities.prisoner.attendance-deleted", SCHEDULE_INSTANCE_ID, NOMIS_BOOKING_ID))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue("activities.prisoner.attendance-deleted").build(),
+          ),
+        ).build(),
+    ).get()
+      .also {
+        waitForAnyProcessingToComplete()
+      }
+  }
 }
 
 fun buildGetAttendanceSyncResponse(sessionDate: LocalDate = LocalDate.now().plusDays(1)) = """
@@ -291,3 +385,14 @@ fun buildGetAttendanceSyncResponse(sessionDate: LocalDate = LocalDate.now().plus
     "status": "WAITING"
   }
 """.trimIndent()
+
+fun buildGetScheduleMappingResponse(
+  nomisCourseScheduleId: Long = NOMIS_CRS_SCH_ID,
+  scheduledInstanceId: Long = ACTIVITY_SCHEDULE_ID,
+) =
+  """{
+          "nomisCourseScheduleId": $nomisCourseScheduleId,
+          "scheduledInstanceId": $scheduledInstanceId,
+          "mappingType": "ACTIVITY_CREATED"
+        }
+  """.trimIndent()

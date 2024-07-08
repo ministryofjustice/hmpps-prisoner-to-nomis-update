@@ -44,6 +44,7 @@ class ActivitiesDomainEventListener(
       "activities.prisoner.attendance-created" -> attendanceService.upsertAttendanceEvent(message.fromJson())
       "activities.prisoner.attendance-amended" -> attendanceService.upsertAttendanceEvent(message.fromJson())
       "activities.prisoner.attendance-expired" -> attendanceService.upsertAttendanceEvent(message.fromJson())
+      "activities.prisoner.attendance-deleted" -> attendanceService.deleteAttendanceEvent(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
