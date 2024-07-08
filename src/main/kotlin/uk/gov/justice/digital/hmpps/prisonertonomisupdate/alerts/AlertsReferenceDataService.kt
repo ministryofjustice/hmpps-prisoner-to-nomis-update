@@ -123,6 +123,5 @@ data class AlertReferenceDataEvent(
 )
 
 data class AlertReferenceDataAdditionalInformation(
-  val url: String,
   val alertCode: String,
 )
