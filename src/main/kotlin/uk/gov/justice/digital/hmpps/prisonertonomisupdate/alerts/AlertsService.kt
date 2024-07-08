@@ -27,7 +27,7 @@ class AlertsService(
 
   suspend fun createAlert(alertEvent: AlertEvent) {
     val dpsAlertId = alertEvent.additionalInformation.alertUuid
-    val offenderNo = alertEvent.additionalInformation.prisonNumber
+    val offenderNo = requireNotNull(alertEvent.personReference.findNomsNumber())
     val telemetryMap = mapOf(
       "dpsAlertId" to dpsAlertId,
       "offenderNo" to offenderNo,
@@ -78,7 +78,7 @@ class AlertsService(
 
   suspend fun updateAlert(alertEvent: AlertEvent) {
     val dpsAlertId = alertEvent.additionalInformation.alertUuid
-    val offenderNo = alertEvent.additionalInformation.prisonNumber
+    val offenderNo = requireNotNull(alertEvent.personReference.findNomsNumber())
     val telemetryMap = mutableMapOf(
       "dpsAlertId" to dpsAlertId,
       "offenderNo" to offenderNo,
@@ -87,12 +87,17 @@ class AlertsService(
 
     if (alertEvent.wasUpdateInDPS()) {
       runCatching {
-        val mapping = mappingApiService.getOrNullByDpsId(dpsAlertId) ?: throw IllegalStateException("Tried to update an alert that has never been created")
+        val mapping = mappingApiService.getOrNullByDpsId(dpsAlertId)
+          ?: throw IllegalStateException("Tried to update an alert that has never been created")
         telemetryMap["nomisBookingId"] = mapping.nomisBookingId.toString()
         telemetryMap["nomisAlertSequence"] = mapping.nomisAlertSequence.toString()
 
         val dpsAlert = dpsApiService.getAlert(dpsAlertId)
-        nomisApiService.updateAlert(bookingId = mapping.nomisBookingId, alertSequence = mapping.nomisAlertSequence, dpsAlert.toNomisUpdateRequest())
+        nomisApiService.updateAlert(
+          bookingId = mapping.nomisBookingId,
+          alertSequence = mapping.nomisAlertSequence,
+          dpsAlert.toNomisUpdateRequest(),
+        )
         telemetryClient.trackEvent("alert-updated-success", telemetryMap)
       }.onFailure { e ->
         telemetryClient.trackEvent("alert-updated-failed", telemetryMap)
@@ -105,7 +110,7 @@ class AlertsService(
 
   suspend fun deleteAlert(alertEvent: AlertEvent) {
     val dpsAlertId = alertEvent.additionalInformation.alertUuid
-    val offenderNo = alertEvent.additionalInformation.prisonNumber
+    val offenderNo = requireNotNull(alertEvent.personReference.findNomsNumber())
     val telemetryMap = mutableMapOf(
       "dpsAlertId" to dpsAlertId,
       "offenderNo" to offenderNo,
@@ -147,15 +152,27 @@ data class AlertEvent(
   val description: String?,
   val eventType: String,
   val additionalInformation: AlertAdditionalInformation,
+  val personReference: PersonReference,
 )
 
 data class AlertAdditionalInformation(
-  val url: String,
   val alertUuid: String,
-  val prisonNumber: String,
   val alertCode: String,
   val source: AlertSource,
 )
+
+data class PersonReference(val identifiers: List<Identifier> = listOf()) {
+  operator fun get(key: String) = identifiers.find { it.type == key }?.value
+  fun findNomsNumber() = get(NOMS_NUMBER_TYPE)
+
+  companion object {
+    const val NOMS_NUMBER_TYPE = "NOMS"
+    fun withNomsNumber(prisonNumber: String) = PersonReference(listOf(Identifier(NOMS_NUMBER_TYPE, prisonNumber)))
+  }
+
+  data class Identifier(val type: String, val value: String)
+}
+
 
 enum class AlertSource {
   DPS,

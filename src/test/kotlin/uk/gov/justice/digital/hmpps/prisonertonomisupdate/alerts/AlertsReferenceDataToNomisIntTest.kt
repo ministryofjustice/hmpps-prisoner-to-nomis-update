@@ -507,12 +507,11 @@ fun alertReferenceDataMessagePayload(
     {
       "eventType":"$eventType", 
       "description": "An alert code or type has been changed in the alerts reference data service",
+      "detailUrl":"https://alerts-api.hmpps.service.justice.gov.uk/alert-codes/$alertCode", 
       "occurredAt": "2024-05-28T13:00:33.2534984Z",
       "additionalInformation": {
-        "url":"https://alerts-api.hmpps.service.justice.gov.uk/alert-codes/$alertCode", 
         "alertCode": "$alertCode",
-        "source": "DPS",
-        "reason": "USER"
+        "source": "DPS"
       }
     }
     """

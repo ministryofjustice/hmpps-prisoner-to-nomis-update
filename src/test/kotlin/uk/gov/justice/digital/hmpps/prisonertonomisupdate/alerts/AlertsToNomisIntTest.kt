@@ -706,12 +706,18 @@ fun alertMessagePayload(
   """
     {
       "eventType":"$eventType", 
+      "detailUrl":"https://somecallback", 
       "additionalInformation": {
-        "url":"https://somecallback", 
         "alertUuid": "$alertUuid",
-        "prisonNumber": "$offenderNo", 
         "source": "${source.name}",
         "alertCode": "$alertCode"
+      },
+      "personReference": {
+        "identifiers": [
+          {
+            "type" : "NOMS", "value": "$offenderNo"
+          }
+        ]
       }
     }
     """
