@@ -76,6 +76,13 @@ class ActivitiesNomisApiService(@Qualifier("nomisApiWebClient") private val webC
       .retrieve()
       .awaitBodyOrUpsertAttendanceError()
 
+  suspend fun deleteAttendance(courseScheduleId: Long, bookingId: Long) {
+    webClient.delete()
+      .uri("/schedules/{courseScheduleId}/bookings/{bookingId}/attendance", courseScheduleId, bookingId)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
   suspend fun getAllocationReconciliation(prisonId: String): AllocationReconciliationResponse =
     webClient.get()
       .uri("/allocations/reconciliation/{prisonId}", prisonId)
