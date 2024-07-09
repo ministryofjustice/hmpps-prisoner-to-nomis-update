@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtA
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ExistingOffenderChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.OffenderChargeRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.AdditionalInformation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
@@ -32,6 +31,8 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 
 const val HARDCODED_COURT = "OLDHMC"
+const val HARDCODED_IMPRISONMENT_RESULT_CODE = "1002"
+const val HARDCODED_REMAND_RESULT_CODE = "4531"
 
 @Service
 class CourtSentencingService(
@@ -234,8 +235,11 @@ class CourtSentencingService(
           )
         },
       ).takeIf { it.hasAnyMappingsToUpdate() }?.run {
-        telemetryMap["newCourtChargeMappings"] = this.courtChargesToCreate.map { "dpsCourtChargeId: ${it.dpsCourtChargeId}, nomisCourtChargeId: ${it.nomisCourtChargeId}" }.toString()
-        telemetryMap["deletedCourtChargeMappings"] = this.courtChargesToDelete.map { "nomisCourtChargeId: ${it.nomisCourtChargeId}" }.toString()
+        telemetryMap["newCourtChargeMappings"] =
+          this.courtChargesToCreate.map { "dpsCourtChargeId: ${it.dpsCourtChargeId}, nomisCourtChargeId: ${it.nomisCourtChargeId}" }
+            .toString()
+        telemetryMap["deletedCourtChargeMappings"] =
+          this.courtChargesToDelete.map { "nomisCourtChargeId: ${it.nomisCourtChargeId}" }.toString()
         createMapping(
           mapping = this,
           telemetryClient = telemetryClient,
@@ -345,9 +349,9 @@ fun CourtAppearance.toNomisCourtAppearance(
     ).toString(),
     // TODO these are MOV_RSN on NOMIS - defaulting to Court Appearance until DPS provide a mapping
     courtEventType = "CA",
-    // TODO hardcoding until mapping approach decided this.courtCode
+    // TODO hard coding until mapping approach decided this.courtCode
     courtId = HARDCODED_COURT,
-    outcomeReasonCode = this.outcome,
+    outcomeReasonCode = getHardcodedNomisResultCode(this.outcome),
     nextEventDateTime = nextCourtAppearance?.let {
       LocalDateTime.of(
         nextCourtAppearance.appearanceDate,
@@ -366,12 +370,17 @@ fun Charge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeRequest(
   offenceDate = this.offenceStartDate,
   offenceEndDate = this.offenceEndDate,
 // TODO dps has text that 'mainly' matches nomis but there are also non-matching values on T3
-  resultCode1 = this.outcome,
+  resultCode1 = getHardcodedNomisResultCode(this.outcome),
 // TODO do dps provide this?
   mostSeriousFlag = false,
   // TODO determine if this comes from DPS or is it determined
   offencesCount = 1,
 )
+
+fun getHardcodedNomisResultCode(dpsResultCode: String): String {
+  // map to remand or imprisonment NOMIS codes
+  return if ("remand" in dpsResultCode.lowercase()) HARDCODED_REMAND_RESULT_CODE else HARDCODED_IMPRISONMENT_RESULT_CODE
+}
 
 fun Charge.toExistingNomisCourtCharge(nomisId: Long): ExistingOffenderChargeRequest = ExistingOffenderChargeRequest(
   offenderChargeId = nomisId,
@@ -379,7 +388,7 @@ fun Charge.toExistingNomisCourtCharge(nomisId: Long): ExistingOffenderChargeRequ
   offenceDate = this.offenceStartDate,
   offenceEndDate = this.offenceEndDate,
 // TODO dps has text that 'mainly' matches nomis but there are also non-matching values on T3
-  resultCode1 = this.outcome,
+  resultCode1 = getHardcodedNomisResultCode(this.outcome),
 // TODO do dps provide this?
   mostSeriousFlag = false,
   offencesCount = 1,

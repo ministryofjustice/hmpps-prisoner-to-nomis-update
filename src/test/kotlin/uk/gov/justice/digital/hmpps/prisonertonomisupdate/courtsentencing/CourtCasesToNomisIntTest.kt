@@ -21,17 +21,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_DATE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_END_DATE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_RESULT_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_2_OFFENCE_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_2_OFFENCE_DATE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_2_OFFENCE_END_DATE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_2_RESULT_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_3_OFFENCE_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_3_OFFENCE_DATE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_3_RESULT_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_4_OFFENCE_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_4_OFFENCE_DATE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_4_RESULT_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.CourtSentencingApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
@@ -675,7 +671,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(
               WireMock.matchingJsonPath(
                 "courtEventChargesToUpdate[0].resultCode1",
-                WireMock.equalTo("$COURT_CHARGE_1_RESULT_CODE"),
+                WireMock.equalTo(HARDCODED_REMAND_RESULT_CODE),
               ),
             )
             .withRequestBody(
@@ -711,7 +707,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(
               WireMock.matchingJsonPath(
                 "courtEventChargesToUpdate[1].resultCode1",
-                WireMock.equalTo("$COURT_CHARGE_3_RESULT_CODE"),
+                WireMock.equalTo(HARDCODED_IMPRISONMENT_RESULT_CODE),
               ),
             )
             .withRequestBody(
@@ -747,7 +743,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(
               WireMock.matchingJsonPath(
                 "courtEventChargesToCreate[0].resultCode1",
-                WireMock.equalTo("$COURT_CHARGE_2_RESULT_CODE"),
+                WireMock.equalTo(HARDCODED_REMAND_RESULT_CODE),
               ),
             )
             .withRequestBody(
@@ -783,7 +779,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(
               WireMock.matchingJsonPath(
                 "courtEventChargesToCreate[1].resultCode1",
-                WireMock.equalTo("$COURT_CHARGE_4_RESULT_CODE"),
+                WireMock.equalTo(HARDCODED_IMPRISONMENT_RESULT_CODE),
               ),
             )
             .withRequestBody(
