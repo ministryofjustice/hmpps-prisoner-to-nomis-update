@@ -110,7 +110,29 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to create the Court Case`() {
         waitForAnyProcessingToComplete()
-        NomisApiExtension.nomisApi.verify(WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases")))
+        NomisApiExtension.nomisApi.verify(
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases"))
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "status",
+                WireMock.equalTo("A"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "legalCaseType",
+                WireMock.equalTo("A"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtAppearance.courtEventType",
+                WireMock.equalTo(
+                  "CA",
+                ),
+              ),
+            ),
+        )
       }
 
       @Test
@@ -350,7 +372,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         MappingExtension.mappingServer.stubCreateCourtAppearance()
         // stub two mappings for charges out of the 4 - which makes 2 creates and 2 updates
         MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
-        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_3_ID, NOMIS_COURT_CHARGE_3_ID)
+        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(
+          DPS_COURT_CHARGE_3_ID,
+          NOMIS_COURT_CHARGE_3_ID,
+        )
         MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_2_ID, 404)
         MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_4_ID, 404)
         publishCreateCourtAppearanceDomainEvent()
@@ -375,7 +400,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             Assertions.assertThat(it["mappingType"]).isEqualTo(CourtCaseMapping.MappingType.DPS_CREATED.toString())
             Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
             Assertions.assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
-            Assertions.assertThat(it["courtCharges"]).contains("[CourtChargeMappingDto(nomisCourtChargeId=12, dpsCourtChargeId=9996aa44-642a-484a-a967-2d17b5c9c5a1, label=null, mappingType=DPS_CREATED, whenCreated=null), CourtChargeMappingDto(nomisCourtChargeId=14, dpsCourtChargeId=1236aa44-642a-484a-a967-2d17b5c9c5a1, label=null, mappingType=DPS_CREATED, whenCreated=null)]")
+            Assertions.assertThat(it["courtCharges"])
+              .contains("[CourtChargeMappingDto(nomisCourtChargeId=12, dpsCourtChargeId=9996aa44-642a-484a-a967-2d17b5c9c5a1, label=null, mappingType=DPS_CREATED, whenCreated=null), CourtChargeMappingDto(nomisCourtChargeId=14, dpsCourtChargeId=1236aa44-642a-484a-a967-2d17b5c9c5a1, label=null, mappingType=DPS_CREATED, whenCreated=null)]")
           },
           isNull(),
         )
@@ -497,7 +523,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           NOMIS_COURT_CASE_ID_FOR_CREATION,
           nomisCourtAppearanceCreateResponseWithTwoCharges(),
         )
-        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(id = COURT_CASE_ID_FOR_CREATION, nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION)
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
         MappingExtension.mappingServer.stubGetCourtAppearanceMappingGivenDpsIdWithError(DPS_COURT_APPEARANCE_ID, 404)
         MappingExtension.mappingServer.stubCreateCourtAppearanceWithErrorFollowedBySlowSuccess()
         publishCreateCourtAppearanceDomainEvent()
@@ -580,11 +609,17 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
         )
 
-        MappingExtension.mappingServer.stubGetCourtAppearanceMappingGivenDpsId(DPS_COURT_APPEARANCE_ID, NOMIS_COURT_APPEARANCE_ID)
+        MappingExtension.mappingServer.stubGetCourtAppearanceMappingGivenDpsId(
+          DPS_COURT_APPEARANCE_ID,
+          NOMIS_COURT_APPEARANCE_ID,
+        )
         MappingExtension.mappingServer.stubCreateCourtAppearance()
         // stub two mappings for charges out of the 4 - which makes 2 creates and 2 updates
         MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
-        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_3_ID, NOMIS_COURT_CHARGE_3_ID)
+        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(
+          DPS_COURT_CHARGE_3_ID,
+          NOMIS_COURT_CHARGE_3_ID,
+        )
         MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_2_ID, 404)
         MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_4_ID, 404)
         MappingExtension.mappingServer.stubCourtChargeBatchUpdate()
@@ -605,30 +640,150 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           WireMock.putRequestedFor(WireMock.anyUrl())
             .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToUpdate.size()", WireMock.equalTo("2")))
             .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToCreate.size()", WireMock.equalTo("2")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToUpdate[0].offenceCode", WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_CODE")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToUpdate[0].offencesCount", WireMock.equalTo("$OFFENCES_COUNT")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToUpdate[0].offenceEndDate", WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_END_DATE")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToUpdate[0].offenceDate", WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_DATE")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToUpdate[0].resultCode1", WireMock.equalTo("$COURT_CHARGE_1_RESULT_CODE")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToUpdate[0].mostSeriousFlag", WireMock.equalTo("false")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToUpdate[1].offenceCode", WireMock.equalTo("$COURT_CHARGE_3_OFFENCE_CODE")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToUpdate[1].offencesCount", WireMock.equalTo("$OFFENCES_COUNT")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToUpdate[1].offenceEndDate", WireMock.absent()))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToUpdate[1].offenceDate", WireMock.equalTo("$COURT_CHARGE_3_OFFENCE_DATE")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToUpdate[1].resultCode1", WireMock.equalTo("$COURT_CHARGE_3_RESULT_CODE")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToUpdate[1].mostSeriousFlag", WireMock.equalTo("false")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToCreate[0].offenceCode", WireMock.equalTo("$COURT_CHARGE_2_OFFENCE_CODE")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToCreate[0].offencesCount", WireMock.equalTo("$OFFENCES_COUNT")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToCreate[0].offenceEndDate", WireMock.equalTo("$COURT_CHARGE_2_OFFENCE_END_DATE")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToCreate[0].offenceDate", WireMock.equalTo("$COURT_CHARGE_2_OFFENCE_DATE")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToCreate[0].resultCode1", WireMock.equalTo("$COURT_CHARGE_2_RESULT_CODE")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToCreate[0].mostSeriousFlag", WireMock.equalTo("false")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToCreate[1].offenceCode", WireMock.equalTo("$COURT_CHARGE_4_OFFENCE_CODE")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToCreate[1].offencesCount", WireMock.equalTo("$OFFENCES_COUNT")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToCreate[1].offenceEndDate", WireMock.absent()))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToCreate[1].offenceDate", WireMock.equalTo("$COURT_CHARGE_4_OFFENCE_DATE")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToCreate[1].resultCode1", WireMock.equalTo("$COURT_CHARGE_4_RESULT_CODE")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToCreate[1].mostSeriousFlag", WireMock.equalTo("false"))),
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToUpdate[0].offenceCode",
+                WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_CODE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToUpdate[0].offencesCount",
+                WireMock.equalTo("$OFFENCES_COUNT"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToUpdate[0].offenceEndDate",
+                WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_END_DATE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToUpdate[0].offenceDate",
+                WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_DATE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToUpdate[0].resultCode1",
+                WireMock.equalTo("$COURT_CHARGE_1_RESULT_CODE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToUpdate[0].mostSeriousFlag",
+                WireMock.equalTo("false"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToUpdate[1].offenceCode",
+                WireMock.equalTo("$COURT_CHARGE_3_OFFENCE_CODE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToUpdate[1].offencesCount",
+                WireMock.equalTo("$OFFENCES_COUNT"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToUpdate[1].offenceEndDate",
+                WireMock.absent(),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToUpdate[1].offenceDate",
+                WireMock.equalTo("$COURT_CHARGE_3_OFFENCE_DATE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToUpdate[1].resultCode1",
+                WireMock.equalTo("$COURT_CHARGE_3_RESULT_CODE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToUpdate[1].mostSeriousFlag",
+                WireMock.equalTo("false"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToCreate[0].offenceCode",
+                WireMock.equalTo("$COURT_CHARGE_2_OFFENCE_CODE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToCreate[0].offencesCount",
+                WireMock.equalTo("$OFFENCES_COUNT"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToCreate[0].offenceEndDate",
+                WireMock.equalTo("$COURT_CHARGE_2_OFFENCE_END_DATE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToCreate[0].offenceDate",
+                WireMock.equalTo("$COURT_CHARGE_2_OFFENCE_DATE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToCreate[0].resultCode1",
+                WireMock.equalTo("$COURT_CHARGE_2_RESULT_CODE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToCreate[0].mostSeriousFlag",
+                WireMock.equalTo("false"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToCreate[1].offenceCode",
+                WireMock.equalTo("$COURT_CHARGE_4_OFFENCE_CODE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToCreate[1].offencesCount",
+                WireMock.equalTo("$OFFENCES_COUNT"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToCreate[1].offenceEndDate",
+                WireMock.absent(),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToCreate[1].offenceDate",
+                WireMock.equalTo("$COURT_CHARGE_4_OFFENCE_DATE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToCreate[1].resultCode1",
+                WireMock.equalTo("$COURT_CHARGE_4_RESULT_CODE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventChargesToCreate[1].mostSeriousFlag",
+                WireMock.equalTo("false"),
+              ),
+            ),
         )
       }
 
@@ -702,8 +857,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
             Assertions.assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
-            Assertions.assertThat(it["newCourtChargeMappings"]).contains("[dpsCourtChargeId: 9996aa44-642a-484a-a967-2d17b5c9c5a1, nomisCourtChargeId: 12, dpsCourtChargeId: 1236aa44-642a-484a-a967-2d17b5c9c5a1, nomisCourtChargeId: 14]")
-            Assertions.assertThat(it["deletedCourtChargeMappings"]).contains("[nomisCourtChargeId: 15, nomisCourtChargeId: 16]")
+            Assertions.assertThat(it["newCourtChargeMappings"])
+              .contains("[dpsCourtChargeId: 9996aa44-642a-484a-a967-2d17b5c9c5a1, nomisCourtChargeId: 12, dpsCourtChargeId: 1236aa44-642a-484a-a967-2d17b5c9c5a1, nomisCourtChargeId: 14]")
+            Assertions.assertThat(it["deletedCourtChargeMappings"])
+              .contains("[nomisCourtChargeId: 15, nomisCourtChargeId: 16]")
           },
           isNull(),
         )
