@@ -31,6 +31,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDateTime
 import java.time.LocalTime
 
+const val HARDCODED_COURT = "OLDHMC"
+
 @Service
 class CourtSentencingService(
   private val courtSentencingApiService: CourtSentencingApiService,
@@ -309,13 +311,15 @@ class CourtSentencingService(
 
 fun CourtCase.toNomisCourtCase(): CreateCourtCaseRequest = CreateCourtCaseRequest(
   startDate = this.latestAppearance.appearanceDate,
-  courtId = this.latestAppearance.courtCode,
+  // TODO hardcoding until mapping approach decided this.courtCode
+  courtId = HARDCODED_COURT,
   courtAppearance = CourtAppearanceRequest(
     eventDateTime = LocalDateTime.of(
       this.latestAppearance.appearanceDate,
       LocalTime.MIDNIGHT,
     ).toString(),
-    courtId = this.latestAppearance.courtCode,
+    // TODO hardcoding until mapping approach decided this.courtCode
+    courtId = HARDCODED_COURT,
     // TODO these are MOV_RSN on NOMIS - defaulting to Court Appearance until DPS provide a mapping
     courtEventType = "CA",
     courtEventChargesToUpdate = listOf(),
@@ -341,7 +345,8 @@ fun CourtAppearance.toNomisCourtAppearance(
     ).toString(),
     // TODO these are MOV_RSN on NOMIS - defaulting to Court Appearance until DPS provide a mapping
     courtEventType = "CA",
-    courtId = this.courtCode,
+    // TODO hardcoding until mapping approach decided this.courtCode
+    courtId = HARDCODED_COURT,
     outcomeReasonCode = this.outcome,
     nextEventDateTime = nextCourtAppearance?.let {
       LocalDateTime.of(
@@ -351,7 +356,8 @@ fun CourtAppearance.toNomisCourtAppearance(
     },
     courtEventChargesToUpdate = courtEventChargesToUpdate,
     courtEventChargesToCreate = courtEventChargesToCreate,
-    nextCourtId = nextCourtAppearance?.courtCode,
+    // TODO hardcoding until mapping approach decided this.courtCode
+    nextCourtId = nextCourtAppearance?.let { HARDCODED_COURT },
   )
 }
 
