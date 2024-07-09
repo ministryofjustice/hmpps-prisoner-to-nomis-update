@@ -131,6 +131,14 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                   "CA",
                 ),
               ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtAppearance.courtId",
+                WireMock.equalTo(
+                  HARDCODED_COURT,
+                ),
+              ),
             ),
         )
       }
