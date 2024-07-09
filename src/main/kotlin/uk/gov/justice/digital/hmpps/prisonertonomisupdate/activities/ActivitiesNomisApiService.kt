@@ -78,7 +78,7 @@ class ActivitiesNomisApiService(@Qualifier("nomisApiWebClient") private val webC
 
   suspend fun deleteAttendance(courseScheduleId: Long, bookingId: Long) {
     webClient.delete()
-      .uri("/schedules/{courseScheduleId}/bookings/{bookingId}/attendance", courseScheduleId, bookingId)
+      .uri("/schedules/{courseScheduleId}/booking/{bookingId}/attendance", courseScheduleId, bookingId)
       .retrieve()
       .awaitBodilessEntity()
   }

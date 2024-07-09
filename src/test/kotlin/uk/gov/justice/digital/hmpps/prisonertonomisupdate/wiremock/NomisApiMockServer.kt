@@ -290,7 +290,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubDeleteAttendance(courseScheduleId: Long, bookingId: Long) {
     stubFor(
-      delete("/schedules/$courseScheduleId/bookings/$bookingId/attendance").willReturn(
+      delete("/schedules/$courseScheduleId/booking/$bookingId/attendance").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(204),
@@ -300,7 +300,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubDeleteAttendanceWithError(courseScheduleId: Long, bookingId: Long, status: Int = 500, body: String = ERROR_RESPONSE) {
     stubFor(
-      delete("/schedules/$courseScheduleId/bookings/$bookingId/attendance").willReturn(
+      delete("/schedules/$courseScheduleId/booking/$bookingId/attendance").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(body)
