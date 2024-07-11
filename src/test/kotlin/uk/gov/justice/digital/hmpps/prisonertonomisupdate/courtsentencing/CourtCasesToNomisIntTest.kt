@@ -135,6 +135,62 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                   HARDCODED_COURT,
                 ),
               ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtAppearance.nextCourtId",
+                WireMock.equalTo(
+                  HARDCODED_COURT,
+                ),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtAppearance.outcomeReasonCode",
+                WireMock.equalTo(
+                  "4531",
+                ),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtAppearance.nextEventDateTime",
+                WireMock.equalTo(
+                  "2024-12-10T00:00",
+                ),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtAppearance.courtEventChargesToCreate[0].offenceCode",
+                WireMock.equalTo(
+                  "PS90037",
+                ),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtAppearance.courtEventChargesToCreate[1].offenceCode",
+                WireMock.equalTo(
+                  "PS90090",
+                ),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtAppearance.courtEventChargesToCreate[0].resultCode1",
+                WireMock.equalTo(
+                  "4531",
+                ),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtAppearance.courtEventChargesToCreate[1].resultCode1",
+                WireMock.equalTo(
+                  "4531",
+                ),
+              ),
             ),
         )
       }
