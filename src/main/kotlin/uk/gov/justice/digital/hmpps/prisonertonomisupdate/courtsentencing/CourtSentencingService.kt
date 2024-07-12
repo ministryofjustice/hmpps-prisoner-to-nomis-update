@@ -315,17 +315,9 @@ class CourtSentencingService(
 
 fun CourtCase.toNomisCourtCase(): CreateCourtCaseRequest = CreateCourtCaseRequest(
   startDate = this.latestAppearance.appearanceDate,
-  // TODO hardcoding until mapping approach decided this.courtCode
+  // TODO hard coding until mapping approach decided this.courtCode
   courtId = HARDCODED_COURT,
-  courtAppearance = CourtAppearanceRequest(
-    eventDateTime = LocalDateTime.of(
-      this.latestAppearance.appearanceDate,
-      LocalTime.MIDNIGHT,
-    ).toString(),
-    // TODO hardcoding until mapping approach decided this.courtCode
-    courtId = HARDCODED_COURT,
-    // TODO these are MOV_RSN on NOMIS - defaulting to Court Appearance until DPS provide a mapping
-    courtEventType = "CA",
+  courtAppearance = this.latestAppearance.toNomisCourtAppearance(
     courtEventChargesToUpdate = listOf(),
     courtEventChargesToCreate = this.latestAppearance.charges.mapIndexed { index, dpsCharge ->
       dpsCharge.toNomisCourtCharge()

@@ -104,7 +104,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "offenceCode": "PS90090",
                 "offenceStartDate": "2024-01-17",
                 "offenceEndDate": "2024-01-19",
-                "outcome": "Remand in Custody (Bail Refused)",
+                "outcome": "Remand in Custody Different outcome",
                 "terrorRelated": null,
                 "sentence": null
             }
