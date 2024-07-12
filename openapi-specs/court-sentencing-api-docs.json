@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-02-15.1088.fe47a5d"
+    "version": "2024-07-10.1849.e8ca258"
   },
   "servers": [
     {
@@ -29,6 +29,10 @@
   ],
   "tags": [
     {
+      "name": "recall-controller",
+      "description": "Recall"
+    },
+    {
       "name": "court-appearance-controller",
       "description": "Court Appearances"
     },
@@ -46,6 +50,130 @@
     }
   ],
   "paths": {
+    "/recall/{recallUuid}": {
+      "get": {
+        "tags": [
+          "recall-controller"
+        ],
+        "summary": "Retrieve a recall",
+        "description": "This endpoint will retrieve the details of a recall",
+        "operationId": "getRecall",
+        "parameters": [
+          {
+            "name": "recallUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recall"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found if no recall uuid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recall"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recall"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Returns recall details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recall"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "recall-controller"
+        ],
+        "summary": "Update a recall (or create one with the passed in details)",
+        "description": "This endpoint will update a recall (or create one with the passed in details)",
+        "operationId": "updateRecall",
+        "parameters": [
+          {
+            "name": "recallUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecall"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveRecallResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveRecallResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Returns court case UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveRecallResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/court-case/{courtCaseUuid}": {
       "get": {
         "tags": [
@@ -312,6 +440,58 @@
         }
       }
     },
+    "/recall": {
+      "post": {
+        "tags": [
+          "recall-controller"
+        ],
+        "summary": "Create a recall",
+        "description": "This endpoint will create a recall",
+        "operationId": "createRecall",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecall"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveRecallResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Returns recall UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveRecallResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveRecallResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/court-case": {
       "post": {
         "tags": [
@@ -409,6 +589,67 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CreateCourtAppearanceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recall/person/{prisonerId}": {
+      "get": {
+        "tags": [
+          "recall-controller"
+        ],
+        "summary": "Retrieve all recalls for a person",
+        "description": "This endpoint will retrieve  all recalls for a person",
+        "operationId": "getRecallsByPrisonerId",
+        "parameters": [
+          {
+            "name": "prisonerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns all recalls for person",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Recall"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Recall"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Recall"
+                  }
                 }
               }
             }
@@ -656,6 +897,53 @@
   },
   "components": {
     "schemas": {
+      "CreateRecall": {
+        "required": [
+          "createdByUsername",
+          "prisonerId",
+          "recallDate",
+          "recallType",
+          "returnToCustodyDate"
+        ],
+        "type": "object",
+        "properties": {
+          "prisonerId": {
+            "type": "string"
+          },
+          "recallDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "returnToCustodyDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "recallType": {
+            "type": "string",
+            "enum": [
+              "FOURTEEN_DAY_FIXED_TERM_RECALL",
+              "TWENTY_EIGHT_DAY_FIXED_TERM_RECALL",
+              "STANDARD_RECALL",
+              "HDC_RECALL"
+            ]
+          },
+          "createdByUsername": {
+            "type": "string"
+          }
+        }
+      },
+      "SaveRecallResponse": {
+        "required": [
+          "recallUuid"
+        ],
+        "type": "object",
+        "properties": {
+          "recallUuid": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "CreateCharge": {
         "required": [
           "offenceCode",
@@ -694,7 +982,6 @@
         "required": [
           "appearanceDate",
           "charges",
-          "courtCaseReference",
           "courtCode",
           "outcome",
           "warrantType"
@@ -730,6 +1017,9 @@
           "taggedBail": {
             "type": "integer",
             "format": "int32"
+          },
+          "overallSentenceLength": {
+            "$ref": "#/components/schemas/CreatePeriodLength"
           },
           "nextCourtAppearance": {
             "$ref": "#/components/schemas/CreateNextCourtAppearance"
@@ -772,6 +1062,10 @@
             "type": "string",
             "format": "date"
           },
+          "appearanceTime": {
+            "type": "string",
+            "example": "08:48:12.796193908"
+          },
           "courtCode": {
             "type": "string"
           },
@@ -787,16 +1081,20 @@
         "type": "object",
         "properties": {
           "years": {
-            "type": "number"
+            "type": "integer",
+            "format": "int32"
           },
           "months": {
-            "type": "number"
+            "type": "integer",
+            "format": "int32"
           },
           "weeks": {
-            "type": "number"
+            "type": "integer",
+            "format": "int32"
           },
           "days": {
-            "type": "number"
+            "type": "integer",
+            "format": "int32"
           },
           "periodOrder": {
             "type": "string"
@@ -806,7 +1104,9 @@
       "CreateSentence": {
         "required": [
           "chargeNumber",
-          "custodialPeriodLength"
+          "custodialPeriodLength",
+          "sentenceServeType",
+          "sentenceType"
         ],
         "type": "object",
         "properties": {
@@ -822,6 +1122,15 @@
           },
           "extendedLicensePeriodLength": {
             "$ref": "#/components/schemas/CreatePeriodLength"
+          },
+          "sentenceServeType": {
+            "type": "string"
+          },
+          "consecutiveToChargeNumber": {
+            "type": "string"
+          },
+          "sentenceType": {
+            "type": "string"
           }
         }
       },
@@ -845,6 +1154,51 @@
           "appearanceUuid": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "Recall": {
+        "required": [
+          "createdAt",
+          "createdByUsername",
+          "prisonerId",
+          "recallDate",
+          "recallType",
+          "recallUniqueIdentifier",
+          "returnToCustodyDate"
+        ],
+        "type": "object",
+        "properties": {
+          "recallUniqueIdentifier": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "prisonerId": {
+            "type": "string"
+          },
+          "recallDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "returnToCustodyDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "recallType": {
+            "type": "string",
+            "enum": [
+              "FOURTEEN_DAY_FIXED_TERM_RECALL",
+              "TWENTY_EIGHT_DAY_FIXED_TERM_RECALL",
+              "STANDARD_RECALL",
+              "HDC_RECALL"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdByUsername": {
+            "type": "string"
           }
         }
       },
@@ -924,7 +1278,6 @@
           "appearanceDate",
           "appearanceUuid",
           "charges",
-          "courtCaseReference",
           "courtCode",
           "outcome",
           "warrantType"
@@ -966,6 +1319,9 @@
             "items": {
               "$ref": "#/components/schemas/Charge"
             }
+          },
+          "overallSentenceLength": {
+            "$ref": "#/components/schemas/PeriodLength"
           }
         }
       },
@@ -1007,6 +1363,10 @@
             "type": "string",
             "format": "date"
           },
+          "appearanceTime": {
+            "type": "string",
+            "example": "08:48:12.796193908"
+          },
           "courtCode": {
             "type": "string"
           },
@@ -1022,16 +1382,20 @@
         "type": "object",
         "properties": {
           "years": {
-            "type": "number"
+            "type": "integer",
+            "format": "int32"
           },
           "months": {
-            "type": "number"
+            "type": "integer",
+            "format": "int32"
           },
           "weeks": {
-            "type": "number"
+            "type": "integer",
+            "format": "int32"
           },
           "days": {
-            "type": "number"
+            "type": "integer",
+            "format": "int32"
           },
           "periodOrder": {
             "type": "string"
@@ -1042,6 +1406,8 @@
         "required": [
           "chargeNumber",
           "custodialPeriodLength",
+          "sentenceServeType",
+          "sentenceType",
           "sentenceUuid"
         ],
         "type": "object",
@@ -1058,6 +1424,15 @@
           },
           "extendedLicensePeriodLength": {
             "$ref": "#/components/schemas/PeriodLength"
+          },
+          "sentenceServeType": {
+            "type": "string"
+          },
+          "consecutiveToChargeNumber": {
+            "type": "string"
+          },
+          "sentenceType": {
+            "type": "string"
           }
         }
       },
@@ -1085,13 +1460,19 @@
       "PageCourtCase": {
         "type": "object",
         "properties": {
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
           },
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "size": {
             "type": "integer",
@@ -1108,7 +1489,10 @@
             "format": "int32"
           },
           "sort": {
-            "$ref": "#/components/schemas/SortObject"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SortObject"
+            }
           },
           "numberOfElements": {
             "type": "integer",
@@ -1116,12 +1500,6 @@
           },
           "pageable": {
             "$ref": "#/components/schemas/PageableObject"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "first": {
-            "type": "boolean"
           },
           "empty": {
             "type": "boolean"
@@ -1136,7 +1514,10 @@
             "format": "int64"
           },
           "sort": {
-            "$ref": "#/components/schemas/SortObject"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SortObject"
+            }
           },
           "pageSize": {
             "type": "integer",
@@ -1145,25 +1526,31 @@
           "paged": {
             "type": "boolean"
           },
-          "unpaged": {
-            "type": "boolean"
-          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
+          },
+          "unpaged": {
+            "type": "boolean"
           }
         }
       },
       "SortObject": {
         "type": "object",
         "properties": {
-          "empty": {
+          "direction": {
+            "type": "string"
+          },
+          "nullHandling": {
+            "type": "string"
+          },
+          "ascending": {
             "type": "boolean"
           },
-          "sorted": {
-            "type": "boolean"
+          "property": {
+            "type": "string"
           },
-          "unsorted": {
+          "ignoreCase": {
             "type": "boolean"
           }
         }

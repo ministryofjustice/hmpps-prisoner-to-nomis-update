@@ -363,8 +363,6 @@ fun Charge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeRequest(
   offenceEndDate = this.offenceEndDate,
 // TODO dps has text that 'mainly' matches nomis but there are also non-matching values on T3
   resultCode1 = getHardcodedNomisResultCode(this.outcome),
-// TODO do dps provide this?
-  mostSeriousFlag = false,
   // TODO determine if this comes from DPS or is it determined
   offencesCount = 1,
 )
@@ -381,8 +379,6 @@ fun Charge.toExistingNomisCourtCharge(nomisId: Long): ExistingOffenderChargeRequ
   offenceEndDate = this.offenceEndDate,
 // TODO dps has text that 'mainly' matches nomis but there are also non-matching values on T3
   resultCode1 = getHardcodedNomisResultCode(this.outcome),
-// TODO do dps provide this?
-  mostSeriousFlag = false,
   offencesCount = 1,
 )
 
