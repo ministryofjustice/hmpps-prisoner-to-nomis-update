@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-06-06.7961.60de179"
+    "version": "2024-07-12.8288.65a9114"
   },
   "servers": [
     {
@@ -288,6 +288,71 @@
             }
           },
           "403": {
+            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "activities-resource"
+        ],
+        "summary": "Deletes an attendance record",
+        "description": "Deletes an attendance for the course schedule. Requires role NOMIS_ACTIVITIES",
+        "operationId": "deleteAttendance",
+        "parameters": [
+          {
+            "name": "courseScheduleId",
+            "in": "path",
+            "description": "Course schedule id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Course schedule id"
+            }
+          },
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "Booking id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Booking id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Attendance deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_ACTIVITIES",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
             "description": "Forbidden, requires role NOMIS_ACTIVITIES",
             "content": {
               "application/json": {
@@ -2110,6 +2175,156 @@
           },
           "403": {
             "description": "Forbidden to access this endpoint when role NOMIS_INCENTIVES not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/casenotes/{caseNoteId}": {
+      "get": {
+        "tags": [
+          "case-notes-resource"
+        ],
+        "summary": "get a case note by id",
+        "description": "Retrieves a prisoner case note. Requires ROLE_NOMIS_CASENOTES",
+        "operationId": "getCaseNote",
+        "parameters": [
+          {
+            "name": "caseNoteId",
+            "in": "path",
+            "description": "Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Id",
+              "example": 1234578
+            },
+            "example": 1234578
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CaseNote Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseNoteResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CASENOTES",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "CaseNote does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "case-notes-resource"
+        ],
+        "summary": "Amends a case note on a prisoner",
+        "description": "Updates the specified case note. Requires ROLE_NOMIS_CASENOTES",
+        "operationId": "amendCaseNote",
+        "parameters": [
+          {
+            "name": "caseNoteId",
+            "in": "path",
+            "description": "Case note id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Case note id",
+              "example": 1234567
+            },
+            "example": 1234567
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AmendCaseNoteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "CaseNote Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseNoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "One or more fields in the request contains invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CASENOTES",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "CaseNote does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -4537,6 +4752,156 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/casenotes": {
+      "get": {
+        "tags": [
+          "case-notes-resource"
+        ],
+        "summary": "Gets all case notes for a prisoner",
+        "description": "Retrieves all case notes for a specific prisoner, for migration or reconciliation. Requires ROLE_NOMIS_CASENOTES",
+        "operationId": "getCaseNotesForPrisoner",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender No AKA prisoner number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender No AKA prisoner number",
+              "example": "A3745XD"
+            },
+            "example": "A3745XD"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Case notes Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrisonerCaseNotesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CASENOTES",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prisoner does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "case-notes-resource"
+        ],
+        "summary": "Creates a case note on a prisoner",
+        "description": "Creates a case note on the prisoner's latest booking. Requires ROLE_NOMIS_CASENOTES",
+        "operationId": "createCaseNote",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender no (aka prisoner number)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender no (aka prisoner number)",
+              "example": "A1234AK"
+            },
+            "example": "A1234AK"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCaseNoteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "CaseNote Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateCaseNoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "One or more fields in the request contains invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CASENOTES",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prisoner does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/alerts": {
       "post": {
         "tags": [
@@ -6878,6 +7243,72 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/physical-attributes": {
+      "get": {
+        "tags": [
+          "prison-person-resource"
+        ],
+        "summary": "Get physical attributes for a prisoner",
+        "description": "Retrieves physical attributes for a prisoner and all of their aliases and bookings. Requires ROLE_NOMIS_PRISON_PERSON",
+        "operationId": "getPhysicalAttributes",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender number",
+              "example": "A1234AA"
+            },
+            "example": "A1234AA"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Physical Attributes Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrisonerPhysicalAttributesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prisoner does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/merges": {
       "get": {
         "tags": [
@@ -8176,7 +8607,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PageLong"
+                  "$ref": "#/components/schemas/PageIncidentIdResponse"
                 }
               }
             }
@@ -8770,6 +9201,14 @@
               "type": "string",
               "description": "CSIP id"
             }
+          },
+          {
+            "name": "includeDocumentIds",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -8889,6 +9328,127 @@
           },
           "403": {
             "description": "Forbidden to access this endpoint when role NOMIS_CSIP not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csip/factors/{csipFactorId}": {
+      "get": {
+        "tags": [
+          "csip-factor-resource"
+        ],
+        "summary": "Get CSIP factor details",
+        "description": "Gets csip factor details. Requires role NOMIS_CSIP",
+        "operationId": "getCSIPFactor",
+        "parameters": [
+          {
+            "name": "csipFactorId",
+            "in": "path",
+            "description": "CSIP Factor id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "CSIP Factor id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPFactorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_CSIP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "csip-factor-resource"
+        ],
+        "summary": "Deletes a csip factor",
+        "description": "Deletes a csip factor. Requires ROLE_NOMIS_CSIP",
+        "operationId": "deleteCSIPFactor",
+        "parameters": [
+          {
+            "name": "csipFactorId",
+            "in": "path",
+            "description": "CSIP Factor Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "CSIP Factor Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Csip factor Deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CSIP",
             "content": {
               "application/json": {
                 "schema": {
@@ -10443,6 +11003,55 @@
         }
       }
     },
+    "/csip/{csipId}": {
+      "delete": {
+        "tags": [
+          "csip-resource"
+        ],
+        "summary": "Deletes a csip report",
+        "description": "Deletes a csip report. Requires ROLE_NOMIS_CSIP",
+        "operationId": "deleteCSIP",
+        "parameters": [
+          {
+            "name": "csipId",
+            "in": "path",
+            "description": "CSIP Factor Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "CSIP Factor Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Csip report Deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CSIP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/attendances/{eventId}": {
       "delete": {
         "tags": [
@@ -10450,7 +11059,7 @@
         ],
         "summary": "Delete a NOMIS attendance (from OFFENDER_COURSE_ATTENDANCES table)",
         "description": "Deletes an attendance from NOMIS. Requires role NOMIS_ACTIVITIES",
-        "operationId": "deleteAttendance",
+        "operationId": "deleteAttendance_1",
         "parameters": [
           {
             "name": "eventId",
@@ -10829,7 +11438,6 @@
       },
       "ExistingOffenderChargeRequest": {
         "required": [
-          "mostSeriousFlag",
           "offenceCode",
           "offenderChargeId"
         ],
@@ -10856,16 +11464,12 @@
           },
           "resultCode1": {
             "type": "string"
-          },
-          "mostSeriousFlag": {
-            "type": "boolean"
           }
         },
         "description": "Court Event"
       },
       "OffenderChargeRequest": {
         "required": [
-          "mostSeriousFlag",
           "offenceCode"
         ],
         "type": "object",
@@ -10887,9 +11491,6 @@
           },
           "resultCode1": {
             "type": "string"
-          },
-          "mostSeriousFlag": {
-            "type": "boolean"
           }
         },
         "description": "Court Event"
@@ -11448,6 +12049,9 @@
         "description": "Location usage"
       },
       "DeactivateRequest": {
+        "required": [
+          "force"
+        ],
         "type": "object",
         "properties": {
           "deactivateDate": {
@@ -11479,6 +12083,10 @@
             "description": "The expected reactivation date if any",
             "format": "date",
             "example": "2024-12-31"
+          },
+          "force": {
+            "type": "boolean",
+            "description": "If true, update Nomis even if already inactive. Useful when a temporarily inactive location is deactivated permanently"
           }
         },
         "description": "Location deactivate request"
@@ -11765,6 +12373,101 @@
           }
         },
         "description": "Incentive information"
+      },
+      "CaseNoteResponse": {
+        "required": [
+          "amended",
+          "authorUsername",
+          "bookingId",
+          "caseNoteId",
+          "caseNoteSubType",
+          "caseNoteType"
+        ],
+        "type": "object",
+        "properties": {
+          "caseNoteId": {
+            "type": "integer",
+            "description": "The primary key",
+            "format": "int64"
+          },
+          "bookingId": {
+            "type": "integer",
+            "description": "The prisoner's bookingId related to this case note",
+            "format": "int64"
+          },
+          "caseNoteType": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "caseNoteSubType": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "occurrenceDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date case note occurred",
+            "example": "2021-07-05T10:35:17"
+          },
+          "authorUsername": {
+            "type": "string",
+            "description": "Free format text of person or department that created the case note"
+          },
+          "prisonId": {
+            "type": "string",
+            "description": "Prison id"
+          },
+          "caseNoteText": {
+            "type": "string",
+            "description": "Free format text body of case note"
+          },
+          "amended": {
+            "type": "boolean",
+            "description": "Whether the case note was amended",
+            "example": false
+          },
+          "auditModuleName": {
+            "type": "string",
+            "description": "Which screen (or DPS) created the case note",
+            "example": "false"
+          }
+        },
+        "description": "The data held in NOMIS about a case note associated with a prisoner"
+      },
+      "AmendCaseNoteRequest": {
+        "required": [
+          "authorUsername",
+          "caseNoteSubType",
+          "caseNoteText",
+          "caseNoteType",
+          "occurrenceDateTime"
+        ],
+        "type": "object",
+        "properties": {
+          "caseNoteType": {
+            "type": "string",
+            "description": "The case note type"
+          },
+          "caseNoteSubType": {
+            "type": "string",
+            "description": "The case note subtype"
+          },
+          "occurrenceDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date case note occurred",
+            "example": "2021-07-05T10:35:17"
+          },
+          "authorUsername": {
+            "type": "string",
+            "description": "Free format text of person or department that created the case note"
+          },
+          "caseNoteText": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string",
+            "description": "Free format text body of case note"
+          }
+        },
+        "description": "A request to amend a case note in NOMIS"
       },
       "UpdateAppointmentRequest": {
         "required": [
@@ -12843,6 +13546,57 @@
           }
         },
         "description": "Create court case response"
+      },
+      "CreateCaseNoteResponse": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The id of this case note",
+            "format": "int64"
+          }
+        },
+        "description": "A response after a case note created in NOMIS"
+      },
+      "CreateCaseNoteRequest": {
+        "required": [
+          "authorUsername",
+          "caseNoteSubType",
+          "caseNoteText",
+          "caseNoteType",
+          "occurrenceDateTime"
+        ],
+        "type": "object",
+        "properties": {
+          "caseNoteType": {
+            "type": "string",
+            "description": "The case note type"
+          },
+          "caseNoteSubType": {
+            "type": "string",
+            "description": "The case note subtype"
+          },
+          "occurrenceDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date case note occurred",
+            "example": "2021-07-05T10:35:17"
+          },
+          "authorUsername": {
+            "type": "string",
+            "description": "Free format text of person or department that created the case note"
+          },
+          "caseNoteText": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string",
+            "description": "Free format text body of case note"
+          }
+        },
+        "description": "A request to create a case note in NOMIS"
       },
       "CreateAlertResponse": {
         "required": [
@@ -15624,6 +16378,125 @@
         },
         "description": "Sentence Purpose"
       },
+      "BookingPhysicalAttributesResponse": {
+        "required": [
+          "bookingId",
+          "latestBooking",
+          "physicalAttributes",
+          "startDateTime"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "The booking's unique identifier",
+            "format": "int64",
+            "example": 1234567
+          },
+          "startDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The start date of the booking",
+            "example": "2021-07-05T10:35:17"
+          },
+          "endDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The end date of the booking, or null if the booking is still active",
+            "example": "2021-07-05T10:35:17"
+          },
+          "physicalAttributes": {
+            "type": "array",
+            "description": "A list of physical attributes for this booking",
+            "items": {
+              "$ref": "#/components/schemas/PhysicalAttributesResponse"
+            }
+          },
+          "latestBooking": {
+            "type": "boolean",
+            "description": "Whether this is the latest booking or not. Note that latest does not imply active.",
+            "example": true
+          }
+        },
+        "description": "Physical attributes held against a booking"
+      },
+      "PhysicalAttributesResponse": {
+        "required": [
+          "createDateTime",
+          "createdBy"
+        ],
+        "type": "object",
+        "properties": {
+          "attributeSequence": {
+            "type": "integer",
+            "description": "Multiple physical attribute records can be created for each booking",
+            "format": "int64",
+            "example": 1
+          },
+          "heightCentimetres": {
+            "type": "integer",
+            "description": "The height of the prisoner in centimetres",
+            "format": "int32",
+            "example": 180
+          },
+          "weightKilograms": {
+            "type": "integer",
+            "description": "The weight of the prisoner in kilograms",
+            "format": "int32",
+            "example": 80
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The time the physical attributes were created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The user who created the physical attributes",
+            "example": "AQ425D"
+          },
+          "modifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The time the physical attributes were last changed",
+            "example": "2021-07-05T10:35:17"
+          },
+          "modifiedBy": {
+            "type": "string",
+            "description": "The user who modified the physical attributes",
+            "example": "AQ425D"
+          },
+          "auditModuleName": {
+            "type": "string",
+            "description": "The name of the module that last changed the physical attributes, indicates if this was NOMIS or the synchronisation service",
+            "example": "DPS_SYNCHRONISATION"
+          }
+        },
+        "description": "Physical attributes recorded against a prisoner"
+      },
+      "PrisonerPhysicalAttributesResponse": {
+        "required": [
+          "bookings",
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderNo": {
+            "type": "string",
+            "description": "The prisoner's unique identifier",
+            "example": "A1234AA"
+          },
+          "bookings": {
+            "type": "array",
+            "description": "A list of bookings and their physical attributes",
+            "items": {
+              "$ref": "#/components/schemas/BookingPhysicalAttributesResponse"
+            }
+          }
+        },
+        "description": "Physical attributes held against a prisoner"
+      },
       "MergeDetail": {
         "required": [
           "activeBookingId",
@@ -15664,6 +16537,21 @@
           }
         },
         "description": "Details of a prisoner merge"
+      },
+      "PrisonerCaseNotesResponse": {
+        "required": [
+          "caseNotes"
+        ],
+        "type": "object",
+        "properties": {
+          "caseNotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CaseNoteResponse"
+            }
+          }
+        },
+        "description": "The list of case notes held against a booking"
       },
       "PreviousBookingId": {
         "required": [
@@ -17205,7 +18093,21 @@
         },
         "description": "Staff involved in the incident"
       },
-      "PageLong": {
+      "IncidentIdResponse": {
+        "required": [
+          "incidentId"
+        ],
+        "type": "object",
+        "properties": {
+          "incidentId": {
+            "type": "integer",
+            "description": "The incident id",
+            "format": "int64"
+          }
+        },
+        "description": "Incident id"
+      },
+      "PageIncidentIdResponse": {
         "type": "object",
         "properties": {
           "totalPages": {
@@ -17229,8 +18131,7 @@
           "content": {
             "type": "array",
             "items": {
-              "type": "integer",
-              "format": "int64"
+              "$ref": "#/components/schemas/IncidentIdResponse"
             }
           },
           "number": {
@@ -17308,69 +18209,6 @@
           }
         },
         "description": "Incident Agency Id"
-      },
-      "IncidentIdResponse": {
-        "required": [
-          "incidentId"
-        ],
-        "type": "object",
-        "properties": {
-          "incidentId": {
-            "type": "integer",
-            "description": "The incident id",
-            "format": "int64"
-          }
-        },
-        "description": "Incident id"
-      },
-      "PageIncidentIdResponse": {
-        "type": "object",
-        "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "size": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "content": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IncidentIdResponse"
-            }
-          },
-          "number": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
-          },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
-          "empty": {
-            "type": "boolean"
-          }
-        }
       },
       "IncentiveIdResponse": {
         "required": [
@@ -17622,6 +18460,50 @@
         },
         "description": "Summary details"
       },
+      "CSIPFactorResponse": {
+        "required": [
+          "createDateTime",
+          "createdBy",
+          "id",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Factor type id",
+            "format": "int64"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Factor comment"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the report was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the report"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the report was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the report"
+          }
+        },
+        "description": "Contributory factors"
+      },
       "CSIPResponse": {
         "required": [
           "areaOfWork",
@@ -17629,7 +18511,6 @@
           "createDateTime",
           "createdBy",
           "decision",
-          "documents",
           "id",
           "investigation",
           "location",
@@ -17637,6 +18518,7 @@
           "plans",
           "proActiveReferral",
           "reportDetails",
+          "reportedBy",
           "reportedDate",
           "reviews",
           "saferCustodyScreening",
@@ -17809,50 +18691,6 @@
           }
         },
         "description": "DecisionAndActions"
-      },
-      "FactorResponse": {
-        "required": [
-          "createDateTime",
-          "createdBy",
-          "id",
-          "type"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "Factor type id",
-            "format": "int64"
-          },
-          "type": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "comment": {
-            "type": "string",
-            "description": "Factor comment"
-          },
-          "createDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "The date and time the report was created",
-            "example": "2021-07-05T10:35:17"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "The username of the person who created the report"
-          },
-          "lastModifiedDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "The date and time the report was last updated",
-            "example": "2021-07-05T10:35:17"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "The username of the person who last updated the report"
-          }
-        },
-        "description": "Contributory factors"
       },
       "InterviewDetails": {
         "required": [
@@ -18035,7 +18873,7 @@
             "type": "array",
             "description": "Contributory factors",
             "items": {
-              "$ref": "#/components/schemas/FactorResponse"
+              "$ref": "#/components/schemas/CSIPFactorResponse"
             }
           },
           "knownReasons": {
@@ -18179,11 +19017,11 @@
       },
       "CSIPIdResponse": {
         "required": [
-          "id"
+          "csipId"
         ],
         "type": "object",
         "properties": {
-          "id": {
+          "csipId": {
             "type": "integer",
             "description": "The csip id",
             "format": "int64"

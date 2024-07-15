@@ -732,12 +732,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             )
             .withRequestBody(
               WireMock.matchingJsonPath(
-                "courtEventChargesToUpdate[0].mostSeriousFlag",
-                WireMock.equalTo("false"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
                 "courtEventChargesToUpdate[1].offenceCode",
                 WireMock.equalTo("$COURT_CHARGE_3_OFFENCE_CODE"),
               ),
@@ -764,12 +758,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               WireMock.matchingJsonPath(
                 "courtEventChargesToUpdate[1].resultCode1",
                 WireMock.equalTo(HARDCODED_IMPRISONMENT_RESULT_CODE),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtEventChargesToUpdate[1].mostSeriousFlag",
-                WireMock.equalTo("false"),
               ),
             )
             .withRequestBody(
@@ -804,12 +792,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             )
             .withRequestBody(
               WireMock.matchingJsonPath(
-                "courtEventChargesToCreate[0].mostSeriousFlag",
-                WireMock.equalTo("false"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
                 "courtEventChargesToCreate[1].offenceCode",
                 WireMock.equalTo("$COURT_CHARGE_4_OFFENCE_CODE"),
               ),
@@ -836,12 +818,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               WireMock.matchingJsonPath(
                 "courtEventChargesToCreate[1].resultCode1",
                 WireMock.equalTo(HARDCODED_IMPRISONMENT_RESULT_CODE),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtEventChargesToCreate[1].mostSeriousFlag",
-                WireMock.equalTo("false"),
               ),
             ),
         )
