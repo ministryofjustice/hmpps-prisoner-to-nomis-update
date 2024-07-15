@@ -96,7 +96,7 @@ class LocationsService(
       runCatching {
         mappingService.getMappingGivenDpsId(event.additionalInformation.id).apply {
           telemetryMap["nomisLocationId"] = nomisLocationId.toString()
-          nomisApiService.deactivateLocation(nomisLocationId, DeactivateRequest(false))
+          nomisApiService.deactivateLocation(nomisLocationId, DeactivateRequest(force = false))
           nomisApiService.updateLocationCapacity(nomisLocationId, UpdateCapacityRequest(0, 0))
           nomisApiService.updateLocationCertification(nomisLocationId, UpdateCertificationRequest(0, false))
           // TODO: Need to decide how to define a soft-deleted location
@@ -365,7 +365,7 @@ class LocationsService(
       else -> null
     },
     reactivateDate = location.proposedReactivationDate,
-    force = false,
+    force = location.permanentlyDeactivated,
   )
 
   private fun isDpsCreated(additionalInformation: LocationAdditionalInformation) =

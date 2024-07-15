@@ -71,6 +71,28 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
     }
   """.trimIndent()
 
+  fun locationApiResponseDeactivated(permanentlyDeactivated: Boolean = false) = """
+    {
+      "id": "$DPS_ID",
+      "prisonId": "MDI",
+      "code": "001",
+      "pathHierarchy": "A-1-001",
+      "locationType": "CELL",
+      "active": false,
+      "orderWithinParentLocation": 1,
+      "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",
+      "key": "MDI-A-1-001",
+      "status": "INACTIVE",
+      "isResidential": true,
+      "deactivatedDate": "2024-02-01",
+      "deactivatedReason": "MOTHBALLED",
+      "proposedReactivationDate": "2024-02-14",
+      "permanentlyDeactivated": $permanentlyDeactivated,
+      "lastModifiedBy": "me",
+      "lastModifiedDate": "2024-05-25"
+    }
+  """.trimIndent()
+
   val locationMappingResponse = """
     {
       "dpsLocationId": "$DPS_ID",
@@ -465,32 +487,11 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
 
   @Nested
   inner class Deactivate {
-    val locationApiResponseDeactivated = """
-    {
-      "id": "$DPS_ID",
-      "prisonId": "MDI",
-      "code": "001",
-      "pathHierarchy": "A-1-001",
-      "locationType": "CELL",
-      "active": false,
-      "orderWithinParentLocation": 1,
-      "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",
-      "key": "MDI-A-1-001",
-      "status": "INACTIVE",
-      "isResidential": true,
-      "deactivatedDate": "2024-02-01",
-      "deactivatedReason": "MOTHBALLED",
-      "proposedReactivationDate": "2024-02-14",
-      "lastModifiedBy": "me",
-      "lastModifiedDate": "2024-05-25"
-    }
-    """.trimIndent()
-
     @Nested
     inner class WhenLocationHasBeenDeactivatedInDPS {
       @BeforeEach
       fun setUp() {
-        locationsApi.stubGetLocation(DPS_ID, false, locationApiResponseDeactivated)
+        locationsApi.stubGetLocation(DPS_ID, false, locationApiResponseDeactivated())
         mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
         nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/deactivate")
         publishLocationDomainEvent("location.inside.prison.deactivated")
@@ -517,7 +518,46 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
             putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/deactivate"))
               .withRequestBody(matchingJsonPath("reasonCode", equalTo("I")))
               .withRequestBody(matchingJsonPath("reactivateDate", equalTo("2024-02-14")))
-              .withRequestBody(matchingJsonPath("deactivateDate", equalTo("2024-02-01"))),
+              .withRequestBody(matchingJsonPath("deactivateDate", equalTo("2024-02-01")))
+              .withRequestBody(matchingJsonPath("force", equalTo("false"))),
+          )
+        }
+      }
+    }
+
+    @Nested
+    inner class WhenLocationHasBeenPermanentlyDeactivatedInDPS {
+      @BeforeEach
+      fun setUp() {
+        locationsApi.stubGetLocation(DPS_ID, false, locationApiResponseDeactivated(permanentlyDeactivated = true))
+        mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/deactivate")
+        publishLocationDomainEvent("location.inside.prison.deactivated")
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            Mockito.eq("location-deactivate-success"),
+            org.mockito.kotlin.check {
+              assertThat(it["dpsId"]).isEqualTo(DPS_ID)
+              assertThat(it["nomisId"]).isEqualTo(NOMIS_ID.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Test
+      fun `will call nomis api correctly to deactivate the location`() {
+        await untilAsserted {
+          nomisApi.verify(
+            putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/deactivate"))
+              .withRequestBody(matchingJsonPath("reasonCode", equalTo("I")))
+              .withRequestBody(matchingJsonPath("reactivateDate", equalTo("2024-02-14")))
+              .withRequestBody(matchingJsonPath("deactivateDate", equalTo("2024-02-01")))
+              .withRequestBody(matchingJsonPath("force", equalTo("true"))),
           )
         }
       }
