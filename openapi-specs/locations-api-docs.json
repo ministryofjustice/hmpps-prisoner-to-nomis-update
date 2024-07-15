@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-06-18.1860.7ab0025"
+    "version": "2024-07-09.2221.7855edc"
   },
   "servers": [
     {
@@ -42,6 +42,10 @@
     {
       "name": "Constants",
       "description": "Returns location reference data."
+    },
+    {
+      "name": "Location Occupancy",
+      "description": "Returns location information with occupancy information"
     },
     {
       "name": "Signed Operation Capacity",
@@ -253,6 +257,92 @@
         "responses": {
           "200": {
             "description": "Returns cell location changes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Location not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/{id}/used-for-type": {
+      "put": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Update Used For types at cell location below the specified location",
+        "description": "Requires role MAINTAIN_LOCATIONS and write scope",
+        "operationId": "updateUsedForType",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The location Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The location Id",
+              "example": "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+            },
+            "example": "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserForTypeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Returns details of the updated locations",
             "content": {
               "application/json": {
                 "schema": {
@@ -2822,6 +2912,125 @@
         }
       }
     },
+    "/location-occupancy/cells-with-capacity/{prisonId}": {
+      "get": {
+        "tags": [
+          "Location Occupancy"
+        ],
+        "summary": "List of cells by group at prison which have capacity.",
+        "description": "Requires role VIEW_LOCATIONS",
+        "operationId": "getCellsWithCapacity",
+        "parameters": [
+          {
+            "name": "prisonId",
+            "in": "path",
+            "description": "Prison Id",
+            "required": true,
+            "schema": {
+              "maxLength": 5,
+              "minLength": 3,
+              "pattern": "^[A-Z]{2}I|ZZGHI$",
+              "type": "string",
+              "description": "Prison Id",
+              "example": "MDI"
+            },
+            "example": "MDI"
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "description": "Location Id in the prison below which to find cells",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Location Id in the prison below which to find cells",
+              "example": "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+            },
+            "example": "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          {
+            "name": "groupName",
+            "in": "query",
+            "description": "Group name for a sub location to find cells",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Group name for a sub location to find cells",
+              "example": "Wing A"
+            },
+            "example": "Wing A"
+          },
+          {
+            "name": "specialistCellType",
+            "in": "query",
+            "description": "Only return cells of a specified specialist type",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Only return cells of a specified specialist type",
+              "example": "CSU"
+            },
+            "example": "CSU"
+          },
+          {
+            "name": "includePrisonerInformation",
+            "in": "query",
+            "description": "Include prisoner details in this cell",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Include prisoner details in this cell",
+              "default": "false"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns cells with capacity available",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CellWithSpecialistCellTypes"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires the VIEW_LOCATIONS role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/constants/used-for-type": {
       "get": {
         "tags": [
@@ -3855,6 +4064,42 @@
         },
         "description": "Non Residential Usage"
       },
+      "UpdateUserForTypeRequest": {
+        "required": [
+          "usedFor"
+        ],
+        "type": "object",
+        "properties": {
+          "usedFor": {
+            "uniqueItems": true,
+            "type": "array",
+            "description": "Used for type of a location",
+            "example": "STANDARD ACCOMMODATION",
+            "items": {
+              "type": "string",
+              "description": "Used for type of a location",
+              "example": "STANDARD ACCOMMODATION",
+              "enum": [
+                "STANDARD_ACCOMMODATION",
+                "PERSONALITY_DISORDER",
+                "THERAPEUTIC_COMMUNITY",
+                "PIPE",
+                "SUB_MISUSE_DRUG_RECOVERY",
+                "VULNERABLE_PRISONERS",
+                "FIRST_NIGHT_CENTRE",
+                "REMAND",
+                "MOTHER_AND_BABY",
+                "YOUNG_PERSONS",
+                "HIGH_SECURITY",
+                "CLOSE_SUPERVISION_CENTRE",
+                "PATHWAY_TO_PROG",
+                "IPP_LONG_TERM_SENTENCES"
+              ]
+            }
+          }
+        },
+        "description": "Request to update User-for-type in a residential location"
+      },
       "TemporaryDeactivationLocationRequest": {
         "required": [
           "deactivationReason"
@@ -4315,6 +4560,7 @@
           "lastModifiedDate",
           "locationType",
           "pathHierarchy",
+          "permanentlyDeactivated",
           "prisonId"
         ],
         "type": "object",
@@ -4554,6 +4800,12 @@
             "description": "Proposed Date for location reactivation",
             "format": "date",
             "example": "2026-01-24"
+          },
+          "permanentlyDeactivated": {
+            "type": "boolean",
+            "description": "Indicates that this location has been permanently deactivated and should not be changed in NOMIS",
+            "example": false,
+            "default": false
           },
           "parentId": {
             "type": "string",
@@ -5397,10 +5649,43 @@
           }
         }
       },
+      "Alert": {
+        "required": [
+          "active",
+          "alertCode",
+          "alertType",
+          "expired"
+        ],
+        "type": "object",
+        "properties": {
+          "alertType": {
+            "type": "string",
+            "description": "Alert type",
+            "example": "X"
+          },
+          "alertCode": {
+            "type": "string",
+            "description": "Alert code",
+            "example": "XA"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Active alert",
+            "example": true
+          },
+          "expired": {
+            "type": "boolean",
+            "description": "Expired",
+            "example": false
+          }
+        },
+        "description": "Prisoner alerts"
+      },
       "Prisoner": {
         "required": [
           "cellLocation",
           "firstName",
+          "gender",
           "lastName",
           "prisonerNumber"
         ],
@@ -5410,16 +5695,6 @@
             "type": "string",
             "description": "Prisoner Information",
             "example": "A1234AA"
-          },
-          "firstName": {
-            "type": "string",
-            "description": "Prisoner first name",
-            "example": "Dave"
-          },
-          "lastName": {
-            "type": "string",
-            "description": "Prisoner last name",
-            "example": "Jones"
           },
           "prisonId": {
             "type": "string",
@@ -5435,6 +5710,38 @@
             "type": "string",
             "description": "Cell location of the prisoner",
             "example": "1-1-001"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "Prisoner first name",
+            "example": "Dave"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Prisoner last name",
+            "example": "Jones"
+          },
+          "gender": {
+            "type": "string",
+            "description": "Prisoner gender",
+            "example": "Male"
+          },
+          "csra": {
+            "type": "string",
+            "description": "Prisoner CSRA",
+            "example": "High"
+          },
+          "category": {
+            "type": "string",
+            "description": "Prisoner category",
+            "example": "C"
+          },
+          "alerts": {
+            "type": "array",
+            "description": "Prisoner alerts",
+            "items": {
+              "$ref": "#/components/schemas/Alert"
+            }
           }
         },
         "description": "Prisoner Information"
@@ -5523,9 +5830,6 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "unpaged": {
-            "type": "boolean"
-          },
           "pageSize": {
             "type": "integer",
             "format": "int32"
@@ -5536,6 +5840,9 @@
           "pageNumber": {
             "type": "integer",
             "format": "int32"
+          },
+          "unpaged": {
+            "type": "boolean"
           }
         }
       },
@@ -5763,6 +6070,123 @@
           }
         }
       },
+      "CellType": {
+        "title": "List of specialist types for the cell.",
+        "required": [
+          "typeCode",
+          "typeDescription"
+        ],
+        "type": "object",
+        "properties": {
+          "typeCode": {
+            "title": "Specialist Cell Type Code",
+            "type": "string",
+            "enum": [
+              "ACCESSIBLE_CELL",
+              "BIOHAZARD_DIRTY_PROTEST",
+              "CONSTANT_SUPERVISION",
+              "CAT_A",
+              "CSU",
+              "DRY",
+              "ESCAPE_LIST",
+              "ISOLATION_DISEASES",
+              "LISTENER_CRISIS",
+              "LOCATE_FLAT_CELL",
+              "MEDICAL",
+              "MOTHER_AND_BABY",
+              "SAFE_CELL",
+              "UNFURNISHED"
+            ]
+          },
+          "typeDescription": {
+            "title": "Specialist Cell Type Description",
+            "type": "string"
+          }
+        },
+        "example": {
+          "typeCode": "LISTENER_CRISIS",
+          "typeDescription": "Listener / crisis cell"
+        }
+      },
+      "CellWithSpecialistCellTypes": {
+        "required": [
+          "id",
+          "key",
+          "maxCapacity",
+          "noOfOccupants",
+          "pathHierarchy",
+          "prisonId",
+          "prisonersInCell",
+          "specialistCellTypes",
+          "workingCapacity"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "title": "Location identifier.",
+            "type": "string",
+            "format": "uuid",
+            "example": "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "prisonId": {
+            "type": "string",
+            "description": "Prison ID",
+            "example": "MDI"
+          },
+          "pathHierarchy": {
+            "type": "string",
+            "description": "Full path of the location within the prison",
+            "example": "A-1-001"
+          },
+          "noOfOccupants": {
+            "title": "Current occupancy of location.",
+            "type": "integer",
+            "format": "int32",
+            "example": 1
+          },
+          "maxCapacity": {
+            "title": "Max capacity of the location.",
+            "type": "integer",
+            "format": "int32",
+            "example": 2
+          },
+          "workingCapacity": {
+            "title": "Working capacity of the location.",
+            "type": "integer",
+            "format": "int32",
+            "example": 1
+          },
+          "localName": {
+            "title": "Local Name of the location.",
+            "type": "string",
+            "example": "RES-HB1-ALE"
+          },
+          "specialistCellTypes": {
+            "title": "List of specialist types for the cell.",
+            "type": "array",
+            "example": {
+              "typeCode": "LISTENER_CRISIS",
+              "typeDescription": "Listener / crisis cell"
+            },
+            "items": {
+              "$ref": "#/components/schemas/CellType"
+            }
+          },
+          "prisonersInCell": {
+            "title": "List prisoners in this cell",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Prisoner"
+            }
+          },
+          "key": {
+            "type": "string",
+            "description": "Business Key for a location",
+            "example": "MDI-A-1-001"
+          }
+        },
+        "description": "Cell with specialist cell attributes details"
+      },
       "Constant": {
         "required": [
           "description",
@@ -5771,12 +6195,22 @@
         "type": "object",
         "properties": {
           "key": {
-            "type": "string"
+            "type": "string",
+            "description": "Code of reference information",
+            "example": "ACCESSIBLE_CELL"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Description of reference code",
+            "example": "Accessible cell"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "description": "Additional information about this reference code",
+            "example": "Some useful extra info"
           }
-        }
+        },
+        "description": "Reference data information"
       },
       "CompoundConstant": {
         "required": [
@@ -5787,18 +6221,24 @@
         "type": "object",
         "properties": {
           "key": {
-            "type": "string"
+            "type": "string",
+            "description": "Code of reference information",
+            "example": "ACCESSIBLE_CELL"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Description of reference code",
+            "example": "Accessible cell"
           },
           "values": {
             "type": "array",
+            "description": "Sub list of reference data values",
             "items": {
               "$ref": "#/components/schemas/Constant"
             }
           }
-        }
+        },
+        "description": "Reference data information"
       }
     },
     "securitySchemes": {

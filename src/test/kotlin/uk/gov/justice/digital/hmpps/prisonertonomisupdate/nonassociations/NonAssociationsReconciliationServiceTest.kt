@@ -40,7 +40,7 @@ class NonAssociationsReconciliationServiceTest {
 
     val mismatch = nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2))
 
-    assertThat(mismatch).asList().containsExactly(
+    assertThat(mismatch).containsExactly(
       MismatchNonAssociation(
         NonAssociationIdResponse(OFFENDER1, OFFENDER2),
         null,
@@ -69,7 +69,7 @@ class NonAssociationsReconciliationServiceTest {
 
     val mismatch = nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2))
 
-    assertThat(mismatch).asList().containsExactly(
+    assertThat(mismatch).containsExactly(
       MismatchNonAssociation(
         NonAssociationIdResponse(OFFENDER1, OFFENDER2),
         NonAssociationReportDetail(
@@ -94,7 +94,6 @@ class NonAssociationsReconciliationServiceTest {
     )
 
     assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)))
-      .asList()
       .isEmpty()
   }
 
@@ -115,7 +114,6 @@ class NonAssociationsReconciliationServiceTest {
     )
 
     assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)))
-      .asList()
       .isEmpty()
   }
 
@@ -136,7 +134,6 @@ class NonAssociationsReconciliationServiceTest {
     )
 
     assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)))
-      .asList()
       .containsExactly(
         MismatchNonAssociation(
           NonAssociationIdResponse(OFFENDER1, OFFENDER2),
@@ -189,7 +186,6 @@ class NonAssociationsReconciliationServiceTest {
     )
 
     assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)))
-      .asList()
       .isEmpty()
   }
 

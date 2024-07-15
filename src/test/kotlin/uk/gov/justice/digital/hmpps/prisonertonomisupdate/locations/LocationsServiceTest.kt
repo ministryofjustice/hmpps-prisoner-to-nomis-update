@@ -134,12 +134,7 @@ internal class LocationsServiceTest {
       ),
     ),
     orderWithinParentLocation = 4,
-    //    deactivatedDate = ,
-    //    deactivatedReason = ,
-    //    reactivatedDate = ,
     parentId = UUID.fromString(PARENT_DPS_LOCATION_ID),
-    //      parentLocation = ,
-    //      childLocations = ,
     lastModifiedBy = "me",
     lastModifiedDate = "2024-05-25",
   )
