@@ -340,7 +340,7 @@ fun CourtAppearance.toNomisCourtAppearance(
       LocalTime.MIDNIGHT,
     ).toString(),
     // TODO these are MOV_RSN on NOMIS - defaulting to Court Appearance until DPS provide a mapping
-    courtEventType = "CA",
+    courtEventType = "CRT",
     // TODO hard coding until mapping approach decided this.courtCode
     courtId = HARDCODED_COURT,
     outcomeReasonCode = getHardcodedNomisResultCode(this.outcome),

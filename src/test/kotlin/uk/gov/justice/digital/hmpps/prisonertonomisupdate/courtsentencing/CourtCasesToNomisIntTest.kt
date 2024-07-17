@@ -124,7 +124,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               WireMock.matchingJsonPath(
                 "courtAppearance.courtEventType",
                 WireMock.equalTo(
-                  "CA",
+                  "CRT",
                 ),
               ),
             )
