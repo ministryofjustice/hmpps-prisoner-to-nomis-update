@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.groups.Tuple
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.eq
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.mock
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Lo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ProfileRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UsageRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.util.UUID
@@ -61,7 +63,7 @@ internal class LocationsServiceTest {
       ),
     )
 
-    callService()
+    callCreateService()
     verify(nomisApiService).createLocation(
       check {
         assertThat(it.locationType).isEqualTo(CreateLocationRequest.LocationType.CELL)
@@ -88,7 +90,65 @@ internal class LocationsServiceTest {
     )
   }
 
-  private suspend fun callService() {
+  @Test
+  fun `Amend maps to nomis correctly`() = runTest {
+    whenever(
+      locationsMappingService.getMappingGivenDpsId(DPS_LOCATION_ID),
+    ).thenReturn(
+      LocationMappingDto(
+        dpsLocationId = DPS_LOCATION_ID,
+        nomisLocationId = NOMIS_LOCATION_ID,
+        mappingType = LocationMappingDto.MappingType.LOCATION_CREATED,
+      ),
+    )
+    whenever(
+      locationsMappingService.getMappingGivenDpsId(PARENT_DPS_LOCATION_ID),
+    ).thenReturn(
+      LocationMappingDto(
+        dpsLocationId = PARENT_DPS_LOCATION_ID,
+        nomisLocationId = PARENT_NOMIS_LOCATION_ID,
+        mappingType = LocationMappingDto.MappingType.LOCATION_CREATED,
+      ),
+    )
+
+    callAmendService()
+    verify(nomisApiService).updateLocation(
+      eq(NOMIS_LOCATION_ID),
+      check {
+        assertThat(it.locationType).isEqualTo(UpdateLocationRequest.LocationType.CELL)
+        assertThat(it.locationCode).isEqualTo("003")
+        assertThat(it.description).isEqualTo(DPS_KEY)
+        assertThat(it.parentLocationId).isEqualTo(PARENT_NOMIS_LOCATION_ID)
+        assertThat(it.userDescription).isEqualTo("description")
+        assertThat(it.unitType).isEqualTo(UpdateLocationRequest.UnitType.NA)
+        assertThat(it.listSequence).isEqualTo(4)
+        assertThat(it.comment).isEqualTo("comments")
+        assertThat(it.profiles).extracting("profileType", "profileCode").containsExactly(
+          Tuple.tuple(ProfileRequest.ProfileType.HOU_UNIT_ATT, "GC"),
+          Tuple.tuple(ProfileRequest.ProfileType.HOU_USED_FOR, "7"),
+        )
+        assertThat(it.usages).extracting("internalLocationUsageType", "sequence", "capacity").containsExactly(
+          Tuple.tuple(UsageRequest.InternalLocationUsageType.MOVEMENT, 3, 11),
+        )
+      },
+    )
+    verify(nomisApiService).updateLocationCapacity(
+      eq(NOMIS_LOCATION_ID),
+      check {
+        assertThat(it.capacity).isEqualTo(14)
+        assertThat(it.operationalCapacity).isEqualTo(12)
+      },
+    )
+    verify(nomisApiService).updateLocationCertification(
+      eq(NOMIS_LOCATION_ID),
+      check {
+        assertThat(it.certified).isTrue()
+        assertThat(it.cnaCapacity).isEqualTo(13)
+      },
+    )
+  }
+
+  private suspend fun callCreateService() {
     whenever(locationsApiService.getLocation(DPS_LOCATION_ID)).thenReturn(
       newLocation(),
     )
@@ -101,6 +161,21 @@ internal class LocationsServiceTest {
       LocationAdditionalInformation(id = DPS_LOCATION_ID, key = DPS_KEY),
     )
     locationsService.createLocation(location)
+  }
+
+  private suspend fun callAmendService() {
+    whenever(locationsApiService.getLocation(DPS_LOCATION_ID)).thenReturn(
+      newLocation(),
+    )
+    // void whenever(nomisApiService.updateLocation(NOMIS_LOCATION_ID, any())).thenReturn(LocationIdResponse(NOMIS_LOCATION_ID))
+
+    val location = LocationDomainEvent(
+      "TYPE",
+      "version",
+      "description",
+      LocationAdditionalInformation(id = DPS_LOCATION_ID, key = DPS_KEY),
+    )
+    locationsService.amendLocation(location)
   }
 
   private fun newLocation() = LegacyLocation(
