@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-07-12.8288.65a9114"
+    "version": "2024-07-19.8356.7a4b09a"
   },
   "servers": [
     {
@@ -2332,6 +2332,73 @@
                 }
               }
             }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "case-notes-resource"
+        ],
+        "summary": "Deletes a case note",
+        "description": "Deletes the specified case note. Requires ROLE_NOMIS_CASENOTES",
+        "operationId": "deleteCaseNote",
+        "parameters": [
+          {
+            "name": "caseNoteId",
+            "in": "path",
+            "description": "Case note id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Case note id",
+              "example": 1234567
+            },
+            "example": 1234567
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "CaseNote Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseNoteResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CASENOTES",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "CaseNote does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
           }
         }
       }
@@ -6720,6 +6787,80 @@
           },
           "403": {
             "description": "Forbidden, requires role SYNCHRONISATION_REPORTING",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sentencing/court-cases/ids": {
+      "get": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "get court case IDs by filter",
+        "description": "Retrieves a paged list of court case ids by filter. Requires ROLE_NOMIS_SENTENCING.",
+        "operationId": "getCourtCaseIdsByFilter",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "description": "Filter results by court cases that were created on or after the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "description": "Filter results by court cases that were created on or before the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pageable list of ids are returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageCourtCaseIdResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role ROLE_NOMIS_SENTENCING not present",
             "content": {
               "application/json": {
                 "schema": {
@@ -11712,7 +11853,8 @@
           "description": {
             "type": "string"
           }
-        }
+        },
+        "description": "The case note subtype"
       },
       "NomisAudit": {
         "required": [
@@ -15556,6 +15698,69 @@
         },
         "description": "A prison"
       },
+      "CourtCaseIdResponse": {
+        "required": [
+          "caseId"
+        ],
+        "type": "object",
+        "properties": {
+          "caseId": {
+            "type": "integer",
+            "description": "Court case Id",
+            "format": "int64"
+          }
+        },
+        "description": "court case id"
+      },
+      "PageCourtCaseIdResponse": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourtCaseIdResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SortObject"
+            }
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
       "SentenceAdjustmentResponse": {
         "required": [
           "active",
@@ -18412,7 +18617,7 @@
       },
       "Attendee": {
         "required": [
-          "If attended (otherwise contributor)",
+          "attended",
           "createDateTime",
           "createdBy",
           "id"
@@ -18428,14 +18633,17 @@
             "type": "string",
             "description": "Name of attendee/contributor"
           },
-          "Role of attendee/contributor": {
-            "type": "string"
+          "role": {
+            "type": "string",
+            "description": "Role of attendee/contributor"
           },
-          "If attended (otherwise contributor)": {
-            "type": "boolean"
+          "attended": {
+            "type": "boolean",
+            "description": "If attended (otherwise contributor)"
           },
-          "Contribution": {
-            "type": "string"
+          "contribution": {
+            "type": "string",
+            "description": "Contribution"
           },
           "createDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
@@ -18458,7 +18666,7 @@
             "description": "The username of the person who last updated the attendee"
           }
         },
-        "description": "Summary details"
+        "description": "Attendees to the review"
       },
       "CSIPFactorResponse": {
         "required": [
@@ -18512,6 +18720,7 @@
           "createdBy",
           "decision",
           "id",
+          "incidentDate",
           "investigation",
           "location",
           "offender",
@@ -18548,11 +18757,15 @@
             "type": "string",
             "description": "Log number"
           },
-          "incidentDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+          "incidentDate": {
             "type": "string",
             "description": "Date/Time incident occurred",
-            "example": "2021-07-05T10:35:17"
+            "format": "date"
+          },
+          "incidentTime": {
+            "type": "string",
+            "description": "Date/Time incident occurred",
+            "format": "partial-time"
           },
           "type": {
             "$ref": "#/components/schemas/CodeDescription"
@@ -18671,7 +18884,11 @@
           },
           "recordedBy": {
             "type": "string",
-            "description": "Recorded By"
+            "description": "The username of the person who recorded the decision"
+          },
+          "recordedByDisplayName": {
+            "type": "string",
+            "description": "Real name of who recorded the decision"
           },
           "recordedDate": {
             "type": "string",
@@ -18931,30 +19148,30 @@
           },
           "attendees": {
             "type": "array",
-            "description": "Summary details",
+            "description": "Attendees to the review",
             "items": {
               "$ref": "#/components/schemas/Attendee"
             }
           },
           "remainOnCSIP": {
             "type": "boolean",
-            "description": "Summary details"
+            "description": "Whether to remain on CSIP"
           },
           "csipUpdated": {
             "type": "boolean",
-            "description": "Summary details"
+            "description": "If the csip has been updated"
           },
           "caseNote": {
             "type": "boolean",
-            "description": "Summary details"
+            "description": "If a case note was added"
           },
           "closeCSIP": {
             "type": "boolean",
-            "description": "Summary details"
+            "description": "If the csip is closed"
           },
           "peopleInformed": {
             "type": "boolean",
-            "description": "Summary details"
+            "description": "Whether people were informed"
           },
           "summary": {
             "type": "string",
@@ -18978,7 +19195,11 @@
           },
           "createdBy": {
             "type": "string",
-            "description": "The username of the person who created the review"
+            "description": "The username of the person who created/recorded the review"
+          },
+          "createdByDisplayName": {
+            "type": "string",
+            "description": "Real name of who created/recorded the review"
           },
           "lastModifiedDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
