@@ -69,7 +69,7 @@ class LocationsService(
   suspend fun amendLocation(event: LocationDomainEvent) {
     doUpdateLocation(event, "amend") { nomisLocationId, location ->
       nomisApiService.updateLocation(nomisLocationId, toUpdateLocationRequest(location))
-      nomisApiService.updateLocationCapacity(nomisLocationId, UpdateCapacityRequest(location.capacity?.maxCapacity, location.capacity?.maxCapacity))
+      nomisApiService.updateLocationCapacity(nomisLocationId, UpdateCapacityRequest(location.capacity?.maxCapacity, location.capacity?.workingCapacity))
       nomisApiService.updateLocationCertification(
         nomisLocationId,
         UpdateCertificationRequest(location.certification?.capacityOfCertifiedCell ?: 0, location.certification?.certified ?: false),
