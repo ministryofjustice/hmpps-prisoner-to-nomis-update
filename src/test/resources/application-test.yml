@@ -19,6 +19,7 @@ api.base.url:
   locations: http://localhost:8093
   court.sentencing: http://localhost:8094
   alerts: http://localhost:8095
+  casenotes: http://localhost:8096
 
 hmpps.sqs:
   provider: localstack

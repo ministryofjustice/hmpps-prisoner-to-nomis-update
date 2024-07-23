@@ -76,6 +76,11 @@ spring:
             client-id: ${alerts.client.id}
             client-secret: ${alerts.client.secret}
             authorization-grant-type: client_credentials
+          casenotes-api:
+            provider: hmpps-auth
+            client-id: ${casenotes.client.id}
+            client-secret: ${casenotes.client.secret}
+            authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${api.base.url.hmpps-auth}/oauth/token

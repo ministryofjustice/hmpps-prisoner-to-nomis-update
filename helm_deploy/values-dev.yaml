@@ -22,6 +22,8 @@ generic-service:
     API_BASE_URL_NON_ASSOCIATIONS: https://non-associations-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_LOCATIONS: https://locations-inside-prison-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_ALERTS: https://alerts-api-dev.hmpps.service.justice.gov.uk
+    # currently set to self for a mock API until real API is ready
+    API_BASE_URL_CASENOTES: https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk
     FEATURE_EVENT_DELETEALL: true
 
 generic-prometheus-alerts:

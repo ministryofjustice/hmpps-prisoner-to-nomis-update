@@ -131,6 +131,8 @@ generic-service:
       COURT_SENTENCING_CLIENT_SECRET: "COURT_SENTENCING_CLIENT_SECRET"
       ALERTS_CLIENT_ID: "ALERTS_CLIENT_ID"
       ALERTS_CLIENT_SECRET: "ALERTS_CLIENT_SECRET"
+      CASENOTES_CLIENT_ID: "CASENOTES_CLIENT_ID"
+      CASENOTES_CLIENT_SECRET: "CASENOTES_CLIENT_SECRET"
     domain-events-sqs-nomis-update-visit:
       HMPPS_SQS_QUEUES_VISIT_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-visit-dlq:
