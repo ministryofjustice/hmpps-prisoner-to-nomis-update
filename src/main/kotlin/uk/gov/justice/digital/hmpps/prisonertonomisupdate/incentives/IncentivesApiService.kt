@@ -11,45 +11,33 @@ import java.time.LocalDateTime
 @Service
 class IncentivesApiService(@Qualifier("incentivesApiWebClient") private val webClient: WebClient) {
 
-  suspend fun getIncentive(incentiveId: Long): IepDetail {
-    return webClient.get()
-      .uri("/incentive-reviews/id/{incentiveId}", incentiveId)
-      .retrieve()
-      .awaitBody()
-  }
+  suspend fun getIncentive(incentiveId: Long): IepDetail = webClient.get()
+    .uri("/incentive-reviews/id/{incentiveId}", incentiveId)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getCurrentIncentive(bookingId: Long): IepSummary? {
-    return webClient.get()
-      .uri("/incentive-reviews/booking/{bookingId}?with-details=false", bookingId)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
-  }
+  suspend fun getCurrentIncentive(bookingId: Long): IepSummary? = webClient.get()
+    .uri("/incentive-reviews/booking/{bookingId}?with-details=false", bookingId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
-  suspend fun getGlobalIncentiveLevel(incentiveLevelCode: String): IncentiveLevel {
-    return webClient.get()
-      .uri("/incentive/levels/{incentiveLevelCode}?with-inactive=true", incentiveLevelCode)
-      .retrieve()
-      .awaitBody()
-  }
+  suspend fun getGlobalIncentiveLevel(incentiveLevelCode: String): IncentiveLevel = webClient.get()
+    .uri("/incentive/levels/{incentiveLevelCode}?with-inactive=true", incentiveLevelCode)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getGlobalIncentiveLevelsInOrder(): List<IncentiveLevel> {
-    return webClient.get()
-      .uri("/incentive/levels?with-inactive=true")
-      .retrieve()
-      .awaitBody()
-  }
+  suspend fun getGlobalIncentiveLevelsInOrder(): List<IncentiveLevel> = webClient.get()
+    .uri("/incentive/levels?with-inactive=true")
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getPrisonIncentiveLevel(prisonId: String, incentiveLevelCode: String): PrisonIncentiveLevel {
-    return webClient.get()
-      .uri("/incentive/prison-levels/{prisonId}/level/{incentiveLevelCode}", prisonId, incentiveLevelCode)
-      .retrieve()
-      .awaitBody()
-  }
+  suspend fun getPrisonIncentiveLevel(prisonId: String, incentiveLevelCode: String): PrisonIncentiveLevel = webClient.get()
+    .uri("/incentive/prison-levels/{prisonId}/level/{incentiveLevelCode}", prisonId, incentiveLevelCode)
+    .retrieve()
+    .awaitBody()
 }
 
-fun List<IncentiveLevel>.toCodeList(): List<String> {
-  return this.map { it.code }
-}
+fun List<IncentiveLevel>.toCodeList(): List<String> = this.map { it.code }
 
 data class IncentiveLevel(
   val code: String,
@@ -69,7 +57,6 @@ data class IepDetail(
   val iepDate: LocalDate,
   val iepTime: LocalDateTime,
   val agencyId: String,
-  val locationId: String? = null,
   val userId: String?,
   val auditModuleName: String? = null,
 )
