@@ -14,9 +14,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.typeReference
 @Service
 class LocationsApiService(
   @Qualifier("locationsApiWebClient") private val webClient: WebClient,
-  @Value("\${hmpps.web-client.casenotes.max-retries:3}") private val maxRetryAttempts: Long,
-  @Value("\${hmpps.web-client.casenotes.backoff-millis:100}") private val backoffMillis: Long,
-) : RetryApiService(maxRetryAttempts, backoffMillis) {
+  @Value("\${hmpps.web-client.casenotes.max-retries:#{null}}") private val maxRetryAttempts: Long?,
+  @Value("\${hmpps.web-client.casenotes.backoff-millis:#{null}}") private val backoffMillis: Long?,
+  retryApiService: RetryApiService,
+) {
+  private val backoffSpec = retryApiService.getBackoffSpec(maxRetryAttempts, backoffMillis)
+
   suspend fun getLocation(id: String, includeHistory: Boolean = false): LegacyLocation {
     return webClient.get()
       .uri {
@@ -26,7 +29,7 @@ class LocationsApiService(
       }
       .retrieve()
       .bodyToMono(LegacyLocation::class.java)
-      .withRetryPolicy()
+      .retryWhen(backoffSpec)
       .awaitSingle()
   }
 
@@ -43,7 +46,7 @@ class LocationsApiService(
       }
       .retrieve()
       .bodyToMono(typeReference<RestResponsePage<LegacyLocation>>())
-      .withRetryPolicy()
+      .retryWhen(backoffSpec)
       .awaitSingle()
   }
 }

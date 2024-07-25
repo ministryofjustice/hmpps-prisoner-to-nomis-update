@@ -13,12 +13,13 @@ import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiExtension.Companion.locationsApi
 
 private const val LOCATION_ID = "2475f250-434a-4257-afe7-b911f1773a4d"
 
 @SpringAPIServiceTest
-@Import(LocationsApiService::class, LocationsConfiguration::class)
+@Import(LocationsApiService::class, LocationsConfiguration::class, RetryApiService::class)
 internal class LocationsApiServiceTest {
 
   @Autowired

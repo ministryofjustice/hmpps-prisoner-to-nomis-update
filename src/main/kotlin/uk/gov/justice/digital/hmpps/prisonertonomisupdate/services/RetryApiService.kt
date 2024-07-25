@@ -4,24 +4,29 @@ import io.netty.channel.ConnectTimeoutException
 import io.netty.handler.timeout.ReadTimeoutException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import reactor.core.publisher.Mono
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import reactor.util.retry.Retry
+import reactor.util.retry.RetryBackoffSpec
 import java.net.SocketException
 import java.time.Duration
 
-abstract class RetryApiService(
-  maxRetryAttempts: Long,
-  backoffMillis: Long,
+@Service
+class RetryApiService(
+  @Value("\${hmpps.web-client.max-retries:3}") private val maxRetryAttempts: Long,
+  @Value("\${hmpps.web-client.backoff-millis:100}") private val backoffMillis: Long,
 ) {
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  private val backoffSpec = Retry.backoff(maxRetryAttempts, Duration.ofMillis(backoffMillis))
-    .filter { isTimeoutException(it) }
-    .doBeforeRetry { logRetrySignal(it) }
-
-  fun <T> Mono<T>.withRetryPolicy(): Mono<T> = this.retryWhen(backoffSpec)
+  fun getBackoffSpec(maxRetryAttempts: Long?, backoffMillis: Long?): RetryBackoffSpec =
+    Retry.backoff(
+      maxRetryAttempts ?: this.maxRetryAttempts,
+      Duration.ofMillis(backoffMillis ?: this.backoffMillis),
+    )
+      .filter { isTimeoutException(it) }
+      .doBeforeRetry { logRetrySignal(it) }
 
   private fun isTimeoutException(it: Throwable): Boolean =
     // Timeout for NO_RESPONSE is wrapped in a WebClientRequestException
