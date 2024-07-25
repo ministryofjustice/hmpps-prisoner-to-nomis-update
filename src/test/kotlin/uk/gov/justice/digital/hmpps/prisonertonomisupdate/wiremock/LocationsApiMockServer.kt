@@ -53,6 +53,39 @@ class LocationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetLocationSlowThenQuick(id: String, response: String) {
+    stubFor(
+      get(urlPathEqualTo("/sync/id/$id"))
+        .inScenario("Timeout Locations Scenario")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withFixedDelay(1100),
+        )
+        .willSetStateTo("Cause Locations 1"),
+    )
+
+    stubFor(
+      get(urlPathEqualTo("/sync/id/$id"))
+        .inScenario("Timeout Locations Scenario")
+        .whenScenarioStateIs("Cause Locations 1")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withFixedDelay(1100),
+        )
+        .willSetStateTo("Cause Locations Success"),
+    )
+
+    stubFor(
+      get(urlPathEqualTo("/sync/id/$id"))
+        .inScenario("Timeout Locations Scenario")
+        .whenScenarioStateIs("Cause Locations Success")
+        .willReturn(okJson(response))
+        .willSetStateTo(Scenario.STARTED),
+    )
+  }
+
   fun stubGetLocationWithError(id: String, includeHistory: Boolean, status: Int = 500) {
     stubFor(
       get(urlPathEqualTo("/sync/id/$id"))
