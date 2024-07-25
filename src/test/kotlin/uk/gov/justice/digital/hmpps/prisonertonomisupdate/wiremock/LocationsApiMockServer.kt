@@ -9,7 +9,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.jsonResponse
 import com.github.tomakehurst.wiremock.client.WireMock.okJson
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
-import com.github.tomakehurst.wiremock.http.Fault
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
@@ -54,21 +53,14 @@ class LocationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetLocationWithError(id: String, includeHistory: Boolean, status: Int = 500) {
-    stubFor(
-      get(urlPathEqualTo("/sync/id/$id"))
-        .withQueryParam("includeHistory", equalTo(includeHistory.toString()))
-        .willReturn(jsonResponse("""{ "error": "some error" }""", status)),
-    )
-  }
-
-  fun stubGetLocationWithTimeoutFollowedBySuccess(id: String, response: String) {
+  fun stubGetLocationSlowThenQuick(id: String, response: String) {
     stubFor(
       get(urlPathEqualTo("/sync/id/$id"))
         .inScenario("Timeout Locations Scenario")
         .willReturn(
-          jsonResponse("""{ "error": "some error" }""", 500)
-            .withFault(Fault.CONNECTION_RESET_BY_PEER),
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withFixedDelay(1100),
         )
         .willSetStateTo("Cause Locations 1"),
     )
@@ -78,8 +70,9 @@ class LocationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         .inScenario("Timeout Locations Scenario")
         .whenScenarioStateIs("Cause Locations 1")
         .willReturn(
-          jsonResponse("""{ "error": "some error" }""", 500)
-            .withFault(Fault.CONNECTION_RESET_BY_PEER),
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withFixedDelay(1100),
         )
         .willSetStateTo("Cause Locations Success"),
     )
@@ -90,6 +83,14 @@ class LocationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         .whenScenarioStateIs("Cause Locations Success")
         .willReturn(okJson(response))
         .willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetLocationWithError(id: String, includeHistory: Boolean, status: Int = 500) {
+    stubFor(
+      get(urlPathEqualTo("/sync/id/$id"))
+        .withQueryParam("includeHistory", equalTo(includeHistory.toString()))
+        .willReturn(jsonResponse("""{ "error": "some error" }""", status)),
     )
   }
 

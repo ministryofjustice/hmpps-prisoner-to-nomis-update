@@ -99,7 +99,7 @@ internal class LocationsApiServiceTest {
 
     @Test
     fun `when a timeout occurs the call is retried`() = runTest {
-      locationsApi.stubGetLocationWithTimeoutFollowedBySuccess(LOCATION_ID, response)
+      locationsApi.stubGetLocationSlowThenQuick(LOCATION_ID, response)
 
       val location = locationsApiService.getLocation(LOCATION_ID)
 

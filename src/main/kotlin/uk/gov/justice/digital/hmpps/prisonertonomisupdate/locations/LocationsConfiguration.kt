@@ -15,8 +15,8 @@ import java.time.Duration
 @Configuration
 class LocationsConfiguration(
   @Value("\${api.base.url.locations}") val baseUrl: String,
-  @Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
-  @Value("\${api.timeout:90s}") val timeout: Duration,
+  @Value("\${api.locations.health-timeout:2s}") val healthTimeout: Duration,
+  @Value("\${api.locations.timeout:90s}") val timeout: Duration,
 ) {
 
   @Bean
