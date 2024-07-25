@@ -95,5 +95,14 @@ internal class LocationsApiServiceTest {
         locationsApiService.getLocation(LOCATION_ID)
       }
     }
+
+    @Test
+    fun `when a timeout occurs the call is retried`() = runTest {
+      locationsApi.stubGetLocationWithTimeoutFollowedBySuccess(LOCATION_ID, response)
+
+      val location = locationsApiService.getLocation(LOCATION_ID)
+
+      assertThat(location.pathHierarchy).isEqualTo("A-1-001")
+    }
   }
 }
