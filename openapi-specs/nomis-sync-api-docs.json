@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-07-19.8356.7a4b09a"
+    "version": "2024-07-29.8418.36c3e4f"
   },
   "servers": [
     {
@@ -6798,80 +6798,6 @@
         }
       }
     },
-    "/sentencing/court-cases/ids": {
-      "get": {
-        "tags": [
-          "sentencing-resource"
-        ],
-        "summary": "get court case IDs by filter",
-        "description": "Retrieves a paged list of court case ids by filter. Requires ROLE_NOMIS_SENTENCING.",
-        "operationId": "getCourtCaseIdsByFilter",
-        "parameters": [
-          {
-            "name": "pageRequest",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/Pageable"
-            }
-          },
-          {
-            "name": "fromDate",
-            "in": "query",
-            "description": "Filter results by court cases that were created on or after the given date",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            },
-            "example": "2021-11-03"
-          },
-          {
-            "name": "toDate",
-            "in": "query",
-            "description": "Filter results by court cases that were created on or before the given date",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            },
-            "example": "2021-11-03"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Pageable list of ids are returned",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PageCourtCaseIdResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden to access this endpoint when role ROLE_NOMIS_SENTENCING not present",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/schedules/max-id": {
       "get": {
         "tags": [
@@ -7509,6 +7435,72 @@
           },
           "403": {
             "description": "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/csip/to-migrate": {
+      "get": {
+        "tags": [
+          "csip-resource"
+        ],
+        "summary": "Gets csips for an offender",
+        "description": "Retrieves csips for a prisoner from all bookings. Requires ROLE_NOMIS_CSIP",
+        "operationId": "getCSIPsToMigrate",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender No AKA prisoner number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender No AKA prisoner number",
+              "example": "A1234AK"
+            },
+            "example": "A1234AK"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSIPs Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrisonerCSIPsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CSIP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prisoner does not exist or has no csips",
             "content": {
               "application/json": {
                 "schema": {
@@ -9356,7 +9348,7 @@
           "200": {
             "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CSIPResponse"
                 }
@@ -9450,7 +9442,7 @@
           "200": {
             "description": "Pageable list of ids are returned",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/PageCSIPIdResponse"
                 }
@@ -9613,7 +9605,7 @@
           "200": {
             "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "type": "integer",
                   "format": "int64"
@@ -9633,6 +9625,146 @@
           },
           "403": {
             "description": "Forbidden, requires role NOMIS_CSIP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/court-cases/{id}": {
+      "get": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "get a court case, migration version without offenderNo validation",
+        "description": "Requires role NOMIS_SENTENCING. Retrieves a court case by id",
+        "operationId": "getCourtCaseForMigration",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Court case id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Court case id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the court case details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtCaseResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Court case not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/court-cases/ids": {
+      "get": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "get court case IDs by filter",
+        "description": "Retrieves a paged list of court case ids by filter. Requires ROLE_NOMIS_SENTENCING.",
+        "operationId": "getCourtCaseIdsByFilter",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "description": "Filter results by court cases that were created on or after the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "description": "Filter results by court cases that were created on or before the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pageable list of ids are returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageCourtCaseIdResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role ROLE_NOMIS_SENTENCING not present",
             "content": {
               "application/json": {
                 "schema": {
@@ -13691,6 +13823,7 @@
       },
       "CreateCaseNoteResponse": {
         "required": [
+          "bookingId",
           "id"
         ],
         "type": "object",
@@ -13698,6 +13831,11 @@
           "id": {
             "type": "integer",
             "description": "The id of this case note",
+            "format": "int64"
+          },
+          "bookingId": {
+            "type": "integer",
+            "description": "The booking id of this case note (which is the prisoner's latest at creation time)",
             "format": "int64"
           }
         },
@@ -15698,69 +15836,6 @@
         },
         "description": "A prison"
       },
-      "CourtCaseIdResponse": {
-        "required": [
-          "caseId"
-        ],
-        "type": "object",
-        "properties": {
-          "caseId": {
-            "type": "integer",
-            "description": "Court case Id",
-            "format": "int64"
-          }
-        },
-        "description": "court case id"
-      },
-      "PageCourtCaseIdResponse": {
-        "type": "object",
-        "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "size": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "content": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CourtCaseIdResponse"
-            }
-          },
-          "number": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
-          },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
-          "empty": {
-            "type": "boolean"
-          }
-        }
-      },
       "SentenceAdjustmentResponse": {
         "required": [
           "active",
@@ -16742,6 +16817,713 @@
           }
         },
         "description": "Details of a prisoner merge"
+      },
+      "Actions": {
+        "required": [
+          "csraOrRsraReview",
+          "nonAssociationsUpdated",
+          "observationBook",
+          "openCSIPAlert",
+          "serviceReferral",
+          "simReferral",
+          "unitOrCellMove"
+        ],
+        "type": "object",
+        "properties": {
+          "openCSIPAlert": {
+            "type": "boolean"
+          },
+          "nonAssociationsUpdated": {
+            "type": "boolean"
+          },
+          "observationBook": {
+            "type": "boolean"
+          },
+          "unitOrCellMove": {
+            "type": "boolean"
+          },
+          "csraOrRsraReview": {
+            "type": "boolean"
+          },
+          "serviceReferral": {
+            "type": "boolean"
+          },
+          "simReferral": {
+            "type": "boolean"
+          }
+        },
+        "description": "Action list"
+      },
+      "Attendee": {
+        "required": [
+          "attended",
+          "createDateTime",
+          "createdBy",
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Review Attendee/Contributor Id",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of attendee/contributor"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role of attendee/contributor"
+          },
+          "attended": {
+            "type": "boolean",
+            "description": "If attended (otherwise contributor)"
+          },
+          "contribution": {
+            "type": "string",
+            "description": "Contribution"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the attendee was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the attendee"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the attendee was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the attendee"
+          }
+        },
+        "description": "Attendees to the review"
+      },
+      "CSIPFactorResponse": {
+        "required": [
+          "createDateTime",
+          "createdBy",
+          "id",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Factor type id",
+            "format": "int64"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Factor comment"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the report was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the report"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the report was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the report"
+          }
+        },
+        "description": "Contributory factors"
+      },
+      "CSIPResponse": {
+        "required": [
+          "areaOfWork",
+          "bookingId",
+          "createDateTime",
+          "createdBy",
+          "decision",
+          "id",
+          "incidentDate",
+          "investigation",
+          "location",
+          "offender",
+          "plans",
+          "proActiveReferral",
+          "reportDetails",
+          "reportedBy",
+          "reportedDate",
+          "reviews",
+          "saferCustodyScreening",
+          "staffAssaulted",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The csip id",
+            "format": "int64"
+          },
+          "offender": {
+            "$ref": "#/components/schemas/Offender"
+          },
+          "bookingId": {
+            "type": "integer",
+            "description": "The booking id associated with the CSIP",
+            "format": "int64"
+          },
+          "originalAgencyId": {
+            "type": "string",
+            "description": "The original location when the CSIP was created"
+          },
+          "logNumber": {
+            "type": "string",
+            "description": "Log number"
+          },
+          "incidentDate": {
+            "type": "string",
+            "description": "Date/Time incident occurred",
+            "format": "date"
+          },
+          "incidentTime": {
+            "type": "string",
+            "description": "Date/Time incident occurred",
+            "format": "partial-time"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "location": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "areaOfWork": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "reportedBy": {
+            "type": "string",
+            "description": "The person reporting the incident - free text"
+          },
+          "reportedDate": {
+            "type": "string",
+            "description": "Date reported",
+            "format": "date"
+          },
+          "proActiveReferral": {
+            "type": "boolean",
+            "description": "proActive Referral"
+          },
+          "staffAssaulted": {
+            "type": "boolean",
+            "description": "If a staff member was assaulted"
+          },
+          "staffAssaultedName": {
+            "type": "string",
+            "description": "If assaulted, the staff member name"
+          },
+          "reportDetails": {
+            "$ref": "#/components/schemas/ReportDetails"
+          },
+          "saferCustodyScreening": {
+            "$ref": "#/components/schemas/SaferCustodyScreening"
+          },
+          "investigation": {
+            "$ref": "#/components/schemas/InvestigationDetails"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/Decision"
+          },
+          "caseManager": {
+            "type": "string",
+            "description": "Case Manager involved"
+          },
+          "planReason": {
+            "type": "string",
+            "description": "Reason for plan"
+          },
+          "firstCaseReviewDate": {
+            "type": "string",
+            "description": "Date of first review",
+            "format": "date"
+          },
+          "plans": {
+            "type": "array",
+            "description": "CSIP Plans",
+            "items": {
+              "$ref": "#/components/schemas/Plan"
+            }
+          },
+          "reviews": {
+            "type": "array",
+            "description": "CSIP Reviews",
+            "items": {
+              "$ref": "#/components/schemas/Review"
+            }
+          },
+          "documents": {
+            "type": "array",
+            "description": "Associated CSIP document Ids",
+            "items": {
+              "$ref": "#/components/schemas/DocumentIdResponse"
+            }
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the report was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the report"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the report was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the report"
+          }
+        },
+        "description": "CSIP Details"
+      },
+      "Decision": {
+        "required": [
+          "actions"
+        ],
+        "type": "object",
+        "properties": {
+          "conclusion": {
+            "type": "string",
+            "description": "Conclusion & Reason for decision"
+          },
+          "decisionOutcome": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "signedOffRole": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "recordedBy": {
+            "type": "string",
+            "description": "The username of the person who recorded the decision"
+          },
+          "recordedByDisplayName": {
+            "type": "string",
+            "description": "Real name of who recorded the decision"
+          },
+          "recordedDate": {
+            "type": "string",
+            "description": "Recorded Date",
+            "format": "date"
+          },
+          "nextSteps": {
+            "type": "string",
+            "description": "What to do next"
+          },
+          "otherDetails": {
+            "type": "string",
+            "description": "Other information to take into consideration"
+          },
+          "actions": {
+            "$ref": "#/components/schemas/Actions"
+          }
+        },
+        "description": "DecisionAndActions"
+      },
+      "DocumentIdResponse": {
+        "required": [
+          "documentId"
+        ],
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "integer",
+            "description": "The document id",
+            "format": "int64"
+          }
+        },
+        "description": "Document id"
+      },
+      "InterviewDetails": {
+        "required": [
+          "createDateTime",
+          "createdBy",
+          "date",
+          "interviewee",
+          "role"
+        ],
+        "type": "object",
+        "properties": {
+          "interviewee": {
+            "type": "string",
+            "description": "Person being interviewed"
+          },
+          "date": {
+            "type": "string",
+            "description": "date of interview",
+            "format": "date"
+          },
+          "role": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "comments": {
+            "type": "string",
+            "description": "Additional data regarding the interview"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the interview was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the interview"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the interview was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the interview"
+          }
+        },
+        "description": "Interview"
+      },
+      "InvestigationDetails": {
+        "type": "object",
+        "properties": {
+          "staffInvolved": {
+            "type": "string",
+            "description": "Staff involved in the incident"
+          },
+          "evidenceSecured": {
+            "type": "string",
+            "description": "Whether any evidence was secured"
+          },
+          "reasonOccurred": {
+            "type": "string",
+            "description": "Why the incident occurred"
+          },
+          "usualBehaviour": {
+            "type": "string",
+            "description": "Normal behaviour of the offender"
+          },
+          "trigger": {
+            "type": "string",
+            "description": "Offender's trigger"
+          },
+          "protectiveFactors": {
+            "type": "string",
+            "description": "Protective factors"
+          },
+          "interviews": {
+            "type": "array",
+            "description": "Interview",
+            "items": {
+              "$ref": "#/components/schemas/InterviewDetails"
+            }
+          }
+        },
+        "description": "Investigation details of the incident"
+      },
+      "Offender": {
+        "required": [
+          "lastName",
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderNo": {
+            "type": "string",
+            "description": "NOMIS id"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "First name of offender"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Last name of offender"
+          }
+        },
+        "description": "The offender"
+      },
+      "Plan": {
+        "required": [
+          "createDateTime",
+          "createdBy",
+          "createdDate",
+          "id",
+          "identifiedNeed",
+          "intervention",
+          "targetDate"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Plan Id",
+            "format": "int64"
+          },
+          "identifiedNeed": {
+            "type": "string",
+            "description": "Details of the need"
+          },
+          "intervention": {
+            "type": "string",
+            "description": "Intervention plan"
+          },
+          "progression": {
+            "type": "string",
+            "description": "Information regarding progression of plan"
+          },
+          "referredBy": {
+            "type": "string",
+            "description": "The person reporting - free text"
+          },
+          "createdDate": {
+            "type": "string",
+            "description": "When created",
+            "format": "date"
+          },
+          "targetDate": {
+            "type": "string",
+            "description": "Target date of plan",
+            "format": "date"
+          },
+          "closedDate": {
+            "type": "string",
+            "description": "Plan closed date",
+            "format": "date"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the plan was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the plan"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the plan was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the plan"
+          }
+        },
+        "description": "CSIP Plans"
+      },
+      "PrisonerCSIPsResponse": {
+        "required": [
+          "offenderCSIPs"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderCSIPs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CSIPResponse"
+            }
+          }
+        },
+        "description": "The list of CSIPs held against a prisoner"
+      },
+      "ReportDetails": {
+        "required": [
+          "factors",
+          "referralComplete",
+          "saferCustodyTeamInformed"
+        ],
+        "type": "object",
+        "properties": {
+          "releaseDate": {
+            "type": "string",
+            "description": "Date the offender is released",
+            "format": "date"
+          },
+          "involvement": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "concern": {
+            "type": "string",
+            "description": "Concern description"
+          },
+          "factors": {
+            "type": "array",
+            "description": "Contributory factors",
+            "items": {
+              "$ref": "#/components/schemas/CSIPFactorResponse"
+            }
+          },
+          "knownReasons": {
+            "type": "string",
+            "description": "known reasons for the involvement"
+          },
+          "otherInformation": {
+            "type": "string",
+            "description": "Additional information"
+          },
+          "saferCustodyTeamInformed": {
+            "type": "boolean",
+            "description": "If the safer custody team were informed"
+          },
+          "referralComplete": {
+            "type": "boolean",
+            "description": "If the referral has been completed"
+          },
+          "referralCompletedBy": {
+            "type": "string",
+            "description": "Who completed the referral"
+          },
+          "referralCompletedDate": {
+            "type": "string",
+            "description": "Date the referral was completed",
+            "format": "date"
+          }
+        },
+        "description": "Additional information for the CSIP Report"
+      },
+      "Review": {
+        "required": [
+          "attendees",
+          "caseNote",
+          "closeCSIP",
+          "csipUpdated",
+          "id",
+          "peopleInformed",
+          "recordedBy",
+          "recordedDate",
+          "remainOnCSIP",
+          "reviewSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Review Id",
+            "format": "int64"
+          },
+          "reviewSequence": {
+            "type": "integer",
+            "description": "Sequence number",
+            "format": "int32"
+          },
+          "attendees": {
+            "type": "array",
+            "description": "Attendees to the review",
+            "items": {
+              "$ref": "#/components/schemas/Attendee"
+            }
+          },
+          "remainOnCSIP": {
+            "type": "boolean",
+            "description": "Whether to remain on CSIP"
+          },
+          "csipUpdated": {
+            "type": "boolean",
+            "description": "If the csip has been updated"
+          },
+          "caseNote": {
+            "type": "boolean",
+            "description": "If a case note was added"
+          },
+          "closeCSIP": {
+            "type": "boolean",
+            "description": "If the csip is closed"
+          },
+          "peopleInformed": {
+            "type": "boolean",
+            "description": "Whether people were informed"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Summary details"
+          },
+          "nextReviewDate": {
+            "type": "string",
+            "description": "Next Review date",
+            "format": "date"
+          },
+          "closeDate": {
+            "type": "string",
+            "description": "Review closed date",
+            "format": "date"
+          },
+          "recordedDate": {
+            "type": "string",
+            "description": "The date the review was created",
+            "format": "date"
+          },
+          "recordedBy": {
+            "type": "string",
+            "description": "The username of the person who recorded the review"
+          },
+          "recordedByDisplayName": {
+            "type": "string",
+            "description": "Real name of who recorded the review"
+          },
+          "lastModifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the review was last updated",
+            "example": "2021-07-05T10:35:17"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the person who last updated the review"
+          }
+        },
+        "description": "CSIP Reviews"
+      },
+      "SaferCustodyScreening": {
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "recordedBy": {
+            "type": "string",
+            "description": "Who recorded the data"
+          },
+          "recordedDate": {
+            "type": "string",
+            "description": "When the the SCS occurred",
+            "format": "date"
+          },
+          "reasonForDecision": {
+            "type": "string",
+            "description": "Why the decision was made"
+          }
+        },
+        "description": "Safer custody screening"
       },
       "PrisonerCaseNotesResponse": {
         "required": [
@@ -18037,28 +18819,6 @@
         },
         "description": "Status details"
       },
-      "Offender": {
-        "required": [
-          "lastName",
-          "offenderNo"
-        ],
-        "type": "object",
-        "properties": {
-          "offenderNo": {
-            "type": "string",
-            "description": "NOMIS id"
-          },
-          "firstName": {
-            "type": "string",
-            "description": "First name of staff member"
-          },
-          "lastName": {
-            "type": "string",
-            "description": "Last name of staff member"
-          }
-        },
-        "description": "Offender involved in the incident"
-      },
       "OffenderParty": {
         "required": [
           "createDateTime",
@@ -18565,677 +19325,6 @@
         },
         "description": "Incentive information"
       },
-      "DocumentIdResponse": {
-        "required": [
-          "documentId"
-        ],
-        "type": "object",
-        "properties": {
-          "documentId": {
-            "type": "integer",
-            "description": "The document id",
-            "format": "int64"
-          }
-        },
-        "description": "Document id"
-      },
-      "Actions": {
-        "required": [
-          "csraOrRsraReview",
-          "nonAssociationsUpdated",
-          "observationBook",
-          "openCSIPAlert",
-          "serviceReferral",
-          "simReferral",
-          "unitOrCellMove"
-        ],
-        "type": "object",
-        "properties": {
-          "openCSIPAlert": {
-            "type": "boolean"
-          },
-          "nonAssociationsUpdated": {
-            "type": "boolean"
-          },
-          "observationBook": {
-            "type": "boolean"
-          },
-          "unitOrCellMove": {
-            "type": "boolean"
-          },
-          "csraOrRsraReview": {
-            "type": "boolean"
-          },
-          "serviceReferral": {
-            "type": "boolean"
-          },
-          "simReferral": {
-            "type": "boolean"
-          }
-        },
-        "description": "Action list"
-      },
-      "Attendee": {
-        "required": [
-          "attended",
-          "createDateTime",
-          "createdBy",
-          "id"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "Review Attendee/Contributor Id",
-            "format": "int64"
-          },
-          "name": {
-            "type": "string",
-            "description": "Name of attendee/contributor"
-          },
-          "role": {
-            "type": "string",
-            "description": "Role of attendee/contributor"
-          },
-          "attended": {
-            "type": "boolean",
-            "description": "If attended (otherwise contributor)"
-          },
-          "contribution": {
-            "type": "string",
-            "description": "Contribution"
-          },
-          "createDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "The date and time the attendee was created",
-            "example": "2021-07-05T10:35:17"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "The username of the person who created the attendee"
-          },
-          "lastModifiedDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "The date and time the attendee was last updated",
-            "example": "2021-07-05T10:35:17"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "The username of the person who last updated the attendee"
-          }
-        },
-        "description": "Attendees to the review"
-      },
-      "CSIPFactorResponse": {
-        "required": [
-          "createDateTime",
-          "createdBy",
-          "id",
-          "type"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "Factor type id",
-            "format": "int64"
-          },
-          "type": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "comment": {
-            "type": "string",
-            "description": "Factor comment"
-          },
-          "createDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "The date and time the report was created",
-            "example": "2021-07-05T10:35:17"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "The username of the person who created the report"
-          },
-          "lastModifiedDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "The date and time the report was last updated",
-            "example": "2021-07-05T10:35:17"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "The username of the person who last updated the report"
-          }
-        },
-        "description": "Contributory factors"
-      },
-      "CSIPResponse": {
-        "required": [
-          "areaOfWork",
-          "bookingId",
-          "createDateTime",
-          "createdBy",
-          "decision",
-          "id",
-          "incidentDate",
-          "investigation",
-          "location",
-          "offender",
-          "plans",
-          "proActiveReferral",
-          "reportDetails",
-          "reportedBy",
-          "reportedDate",
-          "reviews",
-          "saferCustodyScreening",
-          "staffAssaulted",
-          "type"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "The csip id",
-            "format": "int64"
-          },
-          "offender": {
-            "$ref": "#/components/schemas/Offender"
-          },
-          "bookingId": {
-            "type": "integer",
-            "description": "The booking id associated with the CSIP",
-            "format": "int64"
-          },
-          "originalAgencyId": {
-            "type": "string",
-            "description": "The original location when the CSIP was created"
-          },
-          "logNumber": {
-            "type": "string",
-            "description": "Log number"
-          },
-          "incidentDate": {
-            "type": "string",
-            "description": "Date/Time incident occurred",
-            "format": "date"
-          },
-          "incidentTime": {
-            "type": "string",
-            "description": "Date/Time incident occurred",
-            "format": "partial-time"
-          },
-          "type": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "location": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "areaOfWork": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "reportedBy": {
-            "type": "string",
-            "description": "The person reporting the incident - free text"
-          },
-          "reportedDate": {
-            "type": "string",
-            "description": "Date reported",
-            "format": "date"
-          },
-          "proActiveReferral": {
-            "type": "boolean",
-            "description": "proActive Referral"
-          },
-          "staffAssaulted": {
-            "type": "boolean",
-            "description": "If a staff member was assaulted"
-          },
-          "staffAssaultedName": {
-            "type": "string",
-            "description": "If assaulted, the staff member name"
-          },
-          "reportDetails": {
-            "$ref": "#/components/schemas/ReportDetails"
-          },
-          "saferCustodyScreening": {
-            "$ref": "#/components/schemas/SaferCustodyScreening"
-          },
-          "investigation": {
-            "$ref": "#/components/schemas/InvestigationDetails"
-          },
-          "decision": {
-            "$ref": "#/components/schemas/Decision"
-          },
-          "caseManager": {
-            "type": "string",
-            "description": "Case Manager involved"
-          },
-          "planReason": {
-            "type": "string",
-            "description": "Reason for plan"
-          },
-          "firstCaseReviewDate": {
-            "type": "string",
-            "description": "Date of first review",
-            "format": "date"
-          },
-          "plans": {
-            "type": "array",
-            "description": "CSIP Plans",
-            "items": {
-              "$ref": "#/components/schemas/Plan"
-            }
-          },
-          "reviews": {
-            "type": "array",
-            "description": "CSIP Reviews",
-            "items": {
-              "$ref": "#/components/schemas/Review"
-            }
-          },
-          "documents": {
-            "type": "array",
-            "description": "Associated CSIP document Ids",
-            "items": {
-              "$ref": "#/components/schemas/DocumentIdResponse"
-            }
-          },
-          "createDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "The date and time the report was created",
-            "example": "2021-07-05T10:35:17"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "The username of the person who created the report"
-          },
-          "lastModifiedDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "The date and time the report was last updated",
-            "example": "2021-07-05T10:35:17"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "The username of the person who last updated the report"
-          }
-        },
-        "description": "CSIP Details"
-      },
-      "Decision": {
-        "required": [
-          "actions"
-        ],
-        "type": "object",
-        "properties": {
-          "conclusion": {
-            "type": "string",
-            "description": "Conclusion & Reason for decision"
-          },
-          "decisionOutcome": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "signedOffRole": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "recordedBy": {
-            "type": "string",
-            "description": "The username of the person who recorded the decision"
-          },
-          "recordedByDisplayName": {
-            "type": "string",
-            "description": "Real name of who recorded the decision"
-          },
-          "recordedDate": {
-            "type": "string",
-            "description": "Recorded Date",
-            "format": "date"
-          },
-          "nextSteps": {
-            "type": "string",
-            "description": "What to do next"
-          },
-          "otherDetails": {
-            "type": "string",
-            "description": "Other information to take into consideration"
-          },
-          "actions": {
-            "$ref": "#/components/schemas/Actions"
-          }
-        },
-        "description": "DecisionAndActions"
-      },
-      "InterviewDetails": {
-        "required": [
-          "createDateTime",
-          "createdBy",
-          "date",
-          "interviewee",
-          "role"
-        ],
-        "type": "object",
-        "properties": {
-          "interviewee": {
-            "type": "string",
-            "description": "Person being interviewed"
-          },
-          "date": {
-            "type": "string",
-            "description": "date of interview",
-            "format": "date"
-          },
-          "role": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "comments": {
-            "type": "string",
-            "description": "Additional data regarding the interview"
-          },
-          "createDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "The date and time the interview was created",
-            "example": "2021-07-05T10:35:17"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "The username of the person who created the interview"
-          },
-          "lastModifiedDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "The date and time the interview was last updated",
-            "example": "2021-07-05T10:35:17"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "The username of the person who last updated the interview"
-          }
-        },
-        "description": "Interview"
-      },
-      "InvestigationDetails": {
-        "type": "object",
-        "properties": {
-          "staffInvolved": {
-            "type": "string",
-            "description": "Staff involved in the incident"
-          },
-          "evidenceSecured": {
-            "type": "string",
-            "description": "Whether any evidence was secured"
-          },
-          "reasonOccurred": {
-            "type": "string",
-            "description": "Why the incident occurred"
-          },
-          "usualBehaviour": {
-            "type": "string",
-            "description": "Normal behaviour of the offender"
-          },
-          "trigger": {
-            "type": "string",
-            "description": "Offender's trigger"
-          },
-          "protectiveFactors": {
-            "type": "string",
-            "description": "Protective factors"
-          },
-          "interviews": {
-            "type": "array",
-            "description": "Interview",
-            "items": {
-              "$ref": "#/components/schemas/InterviewDetails"
-            }
-          }
-        },
-        "description": "Investigation details of the incident"
-      },
-      "Plan": {
-        "required": [
-          "createDateTime",
-          "createdBy",
-          "createdDate",
-          "id",
-          "identifiedNeed",
-          "intervention",
-          "targetDate"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "Plan Id",
-            "format": "int64"
-          },
-          "identifiedNeed": {
-            "type": "string",
-            "description": "Details of the need"
-          },
-          "intervention": {
-            "type": "string",
-            "description": "Intervention plan"
-          },
-          "progression": {
-            "type": "string",
-            "description": "Information regarding progression of plan"
-          },
-          "referredBy": {
-            "type": "string",
-            "description": "The person reporting - free text"
-          },
-          "createdDate": {
-            "type": "string",
-            "description": "When created",
-            "format": "date"
-          },
-          "targetDate": {
-            "type": "string",
-            "description": "Target date of plan",
-            "format": "date"
-          },
-          "closedDate": {
-            "type": "string",
-            "description": "Plan closed date",
-            "format": "date"
-          },
-          "createDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "The date and time the plan was created",
-            "example": "2021-07-05T10:35:17"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "The username of the person who created the plan"
-          },
-          "lastModifiedDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "The date and time the plan was last updated",
-            "example": "2021-07-05T10:35:17"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "The username of the person who last updated the plan"
-          }
-        },
-        "description": "CSIP Plans"
-      },
-      "ReportDetails": {
-        "required": [
-          "factors",
-          "referralComplete",
-          "saferCustodyTeamInformed"
-        ],
-        "type": "object",
-        "properties": {
-          "releaseDate": {
-            "type": "string",
-            "description": "Date the offender is released",
-            "format": "date"
-          },
-          "involvement": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "concern": {
-            "type": "string",
-            "description": "Concern description"
-          },
-          "factors": {
-            "type": "array",
-            "description": "Contributory factors",
-            "items": {
-              "$ref": "#/components/schemas/CSIPFactorResponse"
-            }
-          },
-          "knownReasons": {
-            "type": "string",
-            "description": "known reasons for the involvement"
-          },
-          "otherInformation": {
-            "type": "string",
-            "description": "Additional information"
-          },
-          "saferCustodyTeamInformed": {
-            "type": "boolean",
-            "description": "If the safer custody team were informed"
-          },
-          "referralComplete": {
-            "type": "boolean",
-            "description": "If the referral has been completed"
-          },
-          "referralCompletedBy": {
-            "type": "string",
-            "description": "Who completed the referral"
-          },
-          "referralCompletedDate": {
-            "type": "string",
-            "description": "Date the referral was completed",
-            "format": "date"
-          }
-        },
-        "description": "Additional information for the CSIP Report"
-      },
-      "Review": {
-        "required": [
-          "attendees",
-          "caseNote",
-          "closeCSIP",
-          "createDateTime",
-          "createdBy",
-          "csipUpdated",
-          "id",
-          "peopleInformed",
-          "remainOnCSIP",
-          "reviewSequence"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "Review Id",
-            "format": "int64"
-          },
-          "reviewSequence": {
-            "type": "integer",
-            "description": "Sequence number",
-            "format": "int32"
-          },
-          "attendees": {
-            "type": "array",
-            "description": "Attendees to the review",
-            "items": {
-              "$ref": "#/components/schemas/Attendee"
-            }
-          },
-          "remainOnCSIP": {
-            "type": "boolean",
-            "description": "Whether to remain on CSIP"
-          },
-          "csipUpdated": {
-            "type": "boolean",
-            "description": "If the csip has been updated"
-          },
-          "caseNote": {
-            "type": "boolean",
-            "description": "If a case note was added"
-          },
-          "closeCSIP": {
-            "type": "boolean",
-            "description": "If the csip is closed"
-          },
-          "peopleInformed": {
-            "type": "boolean",
-            "description": "Whether people were informed"
-          },
-          "summary": {
-            "type": "string",
-            "description": "Summary details"
-          },
-          "nextReviewDate": {
-            "type": "string",
-            "description": "Next Review date",
-            "format": "date"
-          },
-          "closeDate": {
-            "type": "string",
-            "description": "Review closed date",
-            "format": "date"
-          },
-          "createDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "The date and time the review was created",
-            "example": "2021-07-05T10:35:17"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "The username of the person who created/recorded the review"
-          },
-          "createdByDisplayName": {
-            "type": "string",
-            "description": "Real name of who created/recorded the review"
-          },
-          "lastModifiedDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "The date and time the review was last updated",
-            "example": "2021-07-05T10:35:17"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "The username of the person who last updated the review"
-          }
-        },
-        "description": "CSIP Reviews"
-      },
-      "SaferCustodyScreening": {
-        "type": "object",
-        "properties": {
-          "outcome": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "recordedBy": {
-            "type": "string",
-            "description": "Who recorded the data"
-          },
-          "recordedDate": {
-            "type": "string",
-            "description": "When the the SCS occurred",
-            "format": "date"
-          },
-          "reasonForDecision": {
-            "type": "string",
-            "description": "Why the decision was made"
-          }
-        },
-        "description": "Safer custody screening"
-      },
       "CSIPIdResponse": {
         "required": [
           "csipId"
@@ -19275,6 +19364,69 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CSIPIdResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SortObject"
+            }
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CourtCaseIdResponse": {
+        "required": [
+          "caseId"
+        ],
+        "type": "object",
+        "properties": {
+          "caseId": {
+            "type": "integer",
+            "description": "Court case Id",
+            "format": "int64"
+          }
+        },
+        "description": "court case id"
+      },
+      "PageCourtCaseIdResponse": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourtCaseIdResponse"
             }
           },
           "number": {
