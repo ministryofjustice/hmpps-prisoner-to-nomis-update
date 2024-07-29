@@ -60,7 +60,6 @@ class LocationsMappingService(
       .bodyToMono<LocationMappingDto>()
       .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
       .retryWhen(backoffSpec.withRetryContext(Context.of("api", "mapping-api", "url", url.path)))
-      .retryWhen(backoffSpec)
       .awaitSingleOrNull()
   }
 
