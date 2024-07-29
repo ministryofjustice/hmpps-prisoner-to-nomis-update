@@ -83,12 +83,14 @@ class CaseNotesNomisApiServiceTest {
         offenderNo = "A1234KT",
         caseNote = CreateCaseNoteResponse(
           id = 3,
+          bookingId = 123,
         ),
       )
 
       val nomisCaseNote = apiService.createCaseNote(offenderNo = "A1234KT", nomisCaseNote = createCaseNoteRequest())
 
       assertThat(nomisCaseNote.id).isEqualTo(3)
+      assertThat(nomisCaseNote.bookingId).isEqualTo(123)
     }
 
     private fun createCaseNoteRequest() = CreateCaseNoteRequest(

@@ -32,7 +32,10 @@ class CaseNotesNomisApiMockServer(private val objectMapper: ObjectMapper) {
   fun stubPostCaseNote(
     offenderNo: String = "A1234AK",
     caseNoteId: Long = 1001,
-    caseNote: CreateCaseNoteResponse = createCaseNoteResponse(caseNoteId),
+    caseNote: CreateCaseNoteResponse = CreateCaseNoteResponse(
+      id = caseNoteId,
+      bookingId = 1,
+    ),
   ) {
     nomisApi.stubFor(
       post(urlEqualTo("/prisoners/$offenderNo/casenotes")).willReturn(
@@ -87,10 +90,6 @@ class CaseNotesNomisApiMockServer(private val objectMapper: ObjectMapper) {
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }
-
-fun createCaseNoteResponse(caseNoteId: Long) = CreateCaseNoteResponse(
-  id = caseNoteId,
-)
 
 fun caseNoteResponse(caseNoteId: Long) = CaseNoteResponse(
   caseNoteId = caseNoteId,
