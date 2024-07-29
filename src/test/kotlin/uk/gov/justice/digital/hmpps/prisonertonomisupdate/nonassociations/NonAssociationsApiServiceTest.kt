@@ -18,12 +18,13 @@ import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NonAssociationsApiExtension.Companion.nonAssociationsApiServer
 
 private const val NON_ASSOCIATION_ID = 1234L
 
 @SpringAPIServiceTest
-@Import(NonAssociationsApiService::class, NonAssociationsConfiguration::class)
+@Import(NonAssociationsApiService::class, NonAssociationsConfiguration::class, RetryApiService::class)
 internal class NonAssociationsApiServiceTest {
 
   @Autowired

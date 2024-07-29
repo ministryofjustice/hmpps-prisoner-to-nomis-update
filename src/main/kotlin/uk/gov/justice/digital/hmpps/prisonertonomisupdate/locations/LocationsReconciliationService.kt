@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Profil
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 
 @Service
 class LocationsReconciliationService(
@@ -45,12 +44,12 @@ class LocationsReconciliationService(
       val locations = getNomisLocationsForPage(page)
         .map { it.locationId }
         .mapNotNull { nomisId ->
-          doApiCallWithRetries { mappingService.getMappingGivenNomisIdOrNull(nomisId) }
+          mappingService.getMappingGivenNomisIdOrNull(nomisId)
             ?.also { mappingDto ->
               allDpsIdsInNomis.add(mappingDto.dpsLocationId)
             }
             ?: run {
-              val nomisDetails = doApiCallWithRetries { nomisApiService.getLocationDetails(nomisId) }
+              val nomisDetails = nomisApiService.getLocationDetails(nomisId)
               if (invalidPrisons.contains(nomisDetails.prisonId)) {
                 invalidPrisonsTotal++
               } else {
@@ -124,7 +123,7 @@ class LocationsReconciliationService(
   }
 
   internal suspend fun getNomisLocationsForPage(page: Pair<Long, Long>) =
-    runCatching { doApiCallWithRetries { nomisApiService.getLocations(page.first, page.second).content } }
+    runCatching { nomisApiService.getLocations(page.first, page.second).content }
       .onFailure {
         telemetryClient.trackEvent(
           "locations-reports-reconciliation-mismatch-page-error",
@@ -136,7 +135,7 @@ class LocationsReconciliationService(
       .also { log.info("Nomis Page requested: $page, with ${it.size} locations") }
 
   internal suspend fun getDpsLocationsForPage(page: Pair<Long, Long>): List<LegacyLocation> =
-    runCatching { doApiCallWithRetries { locationsApiService.getLocations(page.first, page.second).content } }
+    runCatching { locationsApiService.getLocations(page.first, page.second).content }
       .onFailure {
         telemetryClient.trackEvent(
           "locations-reports-reconciliation-mismatch-page-error",
@@ -151,8 +150,8 @@ class LocationsReconciliationService(
     // log.debug("Checking location: {}", mapping)
 
     val (nomisRecord, dpsRecord) = withContext(Dispatchers.Unconfined) {
-      async { doApiCallWithRetries { nomisApiService.getLocationDetails(mapping.nomisLocationId) } } to
-        async { doApiCallWithRetries { locationsApiService.getLocation(mapping.dpsLocationId, true) } }
+      async { nomisApiService.getLocationDetails(mapping.nomisLocationId) } to
+        async { locationsApiService.getLocation(mapping.dpsLocationId, true) }
     }.awaitBoth()
 
     val verdict = doesNotMatch(nomisRecord, dpsRecord)

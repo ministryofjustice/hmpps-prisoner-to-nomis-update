@@ -8,6 +8,7 @@ import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
@@ -62,11 +63,17 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 
 @Service
-class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
-
+class NomisApiService(
+  @Qualifier("nomisApiWebClient") private val webClient: WebClient,
+  @Value("\${hmpps.web-client.nomis.max-retries:#{null}}") private val maxRetryAttempts: Long?,
+  @Value("\${hmpps.web-client.nomis.backoff-millis:#{null}}") private val backoffMillis: Long?,
+  retryApiService: RetryApiService,
+) {
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
+
+  private val backoffSpec = retryApiService.getBackoffSpec(maxRetryAttempts, backoffMillis)
 
   // ////////// VISITS //////////////
 
@@ -594,6 +601,7 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       }
       .retrieve()
       .bodyToMono(typeReference<RestResponsePage<LocationIdResponse>>())
+      .retryWhen(backoffSpec)
       .awaitSingle()
 
   suspend fun getLocationDetails(id: Long): LocationResponse =
@@ -601,7 +609,9 @@ class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: Web
       .get()
       .uri("/locations/{id}", id)
       .retrieve()
-      .awaitBody()
+      .bodyToMono(LocationResponse::class.java)
+      .retryWhen(backoffSpec)
+      .awaitSingle()
 
   // ///////////////////// COURT SENTENCING /////////////////////////
 

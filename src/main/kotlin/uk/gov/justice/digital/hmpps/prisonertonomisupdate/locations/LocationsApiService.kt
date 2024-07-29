@@ -6,10 +6,12 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RestResponsePage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.typeReference
+import java.net.URI
 
 @Service
 class LocationsApiService(
@@ -21,15 +23,17 @@ class LocationsApiService(
   private val backoffSpec = retryApiService.getBackoffSpec(maxRetryAttempts, backoffMillis)
 
   suspend fun getLocation(id: String, includeHistory: Boolean = false): LegacyLocation {
+    lateinit var url: URI
     return webClient.get()
       .uri {
-        it.path("/sync/id/{id}")
+        url = it.path("/sync/id/{id}")
           .queryParam("includeHistory", includeHistory)
           .build(id)
+        url
       }
       .retrieve()
       .bodyToMono(LegacyLocation::class.java)
-      .retryWhen(backoffSpec)
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "locations-api", "url", url.path)))
       .awaitSingle()
   }
 
@@ -37,16 +41,18 @@ class LocationsApiService(
     pageNumber: Long,
     pageSize: Long,
   ): Page<LegacyLocation> {
+    lateinit var url: URI
     return webClient.get()
       .uri {
-        it.path("/locations")
+        url = it.path("/locations")
           .queryParam("page", pageNumber)
           .queryParam("size", pageSize)
           .build()
+        url
       }
       .retrieve()
       .bodyToMono(typeReference<RestResponsePage<LegacyLocation>>())
-      .retryWhen(backoffSpec)
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "locations-api", "url", url.path)))
       .awaitSingle()
   }
 }
