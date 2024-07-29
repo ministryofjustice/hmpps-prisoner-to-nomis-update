@@ -38,6 +38,11 @@ class RetryApiService(
     val failure = retrySignal.failure()
     val exception = failure?.cause ?: failure
     val message = exception.message ?: exception.javaClass.canonicalName
-    log.warn("Retrying due to [{}], retry number: {}", message, retrySignal.totalRetries())
+    log.warn(
+      "Retrying due to [{}], retry number: {}, context: {}",
+      message,
+      retrySignal.totalRetries(),
+      retrySignal.retryContextView(),
+    )
   }
 }

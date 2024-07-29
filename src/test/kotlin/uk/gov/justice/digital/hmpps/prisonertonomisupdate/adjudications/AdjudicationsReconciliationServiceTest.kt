@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension.Companion.adjudicationsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -48,6 +49,7 @@ import java.time.LocalDate
   AdjudicationsMappingService::class,
   AdjudicationsApiService::class,
   AdjudicationsConfiguration::class,
+  RetryApiService::class,
 )
 internal class AdjudicationsReconciliationServiceTest {
   @MockBean
