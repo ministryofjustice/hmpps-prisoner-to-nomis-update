@@ -44,7 +44,7 @@ class LocationsReconciliationService(
       val locations = getNomisLocationsForPage(page)
         .map { it.locationId }
         .mapNotNull { nomisId ->
-          doApiCallWithRetries { mappingService.getMappingGivenNomisIdOrNull(nomisId) }
+          mappingService.getMappingGivenNomisIdOrNull(nomisId)
             ?.also { mappingDto ->
               allDpsIdsInNomis.add(mappingDto.dpsLocationId)
             }
