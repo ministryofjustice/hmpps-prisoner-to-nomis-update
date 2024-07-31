@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-07-29.8418.36c3e4f"
+    "version": "2024-07-30.8471.68ce50a"
   },
   "servers": [
     {
@@ -13750,7 +13750,6 @@
       },
       "CreateCourtCaseRequest": {
         "required": [
-          "courtAppearance",
           "courtId",
           "legalCaseType",
           "startDate",
@@ -15707,13 +15706,13 @@
       "PageVisitIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -16157,13 +16156,13 @@
       "PageQuestionnaireIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -17580,13 +17579,13 @@
       "PagePrisonerIds": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -17650,13 +17649,13 @@
       "PagePrisonerId": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -18234,13 +18233,13 @@
       "PageNonAssociationIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -18492,13 +18491,13 @@
       "PageLocationIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -19075,13 +19074,13 @@
       "PageIncidentIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -19198,13 +19197,13 @@
       "PageIncentiveIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -19342,13 +19341,13 @@
       "PageCSIPIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -19405,13 +19404,13 @@
       "PageCourtCaseIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -19601,13 +19600,13 @@
       "PageAppointmentIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -19930,13 +19929,13 @@
       "PageFindActiveAllocationIdsResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -19998,13 +19997,13 @@
       "PageAdjustmentIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -20072,13 +20071,13 @@
       "PageAdjudicationChargeIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -20380,13 +20379,13 @@
       "PageFindActiveActivityIdsResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
