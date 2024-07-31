@@ -313,16 +313,20 @@ class CourtSentencingService(
   )
 }
 
-fun CourtCase.toNomisCourtCase(): CreateCourtCaseRequest = CreateCourtCaseRequest(
+fun CourtCase.toNomisCourtCase(courtCaseOnly: Boolean = true): CreateCourtCaseRequest = CreateCourtCaseRequest(
   startDate = this.latestAppearance.appearanceDate,
   // TODO hard coding until mapping approach decided this.courtCode
   courtId = HARDCODED_COURT,
-  courtAppearance = this.latestAppearance.toNomisCourtAppearance(
-    courtEventChargesToUpdate = listOf(),
-    courtEventChargesToCreate = this.latestAppearance.charges.mapIndexed { index, dpsCharge ->
-      dpsCharge.toNomisCourtCharge()
-    },
-  ),
+  courtAppearance = if (courtCaseOnly) {
+    null
+  } else {
+    this.latestAppearance.toNomisCourtAppearance(
+      courtEventChargesToUpdate = listOf(),
+      courtEventChargesToCreate = this.latestAppearance.charges.mapIndexed { index, dpsCharge ->
+        dpsCharge.toNomisCourtCharge()
+      },
+    )
+  },
   // LEG_CASE_TYP on NOMIS - defaulting to Adult as suggested in the Sentencing document
   legalCaseType = "A",
   // CASE_STS on NOMIS - no decision from DPS yet - defaulting to Active

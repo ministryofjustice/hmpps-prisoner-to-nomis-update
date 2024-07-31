@@ -103,6 +103,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
       }
 
+      // TODO REMOVED COURT APPEARANCE FROM COURT CASE TEMPORARILY
       @Test
       fun `will call nomis api to create the Court Case`() {
         waitForAnyProcessingToComplete()
@@ -119,8 +120,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                 "legalCaseType",
                 WireMock.equalTo("A"),
               ),
-            )
-            .withRequestBody(
+            ),
+            /* .withRequestBody(
               WireMock.matchingJsonPath(
                 "courtAppearance.courtEventType",
                 WireMock.equalTo(
@@ -191,7 +192,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                   "4531",
                 ),
               ),
-            ),
+            ),*/
         )
       }
 
