@@ -148,7 +148,7 @@ reports:
       page-size: 40
   locations:
     reconciliation:
-      page-size: 40
+      page-size: 20
 
 hmpps.sqs:
   queues:

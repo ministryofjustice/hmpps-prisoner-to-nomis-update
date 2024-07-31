@@ -171,7 +171,7 @@ class LocationsResourceIntTest : IntegrationTestBase() {
         val nomisId = it.toLong()
         val dpsId = generateUUID(it)
         nomisApi.stubGetLocation(nomisId, locationNomisResponse(nomisId))
-        locationsApi.stubGetLocation(dpsId, true, locationApiResponse(if (it % 10 == 0) "OTHER" else "001", dpsId)) // every 10th location has an 'OTHER' code in DPS
+        locationsApi.stubGetLocation(dpsId, false, locationApiResponse(if (it % 10 == 0) "OTHER" else "001", dpsId)) // every 10th location has an 'OTHER' code in DPS
         mappingServer.stubGetMappingGivenNomisLocationId(
           nomisId,
           """{
@@ -338,7 +338,7 @@ class LocationsResourceIntTest : IntegrationTestBase() {
     @Test
     fun `will attempt to complete a report even if some of the checks fail`() {
       nomisApi.stubGetLocationWithError(2, 500)
-      locationsApi.stubGetLocationWithError(generateUUID(20), true, 500)
+      locationsApi.stubGetLocationWithError(generateUUID(20), false, 500)
 
       webTestClient.put().uri("/locations/reports/reconciliation")
         .exchange()
