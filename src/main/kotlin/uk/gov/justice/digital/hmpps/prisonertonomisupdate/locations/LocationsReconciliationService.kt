@@ -151,7 +151,7 @@ class LocationsReconciliationService(
 
     val (nomisRecord, dpsRecord) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getLocationDetails(mapping.nomisLocationId) } to
-        async { locationsApiService.getLocation(mapping.dpsLocationId, true) }
+        async { locationsApiService.getLocation(mapping.dpsLocationId, false) }
     }.awaitBoth()
 
     val verdict = doesNotMatch(nomisRecord, dpsRecord)
