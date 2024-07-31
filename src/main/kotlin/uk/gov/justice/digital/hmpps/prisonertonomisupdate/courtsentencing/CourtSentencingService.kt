@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceAllMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
@@ -83,6 +82,10 @@ class CourtSentencingService(
             nomisCourtCaseId = nomisResponse.id,
             dpsCourtCaseId = courtCaseId,
             // expecting a court case with 1 court appearance - separate event for subsequent appearances
+            // TODO reinstate after court case sync testing
+            courtAppearances = emptyList(),
+            courtCharges = emptyList(),
+            /*
             courtAppearances = listOf(
               CourtAppearanceMappingDto(
                 dpsCourtAppearanceId = courtCase.latestAppearance.appearanceUuid.toString(),
@@ -95,7 +98,7 @@ class CourtSentencingService(
                 nomisCourtChargeId = nomisCourtAppearanceResponse.courtEventChargesIds[index].offenderChargeId,
                 dpsCourtChargeId = dpsCharge.chargeUuid.toString(),
               )
-            },
+            },*/
           )
         }
         saveMapping { courtCaseMappingService.createMapping(it) }
