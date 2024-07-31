@@ -6,6 +6,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import reactor.netty.http.client.PrematureCloseException
 import reactor.util.retry.Retry
 import reactor.util.retry.RetryBackoffSpec
 import java.net.SocketException
@@ -32,7 +33,8 @@ class RetryApiService(
     // Timeout for NO_RESPONSE is wrapped in a WebClientRequestException
     it is ReadTimeoutException || it.cause is ReadTimeoutException ||
       it is ConnectTimeoutException || it.cause is ConnectTimeoutException ||
-      it is SocketException || it.cause is SocketException
+      it is SocketException || it.cause is SocketException ||
+      it is PrematureCloseException || it.cause is PrematureCloseException
 
   private fun logRetrySignal(retrySignal: Retry.RetrySignal) {
     val failure = retrySignal.failure()

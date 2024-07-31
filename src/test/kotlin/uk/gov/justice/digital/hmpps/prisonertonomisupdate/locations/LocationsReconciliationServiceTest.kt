@@ -55,7 +55,7 @@ class LocationsReconciliationServiceTest {
   fun `will report mismatch where locations have a different comment`() = runTest {
     whenever(locationsMappingService.getMappingGivenNomisIdOrNull(NOMIS_LOCATION_ID)).thenReturn(locationMappingDto)
     whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID)).thenReturn(nomisResponse("comment1"))
-    whenever(locationsApiService.getLocation(DPS_LOCATION_ID, true)).thenReturn(dpsResponse(DPS_LOCATION_ID, "comment3"))
+    whenever(locationsApiService.getLocation(DPS_LOCATION_ID, false)).thenReturn(dpsResponse(DPS_LOCATION_ID, "comment3"))
 
     assertThat(locationsReconciliationService.checkMatch(locationMappingDto))
       .isEqualTo(
