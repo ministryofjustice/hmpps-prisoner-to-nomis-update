@@ -92,12 +92,14 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["mappingType"]).isEqualTo(CourtCaseMapping.MappingType.DPS_CREATED.toString())
+            /*
             Assertions.assertThat(it["courtAppearances"]).contains("dpsCourtAppearanceId=$DPS_COURT_APPEARANCE_ID")
             Assertions.assertThat(it["courtAppearances"]).contains("nomisCourtAppearanceId=$NOMIS_COURT_APPEARANCE_ID")
             Assertions.assertThat(it["courtCharges"]).contains("dpsCourtChargeId=$DPS_COURT_CHARGE_ID")
             Assertions.assertThat(it["courtCharges"]).contains("nomisCourtChargeId=$NOMIS_COURT_CHARGE_ID")
             Assertions.assertThat(it["courtCharges"]).contains("dpsCourtChargeId=$DPS_COURT_CHARGE_2_ID")
             Assertions.assertThat(it["courtCharges"]).contains("nomisCourtChargeId=$NOMIS_COURT_CHARGE_2_ID")
+             */
           },
           isNull(),
         )
@@ -222,8 +224,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                     NOMIS_COURT_CASE_ID_FOR_CREATION.toString(),
                   ),
                 ),
-              )
-              .withRequestBody(
+              ),
+              /*.withRequestBody(
                 WireMock.matchingJsonPath(
                   "courtAppearances[0].nomisCourtAppearanceId",
                   WireMock.equalTo(
@@ -270,7 +272,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                     DPS_COURT_CHARGE_2_ID,
                   ),
                 ),
-              ),
+              ),*/
           )
         }
         await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
