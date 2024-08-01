@@ -77,7 +77,6 @@ class CourtSentencingService(
           val nomisResponse =
             nomisApiService.createCourtCase(offenderNo, courtCase.toNomisCourtCase())
 
-          val nomisCourtAppearanceResponse = nomisResponse.courtAppearanceIds.first()
           CourtCaseAllMappingDto(
             nomisCourtCaseId = nomisResponse.id,
             dpsCourtCaseId = courtCaseId,
