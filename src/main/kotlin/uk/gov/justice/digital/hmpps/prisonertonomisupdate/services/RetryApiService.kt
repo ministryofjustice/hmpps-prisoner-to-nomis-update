@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import io.netty.channel.ConnectTimeoutException
+import io.netty.channel.unix.Errors
 import io.netty.handler.timeout.ReadTimeoutException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -29,12 +30,13 @@ class RetryApiService(
       .filter { isTimeoutException(it) }
       .doBeforeRetry { logRetrySignal(it) }
 
-  private fun isTimeoutException(it: Throwable): Boolean =
-    // Timeout for NO_RESPONSE is wrapped in a WebClientRequestException
-    it is ReadTimeoutException || it.cause is ReadTimeoutException ||
-      it is ConnectTimeoutException || it.cause is ConnectTimeoutException ||
-      it is SocketException || it.cause is SocketException ||
-      it is PrematureCloseException || it.cause is PrematureCloseException
+  private fun isTimeoutException(e: Throwable): Boolean =
+    // Timeouts etc are wrapped in a WebClientRequestException
+    e is ReadTimeoutException || e.cause is ReadTimeoutException ||
+      e is ConnectTimeoutException || e.cause is ConnectTimeoutException ||
+      e is SocketException || e.cause is SocketException ||
+      e is PrematureCloseException || e.cause is PrematureCloseException || // server closed the connection
+      e is Errors.NativeIoException || e.cause is Errors.NativeIoException // Connection reset by peer
 
   private fun logRetrySignal(retrySignal: Retry.RetrySignal) {
     val failure = retrySignal.failure()

@@ -18,6 +18,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
+import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationResponse
@@ -601,7 +602,7 @@ class NomisApiService(
       }
       .retrieve()
       .bodyToMono(typeReference<RestResponsePage<LocationIdResponse>>())
-      .retryWhen(backoffSpec)
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/locations/ids")))
       .awaitSingle()
 
   suspend fun getLocationDetails(id: Long): LocationResponse =
@@ -610,7 +611,7 @@ class NomisApiService(
       .uri("/locations/{id}", id)
       .retrieve()
       .bodyToMono(LocationResponse::class.java)
-      .retryWhen(backoffSpec)
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/locations/{id}")))
       .awaitSingle()
 
   // ///////////////////// COURT SENTENCING /////////////////////////
