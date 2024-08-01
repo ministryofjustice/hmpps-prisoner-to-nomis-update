@@ -42,25 +42,33 @@ class LocationsReconciliationService(
     nomisTotal = locationsCount.toInt()
     val results = locationsCount.asPages(pageSize).flatMap { page ->
       val locations = getNomisLocationsForPage(page)
-        .map { it.locationId }
-        .mapNotNull { nomisId ->
-          mappingService.getMappingGivenNomisIdOrNull(nomisId)
-            ?.also { mappingDto ->
-              allDpsIdsInNomis.add(mappingDto.dpsLocationId)
-            }
-            ?: run {
-              val nomisDetails = nomisApiService.getLocationDetails(nomisId)
-              if (invalidPrisons.contains(nomisDetails.prisonId)) {
-                invalidPrisonsTotal++
-              } else {
-                log.info("No mapping found for location $nomisId, key ${nomisDetails.description}")
-                telemetryClient.trackEvent(
-                  "locations-reports-reconciliation-mismatch-missing-mapping",
-                  mapOf("locationId" to nomisId.toString()),
-                )
+        .mapNotNull { locationIdResponse ->
+          val nomisId = locationIdResponse.locationId
+          runCatching {
+            mappingService.getMappingGivenNomisIdOrNull(nomisId)
+              ?.also { mappingDto ->
+                allDpsIdsInNomis.add(mappingDto.dpsLocationId)
               }
-              null
-            }
+              ?: run {
+                val nomisDetails = nomisApiService.getLocationDetails(nomisId)
+                if (invalidPrisons.contains(nomisDetails.prisonId)) {
+                  invalidPrisonsTotal++
+                } else {
+                  log.info("No mapping found for location $nomisId, key ${nomisDetails.description}")
+                  telemetryClient.trackEvent(
+                    "locations-reports-reconciliation-mismatch-missing-mapping",
+                    mapOf("locationId" to nomisId.toString()),
+                  )
+                }
+                null
+              }
+          }.onFailure {
+            telemetryClient.trackEvent(
+              "locations-reports-reconciliation-retrieval-error",
+              mapOf("nomis-location-id" to nomisId.toString()),
+            )
+            log.error("Unexpected error from api getting nomis location $nomisId", it)
+          }.getOrNull()
         }
 
       withContext(Dispatchers.Unconfined) {

@@ -3,10 +3,16 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyMap
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Capacity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Certification
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.ChangeHistory
@@ -14,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Legacy
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.NonResidentialUsageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AmendmentResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ProfileRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UsageRequest
@@ -44,7 +51,6 @@ class LocationsReconciliationServiceTest {
 
   @Test
   fun `will not report mismatch where details match`() = runTest {
-    whenever(locationsMappingService.getMappingGivenNomisIdOrNull(NOMIS_LOCATION_ID)).thenReturn(locationMappingDto)
     whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID)).thenReturn(nomisResponse())
     whenever(locationsApiService.getLocation(DPS_LOCATION_ID, true)).thenReturn(dpsResponse(DPS_LOCATION_ID))
 
@@ -53,7 +59,6 @@ class LocationsReconciliationServiceTest {
 
   @Test
   fun `will report mismatch where locations have a different comment`() = runTest {
-    whenever(locationsMappingService.getMappingGivenNomisIdOrNull(NOMIS_LOCATION_ID)).thenReturn(locationMappingDto)
     whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID)).thenReturn(nomisResponse("comment1"))
     whenever(locationsApiService.getLocation(DPS_LOCATION_ID, false)).thenReturn(dpsResponse(DPS_LOCATION_ID, "comment3"))
 
@@ -97,67 +102,46 @@ class LocationsReconciliationServiceTest {
   }
 
   @Test
-  @Disabled("History comparison disabled for now")
-  fun `will report mismatch where locations have a different history count`() = runTest {
-    whenever(locationsMappingService.getMappingGivenNomisIdOrNull(NOMIS_LOCATION_ID)).thenReturn(locationMappingDto)
-    whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID)).thenReturn(nomisResponse())
+  fun `will continue after a GET mapping error`() = runTest {
+    whenever(nomisApiService.getLocations(0, 10)).thenReturn(
+      PageImpl(
+        listOf(LocationIdResponse(999), LocationIdResponse(NOMIS_LOCATION_ID)),
+        Pageable.ofSize(10),
+        2,
+      ),
+    )
+    whenever(locationsMappingService.getMappingGivenNomisIdOrNull(999))
+      .thenThrow(RuntimeException("test error"))
+    whenever(locationsMappingService.getMappingGivenNomisIdOrNull(NOMIS_LOCATION_ID))
+      .thenReturn(LocationMappingDto(DPS_LOCATION_ID, NOMIS_LOCATION_ID, LocationMappingDto.MappingType.LOCATION_CREATED))
 
-    whenever(locationsApiService.getLocation(DPS_LOCATION_ID, true)).thenReturn(
-      dpsResponse(DPS_LOCATION_ID).apply {
-        (changeHistory as MutableList).add(
-          ChangeHistory(
-            amendedDate = "2023-09-25T11:12:45",
-            amendedBy = "STEVE_ADM",
-            attribute = "NEW attribute",
-            oldValue = "old",
-            newValue = "new",
-          ),
-        )
-      },
+    whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID)).thenReturn(nomisResponse().copy(listSequence = 9999))
+    whenever(locationsApiService.getLocation(DPS_LOCATION_ID, false)).thenReturn(dpsResponse(DPS_LOCATION_ID))
+
+    // Total of 2 => no missing dps records
+    whenever(locationsApiService.getLocations(0, 1)).thenReturn(
+      PageImpl(
+        listOf(dpsResponse(DPS_LOCATION_ID), dpsResponse(DPS_LOCATION_ID)),
+        Pageable.ofSize(10),
+        2,
+      ),
     )
 
-    with(locationsReconciliationService.checkMatch(locationMappingDto)!!) {
-      assertThat(nomisLocation?.history).isEqualTo(1)
-      assertThat(dpsLocation?.history).isEqualTo(2)
-    }
-  }
+    val results = locationsReconciliationService.generateReconciliationReport(2)
+    assertThat(results).hasSize(1)
 
-  @Test
-  @Disabled("History comparison disabled for now")
-  fun `will report mismatch where locations have a different history item`() = runTest {
-    whenever(locationsMappingService.getMappingGivenNomisIdOrNull(NOMIS_LOCATION_ID)).thenReturn(locationMappingDto)
-    whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID)).thenReturn(
-      nomisResponse().apply {
-        (amendments as MutableList).add(
-          AmendmentResponse(
-            amendDateTime = "2023-09-25T11:12:45",
-            columnName = "Baseline CNA",
-            oldValue = "5",
-            newValue = "6",
-            amendedBy = "STEVE_ADM",
-          ),
-        )
+    verify(telemetryClient, times(1)).trackEvent(
+      eq("locations-reports-reconciliation-retrieval-error"),
+      org.mockito.kotlin.check {
+        assertThat(it).containsEntry("nomis-location-id", "999")
       },
+      isNull(),
     )
-
-    whenever(locationsApiService.getLocation(DPS_LOCATION_ID, true)).thenReturn(
-      dpsResponse(DPS_LOCATION_ID).apply {
-        (changeHistory as MutableList).add(
-          ChangeHistory(
-            amendedDate = "2023-09-25T11:12:45",
-            amendedBy = "STEVE_ADM",
-            attribute = "NEW dps attribute",
-            oldValue = "old",
-            newValue = "new",
-          ),
-        )
-      },
+    verify(telemetryClient, times(1)).trackEvent(
+      eq("locations-reports-reconciliation-mismatch"),
+      anyMap(),
+      isNull(),
     )
-
-    with(locationsReconciliationService.checkMatch(locationMappingDto)!!) {
-      assertThat(nomisLocation?.history).isEqualTo(2)
-      assertThat(dpsLocation?.history).isEqualTo(2)
-    }
   }
 
   private fun nomisResponse(comment: String? = null) = LocationResponse(
