@@ -68,7 +68,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
         NomisApiExtension.nomisApi.stubCourtCaseCreate(
           OFFENDER_NO,
-          nomisCourtCaseCreateResponseWithTwoCharges(),
+          nomisCourtCaseCreateResponseWithoutAppearances(),
         )
         MappingExtension.mappingServer.stubGetCreateCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
         MappingExtension.mappingServer.stubCreateCourtCase()
@@ -1029,6 +1029,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
   fun nomisCourtCaseCreateResponseWithTwoCharges(): String {
     return """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION, "courtAppearanceIds": [{"id": $NOMIS_COURT_APPEARANCE_ID, "nextCourtAppearanceId": $NOMIS_NEXT_COURT_APPEARANCE_ID, "courtEventChargesIds": [{"offenderChargeId": $NOMIS_COURT_CHARGE_ID }, {"offenderChargeId": $NOMIS_COURT_CHARGE_2_ID }] }] }"""
+  }
+
+  fun nomisCourtCaseCreateResponseWithoutAppearances(): String {
+    return """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION, "courtAppearanceIds": [] }"""
   }
 
   fun nomisCourtAppearanceCreateResponseWithTwoCharges(): String {
