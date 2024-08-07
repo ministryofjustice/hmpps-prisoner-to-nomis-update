@@ -20,6 +20,7 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyBlocking
 import org.mockito.kotlin.whenever
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerDetails
@@ -277,7 +278,7 @@ class ActivitiesReconTest {
     fun `should publish error telemetry`() = runTest {
       stubBookingCounts(prisonId = "BXI", BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "TRN", nomisCount = 1, dpsCount = 1))
       whenever(nomisApiService.getAllocationReconciliation(anyString()))
-        .thenThrow(WebClientResponseException.create(HttpStatus.BAD_GATEWAY, "error", null, null, null, null))
+        .thenThrow(WebClientResponseException.create(HttpStatus.BAD_GATEWAY, "error", HttpHeaders.EMPTY, ByteArray(0), null, null))
 
       activitiesReconService.allocationsReconciliationReport("BXI")
 
@@ -461,7 +462,7 @@ class ActivitiesReconTest {
     fun `should publish error telemetry`() = runTest {
       stubBookingCounts(prisonId = "BXI", today, BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "TRN", nomisCount = 1, dpsCount = 1))
       whenever(nomisApiService.getAttendanceReconciliation(anyString(), any()))
-        .thenThrow(WebClientResponseException.create(HttpStatus.BAD_GATEWAY, "error", null, null, null, null))
+        .thenThrow(WebClientResponseException.create(HttpStatus.BAD_GATEWAY, "error", HttpHeaders.EMPTY, ByteArray(0), null, null))
 
       activitiesReconService.attendancesReconciliationReport("BXI", today)
 
