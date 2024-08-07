@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.PrisonPersonDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
@@ -42,6 +43,7 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("components.courtSentencingApi.status").isEqualTo("UP")
       .jsonPath("components.alertsApi.status").isEqualTo("UP")
       .jsonPath("components.caseNotesApi.status").isEqualTo("UP")
+      .jsonPath("components.prisonPersonApi.status").isEqualTo("UP")
   }
 
   @Test
@@ -101,5 +103,6 @@ class HealthCheckTest : IntegrationTestBase() {
     CourtSentencingApiExtension.courtSentencingApi.stubHealthPing(status)
     AlertsDpsApiExtension.alertsDpsApi.stubHealthPing(status)
     CaseNotesDpsApiExtension.caseNotesDpsApi.stubHealthPing(status)
+    PrisonPersonDpsApiExtension.prisonPersonDpsApi.stubHealthPing(status)
   }
 }
