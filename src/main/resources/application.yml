@@ -81,6 +81,11 @@ spring:
             client-id: ${casenotes.client.id}
             client-secret: ${casenotes.client.secret}
             authorization-grant-type: client_credentials
+          prison-person-api:
+            provider: hmpps-auth
+            client-id: ${prison.person.client.id}
+            client-secret: ${prison.person.client.secret}
+            authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${api.base.url.hmpps-auth}/oauth/token
