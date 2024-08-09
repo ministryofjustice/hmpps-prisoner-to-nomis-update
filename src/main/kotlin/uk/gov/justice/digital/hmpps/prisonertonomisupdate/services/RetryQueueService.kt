@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.future.await
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
@@ -25,7 +26,11 @@ open class RetryQueueService(
       Message = CreateMappingRetryMessage(mapping, telemetryAttributes, entityName).toJson(),
     )
     val result = sqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(queueUrl).messageBody(sqsMessage.toJson()).build(),
+      SendMessageRequest.builder()
+        .queueUrl(queueUrl)
+        .messageBody(sqsMessage.toJson())
+        .messageAttributes(mapOf("eventType" to MessageAttributeValue.builder().dataType("String").stringValue(RETRY_CREATE_MAPPING).build()))
+        .build(),
     ).await()
 
     telemetryClient.trackEvent(

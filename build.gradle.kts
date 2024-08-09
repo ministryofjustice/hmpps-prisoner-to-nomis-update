@@ -20,7 +20,7 @@ dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.0.3")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.data:spring-data-commons:3.3.2")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:4.2.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:4.3.0-beta")
 
   implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.6.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
