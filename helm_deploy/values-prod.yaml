@@ -22,6 +22,7 @@ generic-service:
     API_BASE_URL_NON_ASSOCIATIONS: https://non-associations-api.hmpps.service.justice.gov.uk
     API_BASE_URL_LOCATIONS: https://locations-inside-prison-api.hmpps.service.justice.gov.uk
     API_BASE_URL_ALERTS: https://alerts-api.hmpps.service.justice.gov.uk
+    API_BASE_URL_CSIP: https://csip-api.hmpps.service.justice.gov.uk
     # currently set to self for a mock API until real API is ready
     API_BASE_URL_CASENOTES: https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk
     # API_BASE_URL_PRISONPERSON: https://prison-person-api.prison.service.justice.gov.uk
@@ -29,6 +30,19 @@ generic-service:
     FEATURE_EVENT_COURT_CASE_INSERTED: false
     FEATURE_EVENT_COURT_SENTENCING_COURT_APPEARANCE_CREATED: false
     FEATURE_EVENT_COURT_SENTENCING_COURT_APPEARANCE_UPDATED: false
+    FEATURE_EVENT_CSIP_RECORD_CREATED: false
+    FEATURE_EVENT_CSIP_RECORD_UPDATED: false
+    FEATURE_EVENT_CSIP_RECORD_DELETED: false
+    FEATURE_EVENT_CSIP_CONTRIBUTORY_FACTOR_CREATED: false
+    FEATURE_EVENT_CSIP_CONTRIBUTORY_FACTOR_DELETED: false
+    FEATURE_EVENT_CSIP_INTERVIEW_CREATED: false
+    FEATURE_EVENT_CSIP_INTERVIEW_DELETED: false
+    FEATURE_EVENT_CSIP_IDENTIFIED_NEED_CREATED: false
+    FEATURE_EVENT_CSIP_IDENTIFIED_NEED_DELETED: false
+    FEATURE_EVENT_CSIP_REVIEW_CREATED: false
+    FEATURE_EVENT_CSIP_REVIEW_DELETED: false
+    FEATURE_EVENT_CSIP_ATTENDEE_CREATED: false
+    FEATURE_EVENT_CSIP_ATTENDEE_DELETED: false
 
 generic-prometheus-alerts:
   sqsNumberAlertQueueMappings:
@@ -61,3 +75,6 @@ generic-prometheus-alerts:
     alerts:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_alerts_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_alerts_dlq"
+    csip:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_csip_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_csip_dlq"

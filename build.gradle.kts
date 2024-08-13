@@ -58,6 +58,7 @@ tasks {
       "buildSentencingAdjustmentsApiModel",
       "buildCourtSentencingApiModel",
       "buildAlertApiModel",
+      "buildCsipApiModel",
       "buildCaseNoteApiModel",
     )
     compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
@@ -74,6 +75,7 @@ tasks {
       "buildSentencingAdjustmentsApiModel",
       "buildCourtSentencingApiModel",
       "buildAlertApiModel",
+      "buildCsipApiModel",
       "buildCaseNoteApiModel",
     )
   }
@@ -89,6 +91,7 @@ tasks {
       "buildSentencingAdjustmentsApiModel",
       "buildCourtSentencingApiModel",
       "buildAlertApiModel",
+      "buildCsipApiModel",
       "buildCaseNoteApiModel",
     )
   }
@@ -200,6 +203,16 @@ tasks.register("buildAlertApiModel", GenerateTask::class) {
   outputDir.set("$buildDirectory/generated/alerts")
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.api")
+  configOptions.set(configValues)
+  globalProperties.set(mapOf("models" to ""))
+}
+
+tasks.register("buildCsipApiModel", GenerateTask::class) {
+  generatorName.set("kotlin")
+  inputSpec.set("openapi-specs/csip-api-docs.json")
+  outputDir.set("$buildDirectory/generated/csip")
+  modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model")
+  apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.api")
   configOptions.set(configValues)
   globalProperties.set(mapOf("models" to ""))
 }
