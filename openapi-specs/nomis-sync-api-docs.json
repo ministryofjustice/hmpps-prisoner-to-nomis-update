@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-07-30.8471.68ce50a"
+    "version": "2024-08-07.8561.f84e6e6"
   },
   "servers": [
     {
@@ -625,6 +625,146 @@
           },
           "404": {
             "description": "Court appearance does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/physical-attributes": {
+      "get": {
+        "tags": [
+          "prison-person-resource"
+        ],
+        "summary": "Get physical attributes for a prisoner",
+        "description": "Retrieves physical attributes for a prisoner and all of their aliases and bookings. Requires ROLE_NOMIS_PRISON_PERSON",
+        "operationId": "getPhysicalAttributes",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender number",
+              "example": "A1234AA"
+            },
+            "example": "A1234AA"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Physical Attributes Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrisonerPhysicalAttributesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prisoner does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "prison-person-resource"
+        ],
+        "summary": "Upsert physical attributes for a prisoner",
+        "description": "Upserts physical attributes on the latest booking for a prisoner, if it exists. Requires ROLE_NOMIS_PRISON_PERSON",
+        "operationId": "upsertPhysicalAttributes",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender number",
+              "example": "A1234AA"
+            },
+            "example": "A1234AA"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPhysicalAttributesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Physical Attributes Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpsertPhysicalAttributesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prisoner does not exist or has no bookings",
             "content": {
               "application/json": {
                 "schema": {
@@ -7076,6 +7216,73 @@
         }
       }
     },
+    "/prisoners/{offenderNo}": {
+      "get": {
+        "tags": [
+          "prisoners-resource"
+        ],
+        "summary": "Gets the prisoner's details",
+        "description": "Requires role NOMIS_ALERTS.",
+        "operationId": "getPrisonerDetails",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender Noms Id",
+            "required": true,
+            "schema": {
+              "pattern": "[A-Z]\\d{4}[A-Z]{2}",
+              "type": "string",
+              "description": "Offender Noms Id",
+              "example": "A1234ZZ"
+            },
+            "example": "A1234ZZ"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "prisoner details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrisonerDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_ALERTS not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prisoner not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/sentencing/offender-charges/{offenderChargeId}": {
       "get": {
         "tags": [
@@ -7310,78 +7517,12 @@
         }
       }
     },
-    "/prisoners/{offenderNo}/physical-attributes": {
-      "get": {
-        "tags": [
-          "prison-person-resource"
-        ],
-        "summary": "Get physical attributes for a prisoner",
-        "description": "Retrieves physical attributes for a prisoner and all of their aliases and bookings. Requires ROLE_NOMIS_PRISON_PERSON",
-        "operationId": "getPhysicalAttributes",
-        "parameters": [
-          {
-            "name": "offenderNo",
-            "in": "path",
-            "description": "Offender number",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Offender number",
-              "example": "A1234AA"
-            },
-            "example": "A1234AA"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Physical Attributes Returned",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PrisonerPhysicalAttributesResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Prisoner does not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/prisoners/{offenderNo}/merges": {
       "get": {
         "tags": [
           "prisoners-resource"
         ],
-        "summary": "Gets prisoner's list of merge details since a given date. Either the current offenderNo or the previous offenderNo can be used to search for merges.",
+        "summary": "Gets prisoner's list of merge details since a given date. Either the current offenderNo or the previous offenderNo can be used to search for merges. Only COMPLETED merges are returned",
         "description": "Requires role SYNCHRONISATION_REPORTING.",
         "operationId": "getPrisonerMerges",
         "parameters": [
@@ -11807,6 +11948,41 @@
         },
         "description": "Create adjustment response"
       },
+      "UpsertPhysicalAttributesRequest": {
+        "type": "object",
+        "properties": {
+          "height": {
+            "type": "integer",
+            "description": "Height (cm)",
+            "format": "int32"
+          },
+          "weight": {
+            "type": "integer",
+            "description": "Weight (kg)",
+            "format": "int32"
+          }
+        },
+        "description": "Physical attributes to update a prisoner"
+      },
+      "UpsertPhysicalAttributesResponse": {
+        "required": [
+          "bookingId",
+          "created"
+        ],
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "boolean",
+            "description": "Whether the record was created or updated"
+          },
+          "bookingId": {
+            "type": "integer",
+            "description": "The offender booking ID that was changed",
+            "format": "int64"
+          }
+        },
+        "description": "Physical attributes upsert response"
+      },
       "CreateSentenceRequest": {
         "required": [
           "offenderChargeIds",
@@ -14765,6 +14941,7 @@
       },
       "PrisonerDetails": {
         "required": [
+          "active",
           "bookingId",
           "location",
           "offenderNo"
@@ -14786,6 +14963,10 @@
             "type": "string",
             "description": "The prisoner's current location",
             "example": "BXI, OUT"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "True if prisoner is active in prison"
           }
         },
         "description": "Details of a prisoner booking"
@@ -17510,7 +17691,11 @@
           },
           "recordedBy": {
             "type": "string",
-            "description": "Who recorded the data"
+            "description": "The username of the person who recorded the data"
+          },
+          "recordedByDisplayName": {
+            "type": "string",
+            "description": "Real name of who recorded the data"
           },
           "recordedDate": {
             "type": "string",
