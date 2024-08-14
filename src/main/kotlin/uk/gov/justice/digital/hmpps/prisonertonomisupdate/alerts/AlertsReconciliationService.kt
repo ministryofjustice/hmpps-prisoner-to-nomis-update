@@ -28,14 +28,12 @@ class AlertsReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<MismatchAlerts> {
-    return activePrisonersCount.asPages(pageSize).flatMap { page ->
-      val activePrisoners = getActivePrisonersForPage(page)
+  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<MismatchAlerts> = activePrisonersCount.asPages(pageSize).flatMap { page ->
+    val activePrisoners = getActivePrisonersForPage(page)
 
-      withContext(Dispatchers.Unconfined) {
-        activePrisoners.map { async { checkActiveAlertsMatch(it) } }
-      }.awaitAll().filterNotNull()
-    }
+    withContext(Dispatchers.Unconfined) {
+      activePrisoners.map { async { checkActiveAlertsMatch(it) } }
+    }.awaitAll().filterNotNull()
   }
 
   private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) =
