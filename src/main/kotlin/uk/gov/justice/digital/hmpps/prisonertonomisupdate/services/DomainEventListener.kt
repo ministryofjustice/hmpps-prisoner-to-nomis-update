@@ -16,18 +16,12 @@ import java.util.concurrent.CompletableFuture
 
 const val RETRY_CREATE_MAPPING = "RETRY_CREATE_MAPPING"
 
-abstract class DomainEventListener(
-  internal val service: CreateMappingRetryable,
+abstract class DomainEventListenerNoMapping(
   internal val objectMapper: ObjectMapper,
   internal val eventFeatureSwitch: EventFeatureSwitch,
   internal val telemetryClient: TelemetryClient,
 ) {
-
-  private companion object {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
-  }
-
-  internal fun onDomainEvent(
+  fun onDomainEvent(
     rawMessage: String,
     processMessage: suspend (eventType: String, message: String) -> Unit,
   ): CompletableFuture<Void> {
@@ -43,31 +37,47 @@ abstract class DomainEventListener(
             log.warn("Feature switch is disabled for {}", eventType)
           }
         }
-
-        RETRY_CREATE_MAPPING -> runCatching { service.retryCreateMapping(sqsMessage.Message) }
-          .onFailure {
-            telemetryClient.trackEvent(
-              "create-mapping-retry-failure",
-              mapOf("retryMessage" to sqsMessage.Message),
-              null,
-            )
-            throw it
-          }
+        else -> onNonDomainEvent(sqsMessage)
       }
     }
   }
 
-  internal inline fun <reified T> String.fromJson(): T =
-    objectMapper.readValue(this)
+  internal open suspend fun onNonDomainEvent(sqsMessage: SQSMessage) {}
+
+  internal inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
+
+  private companion object {
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
+}
+
+abstract class DomainEventListener(
+  internal val service: CreateMappingRetryable,
+  objectMapper: ObjectMapper,
+  eventFeatureSwitch: EventFeatureSwitch,
+  telemetryClient: TelemetryClient,
+) : DomainEventListenerNoMapping(objectMapper, eventFeatureSwitch, telemetryClient) {
+
+  override suspend fun onNonDomainEvent(sqsMessage: SQSMessage) {
+    when (sqsMessage.Type) {
+      RETRY_CREATE_MAPPING -> runCatching { service.retryCreateMapping(sqsMessage.Message) }
+        .onFailure {
+          telemetryClient.trackEvent(
+            "create-mapping-retry-failure",
+            mapOf("retryMessage" to sqsMessage.Message),
+            null,
+          )
+          throw it
+        }
+    }
+  }
 }
 
 private fun asCompletableFuture(
   process: suspend () -> Unit,
-): CompletableFuture<Void> {
-  return CoroutineScope(Dispatchers.Default).future {
-    process()
-  }.thenAccept { }
-}
+): CompletableFuture<Void> = CoroutineScope(Dispatchers.Default).future {
+  process()
+}.thenAccept { }
 
 interface CreateMappingRetryable {
   suspend fun retryCreateMapping(message: String)

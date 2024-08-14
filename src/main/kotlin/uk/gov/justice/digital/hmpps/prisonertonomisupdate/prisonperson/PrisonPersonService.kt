@@ -10,6 +10,18 @@ class PrisonPersonService(
   private val nomisApi: PrisonPersonNomisApiService,
   private val telemetryClient: TelemetryClient,
 ) {
+
+  suspend fun updatePhysicalAttributesEvent(event: PhysicalAttributesDomainEvent) {
+    if (event.additionalInformation.source == "DPS") {
+      updatePhysicalAttributes(event.additionalInformation.prisonerNumber)
+    } else {
+      telemetryClient.trackEvent(
+        "physical-attributes-update-ignored",
+        mutableMapOf("offenderNo" to event.additionalInformation.prisonerNumber),
+      )
+    }
+  }
+
   suspend fun updatePhysicalAttributes(offenderNo: String) {
     val telemetry = mutableMapOf("offenderNo" to offenderNo)
 
@@ -29,3 +41,15 @@ class PrisonPersonService(
     }
   }
 }
+
+data class PhysicalAttributesDomainEvent(
+  val eventType: String,
+  val version: String,
+  val description: String,
+  val additionalInformation: PhysicalAttributesAdditionalInformation,
+)
+
+data class PhysicalAttributesAdditionalInformation(
+  val source: String,
+  val prisonerNumber: String,
+)
