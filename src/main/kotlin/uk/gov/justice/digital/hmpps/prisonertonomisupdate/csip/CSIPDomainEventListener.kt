@@ -35,19 +35,19 @@ class CSIPDomainEventListener(
     rawMessage: String,
   ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
-      "csip.record.created" -> log.info("Received csip.record.created event")
-      "csip.record.updated" -> log.info("Received csip.record.updated event")
-      "csip.record.deleted" -> log.info("Received csip.record.deleted event")
-      "csip.contributory-factor.created" -> log.info("Received csip.contributory-factor.created event")
-      "csip.contributory-factor.deleted" -> log.info("Received csip.contributory-factor.deleted event")
-      "csip.interview.created" -> log.info("Received csip.interview.created event")
-      "csip.interview.deleted" -> log.info("Received csip.interview.deleted event")
-      "csip.identified-need.created" -> log.info("Received csip.identified-need.created event")
-      "csip.identified-need.deleted" -> log.info("Received csip.identified-need.deleted event")
-      "csip.review.created" -> log.info("Received csip.review.created event")
-      "csip.review.deleted" -> log.info("Received csip.review.deleted event")
-      "csip.attendee.created" -> log.info("Received csip.attendee.created event")
-      "csip.attendee.deleted" -> log.info("Received csip.attendee.deleted event")
+      "person.csip.record.created" -> log.info("Received csip.record.created event")
+      "person.csip.record.updated" -> log.info("Received csip.record.updated event")
+      "person.csip.record.deleted" -> log.info("Received csip.record.deleted event")
+      "person.csip.contributory-factor.created" -> log.info("Received csip.contributory-factor.created event")
+      "person.csip.contributory-factor.deleted" -> log.info("Received csip.contributory-factor.deleted event")
+      "person.csip.interview.created" -> log.info("Received csip.interview.created event")
+      "person.csip.interview.deleted" -> log.info("Received csip.interview.deleted event")
+      "person.csip.identified-need.created" -> log.info("Received csip.identified-need.created event")
+      "person.csip.identified-need.deleted" -> log.info("Received csip.identified-need.deleted event")
+      "person.csip.review.created" -> log.info("Received csip.review.created event")
+      "person.csip.review.deleted" -> log.info("Received csip.review.deleted event")
+      "person.csip.attendee.created" -> log.info("Received csip.attendee.created event")
+      "person.csip.attendee.deleted" -> log.info("Received csip.attendee.deleted event")
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
