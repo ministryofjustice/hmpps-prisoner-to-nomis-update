@@ -42,7 +42,7 @@ abstract class DomainEventListenerNoMapping(
     }
   }
 
-  internal open fun onNonDomainEvent(sqsMessage: SQSMessage) = asCompletableFuture { }
+  internal open suspend fun onNonDomainEvent(sqsMessage: SQSMessage) {}
 
   internal inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 
@@ -58,20 +58,19 @@ abstract class DomainEventListener(
   telemetryClient: TelemetryClient,
 ) : DomainEventListenerNoMapping(objectMapper, eventFeatureSwitch, telemetryClient) {
 
-  override fun onNonDomainEvent(sqsMessage: SQSMessage): CompletableFuture<Void> =
-    asCompletableFuture {
-      when (sqsMessage.Type) {
-        RETRY_CREATE_MAPPING -> runCatching { service.retryCreateMapping(sqsMessage.Message) }
-          .onFailure {
-            telemetryClient.trackEvent(
-              "create-mapping-retry-failure",
-              mapOf("retryMessage" to sqsMessage.Message),
-              null,
-            )
-            throw it
-          }
-      }
+  override suspend fun onNonDomainEvent(sqsMessage: SQSMessage) {
+    when (sqsMessage.Type) {
+      RETRY_CREATE_MAPPING -> runCatching { service.retryCreateMapping(sqsMessage.Message) }
+        .onFailure {
+          telemetryClient.trackEvent(
+            "create-mapping-retry-failure",
+            mapOf("retryMessage" to sqsMessage.Message),
+            null,
+          )
+          throw it
+        }
     }
+  }
 }
 
 private fun asCompletableFuture(
