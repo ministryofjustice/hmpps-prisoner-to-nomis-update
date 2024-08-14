@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts
 
 import com.microsoft.applicationinsights.TelemetryClient
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -28,14 +29,12 @@ class AlertsReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<MismatchAlerts> {
-    return activePrisonersCount.asPages(pageSize).flatMap { page ->
-      val activePrisoners = getActivePrisonersForPage(page)
+  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<MismatchAlerts> = activePrisonersCount.asPages(pageSize).flatMap { page ->
+    val activePrisoners = getActivePrisonersForPage(page)
 
-      withContext(Dispatchers.Unconfined) {
-        activePrisoners.map { async { checkActiveAlertsMatch(it) } }
-      }.awaitAll().filterNotNull()
-    }
+    withContext(Dispatchers.Unconfined) {
+      activePrisoners.map { async { checkActiveAlertsMatch(it) } }
+    }.awaitAll().filterNotNull()
   }
 
   private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) =
@@ -52,6 +51,7 @@ class AlertsReconciliationService(
       .getOrElse { emptyList() }
       .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
+  @WithSpan("checkActiveAlertsMatch")
   suspend fun checkActiveAlertsMatch(prisonerId: PrisonerIds): MismatchAlerts? = runCatching {
     val nomisAlerts = doApiCallWithRetries { nomisAlertsApiService.getAlertsForReconciliation(prisonerId.offenderNo) }.latestBookingAlerts
       .map { it.alertCode.code }.toSortedSet()
