@@ -238,6 +238,7 @@ val generatedProjectDirs = listOf(
   "courtsentencing",
   "alerts",
   "casenotes",
+  "csip",
 )
 
 kotlin {

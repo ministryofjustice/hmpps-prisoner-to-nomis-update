@@ -181,6 +181,10 @@ generic-service:
       HMPPS_SQS_QUEUES_ALERTS_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-alerts-dlq:
       HMPPS_SQS_QUEUES_ALERTS_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-csip:
+      HMPPS_SQS_QUEUES_CSIP_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-csip-dlq:
+      HMPPS_SQS_QUEUES_CSIP_DLQ_NAME: "sqs_queue_name"
 
   allowlist:
     groups:
