@@ -10,10 +10,12 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.dpsmodel.PhysicalAttributesDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.dpsmodel.PrisonPersonDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.dpsmodel.ValueWithMetadataInteger
+import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 
 class PrisonPersonDpsApiExtension :
@@ -73,6 +75,18 @@ class PrisonPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withHeader("Content-Type", "application/json")
             .withBody(prisonPerson(prisonerNumber, height, weight))
             .withStatus(200),
+        ),
+    )
+  }
+
+  fun stubGetPrisonPerson(errorStatus: HttpStatus) {
+    stubFor(
+      get(urlMatching("/prisoners/.*"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(ErrorResponse(status = errorStatus, userMessage = "Some error"))
+            .withStatus(errorStatus.value()),
         ),
     )
   }
