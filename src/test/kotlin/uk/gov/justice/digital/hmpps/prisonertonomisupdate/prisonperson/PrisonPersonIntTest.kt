@@ -7,25 +7,26 @@ import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
-import org.springframework.web.reactive.function.client.WebClientResponseException
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
+import software.amazon.awssdk.services.sns.model.MessageAttributeValue
+import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.PrisonPersonDpsApiExtension.Companion.prisonPersonDpsApi
+import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
-class PrisonPersonIntTest(
-  // TODO remove this and replace with event processing after creating a message handler
-  @Autowired private val service: PrisonPersonService,
-) : IntegrationTestBase() {
+class PrisonPersonIntTest : SqsIntegrationTestBase() {
 
   @Autowired
   private lateinit var prisonPersonNomisApi: PrisonPersonNomisApiMockServer
@@ -39,27 +40,25 @@ class PrisonPersonIntTest(
         prisonPersonDpsApi.stubGetPrisonPerson(prisonerNumber = "A1234AA")
         prisonPersonNomisApi.stubPutPhysicalAttributes(offenderNo = "A1234AA")
 
-        service.updatePhysicalAttributes(offenderNo = "A1234AA")
+        awsSnsClient.publish(physicalAttributesRequest()).get()
+          .also { waitForAnyProcessingToComplete() }
       }
 
       @Test
-      fun `should call DPS API`() {
+      fun `should update physical attributes`() {
+        // should call DPS API
         prisonPersonDpsApi.verify(
           getRequestedFor(urlPathEqualTo("/prisoners/A1234AA")),
         )
-      }
 
-      @Test
-      fun `should call NOMIS API`() {
+        // should call NOMIS API`
         prisonPersonNomisApi.verify(
           putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes"))
             .withRequestBody(matchingJsonPath("$.height", equalTo("180")))
             .withRequestBody(matchingJsonPath("$.weight", equalTo("80"))),
         )
-      }
 
-      @Test
-      fun `should publish telemetry`() {
+        // should publish telemetry
         verify(telemetryClient).trackEvent(
           eq("physical-attributes-update-success"),
           check {
@@ -78,19 +77,45 @@ class PrisonPersonIntTest(
 
     @Nested
     inner class Failures {
-      @Disabled("cannot implement this until we add message handling (source system is contained in the message)")
       @Test
-      fun `should ignore if source system is not DPS`() {}
+      fun `should ignore if source system is not DPS`() {
+        prisonPersonDpsApi.stubGetPrisonPerson(prisonerNumber = "A1234AA")
+        prisonPersonNomisApi.stubPutPhysicalAttributes(offenderNo = "A1234AA")
+
+        awsSnsClient.publish(physicalAttributesRequest(source = "NOMIS")).get()
+          .also { waitForAnyProcessingToComplete() }
+
+        // should never call out
+        prisonPersonDpsApi.verify(0, getRequestedFor(urlPathEqualTo("/prisoners/A1234AA")))
+        prisonPersonNomisApi.verify(0, putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
+        // should publish ignore event
+        verify(telemetryClient).trackEvent(
+          eq("physical-attributes-update-ignored"),
+          check {
+            assertThat(it).containsExactlyInAnyOrderEntriesOf(mapOf("offenderNo" to "A1234AA"))
+          },
+          isNull(),
+        )
+      }
 
       @Test
-      fun `should throw if call to DPS fails`() = runTest {
+      fun `should fail if call to DPS fails`() = runTest {
         prisonPersonDpsApi.stubGetPrisonPerson(HttpStatus.BAD_REQUEST)
 
-        assertThrows<WebClientResponseException.BadRequest> {
-          service.updatePhysicalAttributes(offenderNo = "A1234AA")
-        }
+        awsSnsClient.publish(physicalAttributesRequest()).get()
+          .also {
+            // event should end up on the DLQ
+            await untilCallTo {
+              prisonPersonDlqClient!!.countAllMessagesOnQueue(prisonPersonDlqUrl!!).get()
+            } matches { it == 1 }
+          }
 
-        verify(telemetryClient).trackEvent(
+        // should call DPS for each retry
+        prisonPersonDpsApi.verify(3, getRequestedFor(urlPathEqualTo("/prisoners/A1234AA")))
+        // should never call NOMIS API
+        prisonPersonNomisApi.verify(0, putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
+        // should publish failed telemetry for each retry
+        verify(telemetryClient, times(3)).trackEvent(
           eq("physical-attributes-update-failed"),
           check {
             assertThat(it).containsExactlyInAnyOrderEntriesOf(
@@ -105,15 +130,23 @@ class PrisonPersonIntTest(
       }
 
       @Test
-      fun `should throw if call to NOMIS fails`() = runTest {
+      fun `should fail if call to NOMIS fails`() = runTest {
         prisonPersonDpsApi.stubGetPrisonPerson(prisonerNumber = "A1234AA")
         prisonPersonNomisApi.stubPutPhysicalAttributes(HttpStatus.BAD_GATEWAY)
 
-        assertThrows<WebClientResponseException.BadGateway> {
-          service.updatePhysicalAttributes(offenderNo = "A1234AA")
-        }
+        awsSnsClient.publish(physicalAttributesRequest()).get()
+          .also {
+            // event should end up on the DLQ
+            await untilCallTo {
+              prisonPersonDlqClient!!.countAllMessagesOnQueue(prisonPersonDlqUrl!!).get()
+            } matches { it == 1 }
+          }
 
-        verify(telemetryClient).trackEvent(
+        // should call DPS and NOMIS APIs for each retry
+        prisonPersonDpsApi.verify(3, getRequestedFor(urlPathEqualTo("/prisoners/A1234AA")))
+        prisonPersonNomisApi.verify(3, putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
+        // should publish failed telemetry for each retry
+        verify(telemetryClient, times(3)).trackEvent(
           eq("physical-attributes-update-failed"),
           check {
             assertThat(it).containsExactlyInAnyOrderEntriesOf(
@@ -128,4 +161,28 @@ class PrisonPersonIntTest(
       }
     }
   }
+
+  private fun physicalAttributesRequest(prisonerNumber: String = "A1234AA", source: String = "DPS") =
+    PublishRequest.builder().topicArn(topicArn)
+      .message(physicalAttributesMessage(prisonerNumber, source))
+      .messageAttributes(
+        mapOf(
+          "eventType" to MessageAttributeValue.builder().dataType("String")
+            .stringValue("prison-person.physical-attributes.updated").build(),
+        ),
+      ).build()
+
+  private fun physicalAttributesMessage(prisonerNumber: String, source: String) = """
+    {
+      "eventType":"prison-person.physical-attributes.updated",
+      "additionalInformation": {
+        "url":"https://prison-person-api-dev.prison.service.justice.gov.uk/prisoners/$prisonerNumber",
+        "source":"$source",
+        "prisonerNumber":"$prisonerNumber"
+      },
+      "occurredAt":"2024-08-12T15:16:44.356649821+01:00",
+      "description":"The physical attributes of a prisoner have been updated.",
+      "version":"1.0"
+    }
+  """.trimIndent()
 }

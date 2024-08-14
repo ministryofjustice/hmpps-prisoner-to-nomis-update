@@ -207,6 +207,16 @@ hmpps.sqs:
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
+    prisonperson:
+      queueName: "prisonperson-${random.uuid}"
+      dlqName: "prisonperson-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "prison-person.physical-attributes.updated"
+        ]}
+      dlqMaxReceiveCount: 3
+      visibilityTimeout: 120
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}
