@@ -56,6 +56,10 @@ generic-service:
           deny all;
           return 401;
         }
+        location /csip/reports/reconciliation {
+          deny all;
+          return 401;
+        }
     host: app-hostname.local # override per environment
     tlsSecretName: prisoner-to-nomis-cert
 
@@ -131,6 +135,8 @@ generic-service:
       COURT_SENTENCING_CLIENT_SECRET: "COURT_SENTENCING_CLIENT_SECRET"
       ALERTS_CLIENT_ID: "ALERTS_CLIENT_ID"
       ALERTS_CLIENT_SECRET: "ALERTS_CLIENT_SECRET"
+      CSIP_CLIENT_ID: "CSIP_CLIENT_ID"
+      CSIP_CLIENT_SECRET: "CSIP_CLIENT_SECRET"
       CASENOTES_CLIENT_ID: "CASENOTES_CLIENT_ID"
       CASENOTES_CLIENT_SECRET: "CASENOTES_CLIENT_SECRET"
       PRISON_PERSON_CLIENT_ID: "PRISON_PERSON_CLIENT_ID"

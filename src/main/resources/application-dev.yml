@@ -15,3 +15,4 @@ api.base.url:
   nonAssociations: http://localhost:8080
   court.sentencing: http://localhost:8080
   alerts: http://localhost:8080
+  csip: http://localhost:8080

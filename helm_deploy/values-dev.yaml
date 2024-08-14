@@ -22,6 +22,7 @@ generic-service:
     API_BASE_URL_NON_ASSOCIATIONS: https://non-associations-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_LOCATIONS: https://locations-inside-prison-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_ALERTS: https://alerts-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_CSIP: https://csip-api-dev.hmpps.service.justice.gov.uk
     # currently set to self for a mock API until real API is ready
     API_BASE_URL_CASENOTES: https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_PRISONPERSON: https://prison-person-api-dev.prison.service.justice.gov.uk
@@ -60,3 +61,6 @@ generic-prometheus-alerts:
     alerts:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_alerts_queue"
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_alerts_dlq"
+    csip:
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_csip_queue"
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_csip_dlq"

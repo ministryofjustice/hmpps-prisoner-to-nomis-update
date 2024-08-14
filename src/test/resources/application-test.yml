@@ -21,6 +21,7 @@ api.base.url:
   alerts: http://localhost:8095
   casenotes: http://localhost:8096
   prisonperson: http://localhost:8097
+  csip: http://localhost:8098
 
 hmpps.sqs:
   provider: localstack
@@ -181,6 +182,28 @@ hmpps.sqs:
           "prisoner-alerts.alert-type-deactivated",
           "prisoner-alerts.alert-type-reactivated",
           "prisoner-alerts.alert-type-updated"
+        ]}
+      dlqMaxReceiveCount: 3
+      visibilityTimeout: 120
+    csip:
+      queueName: "csip-${random.uuid}"
+      dlqName: "csip-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "csip.record.created",
+          "csip.record.updated",
+          "csip.record.deleted",
+          "csip.contributory-factor.created",
+          "csip.contributory-factor.deleted",
+          "csip.interview.created",
+          "csip.interview.deleted",
+          "csip.identified-need.created",
+          "csip.identified-need.deleted",
+          "csip.review.created",
+          "csip.review.deleted",
+          "csip.attendee.created",
+          "csip.attendee.deleted"
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120

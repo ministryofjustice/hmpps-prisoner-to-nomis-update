@@ -130,6 +130,25 @@ hmpps.sqs:
           "person.alert.created",
           "person.alert.updated",
           "person.alert.deleted"]}
+    csip:
+      queueName: hmpps_prisoner_to_nomis_csip_queue
+      dlqName: hmpps_prisoner_to_nomis_csip_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+            "csip.record.created",
+            "csip.record.updated",
+            "csip.record.deleted",
+            "csip.contributory-factor.created",
+            "csip.contributory-factor.deleted",
+            "csip.interview.created",
+            "csip.interview.deleted",
+            "csip.identified-need.created",
+            "csip.identified-need.deleted",
+            "csip.review.created",
+            "csip.review.deleted",
+            "csip.attendee.created",
+            "csip.attendee.deleted"]}
 
   topics:
     domainevents:

@@ -86,6 +86,11 @@ spring:
             client-id: ${prison.person.client.id}
             client-secret: ${prison.person.client.secret}
             authorization-grant-type: client_credentials
+          csip-api:
+            provider: hmpps-auth
+            client-id: ${csip.client.id}
+            client-secret: ${csip.client.secret}
+            authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${api.base.url.hmpps-auth}/oauth/token
