@@ -76,6 +76,7 @@ curl https://nomis-sync-prisoner-mapping-dev.hmpps.service.justice.gov.uk/v3/api
 curl https://adjustments-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/sentencing-adjustments-api-docs.json
 curl https://remand-and-sentencing-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/court-sentencing-api-docs.json
 curl https://csip-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/csip-api-docs.json
+curl https://prison-person-api-dev.prison.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/prison-person-api-docs.json
 ```
 
 Then run compile gradle task that will regenerate the models in the `build/generated/src` directory:
