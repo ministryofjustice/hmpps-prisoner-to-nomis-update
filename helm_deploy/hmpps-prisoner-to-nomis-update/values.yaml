@@ -171,6 +171,10 @@ generic-service:
       HMPPS_SQS_QUEUES_CSIP_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-csip-dlq:
       HMPPS_SQS_QUEUES_CSIP_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-prisonperson:
+      HMPPS_SQS_QUEUES_PRISONPERSON_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-prisonperson-dlq:
+      HMPPS_SQS_QUEUES_PRISONPERSON_DLQ_NAME: "sqs_queue_name"
 
   allowlist:
     groups:
