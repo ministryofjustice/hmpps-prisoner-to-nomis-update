@@ -12,9 +12,10 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.dpsmodel.PhysicalAttributesDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.dpsmodel.PrisonPersonDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.dpsmodel.ValueWithMetadataInteger
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.HealthDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PhysicalAttributesDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PrisonPersonDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.ValueWithMetadataInteger
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 
@@ -102,4 +103,5 @@ fun prisonPerson(
     height = ValueWithMetadataInteger(value = height, lastModifiedAt = LocalDateTime.now().toString(), lastModifiedBy = "someone"),
     weight = ValueWithMetadataInteger(value = weight, lastModifiedAt = LocalDateTime.now().toString(), lastModifiedBy = "someone"),
   ),
+  health = HealthDto(),
 )
