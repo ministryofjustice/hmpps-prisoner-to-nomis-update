@@ -32,7 +32,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
   private lateinit var prisonPersonNomisApi: PrisonPersonNomisApiMockServer
 
   @Nested
-  inner class UpdatePhysicalAttributes {
+  inner class UpdatePhysicalAttributesEvent {
     @Nested
     inner class HappyPath {
       @BeforeEach
@@ -185,4 +185,111 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
       "version":"1.0"
     }
   """.trimIndent()
+
+  @Nested
+  inner class UpdatePhysicalAttributesApi {
+
+    @Test
+    fun `should update physical attributes`() {
+      prisonPersonDpsApi.stubGetPrisonPerson(prisonerNumber = "A1234AA")
+      prisonPersonNomisApi.stubPutPhysicalAttributes(offenderNo = "A1234AA")
+
+      webTestClient.put().uri("/prisonperson/A1234AA/physical-attributes")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_PRISON_PERSON")))
+        .exchange()
+        .expectStatus().isOk
+
+      // should call DPS API
+      prisonPersonDpsApi.verify(
+        getRequestedFor(urlPathEqualTo("/prisoners/A1234AA")),
+      )
+
+      // should call NOMIS API`
+      prisonPersonNomisApi.verify(
+        putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes"))
+          .withRequestBody(matchingJsonPath("$.height", equalTo("180")))
+          .withRequestBody(matchingJsonPath("$.weight", equalTo("80"))),
+      )
+
+      // should publish telemetry
+      verify(telemetryClient).trackEvent(
+        eq("physical-attributes-update-requested"),
+        check {
+          assertThat(it).containsExactlyEntriesOf(mapOf("offenderNo" to "A1234AA"))
+        },
+        isNull(),
+      )
+      verify(telemetryClient).trackEvent(
+        eq("physical-attributes-update-success"),
+        check {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "offenderNo" to "A1234AA",
+              "bookingId" to "12345",
+              "created" to "true",
+            ),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should fail on error`() = runTest {
+      prisonPersonDpsApi.stubGetPrisonPerson(HttpStatus.BAD_REQUEST)
+
+      webTestClient.put().uri("/prisonperson/A1234AA/physical-attributes")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_PRISON_PERSON")))
+        .exchange()
+        .expectStatus().is5xxServerError
+
+      // should call DPS
+      prisonPersonDpsApi.verify(getRequestedFor(urlPathEqualTo("/prisoners/A1234AA")))
+      // should never call NOMIS API
+      prisonPersonNomisApi.verify(0, putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
+      // should publish failed telemetry
+      verify(telemetryClient).trackEvent(
+        eq("physical-attributes-update-requested"),
+        check {
+          assertThat(it).containsExactlyEntriesOf(mapOf("offenderNo" to "A1234AA"))
+        },
+        isNull(),
+      )
+      verify(telemetryClient).trackEvent(
+        eq("physical-attributes-update-failed"),
+        check {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "offenderNo" to "A1234AA",
+              "reason" to "400 Bad Request from GET http://localhost:8097/prisoners/A1234AA",
+            ),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `access forbidden when no authority`() {
+      webTestClient.put().uri("/prisonperson/A1234AA/physical-attributes")
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
+
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient.put().uri("/prisonperson/A1234AA/physical-attributes")
+        .headers(setAuthorisation(roles = listOf()))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden with wrong role`() {
+      webTestClient.put().uri("/prisonperson/A1234AA/physical-attributes")
+        .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+  }
 }
