@@ -12,9 +12,7 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.HealthDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PhysicalAttributesDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PrisonPersonDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.ValueWithMetadataInteger
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
@@ -64,25 +62,24 @@ class PrisonPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     return this
   }
 
-  fun stubGetPrisonPerson(
-    prisonerNumber: String = "A1234AA",
+  fun stubGetPhysicalAttributes(
     height: Int = 180,
     weight: Int = 80,
   ) {
     stubFor(
-      get(urlMatching("/prisoners/.*"))
+      get(urlMatching("/prisoners/.*/physical-attributes"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
-            .withBody(prisonPerson(prisonerNumber, height, weight))
+            .withBody(physicalAttributes(height, weight))
             .withStatus(200),
         ),
     )
   }
 
-  fun stubGetPrisonPerson(errorStatus: HttpStatus) {
+  fun stubGetPhysicalAttributes(errorStatus: HttpStatus) {
     stubFor(
-      get(urlMatching("/prisoners/.*"))
+      get(urlMatching("/prisoners/.*/physical-attributes"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -93,15 +90,10 @@ class PrisonPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 }
 
-fun prisonPerson(
-  prisonerNumber: String = "A1234AA",
+fun physicalAttributes(
   height: Int = 180,
   weight: Int = 80,
-): PrisonPersonDto = PrisonPersonDto(
-  prisonerNumber = prisonerNumber,
-  physicalAttributes = PhysicalAttributesDto(
-    height = ValueWithMetadataInteger(value = height, lastModifiedAt = LocalDateTime.now().toString(), lastModifiedBy = "someone"),
-    weight = ValueWithMetadataInteger(value = weight, lastModifiedAt = LocalDateTime.now().toString(), lastModifiedBy = "someone"),
-  ),
-  health = HealthDto(),
+): PhysicalAttributesDto = PhysicalAttributesDto(
+  height = ValueWithMetadataInteger(value = height, lastModifiedAt = LocalDateTime.now().toString(), lastModifiedBy = "someone"),
+  weight = ValueWithMetadataInteger(value = weight, lastModifiedAt = LocalDateTime.now().toString(), lastModifiedBy = "someone"),
 )
