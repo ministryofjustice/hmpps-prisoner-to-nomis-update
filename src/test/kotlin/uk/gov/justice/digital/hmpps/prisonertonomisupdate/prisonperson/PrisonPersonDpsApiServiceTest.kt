@@ -40,7 +40,7 @@ class PrisonPersonDpsApiServiceTest {
       apiService.getPhysicalAttributes(prisonerNumber = "A1234AA")
 
       prisonPersonDpsApi.verify(
-        getRequestedFor(urlEqualTo("/prisoners/A1234AA")),
+        getRequestedFor(urlEqualTo("/prisoners/A1234AA/physical-attributes")),
       )
     }
 
