@@ -37,7 +37,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
     inner class HappyPath {
       @BeforeEach
       fun setUp() = runTest {
-        prisonPersonDpsApi.stubGetPrisonPerson(prisonerNumber = "A1234AA")
+        prisonPersonDpsApi.stubGetPhysicalAttributes()
         prisonPersonNomisApi.stubPutPhysicalAttributes(offenderNo = "A1234AA")
 
         awsSnsClient.publish(physicalAttributesRequest()).get()
@@ -48,7 +48,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
       fun `should update physical attributes`() {
         // should call DPS API
         prisonPersonDpsApi.verify(
-          getRequestedFor(urlPathEqualTo("/prisoners/A1234AA")),
+          getRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")),
         )
 
         // should call NOMIS API`
@@ -79,14 +79,14 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
     inner class Failures {
       @Test
       fun `should ignore if source system is not DPS`() {
-        prisonPersonDpsApi.stubGetPrisonPerson(prisonerNumber = "A1234AA")
+        prisonPersonDpsApi.stubGetPhysicalAttributes()
         prisonPersonNomisApi.stubPutPhysicalAttributes(offenderNo = "A1234AA")
 
         awsSnsClient.publish(physicalAttributesRequest(source = "NOMIS")).get()
           .also { waitForAnyProcessingToComplete() }
 
         // should never call out
-        prisonPersonDpsApi.verify(0, getRequestedFor(urlPathEqualTo("/prisoners/A1234AA")))
+        prisonPersonDpsApi.verify(0, getRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
         prisonPersonNomisApi.verify(0, putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
         // should publish ignore event
         verify(telemetryClient).trackEvent(
@@ -100,7 +100,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `should fail if call to DPS fails`() = runTest {
-        prisonPersonDpsApi.stubGetPrisonPerson(HttpStatus.BAD_REQUEST)
+        prisonPersonDpsApi.stubGetPhysicalAttributes(HttpStatus.BAD_REQUEST)
 
         awsSnsClient.publish(physicalAttributesRequest()).get()
           .also {
@@ -111,7 +111,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
           }
 
         // should call DPS for each retry
-        prisonPersonDpsApi.verify(3, getRequestedFor(urlPathEqualTo("/prisoners/A1234AA")))
+        prisonPersonDpsApi.verify(3, getRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
         // should never call NOMIS API
         prisonPersonNomisApi.verify(0, putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
         // should publish failed telemetry for each retry
@@ -121,7 +121,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
             assertThat(it).containsExactlyInAnyOrderEntriesOf(
               mapOf(
                 "offenderNo" to "A1234AA",
-                "reason" to "400 Bad Request from GET http://localhost:8097/prisoners/A1234AA",
+                "reason" to "400 Bad Request from GET http://localhost:8097/prisoners/A1234AA/physical-attributes",
               ),
             )
           },
@@ -131,7 +131,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `should fail if call to NOMIS fails`() = runTest {
-        prisonPersonDpsApi.stubGetPrisonPerson(prisonerNumber = "A1234AA")
+        prisonPersonDpsApi.stubGetPhysicalAttributes()
         prisonPersonNomisApi.stubPutPhysicalAttributes(HttpStatus.BAD_GATEWAY)
 
         awsSnsClient.publish(physicalAttributesRequest()).get()
@@ -143,7 +143,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
           }
 
         // should call DPS and NOMIS APIs for each retry
-        prisonPersonDpsApi.verify(3, getRequestedFor(urlPathEqualTo("/prisoners/A1234AA")))
+        prisonPersonDpsApi.verify(3, getRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
         prisonPersonNomisApi.verify(3, putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
         // should publish failed telemetry for each retry
         verify(telemetryClient, times(3)).trackEvent(
@@ -191,7 +191,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
 
     @Test
     fun `should update physical attributes`() {
-      prisonPersonDpsApi.stubGetPrisonPerson(prisonerNumber = "A1234AA")
+      prisonPersonDpsApi.stubGetPhysicalAttributes()
       prisonPersonNomisApi.stubPutPhysicalAttributes(offenderNo = "A1234AA")
 
       webTestClient.put().uri("/prisonperson/A1234AA/physical-attributes")
@@ -201,7 +201,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
 
       // should call DPS API
       prisonPersonDpsApi.verify(
-        getRequestedFor(urlPathEqualTo("/prisoners/A1234AA")),
+        getRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")),
       )
 
       // should call NOMIS API`
@@ -236,7 +236,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
 
     @Test
     fun `should fail on error`() = runTest {
-      prisonPersonDpsApi.stubGetPrisonPerson(HttpStatus.BAD_REQUEST)
+      prisonPersonDpsApi.stubGetPhysicalAttributes(HttpStatus.BAD_REQUEST)
 
       webTestClient.put().uri("/prisonperson/A1234AA/physical-attributes")
         .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_PRISON_PERSON")))
@@ -244,7 +244,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
         .expectStatus().is5xxServerError
 
       // should call DPS
-      prisonPersonDpsApi.verify(getRequestedFor(urlPathEqualTo("/prisoners/A1234AA")))
+      prisonPersonDpsApi.verify(getRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
       // should never call NOMIS API
       prisonPersonNomisApi.verify(0, putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
       // should publish failed telemetry
@@ -261,7 +261,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "offenderNo" to "A1234AA",
-              "reason" to "400 Bad Request from GET http://localhost:8097/prisoners/A1234AA",
+              "reason" to "400 Bad Request from GET http://localhost:8097/prisoners/A1234AA/physical-attributes",
             ),
           )
         },

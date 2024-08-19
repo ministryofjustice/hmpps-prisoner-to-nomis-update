@@ -23,9 +23,9 @@ class PrisonPersonDpsApiServiceTest {
   inner class GetPrisonPerson {
     @Test
     internal fun `will pass oath2 token to service`() = runTest {
-      prisonPersonDpsApi.stubGetPrisonPerson(prisonerNumber = "A1234AA")
+      prisonPersonDpsApi.stubGetPhysicalAttributes()
 
-      apiService.getPrisonPerson(prisonerNumber = "A1234AA")
+      apiService.getPhysicalAttributes(prisonerNumber = "A1234AA")
 
       prisonPersonDpsApi.verify(
         getRequestedFor(anyUrl())
@@ -35,20 +35,20 @@ class PrisonPersonDpsApiServiceTest {
 
     @Test
     internal fun `will pass prisoner number to service`() = runTest {
-      prisonPersonDpsApi.stubGetPrisonPerson(prisonerNumber = "A1234AA")
+      prisonPersonDpsApi.stubGetPhysicalAttributes()
 
-      apiService.getPrisonPerson(prisonerNumber = "A1234AA")
+      apiService.getPhysicalAttributes(prisonerNumber = "A1234AA")
 
       prisonPersonDpsApi.verify(
-        getRequestedFor(urlEqualTo("/prisoners/A1234AA")),
+        getRequestedFor(urlEqualTo("/prisoners/A1234AA/physical-attributes")),
       )
     }
 
     @Test
     fun `will return physical attributes DTO`() = runTest {
-      prisonPersonDpsApi.stubGetPrisonPerson(prisonerNumber = "A1234AA")
+      prisonPersonDpsApi.stubGetPhysicalAttributes()
 
-      val pa = apiService.getPrisonPerson(prisonerNumber = "A1234AA").physicalAttributes
+      val pa = apiService.getPhysicalAttributes(prisonerNumber = "A1234AA")
 
       assertThat(pa.height?.value).isEqualTo(180)
       assertThat(pa.weight?.value).isEqualTo(80)

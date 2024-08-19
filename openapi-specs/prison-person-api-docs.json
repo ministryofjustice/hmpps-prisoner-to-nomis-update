@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-08-15.661.0b81d25"
+    "version": "2024-08-16.746.6709b76"
   },
   "servers": [
     {
@@ -32,16 +32,16 @@
       "description": "Reference Data Domains for Prison Person data"
     },
     {
+      "name": "Physical Attributes",
+      "description": "The physical attributes, such as height and weight, of a prisoner"
+    },
+    {
       "name": "Sync with NOMIS",
       "description": "Endpoints to keep the Prison Person database in sync with changes in the NOMIS database"
     },
     {
       "name": "Prison Person Data",
       "description": "Data about a person that is specific to their time in prison"
-    },
-    {
-      "name": "Physical Attributes",
-      "description": "The height and weight of a prisoner"
     },
     {
       "name": "Migration from NOMIS",
@@ -315,6 +315,69 @@
       }
     },
     "/prisoners/{prisonerNumber}/physical-attributes": {
+      "get": {
+        "tags": [
+          "Physical Attributes"
+        ],
+        "description": "Requires role `ROLE_PRISON_PERSON_API__PRISON_PERSON_DATA__RO`",
+        "operationId": "getPhysicalAttributes",
+        "parameters": [
+          {
+            "name": "prisonerNumber",
+            "in": "path",
+            "description": "The prisoner number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The prisoner number",
+              "example": "A1234AA"
+            },
+            "example": "A1234AA"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the prisoner's physical attributes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhysicalAttributesDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires ROLE_PRISON_PERSON_API__PRISON_PERSON_DATA__RO",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
       "patch": {
         "tags": [
           "Physical Attributes"
@@ -780,19 +843,19 @@
             "type": "string",
             "description": "The timestamp indicating from when these physical attributes were true for the prisoner. For edits to the current booking, this should be equal to the 'createdAt' date. For edits to historical bookings, this should be equal to the booking start date.",
             "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+01:00[Europe/London]"
+            "example": "2024-06-14T10:35:17+0100"
           },
           "appliesTo": {
             "type": "string",
             "description": "The timestamp of when these physical attributes should no longer be considered applicable. For edits to the current booking, this should be left null. For edits to historical bookings, this should be equal to the booking end date.",
             "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+01:00[Europe/London]"
+            "example": "2024-06-14T10:35:17+0100"
           },
           "createdAt": {
             "type": "string",
             "description": "The timestamp indicating when this record was last edited in NOMIS.",
             "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+01:00[Europe/London]"
+            "example": "2024-06-14T10:35:17+0100"
           },
           "createdBy": {
             "type": "string",
@@ -874,19 +937,19 @@
             "type": "string",
             "description": "The timestamp indicating from when these physical attributes were true for the prisoner. For migration of the current booking, this should be equal to the 'createdAt' date. For migration of historical bookings, this should be equal to the booking start date.",
             "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+01:00[Europe/London]"
+            "example": "2024-06-14T10:35:17+0100"
           },
           "appliesTo": {
             "type": "string",
             "description": "The timestamp of when these physical attributes should no longer be considered applicable. For migration of the current booking, this should be left null. For migration of historical bookings, this should be equal to the booking end date.",
             "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+01:00[Europe/London]"
+            "example": "2024-06-14T10:35:17+0100"
           },
           "createdAt": {
             "type": "string",
             "description": "The timestamp indicating when this record was last edited in NOMIS.",
             "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+01:00[Europe/London]"
+            "example": "2024-06-14T10:35:17+0100"
           },
           "createdBy": {
             "type": "string",
@@ -1061,7 +1124,7 @@
             "type": "string",
             "description": "The date and time the reference data code was created",
             "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+01:00[Europe/London]"
+            "example": "2024-06-14T10:35:17+0100"
           },
           "createdBy": {
             "type": "string",
@@ -1072,7 +1135,7 @@
             "type": "string",
             "description": "The date and time the reference data code was last modified",
             "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+01:00[Europe/London]"
+            "example": "2024-06-14T10:35:17+0100"
           },
           "lastModifiedBy": {
             "type": "string",
@@ -1083,7 +1146,7 @@
             "type": "string",
             "description": "The date and time the reference data code was deactivated",
             "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+01:00[Europe/London]"
+            "example": "2024-06-14T10:35:17+0100"
           },
           "deactivatedBy": {
             "type": "string",
@@ -1109,7 +1172,7 @@
             "type": "string",
             "description": "Timestamp this field was last modified",
             "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+01:00[Europe/London]"
+            "example": "2024-06-14T10:35:17+0100"
           },
           "lastModifiedBy": {
             "type": "string",
@@ -1133,7 +1196,7 @@
             "type": "string",
             "description": "Timestamp this field was last modified",
             "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+01:00[Europe/London]"
+            "example": "2024-06-14T10:35:17+0100"
           },
           "lastModifiedBy": {
             "type": "string",
@@ -1158,7 +1221,7 @@
             "type": "string",
             "description": "Timestamp this field was last modified",
             "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+01:00[Europe/London]"
+            "example": "2024-06-14T10:35:17+0100"
           },
           "lastModifiedBy": {
             "type": "string",
@@ -1205,7 +1268,7 @@
             "type": "string",
             "description": "The date and time the reference data domain was created",
             "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+01:00[Europe/London]"
+            "example": "2024-06-14T10:35:17+0100"
           },
           "createdBy": {
             "type": "string",
@@ -1216,7 +1279,7 @@
             "type": "string",
             "description": "The date and time the reference data domain was last modified",
             "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+01:00[Europe/London]"
+            "example": "2024-06-14T10:35:17+0100"
           },
           "lastModifiedBy": {
             "type": "string",
@@ -1227,7 +1290,7 @@
             "type": "string",
             "description": "The date and time the reference data domain was deactivated",
             "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+01:00[Europe/London]"
+            "example": "2024-06-14T10:35:17+0100"
           },
           "deactivatedBy": {
             "type": "string",
