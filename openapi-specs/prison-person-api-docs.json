@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-08-16.746.6709b76"
+    "version": "2024-08-21.863.6757701"
   },
   "servers": [
     {
@@ -28,12 +28,20 @@
   ],
   "tags": [
     {
-      "name": "Reference Data Domains",
-      "description": "Reference Data Domains for Prison Person data"
+      "name": "Field History",
+      "description": "The history of changes to fields linked to a prisoner, such as height, weight, hair, facial hair, face shape, build, eye colour and shoe size."
+    },
+    {
+      "name": "Health",
+      "description": "The health information for a prisoner"
     },
     {
       "name": "Physical Attributes",
-      "description": "The physical attributes, such as height and weight, of a prisoner"
+      "description": "The physical attributes of a prisoner - height, weight, hair, facial hair, face shape, build, eye colour and shoe size."
+    },
+    {
+      "name": "Reference Data Domains",
+      "description": "Reference Data Domains for Prison Person data"
     },
     {
       "name": "Sync with NOMIS",
@@ -42,6 +50,10 @@
     {
       "name": "Prison Person Data",
       "description": "Data about a person that is specific to their time in prison"
+    },
+    {
+      "name": "Prison Person Photographs",
+      "description": "The photographs linked to a prisoner"
     },
     {
       "name": "Migration from NOMIS",
@@ -314,6 +326,82 @@
         }
       }
     },
+    "/photographs/prisoner-profile": {
+      "post": {
+        "tags": [
+          "Prison Person Photographs"
+        ],
+        "summary": "Post a profile picture for a prisoner",
+        "description": "description = \"Stores a profile picture supplied on the file attribute of a multipart/form-date submission  \nreturns the meta data for the stored document\"\nRequires role `ROLE_PRISON_PERSON_API__PRISON_PERSON_DATA__RO`",
+        "operationId": "putPrisonerProfilePicture",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "file",
+                  "prisonerNumber"
+                ],
+                "type": "object",
+                "properties": {
+                  "prisonerNumber": {
+                    "type": "string",
+                    "description": "The prisoner number"
+                  },
+                  "file": {
+                    "type": "string",
+                    "description": "File part of the multipart request",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns uploaded photograph document data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires ROLE_PRISON_PERSON_API__PRISON_PERSON_DATA__RO",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{prisonerNumber}/physical-attributes": {
       "get": {
         "tags": [
@@ -456,6 +544,92 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PhysicalAttributesDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{prisonerNumber}/health": {
+      "patch": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Updates the health information for a prisoner",
+        "description": "Requires role `ROLE_PRISON_PERSON_API__HEALTH__RW`",
+        "operationId": "createOrUpdateHealth",
+        "parameters": [
+          {
+            "name": "prisonerNumber",
+            "in": "path",
+            "description": "The prisoner number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The prisoner number",
+              "example": "A1234AA"
+            },
+            "example": "A1234AA"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HealthUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Returns prisoner's health information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires ROLE_PRISON_PERSON_API__HEALTH__RW",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthDto"
                 }
               }
             }
@@ -789,6 +963,153 @@
           }
         }
       }
+    },
+    "/prisoners/{prisonerNumber}/field-history/{field}": {
+      "get": {
+        "tags": [
+          "Field History"
+        ],
+        "description": "Requires role `ROLE_PRISON_PERSON_API__FIELD_HISTORY__RO`",
+        "operationId": "getFieldHistory",
+        "parameters": [
+          {
+            "name": "prisonerNumber",
+            "in": "path",
+            "description": "The prisoner number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The prisoner number",
+              "example": "A1234AA"
+            },
+            "example": "A1234AA"
+          },
+          {
+            "name": "field",
+            "in": "path",
+            "description": "The field to get history for",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The field to get history for",
+              "example": "HAIR"
+            },
+            "example": "HAIR"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns Field History Data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FieldHistoryDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires ROLE_PRISON_PERSON_API__FIELD_HISTORY__RO",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/photographs/{prisonerNumber}/all": {
+      "get": {
+        "tags": [
+          "Prison Person Photographs"
+        ],
+        "summary": "Get all photographs for a prisoner",
+        "description": "description = \"Returns document properties and metadata associated with the document. The document file must be \ndownloaded separately using the GET /COMING_SOON.\"\nRequires role `ROLE_PRISON_PERSON_API__PRISON_PERSON_DATA__RO`",
+        "operationId": "getAllProfilePicturesForPrisoner",
+        "parameters": [
+          {
+            "name": "prisonerNumber",
+            "in": "path",
+            "description": "The prisoner number",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "A1234AA"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns Photograph Document Data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing required role. Requires ROLE_PRISON_PERSON_API__PRISON_PERSON_DATA__RO",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -861,6 +1182,11 @@
             "type": "string",
             "description": "The username of who last edited the record in NOMIS",
             "example": "USER1"
+          },
+          "latestBooking": {
+            "type": "boolean",
+            "description": "An indication of whether the edit was performed to the latest booking. If this is not the latest booking, the edit will be inserted into field history but the physical attributes table will not be updated.",
+            "example": true
           }
         },
         "description": "Request object for syncing a prisoner's physical attributes"
@@ -981,6 +1307,68 @@
         },
         "description": "Physical Attributes Migration Response"
       },
+      "DocumentDto": {
+        "required": [
+          "createdByServiceName",
+          "createdTime",
+          "documentFilename",
+          "documentType",
+          "documentUuid",
+          "fileExtension",
+          "fileHash",
+          "fileSize",
+          "filename",
+          "metadata",
+          "mimeType"
+        ],
+        "type": "object",
+        "properties": {
+          "documentUuid": {
+            "type": "string"
+          },
+          "documentType": {
+            "type": "string",
+            "enum": [
+              "PRISONER_PROFILE_PICTURE",
+              "PHYSICAL_IDENTIFIER_PICTURE"
+            ]
+          },
+          "documentFilename": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "fileExtension": {
+            "type": "string"
+          },
+          "fileSize": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "fileHash": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "createdTime": {
+            "type": "string"
+          },
+          "createdByServiceName": {
+            "type": "string"
+          },
+          "createdByUsername": {
+            "type": "string"
+          }
+        }
+      },
       "PhysicalAttributesUpdateRequest": {
         "type": "object",
         "properties": {
@@ -1053,28 +1441,157 @@
             "$ref": "#/components/schemas/ValueWithMetadataInteger"
           },
           "hair": {
-            "$ref": "#/components/schemas/ValueWithMetadataReferenceDataCodeDto"
+            "$ref": "#/components/schemas/ValueWithMetadataReferenceDataSimpleDto"
           },
           "facialHair": {
-            "$ref": "#/components/schemas/ValueWithMetadataReferenceDataCodeDto"
+            "$ref": "#/components/schemas/ValueWithMetadataReferenceDataSimpleDto"
           },
           "face": {
-            "$ref": "#/components/schemas/ValueWithMetadataReferenceDataCodeDto"
+            "$ref": "#/components/schemas/ValueWithMetadataReferenceDataSimpleDto"
           },
           "build": {
-            "$ref": "#/components/schemas/ValueWithMetadataReferenceDataCodeDto"
+            "$ref": "#/components/schemas/ValueWithMetadataReferenceDataSimpleDto"
           },
           "leftEyeColour": {
-            "$ref": "#/components/schemas/ValueWithMetadataReferenceDataCodeDto"
+            "$ref": "#/components/schemas/ValueWithMetadataReferenceDataSimpleDto"
           },
           "rightEyeColour": {
-            "$ref": "#/components/schemas/ValueWithMetadataReferenceDataCodeDto"
+            "$ref": "#/components/schemas/ValueWithMetadataReferenceDataSimpleDto"
           },
           "shoeSize": {
             "$ref": "#/components/schemas/ValueWithMetadataString"
           }
         },
         "description": "Physical Attributes"
+      },
+      "ReferenceDataSimpleDto": {
+        "required": [
+          "description",
+          "id",
+          "isActive",
+          "listSequence"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Id",
+            "example": "FACIAL_HAIR_BEARDED"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the reference data code",
+            "example": "Full Beard"
+          },
+          "listSequence": {
+            "type": "integer",
+            "description": "The sequence number of the reference data code. Used for ordering reference data correctly in lists and dropdowns. 0 is default order by description.",
+            "format": "int32",
+            "example": 3
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Indicates that the reference data code is active and can be used. Inactive reference data codes are not returned by default in the API",
+            "example": true
+          }
+        },
+        "description": "Reference Data Simple DTO - for use in dropdowns"
+      },
+      "ValueWithMetadataInteger": {
+        "required": [
+          "lastModifiedAt",
+          "lastModifiedBy"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "description": "Value",
+            "format": "int32"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "description": "Timestamp this field was last modified",
+            "format": "yyyy-MM-dd'T'HH:mm:ssX",
+            "example": "2024-06-14T10:35:17+0100"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "Username of the user that last modified this field",
+            "example": "USER1"
+          }
+        },
+        "description": "Weight (in kilograms)"
+      },
+      "ValueWithMetadataReferenceDataSimpleDto": {
+        "required": [
+          "lastModifiedAt",
+          "lastModifiedBy"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "$ref": "#/components/schemas/ReferenceDataSimpleDto"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "description": "Timestamp this field was last modified",
+            "format": "yyyy-MM-dd'T'HH:mm:ssX",
+            "example": "2024-06-14T10:35:17+0100"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "Username of the user that last modified this field",
+            "example": "USER1"
+          }
+        },
+        "description": "Right eye colour"
+      },
+      "ValueWithMetadataString": {
+        "required": [
+          "lastModifiedAt",
+          "lastModifiedBy"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Value"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "description": "Timestamp this field was last modified",
+            "format": "yyyy-MM-dd'T'HH:mm:ssX",
+            "example": "2024-06-14T10:35:17+0100"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "Username of the user that last modified this field",
+            "example": "USER1"
+          }
+        },
+        "description": "Shoe size"
+      },
+      "HealthUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "smokerOrVaper": {
+            "type": "string",
+            "description": "Smoker or vaper. `ReferenceDataCode`.`id`.",
+            "nullable": true,
+            "example": "SMOKE_NO"
+          }
+        },
+        "description": "Request object for updating a prisoner's health information. Can include one or multiple fields. If an attribute is provided and set to 'null' it will be updated equal to 'null'. If it is not provided it is not updated"
+      },
+      "HealthDto": {
+        "type": "object",
+        "properties": {
+          "smokerOrVaper": {
+            "$ref": "#/components/schemas/ReferenceDataCodeDto"
+          }
+        },
+        "description": "Prison person health"
       },
       "ReferenceDataCodeDto": {
         "required": [
@@ -1155,81 +1672,6 @@
           }
         },
         "description": "Reference Data Code"
-      },
-      "ValueWithMetadataInteger": {
-        "required": [
-          "lastModifiedAt",
-          "lastModifiedBy"
-        ],
-        "type": "object",
-        "properties": {
-          "value": {
-            "type": "integer",
-            "description": "Value",
-            "format": "int32"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "description": "Timestamp this field was last modified",
-            "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+0100"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "Username of the user that last modified this field",
-            "example": "USER1"
-          }
-        },
-        "description": "Weight (in kilograms)"
-      },
-      "ValueWithMetadataReferenceDataCodeDto": {
-        "required": [
-          "lastModifiedAt",
-          "lastModifiedBy"
-        ],
-        "type": "object",
-        "properties": {
-          "value": {
-            "$ref": "#/components/schemas/ReferenceDataCodeDto"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "description": "Timestamp this field was last modified",
-            "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+0100"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "Username of the user that last modified this field",
-            "example": "USER1"
-          }
-        },
-        "description": "Right eye colour"
-      },
-      "ValueWithMetadataString": {
-        "required": [
-          "lastModifiedAt",
-          "lastModifiedBy"
-        ],
-        "type": "object",
-        "properties": {
-          "value": {
-            "type": "string",
-            "description": "Value"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "description": "Timestamp this field was last modified",
-            "format": "yyyy-MM-dd'T'HH:mm:ssX",
-            "example": "2024-06-14T10:35:17+0100"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "Username of the user that last modified this field",
-            "example": "USER1"
-          }
-        },
-        "description": "Shoe size"
       },
       "ReferenceDataDomainDto": {
         "required": [
@@ -1349,15 +1791,6 @@
           }
         }
       },
-      "HealthDto": {
-        "type": "object",
-        "properties": {
-          "smokerOrVaper": {
-            "$ref": "#/components/schemas/ReferenceDataCodeDto"
-          }
-        },
-        "description": "Prison person health"
-      },
       "PrisonPersonDto": {
         "required": [
           "health",
@@ -1379,6 +1812,96 @@
           }
         },
         "description": "Prison Person"
+      },
+      "FieldHistoryDto": {
+        "required": [
+          "appliesFrom",
+          "createdAt",
+          "createdBy",
+          "field",
+          "prisonerNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "prisonerNumber": {
+            "type": "string",
+            "description": "Prisoner Number",
+            "example": "A1234AA"
+          },
+          "field": {
+            "type": "string",
+            "description": "Field name",
+            "example": "HEIGHT",
+            "enum": [
+              "HEIGHT",
+              "WEIGHT",
+              "HAIR",
+              "FACIAL_HAIR",
+              "FACE",
+              "BUILD",
+              "LEFT_EYE_COLOUR",
+              "RIGHT_EYE_COLOUR",
+              "SHOE_SIZE"
+            ]
+          },
+          "valueInt": {
+            "type": "integer",
+            "description": "Integer value of the field in the date range `appliesFrom` to `appliesTo`",
+            "format": "int32",
+            "example": 1
+          },
+          "valueString": {
+            "type": "string",
+            "description": "String value of the field in the date range `appliesFrom` to `appliesTo`",
+            "example": "string"
+          },
+          "valueRef": {
+            "$ref": "#/components/schemas/ReferenceDataSimpleDto"
+          },
+          "appliesFrom": {
+            "type": "string",
+            "description": "The timestamp the field value applies from",
+            "format": "yyyy-MM-dd'T'HH:mm:ssX",
+            "example": "2024-06-14T10:35:17+0100"
+          },
+          "appliesTo": {
+            "type": "string",
+            "description": "The timestamp the field value applies up to. If null, the value currently applies.",
+            "format": "yyyy-MM-dd'T'HH:mm:ssX",
+            "example": "2024-06-14T10:35:17+0100"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "The date and time the field history entry was created",
+            "format": "yyyy-MM-dd'T'HH:mm:ssX",
+            "example": "2024-06-14T10:35:17+0100"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the user who created the field history entry"
+          },
+          "migratedAt": {
+            "type": "string",
+            "description": "The date and time the field history entry was migrated",
+            "format": "yyyy-MM-dd'T'HH:mm:ssX",
+            "example": "2024-06-14T10:35:17+0100"
+          },
+          "mergedAt": {
+            "type": "string",
+            "description": "The date and time the field history entry was merged",
+            "format": "yyyy-MM-dd'T'HH:mm:ssX",
+            "example": "2024-06-14T10:35:17+0100"
+          },
+          "mergedFrom": {
+            "type": "string",
+            "description": "The Prisoner Number the field history entry was merged from"
+          },
+          "source": {
+            "type": "string",
+            "description": "The source of the change, either DPS or NOMIS. Will be NOMIS if the record was either migrated or synced from NOMIS"
+          }
+        },
+        "description": "Field History"
       }
     },
     "securitySchemes": {
