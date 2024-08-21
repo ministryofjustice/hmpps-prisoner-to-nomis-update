@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-08-07.8561.f84e6e6"
+    "version": "2024-08-21.8627.fc424dc"
   },
   "servers": [
     {
@@ -7506,6 +7506,72 @@
           },
           "404": {
             "description": "Offender not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/prison-person/reconciliation": {
+      "get": {
+        "tags": [
+          "prison-person-resource"
+        ],
+        "summary": "Get prison person reconciliation details for a prisoner",
+        "description": "Retrieves reconciliation details used to check NOMIS and DPS are aligned. Requires ROLE_NOMIS_PRISON_PERSON",
+        "operationId": "getReconciliation",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender number",
+              "example": "A1234AA"
+            },
+            "example": "A1234AA"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Physical Attributes Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrisonPersonReconciliationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prisoner does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -15946,6 +16012,9 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
+          "unpaged": {
+            "type": "boolean"
+          },
           "pageSize": {
             "type": "integer",
             "format": "int32"
@@ -15956,9 +16025,6 @@
           "pageNumber": {
             "type": "integer",
             "format": "int32"
-          },
-          "unpaged": {
-            "type": "boolean"
           }
         }
       },
@@ -16837,6 +16903,32 @@
           }
         },
         "description": "Sentence Purpose"
+      },
+      "PrisonPersonReconciliationResponse": {
+        "required": [
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderNo": {
+            "type": "string",
+            "description": "The prisoner's unique identifier",
+            "example": "A1234AA"
+          },
+          "height": {
+            "type": "integer",
+            "description": "The height of the prisoner in centimetres",
+            "format": "int32",
+            "example": 180
+          },
+          "weight": {
+            "type": "integer",
+            "description": "The weight of the prisoner in kilograms",
+            "format": "int32",
+            "example": 80
+          }
+        },
+        "description": "Reconciliation details held against a prisoner"
       },
       "BookingPhysicalAttributesResponse": {
         "required": [
