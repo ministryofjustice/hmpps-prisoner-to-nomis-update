@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonPersonReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertPhysicalAttributesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertPhysicalAttributesResponse
@@ -17,9 +18,9 @@ class PrisonPersonNomisApiService(@Qualifier("nomisApiWebClient") private val we
       .retrieve()
       .awaitBody()
 
-  suspend fun getReconciliation(offenderNo: String): PrisonPersonReconciliationResponse =
+  suspend fun getReconciliation(offenderNo: String): PrisonPersonReconciliationResponse? =
     webClient.get()
       .uri("/prisoners/{offenderNo}/physical-attributes/reconciliation", offenderNo)
       .retrieve()
-      .awaitBody()
+      .awaitBodyOrNullForNotFound<PrisonPersonReconciliationResponse>()
 }

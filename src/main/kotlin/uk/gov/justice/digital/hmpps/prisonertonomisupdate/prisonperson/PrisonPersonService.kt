@@ -26,7 +26,7 @@ class PrisonPersonService(
     val telemetry = mutableMapOf("offenderNo" to offenderNo)
 
     runCatching {
-      dpsApi.getPhysicalAttributes(offenderNo)
+      dpsApi.getPhysicalAttributes(offenderNo)!!
         .let { nomisApi.upsertPhysicalAttributes(offenderNo, it.height?.value, it.weight?.value) }
         .also {
           telemetry["bookingId"] = it.bookingId.toString()

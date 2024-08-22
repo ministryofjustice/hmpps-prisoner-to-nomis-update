@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import org.springframework.http.HttpStatus.NOT_FOUND
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.PrisonPersonDpsApiExtension.Companion.prisonPersonDpsApi
 
@@ -50,8 +51,15 @@ class PrisonPersonDpsApiServiceTest {
 
       val pa = apiService.getPhysicalAttributes(prisonerNumber = "A1234AA")
 
-      assertThat(pa.height?.value).isEqualTo(180)
-      assertThat(pa.weight?.value).isEqualTo(80)
+      assertThat(pa?.height?.value).isEqualTo(180)
+      assertThat(pa?.weight?.value).isEqualTo(80)
+    }
+
+    @Test
+    fun `will return null if not found`() = runTest {
+      prisonPersonDpsApi.stubGetPhysicalAttributes(NOT_FOUND)
+
+      assertThat(apiService.getPhysicalAttributes(prisonerNumber = "A1234AA")).isNull()
     }
   }
 }

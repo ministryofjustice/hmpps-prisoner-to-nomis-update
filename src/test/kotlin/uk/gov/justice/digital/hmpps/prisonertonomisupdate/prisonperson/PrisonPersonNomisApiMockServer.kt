@@ -45,8 +45,8 @@ class PrisonPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
 
   fun stubGetReconciliation(
     offenderNo: String = "A1234AA",
-    height: Int = 180,
-    weight: Int = 80,
+    height: Int? = 180,
+    weight: Int? = 80,
   ) = nomisApi.stubFor(
     get(urlEqualTo("/prisoners/$offenderNo/physical-attributes/reconciliation")).willReturn(
       aResponse()

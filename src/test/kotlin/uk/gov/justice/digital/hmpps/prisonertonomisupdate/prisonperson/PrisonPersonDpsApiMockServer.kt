@@ -63,8 +63,8 @@ class PrisonPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun stubGetPhysicalAttributes(
-    height: Int = 180,
-    weight: Int = 80,
+    height: Int? = 180,
+    weight: Int? = 80,
   ) {
     stubFor(
       get(urlMatching("/prisoners/.*/physical-attributes"))
@@ -91,8 +91,8 @@ class PrisonPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 }
 
 fun physicalAttributes(
-  height: Int = 180,
-  weight: Int = 80,
+  height: Int? = 180,
+  weight: Int? = 80,
 ): PhysicalAttributesDto = PhysicalAttributesDto(
   height = ValueWithMetadataInteger(value = height, lastModifiedAt = LocalDateTime.now().toString(), lastModifiedBy = "someone"),
   weight = ValueWithMetadataInteger(value = weight, lastModifiedAt = LocalDateTime.now().toString(), lastModifiedBy = "someone"),

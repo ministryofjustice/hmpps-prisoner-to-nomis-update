@@ -14,6 +14,7 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
+import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 
@@ -93,8 +94,8 @@ class PrisonPersonNomisApiServiceTest {
 
       val response = apiService.getReconciliation(offenderNo = "A1234KT")
 
-      assertThat(response.height).isEqualTo(180)
-      assertThat(response.weight).isEqualTo(80)
+      assertThat(response?.height).isEqualTo(180)
+      assertThat(response?.weight).isEqualTo(80)
     }
 
     @Test
@@ -104,6 +105,13 @@ class PrisonPersonNomisApiServiceTest {
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getReconciliation(offenderNo = "A1234KT")
       }
+    }
+
+    @Test
+    fun `will return null if not found`() = runTest {
+      prisonPersonNomisApiMockServer.stubGetReconciliation(NOT_FOUND)
+
+      assertThat(apiService.getReconciliation(offenderNo = "A1234AA")).isNull()
     }
   }
 }
