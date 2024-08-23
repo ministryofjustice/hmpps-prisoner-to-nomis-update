@@ -924,13 +924,13 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetActivePrisonersPageWithError(pageNumber: Long, pageSize: Long = 10, responseCode: Int) {
+  fun stubGetActivePrisonersPageWithError(pageNumber: Long, pageSize: Long? = null, responseCode: Int) {
     stubFor(
       get(
         urlPathEqualTo("/prisoners/ids/active"),
       )
         .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
-        .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
+        .apply { pageSize?.also { withQueryParam("size", WireMock.equalTo(it.toString())) } }
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
