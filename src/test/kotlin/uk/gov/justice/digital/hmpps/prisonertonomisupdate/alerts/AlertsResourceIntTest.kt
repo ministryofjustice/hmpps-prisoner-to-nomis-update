@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExt
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerAlertsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 
 class AlertsResourceIntTest : IntegrationTestBase() {
 
@@ -89,7 +90,7 @@ class AlertsResourceIntTest : IntegrationTestBase() {
 
       // all others have alerts
       (3..<numberOfActivePrisoners).forEach {
-        val offenderNo = "A${it.toString().padStart(4, '0')}TZ"
+        val offenderNo = generateOffenderNo(sequence = it)
         alertsDpsApi.stubGetActiveAlertsForPrisoner(
           offenderNo,
           dpsAlert().copy(alertCode = dpsAlertCode("HPI")),
@@ -206,7 +207,7 @@ class AlertsResourceIntTest : IntegrationTestBase() {
 
     @Test
     fun `when initial prison count fails the whole report fails`() {
-      nomisApi.stubGetActivePrisonersPageWithError(0, 500)
+      nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 0, responseCode = 500)
 
       webTestClient.put().uri("/alerts/reports/reconciliation")
         .exchange()
@@ -215,7 +216,7 @@ class AlertsResourceIntTest : IntegrationTestBase() {
 
     @Test
     fun `will attempt to complete a report even if whole pages of the checks fail`() {
-      nomisApi.stubGetActivePrisonersPageWithError(2, 500)
+      nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 2, responseCode = 500)
 
       webTestClient.put().uri("/alerts/reports/reconciliation")
         .exchange()

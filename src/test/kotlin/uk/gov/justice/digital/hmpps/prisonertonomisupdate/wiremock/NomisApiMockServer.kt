@@ -924,12 +924,14 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetActivePrisonersPageWithError(pageNumber: Long, responseCode: Int) {
+  fun stubGetActivePrisonersPageWithError(pageNumber: Long, pageSize: Long = 10, responseCode: Int) {
     stubFor(
       get(
         urlPathEqualTo("/prisoners/ids/active"),
       )
-        .withQueryParam("page", WireMock.equalTo(pageNumber.toString())).willReturn(
+        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
+        .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
+        .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(responseCode)
@@ -968,7 +970,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     pageNumber: Long = 0,
   ): String {
     val activePrisonerId = (1..numberOfElements).map { it + (pageNumber * pageSize) }
-      .map { PrisonerIds(bookingId = it, offenderNo = "A${it.toString().padStart(4, '0')}TZ") }
+      .map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) }
     val content = activePrisonerId.map { """{ "bookingId": ${it.bookingId}, "offenderNo": "${it.offenderNo}" }""" }
       .joinToString { it }
     return """
@@ -2048,3 +2050,6 @@ private const val CREATE_INCENTIVE_RESPONSE = """
       "sequence": 1
     }
     """
+
+fun generateOffenderNo(prefix: String = "A", sequence: Long = 1, suffix: String = "TZ") =
+  "$prefix${sequence.toString().padStart(4, '0')}$suffix"

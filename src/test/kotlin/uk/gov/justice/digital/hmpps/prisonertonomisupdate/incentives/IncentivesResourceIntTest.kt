@@ -154,7 +154,7 @@ class IncentivesResourceIntTest : IntegrationTestBase() {
 
     @Test
     fun `when initial prison count fails the whole report fails`() {
-      nomisApi.stubGetActivePrisonersPageWithError(0, 500)
+      nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 0, responseCode = 500)
 
       webTestClient.put().uri("/incentives/reports/reconciliation")
         .exchange()
@@ -163,7 +163,7 @@ class IncentivesResourceIntTest : IntegrationTestBase() {
 
     @Test
     fun `will attempt to complete a report even if whole pages of the checks fail`() {
-      nomisApi.stubGetActivePrisonersPageWithError(2, 500)
+      nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 2, responseCode = 500)
 
       webTestClient.put().uri("/incentives/reports/reconciliation")
         .exchange()
