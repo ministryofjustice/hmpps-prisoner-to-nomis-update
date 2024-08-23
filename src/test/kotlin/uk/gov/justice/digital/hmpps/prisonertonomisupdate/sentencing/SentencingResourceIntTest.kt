@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Senten
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.model.AdjustmentDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension.Companion.sentencingAdjustmentsApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 
 class SentencingResourceIntTest : IntegrationTestBase() {
 
@@ -52,7 +53,7 @@ class SentencingResourceIntTest : IntegrationTestBase() {
       // all others have no adjustments so match
       (2..<numberOfActivePrisoners).forEach {
         nomisApi.stubGetSentencingAdjustments(it, SentencingAdjustmentsResponse(emptyList(), emptyList()))
-        sentencingAdjustmentsApi.stubAdjustmentsGet("A${it.toString().padStart(4, '0')}TZ", emptyList())
+        sentencingAdjustmentsApi.stubAdjustmentsGet(generateOffenderNo(sequence = it), emptyList())
       }
     }
 
@@ -154,7 +155,7 @@ class SentencingResourceIntTest : IntegrationTestBase() {
 
     @Test
     fun `when initial prison count fails the whole report fails`() {
-      nomisApi.stubGetActivePrisonersPageWithError(0, 500)
+      nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 0, responseCode = 500)
 
       webTestClient.put().uri("/sentencing/reports/reconciliation")
         .exchange()
@@ -163,7 +164,7 @@ class SentencingResourceIntTest : IntegrationTestBase() {
 
     @Test
     fun `will attempt to complete a report even if whole pages of the checks fail`() {
-      nomisApi.stubGetActivePrisonersPageWithError(2, 500)
+      nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 2, responseCode = 500)
 
       webTestClient.put().uri("/sentencing/reports/reconciliation")
         .exchange()

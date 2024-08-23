@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.Integratio
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension.Companion.adjudicationsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 
 class AdjudicationsResourceIntTest : IntegrationTestBase() {
 
@@ -68,7 +69,7 @@ class AdjudicationsResourceIntTest : IntegrationTestBase() {
           bookingId = it,
           adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
             bookingId = it,
-            offenderNo = "A${it.toString().padStart(4, '0')}TZ",
+            offenderNo = generateOffenderNo(prefix = "A", sequence = it, suffix = "TZ"),
             adaSummaries = listOf(nomisSummary(days = 10)),
           ),
         )
@@ -178,7 +179,7 @@ class AdjudicationsResourceIntTest : IntegrationTestBase() {
 
     @Test
     fun `when initial prison count fails the whole report fails`() {
-      nomisApi.stubGetActivePrisonersPageWithError(0, 500)
+      nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 0, responseCode = 500)
 
       webTestClient.put().uri("/adjudications/reports/reconciliation")
         .exchange()
@@ -187,7 +188,7 @@ class AdjudicationsResourceIntTest : IntegrationTestBase() {
 
     @Test
     fun `will attempt to complete a report even if whole pages of the checks fail`() {
-      nomisApi.stubGetActivePrisonersPageWithError(2, 500)
+      nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 2, responseCode = 500)
 
       webTestClient.put().uri("/adjudications/reports/reconciliation")
         .exchange()

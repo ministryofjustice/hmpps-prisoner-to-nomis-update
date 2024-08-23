@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.Integratio
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NonAssociationsApiExtension.Companion.nonAssociationsApiServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 
 class NonAssociationsResourceIntTest : IntegrationTestBase() {
 
@@ -101,8 +102,8 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
   }                
   """.trimIndent()
 
-  private fun index1ToNomsId(it: Int) = "A${it.toString().padStart(4, '0')}TY"
-  private fun index2ToNomsId(it: Int) = "B${it.toString().padStart(4, '0')}TZ"
+  private fun index1ToNomsId(it: Int) = generateOffenderNo(prefix = "A", sequence = it.toLong(), suffix = "TY")
+  private fun index2ToNomsId(it: Int) = generateOffenderNo(prefix = "B", sequence = it.toLong(), suffix = "TZ")
 
   private fun nonAssociationNomisResponse(offenderNo: String, nsOffenderNo: String): String = "[ ${nonAssociationNomisJson(offenderNo, nsOffenderNo)} ]"
 
