@@ -48,7 +48,7 @@ class PrisonPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
     height: Int? = 180,
     weight: Int? = 80,
   ) = nomisApi.stubFor(
-    get(urlEqualTo("/prisoners/$offenderNo/physical-attributes/reconciliation")).willReturn(
+    get(urlEqualTo("/prisoners/$offenderNo/prison-person/reconciliation")).willReturn(
       aResponse()
         .withHeader("Content-Type", "application/json")
         .withStatus(HttpStatus.OK.value())
@@ -58,7 +58,7 @@ class PrisonPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
 
   fun stubGetReconciliation(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
     nomisApi.stubFor(
-      get(urlPathMatching("/prisoners/\\w+/physical-attributes/reconciliation")).willReturn(
+      get(urlPathMatching("/prisoners/\\w+/prison-person/reconciliation")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())

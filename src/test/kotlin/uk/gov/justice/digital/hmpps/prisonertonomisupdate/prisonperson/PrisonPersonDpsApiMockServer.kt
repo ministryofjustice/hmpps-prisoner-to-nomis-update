@@ -63,11 +63,12 @@ class PrisonPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun stubGetPhysicalAttributes(
+    offenderNo: String,
     height: Int? = 180,
     weight: Int? = 80,
   ) {
     stubFor(
-      get(urlMatching("/prisoners/.*/physical-attributes"))
+      get(urlMatching("/prisoners/$offenderNo/physical-attributes"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")

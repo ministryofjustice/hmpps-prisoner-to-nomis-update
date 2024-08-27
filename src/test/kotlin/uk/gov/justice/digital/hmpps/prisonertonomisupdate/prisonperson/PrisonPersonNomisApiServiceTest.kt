@@ -84,7 +84,7 @@ class PrisonPersonNomisApiServiceTest {
       apiService.getReconciliation(offenderNo = "A1234KT")
 
       prisonPersonNomisApiMockServer.verify(
-        getRequestedFor(urlPathEqualTo("/prisoners/A1234KT/physical-attributes/reconciliation")),
+        getRequestedFor(urlPathEqualTo("/prisoners/A1234KT/prison-person/reconciliation")),
       )
     }
 
