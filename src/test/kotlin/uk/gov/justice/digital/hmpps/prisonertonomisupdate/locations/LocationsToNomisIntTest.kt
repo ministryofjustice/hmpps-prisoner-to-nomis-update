@@ -366,7 +366,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
         mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
         mappingServer.stubGetMappingGivenDpsLocationId(PARENT_ID, parentMappingResponse)
         nomisApi.stubLocationUpdate("/locations/$NOMIS_ID")
-        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/capacity")
+        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/capacity?ignoreOperationalCapacity=false")
         nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/certification")
         publishLocationDomainEvent("location.inside.prison.amended")
       }
@@ -397,7 +397,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to update the location`() {
         await untilAsserted {
           nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID")))
-          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/capacity")))
+          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/capacity?ignoreOperationalCapacity=false")))
           nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/certification")))
         }
       }
@@ -419,7 +419,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
           mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
           mappingServer.stubGetMappingGivenDpsLocationId(PARENT_ID, parentMappingResponse)
           nomisApi.stubLocationUpdate("/locations/$NOMIS_ID")
-          nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/capacity")
+          nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/capacity?ignoreOperationalCapacity=false")
           nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/certification")
           publishLocationDomainEvent("location.inside.prison.amended")
         }
@@ -717,7 +717,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       fun setUp() {
         mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
         nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/deactivate")
-        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/capacity")
+        nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/capacity?ignoreOperationalCapacity=false")
         nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/certification")
         mappingServer.stubDeleteLocationMapping(DPS_ID)
         publishLocationDomainEvent("location.inside.prison.deleted")
@@ -727,7 +727,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will delete the location in NOMIS`() {
         await untilAsserted {
           nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/deactivate")))
-          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/capacity")))
+          nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/capacity?ignoreOperationalCapacity=false")))
           nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID/certification")))
         }
       }

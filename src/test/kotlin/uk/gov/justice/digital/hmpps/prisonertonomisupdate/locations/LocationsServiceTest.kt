@@ -138,6 +138,7 @@ internal class LocationsServiceTest {
         assertThat(it.capacity).isEqualTo(14)
         assertThat(it.operationalCapacity).isEqualTo(12)
       },
+      eq(false),
     )
     verify(nomisApiService).updateLocationCertification(
       eq(NOMIS_LOCATION_ID),

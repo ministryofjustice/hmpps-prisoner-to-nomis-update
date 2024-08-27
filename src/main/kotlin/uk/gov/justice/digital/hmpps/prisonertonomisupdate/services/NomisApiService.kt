@@ -577,9 +577,13 @@ class NomisApiService(
       .retrieve()
       .awaitBodilessEntity()
 
-  suspend fun updateLocationCapacity(locationId: Long, request: UpdateCapacityRequest) =
+  suspend fun updateLocationCapacity(locationId: Long, request: UpdateCapacityRequest, ignoreOperationalCapacity: Boolean) =
     webClient.put()
-      .uri("/locations/{id}/capacity", locationId)
+      .uri {
+        it.path("/locations/{id}/capacity")
+          .queryParam("ignoreOperationalCapacity", ignoreOperationalCapacity)
+          .build(locationId)
+      }
       .bodyValue(request)
       .retrieve()
       .awaitBodilessEntity()
