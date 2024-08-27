@@ -66,11 +66,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "offenderNo" to "A1234AA",
-              // TODO SDIT-1829 Remove the values from failure telemetry and only mention which fields fail (then we don't have to worry about sensitive data in the future)
-              "heightDps" to "170",
-              "heightNomis" to "180",
-              "weightDps" to "70",
-              "weightNomis" to "80",
+              "differences" to "height, weight",
             ),
           )
         },
@@ -89,10 +85,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
         eq("prison-person-reconciliation-prisoner-failed"),
         check {
           assertThat(it).containsAllEntriesOf(
-            mapOf(
-              "heightDps" to "null",
-              "weightDps" to "null",
-            ),
+            mapOf("differences" to "height, weight"),
           )
         },
         isNull(),
@@ -110,10 +103,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
         eq("prison-person-reconciliation-prisoner-failed"),
         check {
           assertThat(it).containsAllEntriesOf(
-            mapOf(
-              "heightNomis" to "null",
-              "weightNomis" to "null",
-            ),
+            mapOf("differences" to "height, weight"),
           )
         },
         isNull(),
@@ -133,11 +123,8 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "offenderNo" to "A1234AA",
+              "differences" to "height, weight",
               "dpsPrisoner" to "null",
-              "heightDps" to "null",
-              "heightNomis" to "180",
-              "weightDps" to "null",
-              "weightNomis" to "80",
             ),
           )
         },
@@ -158,11 +145,8 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "offenderNo" to "A1234AA",
+              "differences" to "height, weight",
               "nomisPrisoner" to "null",
-              "heightNomis" to "null",
-              "heightDps" to "170",
-              "weightNomis" to "null",
-              "weightDps" to "70",
             ),
           )
         },
@@ -342,8 +326,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
               assertThat(it).containsAllEntriesOf(
                 mapOf(
                   "offenderNo" to "A0004TZ",
-                  "heightDps" to "180",
-                  "heightNomis" to "170",
+                  "differences" to "height",
                 ),
               )
             },
@@ -391,8 +374,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
               assertThat(it).containsAllEntriesOf(
                 mapOf(
                   "offenderNo" to "A0001TZ",
-                  "weightDps" to "70",
-                  "weightNomis" to "80",
+                  "differences" to "weight",
                 ),
               )
             },
