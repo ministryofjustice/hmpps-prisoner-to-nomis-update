@@ -6,6 +6,8 @@ import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
+import com.github.tomakehurst.wiremock.http.Fault
+import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -87,6 +89,33 @@ class PrisonPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withBody(ErrorResponse(status = errorStatus, userMessage = "Some error"))
             .withStatus(errorStatus.value()),
         ),
+    )
+  }
+  fun stubGetPhysicalAttributesWithRetry(
+    offenderNo: String,
+    height: Int? = 180,
+    weight: Int? = 80,
+  ) {
+    stubFor(
+      get(urlMatching("/prisoners/$offenderNo/physical-attributes"))
+        .inScenario("Retry Prison Person")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withFault(Fault.CONNECTION_RESET_BY_PEER),
+        ).willSetStateTo("Prison Person first call failed"),
+    )
+
+    stubFor(
+      get(urlMatching("/prisoners/$offenderNo/physical-attributes"))
+        .inScenario("Retry Prison Person")
+        .whenScenarioStateIs("Prison Person first call failed")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(physicalAttributes(height, weight))
+            .withStatus(200),
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 }

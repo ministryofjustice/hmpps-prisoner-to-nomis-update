@@ -7,7 +7,9 @@ import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
+import com.github.tomakehurst.wiremock.http.Fault
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
+import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonPersonReconciliationResponse
@@ -64,6 +66,33 @@ class PrisonPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
           .withStatus(status.value())
           .withBody(objectMapper.writeValueAsString(error)),
       ),
+    )
+  }
+  fun stubGetReconciliationWithRetry(
+    offenderNo: String = "A1234AA",
+    height: Int? = 180,
+    weight: Int? = 80,
+  ) {
+    nomisApi.stubFor(
+      get(urlEqualTo("/prisoners/$offenderNo/prison-person/reconciliation"))
+        .inScenario("Retry Prison Person")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withFault(Fault.CONNECTION_RESET_BY_PEER),
+        ).willSetStateTo("Prison Person first call failed"),
+    )
+
+    nomisApi.stubFor(
+      get(urlEqualTo("/prisoners/$offenderNo/prison-person/reconciliation"))
+        .inScenario("Retry Prison Person")
+        .whenScenarioStateIs("Prison Person first call failed")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(objectMapper.writeValueAsString(PrisonPersonReconciliationResponse(offenderNo, height, weight))),
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 
