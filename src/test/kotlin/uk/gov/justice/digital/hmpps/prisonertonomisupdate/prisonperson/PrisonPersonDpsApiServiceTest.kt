@@ -24,7 +24,7 @@ class PrisonPersonDpsApiServiceTest {
   inner class GetPrisonPerson {
     @Test
     internal fun `will pass oath2 token to service`() = runTest {
-      prisonPersonDpsApi.stubGetPhysicalAttributes()
+      prisonPersonDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
 
       apiService.getPhysicalAttributes(prisonerNumber = "A1234AA")
 
@@ -36,7 +36,7 @@ class PrisonPersonDpsApiServiceTest {
 
     @Test
     internal fun `will pass prisoner number to service`() = runTest {
-      prisonPersonDpsApi.stubGetPhysicalAttributes()
+      prisonPersonDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
 
       apiService.getPhysicalAttributes(prisonerNumber = "A1234AA")
 
@@ -47,7 +47,7 @@ class PrisonPersonDpsApiServiceTest {
 
     @Test
     fun `will return physical attributes DTO`() = runTest {
-      prisonPersonDpsApi.stubGetPhysicalAttributes()
+      prisonPersonDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
 
       val pa = apiService.getPhysicalAttributes(prisonerNumber = "A1234AA")
 

@@ -37,7 +37,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
     inner class HappyPath {
       @BeforeEach
       fun setUp() = runTest {
-        prisonPersonDpsApi.stubGetPhysicalAttributes()
+        prisonPersonDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
         prisonPersonNomisApi.stubPutPhysicalAttributes(offenderNo = "A1234AA")
 
         awsSnsClient.publish(physicalAttributesRequest()).get()
@@ -79,7 +79,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
     inner class Failures {
       @Test
       fun `should ignore if source system is not DPS`() {
-        prisonPersonDpsApi.stubGetPhysicalAttributes()
+        prisonPersonDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
         prisonPersonNomisApi.stubPutPhysicalAttributes(offenderNo = "A1234AA")
 
         awsSnsClient.publish(physicalAttributesRequest(source = "NOMIS")).get()
@@ -131,7 +131,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `should fail if call to NOMIS fails`() = runTest {
-        prisonPersonDpsApi.stubGetPhysicalAttributes()
+        prisonPersonDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
         prisonPersonNomisApi.stubPutPhysicalAttributes(HttpStatus.BAD_GATEWAY)
 
         awsSnsClient.publish(physicalAttributesRequest()).get()
@@ -191,7 +191,7 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
 
     @Test
     fun `should update physical attributes`() {
-      prisonPersonDpsApi.stubGetPhysicalAttributes()
+      prisonPersonDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
       prisonPersonNomisApi.stubPutPhysicalAttributes(offenderNo = "A1234AA")
 
       webTestClient.put().uri("/prisonperson/A1234AA/physical-attributes")

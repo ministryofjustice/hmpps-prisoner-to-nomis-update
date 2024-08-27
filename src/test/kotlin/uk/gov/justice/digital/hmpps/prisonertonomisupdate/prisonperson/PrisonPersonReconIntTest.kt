@@ -30,7 +30,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
   inner class SinglePrisoner {
     @Test
     fun `should do nothing if no differences`() = runTest {
-      prisonPersonDpsApi.stubGetPhysicalAttributes(height = 180, weight = 80)
+      prisonPersonDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = 180, weight = 80)
       prisonPersonNomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = 180, weight = 80)
 
       reconciliationService.checkPrisoner("A1234AA")
@@ -40,13 +40,13 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
 
     @Test
     fun `should report differences to height and weight`() = runTest {
-      prisonPersonDpsApi.stubGetPhysicalAttributes(height = 170, weight = 70)
+      prisonPersonDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = 170, weight = 70)
       prisonPersonNomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = 180, weight = 80)
 
       reconciliationService.checkPrisoner("A1234AA")
 
       verify(telemetryClient).trackEvent(
-        eq("prison-person-reconciliation-report-failed"),
+        eq("prison-person-reconciliation-prisoner-failed"),
         check {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
@@ -64,13 +64,13 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
 
     @Test
     fun `should report differences if null in DPS`() = runTest {
-      prisonPersonDpsApi.stubGetPhysicalAttributes(height = null, weight = null)
+      prisonPersonDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = null, weight = null)
       prisonPersonNomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = 180, weight = 80)
 
       reconciliationService.checkPrisoner("A1234AA")
 
       verify(telemetryClient).trackEvent(
-        eq("prison-person-reconciliation-report-failed"),
+        eq("prison-person-reconciliation-prisoner-failed"),
         check {
           assertThat(it).containsAllEntriesOf(
             mapOf(
@@ -85,13 +85,13 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
 
     @Test
     fun `should report differences if null in NOMIS`() = runTest {
-      prisonPersonDpsApi.stubGetPhysicalAttributes(height = 170, weight = 70)
+      prisonPersonDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = 170, weight = 70)
       prisonPersonNomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = null, weight = null)
 
       reconciliationService.checkPrisoner("A1234AA")
 
       verify(telemetryClient).trackEvent(
-        eq("prison-person-reconciliation-report-failed"),
+        eq("prison-person-reconciliation-prisoner-failed"),
         check {
           assertThat(it).containsAllEntriesOf(
             mapOf(
@@ -112,7 +112,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
       reconciliationService.checkPrisoner("A1234AA")
 
       verify(telemetryClient).trackEvent(
-        eq("prison-person-reconciliation-report-failed"),
+        eq("prison-person-reconciliation-prisoner-failed"),
         check {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
@@ -131,13 +131,13 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
 
     @Test
     fun `should report differences if missing from NOMIS`() = runTest {
-      prisonPersonDpsApi.stubGetPhysicalAttributes(height = 170, weight = 70)
+      prisonPersonDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = 170, weight = 70)
       prisonPersonNomisApi.stubGetReconciliation(NOT_FOUND)
 
       reconciliationService.checkPrisoner("A1234AA")
 
       verify(telemetryClient).trackEvent(
-        eq("prison-person-reconciliation-report-failed"),
+        eq("prison-person-reconciliation-prisoner-failed"),
         check {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
@@ -156,7 +156,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
 
     @Test
     fun `should not report differences if null in both`() = runTest {
-      prisonPersonDpsApi.stubGetPhysicalAttributes(height = null, weight = null)
+      prisonPersonDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = null, weight = null)
       prisonPersonNomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = null, weight = null)
 
       reconciliationService.checkPrisoner("A1234AA")
@@ -182,7 +182,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
       reconciliationService.checkPrisoner("A1234AA")
 
       verify(telemetryClient).trackEvent(
-        eq("prison-person-reconciliation-report-error"),
+        eq("prison-person-reconciliation-prisoner-error"),
         check {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
@@ -197,18 +197,18 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
 
     @Test
     fun `should report errors from NOMIS`() = runTest {
-      prisonPersonDpsApi.stubGetPhysicalAttributes()
+      prisonPersonDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
       prisonPersonNomisApi.stubGetReconciliation(BAD_GATEWAY)
 
       reconciliationService.checkPrisoner("A1234AA")
 
       verify(telemetryClient).trackEvent(
-        eq("prison-person-reconciliation-report-error"),
+        eq("prison-person-reconciliation-prisoner-error"),
         check {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "offenderNo" to "A1234AA",
-              "error" to "502 Bad Gateway from GET http://localhost:8082/prisoners/A1234AA/physical-attributes/reconciliation",
+              "error" to "502 Bad Gateway from GET http://localhost:8082/prisoners/A1234AA/prison-person/reconciliation",
             ),
           )
         },

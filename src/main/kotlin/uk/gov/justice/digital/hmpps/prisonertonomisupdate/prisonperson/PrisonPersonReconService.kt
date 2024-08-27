@@ -9,28 +9,32 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonPersonReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PhysicalAttributesDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 
 @Service
 class PrisonPersonReconService(
   private val dpsApi: PrisonPersonDpsApiService,
-  private val nomisApi: PrisonPersonNomisApiService,
+  private val prisonPersonNomisApi: PrisonPersonNomisApiService,
   private val telemetryClient: TelemetryClient,
 ) {
 
-  suspend fun checkPrisoner(offenderNo: String) = runCatching {
+  suspend fun checkPrisoner(offenderNo: String): String? = runCatching {
     val (nomisPrisoner, dpsPrisoner) = withContext(Dispatchers.Unconfined) {
-      async { nomisApi.getReconciliation(offenderNo) } to
-        async { dpsApi.getPhysicalAttributes(offenderNo) }
+      async { doApiCallWithRetries { prisonPersonNomisApi.getReconciliation(offenderNo) } } to
+        async { doApiCallWithRetries { dpsApi.getPhysicalAttributes(offenderNo) } }
     }.awaitBoth()
 
-    findDifferences(offenderNo, nomisPrisoner, dpsPrisoner)
-      .takeIf { it.isNotEmpty() }
-      ?.also {
-        telemetryClient.trackEvent("prison-person-reconciliation-report-failed", it)
+    val differences = findDifferences(offenderNo, nomisPrisoner, dpsPrisoner)
+    return if (differences.isNotEmpty()) {
+      offenderNo.also {
+        telemetryClient.trackEvent("prison-person-reconciliation-prisoner-failed", differences)
       }
+    } else {
+      null
+    }
   }.onFailure {
-    telemetryClient.trackEvent("prison-person-reconciliation-report-error", mapOf("offenderNo" to offenderNo, "error" to (it.message ?: "unknown error")))
-  }
+    telemetryClient.trackEvent("prison-person-reconciliation-prisoner-error", mapOf("offenderNo" to offenderNo, "error" to (it.message ?: "unknown error")))
+  }.getOrNull()
 
   private fun findDifferences(offenderNo: String, nomisPrisoner: PrisonPersonReconciliationResponse?, dpsPrisoner: PhysicalAttributesDto?): MutableMap<String, String> {
     val failureTelemetry = mutableMapOf<String, String>()

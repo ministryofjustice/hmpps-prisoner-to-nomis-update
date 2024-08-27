@@ -20,7 +20,7 @@ class PrisonPersonNomisApiService(@Qualifier("nomisApiWebClient") private val we
 
   suspend fun getReconciliation(offenderNo: String): PrisonPersonReconciliationResponse? =
     webClient.get()
-      .uri("/prisoners/{offenderNo}/physical-attributes/reconciliation", offenderNo)
+      .uri("/prisoners/{offenderNo}/prison-person/reconciliation", offenderNo)
       .retrieve()
       .awaitBodyOrNullForNotFound<PrisonPersonReconciliationResponse>()
 }
