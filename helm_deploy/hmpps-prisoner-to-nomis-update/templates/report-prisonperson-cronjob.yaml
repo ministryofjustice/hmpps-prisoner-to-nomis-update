@@ -1,12 +1,12 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "app.fullname" . }}-report-alerts
+  name: {{ include "app.fullname" . }}-report-prisonperson
   labels:
     {{- include "app.labels" . | nindent 4 }}
 spec:
-  schedule: "45 4 * * *"
-  suspend: false
+  schedule: "30 5 * * *"
+  suspend: true
   concurrencyPolicy: Forbid
   failedJobsHistoryLimit: 5
   startingDeadlineSeconds: 600
@@ -18,12 +18,12 @@ spec:
       template:
         spec:
           containers:
-            - name: report-alerts
+            - name: report-prisonperson
               image: ghcr.io/ministryofjustice/hmpps-devops-tools
               args:
                 - /bin/sh
                 - -c
-                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/alerts/reports/reconciliation
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/prisonperson/reports/reconciliation
               securityContext:
                 capabilities:
                   drop:
