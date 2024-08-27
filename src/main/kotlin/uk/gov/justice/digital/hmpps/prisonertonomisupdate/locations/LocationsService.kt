@@ -69,7 +69,14 @@ class LocationsService(
   suspend fun amendLocation(event: LocationDomainEvent) {
     doUpdateLocation(event, "amend") { nomisLocationId, location ->
       nomisApiService.updateLocation(nomisLocationId, toUpdateLocationRequest(location))
-      nomisApiService.updateLocationCapacity(nomisLocationId, UpdateCapacityRequest(location.capacity?.maxCapacity, location.capacity?.workingCapacity))
+      nomisApiService.updateLocationCapacity(
+        nomisLocationId,
+        UpdateCapacityRequest(
+          location.capacity?.maxCapacity,
+          location.capacity?.workingCapacity,
+        ),
+        location.ignoreWorkingCapacity,
+      )
       nomisApiService.updateLocationCertification(
         nomisLocationId,
         UpdateCertificationRequest(location.certification?.capacityOfCertifiedCell ?: 0, location.certification?.certified ?: false),
@@ -97,7 +104,7 @@ class LocationsService(
         mappingService.getMappingGivenDpsId(event.additionalInformation.id).apply {
           telemetryMap["nomisLocationId"] = nomisLocationId.toString()
           nomisApiService.deactivateLocation(nomisLocationId, DeactivateRequest(force = false))
-          nomisApiService.updateLocationCapacity(nomisLocationId, UpdateCapacityRequest(0, 0))
+          nomisApiService.updateLocationCapacity(nomisLocationId, UpdateCapacityRequest(0, 0), false)
           nomisApiService.updateLocationCertification(nomisLocationId, UpdateCertificationRequest(0, false))
           // TODO: Need to decide how to define a soft-deleted location
         }

@@ -138,6 +138,7 @@ internal class LocationsServiceTest {
         assertThat(it.capacity).isEqualTo(14)
         assertThat(it.operationalCapacity).isEqualTo(12)
       },
+      eq(false),
     )
     verify(nomisApiService).updateLocationCertification(
       eq(NOMIS_LOCATION_ID),
@@ -145,6 +146,27 @@ internal class LocationsServiceTest {
         assertThat(it.certified).isTrue()
         assertThat(it.cnaCapacity).isEqualTo(13)
       },
+    )
+  }
+
+  @Test
+  fun `Amend passes ignoreOperationalCapacity flag`() = runTest {
+    whenever(
+      locationsMappingService.getMappingGivenDpsId(DPS_LOCATION_ID),
+    ).thenReturn(
+      LocationMappingDto(
+        dpsLocationId = DPS_LOCATION_ID,
+        nomisLocationId = NOMIS_LOCATION_ID,
+        mappingType = LocationMappingDto.MappingType.LOCATION_CREATED,
+      ),
+    )
+
+    callAmendService(newLocation().copy(ignoreWorkingCapacity = true, parentId = null))
+
+    verify(nomisApiService).updateLocationCapacity(
+      eq(NOMIS_LOCATION_ID),
+      any(),
+      eq(true),
     )
   }
 
@@ -163,11 +185,8 @@ internal class LocationsServiceTest {
     locationsService.createLocation(location)
   }
 
-  private suspend fun callAmendService() {
-    whenever(locationsApiService.getLocation(DPS_LOCATION_ID)).thenReturn(
-      newLocation(),
-    )
-    // void whenever(nomisApiService.updateLocation(NOMIS_LOCATION_ID, any())).thenReturn(LocationIdResponse(NOMIS_LOCATION_ID))
+  private suspend fun callAmendService(newLocation: LegacyLocation = newLocation()) {
+    whenever(locationsApiService.getLocation(DPS_LOCATION_ID)).thenReturn(newLocation)
 
     val location = LocationDomainEvent(
       "TYPE",
