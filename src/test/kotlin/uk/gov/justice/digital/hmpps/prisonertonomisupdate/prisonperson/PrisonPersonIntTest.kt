@@ -291,5 +291,16 @@ class PrisonPersonIntTest : SqsIntegrationTestBase() {
         .exchange()
         .expectStatus().isForbidden
     }
+
+    @Test
+    fun `should allow access to DPS reconciliation role`() {
+      prisonPersonDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
+      prisonPersonNomisApi.stubPutPhysicalAttributes(offenderNo = "A1234AA")
+
+      webTestClient.put().uri("/prisonperson/A1234AA/physical-attributes")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_PRISON_PERSON__RECONCILIATION")))
+        .exchange()
+        .expectStatus().isOk
+    }
   }
 }
