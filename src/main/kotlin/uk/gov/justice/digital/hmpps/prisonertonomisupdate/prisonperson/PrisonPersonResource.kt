@@ -25,7 +25,7 @@ class PrisonPersonResource(
   private val reportScope: CoroutineScope,
   private val telemetryClient: TelemetryClient,
 ) {
-  @PreAuthorize("hasRole('ROLE_NOMIS_PRISON_PERSON')")
+  @PreAuthorize("hasRole('ROLE_NOMIS_PRISON_PERSON') or hasRole('ROLE_NOMIS_PRISON_PERSON__RECONCILIATION')")
   @PutMapping("/prisonperson/{prisonerNumber}/physical-attributes")
   @Operation(
     summary = "Synchronises an update to DPS physical attributes",
