@@ -13,7 +13,7 @@ import uk.gov.justice.hmpps.kotlin.health.ReactiveHealthPingCheck
 import java.time.Duration
 
 @Configuration
-class PrisonPersonConfiguration(
+class Configuration(
   @Value("\${api.base.url.prisonperson}") val prisonPersonUrl: String,
   @Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
   @Value("\${api.timeout:90s}") val timeout: Duration,

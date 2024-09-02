@@ -5,7 +5,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExt
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.PrisonPersonDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
@@ -18,6 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExten
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NonAssociationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.DpsApiExtension as PrisonPersonApiExtension
 
 class HealthCheckTest : IntegrationTestBase() {
 
@@ -105,7 +105,7 @@ class HealthCheckTest : IntegrationTestBase() {
     CourtSentencingApiExtension.courtSentencingApi.stubHealthPing(status)
     AlertsDpsApiExtension.alertsDpsApi.stubHealthPing(status)
     CaseNotesDpsApiExtension.caseNotesDpsApi.stubHealthPing(status)
-    PrisonPersonDpsApiExtension.prisonPersonDpsApi.stubHealthPing(status)
+    PrisonPersonApiExtension.dpsApi.stubHealthPing(status)
     CSIPDpsApiExtension.csipDpsApi.stubHealthPing(status)
   }
 }
