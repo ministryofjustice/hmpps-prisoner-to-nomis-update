@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NonAssociatio
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.VisitsApiExtension
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.DpsApiExtension as PrisonPersonApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.DpsApiExtension as PrisonPersonDpsApiExtension
 
 @ExtendWith(
   NomisApiExtension::class,
@@ -44,7 +44,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.DpsApiExt
   CourtSentencingApiExtension::class,
   AlertsDpsApiExtension::class,
   CaseNotesDpsApiExtension::class,
-  PrisonPersonApiExtension::class,
+  PrisonPersonDpsApiExtension::class,
   CSIPDpsApiExtension::class,
 )
 @SpringBootTest(webEnvironment = RANDOM_PORT)

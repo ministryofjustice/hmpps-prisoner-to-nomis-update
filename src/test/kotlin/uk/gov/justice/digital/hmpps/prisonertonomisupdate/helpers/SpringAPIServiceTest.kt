@@ -28,7 +28,7 @@ import uk.gov.justice.hmpps.kotlin.auth.HmppsReactiveWebClientConfiguration
 import java.lang.annotation.Inherited
 import kotlin.annotation.AnnotationTarget.ANNOTATION_CLASS
 import kotlin.annotation.AnnotationTarget.CLASS
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.DpsApiExtension as PrisonPersonApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.DpsApiExtension as PrisonPersonDpsApiExtension
 
 /**
  * Annotation for an API service test that focuses **only** on services that call a WebClient
@@ -55,7 +55,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.DpsApiExt
   LocationsApiExtension::class,
   AlertsDpsApiExtension::class,
   CaseNotesDpsApiExtension::class,
-  PrisonPersonApiExtension::class,
+  PrisonPersonDpsApiExtension::class,
 )
 @ActiveProfiles("test")
 @SpringBootTest(classes = [JacksonAutoConfiguration::class, CodecsAutoConfiguration::class, WebClientConfiguration::class, WebClientAutoConfiguration::class, ReactiveOAuth2ClientAutoConfiguration::class, ReactiveSecurityAutoConfiguration::class, HmppsReactiveWebClientConfiguration::class])
