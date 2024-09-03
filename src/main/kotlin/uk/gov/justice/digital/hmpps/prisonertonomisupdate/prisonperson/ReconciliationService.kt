@@ -5,21 +5,24 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonPersonReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PhysicalAttributesDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.physicalattributes.DpsApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.NomisApiService as PrisonPersonNomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService as PrisonerNomisApiService
 
-@Service
-class PrisonPersonReconService(
-  private val dpsApi: PrisonPersonDpsApiService,
-  private val prisonPersonNomisApi: PrisonPersonNomisApiService,
-  private val nomisApi: NomisApiService,
+@Service("prisonPersonReconciliationService")
+class ReconciliationService(
+  @Qualifier("physicalAttributesDpsApiService") private val dpsApi: DpsApiService,
+  @Qualifier("prisonPersonNomisApiService") private val prisonPersonNomisApi: PrisonPersonNomisApiService,
+  private val nomisApi: PrisonerNomisApiService,
   @Value("\${reports.prisonperson.reconciliation.page-size:20}") private val pageSize: Long = 20,
   private val telemetryClient: TelemetryClient,
 ) {

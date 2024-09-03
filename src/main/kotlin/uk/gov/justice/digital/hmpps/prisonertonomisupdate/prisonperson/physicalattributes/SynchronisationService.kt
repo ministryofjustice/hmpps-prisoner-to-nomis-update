@@ -1,13 +1,13 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.physicalattributes
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 
-@Service
-class PrisonPersonService(
-  private val dpsApi: PrisonPersonDpsApiService,
-  private val nomisApi: PrisonPersonNomisApiService,
+@Service("physicalAttributesSynchronisationService")
+class SynchronisationService(
+  private val dpsApi: DpsApiService,
+  private val nomisApi: NomisApiService,
   private val telemetryClient: TelemetryClient,
 ) {
 

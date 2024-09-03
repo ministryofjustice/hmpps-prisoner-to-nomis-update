@@ -1,26 +1,18 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.physicalattributes
 
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonPersonReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertPhysicalAttributesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertPhysicalAttributesResponse
 
-@Service
-class PrisonPersonNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
+@Service("physicalAttributesNomisApiService")
+class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
   suspend fun upsertPhysicalAttributes(offenderNo: String, height: Int?, weight: Int?): UpsertPhysicalAttributesResponse =
     webClient.put()
       .uri("/prisoners/{offenderNo}/physical-attributes", offenderNo)
       .bodyValue(UpsertPhysicalAttributesRequest(height, weight))
       .retrieve()
       .awaitBody()
-
-  suspend fun getReconciliation(offenderNo: String): PrisonPersonReconciliationResponse? =
-    webClient.get()
-      .uri("/prisoners/{offenderNo}/prison-person/reconciliation", offenderNo)
-      .retrieve()
-      .awaitBodyOrNullForNotFound<PrisonPersonReconciliationResponse>()
 }
