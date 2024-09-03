@@ -19,22 +19,19 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
-class SynchronisationIntTest : SqsIntegrationTestBase() {
+class PhysAttrSyncIntTest : SqsIntegrationTestBase() {
 
   @Autowired
-  @Qualifier("physicalAttributesNomisApiMockServer")
-  private lateinit var nomisApi: NomisApiMockServer
+  private lateinit var nomisApi: PhysAttrNomisApiMockServer
 
   @Autowired
-  @Qualifier("physicalAttributesDpsApiMockServer")
-  private lateinit var dpsApi: DpsApiMockServer
+  private lateinit var dpsApi: PhysAttrDpsApiMockServer
 
   @Nested
   inner class UpdatePhysicalAttributesEvent {

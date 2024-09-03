@@ -6,8 +6,8 @@ import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonPersonReconciliationResponse
 
-@Service("prisonPersonNomisApiService")
-class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
+@Service
+class PrisonPersonNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
   suspend fun getReconciliation(offenderNo: String): PrisonPersonReconciliationResponse? =
     webClient.get()
       .uri("/prisoners/{offenderNo}/prison-person/reconciliation", offenderNo)

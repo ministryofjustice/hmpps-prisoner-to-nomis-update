@@ -6,8 +6,8 @@ import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PhysicalAttributesDto
 
-@Service("physicalAttributesDpsApiService")
-class DpsApiService(@Qualifier("prisonPersonApiWebClient") private val webClient: WebClient) {
+@Service
+class PhysAttrDpsApiService(@Qualifier("prisonPersonApiWebClient") private val webClient: WebClient) {
   suspend fun getPhysicalAttributes(prisonerNumber: String): PhysicalAttributesDto? =
     webClient
       .get()

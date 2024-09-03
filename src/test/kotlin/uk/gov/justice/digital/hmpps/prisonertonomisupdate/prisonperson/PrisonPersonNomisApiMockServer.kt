@@ -14,8 +14,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Prison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-@Component("prisonPersonNomisApiMockServer")
-class NomisApiMockServer(private val objectMapper: ObjectMapper) {
+@Component
+class PrisonPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
   fun stubGetReconciliation(
     offenderNo: String = "A1234AA",
     height: Int? = 180,

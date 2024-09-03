@@ -12,16 +12,16 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus.NOT_FOUND
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.Configuration
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.PrisonPersonConfiguration
 
 @SpringAPIServiceTest
-@Import(DpsApiService::class, Configuration::class, DpsApiMockServer::class)
-class DpsApiServiceTest {
+@Import(PhysAttrDpsApiService::class, PrisonPersonConfiguration::class, PhysAttrDpsApiMockServer::class)
+class PhysAttrDpsApiServiceTest {
   @Autowired
-  private lateinit var dpsApiService: DpsApiService
+  private lateinit var dpsApiService: PhysAttrDpsApiService
 
   @Autowired
-  private lateinit var dpsApi: DpsApiMockServer
+  private lateinit var dpsApi: PhysAttrDpsApiMockServer
 
   @Nested
   inner class GetPrisonPerson {

@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService as PrisonerNomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 
 @RestController
-class ReconciliationResource(
-  private val reconciliationService: ReconciliationService,
-  private val nomisApiService: PrisonerNomisApiService,
+class PrisonPersonReconResource(
+  private val reconService: PrisonPersonReconService,
+  private val nomisApiService: NomisApiService,
   private val reportScope: CoroutineScope,
   private val telemetryClient: TelemetryClient,
 ) {
@@ -25,7 +25,7 @@ class ReconciliationResource(
     telemetryClient.trackEvent("prison-person-reconciliation-report-requested", mapOf("active-prisoners" to activePrisonersCount.toString()))
 
     reportScope.launch {
-      runCatching { reconciliationService.generateReconciliationReport(activePrisonersCount) }
+      runCatching { reconService.generateReconciliationReport(activePrisonersCount) }
         .onSuccess {
           telemetryClient.trackEvent(
             "prison-person-reconciliation-report-${if (it.isEmpty()) "success" else "failed"}",

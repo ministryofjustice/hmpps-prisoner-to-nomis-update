@@ -10,14 +10,14 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.DpsApiExtension.Companion.dpsApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.PrisonPersonDpsApiExtension.Companion.dpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PhysicalAttributesDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.ValueWithMetadataInteger
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 
-@Component("physicalAttributesDpsApiMockServer")
-class DpsApiMockServer(private val objectMapper: ObjectMapper) {
+@Component
+class PhysAttrDpsApiMockServer(private val objectMapper: ObjectMapper) {
 
   fun stubHealthPing(status: Int) {
     dpsApi.stubFor(
