@@ -4,10 +4,10 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 
-@Service("physicalAttributesSynchronisationService")
-class SynchronisationService(
-  private val dpsApi: DpsApiService,
-  private val nomisApi: NomisApiService,
+@Service
+class PhysAttrSyncService(
+  private val dpsApi: PhysAttrDpsApiService,
+  private val nomisApi: PhysAttrNomisApiService,
   private val telemetryClient: TelemetryClient,
 ) {
 

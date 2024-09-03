@@ -12,8 +12,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Upsert
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-@Component("physicalAttributesNomisApiMockServer")
-class NomisApiMockServer(private val objectMapper: ObjectMapper) {
+@Component
+class PhysAttrNomisApiMockServer(private val objectMapper: ObjectMapper) {
   fun stubPutPhysicalAttributes(
     offenderNo: String = "A1234AA",
     created: Boolean = true,

@@ -21,38 +21,35 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_GATEWAY
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.test.context.TestPropertySource
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.physicalattributes.DpsApiMockServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.physicalattributes.PhysAttrDpsApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 
 @TestPropertySource(properties = ["reports.prisonperson.reconciliation.page-size=3"])
-class ReconciliationIntTest : IntegrationTestBase() {
+class PrisonPersonReconIntTest : IntegrationTestBase() {
 
   @Autowired
-  @Qualifier("prisonPersonNomisApiMockServer")
-  private lateinit var nomisApi: NomisApiMockServer
+  private lateinit var nomisApi: PrisonPersonNomisApiMockServer
 
   @Autowired
-  @Qualifier("physicalAttributesDpsApiMockServer")
-  private lateinit var physicalAttributesDpsApi: DpsApiMockServer
+  private lateinit var physAttrDpsApi: PhysAttrDpsApiMockServer
 
   @Autowired
-  private lateinit var reconciliationService: ReconciliationService
+  private lateinit var reconService: PrisonPersonReconService
 
   @Nested
   inner class SinglePrisoner {
     @Test
     fun `should do nothing if no differences`() = runTest {
-      physicalAttributesDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = 180, weight = 80)
+      physAttrDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = 180, weight = 80)
       nomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = 180, weight = 80)
 
-      reconciliationService.checkPrisoner("A1234AA")
+      reconService.checkPrisoner("A1234AA")
         .also { assertThat(it).isNull() }
 
       verify(telemetryClient, never()).trackEvent(anyString(), anyMap(), isNull())
@@ -60,10 +57,10 @@ class ReconciliationIntTest : IntegrationTestBase() {
 
     @Test
     fun `should report differences to height and weight`() = runTest {
-      physicalAttributesDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = 170, weight = 70)
+      physAttrDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = 170, weight = 70)
       nomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = 180, weight = 80)
 
-      reconciliationService.checkPrisoner("A1234AA")
+      reconService.checkPrisoner("A1234AA")
         .also { assertThat(it).isEqualTo("A1234AA") }
 
       verify(telemetryClient).trackEvent(
@@ -82,10 +79,10 @@ class ReconciliationIntTest : IntegrationTestBase() {
 
     @Test
     fun `should report differences if null in DPS`() = runTest {
-      physicalAttributesDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = null, weight = null)
+      physAttrDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = null, weight = null)
       nomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = 180, weight = 80)
 
-      reconciliationService.checkPrisoner("A1234AA")
+      reconService.checkPrisoner("A1234AA")
 
       verify(telemetryClient).trackEvent(
         eq("prison-person-reconciliation-prisoner-failed"),
@@ -100,10 +97,10 @@ class ReconciliationIntTest : IntegrationTestBase() {
 
     @Test
     fun `should report differences if null in NOMIS`() = runTest {
-      physicalAttributesDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = 170, weight = 70)
+      physAttrDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = 170, weight = 70)
       nomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = null, weight = null)
 
-      reconciliationService.checkPrisoner("A1234AA")
+      reconService.checkPrisoner("A1234AA")
 
       verify(telemetryClient).trackEvent(
         eq("prison-person-reconciliation-prisoner-failed"),
@@ -118,10 +115,10 @@ class ReconciliationIntTest : IntegrationTestBase() {
 
     @Test
     fun `should report differences if missing from DPS`() = runTest {
-      physicalAttributesDpsApi.stubGetPhysicalAttributes(NOT_FOUND)
+      physAttrDpsApi.stubGetPhysicalAttributes(NOT_FOUND)
       nomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = 180, weight = 80)
 
-      reconciliationService.checkPrisoner("A1234AA")
+      reconService.checkPrisoner("A1234AA")
 
       verify(telemetryClient).trackEvent(
         eq("prison-person-reconciliation-prisoner-failed"),
@@ -140,10 +137,10 @@ class ReconciliationIntTest : IntegrationTestBase() {
 
     @Test
     fun `should report differences if missing from NOMIS`() = runTest {
-      physicalAttributesDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = 170, weight = 70)
+      physAttrDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = 170, weight = 70)
       nomisApi.stubGetReconciliation(NOT_FOUND)
 
-      reconciliationService.checkPrisoner("A1234AA")
+      reconService.checkPrisoner("A1234AA")
 
       verify(telemetryClient).trackEvent(
         eq("prison-person-reconciliation-prisoner-failed"),
@@ -162,30 +159,30 @@ class ReconciliationIntTest : IntegrationTestBase() {
 
     @Test
     fun `should not report differences if null in both`() = runTest {
-      physicalAttributesDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = null, weight = null)
+      physAttrDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = null, weight = null)
       nomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = null, weight = null)
 
-      reconciliationService.checkPrisoner("A1234AA")
+      reconService.checkPrisoner("A1234AA")
 
       verify(telemetryClient, never()).trackEvent(anyString(), anyMap(), isNull())
     }
 
     @Test
     fun `should not report differences if missing from both`() = runTest {
-      physicalAttributesDpsApi.stubGetPhysicalAttributes(NOT_FOUND)
+      physAttrDpsApi.stubGetPhysicalAttributes(NOT_FOUND)
       nomisApi.stubGetReconciliation(NOT_FOUND)
 
-      reconciliationService.checkPrisoner("A1234AA")
+      reconService.checkPrisoner("A1234AA")
 
       verify(telemetryClient, never()).trackEvent(anyString(), anyMap(), isNull())
     }
 
     @Test
     fun `should report errors from DPS`() = runTest {
-      physicalAttributesDpsApi.stubGetPhysicalAttributes(HttpStatus.INTERNAL_SERVER_ERROR)
+      physAttrDpsApi.stubGetPhysicalAttributes(HttpStatus.INTERNAL_SERVER_ERROR)
       nomisApi.stubGetReconciliation("A1234AA")
 
-      reconciliationService.checkPrisoner("A1234AA")
+      reconService.checkPrisoner("A1234AA")
 
       verify(telemetryClient).trackEvent(
         eq("prison-person-reconciliation-prisoner-error"),
@@ -203,10 +200,10 @@ class ReconciliationIntTest : IntegrationTestBase() {
 
     @Test
     fun `should report errors from NOMIS`() = runTest {
-      physicalAttributesDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
+      physAttrDpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
       nomisApi.stubGetReconciliation(BAD_GATEWAY)
 
-      reconciliationService.checkPrisoner("A1234AA")
+      reconService.checkPrisoner("A1234AA")
 
       verify(telemetryClient).trackEvent(
         eq("prison-person-reconciliation-prisoner-error"),
@@ -250,7 +247,7 @@ class ReconciliationIntTest : IntegrationTestBase() {
         reset(telemetryClient)
         stubPages()
         forEachPrisoner { offenderNo ->
-          physicalAttributesDpsApi.stubGetPhysicalAttributes(offenderNo = offenderNo, height = 180, weight = 80)
+          physAttrDpsApi.stubGetPhysicalAttributes(offenderNo = offenderNo, height = 180, weight = 80)
           nomisApi.stubGetReconciliation(offenderNo = offenderNo, height = 180, weight = 80)
         }
 
@@ -284,7 +281,7 @@ class ReconciliationIntTest : IntegrationTestBase() {
           nomisApi.verify(
             getRequestedFor(urlPathEqualTo("/prisoners/$offenderNo/prison-person/reconciliation")),
           )
-          physicalAttributesDpsApi.verify(
+          physAttrDpsApi.verify(
             getRequestedFor(urlPathEqualTo("/prisoners/$offenderNo/physical-attributes")),
           )
         }
@@ -311,7 +308,7 @@ class ReconciliationIntTest : IntegrationTestBase() {
           reset(telemetryClient)
           stubPages()
           forEachPrisoner { offenderNo ->
-            physicalAttributesDpsApi.stubGetPhysicalAttributes(offenderNo = offenderNo, height = 180, weight = 80)
+            physAttrDpsApi.stubGetPhysicalAttributes(offenderNo = offenderNo, height = 180, weight = 80)
             // the 4th prisoner's height is different in DPS and NOMIS
             if (offenderNo != "A0004TZ") {
               nomisApi.stubGetReconciliation(offenderNo = offenderNo, height = 180, weight = 80)
@@ -362,9 +359,9 @@ class ReconciliationIntTest : IntegrationTestBase() {
             nomisApi.stubGetReconciliation(offenderNo = offenderNo, height = 180, weight = 80)
             // the 1st prisoner's weight is different in DPS and NOMIS
             if (offenderNo != "A0001TZ") {
-              physicalAttributesDpsApi.stubGetPhysicalAttributes(offenderNo = offenderNo, height = 180, weight = 80)
+              physAttrDpsApi.stubGetPhysicalAttributes(offenderNo = offenderNo, height = 180, weight = 80)
             } else {
-              physicalAttributesDpsApi.stubGetPhysicalAttributes(offenderNo = offenderNo, height = 180, weight = 70)
+              physAttrDpsApi.stubGetPhysicalAttributes(offenderNo = offenderNo, height = 180, weight = 70)
             }
           }
 
@@ -429,7 +426,7 @@ class ReconciliationIntTest : IntegrationTestBase() {
             stubGetActivePrisonersPage(noActivePrisoners, pageNumber = 2, pageSize = pageSize, numberOfElements = 1)
           }
           forEachPrisoner { offenderNo ->
-            physicalAttributesDpsApi.stubGetPhysicalAttributes(offenderNo = offenderNo, height = 180, weight = 80)
+            physAttrDpsApi.stubGetPhysicalAttributes(offenderNo = offenderNo, height = 180, weight = 80)
             nomisApi.stubGetReconciliation(offenderNo = offenderNo, height = 180, weight = 80)
           }
 
@@ -446,7 +443,7 @@ class ReconciliationIntTest : IntegrationTestBase() {
               count,
               getRequestedFor(urlPathEqualTo("/prisoners/$offenderNo/prison-person/reconciliation")),
             )
-            physicalAttributesDpsApi.verify(
+            physAttrDpsApi.verify(
               count,
               getRequestedFor(urlPathEqualTo("/prisoners/$offenderNo/physical-attributes")),
             )
@@ -486,10 +483,10 @@ class ReconciliationIntTest : IntegrationTestBase() {
           forEachPrisoner { offenderNo ->
             // the 4th prisoner's NOMIS call returns an error
             if (offenderNo != "A0004TZ") {
-              physicalAttributesDpsApi.stubGetPhysicalAttributes(offenderNo = offenderNo, height = 180, weight = 80)
+              physAttrDpsApi.stubGetPhysicalAttributes(offenderNo = offenderNo, height = 180, weight = 80)
               nomisApi.stubGetReconciliation(offenderNo = offenderNo, height = 180, weight = 80)
             } else {
-              physicalAttributesDpsApi.stubGetPhysicalAttributes(offenderNo = offenderNo, height = 180, weight = 80)
+              physAttrDpsApi.stubGetPhysicalAttributes(offenderNo = offenderNo, height = 180, weight = 80)
               nomisApi.stubGetReconciliation(BAD_GATEWAY)
             }
           }
@@ -533,10 +530,10 @@ class ReconciliationIntTest : IntegrationTestBase() {
           forEachPrisoner { offenderNo ->
             // the last prisoner's NOMIS and DPS calls fail then work on a retry
             if (offenderNo != "A0007TZ") {
-              physicalAttributesDpsApi.stubGetPhysicalAttributes(offenderNo = offenderNo, height = 180, weight = 80)
+              physAttrDpsApi.stubGetPhysicalAttributes(offenderNo = offenderNo, height = 180, weight = 80)
               nomisApi.stubGetReconciliation(offenderNo = offenderNo, height = 180, weight = 80)
             } else {
-              physicalAttributesDpsApi.stubGetPhysicalAttributesWithRetry(offenderNo = offenderNo, height = 180, weight = 80)
+              physAttrDpsApi.stubGetPhysicalAttributesWithRetry(offenderNo = offenderNo, height = 180, weight = 80)
               nomisApi.stubGetReconciliationWithRetry(offenderNo = offenderNo, height = 180, weight = 80)
             }
           }
@@ -551,7 +548,7 @@ class ReconciliationIntTest : IntegrationTestBase() {
             2,
             getRequestedFor(urlPathEqualTo("/prisoners/A0007TZ/prison-person/reconciliation")),
           )
-          physicalAttributesDpsApi.verify(
+          physAttrDpsApi.verify(
             2,
             getRequestedFor(urlPathEqualTo("/prisoners/A0007TZ/physical-attributes")),
           )

@@ -17,41 +17,41 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 
 @SpringAPIServiceTest
-@Import(NomisApiService::class, Configuration::class, NomisApiMockServer::class)
-class NomisApiServiceTest {
+@Import(PrisonPersonNomisApiService::class, PrisonPersonConfiguration::class, PrisonPersonNomisApiMockServer::class)
+class PrisonPersonNomisApiServiceTest {
   @Autowired
-  private lateinit var nomisApiService: NomisApiService
+  private lateinit var nomisApiService: PrisonPersonNomisApiService
 
   @Autowired
-  private lateinit var nomisApiMockServer: NomisApiMockServer
+  private lateinit var nomisApi: PrisonPersonNomisApiMockServer
 
   @Nested
   inner class GetReconciliation {
     @Test
     internal fun `will pass oath2 token to service`() = runTest {
-      nomisApiMockServer.stubGetReconciliation(offenderNo = "A1234KT")
+      nomisApi.stubGetReconciliation(offenderNo = "A1234KT")
 
       nomisApiService.getReconciliation(offenderNo = "A1234KT")
 
-      nomisApiMockServer.verify(
+      nomisApi.verify(
         getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
     @Test
     internal fun `will pass offender number to service`() = runTest {
-      nomisApiMockServer.stubGetReconciliation(offenderNo = "A1234KT")
+      nomisApi.stubGetReconciliation(offenderNo = "A1234KT")
 
       nomisApiService.getReconciliation(offenderNo = "A1234KT")
 
-      nomisApiMockServer.verify(
+      nomisApi.verify(
         getRequestedFor(urlPathEqualTo("/prisoners/A1234KT/prison-person/reconciliation")),
       )
     }
 
     @Test
     fun `will return height and weight`() = runTest {
-      nomisApiMockServer.stubGetReconciliation(offenderNo = "A1234KT", height = 180, weight = 80)
+      nomisApi.stubGetReconciliation(offenderNo = "A1234KT", height = 180, weight = 80)
 
       val response = nomisApiService.getReconciliation(offenderNo = "A1234KT")
 
@@ -61,7 +61,7 @@ class NomisApiServiceTest {
 
     @Test
     fun `will throw error when API returns an error`() = runTest {
-      nomisApiMockServer.stubGetReconciliation(INTERNAL_SERVER_ERROR)
+      nomisApi.stubGetReconciliation(INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
         nomisApiService.getReconciliation(offenderNo = "A1234KT")
@@ -70,7 +70,7 @@ class NomisApiServiceTest {
 
     @Test
     fun `will return null if not found`() = runTest {
-      nomisApiMockServer.stubGetReconciliation(NOT_FOUND)
+      nomisApi.stubGetReconciliation(NOT_FOUND)
 
       assertThat(nomisApiService.getReconciliation(offenderNo = "A1234AA")).isNull()
     }

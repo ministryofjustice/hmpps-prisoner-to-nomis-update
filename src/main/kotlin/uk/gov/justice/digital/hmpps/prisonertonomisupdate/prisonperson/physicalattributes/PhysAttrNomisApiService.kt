@@ -7,8 +7,8 @@ import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertPhysicalAttributesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertPhysicalAttributesResponse
 
-@Service("physicalAttributesNomisApiService")
-class NomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
+@Service
+class PhysAttrNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
   suspend fun upsertPhysicalAttributes(offenderNo: String, height: Int?, weight: Int?): UpsertPhysicalAttributesResponse =
     webClient.put()
       .uri("/prisoners/{offenderNo}/physical-attributes", offenderNo)

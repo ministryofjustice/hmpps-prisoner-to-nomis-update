@@ -11,7 +11,7 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 
-class DpsApiExtension :
+class PrisonPersonDpsApiExtension :
   BeforeAllCallback,
   AfterAllCallback,
   BeforeEachCallback {
@@ -52,7 +52,7 @@ class DpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(DpsApiExtension.objectMapper.writeValueAsString(body))
+    this.withBody(PrisonPersonDpsApiExtension.objectMapper.writeValueAsString(body))
     return this
   }
 }

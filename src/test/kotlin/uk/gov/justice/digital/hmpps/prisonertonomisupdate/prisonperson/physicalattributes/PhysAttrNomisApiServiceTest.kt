@@ -12,16 +12,16 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.Configuration
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.PrisonPersonConfiguration
 
 @SpringAPIServiceTest
-@Import(NomisApiService::class, Configuration::class, NomisApiMockServer::class)
-class NomisApiServiceTest {
+@Import(PhysAttrNomisApiService::class, PrisonPersonConfiguration::class, PhysAttrNomisApiMockServer::class)
+class PhysAttrNomisApiServiceTest {
   @Autowired
-  private lateinit var nomisApiService: NomisApiService
+  private lateinit var nomisApiService: PhysAttrNomisApiService
 
   @Autowired
-  private lateinit var nomisApi: NomisApiMockServer
+  private lateinit var nomisApi: PhysAttrNomisApiMockServer
 
   @Nested
   inner class UpsertPhysicalAttributes {

@@ -13,6 +13,7 @@ import org.springframework.test.context.BootstrapWith
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.WebClientConfiguration
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.PrisonPersonDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
@@ -28,7 +29,6 @@ import uk.gov.justice.hmpps.kotlin.auth.HmppsReactiveWebClientConfiguration
 import java.lang.annotation.Inherited
 import kotlin.annotation.AnnotationTarget.ANNOTATION_CLASS
 import kotlin.annotation.AnnotationTarget.CLASS
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.DpsApiExtension as PrisonPersonDpsApiExtension
 
 /**
  * Annotation for an API service test that focuses **only** on services that call a WebClient

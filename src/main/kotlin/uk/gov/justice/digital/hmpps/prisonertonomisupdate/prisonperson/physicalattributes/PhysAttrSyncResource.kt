@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 
-@RestController("physicalAttributesSynchronisationResource")
-class SynchronisationResource(
-  private val synchronisationService: SynchronisationService,
+@RestController
+class PhysAttrSyncResource(
+  private val syncService: PhysAttrSyncService,
   private val telemetryClient: TelemetryClient,
 ) {
   @PreAuthorize("hasRole('ROLE_NOMIS_PRISON_PERSON') or hasRole('ROLE_NOMIS_PRISON_PERSON__RECONCILIATION')")
@@ -43,6 +43,6 @@ class SynchronisationResource(
     @Schema(description = "prisonerNumber", required = true) @PathVariable prisonerNumber: String,
   ) {
     telemetryClient.trackEvent("physical-attributes-update-requested", mapOf("offenderNo" to prisonerNumber))
-    synchronisationService.updatePhysicalAttributes(prisonerNumber)
+    syncService.updatePhysicalAttributes(prisonerNumber)
   }
 }
