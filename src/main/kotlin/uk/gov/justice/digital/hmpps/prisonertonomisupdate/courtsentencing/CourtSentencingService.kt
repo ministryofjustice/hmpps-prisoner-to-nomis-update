@@ -313,20 +313,15 @@ class CourtSentencingService(
   )
 }
 
-fun CourtCase.toNomisCourtCase(courtCaseOnly: Boolean = false): CreateCourtCaseRequest = CreateCourtCaseRequest(
+fun CourtCase.toNomisCourtCase(): CreateCourtCaseRequest = CreateCourtCaseRequest(
   startDate = this.latestAppearance.appearanceDate,
-  // TODO hard coding until mapping approach decided this.courtCode
-  courtId = HARDCODED_COURT,
-  courtAppearance = if (courtCaseOnly) {
-    null
-  } else {
-    this.latestAppearance.toNomisCourtAppearance(
-      courtEventChargesToUpdate = listOf(),
-      courtEventChargesToCreate = this.latestAppearance.charges.mapIndexed { index, dpsCharge ->
-        dpsCharge.toNomisCourtCharge()
-      },
-    )
-  },
+  courtId = this.latestAppearance.courtCode,
+  courtAppearance = this.latestAppearance.toNomisCourtAppearance(
+    courtEventChargesToUpdate = listOf(),
+    courtEventChargesToCreate = this.latestAppearance.charges.mapIndexed { index, dpsCharge ->
+      dpsCharge.toNomisCourtCharge()
+    },
+  ),
   // LEG_CASE_TYP on NOMIS - defaulting to Adult as suggested in the Sentencing document
   legalCaseType = "A",
   // CASE_STS on NOMIS - no decision from DPS yet - defaulting to Active
@@ -345,23 +340,23 @@ fun CourtAppearance.toNomisCourtAppearance(
     ).toString(),
     // TODO these are MOV_RSN on NOMIS - defaulting to Court Appearance until DPS provide a mapping
     courtEventType = "CRT",
-    // TODO hard coding until mapping approach decided this.courtCode
-    courtId = HARDCODED_COURT,
+    courtId = this.courtCode,
     outcomeReasonCode = getHardcodedNomisResultCode(this.outcome),
     nextEventDateTime = nextCourtAppearance?.let {
       LocalDateTime.of(
-        nextCourtAppearance.appearanceDate,
+        it.appearanceDate,
         LocalTime.MIDNIGHT,
       ).toString()
     },
     courtEventChargesToUpdate = courtEventChargesToUpdate,
     courtEventChargesToCreate = courtEventChargesToCreate,
     // TODO hardcoding until mapping approach decided this.courtCode
-    nextCourtId = nextCourtAppearance?.let { HARDCODED_COURT },
+    nextCourtId = nextCourtAppearance?.let { it.courtCode },
   )
 }
 
 fun Charge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeRequest(
+  // guaranteed to match nomis this way  (nomis has additional codes so sync back harder)
   offenceCode = this.offenceCode,
   offenceDate = this.offenceStartDate,
   offenceEndDate = this.offenceEndDate,
