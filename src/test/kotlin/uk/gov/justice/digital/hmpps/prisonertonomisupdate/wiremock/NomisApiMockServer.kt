@@ -90,6 +90,27 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubVisitCreateWithDuplicateError(prisonerId: String, nomisVisitId: Long) {
+    stubFor(
+      post("/prisoners/$prisonerId/visits").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            // language=JSON
+            """
+              { 
+                "status": 409, 
+                "userMessage": "Visit already exists $nomisVisitId",
+                "developerMessage": "Visit already exists $nomisVisitId",
+                "moreInfo": "$nomisVisitId"
+              }
+            """.trimIndent(),
+          )
+          .withStatus(409),
+      ),
+    )
+  }
+
   fun stubVisitCancel(prisonerId: String, visitId: String = "1234") {
     stubFor(
       put("/prisoners/$prisonerId/visits/$visitId/cancel").willReturn(

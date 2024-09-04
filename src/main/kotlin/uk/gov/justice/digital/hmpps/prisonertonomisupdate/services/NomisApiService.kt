@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DeactivateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DeleteHearingResultAwardResponses
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DeleteHearingResultResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Hearing
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationResponse
@@ -78,12 +79,20 @@ class NomisApiService(
 
   // ////////// VISITS //////////////
 
-  suspend fun createVisit(request: CreateVisitDto): CreateVisitResponseDto =
+  suspend fun createVisit(request: CreateVisitDto): Result<CreateVisitResponseDto> =
     webClient.post()
       .uri("/prisoners/{offenderNo}/visits", request.offenderNo)
       .bodyValue(request)
       .retrieve()
-      .awaitBody()
+      .bodyToMono(CreateVisitResponseDto::class.java)
+      .map { Result.success(it) }
+      .onErrorResume(WebClientResponseException.Conflict::class.java) {
+        val errorResponse = it.getResponseBodyAs(ErrorResponse::class.java) as ErrorResponse
+        Mono.just(Result.failure(CreateVisitDuplicateResponse(nomisVisitId = errorResponse.moreInfo!!)))
+      }
+      .awaitSingle()
+
+  data class CreateVisitDuplicateResponse(val nomisVisitId: String) : Exception("Duplicate visit")
 
   suspend fun cancelVisit(request: CancelVisitDto) {
     webClient.put()

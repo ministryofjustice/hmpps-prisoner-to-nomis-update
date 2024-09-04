@@ -41,7 +41,7 @@ internal class VisitsServiceTest {
     fun `should log a processed visit booked event`() = runTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
       whenever(mappingService.getMappingGivenVsipIdOrNull("123")).thenReturn(null)
-      whenever(nomisApiService.createVisit(any())).thenReturn(CreateVisitResponseDto("456"))
+      whenever(nomisApiService.createVisit(any())).thenReturn(Result.success(CreateVisitResponseDto("456")))
 
       visitsService.createVisit(
         VisitBookedEvent(
@@ -92,7 +92,7 @@ internal class VisitsServiceTest {
     fun `should log a mapping creation failure`() = runTest {
       whenever(visitApiService.getVisit("123")).thenReturn(newVisit())
       whenever(mappingService.getMappingGivenVsipIdOrNull("123")).thenReturn(null)
-      whenever(nomisApiService.createVisit(any())).thenReturn(CreateVisitResponseDto("456"))
+      whenever(nomisApiService.createVisit(any())).thenReturn(Result.success(CreateVisitResponseDto("456")))
       whenever(mappingService.createMapping(any())).thenThrow(RuntimeException("test"))
 
       visitsService.createVisit(
