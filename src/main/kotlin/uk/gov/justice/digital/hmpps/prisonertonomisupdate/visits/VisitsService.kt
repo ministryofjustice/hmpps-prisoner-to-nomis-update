@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService.CreateVisitDuplicateResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDate
@@ -48,38 +49,40 @@ class VisitsService(
             "endTime" to visit.endTimestamp.format(DateTimeFormatter.ISO_TIME),
           )
 
-          nomisApiService.createVisit(
-            CreateVisitDto(
-              offenderNo = visit.prisonerId,
-              prisonId = visit.prisonId,
-              startDateTime = visit.startTimestamp,
-              endTime = visit.endTimestamp.toLocalTime(),
-              visitorPersonIds = visit.visitors.map { it.nomisPersonId },
-              issueDate = visitBookedEvent.bookingDate,
-              visitType = when (visit.visitType) {
-                "SOCIAL" -> "SCON"
-                "FAMILY" -> "SCON"
-                else -> throw ValidationException("Invalid visit type ${visit.visitType}")
-              },
-              visitComment = "Created by Book A Prison Visit. Reference: ${visit.reference}",
-              visitOrderComment = "Created by Book A Prison Visit for visit with reference: ${visit.reference}",
-              room = visit.visitRoom,
-              openClosedStatus = visit.visitRestriction,
-            ),
-          ).let { nomisResponse ->
-            nomisResponse
-              .map {
-                VisitMappingDto(nomisId = nomisResponse.getOrThrow().visitId, vsipId = visitBookedEvent.reference, mappingType = "ONLINE")
-              }
-              .recover { error ->
-                error as NomisApiService.CreateVisitDuplicateResponse
+          kotlin.runCatching {
+            nomisApiService.createVisit(
+              CreateVisitDto(
+                offenderNo = visit.prisonerId,
+                prisonId = visit.prisonId,
+                startDateTime = visit.startTimestamp,
+                endTime = visit.endTimestamp.toLocalTime(),
+                visitorPersonIds = visit.visitors.map { it.nomisPersonId },
+                issueDate = visitBookedEvent.bookingDate,
+                visitType = when (visit.visitType) {
+                  "SOCIAL" -> "SCON"
+                  "FAMILY" -> "SCON"
+                  else -> throw ValidationException("Invalid visit type ${visit.visitType}")
+                },
+                visitComment = "Created by Book A Prison Visit. Reference: ${visit.reference}",
+                visitOrderComment = "Created by Book A Prison Visit for visit with reference: ${visit.reference}",
+                room = visit.visitRoom,
+                openClosedStatus = visit.visitRestriction,
+              ),
+            )
+          }.map {
+            VisitMappingDto(nomisId = it.visitId, vsipId = visitBookedEvent.reference, mappingType = "ONLINE")
+          }.recover {
+            when (it) {
+              is CreateVisitDuplicateResponse -> {
                 VisitMappingDto(
-                  nomisId = error.nomisVisitId,
+                  nomisId = it.nomisVisitId,
                   vsipId = visitBookedEvent.reference,
                   mappingType = "ONLINE",
                 ).takeIf { doesMappingStillNotExist(visitBookedEvent.reference) }
-              }.getOrNull()
-          }
+              }
+              else -> throw it
+            }
+          }.getOrNull()
         }
       }
       saveMapping { mappingService.createMapping(it) }

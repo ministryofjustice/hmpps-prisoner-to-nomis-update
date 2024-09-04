@@ -79,16 +79,15 @@ class NomisApiService(
 
   // ////////// VISITS //////////////
 
-  suspend fun createVisit(request: CreateVisitDto): Result<CreateVisitResponseDto> =
+  suspend fun createVisit(request: CreateVisitDto): CreateVisitResponseDto =
     webClient.post()
       .uri("/prisoners/{offenderNo}/visits", request.offenderNo)
       .bodyValue(request)
       .retrieve()
       .bodyToMono(CreateVisitResponseDto::class.java)
-      .map { Result.success(it) }
       .onErrorResume(WebClientResponseException.Conflict::class.java) {
         val errorResponse = it.getResponseBodyAs(ErrorResponse::class.java) as ErrorResponse
-        Mono.just(Result.failure(CreateVisitDuplicateResponse(nomisVisitId = errorResponse.moreInfo!!)))
+        throw CreateVisitDuplicateResponse(nomisVisitId = errorResponse.moreInfo!!)
       }
       .awaitSingle()
 
