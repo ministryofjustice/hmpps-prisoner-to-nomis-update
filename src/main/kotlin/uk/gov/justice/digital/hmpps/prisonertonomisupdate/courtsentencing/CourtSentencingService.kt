@@ -323,9 +323,9 @@ fun CourtCase.toNomisCourtCase(): CreateCourtCaseRequest = CreateCourtCaseReques
     },
   ),
   // LEG_CASE_TYP on NOMIS - defaulting to Adult as suggested in the Sentencing document
-  legalCaseType = "A", // DPS to confirm
+  legalCaseType = "A",
   // CASE_STS on NOMIS - no decision from DPS yet - defaulting to Active
-  status = "A", // DPS to confirm
+  status = "A",
 )
 
 fun CourtAppearance.toNomisCourtAppearance(
@@ -356,11 +356,12 @@ fun CourtAppearance.toNomisCourtAppearance(
 }
 
 fun Charge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeRequest(
-  offenceCode = this.offenceCode, // guaranteed to match nomis this way  (nomis has additional codes so sync back harder)
+  // guaranteed to match nomis this way  (nomis has additional codes so sync back harder)
+  offenceCode = this.offenceCode,
   offenceDate = this.offenceStartDate,
   offenceEndDate = this.offenceEndDate,
 // TODO dps has text that 'mainly' matches nomis but there are also non-matching values on T3
-  resultCode1 = getHardcodedNomisResultCode(this.outcome), // requires mapping
+  resultCode1 = getHardcodedNomisResultCode(this.outcome),
   // TODO determine if this comes from DPS or is it determined
   offencesCount = 1,
 )
