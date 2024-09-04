@@ -10,6 +10,8 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.mockito.kotlin.any
@@ -33,153 +35,200 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  @Test
-  fun `will consume a prison visits create message`() {
-    visitsApi.stubVisitGet(
-      "12",
-      buildVisitApiDtoJsonResponse(
-        visitId = "12",
-        prisonerId = "A32323Y",
-        visitRoom = "Main visits room",
-        visitRestriction = "OPEN",
-      ),
-    )
-    mappingServer.stubGetVsipWithError("12", 404)
-    mappingServer.stubCreate()
-    nomisApi.stubVisitCreate(prisonerId = "A32323Y")
+  @Nested
+  inner class CreateVisit {
 
-    awsSnsClient.publish(
-      PublishRequest.builder().topicArn(topicArn)
-        .message(prisonVisitMessagePayload(eventType = "prison-visit.booked", prisonerId = "A32323Y"))
-        .messageAttributes(
-          mapOf(
-            "eventType" to MessageAttributeValue.builder().dataType("String")
-              .stringValue("prison-visit.booked").build(),
-          ),
-        ).build(),
-    ).get()
-
-    await untilCallTo { awsSqsVisitClient.countAllMessagesOnQueue(visitQueueUrl).get() } matches { it == 0 }
-    await untilCallTo { visitsApi.getCountFor("/visits/12") } matches { it == 1 }
-    await untilCallTo { nomisApi.postCountFor("/prisoners/A32323Y/visits") } matches { it == 1 }
-
-    nomisApi.verify(
-      postRequestedFor(urlEqualTo("/prisoners/A32323Y/visits"))
-        .withRequestBody(matchingJsonPath("offenderNo", equalTo("A32323Y")))
-        .withRequestBody(matchingJsonPath("prisonId", equalTo("MDI")))
-        .withRequestBody(matchingJsonPath("visitType", equalTo("SCON")))
-        .withRequestBody(matchingJsonPath("room", equalTo("Main visits room")))
-        .withRequestBody(matchingJsonPath("openClosedStatus", equalTo("OPEN")))
-        .withRequestBody(matchingJsonPath("startDateTime", equalTo("2019-12-02T09:00:00")))
-        .withRequestBody(matchingJsonPath("issueDate", equalTo("2021-03-05")))
-        .withRequestBody(
-          matchingJsonPath(
-            "visitComment",
-            equalTo("Created by Book A Prison Visit. Reference: 12"),
-          ),
-        )
-        .withRequestBody(
-          matchingJsonPath(
-            "visitOrderComment",
-            equalTo("Created by Book A Prison Visit for visit with reference: 12"),
-          ),
+    @Test
+    fun `will consume a prison visits create message`() {
+      visitsApi.stubVisitGet(
+        "12",
+        buildVisitApiDtoJsonResponse(
+          visitId = "12",
+          prisonerId = "A32323Y",
+          visitRoom = "Main visits room",
+          visitRestriction = "OPEN",
         ),
-    )
+      )
+      mappingServer.stubGetVsipWithError("12", 404)
+      mappingServer.stubCreate()
+      nomisApi.stubVisitCreate(prisonerId = "A32323Y")
 
-    mappingServer.verify(
-      postRequestedFor(urlEqualTo("/mapping/visits"))
-        .withRequestBody(matchingJsonPath("nomisId", equalTo("12345")))
-        .withRequestBody(matchingJsonPath("vsipId", equalTo("12")))
-        .withRequestBody(matchingJsonPath("mappingType", equalTo("ONLINE"))),
-    )
-  }
+      publishToDomainEvent("prison-visit.booked", prisonerId = "AB12345")
 
-  @Test
-  fun `will retry after a mapping failure`() {
-    visitsApi.stubVisitGet("12", buildVisitApiDtoJsonResponse(visitId = "12", prisonerId = "A32323Y"))
-    mappingServer.stubGetVsipWithError("12", 404)
-    nomisApi.stubVisitCreate(prisonerId = "A32323Y")
-    mappingServer.stubCreateWithError()
+      await untilCallTo { awsSqsVisitClient.countAllMessagesOnQueue(visitQueueUrl).get() } matches { it == 0 }
+      await untilCallTo { visitsApi.getCountFor("/visits/12") } matches { it == 1 }
+      await untilCallTo { nomisApi.postCountFor("/prisoners/A32323Y/visits") } matches { it == 1 }
 
-    awsSnsClient.publish(
-      PublishRequest.builder().topicArn(topicArn)
-        .message(prisonVisitMessagePayload(eventType = "prison-visit.booked", prisonerId = "A32323Y"))
-        .messageAttributes(
-          mapOf(
-            "eventType" to MessageAttributeValue.builder().dataType("String")
-              .stringValue("prison-visit.booked").build(),
+      nomisApi.verify(
+        postRequestedFor(urlEqualTo("/prisoners/A32323Y/visits"))
+          .withRequestBody(matchingJsonPath("offenderNo", equalTo("A32323Y")))
+          .withRequestBody(matchingJsonPath("prisonId", equalTo("MDI")))
+          .withRequestBody(matchingJsonPath("visitType", equalTo("SCON")))
+          .withRequestBody(matchingJsonPath("room", equalTo("Main visits room")))
+          .withRequestBody(matchingJsonPath("openClosedStatus", equalTo("OPEN")))
+          .withRequestBody(matchingJsonPath("startDateTime", equalTo("2019-12-02T09:00:00")))
+          .withRequestBody(matchingJsonPath("issueDate", equalTo("2021-03-05")))
+          .withRequestBody(
+            matchingJsonPath(
+              "visitComment",
+              equalTo("Created by Book A Prison Visit. Reference: 12"),
+            ),
+          )
+          .withRequestBody(
+            matchingJsonPath(
+              "visitOrderComment",
+              equalTo("Created by Book A Prison Visit for visit with reference: 12"),
+            ),
           ),
-        ).build(),
-    ).get()
+      )
 
-    await untilCallTo { visitsApi.getCountFor("/visits/12") } matches { it == 1 }
-    await untilCallTo { nomisApi.postCountFor("/prisoners/A32323Y/visits") } matches { it == 1 }
-
-    // the mapping call fails resulting in a retry message being queued
-    // the retry message is processed and fails resulting in a message on the DLQ after 1 attempt
-    await untilCallTo { awsSqsVisitClient.countMessagesOnQueue(visitDlqUrl!!).get() } matches { it == 1 }
-
-    // Next time the retry will succeed
-    mappingServer.stubCreate()
-
-    webTestClient.put()
-      .uri("/queue-admin/retry-all-dlqs")
-      .exchange()
-      .expectStatus()
-      .isOk
-
-    await untilCallTo { mappingServer.postCountFor("/mapping/visits") } matches { it == 3 } // 1 initial call, 1 retries and 1 final successful call
-    await untilCallTo { awsSqsVisitClient.countAllMessagesOnQueue(visitQueueUrl).get() } matches { it == 0 }
-    await untilCallTo { awsSqsVisitClient.countMessagesOnQueue(visitDlqUrl!!).get() } matches {
-      log.trace("Messages on queue: {}", it)
-      it == 0
-    }
-  }
-
-  @Test
-  fun `will log when duplicate is detected`() {
-    visitsApi.stubVisitGet("12", buildVisitApiDtoJsonResponse(visitId = "12", prisonerId = "A32323Y"))
-    mappingServer.stubGetVsipWithError("12", 404)
-    nomisApi.stubVisitCreate(prisonerId = "A32323Y")
-    mappingServer.stubCreateWithDuplicateError(visitId = "12", nomisId = 12345, duplicateNomisId = 54321)
-
-    awsSnsClient.publish(
-      PublishRequest.builder().topicArn(topicArn)
-        .message(prisonVisitMessagePayload(eventType = "prison-visit.booked", prisonerId = "A32323Y"))
-        .messageAttributes(
-          mapOf(
-            "eventType" to MessageAttributeValue.builder().dataType("String")
-              .stringValue("prison-visit.booked").build(),
-          ),
-        ).build(),
-    ).get()
-
-    await untilAsserted {
-      verify(telemetryClient).trackEvent(
-        Mockito.eq("visit-mapping-create-failed"),
-        any(),
-        isNull(),
+      mappingServer.verify(
+        postRequestedFor(urlEqualTo("/mapping/visits"))
+          .withRequestBody(matchingJsonPath("nomisId", equalTo("12345")))
+          .withRequestBody(matchingJsonPath("vsipId", equalTo("12")))
+          .withRequestBody(matchingJsonPath("mappingType", equalTo("ONLINE"))),
       )
     }
 
-    await untilCallTo { visitsApi.getCountFor("/visits/12") } matches { it == 1 }
-    await untilCallTo { nomisApi.postCountFor("/prisoners/A32323Y/visits") } matches { it == 1 }
+    @Nested
+    inner class WhenDuplicateVisitDetectedInNomis {
+      val dpsVisitId = "12"
+      val nomisVisitId = 7655L
 
-    // the mapping call fails but is not queued for retry
-    await untilCallTo { awsSqsVisitClient.countMessagesOnQueue(visitDlqUrl!!).get() } matches { it == 0 }
+      @BeforeEach
+      fun setUp() {
+        visitsApi.stubVisitGet(dpsVisitId, buildVisitApiDtoJsonResponse(visitId = "12", prisonerId = "A32323Y"))
+        nomisApi.stubVisitCreateWithDuplicateError(prisonerId = "A32323Y", nomisVisitId = nomisVisitId)
+      }
 
-    await untilCallTo { mappingServer.postCountFor("/mapping/visits") } matches { it == 1 } // only tried once
+      @Nested
+      inner class WhenMappingStillDoesNotExist {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetVsipWithError(dpsVisitId, 404)
+          mappingServer.stubCreate()
+          publishToDomainEvent("prison-visit.booked", prisonerId = "AB12345").also { waitForAnyProcessingToComplete() }
+        }
 
-    verify(telemetryClient).trackEvent(
-      Mockito.eq("to-nomis-synch-visit-duplicate"),
-      org.mockito.kotlin.check {
-        Assertions.assertThat(it["existingVsipId"]).isEqualTo("12")
-        Assertions.assertThat(it["existingNomisId"]).isEqualTo("12345")
-        Assertions.assertThat(it["duplicateVsipId"]).isEqualTo("12")
-        Assertions.assertThat(it["duplicateNomisId"]).isEqualTo("54321")
-      },
-      isNull(),
-    )
+        @Test
+        fun `mapping will be created using NOMIS id from original visit`() {
+          mappingServer.verify(
+            postRequestedFor(urlEqualTo("/mapping/visits"))
+              .withRequestBody(matchingJsonPath("nomisId", equalTo("$nomisVisitId")))
+              .withRequestBody(matchingJsonPath("vsipId", equalTo(dpsVisitId)))
+              .withRequestBody(matchingJsonPath("mappingType", equalTo("ONLINE"))),
+          )
+        }
+
+        @Test
+        fun `no message will be added to DLQ`() {
+          await untilCallTo { awsSqsVisitClient.countMessagesOnQueue(visitDlqUrl!!).get() } matches { it == 0 }
+        }
+      }
+
+      @Nested
+      inner class WhenMappingWasCreatedWhileDuplicateWasDetected {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetVsipWithErrorFollowedBySuccess(
+            dpsVisitId,
+            response =
+            """
+              { 
+                "nomisId": "$nomisVisitId",
+                "vsipId": "$dpsVisitId",
+                "mappingType": "ONLINE"
+              }
+            """,
+            status = 404,
+          )
+          publishToDomainEvent("prison-visit.booked", prisonerId = "AB12345").also { waitForAnyProcessingToComplete() }
+        }
+
+        @Test
+        fun `no mapping will be created`() {
+          mappingServer.verify(
+            0,
+            postRequestedFor(urlEqualTo("/mapping/visits")),
+          )
+        }
+
+        @Test
+        fun `no message will be added to DLQ`() {
+          await untilCallTo { awsSqsVisitClient.countMessagesOnQueue(visitDlqUrl!!).get() } matches { it == 0 }
+        }
+      }
+    }
+
+    @Test
+    fun `will retry after a mapping failure`() {
+      visitsApi.stubVisitGet("12", buildVisitApiDtoJsonResponse(visitId = "12", prisonerId = "A32323Y"))
+      mappingServer.stubGetVsipWithError("12", 404)
+      nomisApi.stubVisitCreate(prisonerId = "A32323Y")
+      mappingServer.stubCreateWithError()
+
+      publishToDomainEvent("prison-visit.booked", prisonerId = "AB12345")
+
+      await untilCallTo { visitsApi.getCountFor("/visits/12") } matches { it == 1 }
+      await untilCallTo { nomisApi.postCountFor("/prisoners/A32323Y/visits") } matches { it == 1 }
+
+      // the mapping call fails resulting in a retry message being queued
+      // the retry message is processed and fails resulting in a message on the DLQ after 1 attempt
+      await untilCallTo { awsSqsVisitClient.countMessagesOnQueue(visitDlqUrl!!).get() } matches { it == 1 }
+
+      // Next time the retry will succeed
+      mappingServer.stubCreate()
+
+      webTestClient.put()
+        .uri("/queue-admin/retry-all-dlqs")
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      await untilCallTo { mappingServer.postCountFor("/mapping/visits") } matches { it == 3 } // 1 initial call, 1 retries and 1 final successful call
+      await untilCallTo { awsSqsVisitClient.countAllMessagesOnQueue(visitQueueUrl).get() } matches { it == 0 }
+      await untilCallTo { awsSqsVisitClient.countMessagesOnQueue(visitDlqUrl!!).get() } matches {
+        log.trace("Messages on queue: {}", it)
+        it == 0
+      }
+    }
+
+    @Test
+    fun `will log when duplicate mapping is detected`() {
+      visitsApi.stubVisitGet("12", buildVisitApiDtoJsonResponse(visitId = "12", prisonerId = "A32323Y"))
+      mappingServer.stubGetVsipWithError("12", 404)
+      nomisApi.stubVisitCreate(prisonerId = "A32323Y")
+      mappingServer.stubCreateWithDuplicateError(visitId = "12", nomisId = 12345, duplicateNomisId = 54321)
+
+      publishToDomainEvent("prison-visit.booked", prisonerId = "AB12345")
+
+      await untilAsserted {
+        verify(telemetryClient).trackEvent(
+          Mockito.eq("visit-mapping-create-failed"),
+          any(),
+          isNull(),
+        )
+      }
+
+      await untilCallTo { visitsApi.getCountFor("/visits/12") } matches { it == 1 }
+      await untilCallTo { nomisApi.postCountFor("/prisoners/A32323Y/visits") } matches { it == 1 }
+
+      // the mapping call fails but is not queued for retry
+      await untilCallTo { awsSqsVisitClient.countMessagesOnQueue(visitDlqUrl!!).get() } matches { it == 0 }
+
+      await untilCallTo { mappingServer.postCountFor("/mapping/visits") } matches { it == 1 } // only tried once
+
+      verify(telemetryClient).trackEvent(
+        Mockito.eq("to-nomis-synch-visit-duplicate"),
+        org.mockito.kotlin.check {
+          Assertions.assertThat(it["existingVsipId"]).isEqualTo("12")
+          Assertions.assertThat(it["existingNomisId"]).isEqualTo("12345")
+          Assertions.assertThat(it["duplicateVsipId"]).isEqualTo("12")
+          Assertions.assertThat(it["duplicateNomisId"]).isEqualTo("54321")
+        },
+        isNull(),
+      )
+    }
   }
 
   @Test
@@ -200,16 +249,7 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
     )
     nomisApi.stubVisitCancel(prisonerId = "AB12345", visitId = "456")
 
-    awsSnsClient.publish(
-      PublishRequest.builder().topicArn(topicArn)
-        .message(prisonVisitMessagePayload(eventType = "prison-visit.cancelled", prisonerId = "AB12345"))
-        .messageAttributes(
-          mapOf(
-            "eventType" to MessageAttributeValue.builder().dataType("String")
-              .stringValue("prison-visit.cancelled").build(),
-          ),
-        ).build(),
-    ).get()
+    publishToDomainEvent("prison-visit.cancelled", prisonerId = "AB12345")
 
     await untilCallTo { awsSqsVisitClient.countMessagesOnQueue(visitQueueUrl).get() } matches { it == 0 }
     await untilCallTo { nomisApi.putCountFor("/prisoners/AB12345/visits/456/cancel") } matches { it == 1 }
@@ -246,16 +286,7 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
     )
     nomisApi.stubVisitUpdate(prisonerId = "AB12345", visitId = "456")
 
-    awsSnsClient.publish(
-      PublishRequest.builder().topicArn(topicArn)
-        .message(prisonVisitMessagePayload(eventType = "prison-visit.changed", prisonerId = "AB12345"))
-        .messageAttributes(
-          mapOf(
-            "eventType" to MessageAttributeValue.builder().dataType("String")
-              .stringValue("prison-visit.changed").build(),
-          ),
-        ).build(),
-    ).get()
+    publishToDomainEvent("prison-visit.changed", prisonerId = "AB12345")
 
     await untilCallTo { awsSqsVisitClient.countMessagesOnQueue(visitQueueUrl).get() } matches { it == 0 }
     await untilCallTo { nomisApi.putCountFor("/prisoners/AB12345/visits/456") } matches { it == 1 }
@@ -269,6 +300,19 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
         .withRequestBody(matchingJsonPath("room", equalTo("Side Room")))
         .withRequestBody(matchingJsonPath("openClosedStatus", equalTo("CLOSED"))),
     )
+  }
+
+  fun publishToDomainEvent(eventType: String, prisonerId: String) {
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(prisonVisitMessagePayload(eventType = eventType, prisonerId = prisonerId))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
   }
 
   fun buildVisitApiDtoJsonResponse(

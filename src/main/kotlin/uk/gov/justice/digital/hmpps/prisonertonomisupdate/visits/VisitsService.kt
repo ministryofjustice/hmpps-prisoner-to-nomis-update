@@ -67,13 +67,26 @@ class VisitsService(
               openClosedStatus = visit.visitRestriction,
             ),
           ).let { nomisResponse ->
-            VisitMappingDto(nomisId = nomisResponse.visitId, vsipId = visitBookedEvent.reference, mappingType = "ONLINE")
+            nomisResponse
+              .map {
+                VisitMappingDto(nomisId = nomisResponse.getOrThrow().visitId, vsipId = visitBookedEvent.reference, mappingType = "ONLINE")
+              }
+              .recover { error ->
+                error as NomisApiService.CreateVisitDuplicateResponse
+                VisitMappingDto(
+                  nomisId = error.nomisVisitId,
+                  vsipId = visitBookedEvent.reference,
+                  mappingType = "ONLINE",
+                ).takeIf { doesMappingStillNotExist(visitBookedEvent.reference) }
+              }.getOrNull()
           }
         }
       }
       saveMapping { mappingService.createMapping(it) }
     }
   }
+
+  suspend fun doesMappingStillNotExist(vsipId: String): Boolean = mappingService.getMappingGivenVsipIdOrNull(vsipId) == null
 
   suspend fun retryCreateVisitMapping(context: CreateMappingRetryMessage<VisitMapping>) {
     mappingService.createMapping(

@@ -150,6 +150,31 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetVsipWithErrorFollowedBySuccess(vsipId: String, response: String, status: Int = 404) {
+    stubFor(
+      get("/mapping/visits/vsipId/$vsipId")
+        .inScenario("Check Mapping Visit Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status),
+        ).willSetStateTo("Cause Mapping Visit Success"),
+    )
+
+    stubFor(
+      get("/mapping/visits/vsipId/$vsipId")
+        .inScenario("Check Mapping Visit Scenario")
+        .whenScenarioStateIs("Cause Mapping Visit Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(200)
+            .withBody(response),
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
   fun stubCreateIncentive() {
     stubFor(
       post("/mapping/incentives").willReturn(
