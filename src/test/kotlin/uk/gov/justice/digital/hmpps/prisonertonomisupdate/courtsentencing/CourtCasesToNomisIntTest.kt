@@ -49,6 +49,7 @@ private const val DPS_COURT_CHARGE_3_ID = "4566aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_COURT_CHARGE_4_ID = "1236aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val OFFENDER_NO = "AB12345"
 private const val OFFENCES_COUNT = 1
+private const val DONCASTER_COURT_CODE = "DRBYYC"
 private const val PRISON_ID = "MDI"
 
 class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
@@ -65,6 +66,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           courtAppearanceId = DPS_COURT_APPEARANCE_ID,
           courtCharge1Id = DPS_COURT_CHARGE_ID,
           courtCharge2Id = DPS_COURT_CHARGE_2_ID,
+          courtId = DONCASTER_COURT_CODE,
         )
         NomisApiExtension.nomisApi.stubCourtCaseCreate(
           OFFENDER_NO,
@@ -122,6 +124,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             )
             .withRequestBody(
               WireMock.matchingJsonPath(
+                "courtId",
+                WireMock.equalTo(DONCASTER_COURT_CODE),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
                 "courtAppearance.courtEventType",
                 WireMock.equalTo(
                   "CRT",
@@ -132,7 +140,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               WireMock.matchingJsonPath(
                 "courtAppearance.courtId",
                 WireMock.equalTo(
-                  HARDCODED_COURT,
+                  DONCASTER_COURT_CODE,
                 ),
               ),
             )
@@ -140,7 +148,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               WireMock.matchingJsonPath(
                 "courtAppearance.nextCourtId",
                 WireMock.equalTo(
-                  HARDCODED_COURT,
+                  DONCASTER_COURT_CODE,
                 ),
               ),
             )
@@ -205,7 +213,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBody(
                 WireMock.matchingJsonPath(
                   "dpsCourtCaseId",
-                  WireMock.equalTo(COURT_CASE_ID_FOR_CREATION.toString()),
+                  WireMock.equalTo(COURT_CASE_ID_FOR_CREATION),
                 ),
               )
               .withRequestBody(
@@ -379,7 +387,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBody(
                 WireMock.matchingJsonPath(
                   "dpsCourtCaseId",
-                  WireMock.equalTo(COURT_CASE_ID_FOR_CREATION.toString()),
+                  WireMock.equalTo(COURT_CASE_ID_FOR_CREATION),
                 ),
               )
               .withRequestBody(
@@ -619,7 +627,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBody(
                 WireMock.matchingJsonPath(
                   "dpsCourtAppearanceId",
-                  WireMock.equalTo(DPS_COURT_APPEARANCE_ID.toString()),
+                  WireMock.equalTo(DPS_COURT_APPEARANCE_ID),
                 ),
               )
               .withRequestBody(
