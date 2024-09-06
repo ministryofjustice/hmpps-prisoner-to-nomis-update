@@ -161,9 +161,6 @@ class NomisApiService(
     webClient.delete()
       .uri("/appointments/{nomisEventId}", nomisEventId)
       .retrieve()
-//      .toBodilessEntity()
-//      .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
-//      .awaitSingleOrNull()
       .awaitBodilessEntity()
 
   // //////////////////// SENTENCES ////////////////////////
