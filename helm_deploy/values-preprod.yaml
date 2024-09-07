@@ -85,3 +85,4 @@ generic-prometheus-alerts:
 
 cron:
   activitiesTidyMappingsSuspend: false
+  prisonPersonReconsSuspend: true
