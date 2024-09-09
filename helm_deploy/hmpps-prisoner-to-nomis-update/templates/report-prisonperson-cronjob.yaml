@@ -6,7 +6,7 @@ metadata:
     {{- include "app.labels" . | nindent 4 }}
 spec:
   schedule: "30 5 * * *"
-  suspend: true
+  suspend: {{ .Values.cron.prisonPersonReconsSuspend }}
   concurrencyPolicy: Forbid
   failedJobsHistoryLimit: 5
   startingDeadlineSeconds: 600
