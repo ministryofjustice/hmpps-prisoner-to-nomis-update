@@ -314,8 +314,10 @@ class CourtSentencingService(
 }
 
 fun CourtCase.toNomisCourtCase(): CreateCourtCaseRequest = CreateCourtCaseRequest(
+  // latest appearance is always the only appearance during a Creat Case request
   startDate = this.latestAppearance.appearanceDate,
   courtId = this.latestAppearance.courtCode,
+  caseReference = this.latestAppearance.courtCaseReference,
   courtAppearance = this.latestAppearance.toNomisCourtAppearance(
     courtEventChargesToUpdate = listOf(),
     courtEventChargesToCreate = this.latestAppearance.charges.mapIndexed { index, dpsCharge ->

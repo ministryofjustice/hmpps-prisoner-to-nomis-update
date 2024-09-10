@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-08-21.8627.fc424dc"
+    "version": "2024-09-10.8769.040079a"
   },
   "servers": [
     {
@@ -1813,6 +1813,16 @@
               "example": 1234567
             },
             "example": 1234567
+          },
+          {
+            "name": "ignoreOperationalCapacity",
+            "in": "query",
+            "description": "If true leave the operational capacity unchanged",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "If true leave the operational capacity unchanged"
+            }
           }
         ],
         "requestBody": {
@@ -4611,6 +4621,16 @@
           },
           "404": {
             "description": "offenderNo does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "visit already exists exist. The moreInfo contains the NOMIS visitId for the existing visit",
             "content": {
               "application/json": {
                 "schema": {
@@ -11648,7 +11668,8 @@
             "type": "string"
           },
           "moreInfo": {
-            "type": "string"
+            "type": "string",
+            "description": "For 409 errors this may contain the entity Id for the existing record that causes the duplicate"
           }
         }
       },
@@ -14014,6 +14035,9 @@
           },
           "courtAppearance": {
             "$ref": "#/components/schemas/CourtAppearanceRequest"
+          },
+          "caseReference": {
+            "type": "string"
           }
         },
         "description": "Court case create request"
@@ -16012,9 +16036,6 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "unpaged": {
-            "type": "boolean"
-          },
           "pageSize": {
             "type": "integer",
             "format": "int32"
@@ -16025,6 +16046,9 @@
           "pageNumber": {
             "type": "integer",
             "format": "int32"
+          },
+          "unpaged": {
+            "type": "boolean"
           }
         }
       },
@@ -17166,6 +17190,10 @@
             "type": "string",
             "description": "The username of the person who created the attendee"
           },
+          "createdByDisplayName": {
+            "type": "string",
+            "description": "Real name of the person who created the attendee"
+          },
           "lastModifiedDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
@@ -17175,6 +17203,10 @@
           "lastModifiedBy": {
             "type": "string",
             "description": "The username of the person who last updated the attendee"
+          },
+          "lastModifiedByDisplayName": {
+            "type": "string",
+            "description": "Real name of the person who last updated the attendee"
           }
         },
         "description": "Attendees to the review"
@@ -17364,6 +17396,10 @@
             "type": "string",
             "description": "The username of the person who created the report"
           },
+          "createdByDisplayName": {
+            "type": "string",
+            "description": "Real name of the person who created the report"
+          },
           "lastModifiedDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
@@ -17373,6 +17409,10 @@
           "lastModifiedBy": {
             "type": "string",
             "description": "The username of the person who last updated the report"
+          },
+          "lastModifiedByDisplayName": {
+            "type": "string",
+            "description": "Real name of the person who last updated the report"
           }
         },
         "description": "CSIP Details"
@@ -17439,11 +17479,17 @@
           "createDateTime",
           "createdBy",
           "date",
+          "id",
           "interviewee",
           "role"
         ],
         "type": "object",
         "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Interview Id",
+            "format": "int64"
+          },
           "interviewee": {
             "type": "string",
             "description": "Person being interviewed"
@@ -17470,6 +17516,10 @@
             "type": "string",
             "description": "The username of the person who created the interview"
           },
+          "createdByDisplayName": {
+            "type": "string",
+            "description": "Real name of the person who created the interview"
+          },
           "lastModifiedDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
@@ -17479,6 +17529,10 @@
           "lastModifiedBy": {
             "type": "string",
             "description": "The username of the person who last updated the interview"
+          },
+          "lastModifiedByDisplayName": {
+            "type": "string",
+            "description": "Real name of the person who last updated the interview"
           }
         },
         "description": "Interview"
@@ -17600,6 +17654,10 @@
             "type": "string",
             "description": "The username of the person who created the plan"
           },
+          "createdByDisplayName": {
+            "type": "string",
+            "description": "Real name of the person who created the plan"
+          },
           "lastModifiedDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
@@ -17609,6 +17667,10 @@
           "lastModifiedBy": {
             "type": "string",
             "description": "The username of the person who last updated the plan"
+          },
+          "lastModifiedByDisplayName": {
+            "type": "string",
+            "description": "Real name of the person who last updated the plan"
           }
         },
         "description": "CSIP Plans"
@@ -17675,6 +17737,10 @@
             "type": "string",
             "description": "Who completed the referral"
           },
+          "referralCompletedByDisplayName": {
+            "type": "string",
+            "description": "Real name of the person who completed the referral"
+          },
           "referralCompletedDate": {
             "type": "string",
             "description": "Date the referral was completed",
@@ -17688,6 +17754,8 @@
           "attendees",
           "caseNote",
           "closeCSIP",
+          "createDateTime",
+          "createdBy",
           "csipUpdated",
           "id",
           "peopleInformed",
@@ -17762,6 +17830,20 @@
             "type": "string",
             "description": "Real name of who recorded the review"
           },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The date and time the review was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the person who created the review"
+          },
+          "createdByDisplayName": {
+            "type": "string",
+            "description": "Real name of the person who created the plan"
+          },
           "lastModifiedDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
@@ -17771,6 +17853,10 @@
           "lastModifiedBy": {
             "type": "string",
             "description": "The username of the person who last updated the review"
+          },
+          "lastModifiedByDisplayName": {
+            "type": "string",
+            "description": "Real name of the person who last updated the review"
           }
         },
         "description": "CSIP Reviews"

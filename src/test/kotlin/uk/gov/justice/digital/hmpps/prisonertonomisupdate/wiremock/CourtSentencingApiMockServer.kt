@@ -64,7 +64,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubCourtCaseGet(courtCaseId: String, courtAppearanceId: String, courtCharge1Id: String, courtCharge2Id: String, courtId: String = "DRBYYC", offenderNo: String = "A6160DZ") {
+  fun stubCourtCaseGet(courtCaseId: String, courtAppearanceId: String, courtCharge1Id: String, courtCharge2Id: String, caseReference: String = "G123456789", courtId: String = "DRBYYC", offenderNo: String = "A6160DZ") {
     stubFor(
       get(WireMock.urlPathMatching("/court-case/$courtCaseId")).willReturn(
         aResponse()
@@ -79,7 +79,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         "appearanceUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
         "outcome": "Remand in Custody (Bail Refused)",
         "courtCode": "$courtId",
-        "courtCaseReference": "G123456789",
+        "courtCaseReference": "$caseReference",
         "appearanceDate": "2024-09-23",
         "warrantId": "7e15b408-4f97-453e-98b7-24791978221c",
         "warrantType": "REMAND",
