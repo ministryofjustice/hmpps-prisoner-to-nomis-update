@@ -51,6 +51,7 @@ private const val OFFENDER_NO = "AB12345"
 private const val OFFENCES_COUNT = 1
 private const val DONCASTER_COURT_CODE = "DRBYYC"
 private const val PRISON_ID = "MDI"
+private const val CASE_REFERENCE = "G123456789"
 
 class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
@@ -120,6 +121,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               WireMock.matchingJsonPath(
                 "legalCaseType",
                 WireMock.equalTo("A"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "caseReference",
+                WireMock.equalTo(CASE_REFERENCE),
               ),
             )
             .withRequestBody(
