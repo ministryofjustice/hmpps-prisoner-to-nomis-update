@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAppointmentRequest
@@ -111,15 +112,21 @@ class AppointmentsService(
   }
 
   suspend fun deleteAppointment(event: AppointmentDomainEvent) {
+    val (appointmentInstanceId) = event.additionalInformation
     val telemetryMap =
-      mutableMapOf("appointmentInstanceId" to event.additionalInformation.appointmentInstanceId.toString())
+      mutableMapOf("appointmentInstanceId" to appointmentInstanceId.toString())
 
     runCatching {
       val nomisEventId =
-        mappingService.getMappingGivenAppointmentInstanceId(event.additionalInformation.appointmentInstanceId).nomisEventId
+        mappingService.getMappingGivenAppointmentInstanceId(appointmentInstanceId).nomisEventId
           .also { telemetryMap["nomisEventId"] = it.toString() }
 
-      nomisApiService.deleteAppointment(nomisEventId)
+      try {
+        nomisApiService.deleteAppointment(nomisEventId)
+      } catch (e: WebClientResponseException.NotFound) {
+        telemetryClient.trackEvent("appointment-delete-missing-ignored", telemetryMap, null)
+      }
+      mappingService.deleteMapping(appointmentInstanceId)
     }.onSuccess {
       telemetryClient.trackEvent("appointment-delete-success", telemetryMap, null)
     }.onFailure { e ->

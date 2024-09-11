@@ -741,6 +741,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
       fun setUp() {
         mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
         nomisApi.stubAppointmentDelete(EVENT_ID)
+        mappingServer.stubDeleteAppointmentMapping(APPOINTMENT_INSTANCE_ID)
         publishAppointmentEvent("appointments.appointment-instance.deleted")
       }
 
@@ -752,8 +753,63 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
+      fun `will delete the mapping`() {
+        await untilAsserted {
+          mappingServer.verify(deleteRequestedFor(urlEqualTo("/mapping/appointments/appointment-instance-id/$APPOINTMENT_INSTANCE_ID")))
+        }
+      }
+
+      @Test
       fun `will create success telemetry`() {
         await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("appointment-delete-success"),
+            check {
+              assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+              assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+
+    @Nested
+    inner class WhenDeletedAppointmentIsMissingFromNomis {
+
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+        nomisApi.stubAppointmentDeleteWithError(EVENT_ID, 404)
+        mappingServer.stubDeleteAppointmentMapping(APPOINTMENT_INSTANCE_ID)
+        publishAppointmentEvent("appointments.appointment-instance.deleted")
+      }
+
+      @Test
+      fun `will attempt to delete the appointment in NOMIS`() {
+        await untilAsserted {
+          nomisApi.verify(deleteRequestedFor(urlEqualTo("/appointments/$EVENT_ID")))
+        }
+      }
+
+      @Test
+      fun `will delete the mapping`() {
+        await untilAsserted {
+          mappingServer.verify(deleteRequestedFor(urlEqualTo("/mapping/appointments/appointment-instance-id/$APPOINTMENT_INSTANCE_ID")))
+        }
+      }
+
+      @Test
+      fun `will create success and warning telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("appointment-delete-missing-ignored"),
+            check {
+              assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+              assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
+            },
+            isNull(),
+          )
           verify(telemetryClient).trackEvent(
             eq("appointment-delete-success"),
             check {
@@ -776,6 +832,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
           nomisApi.stubAppointmentDeleteWithErrorFollowedBySlowSuccess(EVENT_ID)
+          mappingServer.stubDeleteAppointmentMapping(APPOINTMENT_INSTANCE_ID)
           publishAppointmentEvent("appointments.appointment-instance.deleted")
         }
 
