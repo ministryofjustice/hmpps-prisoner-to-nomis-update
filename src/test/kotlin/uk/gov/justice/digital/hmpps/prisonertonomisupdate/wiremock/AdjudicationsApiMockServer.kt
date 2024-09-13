@@ -12,7 +12,21 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.CombinedOutcomeDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingOutcomeDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentDetailsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentRoleDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentStatementDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OffenceDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OffenceRuleDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeHistoryDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedEvidenceDto
 
 class AdjudicationsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
   companion object {
@@ -54,78 +68,77 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubChargeGet(
     chargeNumber: String,
     offenderNo: String = "A7937DY",
-    outcomes: String = "[]",
-    damages: String = "[]",
-    evidence: String = "[]",
-    punishments: String = "[]",
+    damages: List<ReportedDamageDto> = listOf(),
+    evidence: List<ReportedEvidenceDto> = listOf(),
+    outcomes: List<OutcomeHistoryDto> = listOf(),
+    punishments: List<PunishmentDto> = listOf(),
     status: String = "UNSCHEDULED",
     hearingId: Long = 345,
   ) {
+    val adjudicationDto = ReportedAdjudicationDto(
+      chargeNumber = chargeNumber,
+      prisonerNumber = offenderNo,
+      gender = ReportedAdjudicationDto.Gender.MALE,
+      incidentDetails = IncidentDetailsDto(
+        locationId = 197683,
+        dateTimeOfIncident = "2023-07-11T09:00:00",
+        dateTimeOfDiscovery = "2023-07-11T09:00:00",
+        handoverDeadline = "2023-07-13T09:00:00",
+      ),
+      isYouthOffender = false,
+      incidentRole = IncidentRoleDto(),
+      offenceDetails = OffenceDto(
+        offenceCode = 16001,
+        offenceRule = OffenceRuleDto(
+          paragraphNumber = "1",
+          paragraphDescription = "Commits any assault",
+          nomisCode = "51:1B",
+        ),
+        protectedCharacteristics = emptyList(),
+      ),
+      incidentStatement = IncidentStatementDto(
+        statement = "12",
+        completed = true,
+      ),
+      createdByUserId = "TWRIGHT",
+      createdDateTime = "2023-07-25T15:19:37.476664",
+      status = ReportedAdjudicationDto.Status.valueOf(status),
+      reviewedByUserId = "AMARKE_GEN",
+      statusReason = "",
+      statusDetails = "",
+      damages = damages,
+      evidence = evidence,
+      witnesses = emptyList(),
+      hearings = listOf(
+        HearingDto(
+          id = hearingId,
+          locationId = 27187,
+          dateTimeOfHearing = "2023-08-23T14:25:00",
+          oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
+          agencyId = "MDI",
+          outcome = HearingOutcomeDto(
+            id = 962,
+            adjudicator = "JBULLENGEN",
+            code = HearingOutcomeDto.Code.COMPLETE,
+            plea = HearingOutcomeDto.Plea.GUILTY,
+          ),
+
+        ),
+      ),
+      disIssueHistory = emptyList(),
+      outcomes = outcomes,
+      punishments = punishments,
+      punishmentComments = emptyList(),
+      linkedChargeNumbers = emptyList(),
+      outcomeEnteredInNomis = false,
+      originatingAgencyId = "MDI",
+      canActionFromHistory = false,
+    )
     stubFor(
       get("/reported-adjudications/$chargeNumber/v2").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(
-            """
-{
-    "reportedAdjudication": {
-        "chargeNumber": "$chargeNumber",
-        "prisonerNumber": "$offenderNo",
-        "gender": "MALE",
-        "incidentDetails": {
-            "locationId": 197683,
-            "dateTimeOfIncident": "2023-07-11T09:00:00",
-            "dateTimeOfDiscovery": "2023-07-11T09:00:00",
-            "handoverDeadline": "2023-07-13T09:00:00"
-        },
-        "isYouthOffender": false,
-        "incidentRole": {},
-        "offenceDetails": {
-            "offenceCode": 16001,
-            "offenceRule": {
-                "paragraphNumber": "1",
-                "paragraphDescription": "Commits any assault",
-                "nomisCode": "51:1B"
-            },
-            "protectedCharacteristics": []
-        },
-        "incidentStatement": {
-            "statement": "12",
-            "completed": true
-        },
-        "createdByUserId": "TWRIGHT",
-        "createdDateTime": "2023-07-25T15:19:37.476664",
-        "status": "$status",
-        "reviewedByUserId": "AMARKE_GEN",
-        "statusReason": "",
-        "statusDetails": "",
-        "damages": $damages,
-        "evidence": $evidence,
-        "witnesses": [],
-        "hearings": [{
-                "id": $hearingId,
-                "locationId": 27187,
-                "dateTimeOfHearing": "2023-08-23T14:25:00",
-                "oicHearingType": "GOV_ADULT",
-                "agencyId": "MDI",
-                  "outcome": {
-                        "id": 962,
-                        "adjudicator": "JBULLENGEN",
-                        "code": "COMPLETE",
-                        "plea": "GUILTY"
-                    }
-            }],
-        "disIssueHistory": [],
-        "outcomes": $outcomes,
-        "punishments": $punishments,
-        "punishmentComments": [],
-        "linkedChargeNumbers": [],
-        "outcomeEnteredInNomis": false,
-        "originatingAgencyId": "MDI"
-    }
-}              
-            """.trimIndent(),
-          )
+          .withBody(AdjudicationsApiExtension.objectMapper.writeValueAsString(ReportedAdjudicationResponse(reportedAdjudication = adjudicationDto)))
           .withStatus(200),
       ),
     )
@@ -137,31 +150,31 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     offenderNo: String = "A7937DY",
     outcomeFindingCode: String = "CHARGE_PROVED",
   ) {
-    val outcomes = """
-        [
-            {
-                "hearing": {
-                    "id": $hearingId,
-                    "locationId": 27187,
-                    "dateTimeOfHearing": "2023-04-27T17:45:00",
-                    "oicHearingType": "GOV_ADULT",
-                    "outcome": {
-                        "id": 407,
-                        "adjudicator": "SWATSON_GEN",
-                        "code": "COMPLETE",
-                        "plea": "GUILTY"
-                    },
-                    "agencyId": "MDI"
-                },
-                "outcome": {
-                    "outcome": {
-                        "id": 591,
-                        "code": "$outcomeFindingCode"
-                    }
-                }
-            }
-        ]
-    """.trimIndent()
+    val outcomes = listOf(
+      OutcomeHistoryDto(
+        hearing = HearingDto(
+          id = hearingId,
+          locationId = 27187,
+          dateTimeOfHearing = "2023-04-27T17:45:00",
+          oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
+          outcome = HearingOutcomeDto(
+            id = 407,
+            adjudicator = "SWATSON_GEN",
+            code = HearingOutcomeDto.Code.COMPLETE,
+            plea = HearingOutcomeDto.Plea.GUILTY,
+          ),
+          agencyId = "MDI",
+        ),
+        outcome = CombinedOutcomeDto(
+          outcome = OutcomeDto(
+            id = 591,
+            code = OutcomeDto.Code.valueOf(outcomeFindingCode),
+            details = null,
+            canRemove = true,
+          ),
+        ),
+      ),
+    )
     stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
   }
 
@@ -212,32 +225,32 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     chargeNumber: String,
     offenderNo: String = "A7937DY",
   ) {
-    val outcomes = """
-     [
-      {
-          "hearing": {
-            "id": $hearingId,
-            "locationId": 27187,
-            "dateTimeOfHearing": "2023-10-04T13:20:00",
-            "oicHearingType": "GOV_ADULT",
-            "outcome": {
-              "id": 975,
-              "adjudicator": "JBULLENGEN",
-              "code": "${hearingOutcomeCode ?: outcomeCode}",
-              "details": "pdfs"
-              },
-            "agencyId": "MDI"
-          },
-          "outcome": {
-              "outcome": {
-              "id": 1238,
-              "code": "$outcomeCode",
-              "details": "pdfs"
-            }
-          }
-      }
-  ]
-    """.trimIndent()
+    val outcomes = listOf(
+      OutcomeHistoryDto(
+        hearing = HearingDto(
+          id = hearingId,
+          locationId = 27187,
+          dateTimeOfHearing = "2023-10-04T13:20:00",
+          oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
+          outcome = HearingOutcomeDto(
+            id = 975,
+            adjudicator = "JBULLENGEN",
+            code = hearingOutcomeCode ?.let { HearingOutcomeDto.Code.valueOf(it) } ?: HearingOutcomeDto.Code.valueOf(outcomeCode),
+            details = "pdfs",
+          ),
+          agencyId = "MDI",
+        ),
+        outcome = CombinedOutcomeDto(
+          outcome = OutcomeDto(
+            id = 1238,
+            code = OutcomeDto.Code.valueOf(outcomeCode),
+            details = "pdfs",
+            canRemove = true,
+          ),
+        ),
+      ),
+
+    )
     stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
   }
 
@@ -249,127 +262,132 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     offenderNo: String = "A7937DY",
     hearingType: String = "INAD_ADULT",
   ) {
-    val outcomes = """
-     [
-            {
-                "hearing": {
-                    "id": $hearingId,
-                    "locationId": 357596,
-                    "dateTimeOfHearing": "2023-10-12T14:00:00",
-                    "oicHearingType": "$hearingType",
-                    "outcome": {
-                        "id": 1031,
-                        "adjudicator": "jack_b",
-                        "code": "$outcomeCode",
-                        "details": "yuiuy"
-                    },
-                    "agencyId": "MDI"
-                },
-                "outcome": {
-                    "outcome": {
-                        "id": 1319,
-                        "code": "$outcomeCode",
-                        "details": "yuiuy"
-                    },
-                    "referralOutcome": {
-                        "id": 1320,
-                        "code": "$referralOutcomeCode"
-                    }
-                }
-            }
-        ]
-    """.trimIndent()
+    val outcomes = listOf(
+      OutcomeHistoryDto(
+        hearing = HearingDto(
+          id = hearingId,
+          locationId = 357596,
+          dateTimeOfHearing = "2023-10-12T14:00:00",
+          oicHearingType = HearingDto.OicHearingType.valueOf(hearingType),
+          outcome = HearingOutcomeDto(
+            id = 1031,
+            adjudicator = "jack_b",
+            code = HearingOutcomeDto.Code.valueOf(outcomeCode),
+            details = "yuiuy",
+          ),
+          agencyId = "MDI",
+        ),
+        outcome = CombinedOutcomeDto(
+          outcome = OutcomeDto(
+            id = 1319,
+            code = OutcomeDto.Code.valueOf(outcomeCode),
+            details = "yuiuy",
+            canRemove = true,
+          ),
+          referralOutcome = OutcomeDto(
+            id = 1320,
+            code = OutcomeDto.Code.valueOf(referralOutcomeCode),
+            canRemove = true,
+          ),
+        ),
+      ),
+
+    )
     stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
   }
 
   // no separate outcome block for Adjourn
   fun stubChargeGetWithAdjournOutcome(hearingId: Long = 123, chargeNumber: String, offenderNo: String = "A7937DY") {
-    val outcomes = """
-     [
-            {
-                "hearing": {
-                    "id": $hearingId,
-                    "locationId": 27187,
-                    "dateTimeOfHearing": "2023-10-04T13:20:00",
-                    "oicHearingType": "GOV_ADULT",
-                    "outcome": {
-                        "id": 976,
-                        "adjudicator": "JBULLENGEN",
-                        "code": "ADJOURN",
-                        "reason": "RO_ATTEND",
-                        "details": "cxvcx",
-                        "plea": "UNFIT"
-                    },
-                    "agencyId": "MDI"
-                }
-            }
-        ]
-    """.trimIndent()
+    val outcomes = listOf(
+      OutcomeHistoryDto(
+        hearing = HearingDto(
+          id = hearingId,
+          locationId = 27187,
+          dateTimeOfHearing = "2023-10-04T13:20:00",
+          oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
+          outcome = HearingOutcomeDto(
+            id = 976,
+            adjudicator = "JBULLENGEN",
+            code = HearingOutcomeDto.Code.ADJOURN,
+            reason = HearingOutcomeDto.Reason.RO_ATTEND,
+            details = "cxvcx",
+            plea = HearingOutcomeDto.Plea.UNFIT,
+          ),
+          agencyId = "MDI",
+        ),
+        outcome = null,
+      ),
+
+    )
     stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
   }
 
   fun stubChargeGetWithPoliceReferral(chargeNumber: String, offenderNo: String = "A7937DY") {
-    val outcomes = """
-     [
-         {
-             "outcome": {
-                 "outcome": {
-                     "id": 1411,
-                     "code": "REFER_POLICE",
-                     "details": "eewr"
-                 }
-             }
-         }
-     ]
-    """.trimIndent()
+    val outcomes = listOf(
+      OutcomeHistoryDto(
+        hearing = null,
+        outcome = CombinedOutcomeDto(
+          outcome =
+          OutcomeDto(
+            id = 1411,
+            code = OutcomeDto.Code.REFER_POLICE,
+            details = "eewr",
+            canRemove = true,
+          ),
+        ),
+      ),
+
+    )
     stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
   }
 
   fun stubChargeGetWithNotProceedReferral(chargeNumber: String, offenderNo: String = "A7937DY") {
-    val outcomes = """
-     [
-           {
-               "outcome": {
-                   "outcome": {
-                       "id": 1412,
-                       "code": "NOT_PROCEED",
-                       "details": "dssds",
-                       "reason": "EXPIRED_NOTICE"
-                   }
-               }
-           }
-       ]
-    """.trimIndent()
+    val outcomes = listOf(
+      OutcomeHistoryDto(
+        hearing = null,
+        outcome = CombinedOutcomeDto(
+          outcome =
+          OutcomeDto(
+            id = 1412,
+            code = OutcomeDto.Code.NOT_PROCEED,
+            details = "dssds",
+            reason = OutcomeDto.Reason.EXPIRED_NOTICE,
+            canRemove = true,
+          ),
+        ),
+      ),
+
+    )
     stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
   }
 
   fun stubChargeGetWithHearingFollowingReferral(chargeNumber: String, offenderNo: String = "A7937DY") {
-    val outcomes = """
-    [
-    {
-        "outcome": {
-          "outcome": {
-          "id": 1492,
-          "code": "REFER_POLICE",
-          "details": "fdggre"
-        },
-          "referralOutcome": {
-          "id": 1493,
-          "code": "SCHEDULE_HEARING"
-        }
-      }
-    },
-    {
-        "hearing": {
-          "id": 816,
-          "locationId": 357596,
-          "dateTimeOfHearing": "2023-10-26T16:10:00",
-          "oicHearingType": "INAD_ADULT",
-          "agencyId": "MDI"
-       }
-    }
-    ]
-    """.trimIndent()
+    val outcomes = listOf(
+      OutcomeHistoryDto(
+        outcome = CombinedOutcomeDto(
+          outcome = OutcomeDto(
+            id = 1492,
+            code = OutcomeDto.Code.REFER_POLICE,
+            details = "fdggre",
+            canRemove = true,
+          ),
+          referralOutcome = OutcomeDto(
+            id = 1493,
+            code = OutcomeDto.Code.SCHEDULE_HEARING,
+            canRemove = true,
+          ),
+        ),
+      ),
+      OutcomeHistoryDto(
+        hearing = HearingDto(
+          id = 816,
+          locationId = 357596,
+          dateTimeOfHearing = "2023-10-26T16:10:00",
+          oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
+          agencyId = "MDI",
+        ),
+      ),
+    )
     stubChargeGet(chargeNumber = chargeNumber, offenderNo = offenderNo, outcomes = outcomes)
   }
 

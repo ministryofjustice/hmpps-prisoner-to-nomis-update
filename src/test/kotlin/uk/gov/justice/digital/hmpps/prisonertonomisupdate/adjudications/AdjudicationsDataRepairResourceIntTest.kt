@@ -17,10 +17,13 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentScheduleDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension.Companion.adjudicationsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import java.time.LocalDate
 
 private const val DPS_CHARGE_NUMBER = "12345-1"
 private const val DPS_HEARING_ID = "654321"
@@ -71,33 +74,37 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
           DPS_CHARGE_NUMBER,
           offenderNo = OFFENDER_NO,
           // language=json
-          punishments = """
-          [
-            {
-                "id": 634,
-                "type": "CONFINEMENT",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "duration": 3,
-                    "startDate": "2023-10-04",
-                    "endDate": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 667,
-                "type": "EXTRA_WORK",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 12,
-                    "duration": 12,
-                    "suspendedUntil": "2023-10-18",
-                    "measurement": "DAYS"
-                }
-            }
-        ]
-          """.trimIndent(),
+          punishments = listOf(
+            PunishmentDto(
+              id = 634,
+              type = PunishmentDto.Type.CONFINEMENT,
+              rehabilitativeActivities = emptyList(),
+              schedule = PunishmentScheduleDto(
+                days = 3,
+                duration = 3,
+                startDate = LocalDate.parse("2023-10-04"),
+                endDate = LocalDate.parse("2023-10-06"),
+                measurement = PunishmentScheduleDto.Measurement.DAYS,
+              ),
+              canRemove = true,
+              canEdit = true,
+            ),
+            PunishmentDto(
+              id = 667,
+              type = PunishmentDto.Type.EXTRA_WORK,
+              rehabilitativeActivities = emptyList(),
+              schedule = PunishmentScheduleDto(
+                days = 12,
+                duration = 12,
+                suspendedUntil = LocalDate.parse("2023-10-18"),
+                startDate = null,
+                endDate = null,
+                measurement = PunishmentScheduleDto.Measurement.DAYS,
+              ),
+              canRemove = true,
+              canEdit = true,
+            ),
+          ),
         )
 
         mappingServer.stubGetPunishments(dpsPunishmentId = "634", nomisBookingId = 12345, nomisSanctionSequence = 10)

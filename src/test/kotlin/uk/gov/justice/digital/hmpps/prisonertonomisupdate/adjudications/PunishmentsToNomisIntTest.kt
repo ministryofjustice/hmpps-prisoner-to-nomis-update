@@ -24,6 +24,13 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.CombinedOutcomeDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingOutcomeDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeHistoryDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentScheduleDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension.Companion.adjudicationsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
@@ -56,44 +63,48 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           CHARGE_NUMBER_FOR_CREATION,
           offenderNo = OFFENDER_NO,
           // language=json
-          punishments = """
-          [
-            {
-                "id": 634,
-                "type": "CONFINEMENT",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "duration": 3,
-                    "startDate": "2023-10-04",
-                    "endDate": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 667,
-                "type": "EXTRA_WORK",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 12,
-                    "duration": 12,
-                    "suspendedUntil": "2023-10-18",
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 668,
-                "type": "PAYBACK",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 12,
-                    "duration": 12,
-                    "suspendedUntil": "2023-10-18",
-                    "measurement": "HOURS"
-                }
-            }
-        ]
-          """.trimIndent(),
+          punishments = listOf(
+            PunishmentDto(
+              id = 634,
+              type = PunishmentDto.Type.CONFINEMENT,
+              rehabilitativeActivities = emptyList(),
+              schedule = PunishmentScheduleDto(
+                days = 3,
+                duration = 3,
+                startDate = LocalDate.parse("2023-10-04"),
+                endDate = LocalDate.parse("2023-10-06"),
+                measurement = PunishmentScheduleDto.Measurement.DAYS,
+              ),
+              canEdit = true,
+              canRemove = true,
+            ),
+            PunishmentDto(
+              id = 667,
+              type = PunishmentDto.Type.EXTRA_WORK,
+              rehabilitativeActivities = emptyList(),
+              schedule = PunishmentScheduleDto(
+                days = 12,
+                duration = 12,
+                suspendedUntil = LocalDate.parse("2023-10-18"),
+                measurement = PunishmentScheduleDto.Measurement.DAYS,
+              ),
+              canEdit = true,
+              canRemove = true,
+            ),
+            PunishmentDto(
+              id = 668,
+              type = PunishmentDto.Type.PAYBACK,
+              rehabilitativeActivities = emptyList(),
+              schedule = PunishmentScheduleDto(
+                days = 12,
+                duration = 12,
+                suspendedUntil = LocalDate.parse("2023-10-18"),
+                measurement = PunishmentScheduleDto.Measurement.HOURS,
+              ),
+              canEdit = true,
+              canRemove = true,
+            ),
+          ),
         )
 
         nomisApi.stubAdjudicationAwardsCreate(
@@ -194,35 +205,38 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           adjudicationsApiServer.stubChargeGet(
             CHARGE_NUMBER_FOR_CREATION,
             offenderNo = OFFENDER_NO,
-            // language=json
-            punishments = """
-          [
-            {
-                "id": 634,
-                "type": "CONFINEMENT",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "duration": 3,
-                    "startDate": "2023-10-04",
-                    "endDate": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 689,
-                "type": "ADDITIONAL_DAYS",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 2,
-                    "duration": 2,
-                    "measurement": "DAYS"
-                },
-                "consecutiveChargeNumber": "$CONSECUTIVE_CHARGE_NUMBER",
-                "consecutiveReportAvailable": true
-            }        
-          ]
-            """.trimIndent(),
+            punishments = listOf(
+              PunishmentDto(
+                id = 634,
+                type = PunishmentDto.Type.CONFINEMENT,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 3,
+                  duration = 3,
+                  startDate = LocalDate.parse("2023-10-04"),
+                  endDate = LocalDate.parse("2023-10-06"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+              PunishmentDto(
+                id = 634,
+                type = PunishmentDto.Type.ADDITIONAL_DAYS,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 2,
+                  duration = 2,
+                  startDate = null,
+                  endDate = null,
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                consecutiveChargeNumber = CONSECUTIVE_CHARGE_NUMBER,
+                consecutiveReportAvailable = true,
+                canEdit = true,
+                canRemove = true,
+              ),
+            ),
           )
         }
 
@@ -280,58 +294,64 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             CHARGE_NUMBER_FOR_CREATION,
             offenderNo = OFFENDER_NO,
             // language=json
-            punishments = """
-          [
-            {
-                "id": 1,
-                "type": "PRIVILEGE",
-                "privilegeType": "ASSOCIATION",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "startDate": "2023-10-04",
-                    "endDate": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 2,
-                "type": "PRIVILEGE",
-                "privilegeType": "OTHER",
-                "otherPrivilege": "Daily walk",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "startDate": "2023-10-04",
-                    "endDate": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 3,
-                "type": "CONFINEMENT",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "startDate": "2023-10-04",
-                    "endDate": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 4,
-                "type": "DAMAGES_OWED",
-                "damagesOwedAmount": 45.1,
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "startDate": "2023-10-04",
-                    "endDate": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            }
-          ]
-            """.trimIndent(),
+            punishments = listOf(
+              PunishmentDto(
+                id = 1,
+                type = PunishmentDto.Type.PRIVILEGE,
+                privilegeType = PunishmentDto.PrivilegeType.ASSOCIATION,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 3,
+                  startDate = LocalDate.parse("2023-10-04"),
+                  endDate = LocalDate.parse("2023-10-06"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+              PunishmentDto(
+                id = 2,
+                type = PunishmentDto.Type.PRIVILEGE,
+                privilegeType = PunishmentDto.PrivilegeType.OTHER,
+                otherPrivilege = "Daily walk",
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 3,
+                  startDate = LocalDate.parse("2023-10-04"),
+                  endDate = LocalDate.parse("2023-10-06"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+              PunishmentDto(
+                id = 3,
+                type = PunishmentDto.Type.CONFINEMENT,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 3,
+                  startDate = LocalDate.parse("2023-10-04"),
+                  endDate = LocalDate.parse("2023-10-06"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+              PunishmentDto(
+                id = 4,
+                type = PunishmentDto.Type.DAMAGES_OWED,
+                damagesOwedAmount = 45.1,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 3,
+                  startDate = LocalDate.parse("2023-10-04"),
+                  endDate = LocalDate.parse("2023-10-06"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+            ),
           )
         }
 
@@ -363,68 +383,78 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             CHARGE_NUMBER_FOR_CREATION,
             offenderNo = OFFENDER_NO,
             // language=json
-            punishments = """
-          [
-            {
-                "id": 1,
-                "type": "PROSPECTIVE_DAYS",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "suspendedUntil": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 2,
-                "type": "PROSPECTIVE_DAYS",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 3,
-                "type": "PROSPECTIVE_DAYS",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "startDate": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 4,
-                "type": "ADDITIONAL_DAYS",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "suspendedUntil": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 5,
-                "type": "ADDITIONAL_DAYS",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 6,
-                "type": "ADDITIONAL_DAYS",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "startDate": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            }
-          ]
-            """.trimIndent(),
+            punishments = listOf(
+              PunishmentDto(
+                id = 1,
+                type = PunishmentDto.Type.PROSPECTIVE_DAYS,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 3,
+                  suspendedUntil = LocalDate.parse("2023-10-06"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+              PunishmentDto(
+                id = 2,
+                type = PunishmentDto.Type.PROSPECTIVE_DAYS,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 3,
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+              PunishmentDto(
+                id = 3,
+                type = PunishmentDto.Type.PROSPECTIVE_DAYS,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 3,
+                  startDate = LocalDate.parse("2023-10-06"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+              PunishmentDto(
+                id = 4,
+                type = PunishmentDto.Type.ADDITIONAL_DAYS,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 3,
+                  suspendedUntil = LocalDate.parse("2023-10-06"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+              PunishmentDto(
+                id = 5,
+                type = PunishmentDto.Type.ADDITIONAL_DAYS,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 3,
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+              PunishmentDto(
+                id = 5,
+                type = PunishmentDto.Type.ADDITIONAL_DAYS,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 3,
+                  startDate = LocalDate.parse("2023-10-06"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+            ),
           )
         }
 
@@ -489,31 +519,33 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             CHARGE_NUMBER_FOR_CREATION,
             offenderNo = OFFENDER_NO,
             // language=json
-            punishments = """
-          [
-            {
-                "id": 634,
-                "type": "CONFINEMENT",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "startDate": "2023-10-04",
-                    "endDate": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 667,
-                "type": "EXTRA_WORK",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 12,
-                    "suspendedUntil": "2023-10-18",
-                    "measurement": "DAYS"
-                }
-            }
-        ]
-            """.trimIndent(),
+            punishments = listOf(
+              PunishmentDto(
+                id = 634,
+                type = PunishmentDto.Type.CONFINEMENT,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 3,
+                  startDate = LocalDate.parse("2023-10-04"),
+                  endDate = LocalDate.parse("2023-10-06"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+              PunishmentDto(
+                id = 667,
+                type = PunishmentDto.Type.EXTRA_WORK,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 12,
+                  suspendedUntil = LocalDate.parse("2023-10-18"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+            ),
           )
 
           nomisApi.stubAdjudicationAwardsCreate(
@@ -578,33 +610,35 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           CHARGE_NUMBER_FOR_CREATION,
           offenderNo = OFFENDER_NO,
           // language=json
-          punishments = """
-          [
-            {
-                "id": 634,
-                "type": "CONFINEMENT",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "duration": 3,
-                    "startDate": "2023-10-04",
-                    "endDate": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 667,
-                "type": "EXTRA_WORK",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 12,
-                    "duration": 12,
-                    "suspendedUntil": "2023-10-18",
-                    "measurement": "DAYS"
-                }
-            }
-        ]
-          """.trimIndent(),
+          punishments = listOf(
+            PunishmentDto(
+              id = 634,
+              type = PunishmentDto.Type.CONFINEMENT,
+              rehabilitativeActivities = emptyList(),
+              schedule = PunishmentScheduleDto(
+                days = 3,
+                duration = 3,
+                startDate = LocalDate.parse("2023-10-04"),
+                endDate = LocalDate.parse("2023-10-06"),
+                measurement = PunishmentScheduleDto.Measurement.DAYS,
+              ),
+              canEdit = true,
+              canRemove = true,
+            ),
+            PunishmentDto(
+              id = 667,
+              type = PunishmentDto.Type.EXTRA_WORK,
+              rehabilitativeActivities = emptyList(),
+              schedule = PunishmentScheduleDto(
+                days = 12,
+                duration = 12,
+                suspendedUntil = LocalDate.parse("2023-10-18"),
+                measurement = PunishmentScheduleDto.Measurement.DAYS,
+              ),
+              canEdit = true,
+              canRemove = true,
+            ),
+          ),
         )
 
         mappingServer.stubGetPunishments(dpsPunishmentId = "634", nomisBookingId = 12345, nomisSanctionSequence = 10)
@@ -725,31 +759,33 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             CHARGE_NUMBER_FOR_CREATION,
             offenderNo = OFFENDER_NO,
             // language=json
-            punishments = """
-          [
-            {
-                "id": 634,
-                "type": "CONFINEMENT",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "startDate": "2023-10-04",
-                    "endDate": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 667,
-                "type": "EXTRA_WORK",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 12,
-                    "suspendedUntil": "2023-10-18",
-                    "measurement": "DAYS"
-                }
-            }
-        ]
-            """.trimIndent(),
+            punishments = listOf(
+              PunishmentDto(
+                id = 634,
+                type = PunishmentDto.Type.CONFINEMENT,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 3,
+                  startDate = LocalDate.parse("2023-10-04"),
+                  endDate = LocalDate.parse("2023-10-06"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+              PunishmentDto(
+                id = 667,
+                type = PunishmentDto.Type.EXTRA_WORK,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 12,
+                  suspendedUntil = LocalDate.parse("2023-10-18"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+            ),
           )
 
           mappingServer.stubGetPunishments(dpsPunishmentId = "634", nomisBookingId = 12345, nomisSanctionSequence = 10)
@@ -974,29 +1010,33 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             CHARGE_NUMBER_FOR_CREATION,
             offenderNo = OFFENDER_NO,
             // language=json
-            punishments = """
-          [
-            {
-                "id": 634,
-                "type": "CONFINEMENT",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "startDate": "2023-10-04",
-                    "endDate": "2023-10-06"
-                }
-            },
-            {
-                "id": 667,
-                "type": "EXTRA_WORK",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 12,
-                    "suspendedUntil": "2023-10-18"
-                }
-            }
-        ]
-            """.trimIndent(),
+            punishments = listOf(
+              PunishmentDto(
+                id = 634,
+                type = PunishmentDto.Type.CONFINEMENT,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 3,
+                  startDate = LocalDate.parse("2023-10-04"),
+                  endDate = LocalDate.parse("2023-10-06"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+              PunishmentDto(
+                id = 667,
+                type = PunishmentDto.Type.EXTRA_WORK,
+                rehabilitativeActivities = emptyList(),
+                schedule = PunishmentScheduleDto(
+                  days = 12,
+                  suspendedUntil = LocalDate.parse("2023-10-18"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+                canEdit = true,
+                canRemove = true,
+              ),
+            ),
           )
           publishDeletePunishmentsDomainEvent()
         }
@@ -1089,63 +1129,65 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
+
         adjudicationsApiServer.stubChargeGet(
           CHARGE_NUMBER_FOR_CREATION,
           offenderNo = OFFENDER_NO,
-          // language=json
-          punishments = """
-          [
-            {
-                "id": 667,
-                "type": "EXTRA_WORK",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 12,
-                    "suspendedUntil": "2023-10-18",
-                    "measurement": "DAYS"
-                }
-            }
-          ]
-          """.trimIndent(),
-          // language=json
-          outcomes = """
-          [
-            {
-                "hearing": {
-                    "id": 812,
-                    "locationId": 27187,
-                    "dateTimeOfHearing": "2023-10-26T15:30:00",
-                    "oicHearingType": "INAD_ADULT",
-                    "outcome": {
-                        "id": 1144,
-                        "adjudicator": "bobbie",
-                        "code": "COMPLETE",
-                        "plea": "GUILTY"
-                    },
-                    "agencyId": "MDI"
-                },
-                "outcome": {
-                    "outcome": {
-                        "id": 1516,
-                        "code": "CHARGE_PROVED",
-                        "canRemove": true
-                    }
-                }
-            },
-            {
-                "outcome": {
-                    "outcome": {
-                        "id": 1556,
-                        "code": "QUASHED",
-                        "details": "Due to lack of evidence",
-                        "quashedReason": "JUDICIAL_REVIEW",
-                        "canRemove": true
-                    }
-                }
-            }
-          ] 
-          """.trimIndent(),
+          punishments = listOf(
+            PunishmentDto(
+              id = 667,
+              type = PunishmentDto.Type.EXTRA_WORK,
+              rehabilitativeActivities = emptyList(),
+              canEdit = true,
+              canRemove = true,
+              schedule = PunishmentScheduleDto(
+                days = 12,
+                suspendedUntil = LocalDate.parse("2023-10-18"),
+                measurement = PunishmentScheduleDto.Measurement.DAYS,
+              ),
+            ),
+          ),
+          outcomes = listOf(
+            OutcomeHistoryDto(
+              hearing = HearingDto(
+                id = 812,
+                locationId = 27187,
+                dateTimeOfHearing = "2023-10-26T15:30:00",
+                oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
+                outcome = HearingOutcomeDto(
+                  id = 1144,
+                  adjudicator = "bobbie",
+                  code = HearingOutcomeDto.Code.COMPLETE,
+                  plea = HearingOutcomeDto.Plea.GUILTY,
+                ),
+                agencyId = "MDI",
+              ),
+
+              outcome = CombinedOutcomeDto(
+                outcome = OutcomeDto(
+                  id = 1516,
+                  code = OutcomeDto.Code.CHARGE_PROVED,
+                  canRemove = true,
+                ),
+              ),
+
+            ),
+            OutcomeHistoryDto(
+              outcome = CombinedOutcomeDto(
+                outcome = OutcomeDto(
+                  id = 1556,
+                  code = OutcomeDto.Code.QUASHED,
+                  details = "Due to lack of evidence",
+                  quashedReason =
+                  OutcomeDto.QuashedReason.JUDICIAL_REVIEW,
+                  canRemove = true,
+                ),
+              ),
+
+            ),
+          ),
         )
+
         nomisApi.stubAdjudicationSquashAwards(ADJUDICATION_NUMBER, CHARGE_SEQ)
         publishQuashPunishmentsDomainEvent()
         waitForQuashPunishmentProcessingToBeComplete()
@@ -1189,49 +1231,47 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           adjudicationsApiServer.stubChargeGet(
             CHARGE_NUMBER_FOR_CREATION,
             offenderNo = OFFENDER_NO,
-            // language=json
-            punishments = """
-          [
-            {
-                "id": 667,
-                "type": "EXTRA_WORK",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 12,
-                    "suspendedUntil": "2023-10-18",
-                    "measurement": "DAYS"
-                }
-            }
-          ]
-            """.trimIndent(),
-            // language=json
-            outcomes = """
-          [
-            {
-                "hearing": {
-                    "id": 812,
-                    "locationId": 27187,
-                    "dateTimeOfHearing": "2023-10-26T15:30:00",
-                    "oicHearingType": "INAD_ADULT",
-                    "outcome": {
-                        "id": 1144,
-                        "adjudicator": "bobbie",
-                        "code": "COMPLETE",
-                        "plea": "GUILTY"
-                    },
-                    "agencyId": "MDI"
-                },
-                "outcome": {
-                    "outcome": {
-                        "id": 1516,
-                        "code": "CHARGE_PROVED",
-                        "canRemove": true
-                    }
-                }
-            }
-          ] 
-            """.trimIndent(),
+            punishments = listOf(
+              PunishmentDto(
+                id = 667,
+                type = PunishmentDto.Type.EXTRA_WORK,
+                rehabilitativeActivities = emptyList(),
+                canEdit = true,
+                canRemove = true,
+                schedule = PunishmentScheduleDto(
+                  days = 12,
+                  suspendedUntil = LocalDate.parse("2023-10-18"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+              ),
+            ),
+            outcomes = listOf(
+              OutcomeHistoryDto(
+                hearing = HearingDto(
+                  id = 812,
+                  locationId = 27187,
+                  dateTimeOfHearing = "2023-10-26T15:30:00",
+                  oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
+                  outcome = HearingOutcomeDto(
+                    id = 1144,
+                    adjudicator = "bobbie",
+                    code = HearingOutcomeDto.Code.COMPLETE,
+                    plea = HearingOutcomeDto.Plea.GUILTY,
+                  ),
+                  agencyId = "MDI",
+                ),
+
+                outcome = CombinedOutcomeDto(
+                  outcome = OutcomeDto(
+                    id = 1516,
+                    code = OutcomeDto.Code.CHARGE_PROVED,
+                    canRemove = true,
+                  ),
+                ),
+              ),
+            ),
           )
+
           nomisApi.stubAdjudicationSquashAwards(ADJUDICATION_NUMBER, CHARGE_SEQ)
           publishQuashPunishmentsDomainEvent()
         }
@@ -1276,64 +1316,64 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
+
         adjudicationsApiServer.stubChargeGet(
           CHARGE_NUMBER_FOR_CREATION,
           offenderNo = OFFENDER_NO,
-          // language=json
-          outcomes = """
-          [
-            {
-                "hearing": {
-                    "id": 812,
-                    "locationId": 27187,
-                    "dateTimeOfHearing": "2023-10-26T15:30:00",
-                    "oicHearingType": "INAD_ADULT",
-                    "outcome": {
-                        "id": 1144,
-                        "adjudicator": "bobbie",
-                        "code": "COMPLETE",
-                        "plea": "GUILTY"
-                    },
-                    "agencyId": "MDI"
-                },
-                "outcome": {
-                    "outcome": {
-                        "id": 1516,
-                        "code": "CHARGE_PROVED",
-                        "canRemove": true
-                    }
-                }
-            }
-          ] 
-          """.trimIndent(),
-          // language=json
-          punishments = """
-          [
-            {
-                "id": 634,
-                "type": "CONFINEMENT",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "duration": 3,
-                    "startDate": "2023-10-04",
-                    "endDate": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 667,
-                "type": "EXTRA_WORK",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 12,
-                    "duration": 12,
-                    "suspendedUntil": "2023-10-18",
-                    "measurement": "DAYS"
-                }
-            }
-        ]
-          """.trimIndent(),
+          outcomes = listOf(
+            OutcomeHistoryDto(
+              hearing = HearingDto(
+                id = 812,
+                locationId = 27187,
+                dateTimeOfHearing = "2023-10-26T15:30:00",
+                oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
+                outcome = HearingOutcomeDto(
+                  id = 1144,
+                  adjudicator = "bobbie",
+                  code = HearingOutcomeDto.Code.COMPLETE,
+                  plea = HearingOutcomeDto.Plea.GUILTY,
+                ),
+                agencyId = "MDI",
+              ),
+
+              outcome = CombinedOutcomeDto(
+                outcome = OutcomeDto(
+                  id = 1516,
+                  code = OutcomeDto.Code.CHARGE_PROVED,
+                  canRemove = true,
+                ),
+              ),
+            ),
+          ),
+          punishments = listOf(
+            PunishmentDto(
+              id = 634,
+              type = PunishmentDto.Type.CONFINEMENT,
+              rehabilitativeActivities = emptyList(),
+              canEdit = true,
+              canRemove = true,
+              schedule = PunishmentScheduleDto(
+                days = 3,
+                duration = 3,
+                startDate = LocalDate.parse("2023-10-04"),
+                endDate = LocalDate.parse("2023-10-06"),
+                measurement = PunishmentScheduleDto.Measurement.DAYS,
+              ),
+            ),
+            PunishmentDto(
+              id = 667,
+              type = PunishmentDto.Type.EXTRA_WORK,
+              rehabilitativeActivities = emptyList(),
+              canEdit = true,
+              canRemove = true,
+              schedule = PunishmentScheduleDto(
+                days = 12,
+                duration = 12,
+                suspendedUntil = LocalDate.parse("2023-10-18"),
+                measurement = PunishmentScheduleDto.Measurement.DAYS,
+              ),
+            ),
+          ),
         )
 
         mappingServer.stubGetPunishments(dpsPunishmentId = "634", nomisBookingId = 12345, nomisSanctionSequence = 10)
@@ -1399,61 +1439,60 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
         adjudicationsApiServer.stubChargeGet(
           CHARGE_NUMBER_FOR_CREATION,
           offenderNo = OFFENDER_NO,
-          // language=json
-          outcomes = """
-          [
-            {
-                "hearing": {
-                    "id": 812,
-                    "locationId": 27187,
-                    "dateTimeOfHearing": "2023-10-26T15:30:00",
-                    "oicHearingType": "INAD_ADULT",
-                    "outcome": {
-                        "id": 1144,
-                        "adjudicator": "bobbie",
-                        "code": "COMPLETE",
-                        "plea": "GUILTY"
-                    },
-                    "agencyId": "MDI"
-                },
-                "outcome": {
-                    "outcome": {
-                        "id": 1516,
-                        "code": "CHARGE_PROVED",
-                        "canRemove": true
-                    }
-                }
-            }
-          ] 
-          """.trimIndent(),
-          // language=json
-          punishments = """
-          [
-            {
-                "id": 634,
-                "type": "CONFINEMENT",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "duration": 3,
-                    "startDate": "2023-10-04",
-                    "endDate": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 667,
-                "type": "EXTRA_WORK",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 12,
-                    "duration": 12,
-                    "suspendedUntil": "2023-10-18",
-                    "measurement": "DAYS"
-                }
-            }
-        ]
-          """.trimIndent(),
+          outcomes = listOf(
+            OutcomeHistoryDto(
+              hearing = HearingDto(
+                id = 812,
+                locationId = 27187,
+                dateTimeOfHearing = "2023-10-26T15:30:00",
+                oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
+                outcome = HearingOutcomeDto(
+                  id = 1144,
+                  adjudicator = "bobbie",
+                  code = HearingOutcomeDto.Code.COMPLETE,
+                  plea = HearingOutcomeDto.Plea.GUILTY,
+                ),
+                agencyId = "MDI",
+              ),
+
+              outcome = CombinedOutcomeDto(
+                outcome = OutcomeDto(
+                  id = 1516,
+                  code = OutcomeDto.Code.CHARGE_PROVED,
+                  canRemove = true,
+                ),
+              ),
+            ),
+          ),
+          punishments = listOf(
+            PunishmentDto(
+              id = 634,
+              type = PunishmentDto.Type.CONFINEMENT,
+              rehabilitativeActivities = emptyList(),
+              canEdit = true,
+              canRemove = true,
+              schedule = PunishmentScheduleDto(
+                days = 3,
+                duration = 3,
+                startDate = LocalDate.parse("2023-10-04"),
+                endDate = LocalDate.parse("2023-10-06"),
+                measurement = PunishmentScheduleDto.Measurement.DAYS,
+              ),
+            ),
+            PunishmentDto(
+              id = 667,
+              type = PunishmentDto.Type.EXTRA_WORK,
+              rehabilitativeActivities = emptyList(),
+              canEdit = true,
+              canRemove = true,
+              schedule = PunishmentScheduleDto(
+                days = 12,
+                duration = 12,
+                suspendedUntil = LocalDate.parse("2023-10-18"),
+                measurement = PunishmentScheduleDto.Measurement.DAYS,
+              ),
+            ),
+          ),
         )
 
         mappingServer.stubGetPunishments(dpsPunishmentId = "634", nomisBookingId = 12345, nomisSanctionSequence = 10)
@@ -1574,59 +1613,59 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
           adjudicationsApiServer.stubChargeGet(
             CHARGE_NUMBER_FOR_CREATION,
             offenderNo = OFFENDER_NO,
-            // language=json
-            outcomes = """
-          [
-            {
-                "hearing": {
-                    "id": 812,
-                    "locationId": 27187,
-                    "dateTimeOfHearing": "2023-10-26T15:30:00",
-                    "oicHearingType": "INAD_ADULT",
-                    "outcome": {
-                        "id": 1144,
-                        "adjudicator": "bobbie",
-                        "code": "COMPLETE",
-                        "plea": "GUILTY"
-                    },
-                    "agencyId": "MDI"
-                },
-                "outcome": {
-                    "outcome": {
-                        "id": 1516,
-                        "code": "CHARGE_PROVED",
-                        "canRemove": true
-                    }
-                }
-            }
-          ] 
-            """.trimIndent(),
-            // language=json
-            punishments = """
-          [
-            {
-                "id": 634,
-                "type": "CONFINEMENT",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 3,
-                    "startDate": "2023-10-04",
-                    "endDate": "2023-10-06",
-                    "measurement": "DAYS"
-                }
-            },
-            {
-                "id": 667,
-                "type": "EXTRA_WORK",
-                "rehabilitativeActivities": [],
-                "schedule": {
-                    "days": 12,
-                    "suspendedUntil": "2023-10-18",
-                    "measurement": "DAYS"
-                }
-            }
-        ]
-            """.trimIndent(),
+            outcomes = listOf(
+              OutcomeHistoryDto(
+                hearing = HearingDto(
+                  id = 812,
+                  locationId = 27187,
+                  dateTimeOfHearing = "2023-10-26T15:30:00",
+                  oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
+                  outcome = HearingOutcomeDto(
+                    id = 1144,
+                    adjudicator = "bobbie",
+                    code = HearingOutcomeDto.Code.COMPLETE,
+                    plea = HearingOutcomeDto.Plea.GUILTY,
+                  ),
+                  agencyId = "MDI",
+                ),
+
+                outcome = CombinedOutcomeDto(
+                  outcome = OutcomeDto(
+                    id = 1516,
+                    code = OutcomeDto.Code.CHARGE_PROVED,
+                    canRemove = true,
+                  ),
+                ),
+              ),
+            ),
+            punishments = listOf(
+              PunishmentDto(
+                id = 634,
+                type = PunishmentDto.Type.CONFINEMENT,
+                rehabilitativeActivities = emptyList(),
+                canEdit = true,
+                canRemove = true,
+                schedule = PunishmentScheduleDto(
+                  days = 3,
+                  duration = 3,
+                  startDate = LocalDate.parse("2023-10-04"),
+                  endDate = LocalDate.parse("2023-10-06"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+              ),
+              PunishmentDto(
+                id = 667,
+                type = PunishmentDto.Type.EXTRA_WORK,
+                rehabilitativeActivities = emptyList(),
+                canEdit = true,
+                canRemove = true,
+                schedule = PunishmentScheduleDto(
+                  days = 12,
+                  suspendedUntil = LocalDate.parse("2023-10-18"),
+                  measurement = PunishmentScheduleDto.Measurement.DAYS,
+                ),
+              ),
+            ),
           )
 
           mappingServer.stubGetPunishments(dpsPunishmentId = "634", nomisBookingId = 12345, nomisSanctionSequence = 10)
