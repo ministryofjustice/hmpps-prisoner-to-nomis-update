@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExten
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @Component
-class PhysAttrNomisApiMockServer(private val objectMapper: ObjectMapper) {
+class PhysicalAttributesNomisApiMockServer(private val objectMapper: ObjectMapper) {
   fun stubPutPhysicalAttributes(
     offenderNo: String = "A1234AA",
     created: Boolean = true,

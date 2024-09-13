@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNul
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PhysicalAttributesDto
 
 @Service
-class PhysAttrDpsApiService(@Qualifier("prisonPersonApiWebClient") private val webClient: WebClient) {
+class PhysicalAttributesDpsApiService(@Qualifier("prisonPersonApiWebClient") private val webClient: WebClient) {
   suspend fun getPhysicalAttributes(prisonerNumber: String): PhysicalAttributesDto? =
     webClient
       .get()

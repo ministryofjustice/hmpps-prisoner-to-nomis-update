@@ -17,7 +17,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 
 @Component
-class PhysAttrDpsApiMockServer(private val objectMapper: ObjectMapper) {
+class PhysicalAttributesDpsApiMockServer(private val objectMapper: ObjectMapper) {
 
   fun stubHealthPing(status: Int) {
     dpsApi.stubFor(
