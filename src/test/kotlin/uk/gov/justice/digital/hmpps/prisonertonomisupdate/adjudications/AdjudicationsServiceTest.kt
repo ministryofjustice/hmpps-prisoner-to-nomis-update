@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -33,7 +32,6 @@ private const val DPS_CHARGE_NUMBER = "123"
 private const val ADJUDICATION_NUMBER = 123456L
 private const val PRISONER_NUMBER = "A12345DF"
 
-@OptIn(ExperimentalCoroutinesApi::class)
 internal class AdjudicationsServiceTest {
 
   private val adjudicationsApiService: AdjudicationsApiService = mock()

@@ -23,6 +23,8 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedEvidenceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension.Companion.adjudicationsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
@@ -192,26 +194,23 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
         adjudicationsApiServer.stubChargeGet(
           CHARGE_NUMBER_FOR_UPDATE,
           offenderNo = OFFENDER_NO,
-          // language=json
-          damages = """
-        [
-          {
-            "code": "ELECTRICAL_REPAIR",
-            "details": "light switch",
-            "reporter": "QT1234T"
-          },
-          {
-            "code": "LOCK_REPAIR",
-            "details": "lock broken",
-            "reporter": "QT1234T"
-          },
-          {
-            "code": "CLEANING",
-            "details": "dirty carpets",
-            "reporter": "QT1234T"
-          }
-        ]
-          """.trimIndent(),
+          damages = listOf(
+            ReportedDamageDto(
+              code = ReportedDamageDto.Code.ELECTRICAL_REPAIR,
+              details = "light switch",
+              reporter = "QT1234T",
+            ),
+            ReportedDamageDto(
+              code = ReportedDamageDto.Code.LOCK_REPAIR,
+              details = "lock broken",
+              reporter = "QT1234T",
+            ),
+            ReportedDamageDto(
+              code = ReportedDamageDto.Code.CLEANING,
+              details = "dirty carpets",
+              reporter = "QT1234T",
+            ),
+          ),
         )
 
         nomisApi.stubAdjudicationRepairsUpdate(ADJUDICATION_NUMBER)
@@ -387,22 +386,20 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
         adjudicationsApiServer.stubChargeGet(
           CHARGE_NUMBER_FOR_UPDATE,
           offenderNo = OFFENDER_NO,
-          // language=json
-          evidence = """
-            [
-                {
-                    "code": "BAGGED_AND_TAGGED",
-                    "identifier": "24242",
-                    "details": "drugs",
-                    "reporter": "AMARKE_GEN"
-                },
-                {
-                    "code": "CCTV",
-                    "details": "Image of fight",
-                    "reporter": "AMARKE_GEN"
-                }
-            ]
-          """.trimIndent(),
+          evidence = listOf(
+            ReportedEvidenceDto(
+              code = ReportedEvidenceDto.Code.BAGGED_AND_TAGGED,
+              identifier = "24242",
+              details = "drugs",
+              reporter = "AMARKE_GEN",
+            ),
+            ReportedEvidenceDto(
+              code = ReportedEvidenceDto.Code.CCTV,
+              identifier = null,
+              details = "Image of fight",
+              reporter = "AMARKE_GEN",
+            ),
+          ),
         )
 
         nomisApi.stubAdjudicationEvidenceUpdate(ADJUDICATION_NUMBER)
