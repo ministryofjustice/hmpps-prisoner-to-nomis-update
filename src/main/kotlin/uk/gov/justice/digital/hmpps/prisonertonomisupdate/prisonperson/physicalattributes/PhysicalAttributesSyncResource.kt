@@ -13,8 +13,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 
 @RestController
-class PhysAttrSyncResource(
-  private val syncService: PhysAttrSyncService,
+class PhysicalAttributesSyncResource(
+  private val syncService: PhysicalAttributesSyncService,
   private val telemetryClient: TelemetryClient,
 ) {
   @PreAuthorize("hasRole('ROLE_NOMIS_PRISON_PERSON') or hasRole('ROLE_NOMIS_PRISON_PERSON__RECONCILIATION')")

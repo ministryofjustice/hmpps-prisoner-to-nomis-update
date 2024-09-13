@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Upsert
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertPhysicalAttributesResponse
 
 @Service
-class PhysAttrNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
+class PhysicalAttributesNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
   suspend fun upsertPhysicalAttributes(offenderNo: String, height: Int?, weight: Int?): UpsertPhysicalAttributesResponse =
     webClient.put()
       .uri("/prisoners/{offenderNo}/physical-attributes", offenderNo)

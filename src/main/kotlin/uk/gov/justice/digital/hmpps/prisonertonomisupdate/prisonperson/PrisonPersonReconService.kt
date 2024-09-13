@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonPersonReconciliationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PhysicalAttributesDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.physicalattributes.PhysAttrDpsApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.physicalattributes.PhysicalAttributesDpsApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWith
 
 @Service
 class PrisonPersonReconService(
-  private val physAttrDpsApi: PhysAttrDpsApiService,
+  private val dpsApi: PhysicalAttributesDpsApiService,
   private val prisonPersonNomisApi: PrisonPersonNomisApiService,
   private val nomisApi: NomisApiService,
   @Value("\${reports.prisonperson.reconciliation.page-size:20}") private val pageSize: Long = 20,
@@ -46,7 +46,7 @@ class PrisonPersonReconService(
   suspend fun checkPrisoner(offenderNo: String): String? = runCatching {
     val (nomisPrisoner, dpsPrisoner) = withContext(Dispatchers.Unconfined) {
       async { doApiCallWithRetries { prisonPersonNomisApi.getReconciliation(offenderNo) } } to
-        async { doApiCallWithRetries { physAttrDpsApi.getPhysicalAttributes(offenderNo) } }
+        async { doApiCallWithRetries { dpsApi.getPhysicalAttributes(offenderNo) } }
     }.awaitBoth()
 
     val differenceTelemetry = findDifferenceTelemetry(offenderNo, nomisPrisoner, dpsPrisoner)

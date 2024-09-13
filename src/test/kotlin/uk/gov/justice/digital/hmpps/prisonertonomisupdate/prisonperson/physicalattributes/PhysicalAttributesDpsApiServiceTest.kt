@@ -15,13 +15,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.PrisonPersonConfiguration
 
 @SpringAPIServiceTest
-@Import(PhysAttrDpsApiService::class, PrisonPersonConfiguration::class, PhysAttrDpsApiMockServer::class)
-class PhysAttrDpsApiServiceTest {
+@Import(PhysicalAttributesDpsApiService::class, PrisonPersonConfiguration::class, PhysicalAttributesDpsApiMockServer::class)
+class PhysicalAttributesDpsApiServiceTest {
   @Autowired
-  private lateinit var dpsApiService: PhysAttrDpsApiService
+  private lateinit var dpsApiService: PhysicalAttributesDpsApiService
 
   @Autowired
-  private lateinit var dpsApi: PhysAttrDpsApiMockServer
+  private lateinit var dpsApi: PhysicalAttributesDpsApiMockServer
 
   @Nested
   inner class GetPrisonPerson {

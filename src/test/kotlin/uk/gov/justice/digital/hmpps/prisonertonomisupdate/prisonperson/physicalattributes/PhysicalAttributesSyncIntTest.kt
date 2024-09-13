@@ -25,13 +25,13 @@ import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
-class PhysAttrSyncIntTest : SqsIntegrationTestBase() {
+class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
 
   @Autowired
-  private lateinit var nomisApi: PhysAttrNomisApiMockServer
+  private lateinit var nomisApi: PhysicalAttributesNomisApiMockServer
 
   @Autowired
-  private lateinit var dpsApi: PhysAttrDpsApiMockServer
+  private lateinit var dpsApi: PhysicalAttributesDpsApiMockServer
 
   @Nested
   inner class UpdatePhysicalAttributesEvent {

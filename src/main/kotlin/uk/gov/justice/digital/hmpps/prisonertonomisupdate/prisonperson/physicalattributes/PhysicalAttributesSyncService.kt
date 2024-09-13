@@ -5,9 +5,9 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 
 @Service
-class PhysAttrSyncService(
-  private val dpsApi: PhysAttrDpsApiService,
-  private val nomisApi: PhysAttrNomisApiService,
+class PhysicalAttributesSyncService(
+  private val dpsApi: PhysicalAttributesDpsApiService,
+  private val nomisApi: PhysicalAttributesNomisApiService,
   private val telemetryClient: TelemetryClient,
 ) {
 

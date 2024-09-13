@@ -9,7 +9,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.physicalattributes.PhysAttrSyncService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.physicalattributes.PhysicalAttributesSyncService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListenerNoMapping
 import java.util.concurrent.CompletableFuture
 
@@ -17,7 +17,7 @@ import java.util.concurrent.CompletableFuture
 class PrisonPersonDomainEventListener(
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
-  private val physAttrSyncService: PhysAttrSyncService,
+  private val physicalAttributesSyncService: PhysicalAttributesSyncService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListenerNoMapping(
   objectMapper = objectMapper,
@@ -35,7 +35,7 @@ class PrisonPersonDomainEventListener(
     rawMessage: String,
   ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
-      "prison-person.physical-attributes.updated" -> physAttrSyncService.updatePhysicalAttributesEvent(message.fromJson())
+      "prison-person.physical-attributes.updated" -> physicalAttributesSyncService.updatePhysicalAttributesEvent(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
