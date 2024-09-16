@@ -7,9 +7,6 @@ parameters:
   alerts-slack-channel:
     type: string
     default: syscon-alerts-security
-  releases-slack-channel:
-    type: string
-    default: dps-releases
 
 jobs:
   validate:
@@ -101,7 +98,6 @@ workflows:
           pipeline_id: <<pipeline.id>>
           pipeline_number: <<pipeline.number>>
           slack_notification: true
-          slack_channel_name: << pipeline.parameters.releases-slack-channel >>
           context:
             - hmpps-common-vars
             - hmpps-prisoner-to-nomis-update-prod
