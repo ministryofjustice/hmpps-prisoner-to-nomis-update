@@ -154,6 +154,7 @@ hmpps.sqs:
           "adjudication.outcome.unquashed"]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
+      errorVisibilityTimeout: 0
     courtsentencing:
       queueName: "court-sentencing-${random.uuid}"
       dlqName: "court-sentencing-dlq-${random.uuid}"
