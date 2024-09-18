@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-09-10.8769.040079a"
+    "version": "2024-09-18.8975.96661ab"
   },
   "servers": [
     {
@@ -639,7 +639,7 @@
     "/prisoners/{offenderNo}/physical-attributes": {
       "get": {
         "tags": [
-          "prison-person-resource"
+          "physical-attributes-resource"
         ],
         "summary": "Get physical attributes for a prisoner",
         "description": "Retrieves physical attributes for a prisoner and all of their aliases and bookings. Requires ROLE_NOMIS_PRISON_PERSON",
@@ -703,7 +703,7 @@
       },
       "put": {
         "tags": [
-          "prison-person-resource"
+          "physical-attributes-resource"
         ],
         "summary": "Upsert physical attributes for a prisoner",
         "description": "Upserts physical attributes on the latest booking for a prisoner, if it exists. Requires ROLE_NOMIS_PRISON_PERSON",
@@ -7537,10 +7537,76 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/profile-details": {
+      "get": {
+        "tags": [
+          "profile-details-resource"
+        ],
+        "summary": "Get profile details for a prisoner",
+        "description": "Retrieves profile details for a prisoner and all of their aliases and bookings. Requires ROLE_NOMIS_PRISON_PERSON",
+        "operationId": "getProfileDetails",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender number",
+              "example": "A1234AA"
+            },
+            "example": "A1234AA"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile Details Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrisonerProfileDetailsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prisoner does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/prison-person/reconciliation": {
       "get": {
         "tags": [
-          "prison-person-resource"
+          "prison-person-recon-resource"
         ],
         "summary": "Get prison person reconciliation details for a prisoner",
         "description": "Retrieves reconciliation details used to check NOMIS and DPS are aligned. Requires ROLE_NOMIS_PRISON_PERSON",
@@ -8451,6 +8517,72 @@
           },
           "404": {
             "description": "Booking does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons/{personId}": {
+      "get": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Get a person by person Id",
+        "description": "Retrieves a person and related contacts. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "getPerson",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Person Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Person Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactPerson"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Person does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -12911,14 +13043,57 @@
         },
         "description": "Incentive information"
       },
+      "CaseNoteAmendment": {
+        "required": [
+          "authorUsername",
+          "createdDateTime",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Free format text body of amendment"
+          },
+          "authorUsername": {
+            "type": "string",
+            "description": "Author login name of person or department that added the amendment"
+          },
+          "authorStaffId": {
+            "type": "integer",
+            "description": "Author STAFF_ID",
+            "format": "int64"
+          },
+          "authorFirstName": {
+            "type": "string",
+            "description": "Author first name"
+          },
+          "authorLastName": {
+            "type": "string",
+            "description": "Author last name"
+          },
+          "createdDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Amendment created timestamp",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "Amendments to the text"
+      },
       "CaseNoteResponse": {
         "required": [
-          "amended",
+          "amendments",
+          "authorLastName",
+          "authorStaffId",
           "authorUsername",
           "bookingId",
           "caseNoteId",
           "caseNoteSubType",
-          "caseNoteType"
+          "caseNoteText",
+          "caseNoteType",
+          "createdDatetime",
+          "createdUsername"
         ],
         "type": "object",
         "properties": {
@@ -12938,15 +13113,37 @@
           "caseNoteSubType": {
             "$ref": "#/components/schemas/CodeDescription"
           },
+          "noteSourceCode": {
+            "type": "string",
+            "description": "Whether system-generated",
+            "enum": [
+              "AUTO",
+              "EXT",
+              "INST"
+            ]
+          },
           "occurrenceDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
             "description": "Date case note occurred",
             "example": "2021-07-05T10:35:17"
           },
+          "authorStaffId": {
+            "type": "integer",
+            "description": "Author STAFF_ID",
+            "format": "int64"
+          },
           "authorUsername": {
             "type": "string",
-            "description": "Free format text of person or department that created the case note"
+            "description": "Author username or login name"
+          },
+          "authorFirstName": {
+            "type": "string",
+            "description": "Author first name"
+          },
+          "authorLastName": {
+            "type": "string",
+            "description": "Author last name"
           },
           "prisonId": {
             "type": "string",
@@ -12956,10 +13153,22 @@
             "type": "string",
             "description": "Free format text body of case note"
           },
-          "amended": {
-            "type": "boolean",
-            "description": "Whether the case note was amended",
-            "example": false
+          "amendments": {
+            "type": "array",
+            "description": "Amendments to the text",
+            "items": {
+              "$ref": "#/components/schemas/CaseNoteAmendment"
+            }
+          },
+          "createdDatetime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Created timestamp",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdUsername": {
+            "type": "string",
+            "description": "Created username"
           },
           "auditModuleName": {
             "type": "string",
@@ -16928,6 +17137,118 @@
         },
         "description": "Sentence Purpose"
       },
+      "BookingProfileDetailsResponse": {
+        "required": [
+          "bookingId",
+          "latestBooking",
+          "profileDetails",
+          "startDateTime"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "The booking's unique identifier",
+            "format": "int64",
+            "example": 1234567
+          },
+          "startDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The start date of the booking",
+            "example": "2021-07-05T10:35:17"
+          },
+          "endDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The end date of the booking, or null if the booking is still active",
+            "example": "2021-07-05T10:35:17"
+          },
+          "profileDetails": {
+            "type": "array",
+            "description": "A list of profile details for this booking",
+            "items": {
+              "$ref": "#/components/schemas/ProfileDetailsResponse"
+            }
+          },
+          "latestBooking": {
+            "type": "boolean",
+            "description": "Whether this is the latest booking or not. Note that latest does not imply active.",
+            "example": true
+          }
+        },
+        "description": "Profile details held against a booking"
+      },
+      "PrisonerProfileDetailsResponse": {
+        "required": [
+          "bookings",
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderNo": {
+            "type": "string",
+            "description": "The prisoner's unique identifier",
+            "example": "A1234AA"
+          },
+          "bookings": {
+            "type": "array",
+            "description": "A list of bookings and their profile details",
+            "items": {
+              "$ref": "#/components/schemas/BookingProfileDetailsResponse"
+            }
+          }
+        },
+        "description": "Profile details held against a prisoner"
+      },
+      "ProfileDetailsResponse": {
+        "required": [
+          "createDateTime",
+          "createdBy",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of profile info",
+            "example": "BUILD"
+          },
+          "code": {
+            "type": "string",
+            "description": "The value of the profile info",
+            "example": "SLIM"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The time the profile info was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The user who created the profile info",
+            "example": "AQ425D"
+          },
+          "modifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The time the profile info was last changed",
+            "example": "2021-07-05T10:35:17"
+          },
+          "modifiedBy": {
+            "type": "string",
+            "description": "The user who modified the profile info",
+            "example": "AQ425D"
+          },
+          "auditModuleName": {
+            "type": "string",
+            "description": "The name of the module that last changed the profile info, indicates if this was NOMIS or the synchronisation service",
+            "example": "DPS_SYNCHRONISATION"
+          }
+        },
+        "description": "Profile details recorded against a prisoner"
+      },
       "PrisonPersonReconciliationResponse": {
         "required": [
           "offenderNo"
@@ -17235,22 +17556,30 @@
           "createDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
-            "description": "The date and time the report was created",
+            "description": "The date and time the factor was created",
             "example": "2021-07-05T10:35:17"
           },
           "createdBy": {
             "type": "string",
-            "description": "The username of the person who created the report"
+            "description": "The username of the person who created the factor"
+          },
+          "createdByDisplayName": {
+            "type": "string",
+            "description": "Real name of the person who created the factor"
           },
           "lastModifiedDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
-            "description": "The date and time the report was last updated",
+            "description": "The date and time the factor was last updated",
             "example": "2021-07-05T10:35:17"
           },
           "lastModifiedBy": {
             "type": "string",
-            "description": "The username of the person who last updated the report"
+            "description": "The username of the person who last updated the factor"
+          },
+          "lastModifiedByDisplayName": {
+            "type": "string",
+            "description": "Real name of the person who last updated the factor"
           }
         },
         "description": "Contributory factors"
@@ -18498,6 +18827,78 @@
           }
         },
         "description": "The list of alerts held against a booking"
+      },
+      "ContactPerson": {
+        "required": [
+          "audit",
+          "firstName",
+          "interpreterRequired",
+          "keepBiometrics",
+          "lastName",
+          "personId"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "integer",
+            "description": "The person id",
+            "format": "int64"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "First name of the person"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Surname name of the person"
+          },
+          "middleName": {
+            "type": "string",
+            "description": "Middle name of the person"
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "description": "Date of birth of the person",
+            "format": "date"
+          },
+          "gender": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "title": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "language": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "interpreterRequired": {
+            "type": "boolean",
+            "description": "True if the person requires an interpreter"
+          },
+          "domesticStatus": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "deceasedDate": {
+            "type": "string",
+            "description": "Date the person dies",
+            "format": "date"
+          },
+          "isStaff": {
+            "type": "boolean",
+            "description": "True if a staff member"
+          },
+          "isRemitter": {
+            "type": "boolean",
+            "description": "No longer used in NOMIS since 2018"
+          },
+          "keepBiometrics": {
+            "type": "boolean",
+            "description": "No longer used in NOMIS since 2019"
+          },
+          "audit": {
+            "$ref": "#/components/schemas/NomisAudit"
+          }
+        },
+        "description": "The data held in NOMIS about a person who is a contact for a prisoner"
       },
       "NonAssociationResponse": {
         "required": [
