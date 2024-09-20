@@ -37,7 +37,7 @@ class CSIPDomainEventListener(
     when (eventType) {
       "person.csip.record.created" -> log.info("Received csip.record.created event")
       "person.csip.record.updated" -> log.info("Received csip.record.updated event")
-      "person.csip.record.deleted" -> log.info("Received csip.record.deleted event")
+      "person.csip.record.deleted" -> csipService.deleteCsipReport(message.fromJson())
       "person.csip.contributory-factor.created" -> log.info("Received csip.contributory-factor.created event")
       "person.csip.contributory-factor.deleted" -> log.info("Received csip.contributory-factor.deleted event")
       "person.csip.interview.created" -> log.info("Received csip.interview.created event")
