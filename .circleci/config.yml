@@ -38,6 +38,7 @@ jobs:
           path: build/test-results
       - store_artifacts:
           path: build/reports/tests
+    resource_class: "medium+"
 
 workflows:
   version: 2
