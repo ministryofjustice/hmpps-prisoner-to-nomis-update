@@ -2,12 +2,12 @@
   "openapi": "3.0.1",
   "info": {
     "title": "NOMIS Mapping Service",
-    "description": "Manages mapping information between DPS services and NOMIS",
+    "description": "<div>\n<h2>Manages mapping information between DPS services and NOMIS</h2>\n<p>APIs tagged by <b>NOMIS to DPS Mapping lookup</b> are designed to be used by other DPS services that need to transition data held in that service that was originally sourced from NOMIS by now needs to sourced from other DPS services.</p>\n<p>Each domain requires their own role to access these APIs for instance <b>NOMIS_DPS_MAPPING__LOCATIONS__R</b> for location mapping lookups</p>\n<p>All other APIs should be considered private to the NOMIS Migration and Synchronisation suite of services.</p>\n<div>",
     "contact": {
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-07-03.4594.1802173"
+    "version": "2024-09-20.5092.0ec3499"
   },
   "servers": [
     {
@@ -33,6 +33,12 @@
         "read",
         "write"
       ]
+    }
+  ],
+  "tags": [
+    {
+      "name": "NOMIS to DPS Mapping lookup",
+      "description": "APIs designed to be used by DPS services that need to map NOMIS ids stored in a DPS service to a sibling DPS domain service"
     }
   ],
   "paths": {
@@ -515,7 +521,7 @@
         ],
         "summary": "get mapping",
         "description": "Retrieves a mapping by NOMIS id. Requires role NOMIS_ALERTS",
-        "operationId": "getMappingByNomisId_4",
+        "operationId": "getMappingByNomisId_9",
         "parameters": [
           {
             "name": "bookingId",
@@ -752,7 +758,7 @@
         ],
         "summary": "Creates a new activity mapping",
         "description": "Creates a mapping between nomis id and Activity service id. Requires NOMIS_ACTIVITIES",
-        "operationId": "createMapping_15",
+        "operationId": "createMapping_16",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1132,6 +1138,61 @@
         }
       }
     },
+    "/mapping/prisonperson/migration": {
+      "post": {
+        "tags": [
+          "prison-person-resource"
+        ],
+        "summary": "Creates a new prison person migration mapping",
+        "description": "Creates a mapping between nomis alert ids and dps alert id. Requires ROLE_NOMIS_PRISONPERSON",
+        "operationId": "createMapping_2",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrisonPersonMigrationMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping created"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate mapping has been rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/non-associations": {
       "post": {
         "tags": [
@@ -1139,7 +1200,7 @@
         ],
         "summary": "Creates a new Non-association mapping",
         "description": "Creates a mapping between a Nomis non-association and non-association instance id. Requires role NOMIS_NON_ASSOCIATIONS",
-        "operationId": "createMapping_2",
+        "operationId": "createMapping_3",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1227,7 +1288,7 @@
         ],
         "summary": "Creates a new Location mapping",
         "description": "Creates a mapping between a Nomis location id and a DPS location id. Requires role NOMIS_LOCATIONS",
-        "operationId": "createMapping_3",
+        "operationId": "createMapping_4",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1315,7 +1376,7 @@
         ],
         "summary": "Creates a new Incident Report mapping",
         "description": "Creates a mapping between a Nomis incident report id and DPS Incident report id. Requires role NOMIS_INCIDENTS",
-        "operationId": "createMapping_4",
+        "operationId": "createMapping_5",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1403,7 +1464,7 @@
         ],
         "summary": "Creates a new incentive mapping",
         "description": "Creates a mapping between nomis Incentive ids and Incentive service id. Requires ROLE_NOMIS_INCENTIVES",
-        "operationId": "createMapping_5",
+        "operationId": "createMapping_6",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1501,7 +1562,7 @@
         ],
         "summary": "Creates a new hearing mapping",
         "description": "Creates a record of a DPS hearing Id and a NOMIS hearing Id . Requires NOMIS_ADJUDICATIONS",
-        "operationId": "createMapping_6",
+        "operationId": "createMapping_7",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1539,19 +1600,19 @@
         }
       }
     },
-    "/mapping/csip/factors": {
+    "/mapping/csip/reviews": {
       "post": {
         "tags": [
-          "csip-factor-mapping-resource"
+          "csip-review-mapping-resource"
         ],
-        "summary": "Creates a new CSIP Factor mapping",
-        "description": "Creates a mapping between a Nomis CSIP factor id and DPS CSIP factor id. Requires role NOMIS_CSIP",
-        "operationId": "createFactorMapping",
+        "summary": "Creates a new CSIP Review mapping",
+        "description": "Creates a mapping between a Nomis CSIP review id and DPS CSIP review id. Requires role NOMIS_CSIP",
+        "operationId": "createReviewMapping",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CSIPFactorMappingDto"
+                "$ref": "#/components/schemas/CSIPReviewMappingDto"
               }
             }
           },
@@ -1559,7 +1620,14 @@
         },
         "responses": {
           "201": {
-            "description": "Mapping entry created"
+            "description": "Mapping entry created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPReviewMapping"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized to access this endpoint",
@@ -1584,19 +1652,227 @@
         }
       }
     },
-    "/mapping/csip": {
+    "/mapping/csip/plans": {
       "post": {
         "tags": [
-          "csip-mapping-resource"
+          "csip-plan-mapping-resource"
         ],
-        "summary": "Creates a new CSIP Report mapping",
-        "description": "Creates a mapping between a Nomis CSIP report id and DPS CSIP report id. Requires role NOMIS_CSIP",
-        "operationId": "createMapping_7",
+        "summary": "Creates a new CSIP Plan mapping",
+        "description": "Creates a mapping between a Nomis CSIP plan id and DPS CSIP plan id. Requires role NOMIS_CSIP",
+        "operationId": "createPlanMapping",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CSIPMappingDto"
+                "$ref": "#/components/schemas/CSIPPlanMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping entry created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPPlanMapping"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate csip has been rejected. If Error code = 409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip/interviews": {
+      "post": {
+        "tags": [
+          "csip-interview-mapping-resource"
+        ],
+        "summary": "Creates a new CSIP Interview mapping",
+        "description": "Creates a mapping between a Nomis CSIP interview id and DPS CSIP interview id. Requires role NOMIS_CSIP",
+        "operationId": "createInterviewMapping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CSIPInterviewMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping entry created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPInterviewMapping"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate csip has been rejected. If Error code = 409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip/factors": {
+      "post": {
+        "tags": [
+          "csip-factor-mapping-resource"
+        ],
+        "summary": "Creates a new CSIP Factor mapping",
+        "description": "Creates a mapping between a Nomis CSIP factor id and DPS CSIP factor id. Requires role NOMIS_CSIP",
+        "operationId": "createFactorMapping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CSIPFactorMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping entry created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPFactorMapping"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate csip has been rejected. If Error code = 409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip/attendees": {
+      "post": {
+        "tags": [
+          "csip-attendee-mapping-resource"
+        ],
+        "summary": "Creates a new CSIP Attendee mapping",
+        "description": "Creates a mapping between a Nomis CSIP attendee id and DPS CSIP attendee id. Requires role NOMIS_CSIP",
+        "operationId": "createAttendeeMapping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CSIPAttendeeMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping entry created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPAttendeeMapping"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate csip has been rejected. If Error code = 409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip/all": {
+      "post": {
+        "tags": [
+          "csip-mapping-resource"
+        ],
+        "summary": "Creates a new CSIP Report mapping along with any associated children",
+        "description": "Creates a mapping between a Nomis CSIP report id and DPS CSIP report id and all its children. Requires role NOMIS_CSIP",
+        "operationId": "createMappingWithChildren",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CSIPReportMappingDto"
               }
             }
           },
@@ -1665,6 +1941,58 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip": {
+      "post": {
+        "tags": [
+          "csip-mapping-resource"
+        ],
+        "summary": "Creates a new CSIP Report mapping",
+        "description": "Creates a mapping between a Nomis CSIP report id and DPS CSIP report id. Requires role NOMIS_CSIP",
+        "operationId": "createMapping_8",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CSIPReportMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping entry created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPMapping"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate csip has been rejected. If Error code = 409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
                 }
               }
             }
@@ -1741,7 +2069,7 @@
         ],
         "summary": "Creates a new court case hierarchical mapping",
         "description": "Creates a mapping between nomis Court Case ID and DPS Court Case ID. Also maps child entities: Court appearances and charges. Requires ROLE_NOMIS_COURT_SENTENCING",
-        "operationId": "createMapping_8",
+        "operationId": "createMapping_9",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2100,7 +2428,7 @@
         ],
         "summary": "Creates a new casenote mapping",
         "description": "Creates a mapping between nomis casenote id and dps casenote id. Requires ROLE_NOMIS_CASENOTES",
-        "operationId": "createMapping_9",
+        "operationId": "createMapping_10",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2235,7 +2563,7 @@
         ],
         "summary": "Creates a new appointment mapping",
         "description": "Creates a mapping between nomis id and Appointment instance id. Requires NOMIS_APPOINTMENTS",
-        "operationId": "createMapping_10",
+        "operationId": "createMapping_11",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2290,7 +2618,7 @@
         ],
         "summary": "Creates a new allocation migration mapping",
         "description": "Creates a mapping between nomis allocation id and Actvities allocation id. Requires NOMIS_ACTIVITIES",
-        "operationId": "createMapping_11",
+        "operationId": "createMapping_12",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2443,7 +2771,7 @@
         ],
         "summary": "Creates a new alert mapping",
         "description": "Creates a mapping between nomis alert ids and dps alert id. Requires ROLE_NOMIS_ALERTS",
-        "operationId": "createMapping_12",
+        "operationId": "createMapping_13",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2656,7 +2984,7 @@
         ],
         "summary": "Creates a new adjudication mapping",
         "description": "Creates a record of a adjudication number. Requires NOMIS_ADJUDICATIONS",
-        "operationId": "createMapping_13",
+        "operationId": "createMapping_14",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2701,7 +3029,7 @@
         ],
         "summary": "Creates a new activity migration mapping",
         "description": "Creates a mapping between nomis id and up to 2 Activity service ids. Requires NOMIS_ACTIVITIES",
-        "operationId": "createMapping_14",
+        "operationId": "createMapping_15",
         "requestBody": {
           "content": {
             "application/json": {
@@ -3483,6 +3811,60 @@
           },
           "404": {
             "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/prisonperson/migration/migration-id/{migrationId}": {
+      "get": {
+        "tags": [
+          "prison-person-resource"
+        ],
+        "summary": "get paged mappings by migration id",
+        "description": "Retrieve all prison person migration mappings for the given migration id (identifies a single migration run). Results are paged.",
+        "operationId": "getMigratedPrisonPersonMappings",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          },
+          {
+            "name": "migrationId",
+            "in": "path",
+            "description": "Migration Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Migration Id",
+              "example": "2020-03-24T12:00:00"
+            },
+            "example": "2020-03-24T12:00:00"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping page returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrisonPersonMigrationMappingRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
             "content": {
               "application/json": {
                 "schema": {
@@ -4620,6 +5002,324 @@
         }
       }
     },
+    "/mapping/csip/reviews/nomis-csip-review-id/{nomisCSIPReviewId}": {
+      "get": {
+        "tags": [
+          "csip-review-mapping-resource"
+        ],
+        "summary": "get CSIP Review mapping",
+        "description": "Retrieves a CSIP Review mapping by NOMIS id. Requires role NOMIS_CSIP",
+        "operationId": "getMappingByNomisId_1",
+        "parameters": [
+          {
+            "name": "nomisCSIPReviewId",
+            "in": "path",
+            "description": "NOMIS CSIP Review id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS CSIP Review id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPReviewMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip/reviews/dps-csip-review-id/{dpsCSIPReviewId}": {
+      "get": {
+        "tags": [
+          "csip-review-mapping-resource"
+        ],
+        "summary": "get CSIP Review mapping",
+        "description": "Retrieves a csip review mapping by DPS id. Requires role NOMIS_CSIP",
+        "operationId": "getCSIPReviewMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsCSIPReviewId",
+            "in": "path",
+            "description": "DPS CSIP review id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS CSIP review id",
+              "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+            },
+            "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPReviewMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "csip-review-mapping-resource"
+        ],
+        "summary": "Deletes CSIP Review mapping",
+        "description": "Deletes a CSIP Review mapping by DPS id. Requires role NOMIS_CSIP",
+        "operationId": "deleteCSIPReviewMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsCSIPReviewId",
+            "in": "path",
+            "description": "DPS CSIP Review id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS CSIP Review id",
+              "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+            },
+            "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Mapping Deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip/plans/nomis-csip-plan-id/{nomisCSIPPlanId}": {
+      "get": {
+        "tags": [
+          "csip-plan-mapping-resource"
+        ],
+        "summary": "get CSIP Plan mapping",
+        "description": "Retrieves a CSIP Plan mapping by NOMIS id. Requires role NOMIS_CSIP",
+        "operationId": "getMappingByNomisId_2",
+        "parameters": [
+          {
+            "name": "nomisCSIPPlanId",
+            "in": "path",
+            "description": "NOMIS CSIP Plan id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS CSIP Plan id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPPlanMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip/plans/dps-csip-plan-id/{dpsCSIPPlanId}": {
+      "get": {
+        "tags": [
+          "csip-plan-mapping-resource"
+        ],
+        "summary": "get CSIP Plan mapping",
+        "description": "Retrieves a csip plan mapping by DPS id. Requires role NOMIS_CSIP",
+        "operationId": "getCSIPPlanMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsCSIPPlanId",
+            "in": "path",
+            "description": "DPS CSIP plan id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS CSIP plan id",
+              "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+            },
+            "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPPlanMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "csip-plan-mapping-resource"
+        ],
+        "summary": "Deletes CSIP Plan mapping",
+        "description": "Deletes a CSIP Plan mapping by DPS id. Requires role NOMIS_CSIP",
+        "operationId": "deleteCSIPPlanMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsCSIPPlanId",
+            "in": "path",
+            "description": "DPS CSIP Plan id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS CSIP Plan id",
+              "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+            },
+            "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Mapping Deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/csip/nomis-csip-id/{nomisCSIPId}": {
       "get": {
         "tags": [
@@ -4627,7 +5327,7 @@
         ],
         "summary": "get mapping",
         "description": "Retrieves a mapping by nomisCSIPId. Requires role NOMIS_CSIP",
-        "operationId": "getMappingNomisId",
+        "operationId": "getMappingByNomisId_3",
         "parameters": [
           {
             "name": "nomisCSIPId",
@@ -4646,7 +5346,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CSIPMappingDto"
+                  "$ref": "#/components/schemas/CSIPReportMappingDto"
                 }
               }
             }
@@ -4681,7 +5381,7 @@
         ],
         "summary": "get paged mappings by migration id",
         "description": "Retrieve all mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged.",
-        "operationId": "getMigratedMappingsByMigrationId_1",
+        "operationId": "getMappingsByMigrationId_1",
         "parameters": [
           {
             "name": "pageRequest",
@@ -4710,7 +5410,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CSIPMappingDto"
+                  "$ref": "#/components/schemas/CSIPFullMappingDto"
                 }
               }
             }
@@ -4742,7 +5442,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CSIPMappingDto"
+                  "$ref": "#/components/schemas/CSIPFullMappingDto"
                 }
               }
             }
@@ -4770,6 +5470,165 @@
         }
       }
     },
+    "/mapping/csip/interviews/nomis-csip-interview-id/{nomisCSIPInterviewId}": {
+      "get": {
+        "tags": [
+          "csip-interview-mapping-resource"
+        ],
+        "summary": "get CSIP Interview mapping",
+        "description": "Retrieves a CSIP Interview mapping by NOMIS id. Requires role NOMIS_CSIP",
+        "operationId": "getMappingByNomisId_4",
+        "parameters": [
+          {
+            "name": "nomisCSIPInterviewId",
+            "in": "path",
+            "description": "NOMIS CSIP Interview id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS CSIP Interview id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPInterviewMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip/interviews/dps-csip-interview-id/{dpsCSIPInterviewId}": {
+      "get": {
+        "tags": [
+          "csip-interview-mapping-resource"
+        ],
+        "summary": "get CSIP Interview mapping",
+        "description": "Retrieves a csip interview mapping by DPS id. Requires role NOMIS_CSIP",
+        "operationId": "getCSIPInterviewMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsCSIPInterviewId",
+            "in": "path",
+            "description": "DPS CSIP interview id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS CSIP interview id",
+              "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+            },
+            "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPInterviewMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "csip-interview-mapping-resource"
+        ],
+        "summary": "Deletes CSIP Interview mapping",
+        "description": "Deletes a CSIP Interview mapping by DPS id. Requires role NOMIS_CSIP",
+        "operationId": "deleteCSIPInterviewMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsCSIPInterviewId",
+            "in": "path",
+            "description": "DPS CSIP Interview id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS CSIP Interview id",
+              "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+            },
+            "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Mapping Deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/csip/factors/nomis-csip-factor-id/{nomisCSIPFactorId}": {
       "get": {
         "tags": [
@@ -4777,7 +5636,7 @@
         ],
         "summary": "get CSIP Factor mapping",
         "description": "Retrieves a CSIP Factor mapping by NOMIS id. Requires role NOMIS_CSIP",
-        "operationId": "getMappingByNomisId_1",
+        "operationId": "getMappingByNomisId_5",
         "parameters": [
           {
             "name": "nomisCSIPFactorId",
@@ -4838,11 +5697,11 @@
           {
             "name": "dpsCSIPFactorId",
             "in": "path",
-            "description": "DPS alert id",
+            "description": "DPS CSIP factor id",
             "required": true,
             "schema": {
               "type": "string",
-              "description": "DPS alert id",
+              "description": "DPS CSIP factor id",
               "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
             },
             "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
@@ -4929,6 +5788,62 @@
         }
       }
     },
+    "/mapping/csip/dps-csip-id/{csipId}/all": {
+      "get": {
+        "tags": [
+          "csip-mapping-resource"
+        ],
+        "summary": "Get full mapping",
+        "description": "Retrieves a mapping by DPS CSIP Report Id and all associated child mappings. Requires role NOMIS_CSIP",
+        "operationId": "getAllMappingsByDPSId",
+        "parameters": [
+          {
+            "name": "csipId",
+            "in": "path",
+            "description": "DPS CSIP Report Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS CSIP Report Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPFullMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "DPS CSIP Report id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/csip/dps-csip-id/{csipId}": {
       "get": {
         "tags": [
@@ -4957,7 +5872,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CSIPMappingDto"
+                  "$ref": "#/components/schemas/CSIPReportMappingDto"
                 }
               }
             }
@@ -4974,6 +5889,165 @@
           },
           "404": {
             "description": "CSIP id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip/attendees/nomis-csip-attendee-id/{nomisCSIPAttendeeId}": {
+      "get": {
+        "tags": [
+          "csip-attendee-mapping-resource"
+        ],
+        "summary": "get CSIP Attendee mapping",
+        "description": "Retrieves a CSIP Attendee mapping by NOMIS id. Requires role NOMIS_CSIP",
+        "operationId": "getMappingByNomisId_6",
+        "parameters": [
+          {
+            "name": "nomisCSIPAttendeeId",
+            "in": "path",
+            "description": "NOMIS CSIP Attendee id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS CSIP Attendee id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPAttendeeMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/csip/attendees/dps-csip-attendee-id/{dpsCSIPAttendeeId}": {
+      "get": {
+        "tags": [
+          "csip-attendee-mapping-resource"
+        ],
+        "summary": "get CSIP Attendee mapping",
+        "description": "Retrieves a csip attendee mapping by DPS id. Requires role NOMIS_CSIP",
+        "operationId": "getCSIPAttendeeMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsCSIPAttendeeId",
+            "in": "path",
+            "description": "DPS CSIP attendee id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS CSIP attendee id",
+              "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+            },
+            "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSIPAttendeeMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "csip-attendee-mapping-resource"
+        ],
+        "summary": "Deletes CSIP Attendee mapping",
+        "description": "Deletes a CSIP Attendee mapping by DPS id. Requires role NOMIS_CSIP",
+        "operationId": "deleteCSIPAttendeeMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsCSIPAttendeeId",
+            "in": "path",
+            "description": "DPS CSIP Attendee id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS CSIP Attendee id",
+              "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+            },
+            "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Mapping Deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint",
             "content": {
               "application/json": {
                 "schema": {
@@ -5280,6 +6354,126 @@
         }
       }
     },
+    "/mapping/court-sentencing/court-cases/nomis-court-case-id/{courtCaseId}": {
+      "get": {
+        "tags": [
+          "court-sentencing-mapping-resource"
+        ],
+        "summary": "get court case mapping",
+        "description": "Retrieves a mapping by NOMIS id. Requires role NOMIS_COURT_SENTENCING",
+        "operationId": "getMappingByNomisId_7",
+        "parameters": [
+          {
+            "name": "courtCaseId",
+            "in": "path",
+            "description": "NOMIS court case id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS court case id",
+              "example": 123
+            },
+            "example": 123
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtCaseMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-sentencing/court-cases/migration-id/{migrationId}": {
+      "get": {
+        "tags": [
+          "court-sentencing-mapping-resource"
+        ],
+        "summary": "Get paged mappings by migration id",
+        "description": "Retrieve all mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged.",
+        "operationId": "getMappingsByMigrationId_2",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          },
+          {
+            "name": "migrationId",
+            "in": "path",
+            "description": "Migration Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Migration Id",
+              "example": "2020-03-24T12:00:00"
+            },
+            "example": "2020-03-24T12:00:00"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping page returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageCourtCaseMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/court-sentencing/court-cases/dps-court-case-id/{courtCaseId}": {
       "get": {
         "tags": [
@@ -5287,7 +6481,7 @@
         ],
         "summary": "get court case mapping",
         "description": "Retrieves a mapping by DPS id. Requires role NOMIS_COURT_SENTENCING",
-        "operationId": "getMappingByNomisId_2",
+        "operationId": "getMappingByDpsId",
         "parameters": [
           {
             "name": "courtCaseId",
@@ -5455,7 +6649,7 @@
         ],
         "summary": "get mapping",
         "description": "Retrieves a mapping by NOMIS id. Requires role NOMIS_CASENOTES",
-        "operationId": "getMappingByNomisId_3",
+        "operationId": "getMappingByNomisId_8",
         "parameters": [
           {
             "name": "caseNoteId",
@@ -5617,7 +6811,7 @@
         ],
         "summary": "get mapping",
         "description": "Retrieves a mapping by DPS id. Requires role NOMIS_CASENOTES",
-        "operationId": "getMappingByDpsId",
+        "operationId": "getMappingByDpsId_1",
         "parameters": [
           {
             "name": "dpsCaseNoteId",
@@ -6191,7 +7385,7 @@
         ],
         "summary": "Get paged mappings by migration id",
         "description": "Retrieve all mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged.",
-        "operationId": "getMappingsByMigrationId_1",
+        "operationId": "getMappingsByMigrationId_3",
         "parameters": [
           {
             "name": "pageRequest",
@@ -6255,7 +7449,7 @@
         ],
         "summary": "get mapping",
         "description": "Retrieves a mapping by DPS id. Requires role NOMIS_ALERTS",
-        "operationId": "getMappingByDpsId_1",
+        "operationId": "getMappingByDpsId_2",
         "parameters": [
           {
             "name": "dpsAlertId",
@@ -6608,6 +7802,62 @@
         }
       }
     },
+    "/mapping/activities/schedules/scheduled-instance-id/{scheduledInstanceId}": {
+      "get": {
+        "tags": [
+          "activity-mapping-resource"
+        ],
+        "summary": "get scheduled instance mapping",
+        "description": "Retrieves a mapping by scheduled instance id. Requires role NOMIS_ACTIVITIES",
+        "operationId": "getScheduleInstanceMapping",
+        "parameters": [
+          {
+            "name": "scheduledInstanceId",
+            "in": "path",
+            "description": "Scheduled instance Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Scheduled instance Id",
+              "example": 67890
+            },
+            "example": 67890
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/activities/migration/nomis-course-activity-id/{courseActivityId}": {
       "get": {
         "tags": [
@@ -6884,6 +8134,72 @@
         }
       }
     },
+    "/api/locations/nomis/{nomisLocationId}": {
+      "get": {
+        "tags": [
+          "NOMIS to DPS Mapping lookup"
+        ],
+        "summary": "Retrieves the DPS location id from the NOMIS internal location id",
+        "description": "Requires role <b>NOMIS_DPS_MAPPING__LOCATIONS__R</b>",
+        "operationId": "getLocationMappingByNomisId",
+        "parameters": [
+          {
+            "name": "nomisLocationId",
+            "in": "path",
+            "description": "NOMIS internal location id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS internal location id",
+              "example": 2318905
+            },
+            "example": 2318905
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "NOMIS to DPS Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NomisDpsLocationMapping"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden to this endpoint. Requires role NOMIS_DPS_MAPPING__LOCATIONS__R",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Location id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prison/{prisonId}/room-mappings/nomis-room-id/{nomisRoomDescription}": {
       "delete": {
         "tags": [
@@ -7064,13 +8380,13 @@
         }
       }
     },
-    "/mapping/csip/dps-csip-id/{dpsCSIPId}": {
+    "/mapping/csip/dps-csip-id/{dpsCSIPId}/all": {
       "delete": {
         "tags": [
           "csip-mapping-resource"
         ],
-        "summary": "Deletes a specific CSIP mapping by DPS CSIP id",
-        "description": "Deletes a mapping by DPS id. Requires role NOMIS_CSIP",
+        "summary": "Deletes a specific CSIP report mapping by DPS CSIP id and its associated children",
+        "description": "Deletes a mapping by DPS id and any children. Requires role NOMIS_CSIP",
         "operationId": "deleteMapping_2",
         "parameters": [
           {
@@ -7088,7 +8404,7 @@
         ],
         "responses": {
           "204": {
-            "description": "CSIP mapping deleted"
+            "description": "CSIP mappings deleted"
           },
           "401": {
             "description": "Unauthorized to access this endpoint",
@@ -8244,6 +9560,47 @@
         },
         "description": "Batch of Adjudication punishment (aka award) mappings"
       },
+      "PrisonPersonMigrationMappingRequest": {
+        "required": [
+          "dpsIds",
+          "label",
+          "migrationType",
+          "nomisPrisonerNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisPrisonerNumber": {
+            "type": "string",
+            "description": "The prisoner number",
+            "example": "A1234AA"
+          },
+          "migrationType": {
+            "type": "string",
+            "description": "The type of migration for this person, e.g. which data is being migrated",
+            "example": "PHYSICAL_ATTRIBUTES",
+            "enum": [
+              "PHYSICAL_ATTRIBUTES",
+              "PROFILE_DETAILS_PHYSICAL_ATTRIBUTES"
+            ]
+          },
+          "dpsIds": {
+            "type": "array",
+            "description": "The ids of entities created in DPS. Held for audit purposes only.",
+            "example": "1, 2, 3",
+            "items": {
+              "type": "integer",
+              "description": "The ids of entities created in DPS. Held for audit purposes only.",
+              "format": "int64"
+            }
+          },
+          "label": {
+            "type": "string",
+            "description": "A unique reference for the migration, usually a timestamp",
+            "example": "2024-06-03T11:18:33"
+          }
+        },
+        "description": "Prison person mapping"
+      },
       "NonAssociationMappingDto": {
         "required": [
           "firstOffenderNo",
@@ -8487,9 +9844,295 @@
         },
         "description": "Adjudication mapping (same value for NOMIS and DPS)"
       },
+      "CSIPReviewMappingDto": {
+        "required": [
+          "dpsCSIPReportId",
+          "dpsCSIPReviewId",
+          "mappingType",
+          "nomisCSIPReviewId"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisCSIPReviewId": {
+            "type": "integer",
+            "description": "NOMIS CSIP Review id",
+            "format": "int64"
+          },
+          "dpsCSIPReviewId": {
+            "type": "string",
+            "description": "DPS CSIP Review id"
+          },
+          "dpsCSIPReportId": {
+            "type": "string",
+            "description": "DPS CSIP Report id"
+          },
+          "label": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "Mapping type",
+            "enum": [
+              "MIGRATED",
+              "NOMIS_CREATED",
+              "DPS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date-time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "CSIP Review mapping"
+      },
+      "CSIPReviewMapping": {
+        "required": [
+          "dpsCSIPReportId",
+          "dpsCSIPReviewId",
+          "id",
+          "isNew",
+          "mappingType",
+          "new",
+          "nomisCSIPReviewId"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsCSIPReviewId": {
+            "type": "string"
+          },
+          "dpsCSIPReportId": {
+            "type": "string"
+          },
+          "nomisCSIPReviewId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "label": {
+            "type": "string"
+          },
+          "mappingType": {
+            "type": "string",
+            "enum": [
+              "MIGRATED",
+              "NOMIS_CREATED",
+              "DPS_CREATED"
+            ]
+          },
+          "new": {
+            "type": "boolean"
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          },
+          "id": {
+            "type": "string"
+          },
+          "isNew": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CSIPPlanMappingDto": {
+        "required": [
+          "dpsCSIPPlanId",
+          "dpsCSIPReportId",
+          "mappingType",
+          "nomisCSIPPlanId"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisCSIPPlanId": {
+            "type": "integer",
+            "description": "NOMIS CSIP Plan id",
+            "format": "int64"
+          },
+          "dpsCSIPPlanId": {
+            "type": "string",
+            "description": "DPS CSIP Plan id"
+          },
+          "dpsCSIPReportId": {
+            "type": "string",
+            "description": "DPS CSIP Report id"
+          },
+          "label": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "Mapping type",
+            "enum": [
+              "MIGRATED",
+              "NOMIS_CREATED",
+              "DPS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date-time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "CSIP Plan mapping"
+      },
+      "CSIPPlanMapping": {
+        "required": [
+          "dpsCSIPPlanId",
+          "dpsCSIPReportId",
+          "id",
+          "isNew",
+          "mappingType",
+          "new",
+          "nomisCSIPPlanId"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsCSIPPlanId": {
+            "type": "string"
+          },
+          "dpsCSIPReportId": {
+            "type": "string"
+          },
+          "nomisCSIPPlanId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "label": {
+            "type": "string"
+          },
+          "mappingType": {
+            "type": "string",
+            "enum": [
+              "MIGRATED",
+              "NOMIS_CREATED",
+              "DPS_CREATED"
+            ]
+          },
+          "new": {
+            "type": "boolean"
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          },
+          "id": {
+            "type": "string"
+          },
+          "isNew": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CSIPInterviewMappingDto": {
+        "required": [
+          "dpsCSIPInterviewId",
+          "dpsCSIPReportId",
+          "mappingType",
+          "nomisCSIPInterviewId"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisCSIPInterviewId": {
+            "type": "integer",
+            "description": "NOMIS CSIP Interview id",
+            "format": "int64"
+          },
+          "dpsCSIPInterviewId": {
+            "type": "string",
+            "description": "DPS CSIP Interview id"
+          },
+          "dpsCSIPReportId": {
+            "type": "string",
+            "description": "DPS CSIP Report id"
+          },
+          "label": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "Mapping type",
+            "enum": [
+              "MIGRATED",
+              "NOMIS_CREATED",
+              "DPS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date-time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "CSIP Interview mapping"
+      },
+      "CSIPInterviewMapping": {
+        "required": [
+          "dpsCSIPInterviewId",
+          "dpsCSIPReportId",
+          "id",
+          "isNew",
+          "mappingType",
+          "new",
+          "nomisCSIPInterviewId"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsCSIPInterviewId": {
+            "type": "string"
+          },
+          "dpsCSIPReportId": {
+            "type": "string"
+          },
+          "nomisCSIPInterviewId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "label": {
+            "type": "string"
+          },
+          "mappingType": {
+            "type": "string",
+            "enum": [
+              "MIGRATED",
+              "NOMIS_CREATED",
+              "DPS_CREATED"
+            ]
+          },
+          "new": {
+            "type": "boolean"
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          },
+          "id": {
+            "type": "string"
+          },
+          "isNew": {
+            "type": "boolean"
+          }
+        }
+      },
       "CSIPFactorMappingDto": {
         "required": [
           "dpsCSIPFactorId",
+          "dpsCSIPReportId",
           "mappingType",
           "nomisCSIPFactorId"
         ],
@@ -8503,6 +10146,10 @@
           "dpsCSIPFactorId": {
             "type": "string",
             "description": "DPS CSIP Factor id"
+          },
+          "dpsCSIPReportId": {
+            "type": "string",
+            "description": "DPS CSIP Report id"
           },
           "label": {
             "maxLength": 20,
@@ -8528,22 +10175,76 @@
         },
         "description": "CSIP Factor mapping"
       },
-      "CSIPMappingDto": {
+      "CSIPFactorMapping": {
         "required": [
-          "dpsCSIPId",
+          "dpsCSIPFactorId",
+          "dpsCSIPReportId",
+          "id",
+          "isNew",
           "mappingType",
-          "nomisCSIPId"
+          "new",
+          "nomisCSIPFactorId"
         ],
         "type": "object",
         "properties": {
-          "nomisCSIPId": {
+          "dpsCSIPFactorId": {
+            "type": "string"
+          },
+          "dpsCSIPReportId": {
+            "type": "string"
+          },
+          "nomisCSIPFactorId": {
             "type": "integer",
-            "description": "NOMIS CSIP id",
             "format": "int64"
           },
-          "dpsCSIPId": {
+          "label": {
+            "type": "string"
+          },
+          "mappingType": {
             "type": "string",
-            "description": "CSIP id from DPS csip service"
+            "enum": [
+              "MIGRATED",
+              "NOMIS_CREATED",
+              "DPS_CREATED"
+            ]
+          },
+          "new": {
+            "type": "boolean"
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          },
+          "id": {
+            "type": "string"
+          },
+          "isNew": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CSIPAttendeeMappingDto": {
+        "required": [
+          "dpsCSIPAttendeeId",
+          "dpsCSIPReportId",
+          "mappingType",
+          "nomisCSIPAttendeeId"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisCSIPAttendeeId": {
+            "type": "integer",
+            "description": "NOMIS CSIP Attendee id",
+            "format": "int64"
+          },
+          "dpsCSIPAttendeeId": {
+            "type": "string",
+            "description": "DPS CSIP Attendee id"
+          },
+          "dpsCSIPReportId": {
+            "type": "string",
+            "description": "DPS CSIP Report id"
           },
           "label": {
             "maxLength": 20,
@@ -8552,8 +10253,96 @@
             "description": "Label (a timestamp for migrated ids)"
           },
           "mappingType": {
+            "type": "string",
+            "description": "Mapping type",
+            "enum": [
+              "MIGRATED",
+              "NOMIS_CREATED",
+              "DPS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date-time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "CSIP Attendee mapping"
+      },
+      "CSIPAttendeeMapping": {
+        "required": [
+          "dpsCSIPAttendeeId",
+          "dpsCSIPReportId",
+          "id",
+          "isNew",
+          "mappingType",
+          "new",
+          "nomisCSIPAttendeeId"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsCSIPAttendeeId": {
+            "type": "string"
+          },
+          "dpsCSIPReportId": {
+            "type": "string"
+          },
+          "nomisCSIPAttendeeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "label": {
+            "type": "string"
+          },
+          "mappingType": {
+            "type": "string",
+            "enum": [
+              "MIGRATED",
+              "NOMIS_CREATED",
+              "DPS_CREATED"
+            ]
+          },
+          "new": {
+            "type": "boolean"
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          },
+          "id": {
+            "type": "string"
+          },
+          "isNew": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CSIPReportMappingDto": {
+        "required": [
+          "dpsCSIPReportId",
+          "mappingType",
+          "nomisCSIPReportId"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisCSIPReportId": {
+            "type": "integer",
+            "description": "NOMIS CSIP Report id",
+            "format": "int64"
+          },
+          "dpsCSIPReportId": {
+            "type": "string",
+            "description": "CSIP Report id from DPS CSIP service"
+          },
+          "label": {
             "maxLength": 20,
             "minLength": 0,
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
             "type": "string",
             "description": "Mapping type",
             "enum": [
@@ -8570,6 +10359,51 @@
           }
         },
         "description": "CSIP mapping"
+      },
+      "CSIPMapping": {
+        "required": [
+          "dpsCSIPId",
+          "id",
+          "isNew",
+          "mappingType",
+          "new",
+          "nomisCSIPId"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsCSIPId": {
+            "type": "string"
+          },
+          "nomisCSIPId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "label": {
+            "type": "string"
+          },
+          "mappingType": {
+            "type": "string",
+            "enum": [
+              "MIGRATED",
+              "NOMIS_CREATED",
+              "DPS_CREATED"
+            ]
+          },
+          "new": {
+            "type": "boolean"
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          },
+          "id": {
+            "type": "string"
+          },
+          "isNew": {
+            "type": "boolean"
+          }
+        }
       },
       "SentenceMappingDto": {
         "required": [
@@ -9347,6 +11181,87 @@
           }
         }
       },
+      "CSIPFullMappingDto": {
+        "required": [
+          "attendeeMappings",
+          "dpsCSIPReportId",
+          "factorMappings",
+          "interviewMappings",
+          "mappingType",
+          "nomisCSIPReportId",
+          "planMappings",
+          "reviewMappings"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisCSIPReportId": {
+            "type": "integer",
+            "description": "NOMIS CSIP Report id",
+            "format": "int64"
+          },
+          "dpsCSIPReportId": {
+            "type": "string",
+            "description": "CSIP Report id from DPS CSIP service"
+          },
+          "label": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "Mapping type",
+            "enum": [
+              "MIGRATED",
+              "NOMIS_CREATED",
+              "DPS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date-time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "attendeeMappings": {
+            "type": "array",
+            "description": "CSIP Attendee Mappings",
+            "items": {
+              "$ref": "#/components/schemas/CSIPAttendeeMappingDto"
+            }
+          },
+          "factorMappings": {
+            "type": "array",
+            "description": "CSIP Factor Mappings",
+            "items": {
+              "$ref": "#/components/schemas/CSIPFactorMappingDto"
+            }
+          },
+          "interviewMappings": {
+            "type": "array",
+            "description": "CSIP Interview Mappings",
+            "items": {
+              "$ref": "#/components/schemas/CSIPInterviewMappingDto"
+            }
+          },
+          "planMappings": {
+            "type": "array",
+            "description": "CSIP Plan Mappings",
+            "items": {
+              "$ref": "#/components/schemas/CSIPPlanMappingDto"
+            }
+          },
+          "reviewMappings": {
+            "type": "array",
+            "description": "CSIP Review Mappings",
+            "items": {
+              "$ref": "#/components/schemas/CSIPReviewMappingDto"
+            }
+          }
+        },
+        "description": "Full CSIP mapping"
+      },
       "CourtCaseMappingDto": {
         "required": [
           "dpsCourtCaseId",
@@ -9390,32 +11305,16 @@
         },
         "description": "Court case mapping"
       },
-      "AllPrisonerAlertMappingsDto": {
-        "required": [
-          "mappings"
-        ],
+      "PageCourtCaseMappingDto": {
         "type": "object",
         "properties": {
-          "mappings": {
-            "type": "array",
-            "description": "Mappings",
-            "items": {
-              "$ref": "#/components/schemas/AlertMappingDto"
-            }
-          }
-        },
-        "description": "All mappings for a prisoner created either via migration or synchronisation"
-      },
-      "PagePrisonerAlertMappingsSummaryDto": {
-        "type": "object",
-        "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -9430,7 +11329,7 @@
           "content": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/PrisonerAlertMappingsSummaryDto"
+              "$ref": "#/components/schemas/CourtCaseMappingDto"
             }
           },
           "number": {
@@ -9484,6 +11383,91 @@
           }
         }
       },
+      "SortObject": {
+        "type": "object",
+        "properties": {
+          "direction": {
+            "type": "string"
+          },
+          "nullHandling": {
+            "type": "string"
+          },
+          "ascending": {
+            "type": "boolean"
+          },
+          "property": {
+            "type": "string"
+          },
+          "ignoreCase": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AllPrisonerAlertMappingsDto": {
+        "required": [
+          "mappings"
+        ],
+        "type": "object",
+        "properties": {
+          "mappings": {
+            "type": "array",
+            "description": "Mappings",
+            "items": {
+              "$ref": "#/components/schemas/AlertMappingDto"
+            }
+          }
+        },
+        "description": "All mappings for a prisoner created either via migration or synchronisation"
+      },
+      "PagePrisonerAlertMappingsSummaryDto": {
+        "type": "object",
+        "properties": {
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrisonerAlertMappingsSummaryDto"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SortObject"
+            }
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
       "PrisonerAlertMappingsSummaryDto": {
         "required": [
           "mappingsCount",
@@ -9509,36 +11493,16 @@
         },
         "description": "Summary of mappings for a prisoner created during migration"
       },
-      "SortObject": {
-        "type": "object",
-        "properties": {
-          "direction": {
-            "type": "string"
-          },
-          "nullHandling": {
-            "type": "string"
-          },
-          "ascending": {
-            "type": "boolean"
-          },
-          "property": {
-            "type": "string"
-          },
-          "ignoreCase": {
-            "type": "boolean"
-          }
-        }
-      },
       "PageAlertMappingDto": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -9577,6 +11541,27 @@
             "type": "boolean"
           }
         }
+      },
+      "NomisDpsLocationMapping": {
+        "required": [
+          "dpsLocationId",
+          "nomisLocationId"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsLocationId": {
+            "type": "string",
+            "description": "Location id in DPS Locations Service",
+            "example": "f4499772-2e43-4951-861d-04ad86df43fc"
+          },
+          "nomisLocationId": {
+            "type": "integer",
+            "description": "Internal Location id in NOMIS",
+            "format": "int64",
+            "example": 2318905
+          }
+        },
+        "description": "NOMIS DPS Location mapping"
       }
     },
     "securitySchemes": {
