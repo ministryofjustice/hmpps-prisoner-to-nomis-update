@@ -1,13 +1,10 @@
 version: 2.1
-
 orbs:
   hmpps: ministryofjustice/hmpps@10
-
 parameters:
   alerts-slack-channel:
     type: string
     default: syscon-alerts-security
-
 jobs:
   validate:
     executor:
@@ -16,11 +13,7 @@ jobs:
       localstack_tag: "3"
     environment:
       # Setting max gradle workers to 1 (which means 1 running concurrently, not max 1!) - because although this doesn't stop the ktlint workers from starting it does seem to prevent the test executor from needing as much memory.
-      _JAVA_OPTIONS: -Xmx768m -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2
-        -XX:ParallelGCThreads=2
-        -Djava.util.concurrent.ForkJoinPool.common.parallelism=2
-        -Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-XX:+UseContainerSupport
-        -Dkotlin.compiler.execution.strategy=in-process -Dorg.gradle.workers.max=1
+      _JAVA_OPTIONS: -Xmx768m -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2 -XX:ParallelGCThreads=2 -Djava.util.concurrent.ForkJoinPool.common.parallelism=2 -Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-XX:+UseContainerSupport -Dkotlin.compiler.execution.strategy=in-process -Dorg.gradle.workers.max=1
     steps:
       - checkout
       - hmpps/wait_till_ready
@@ -39,7 +32,6 @@ jobs:
       - store_artifacts:
           path: build/reports/tests
     resource_class: "medium+"
-
 workflows:
   version: 2
   build-test-and-deploy:
@@ -104,46 +96,3 @@ workflows:
             - hmpps-prisoner-to-nomis-update-prod
           requires:
             - request-prod-approval
-
-  security:
-    triggers:
-      - schedule:
-          cron: "28 3 * * 1-5"
-          filters:
-            branches:
-              only:
-                - main
-    jobs:
-      - hmpps/gradle_owasp_dependency_check:
-          cache_key: "v2_0"
-          jdk_tag: "21.0"
-          slack_channel: << pipeline.parameters.alerts-slack-channel >>
-          context:
-            - hmpps-common-vars
-      - hmpps/trivy_latest_scan:
-          slack_channel: << pipeline.parameters.alerts-slack-channel >>
-          context:
-            - hmpps-common-vars
-      - hmpps/veracode_pipeline_scan:
-          jdk_tag: "21.0"
-          slack_channel: << pipeline.parameters.alerts-slack-channel >>
-          context:
-            - veracode-credentials
-            - hmpps-common-vars
-  security-weekly:
-    triggers:
-      - schedule:
-          cron: "6 3 * * 1"
-          filters:
-            branches:
-              only:
-                - main
-    jobs:
-      - hmpps/veracode_policy_scan:
-          jdk_tag: "21.0"
-          slack_channel: << pipeline.parameters.alerts-slack-channel >>
-          context:
-            - veracode-credentials
-            - hmpps-common-vars
-
-
