@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-09-18.8975.96661ab"
+    "version": "2024-09-25.9127.f20e357"
   },
   "servers": [
     {
@@ -636,6 +636,146 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/profile-details": {
+      "get": {
+        "tags": [
+          "profile-details-resource"
+        ],
+        "summary": "Get profile details for a prisoner",
+        "description": "Retrieves profile details for a prisoner and all of their aliases and bookings. Requires ROLE_NOMIS_PRISON_PERSON",
+        "operationId": "getProfileDetails",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender number",
+              "example": "A1234AA"
+            },
+            "example": "A1234AA"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile Details Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrisonerProfileDetailsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prisoner does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "profile-details-resource"
+        ],
+        "summary": "Upsert profile details for a prisoner",
+        "description": "Upserts profile details on the latest booking for a prisoner, if it exists. Requires ROLE_NOMIS_PRISON_PERSON",
+        "operationId": "upsertPhysicalAttributes",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender number",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender number",
+              "example": "A1234AA"
+            },
+            "example": "A1234AA"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertProfileDetailsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Physical Attributes Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpsertProfileDetailsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prisoner does not exist or has no bookings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/physical-attributes": {
       "get": {
         "tags": [
@@ -707,7 +847,7 @@
         ],
         "summary": "Upsert physical attributes for a prisoner",
         "description": "Upserts physical attributes on the latest booking for a prisoner, if it exists. Requires ROLE_NOMIS_PRISON_PERSON",
-        "operationId": "upsertPhysicalAttributes",
+        "operationId": "upsertPhysicalAttributes_1",
         "parameters": [
           {
             "name": "offenderNo",
@@ -7537,72 +7677,6 @@
         }
       }
     },
-    "/prisoners/{offenderNo}/profile-details": {
-      "get": {
-        "tags": [
-          "profile-details-resource"
-        ],
-        "summary": "Get profile details for a prisoner",
-        "description": "Retrieves profile details for a prisoner and all of their aliases and bookings. Requires ROLE_NOMIS_PRISON_PERSON",
-        "operationId": "getProfileDetails",
-        "parameters": [
-          {
-            "name": "offenderNo",
-            "in": "path",
-            "description": "Offender number",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Offender number",
-              "example": "A1234AA"
-            },
-            "example": "A1234AA"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Profile Details Returned",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PrisonerProfileDetailsResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Prisoner does not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/prisoners/{offenderNo}/prison-person/reconciliation": {
       "get": {
         "tags": [
@@ -12166,6 +12240,42 @@
           }
         },
         "description": "Create adjustment response"
+      },
+      "UpsertProfileDetailsRequest": {
+        "required": [
+          "profileType"
+        ],
+        "type": "object",
+        "properties": {
+          "profileType": {
+            "type": "string",
+            "description": "Profile Type"
+          },
+          "profileCode": {
+            "type": "string",
+            "description": "Profile Code"
+          }
+        },
+        "description": "Profile Details to update a prisoner"
+      },
+      "UpsertProfileDetailsResponse": {
+        "required": [
+          "bookingId",
+          "created"
+        ],
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "boolean",
+            "description": "Whether the record was created or updated"
+          },
+          "bookingId": {
+            "type": "integer",
+            "description": "The offender booking ID that was changed",
+            "format": "int64"
+          }
+        },
+        "description": "Profile Details upsert response"
       },
       "UpsertPhysicalAttributesRequest": {
         "type": "object",
@@ -18828,14 +18938,109 @@
         },
         "description": "The list of alerts held against a booking"
       },
+      "Address": {
+        "required": [
+          "addressId",
+          "mailAddress",
+          "phoneNumbers",
+          "primaryAddress",
+          "validatedPAF"
+        ],
+        "type": "object",
+        "properties": {
+          "addressId": {
+            "type": "integer",
+            "description": "Unique NOMIS Id of number",
+            "format": "int64"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "flat": {
+            "type": "string",
+            "description": "Flat name or number",
+            "example": "Apartment 3"
+          },
+          "premise": {
+            "type": "string",
+            "description": "Premise",
+            "example": "22"
+          },
+          "street": {
+            "type": "string",
+            "description": "Street",
+            "example": "West Street"
+          },
+          "locality": {
+            "type": "string",
+            "description": "Locality",
+            "example": "Keighley"
+          },
+          "postcode": {
+            "type": "string",
+            "description": "Post code",
+            "example": "MK15 2ST"
+          },
+          "city": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "county": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "country": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "description": "List of phone numbers for the address",
+            "items": {
+              "$ref": "#/components/schemas/PhoneNumber"
+            }
+          },
+          "validatedPAF": {
+            "type": "boolean",
+            "description": "true if address validated by Post Office Address file??"
+          },
+          "noFixedAddress": {
+            "type": "boolean",
+            "description": "true if address not fixed. for example homeless"
+          },
+          "primaryAddress": {
+            "type": "boolean",
+            "description": "true if this is the person's primary address"
+          },
+          "mailAddress": {
+            "type": "boolean",
+            "description": "true if this is used for mail"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Free format comment about the address"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Date address was valid from",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Date address was valid to",
+            "format": "date"
+          }
+        },
+        "description": "The data held in NOMIS about a address number"
+      },
       "ContactPerson": {
         "required": [
+          "addresses",
           "audit",
+          "emailAddresses",
           "firstName",
           "interpreterRequired",
           "keepBiometrics",
           "lastName",
-          "personId"
+          "personId",
+          "phoneNumbers"
         ],
         "type": "object",
         "properties": {
@@ -18896,9 +19101,77 @@
           },
           "audit": {
             "$ref": "#/components/schemas/NomisAudit"
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "description": "List of phone numbers for the person",
+            "items": {
+              "$ref": "#/components/schemas/PhoneNumber"
+            }
+          },
+          "addresses": {
+            "type": "array",
+            "description": "List of addresses for the person",
+            "items": {
+              "$ref": "#/components/schemas/Address"
+            }
+          },
+          "emailAddresses": {
+            "type": "array",
+            "description": "List of email addresses for the person",
+            "items": {
+              "$ref": "#/components/schemas/EmailAddress"
+            }
           }
         },
         "description": "The data held in NOMIS about a person who is a contact for a prisoner"
+      },
+      "EmailAddress": {
+        "required": [
+          "email",
+          "emailAddressId"
+        ],
+        "type": "object",
+        "properties": {
+          "emailAddressId": {
+            "type": "integer",
+            "description": "Unique NOMIS Id of email address",
+            "format": "int64"
+          },
+          "email": {
+            "type": "string",
+            "description": "The email address",
+            "example": "john.smith@internet.co.uk"
+          }
+        },
+        "description": "The data held in NOMIS about a email address"
+      },
+      "PhoneNumber": {
+        "required": [
+          "number",
+          "phoneId",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "phoneId": {
+            "type": "integer",
+            "description": "Unique NOMIS Id of number",
+            "format": "int64"
+          },
+          "number": {
+            "type": "string",
+            "description": "The number"
+          },
+          "extension": {
+            "type": "string",
+            "description": "Extension"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          }
+        },
+        "description": "The data held in NOMIS about a phone number"
       },
       "NonAssociationResponse": {
         "required": [
