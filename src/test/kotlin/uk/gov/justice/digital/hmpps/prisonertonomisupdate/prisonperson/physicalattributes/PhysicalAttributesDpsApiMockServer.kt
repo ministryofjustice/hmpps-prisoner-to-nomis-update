@@ -12,7 +12,10 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.PrisonPersonDpsApiExtension.Companion.dpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PhysicalAttributesDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.ReferenceDataSimpleDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.ValueWithMetadataInteger
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.ValueWithMetadataReferenceDataSimpleDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.ValueWithMetadataString
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 
@@ -39,13 +42,20 @@ class PhysicalAttributesDpsApiMockServer(private val objectMapper: ObjectMapper)
     offenderNo: String,
     height: Int? = 180,
     weight: Int? = 80,
+    build: String? = "SMALL",
+    face: String? = "ROUND",
+    facialHair: String? = "CLEAN_SHAVEN",
+    hair: String? = "BLACK",
+    leftEyeColour: String? = "BLUE",
+    rightEyeColour: String? = "GREEN",
+    shoeSize: String? = "9.5",
   ) {
     dpsApi.stubFor(
       get(urlMatching("/prisoners/$offenderNo/physical-attributes"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
-            .withBody(physicalAttributes(height, weight))
+            .withBody(physicalAttributes(height, weight, build, face, facialHair, hair, leftEyeColour, rightEyeColour, shoeSize))
             .withStatus(200),
         ),
     )
@@ -97,7 +107,45 @@ class PhysicalAttributesDpsApiMockServer(private val objectMapper: ObjectMapper)
 fun physicalAttributes(
   height: Int? = 180,
   weight: Int? = 80,
+  build: String? = "SMALL",
+  face: String? = "ROUND",
+  facialHair: String? = "CLEAN_SHAVEN",
+  hair: String? = "BLACK",
+  leftEyeColour: String? = "BLUE",
+  rightEyeColour: String? = "GREEN",
+  shoeSize: String? = "9.5",
 ): PhysicalAttributesDto = PhysicalAttributesDto(
-  height = ValueWithMetadataInteger(value = height, lastModifiedAt = LocalDateTime.now().toString(), lastModifiedBy = "someone"),
-  weight = ValueWithMetadataInteger(value = weight, lastModifiedAt = LocalDateTime.now().toString(), lastModifiedBy = "someone"),
+  height = integer(height),
+  weight = integer(weight),
+  build = referenceData(build),
+  face = referenceData(face),
+  facialHair = referenceData(facialHair),
+  hair = referenceData(hair),
+  leftEyeColour = referenceData(leftEyeColour),
+  rightEyeColour = referenceData(rightEyeColour),
+  shoeSize = string(shoeSize),
 )
+
+private fun integer(value: Int?) = value?.let {
+  ValueWithMetadataInteger(
+    value = value,
+    lastModifiedAt = LocalDateTime.now().toString(),
+    lastModifiedBy = "someone",
+  )
+}
+
+private fun string(value: String?) = value?.let {
+  ValueWithMetadataString(
+    value = value,
+    lastModifiedAt = LocalDateTime.now().toString(),
+    lastModifiedBy = "someone",
+  )
+}
+
+private fun referenceData(id: String?) = id?.let {
+  ValueWithMetadataReferenceDataSimpleDto(
+    value = ReferenceDataSimpleDto(id = id, description = id, listSequence = 1, isActive = true),
+    lastModifiedAt = LocalDateTime.now().toString(),
+    lastModifiedBy = "someone",
+  )
+}

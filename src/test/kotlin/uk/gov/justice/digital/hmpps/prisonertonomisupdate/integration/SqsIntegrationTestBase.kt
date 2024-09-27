@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
@@ -147,8 +148,8 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
     prisonPersonDlqClient?.purgeQueue(prisonPersonDlqUrl)?.get()
   }
 
-  internal fun waitForAnyProcessingToComplete() {
-    await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+  internal fun waitForAnyProcessingToComplete(times: Int = 1) {
+    await untilAsserted { verify(telemetryClient, times(times)).trackEvent(any(), any(), isNull()) }
   }
 }
 
