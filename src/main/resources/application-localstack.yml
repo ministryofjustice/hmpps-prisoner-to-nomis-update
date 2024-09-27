@@ -130,6 +130,15 @@ hmpps.sqs:
           "person.alert.created",
           "person.alert.updated",
           "person.alert.deleted"]}
+    casenotes:
+      queueName: hmpps_prisoner_to_nomis_casenotes_queue
+      dlqName: hmpps_prisoner_to_nomis_casenotes_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "person.case-note.created",
+          "person.case-note.updated",
+          "person.case-note.deleted"]}
     csip:
       queueName: hmpps_prisoner_to_nomis_csip_queue
       dlqName: hmpps_prisoner_to_nomis_csip_dlq

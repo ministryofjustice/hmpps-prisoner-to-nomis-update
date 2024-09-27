@@ -76,18 +76,6 @@ generic-service:
     SPRING_PROFILES_ACTIVE: "logstash"
     APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=$(APPINSIGHTS_INSTRUMENTATIONKEY);IngestionEndpoint=https://northeurope-0.in.applicationinsights.azure.com/;LiveEndpoint=https://northeurope.livediagnostics.monitor.azure.com/"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
-    FEATURE_EVENT_NON_ASSOCIATIONS_CREATED: true
-    FEATURE_EVENT_NON_ASSOCIATIONS_AMENDED: true
-    FEATURE_EVENT_NON_ASSOCIATIONS_CLOSED: true
-    FEATURE_EVENT_NON_ASSOCIATIONS_DELETED: true
-    FEATURE_EVENT_LOCATION_INSIDE_PRISON_CREATED: true
-    FEATURE_EVENT_LOCATION_INSIDE_PRISON_AMENDED: true
-    FEATURE_EVENT_LOCATION_INSIDE_PRISON_DEACTIVATED: true
-    FEATURE_EVENT_LOCATION_INSIDE_PRISON_REACTIVATED: true
-    FEATURE_EVENT_LOCATION_INSIDE_PRISON_DELETED: true
-    FEATURE_EVENT_INCENTIVES_LEVEL_CHANGED: true
-    FEATURE_EVENT_INCENTIVES_LEVELS_REORDERED: true
-    FEATURE_EVENT_INCENTIVES_PRISON_LEVEL_CHANGED: true
     FEATURE_EVENT_DELETEALL: false
     FEATURE_EVENT_COURT_CASE_INSERTED: true
     FEATURE_EVENT_COURT_SENTENCING_COURT_APPEARANCE_CREATED: true
@@ -171,6 +159,10 @@ generic-service:
       HMPPS_SQS_QUEUES_ALERTS_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-alerts-dlq:
       HMPPS_SQS_QUEUES_ALERTS_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-casenotes:
+      HMPPS_SQS_QUEUES_CASENOTES_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-casenotes-dlq:
+      HMPPS_SQS_QUEUES_CASENOTES_DLQ_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-csip:
       HMPPS_SQS_QUEUES_CSIP_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-csip-dlq:
