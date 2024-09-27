@@ -91,7 +91,7 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   internal val alertsQueueUrl by lazy { alertsQueue.queueUrl }
   internal val alertsDlqUrl by lazy { alertsQueue.dlqUrl }
 
-  internal val csipQueue by lazy { hmppsQueueService.findByQueueId("alerts") as HmppsQueue }
+  internal val csipQueue by lazy { hmppsQueueService.findByQueueId("csip") as HmppsQueue }
 
   internal val awsSqsCSIPClient by lazy { csipQueue.sqsClient }
   internal val awsSqsCSIPDlqClient by lazy { csipQueue.sqsDlqClient }
