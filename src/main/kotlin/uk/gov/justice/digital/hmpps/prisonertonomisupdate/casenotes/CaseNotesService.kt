@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Ca
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+import java.time.ZonedDateTime
+import java.util.UUID
 
 @Service
 class CaseNotesService(
@@ -26,7 +28,7 @@ class CaseNotesService(
   }
 
   suspend fun createCaseNote(caseNoteEvent: CaseNoteEvent) {
-    val dpsCaseNoteId = caseNoteEvent.additionalInformation.caseNoteUuid
+    val dpsCaseNoteId = caseNoteEvent.additionalInformation.id.toString()
     val offenderNo = requireNotNull(caseNoteEvent.personReference.findNomsNumber())
     val telemetryMap = mapOf(
       "dpsCaseNoteId" to dpsCaseNoteId,
@@ -35,7 +37,7 @@ class CaseNotesService(
 
     if (caseNoteEvent.wasCreatedInDPS()) {
       synchronise {
-        name = "caseNote"
+        name = "casenotes"
         telemetryClient = this@CaseNotesService.telemetryClient
         retryQueueService = caseNotesRetryQueueService
         eventTelemetry = telemetryMap
@@ -76,7 +78,7 @@ class CaseNotesService(
   override suspend fun retryCreateMapping(message: String) = createMapping(message.fromJson())
 
   suspend fun updateCaseNote(caseNoteEvent: CaseNoteEvent) {
-    val dpsCaseNoteId = caseNoteEvent.additionalInformation.caseNoteUuid
+    val dpsCaseNoteId = caseNoteEvent.additionalInformation.id.toString()
     val offenderNo = requireNotNull(caseNoteEvent.personReference.findNomsNumber())
     val telemetryMap = mutableMapOf(
       "dpsCaseNoteId" to dpsCaseNoteId,
@@ -86,7 +88,14 @@ class CaseNotesService(
     if (caseNoteEvent.wasAmendedInDPS()) {
       runCatching {
         val mapping = mappingApiService.getOrNullByDpsId(dpsCaseNoteId)
-          ?: throw IllegalStateException("Tried to amend an casenote that has never been created")
+          ?: throw IllegalStateException("Tried to amend an casenote that has no mapping")
+        if (mapping.nomisCaseNoteId != caseNoteEvent.additionalInformation.legacyId) {
+          throw IllegalStateException(
+            "Casenote amendment where legacy id does not match mapping: legacy = ${
+              caseNoteEvent.additionalInformation.legacyId
+            }, mapping = ${mapping.nomisCaseNoteId}",
+          )
+        }
         telemetryMap["nomisBookingId"] = mapping.nomisBookingId.toString()
         telemetryMap["nomisCaseNoteId"] = mapping.nomisCaseNoteId.toString()
 
@@ -106,7 +115,7 @@ class CaseNotesService(
   }
 
   suspend fun deleteCaseNote(caseNoteEvent: CaseNoteEvent) {
-    val dpsCaseNoteId = caseNoteEvent.additionalInformation.caseNoteUuid
+    val dpsCaseNoteId = caseNoteEvent.additionalInformation.id.toString()
     val offenderNo = requireNotNull(caseNoteEvent.personReference.findNomsNumber())
     val telemetryMap = mutableMapOf(
       "dpsCaseNoteId" to dpsCaseNoteId,
@@ -119,7 +128,7 @@ class CaseNotesService(
           telemetryMap["nomisCaseNoteSequence"] = mapping.nomisCaseNoteId.toString()
 
           nomisApiService.deleteCaseNote(caseNoteId = mapping.nomisCaseNoteId)
-          tryToDeletedMapping(dpsCaseNoteId)
+          tryToDeleteMapping(dpsCaseNoteId)
           telemetryClient.trackEvent("casenotes-deleted-success", telemetryMap)
         } ?: also {
           telemetryClient.trackEvent("casenotes-deleted-skipped", telemetryMap)
@@ -133,7 +142,7 @@ class CaseNotesService(
     }
   }
 
-  private suspend fun tryToDeletedMapping(dpsCaseNoteId: String) = kotlin.runCatching {
+  private suspend fun tryToDeleteMapping(dpsCaseNoteId: String) = kotlin.runCatching {
     mappingApiService.deleteByDpsId(dpsCaseNoteId)
   }.onFailure { e ->
     telemetryClient.trackEvent("casenotes-mapping-deleted-failed", mapOf("dpsCaseNoteId" to dpsCaseNoteId))
@@ -145,24 +154,33 @@ class CaseNotesService(
 }
 
 data class CaseNoteEvent(
-  val description: String?,
+  val description: String,
   val eventType: String,
   val additionalInformation: CaseNoteAdditionalInformation,
   val personReference: PersonReference,
+
+  val occurredAt: ZonedDateTime,
+  val detailUrl: String,
+  val version: Int = 1,
 )
 
 data class CaseNoteAdditionalInformation(
-  val caseNoteUuid: String,
+  val id: UUID,
+  val legacyId: Long,
+  val type: String,
+  val subType: String,
   val source: CaseNoteSource,
+  val syncToNomis: Boolean,
+  val systemGenerated: Boolean,
 )
 
-data class PersonReference(val identifiers: List<Identifier> = listOf()) {
+data class PersonReference(val identifiers: Set<Identifier> = setOf()) {
   operator fun get(key: String) = identifiers.find { it.type == key }?.value
   fun findNomsNumber() = get(NOMS_NUMBER_TYPE)
 
   companion object {
-    const val NOMS_NUMBER_TYPE = "NOMS"
-    fun withNomsNumber(prisonNumber: String) = PersonReference(listOf(Identifier(NOMS_NUMBER_TYPE, prisonNumber)))
+    private const val NOMS_NUMBER_TYPE = "NOMS"
+    fun withIdentifier(prisonNumber: String) = PersonReference(setOf(Identifier(NOMS_NUMBER_TYPE, prisonNumber)))
   }
 
   data class Identifier(val type: String, val value: String)

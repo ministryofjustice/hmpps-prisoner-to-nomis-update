@@ -186,6 +186,18 @@ hmpps.sqs:
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
+    casenotes:
+      queueName: "casenotes-${random.uuid}"
+      dlqName: "casenotes-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "person.case-note.created",
+          "person.case-note.updated",
+          "person.case-note.deleted"
+        ]}
+      dlqMaxReceiveCount: 3
+      visibilityTimeout: 120
     csip:
       queueName: "csip-${random.uuid}"
       dlqName: "csip-dlq-${random.uuid}"
