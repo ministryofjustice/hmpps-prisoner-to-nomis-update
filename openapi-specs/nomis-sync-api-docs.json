@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-09-25.9127.f20e357"
+    "version": "2024-09-26.9163.1f3cbb9"
   },
   "servers": [
     {
@@ -2545,9 +2545,9 @@
         "tags": [
           "case-notes-resource"
         ],
-        "summary": "Amends a case note on a prisoner",
+        "summary": "Updates a case note on a prisoner",
         "description": "Updates the specified case note. Requires ROLE_NOMIS_CASENOTES",
-        "operationId": "amendCaseNote",
+        "operationId": "updateCaseNote",
         "parameters": [
           {
             "name": "caseNoteId",
@@ -2566,7 +2566,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AmendCaseNoteRequest"
+                "$ref": "#/components/schemas/UpdateCaseNoteRequest"
               }
             }
           },
@@ -13288,39 +13288,48 @@
         },
         "description": "The data held in NOMIS about a case note associated with a prisoner"
       },
-      "AmendCaseNoteRequest": {
+      "UpdateAmendment": {
         "required": [
           "authorUsername",
-          "caseNoteSubType",
-          "caseNoteText",
-          "caseNoteType",
-          "occurrenceDateTime"
+          "createdDateTime",
+          "text"
         ],
         "type": "object",
         "properties": {
-          "caseNoteType": {
+          "text": {
             "type": "string",
-            "description": "The case note type"
-          },
-          "caseNoteSubType": {
-            "type": "string",
-            "description": "The case note subtype"
-          },
-          "occurrenceDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Date case note occurred",
-            "example": "2021-07-05T10:35:17"
+            "description": "Free format text body of amendment"
           },
           "authorUsername": {
             "type": "string",
-            "description": "Free format text of person or department that created the case note"
+            "description": "Author login name of person or department that added the amendment"
           },
-          "caseNoteText": {
-            "maxLength": 4000,
-            "minLength": 0,
+          "createdDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
-            "description": "Free format text body of case note"
+            "description": "Amendment created timestamp",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "Amendments to the text"
+      },
+      "UpdateCaseNoteRequest": {
+        "required": [
+          "amendments",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Free format text body of the amendment"
+          },
+          "amendments": {
+            "type": "array",
+            "description": "Amendments to the text",
+            "items": {
+              "$ref": "#/components/schemas/UpdateAmendment"
+            }
           }
         },
         "description": "A request to amend a case note in NOMIS"
@@ -14454,8 +14463,6 @@
             "description": "Free format text of person or department that created the case note"
           },
           "caseNoteText": {
-            "maxLength": 4000,
-            "minLength": 0,
             "type": "string",
             "description": "Free format text body of case note"
           }
@@ -19035,7 +19042,9 @@
           "addresses",
           "audit",
           "emailAddresses",
+          "employments",
           "firstName",
+          "identifiers",
           "interpreterRequired",
           "keepBiometrics",
           "lastName",
@@ -19122,9 +19131,42 @@
             "items": {
               "$ref": "#/components/schemas/EmailAddress"
             }
+          },
+          "employments": {
+            "type": "array",
+            "description": "List of employments for the person",
+            "items": {
+              "$ref": "#/components/schemas/Employment"
+            }
+          },
+          "identifiers": {
+            "type": "array",
+            "description": "List of identifiers for the person",
+            "items": {
+              "$ref": "#/components/schemas/Identifier"
+            }
           }
         },
         "description": "The data held in NOMIS about a person who is a contact for a prisoner"
+      },
+      "Corporate": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique NOMIS Id of corporate address",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "description": "The corporate name",
+            "example": "Police"
+          }
+        },
+        "description": "The data held in NOMIS about a corporate entity"
       },
       "EmailAddress": {
         "required": [
@@ -19145,6 +19187,57 @@
           }
         },
         "description": "The data held in NOMIS about a email address"
+      },
+      "Employment": {
+        "required": [
+          "active",
+          "sequence"
+        ],
+        "type": "object",
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "description": "Unique NOMIS sequence for this employment for this person",
+            "format": "int64"
+          },
+          "corporate": {
+            "$ref": "#/components/schemas/Corporate"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "True is employment is active"
+          }
+        },
+        "description": "The data held in NOMIS about a person's employment"
+      },
+      "Identifier": {
+        "required": [
+          "identifier",
+          "sequence",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "description": "Unique NOMIS sequence for this identifier for this person",
+            "format": "int64"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "The identifier value",
+            "example": "NE121212T"
+          },
+          "issuedAuthority": {
+            "type": "string",
+            "description": "The issued authority",
+            "example": "Police"
+          }
+        },
+        "description": "The data held in NOMIS about a person's identifiers"
       },
       "PhoneNumber": {
         "required": [

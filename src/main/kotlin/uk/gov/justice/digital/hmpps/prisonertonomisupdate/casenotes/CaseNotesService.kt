@@ -44,7 +44,7 @@ class CaseNotesService(
           mappingApiService.getOrNullByDpsId(dpsCaseNoteId)
         }
         transform {
-          dpsApiService.getCaseNote(dpsCaseNoteId)
+          dpsApiService.getCaseNote(offenderNo, dpsCaseNoteId)
             .let { dpsCaseNote ->
               nomisApiService.createCaseNote(offenderNo, dpsCaseNote.toNomisCreateRequest()).let { nomisCaseNote ->
                 CaseNoteMappingDto(
@@ -75,7 +75,7 @@ class CaseNotesService(
 
   override suspend fun retryCreateMapping(message: String) = createMapping(message.fromJson())
 
-  suspend fun amendCaseNote(caseNoteEvent: CaseNoteEvent) {
+  suspend fun updateCaseNote(caseNoteEvent: CaseNoteEvent) {
     val dpsCaseNoteId = caseNoteEvent.additionalInformation.caseNoteUuid
     val offenderNo = requireNotNull(caseNoteEvent.personReference.findNomsNumber())
     val telemetryMap = mutableMapOf(
@@ -83,17 +83,17 @@ class CaseNotesService(
       "offenderNo" to offenderNo,
     )
 
-    if (caseNoteEvent.wasAmendInDPS()) {
+    if (caseNoteEvent.wasAmendedInDPS()) {
       runCatching {
         val mapping = mappingApiService.getOrNullByDpsId(dpsCaseNoteId)
           ?: throw IllegalStateException("Tried to amend an casenote that has never been created")
         telemetryMap["nomisBookingId"] = mapping.nomisBookingId.toString()
         telemetryMap["nomisCaseNoteId"] = mapping.nomisCaseNoteId.toString()
 
-        val dpsCaseNote = dpsApiService.getCaseNote(dpsCaseNoteId)
-        nomisApiService.amendCaseNote(
+        val dpsCaseNote = dpsApiService.getCaseNote(offenderNo, dpsCaseNoteId)
+        nomisApiService.updateCaseNote(
           caseNoteId = mapping.nomisCaseNoteId,
-          dpsCaseNote.toNomisAmendRequest(),
+          dpsCaseNote.toNomisUpdateRequest(),
         )
         telemetryClient.trackEvent("casenotes-amend-success", telemetryMap)
       }.onFailure { e ->
@@ -174,6 +174,6 @@ enum class CaseNoteSource {
 }
 
 fun CaseNoteEvent.wasCreatedInDPS() = wasSourceDPS()
-fun CaseNoteEvent.wasAmendInDPS() = wasSourceDPS()
+fun CaseNoteEvent.wasAmendedInDPS() = wasSourceDPS()
 fun CaseNoteEvent.wasDeletedInDPS() = wasSourceDPS()
 fun CaseNoteEvent.wasSourceDPS() = this.additionalInformation.source == CaseNoteSource.DPS

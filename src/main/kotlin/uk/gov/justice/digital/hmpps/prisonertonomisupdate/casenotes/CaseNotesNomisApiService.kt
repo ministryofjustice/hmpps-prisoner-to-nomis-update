@@ -5,11 +5,11 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AmendCaseNoteRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseNoteResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCaseNoteRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCaseNoteResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerCaseNotesResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCaseNoteRequest
 
 @Service
 class CaseNotesNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
@@ -31,7 +31,7 @@ class CaseNotesNomisApiService(@Qualifier("nomisApiWebClient") private val webCl
       .retrieve()
       .awaitBody()
 
-  suspend fun amendCaseNote(caseNoteId: Long, nomisCaseNote: AmendCaseNoteRequest): CaseNoteResponse =
+  suspend fun updateCaseNote(caseNoteId: Long, nomisCaseNote: UpdateCaseNoteRequest): CaseNoteResponse =
     webClient.put().uri(
       "/casenotes/{caseNoteId}",
       caseNoteId,

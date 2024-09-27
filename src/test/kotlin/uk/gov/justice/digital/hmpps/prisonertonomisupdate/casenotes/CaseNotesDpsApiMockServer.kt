@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.okJson
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.junit.jupiter.api.extension.AfterAllCallback
@@ -62,7 +63,7 @@ class CaseNotesDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetCaseNote(caseNote: CaseNote = dpsCaseNote()) {
     stubFor(
-      get(urlMatching("/case-notes/case-note-id/.*"))
+      get(urlMatching("/case-notes/.+/.+"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -72,27 +73,10 @@ class CaseNotesDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetCaseNotesForPrisoner(offenderNo: String, count: Int = 1) {
+  fun stubGetCaseNotesForPrisoner(offenderNo: String, response: String) {
     stubFor(
       get(urlPathEqualTo("/case-notes/$offenderNo"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody((1..count).map { dpsCaseNote() })
-            .withStatus(200),
-        ),
-    )
-  }
-
-  fun stubGetCaseNotesForPrisoner(offenderNo: String, vararg caseNotes: CaseNote) {
-    stubFor(
-      get(urlPathEqualTo("/case-notes/$offenderNo"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody(caseNotes.toList())
-            .withStatus(200),
-        ),
+        .willReturn(okJson(response)),
     )
   }
 
@@ -111,6 +95,7 @@ class CaseNotesDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
 fun dpsCaseNote(): CaseNote = CaseNote(
   caseNoteId = UUID.randomUUID().toString(),
+  legacyId = 1234,
   offenderIdentifier = "A1234AA",
   type = "X",
   typeDescription = "Security",
@@ -125,4 +110,5 @@ fun dpsCaseNote(): CaseNote = CaseNote(
   eventId = 1234567,
   sensitive = false,
   amendments = emptyList(),
+  systemGenerated = false,
 )
