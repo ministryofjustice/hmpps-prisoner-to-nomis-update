@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNote
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.PageCaseNote
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.typeReference
 import java.net.URI
@@ -20,13 +21,13 @@ class CaseNotesDpsApiService(
 ) {
   private val backoffSpec = retryApiService.getBackoffSpec(maxRetryAttempts, backoffMillis)
 
-  suspend fun getCaseNote(caseNoteId: String): CaseNote {
+  suspend fun getCaseNote(offenderNo: String, caseNoteId: String): CaseNote {
     lateinit var url: URI
     return webClient
       .get()
       .uri {
-        url = it.path("/case-notes/case-note-id/{caseNoteIdentifier}")
-          .build(caseNoteId)
+        url = it.path("/case-notes/{offenderNo}/{caseNoteIdentifier}")
+          .build(offenderNo, caseNoteId)
         url
       }
       .retrieve()
@@ -35,20 +36,24 @@ class CaseNotesDpsApiService(
       .awaitSingle()
   }
 
-  suspend fun getCaseNotesForPrisoner(offenderIdentifier: String): List<CaseNote> {
+  suspend fun getCaseNotesForPrisoner(
+    offenderIdentifier: String,
+    pageNumber: Long,
+    pageSize: Long,
+  ): PageCaseNote {
     lateinit var url: URI
     return webClient
       .get()
       .uri {
         url = it.path("/case-notes/{offenderIdentifier}")
+          .queryParam("page", pageNumber)
+          .queryParam("size", pageSize)
           .build(offenderIdentifier)
         url
       }
       .retrieve()
-      .bodyToMono(typeReference<List<CaseNote>>())
+      .bodyToMono(typeReference<PageCaseNote>())
       .retryWhen(backoffSpec.withRetryContext(Context.of("api", "casenotes-api", "url", url.path)))
       .awaitSingle()
   }
-
-  // TODO: These endpoints are 'aspirational' - what I would like the api to provide.
 }

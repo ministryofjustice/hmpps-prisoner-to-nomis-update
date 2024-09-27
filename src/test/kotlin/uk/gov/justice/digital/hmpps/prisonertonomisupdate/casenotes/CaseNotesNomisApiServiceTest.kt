@@ -15,9 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.withRequestBodyJsonPath
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AmendCaseNoteRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCaseNoteRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCaseNoteResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAmendment
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCaseNoteRequest
 
 @SpringAPIServiceTest
 @Import(CaseNotesNomisApiService::class, CaseNotesNomisApiMockServer::class)
@@ -108,7 +109,7 @@ class CaseNotesNomisApiServiceTest {
     internal fun `will pass oath2 token to service`() = runTest {
       caseNotesNomisApiMockServer.stubPutCaseNote(caseNoteId = 4)
 
-      apiService.amendCaseNote(caseNoteId = 4, nomisCaseNote = amendCaseNoteRequest())
+      apiService.updateCaseNote(caseNoteId = 4, nomisCaseNote = updateCaseNoteRequest())
 
       caseNotesNomisApiMockServer.verify(
         putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
@@ -119,7 +120,7 @@ class CaseNotesNomisApiServiceTest {
     internal fun `will pass casenote Id to service`() = runTest {
       caseNotesNomisApiMockServer.stubPutCaseNote(caseNoteId = 4)
 
-      apiService.amendCaseNote(caseNoteId = 4, nomisCaseNote = amendCaseNoteRequest())
+      apiService.updateCaseNote(caseNoteId = 4, nomisCaseNote = updateCaseNoteRequest())
 
       caseNotesNomisApiMockServer.verify(
         putRequestedFor(urlPathEqualTo("/casenotes/4")),
@@ -130,33 +131,32 @@ class CaseNotesNomisApiServiceTest {
     internal fun `will pass casenote amend request to service`() = runTest {
       caseNotesNomisApiMockServer.stubPutCaseNote(caseNoteId = 4)
 
-      apiService.amendCaseNote(
+      apiService.updateCaseNote(
         caseNoteId = 4,
-        nomisCaseNote = AmendCaseNoteRequest(
-          occurrenceDateTime = "2024-07-01",
-          caseNoteType = "Security",
-          caseNoteSubType = "Security",
-          authorUsername = "me",
-          caseNoteText = "contents",
+        nomisCaseNote = UpdateCaseNoteRequest(
+          text = "contents",
+          amendments = listOf(
+            UpdateAmendment(
+              text = "amendment",
+              authorUsername = "ME",
+              createdDateTime = "2024-05-06T07:08:09",
+            ),
+          ),
         ),
       )
 
       caseNotesNomisApiMockServer.verify(
         putRequestedFor(anyUrl())
-          .withRequestBodyJsonPath("occurrenceDateTime", "2024-07-01")
-          .withRequestBodyJsonPath("caseNoteType", "Security")
-          .withRequestBodyJsonPath("caseNoteSubType", "Security")
-          .withRequestBodyJsonPath("authorUsername", "me")
-          .withRequestBodyJsonPath("caseNoteText", "contents"),
+          .withRequestBodyJsonPath("text", "contents")
+          .withRequestBodyJsonPath("amendments[0].text", "amendment")
+          .withRequestBodyJsonPath("amendments[0].authorUsername", "ME")
+          .withRequestBodyJsonPath("amendments[0].createdDateTime", "2024-05-06T07:08:09"),
       )
     }
 
-    private fun amendCaseNoteRequest() = AmendCaseNoteRequest(
-      occurrenceDateTime = "2024-07-01",
-      caseNoteType = "Security",
-      caseNoteSubType = "Security",
-      authorUsername = "me",
-      caseNoteText = "contents",
+    private fun updateCaseNoteRequest() = UpdateCaseNoteRequest(
+      text = "contents",
+      amendments = emptyList(),
     )
   }
 
