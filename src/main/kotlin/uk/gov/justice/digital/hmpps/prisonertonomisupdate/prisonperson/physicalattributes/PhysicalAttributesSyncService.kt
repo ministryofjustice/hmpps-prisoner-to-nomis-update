@@ -3,17 +3,21 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.physical
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PhysicalAttributesDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.profiledetails.ProfileDetailsNomisApiService
 
 @Service
 class PhysicalAttributesSyncService(
   private val dpsApi: PhysicalAttributesDpsApiService,
-  private val nomisApi: PhysicalAttributesNomisApiService,
+  private val physicalAttributesNomisApi: PhysicalAttributesNomisApiService,
+  private val profileDetailsNomisApi: ProfileDetailsNomisApiService,
   private val telemetryClient: TelemetryClient,
 ) {
 
   suspend fun updatePhysicalAttributesEvent(event: PhysicalAttributesDomainEvent) {
     if (event.additionalInformation.source == "DPS") {
-      updatePhysicalAttributes(event.additionalInformation.prisonerNumber)
+      val fields = event.additionalInformation.fields?.parseFields()
+      updatePhysicalAttributes(event.additionalInformation.prisonerNumber, fields)
     } else {
       telemetryClient.trackEvent(
         "physical-attributes-update-ignored",
@@ -22,24 +26,94 @@ class PhysicalAttributesSyncService(
     }
   }
 
-  suspend fun updatePhysicalAttributes(offenderNo: String) {
-    val telemetry = mutableMapOf("offenderNo" to offenderNo)
+  private fun String?.parseFields(): List<String>? =
+    this?.removeSurrounding("[", "]")
+      ?.split(",")
+      ?.toList()
+      ?.map { it.trim() }
 
+  suspend fun updatePhysicalAttributes(offenderNo: String, fields: List<String>? = null) =
     runCatching {
-      dpsApi.getPhysicalAttributes(offenderNo)!!
-        .let { nomisApi.upsertPhysicalAttributes(offenderNo, it.height?.value, it.weight?.value) }
-        .also {
-          telemetry["bookingId"] = it.bookingId.toString()
-          telemetry["created"] = it.created.toString()
-        }
-    }.onSuccess {
-      telemetryClient.trackEvent("physical-attributes-update-success", telemetry)
+      dpsApi.getPhysicalAttributes(offenderNo)
+        ?.also { updateNomis(offenderNo, it, fields) }
+        ?: throw ProfileDetailsSyncException("No physical attributes found for offenderNo: $offenderNo")
     }.onFailure { e ->
-      telemetry["reason"] = e.message ?: "Unknown error"
-      telemetryClient.trackEvent("physical-attributes-update-failed", telemetry)
+      publishTelemetry(
+        type = "physical-attributes-update-error",
+        offenderNo = offenderNo,
+        fields = fields,
+        reason = (e.message ?: "Unknown error"),
+      )
       throw e
     }
+
+  private suspend fun updateNomis(offenderNo: String, dpsAttributes: PhysicalAttributesDto, fields: List<String>?) {
+    if (fields == null || "HEIGHT" in fields || "WEIGHT" in fields) {
+      physicalAttributesNomisApi.upsertPhysicalAttributes(offenderNo, dpsAttributes.height?.value, dpsAttributes.weight?.value)
+        .also {
+          publishTelemetry(
+            type = "physical-attributes-update-success",
+            offenderNo = offenderNo,
+            fields = fields?.filter { it == "HEIGHT" || it == "WEIGHT" },
+            bookingId = it.bookingId,
+            created = it.created,
+          )
+        }
+    }
+    fields?.filterNot { it == "HEIGHT" || it == "WEIGHT" }?.forEach { field ->
+      profileDetailsNomisApi.upsertProfileDetails(offenderNo, field.toNomisProfileType(), dpsAttributes.valueOf(field))
+        .also {
+          publishTelemetry(
+            type = "profile-details-update-success",
+            offenderNo = offenderNo,
+            fields = listOf(field),
+            bookingId = it.bookingId,
+            created = it.created,
+          )
+        }
+    }
   }
+
+  private fun publishTelemetry(
+    type: String,
+    offenderNo: String,
+    fields: List<String>? = null,
+    bookingId: Long? = null,
+    created: Boolean? = null,
+    reason: String? = null,
+  ) {
+    telemetryClient.trackEvent(
+      type,
+      mutableMapOf(
+        "offenderNo" to offenderNo,
+        "fields" to fields.toString(),
+      ).apply {
+        bookingId?.run { put("bookingId", this.toString()) }
+        created?.run { put("created", this.toString()) }
+        reason?.run { put("reason", this) }
+      }.toMap(),
+    )
+  }
+
+  private fun String.toNomisProfileType() =
+    when (this) {
+      "LEFT_EYE_COLOUR" -> "L_EYE_C"
+      "RIGHT_EYE_COLOUR" -> "R_EYE_C"
+      "SHOE_SIZE" -> "SHOESIZE"
+      else -> this
+    }
+
+  private fun PhysicalAttributesDto.valueOf(field: String) =
+    when (field) {
+      "BUILD" -> build?.value?.id
+      "FACE" -> face?.value?.id
+      "FACIAL_HAIR" -> facialHair?.value?.id
+      "HAIR" -> hair?.value?.id
+      "LEFT_EYE_COLOUR" -> leftEyeColour?.value?.id
+      "RIGHT_EYE_COLOUR" -> rightEyeColour?.value?.id
+      "SHOE_SIZE" -> shoeSize?.value
+      else -> throw ProfileDetailsSyncException("Unknown field: $field")
+    }
 }
 
 data class PhysicalAttributesDomainEvent(
@@ -52,4 +126,7 @@ data class PhysicalAttributesDomainEvent(
 data class PhysicalAttributesAdditionalInformation(
   val source: String,
   val prisonerNumber: String,
+  val fields: String?,
 )
+
+class ProfileDetailsSyncException(message: String) : RuntimeException(message)
