@@ -315,22 +315,25 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
     fun `should update physical attributes`() {
       dpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
       physicalAttributesNomisApi.stubPutPhysicalAttributes(offenderNo = "A1234AA")
+      profileDetailsNomisApi.stubPutProfileDetails(offenderNo = "A1234AA")
 
-      webTestClient.put().uri("/prisonperson/A1234AA/physical-attributes")
+      webTestClient.put().uri("/prisonperson/A1234AA/physical-attributes?fields=HEIGHT&fields=BUILD")
         .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_PRISON_PERSON")))
         .exchange()
         .expectStatus().isOk
 
       verifyDpsApiCall()
       verifyNomisPutPhysicalAttributes(height = equalTo("180"), weight = equalTo("80"))
+      verifyNomisPutProfileDetails(profileType = equalTo("BUILD"), profileCode = equalTo("SMALL"))
       verify(telemetryClient).trackEvent(
         eq("physical-attributes-update-requested"),
         check {
-          assertThat(it).containsExactlyEntriesOf(mapOf("offenderNo" to "A1234AA"))
+          assertThat(it).containsExactlyEntriesOf(mapOf("offenderNo" to "A1234AA", "fields" to "[HEIGHT, BUILD]"))
         },
         isNull(),
       )
-      verifyTelemetry("physical-attributes-update-success", "null")
+      verifyTelemetry("physical-attributes-update-success", "[HEIGHT]")
+      verifyTelemetry("profile-details-update-success", "[BUILD]")
     }
 
     @Test
@@ -349,7 +352,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
       verify(telemetryClient).trackEvent(
         eq("physical-attributes-update-requested"),
         check {
-          assertThat(it).containsExactlyEntriesOf(mapOf("offenderNo" to "A1234AA"))
+          assertThat(it).containsExactlyEntriesOf(mapOf("offenderNo" to "A1234AA", "fields" to "null"))
         },
         isNull(),
       )

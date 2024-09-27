@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
@@ -41,8 +42,9 @@ class PhysicalAttributesSyncResource(
   )
   suspend fun synchronisePhysicalAttributes(
     @Schema(description = "prisonerNumber", required = true) @PathVariable prisonerNumber: String,
+    @RequestParam fields: List<String>?,
   ) {
-    telemetryClient.trackEvent("physical-attributes-update-requested", mapOf("offenderNo" to prisonerNumber))
-    syncService.updatePhysicalAttributes(prisonerNumber)
+    telemetryClient.trackEvent("physical-attributes-update-requested", mapOf("offenderNo" to prisonerNumber, "fields" to fields.toString()))
+    syncService.updatePhysicalAttributes(prisonerNumber, fields)
   }
 }
