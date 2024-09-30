@@ -125,7 +125,7 @@ class CaseNotesService(
       runCatching {
         mappingApiService.getOrNullByDpsId(dpsCaseNoteId)?.also { mapping ->
           telemetryMap["nomisBookingId"] = mapping.nomisBookingId.toString()
-          telemetryMap["nomisCaseNoteSequence"] = mapping.nomisCaseNoteId.toString()
+          telemetryMap["nomisCaseNoteId"] = mapping.nomisCaseNoteId.toString()
 
           nomisApiService.deleteCaseNote(caseNoteId = mapping.nomisCaseNoteId)
           tryToDeleteMapping(dpsCaseNoteId)
