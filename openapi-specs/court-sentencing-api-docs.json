@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-07-10.1849.e8ca258"
+    "version": "2024-09-30.2392.f7a7fea"
   },
   "servers": [
     {
@@ -33,6 +33,14 @@
       "description": "Recall"
     },
     {
+      "name": "sentence-type-controller",
+      "description": "Sentence Type"
+    },
+    {
+      "name": "appearance-outcome-controller",
+      "description": "Appearance outcome"
+    },
+    {
       "name": "court-appearance-controller",
       "description": "Court Appearances"
     },
@@ -43,6 +51,10 @@
     {
       "name": "charge-controller",
       "description": "Charges"
+    },
+    {
+      "name": "sentence-controller",
+      "description": "Sentences"
     },
     {
       "name": "court-case-controller",
@@ -329,7 +341,7 @@
           "200": {
             "description": "Returns court appearance details",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CourtAppearance"
                 }
@@ -339,7 +351,7 @@
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CourtAppearance"
                 }
@@ -349,7 +361,7 @@
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CourtAppearance"
                 }
@@ -359,7 +371,7 @@
           "404": {
             "description": "Not found if no court appearance at uuid",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CourtAppearance"
                 }
@@ -400,7 +412,7 @@
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CreateCourtAppearanceResponse"
                 }
@@ -410,7 +422,7 @@
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CreateCourtAppearanceResponse"
                 }
@@ -420,7 +432,7 @@
           "201": {
             "description": "Returns court case UUID",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CreateCourtAppearanceResponse"
                 }
@@ -430,7 +442,7 @@
           "200": {
             "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CreateCourtAppearanceResponse"
                 }
@@ -566,7 +578,7 @@
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CreateCourtAppearanceResponse"
                 }
@@ -576,7 +588,7 @@
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CreateCourtAppearanceResponse"
                 }
@@ -586,9 +598,271 @@
           "201": {
             "description": "Returns court case UUID",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CreateCourtAppearanceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sentence/{sentenceUuid}": {
+      "get": {
+        "tags": [
+          "sentence-controller"
+        ],
+        "summary": "Retrieve sentence details",
+        "description": "This endpoint will retrieve sentence details",
+        "operationId": "getChargeDetails",
+        "parameters": [
+          {
+            "name": "sentenceUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not found if no charge at uuid",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sentence"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Returns sentence details",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sentence"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sentence"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sentence"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sentence-type/{sentenceTypeUuid}": {
+      "get": {
+        "tags": [
+          "sentence-type-controller"
+        ],
+        "summary": "Get Sentence type by UUID",
+        "description": "This endpoint will retrieve sentence type by UUID",
+        "operationId": "getSentenceTypeByUuid",
+        "parameters": [
+          {
+            "name": "sentenceTypeUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns sentence",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentenceType"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentenceType"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found if no sentence type at uuid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentenceType"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentenceType"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sentence-type/uuid/multiple": {
+      "get": {
+        "tags": [
+          "sentence-type-controller"
+        ],
+        "summary": "get all sentence types by uuids",
+        "description": "This endpoint will get all sentence types by uuids",
+        "operationId": "getSentenceTypesByIds",
+        "parameters": [
+          {
+            "name": "uuids",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SentenceType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SentenceType"
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Returns sentence types",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SentenceType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sentence-type/search": {
+      "get": {
+        "tags": [
+          "sentence-type-controller"
+        ],
+        "summary": "Search all sentence types",
+        "description": "This endpoint will search all sentence types",
+        "operationId": "searchSentenceTypes",
+        "parameters": [
+          {
+            "name": "age",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "convictionDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SentenceType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SentenceType"
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Returns sentence types",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SentenceType"
+                  }
                 }
               }
             }
@@ -838,7 +1112,7 @@
         ],
         "summary": "Retrieve charge details",
         "description": "This endpoint will retrieve charge details",
-        "operationId": "getChargeDetails",
+        "operationId": "getChargeDetails_1",
         "parameters": [
           {
             "name": "chargeUuid",
@@ -854,7 +1128,7 @@
           "404": {
             "description": "Not found if no charge at uuid",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/Charge"
                 }
@@ -864,7 +1138,7 @@
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/Charge"
                 }
@@ -874,7 +1148,7 @@
           "200": {
             "description": "Returns charge details",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/Charge"
                 }
@@ -884,9 +1158,60 @@
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/Charge"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appearance-outcome/all": {
+      "get": {
+        "tags": [
+          "appearance-outcome-controller"
+        ],
+        "summary": "Get all appearance outcomes",
+        "description": "This endpoint will get all appearance outcomes",
+        "operationId": "getAllAppearanceOutcomes",
+        "responses": {
+          "200": {
+            "description": "Returns appearance outcomes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourtAppearanceOutcome"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourtAppearanceOutcome"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourtAppearanceOutcome"
+                  }
                 }
               }
             }
@@ -983,7 +1308,6 @@
           "appearanceDate",
           "charges",
           "courtCode",
-          "outcome",
           "warrantType"
         ],
         "type": "object",
@@ -995,8 +1319,9 @@
             "type": "string",
             "format": "uuid"
           },
-          "outcome": {
-            "type": "string"
+          "outcomeUuid": {
+            "type": "string",
+            "format": "uuid"
           },
           "courtCode": {
             "type": "string"
@@ -1029,6 +1354,10 @@
             "items": {
               "$ref": "#/components/schemas/CreateCharge"
             }
+          },
+          "overallConvictionDate": {
+            "type": "string",
+            "format": "date"
           }
         }
       },
@@ -1064,7 +1393,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "08:48:12.796193908"
+            "example": "11:57:01.228893078"
           },
           "courtCode": {
             "type": "string"
@@ -1076,7 +1405,8 @@
       },
       "CreatePeriodLength": {
         "required": [
-          "periodOrder"
+          "periodOrder",
+          "type"
         ],
         "type": "object",
         "properties": {
@@ -1098,15 +1428,26 @@
           },
           "periodOrder": {
             "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "SENTENCE_LENGTH",
+              "CUSTODIAL_TERM",
+              "LICENCE_PERIOD",
+              "TARIFF_LENGTH",
+              "TERM_LENGTH",
+              "OVERALL_SENTENCE_LENGTH"
+            ]
           }
         }
       },
       "CreateSentence": {
         "required": [
           "chargeNumber",
-          "custodialPeriodLength",
+          "periodLengths",
           "sentenceServeType",
-          "sentenceType"
+          "sentenceTypeId"
         ],
         "type": "object",
         "properties": {
@@ -1117,11 +1458,11 @@
           "chargeNumber": {
             "type": "string"
           },
-          "custodialPeriodLength": {
-            "$ref": "#/components/schemas/CreatePeriodLength"
-          },
-          "extendedLicensePeriodLength": {
-            "$ref": "#/components/schemas/CreatePeriodLength"
+          "periodLengths": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatePeriodLength"
+            }
           },
           "sentenceServeType": {
             "type": "string"
@@ -1129,8 +1470,13 @@
           "consecutiveToChargeNumber": {
             "type": "string"
           },
-          "sentenceType": {
-            "type": "string"
+          "sentenceTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "convictionDate": {
+            "type": "string",
+            "format": "date"
           }
         }
       },
@@ -1154,6 +1500,115 @@
           "appearanceUuid": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "PeriodLength": {
+        "required": [
+          "periodLengthType",
+          "periodOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "years": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "months": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weeks": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "periodOrder": {
+            "type": "string"
+          },
+          "periodLengthType": {
+            "type": "string",
+            "enum": [
+              "SENTENCE_LENGTH",
+              "CUSTODIAL_TERM",
+              "LICENCE_PERIOD",
+              "TARIFF_LENGTH",
+              "TERM_LENGTH",
+              "OVERALL_SENTENCE_LENGTH"
+            ]
+          }
+        }
+      },
+      "Sentence": {
+        "required": [
+          "chargeNumber",
+          "periodLengths",
+          "sentenceServeType",
+          "sentenceType",
+          "sentenceUuid"
+        ],
+        "type": "object",
+        "properties": {
+          "sentenceUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chargeNumber": {
+            "type": "string"
+          },
+          "periodLengths": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PeriodLength"
+            }
+          },
+          "sentenceServeType": {
+            "type": "string"
+          },
+          "consecutiveToChargeNumber": {
+            "type": "string"
+          },
+          "sentenceType": {
+            "$ref": "#/components/schemas/SentenceType"
+          },
+          "convictionDate": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "SentenceType": {
+        "required": [
+          "classification",
+          "description",
+          "sentenceTypeUuid"
+        ],
+        "type": "object",
+        "properties": {
+          "sentenceTypeUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string"
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "STANDARD",
+              "EXTENDED",
+              "SOPC",
+              "INDETERMINATE",
+              "BOTUS",
+              "CIVIL",
+              "DTO",
+              "FINE",
+              "LEGACY",
+              "NON_CUSTODIAL"
+            ]
           }
         }
       },
@@ -1241,6 +1696,7 @@
       "Charge": {
         "required": [
           "chargeUuid",
+          "lifetimeUuid",
           "offenceCode",
           "offenceStartDate",
           "outcome"
@@ -1248,6 +1704,10 @@
         "type": "object",
         "properties": {
           "chargeUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lifetimeUuid": {
             "type": "string",
             "format": "uuid"
           },
@@ -1279,7 +1739,7 @@
           "appearanceUuid",
           "charges",
           "courtCode",
-          "outcome",
+          "lifetimeUuid",
           "warrantType"
         ],
         "type": "object",
@@ -1288,8 +1748,12 @@
             "type": "string",
             "format": "uuid"
           },
+          "lifetimeUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
           "outcome": {
-            "type": "string"
+            "$ref": "#/components/schemas/CourtAppearanceOutcome"
           },
           "courtCode": {
             "type": "string"
@@ -1322,6 +1786,39 @@
           },
           "overallSentenceLength": {
             "$ref": "#/components/schemas/PeriodLength"
+          },
+          "overallConvictionDate": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "CourtAppearanceOutcome": {
+        "required": [
+          "displayOrder",
+          "nomisCode",
+          "outcomeName",
+          "outcomeType",
+          "outcomeUuid"
+        ],
+        "type": "object",
+        "properties": {
+          "outcomeUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outcomeName": {
+            "type": "string"
+          },
+          "nomisCode": {
+            "type": "string"
+          },
+          "outcomeType": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -1329,7 +1826,6 @@
         "required": [
           "appearances",
           "courtCaseUuid",
-          "latestAppearance",
           "prisonerId"
         ],
         "type": "object",
@@ -1365,73 +1861,12 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "08:48:12.796193908"
+            "example": "11:57:01.228893078"
           },
           "courtCode": {
             "type": "string"
           },
           "appearanceType": {
-            "type": "string"
-          }
-        }
-      },
-      "PeriodLength": {
-        "required": [
-          "periodOrder"
-        ],
-        "type": "object",
-        "properties": {
-          "years": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "months": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "weeks": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "days": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "periodOrder": {
-            "type": "string"
-          }
-        }
-      },
-      "Sentence": {
-        "required": [
-          "chargeNumber",
-          "custodialPeriodLength",
-          "sentenceServeType",
-          "sentenceType",
-          "sentenceUuid"
-        ],
-        "type": "object",
-        "properties": {
-          "sentenceUuid": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "chargeNumber": {
-            "type": "string"
-          },
-          "custodialPeriodLength": {
-            "$ref": "#/components/schemas/PeriodLength"
-          },
-          "extendedLicensePeriodLength": {
-            "$ref": "#/components/schemas/PeriodLength"
-          },
-          "sentenceServeType": {
-            "type": "string"
-          },
-          "consecutiveToChargeNumber": {
-            "type": "string"
-          },
-          "sentenceType": {
             "type": "string"
           }
         }
@@ -1523,12 +1958,12 @@
             "type": "integer",
             "format": "int32"
           },
-          "paged": {
-            "type": "boolean"
-          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
+          },
+          "paged": {
+            "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"

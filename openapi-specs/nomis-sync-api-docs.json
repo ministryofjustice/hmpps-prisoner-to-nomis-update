@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-09-26.9163.1f3cbb9"
+    "version": "2024-09-27.9214.6fc6ed4"
   },
   "servers": [
     {
@@ -2465,6 +2465,68 @@
           },
           "403": {
             "description": "Forbidden to access this endpoint when role NOMIS_INCENTIVES not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csip": {
+      "put": {
+        "tags": [
+          "csip-resource"
+        ],
+        "summary": "Creates or updates a csip",
+        "description": "Creates or updates a csip report and its children. Requires ROLE_NOMIS_CSIP",
+        "operationId": "upsertCSIP",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertCSIPRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "CSIP Updated or created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpsertCSIPResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "One or more fields in the request contains invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CSIP",
             "content": {
               "application/json": {
                 "schema": {
@@ -13153,6 +13215,113 @@
         },
         "description": "Incentive information"
       },
+      "UpsertCSIPResponse": {
+        "required": [
+          "created",
+          "nomisCSIPReportId",
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisCSIPReportId": {
+            "type": "integer",
+            "description": "The nomis csip id",
+            "format": "int64"
+          },
+          "offenderNo": {
+            "type": "string",
+            "description": "The prisoner nomis Id relating to this csip"
+          },
+          "created": {
+            "type": "boolean",
+            "description": "Whether or not the csip was created"
+          }
+        },
+        "description": "A response after a csip has been upserted in NOMIS"
+      },
+      "UpsertCSIPRequest": {
+        "required": [
+          "areaOfWorkCode",
+          "createUsername",
+          "incidentDate",
+          "incidentTime",
+          "locationCode",
+          "offenderNo",
+          "proActiveReferral",
+          "reportedBy",
+          "reportedDate",
+          "staffAssaulted",
+          "typeCode"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The csip id",
+            "format": "int64",
+            "example": 1234
+          },
+          "offenderNo": {
+            "type": "string",
+            "description": "The offender No",
+            "example": "A11235BC"
+          },
+          "logNumber": {
+            "type": "string",
+            "description": "Log number"
+          },
+          "incidentDate": {
+            "type": "string",
+            "description": "Date/Time incident occurred",
+            "format": "date",
+            "example": "2023-04-03"
+          },
+          "incidentTime": {
+            "type": "string",
+            "description": "Date/Time incident occurred",
+            "format": "partial-time",
+            "example": "10:00"
+          },
+          "typeCode": {
+            "type": "string",
+            "description": "Type of incident"
+          },
+          "locationCode": {
+            "type": "string",
+            "description": "Location of the incident"
+          },
+          "areaOfWorkCode": {
+            "type": "string",
+            "description": "The Area of work, aka function"
+          },
+          "reportedBy": {
+            "type": "string",
+            "description": "The person reporting the incident - free text"
+          },
+          "reportedDate": {
+            "type": "string",
+            "description": "Date reported",
+            "format": "date"
+          },
+          "proActiveReferral": {
+            "type": "boolean",
+            "description": "proActive Referral"
+          },
+          "staffAssaulted": {
+            "type": "boolean",
+            "description": "If a staff member was assaulted"
+          },
+          "staffAssaultedName": {
+            "type": "string",
+            "description": "If assaulted, the staff member name"
+          },
+          "createUsername": {
+            "type": "string",
+            "description": "Username of person that created/updated the record (might also be a system) "
+          }
+        },
+        "description": "CSIP Report create/update request"
+      },
       "CaseNoteAmendment": {
         "required": [
           "authorUsername",
@@ -16923,9 +17092,48 @@
         },
         "description": "Offender Charge"
       },
+      "CaseIdentifierResponse": {
+        "required": [
+          "createDateTime",
+          "reference",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of case identifier",
+            "example": "CASE/INFO#"
+          },
+          "reference": {
+            "type": "string",
+            "description": "The value of the case identifier",
+            "example": "asd/123"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The time the case identifier was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "modifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The time the case identifier was last changed",
+            "example": "2021-07-05T10:35:17"
+          },
+          "auditModuleName": {
+            "type": "string",
+            "description": "The name of the module that last changed it, indicates if this was NOMIS or the synchronisation service",
+            "example": "DPS_SYNCHRONISATION"
+          }
+        },
+        "description": "Case related reference"
+      },
       "CourtCaseResponse": {
         "required": [
           "bookingId",
+          "caseInfoNumbers",
           "caseSequence",
           "caseStatus",
           "courtEvents",
@@ -16951,7 +17159,7 @@
             "type": "integer",
             "format": "int64"
           },
-          "caseInfoNumber": {
+          "primaryCaseInfoNumber": {
             "type": "string"
           },
           "caseSequence": {
@@ -17019,6 +17227,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/OffenderChargeResponse"
+            }
+          },
+          "caseInfoNumbers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CaseIdentifierResponse"
             }
           }
         },
@@ -17864,9 +18078,6 @@
         "description": "CSIP Details"
       },
       "Decision": {
-        "required": [
-          "actions"
-        ],
         "type": "object",
         "properties": {
           "conclusion": {
@@ -19037,10 +19248,43 @@
         },
         "description": "The data held in NOMIS about a address number"
       },
+      "ContactForPrisoner": {
+        "required": [
+          "bookingId",
+          "firstName",
+          "lastName",
+          "offenderNo"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "Unique NOMIS Id of booking associated with the prisoner",
+            "format": "int64"
+          },
+          "offenderNo": {
+            "type": "string",
+            "description": "Offender no aka prisoner number",
+            "example": "A1234AA"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Last name of the prisoner",
+            "example": "Smith"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "First name of the prisoner",
+            "example": "John"
+          }
+        },
+        "description": "The data held in NOMIS about a person's contact with a prisoner"
+      },
       "ContactPerson": {
         "required": [
           "addresses",
           "audit",
+          "contacts",
           "emailAddresses",
           "employments",
           "firstName",
@@ -19049,7 +19293,8 @@
           "keepBiometrics",
           "lastName",
           "personId",
-          "phoneNumbers"
+          "phoneNumbers",
+          "restrictions"
         ],
         "type": "object",
         "properties": {
@@ -19145,9 +19390,60 @@
             "items": {
               "$ref": "#/components/schemas/Identifier"
             }
+          },
+          "contacts": {
+            "type": "array",
+            "description": "List of prisoner contacts this person is related to",
+            "items": {
+              "$ref": "#/components/schemas/PersonContact"
+            }
+          },
+          "restrictions": {
+            "type": "array",
+            "description": "List of restrictions between all prisoners and this person",
+            "items": {
+              "$ref": "#/components/schemas/ContactRestriction"
+            }
           }
         },
         "description": "The data held in NOMIS about a person who is a contact for a prisoner"
+      },
+      "ContactRestriction": {
+        "required": [
+          "effectiveDate",
+          "enteredStaff",
+          "id",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique NOMIS Id of the restriction",
+            "format": "int64"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Free format comment text"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "description": "Date restriction became active",
+            "format": "date"
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "Date restriction is no longer active",
+            "format": "date"
+          },
+          "enteredStaff": {
+            "$ref": "#/components/schemas/Staff"
+          }
+        },
+        "description": "The data held in NOMIS about a person's restriction with a prisoner"
       },
       "Corporate": {
         "required": [
@@ -19238,6 +19534,69 @@
           }
         },
         "description": "The data held in NOMIS about a person's identifiers"
+      },
+      "PersonContact": {
+        "required": [
+          "active",
+          "approvedVisitor",
+          "contactType",
+          "emergencyContact",
+          "id",
+          "nextOfKin",
+          "prisoner",
+          "relationshipType",
+          "restrictions"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique NOMIS sequence for this identifier for this contact",
+            "format": "int64"
+          },
+          "contactType": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "relationshipType": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "True if active"
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "Date contact is no longer active",
+            "format": "date"
+          },
+          "approvedVisitor": {
+            "type": "boolean",
+            "description": "True if approved to visit the prisoner"
+          },
+          "nextOfKin": {
+            "type": "boolean",
+            "description": "True if next of kin to the prisoner"
+          },
+          "emergencyContact": {
+            "type": "boolean",
+            "description": "True if emergency contact for the prisoner"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Free format comment text"
+          },
+          "prisoner": {
+            "$ref": "#/components/schemas/ContactForPrisoner"
+          },
+          "restrictions": {
+            "type": "array",
+            "description": "List of restrictions specifically between the prisoner and this contact",
+            "items": {
+              "$ref": "#/components/schemas/ContactRestriction"
+            }
+          }
+        },
+        "description": "The data held in NOMIS about a person's contact with a prisoner"
       },
       "PhoneNumber": {
         "required": [
