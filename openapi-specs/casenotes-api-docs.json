@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-09-24.6695.5ed8c34"
+    "version": "2024-09-30.6750.f63a960"
   },
   "servers": [
     {
@@ -65,8 +65,18 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "Bad request",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "*/*": {
                 "schema": {
@@ -85,18 +95,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "400": {
+            "description": "Bad request",
             "content": {
               "*/*": {
                 "schema": {
@@ -311,22 +311,22 @@
           "required": true
         },
         "responses": {
-          "404": {
-            "description": "No case notes where found for this offender and case note id",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "201": {
             "description": "The Case Note has been recorded. The updated object is returned including the status.",
             "content": {
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CaseNote"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No case notes where found for this offender and case note id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -363,26 +363,6 @@
           "required": true
         },
         "responses": {
-          "201": {
-            "description": "Case note successfully created",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/CaseNote"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -393,8 +373,28 @@
               }
             }
           },
+          "201": {
+            "description": "Case note successfully created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseNote"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
             "content": {
               "*/*": {
                 "schema": {
@@ -428,8 +428,8 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "Bad request",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "*/*": {
                 "schema": {
@@ -438,8 +438,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "*/*": {
                 "schema": {
@@ -461,8 +461,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "400": {
+            "description": "Bad request",
             "content": {
               "*/*": {
                 "schema": {
@@ -652,38 +652,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Request successfully processed - content found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SubjectAccessRequestContent"
-                }
-              }
-            }
-          },
           "204": {
             "description": "Request successfully processed - no content found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "209": {
-            "description": "Subject Identifier is not recognised by this service",
             "content": {
               "application/json": {
                 "schema": {
@@ -704,6 +674,36 @@
           },
           "500": {
             "description": "Unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Request successfully processed - content found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubjectAccessRequestContent"
+                }
+              }
+            }
+          },
+          "209": {
+            "description": "Subject Identifier is not recognised by this service",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -841,9 +841,6 @@
           }
         ],
         "responses": {
-          "204": {
-            "description": "Case Note successfully deleted"
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -863,6 +860,9 @@
                 }
               }
             }
+          },
+          "204": {
+            "description": "Case Note successfully deleted"
           }
         }
       }
@@ -1161,6 +1161,7 @@
           "amendments",
           "authorName",
           "authorUserId",
+          "authorUsername",
           "caseNoteId",
           "creationDateTime",
           "eventId",
@@ -1232,6 +1233,11 @@
             "type": "string",
             "description": "User Id of case note author - staffId for nomis users, username for auth users",
             "example": "12345 or USERNAME_12345"
+          },
+          "authorUsername": {
+            "type": "string",
+            "description": "Username of the case note author",
+            "example": "USER1"
           },
           "text": {
             "type": "string",
@@ -1698,13 +1704,13 @@
       "PageCaseNote": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"

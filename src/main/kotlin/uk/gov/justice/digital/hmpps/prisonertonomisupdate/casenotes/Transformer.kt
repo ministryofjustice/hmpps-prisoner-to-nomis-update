@@ -4,14 +4,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCaseNoteRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAmendment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCaseNoteRequest
-import java.time.format.DateTimeFormatter.ISO_DATE
+import java.time.format.DateTimeFormatter.ISO_DATE_TIME
 
 fun CaseNote.toNomisCreateRequest(): CreateCaseNoteRequest =
   CreateCaseNoteRequest(
     caseNoteType = this.type,
     caseNoteSubType = this.subType,
     occurrenceDateTime = this.occurrenceDateTime.toString(),
-    authorUsername = this.authorName,
+    authorUsername = this.authorUsername,
     caseNoteText = this.text,
   )
 
@@ -22,7 +22,7 @@ fun CaseNote.toNomisUpdateRequest(): UpdateCaseNoteRequest =
       UpdateAmendment(
         text = it.additionalNoteText,
         authorUsername = it.authorUserName,
-        createdDateTime = it.creationDateTime?.format(ISO_DATE) ?: "",
+        createdDateTime = it.creationDateTime?.format(ISO_DATE_TIME) ?: "",
       )
     },
   )

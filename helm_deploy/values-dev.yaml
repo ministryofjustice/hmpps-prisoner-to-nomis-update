@@ -60,6 +60,9 @@ generic-prometheus-alerts:
     alerts:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_alerts_queue"
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_alerts_dlq"
+    casenotes:
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_casenotes_queue"
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_casenotes_dlq"
     csip:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_csip_queue"
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_csip_dlq"
