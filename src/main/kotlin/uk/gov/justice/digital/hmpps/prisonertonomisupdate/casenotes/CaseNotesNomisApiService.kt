@@ -31,14 +31,15 @@ class CaseNotesNomisApiService(@Qualifier("nomisApiWebClient") private val webCl
       .retrieve()
       .awaitBody()
 
-  suspend fun updateCaseNote(caseNoteId: Long, nomisCaseNote: UpdateCaseNoteRequest): CaseNoteResponse =
+  suspend fun updateCaseNote(caseNoteId: Long, nomisCaseNote: UpdateCaseNoteRequest) {
     webClient.put().uri(
       "/casenotes/{caseNoteId}",
       caseNoteId,
     )
       .bodyValue(nomisCaseNote)
       .retrieve()
-      .awaitBody()
+      .awaitBodilessEntity()
+  }
 
   suspend fun deleteCaseNote(caseNoteId: Long) {
     webClient.delete().uri(
