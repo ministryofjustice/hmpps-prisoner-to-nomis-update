@@ -77,7 +77,14 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     "courtCaseUuid": "$courtCaseId",
     "latestAppearance": {
         "appearanceUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
-        "outcome": "Remand in Custody (Bail Refused)",
+        "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
+        "outcome": {
+            "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+            "outcomeName": "Remanded in custody",
+            "nomisCode": "4531",
+            "outcomeType": "UNKNOWN",
+            "displayOrder": 0
+          },
         "courtCode": "$courtId",
         "courtCaseReference": "$caseReference",
         "appearanceDate": "2024-09-23",
@@ -92,6 +99,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         "charges": [
             {
                 "chargeUuid": "$courtCharge1Id",
+                "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
                 "offenceCode": "PS90037",
                 "offenceStartDate": "2024-01-15",
                 "offenceEndDate": null,
@@ -101,6 +109,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
             },
             {
                 "chargeUuid": "$courtCharge2Id",
+                "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
                 "offenceCode": "PS90090",
                 "offenceStartDate": "2024-01-17",
                 "offenceEndDate": "2024-01-19",
@@ -113,7 +122,13 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     "appearances": [
         {
             "appearanceUuid": "$courtAppearanceId",
-            "outcome": "Remand in Custody (Bail Refused)",
+            "outcome": {
+              "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+              "outcomeName": "Remanded in custody",
+              "nomisCode": "4531",
+              "outcomeType": "UNKNOWN",
+              "displayOrder": 0
+            },
             "courtCode": "$courtId",
             "courtCaseReference": "G123456789",
             "appearanceDate": "2024-09-23",
@@ -128,6 +143,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
             "charges": [
               {
                 "chargeUuid": "$courtCharge1Id",
+                "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
                 "offenceCode": "PS90037",
                 "offenceStartDate": "2024-01-15",
                 "offenceEndDate": null,
@@ -137,6 +153,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
               },
               {
                   "chargeUuid": "$courtCharge2Id",
+                  "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
                   "offenceCode": "PS90090",
                   "offenceStartDate": "2024-01-17",
                   "offenceEndDate": "2024-01-19",
@@ -165,7 +182,14 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
             """
            {
             "appearanceUuid": "$courtAppearanceId",
-            "outcome": "Remand in Custody (Bail Refused)",
+            "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
+            "outcome": {
+              "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+              "outcomeName": "Remanded in custody",
+              "nomisCode": "4531",
+              "outcomeType": "UNKNOWN",
+              "displayOrder": 0
+            },
             "courtCode": "Doncaster Magistrates Court",
             "courtCaseReference": "G123456789",
             "appearanceDate": "2024-09-23",
@@ -180,6 +204,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
            "charges": [
             {
                 "chargeUuid": "$courtCharge1Id",
+                "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
                 "offenceCode": "$COURT_CHARGE_1_OFFENCE_CODE",
                 "offenceStartDate": "$COURT_CHARGE_1_OFFENCE_DATE",
                 "offenceEndDate": "$COURT_CHARGE_1_OFFENCE_END_DATE",
@@ -189,6 +214,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
             },
             {
                 "chargeUuid": "$courtCharge2Id",
+                "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
                 "offenceCode": "$COURT_CHARGE_2_OFFENCE_CODE",
                 "offenceStartDate": "$COURT_CHARGE_2_OFFENCE_DATE",
                 "offenceEndDate": "$COURT_CHARGE_2_OFFENCE_END_DATE",
@@ -198,6 +224,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
             },
             {
                 "chargeUuid": "$courtCharge3Id",
+                "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
                 "offenceCode": "$COURT_CHARGE_3_OFFENCE_CODE",
                 "offenceStartDate": "$COURT_CHARGE_3_OFFENCE_DATE",
                 "offenceEndDate": null,
@@ -207,6 +234,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
             },
             {
                 "chargeUuid": "$courtCharge4Id",
+                "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
                 "offenceCode": "$COURT_CHARGE_4_OFFENCE_CODE",
                 "offenceStartDate": "$COURT_CHARGE_4_OFFENCE_DATE",
                 "offenceEndDate": null,

@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDateTime
 import java.time.LocalTime
 
-const val HARDCODED_COURT = "OLDHMC"
 const val HARDCODED_IMPRISONMENT_RESULT_CODE = "1002"
 const val HARDCODED_REMAND_RESULT_CODE = "4531"
 
@@ -79,18 +78,19 @@ class CourtSentencingService(
             nomisApiService.createCourtCase(offenderNo, courtCase.toNomisCourtCase())
 
           val nomisCourtAppearanceResponse = nomisResponse.courtAppearanceIds.first()
+          val firstAppearance = courtCase.latestAppearance!!
           CourtCaseAllMappingDto(
             nomisCourtCaseId = nomisResponse.id,
             dpsCourtCaseId = courtCaseId,
             // expecting a court case with 1 court appearance - separate event for subsequent appearances
             courtAppearances = listOf(
               CourtAppearanceMappingDto(
-                dpsCourtAppearanceId = courtCase.latestAppearance.appearanceUuid.toString(),
+                dpsCourtAppearanceId = firstAppearance.appearanceUuid.toString(),
                 nomisCourtAppearanceId = nomisCourtAppearanceResponse.id,
                 nomisNextCourtAppearanceId = nomisCourtAppearanceResponse.nextCourtAppearanceId,
               ),
             ),
-            courtCharges = courtCase.latestAppearance.charges.mapIndexed { index, dpsCharge ->
+            courtCharges = firstAppearance.charges.mapIndexed { index, dpsCharge ->
               CourtChargeMappingDto(
                 nomisCourtChargeId = nomisCourtAppearanceResponse.courtEventChargesIds[index].offenderChargeId,
                 dpsCourtChargeId = dpsCharge.chargeUuid.toString(),
@@ -313,22 +313,26 @@ class CourtSentencingService(
   )
 }
 
-fun CourtCase.toNomisCourtCase(): CreateCourtCaseRequest = CreateCourtCaseRequest(
-  // latest appearance is always the only appearance during a Creat Case request
-  startDate = this.latestAppearance.appearanceDate,
-  courtId = this.latestAppearance.courtCode,
-  caseReference = this.latestAppearance.courtCaseReference,
-  courtAppearance = this.latestAppearance.toNomisCourtAppearance(
-    courtEventChargesToUpdate = listOf(),
-    courtEventChargesToCreate = this.latestAppearance.charges.mapIndexed { index, dpsCharge ->
-      dpsCharge.toNomisCourtCharge()
-    },
-  ),
-  // LEG_CASE_TYP on NOMIS - defaulting to Adult as suggested in the Sentencing document
-  legalCaseType = "A",
-  // CASE_STS on NOMIS - no decision from DPS yet - defaulting to Active
-  status = "A",
-)
+fun CourtCase.toNomisCourtCase(): CreateCourtCaseRequest {
+  // we are guaranteed an appearance when a court case is created in DPS
+  val firstAppearance = this.latestAppearance!!
+  return CreateCourtCaseRequest(
+    // latest appearance is always the only appearance during a Creat Case request
+    startDate = firstAppearance.appearanceDate,
+    courtId = firstAppearance.courtCode,
+    caseReference = firstAppearance.courtCaseReference,
+    courtAppearance = firstAppearance.toNomisCourtAppearance(
+      courtEventChargesToUpdate = listOf(),
+      courtEventChargesToCreate = firstAppearance.charges.mapIndexed { index, dpsCharge ->
+        dpsCharge.toNomisCourtCharge()
+      },
+    ),
+    // LEG_CASE_TYP on NOMIS - defaulting to Adult as suggested in the Sentencing document
+    legalCaseType = "A",
+    // CASE_STS on NOMIS - no decision from DPS yet - defaulting to Active
+    status = "A",
+  )
+}
 
 fun CourtAppearance.toNomisCourtAppearance(
   courtEventChargesToCreate: List<OffenderChargeRequest>,
@@ -340,10 +344,10 @@ fun CourtAppearance.toNomisCourtAppearance(
       this.appearanceDate,
       LocalTime.MIDNIGHT,
     ).toString(),
-    // TODO these are MOV_RSN on NOMIS - defaulting to Court Appearance until DPS provide a mapping
+    // DPS confirmed courtEventType would be defaulted to Court Appearance
     courtEventType = "CRT",
     courtId = this.courtCode,
-    outcomeReasonCode = getHardcodedNomisResultCode(this.outcome),
+    outcomeReasonCode = this.outcome?.nomisCode,
     nextEventDateTime = nextCourtAppearance?.let {
       LocalDateTime.of(
         it.appearanceDate,
@@ -352,7 +356,6 @@ fun CourtAppearance.toNomisCourtAppearance(
     },
     courtEventChargesToUpdate = courtEventChargesToUpdate,
     courtEventChargesToCreate = courtEventChargesToCreate,
-    // TODO hardcoding until mapping approach decided this.courtCode
     nextCourtId = nextCourtAppearance?.let { it.courtCode },
   )
 }
@@ -362,7 +365,6 @@ fun Charge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeRequest(
   offenceCode = this.offenceCode,
   offenceDate = this.offenceStartDate,
   offenceEndDate = this.offenceEndDate,
-// TODO dps has text that 'mainly' matches nomis but there are also non-matching values on T3
   resultCode1 = getHardcodedNomisResultCode(this.outcome),
   // TODO determine if this comes from DPS or is it determined
   offencesCount = 1,
@@ -378,7 +380,6 @@ fun Charge.toExistingNomisCourtCharge(nomisId: Long): ExistingOffenderChargeRequ
   offenceCode = this.offenceCode,
   offenceDate = this.offenceStartDate,
   offenceEndDate = this.offenceEndDate,
-// TODO dps has text that 'mainly' matches nomis but there are also non-matching values on T3
   resultCode1 = getHardcodedNomisResultCode(this.outcome),
   offencesCount = 1,
 )
