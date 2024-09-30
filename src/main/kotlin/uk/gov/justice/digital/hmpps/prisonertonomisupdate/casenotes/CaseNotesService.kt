@@ -89,13 +89,7 @@ class CaseNotesService(
       runCatching {
         val mapping = mappingApiService.getOrNullByDpsId(dpsCaseNoteId)
           ?: throw IllegalStateException("Tried to amend an casenote that has no mapping")
-        if (mapping.nomisCaseNoteId != caseNoteEvent.additionalInformation.legacyId) {
-          throw IllegalStateException(
-            "Casenote amendment where legacy id does not match mapping: legacy = ${
-              caseNoteEvent.additionalInformation.legacyId
-            }, mapping = ${mapping.nomisCaseNoteId}",
-          )
-        }
+
         telemetryMap["nomisBookingId"] = mapping.nomisBookingId.toString()
         telemetryMap["nomisCaseNoteId"] = mapping.nomisCaseNoteId.toString()
 
