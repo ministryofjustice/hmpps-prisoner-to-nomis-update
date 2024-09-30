@@ -92,6 +92,13 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   internal val alertsQueueUrl by lazy { alertsQueue.queueUrl }
   internal val alertsDlqUrl by lazy { alertsQueue.dlqUrl }
 
+  internal val caseNotesQueue by lazy { hmppsQueueService.findByQueueId("casenotes") as HmppsQueue }
+
+  internal val awsSqsCaseNotesClient by lazy { caseNotesQueue.sqsClient }
+  internal val awsSqsCaseNotesDlqClient by lazy { caseNotesQueue.sqsDlqClient }
+  internal val caseNotesQueueUrl by lazy { caseNotesQueue.queueUrl }
+  internal val caseNotesDlqUrl by lazy { caseNotesQueue.dlqUrl }
+
   internal val csipQueue by lazy { hmppsQueueService.findByQueueId("csip") as HmppsQueue }
 
   internal val awsSqsCSIPClient by lazy { csipQueue.sqsClient }
@@ -140,6 +147,9 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 
     awsSqsAlertsClient.purgeQueue(alertsQueueUrl).get()
     awsSqsAlertsDlqClient?.purgeQueue(alertsDlqUrl)?.get()
+
+    awsSqsCaseNotesClient.purgeQueue(caseNotesQueueUrl).get()
+    awsSqsCaseNotesDlqClient?.purgeQueue(caseNotesDlqUrl)?.get()
 
     awsSqsCSIPClient.purgeQueue(csipQueueUrl).get()
     awsSqsCSIPDlqClient?.purgeQueue(csipDlqUrl)?.get()

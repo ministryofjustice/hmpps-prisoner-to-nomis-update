@@ -61,14 +61,14 @@ class CaseNotesDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     return this
   }
 
-  fun stubGetCaseNote(caseNote: CaseNote = dpsCaseNote()) {
+  fun stubGetCaseNote(caseNote: CaseNote = dpsCaseNote(), status: Int = 200) {
     stubFor(
       get(urlMatching("/case-notes/.+/.+"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withBody(caseNote)
-            .withStatus(200),
+            .withStatus(status),
         ),
     )
   }
@@ -105,7 +105,8 @@ fun dpsCaseNote(): CaseNote = CaseNote(
   creationDateTime = LocalDateTime.of(2024, 1, 1, 1, 1),
   occurrenceDateTime = LocalDateTime.of(2024, 1, 1, 1, 1),
   authorName = "me",
-  authorUserId = "ME.COM",
+  authorUserId = "123456",
+  authorUsername = "ME.COM",
   text = "contents of case note",
   eventId = 1234567,
   sensitive = false,
