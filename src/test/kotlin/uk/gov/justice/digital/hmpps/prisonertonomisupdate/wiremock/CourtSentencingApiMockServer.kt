@@ -122,6 +122,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     "appearances": [
         {
             "appearanceUuid": "$courtAppearanceId",
+            "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
             "outcome": {
               "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
               "outcomeName": "Remanded in custody",
