@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAlertCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAlertRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAlertType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import java.time.LocalDate
 
 @SpringAPIServiceTest

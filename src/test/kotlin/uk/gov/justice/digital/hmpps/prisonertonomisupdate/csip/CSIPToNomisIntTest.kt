@@ -9,8 +9,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
-import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
-import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -32,6 +30,7 @@ import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPDpsApiExtension.Companion.csipDpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CSIPFullMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.util.UUID
 
@@ -541,9 +540,3 @@ fun csipMessagePayload(
       }
     }
     """
-
-fun RequestPatternBuilder.withRequestBodyJsonPath(path: String, pattern: StringValuePattern): RequestPatternBuilder =
-  this.withRequestBody(matchingJsonPath(path, pattern))
-
-fun RequestPatternBuilder.withRequestBodyJsonPath(path: String, equalTo: Any): RequestPatternBuilder =
-  this.withRequestBodyJsonPath(path, equalTo(equalTo.toString()))

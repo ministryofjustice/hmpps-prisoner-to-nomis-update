@@ -13,12 +13,12 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.withRequestBodyJsonPath
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCaseNoteRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCaseNoteResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAmendment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCaseNoteRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 
 @SpringAPIServiceTest
 @Import(CaseNotesNomisApiService::class, CaseNotesNomisApiMockServer::class)

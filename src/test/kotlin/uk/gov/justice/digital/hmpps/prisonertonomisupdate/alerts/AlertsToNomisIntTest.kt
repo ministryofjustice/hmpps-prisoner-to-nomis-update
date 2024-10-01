@@ -2,15 +2,11 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
-import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
-import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
-import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
-import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -34,6 +30,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExt
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.Comment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AlertMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -721,9 +718,3 @@ fun alertMessagePayload(
       }
     }
     """
-
-fun RequestPatternBuilder.withRequestBodyJsonPath(path: String, pattern: StringValuePattern): RequestPatternBuilder =
-  this.withRequestBody(matchingJsonPath(path, pattern))
-
-fun RequestPatternBuilder.withRequestBodyJsonPath(path: String, equalTo: Any): RequestPatternBuilder =
-  this.withRequestBodyJsonPath(path, equalTo(equalTo.toString()))
