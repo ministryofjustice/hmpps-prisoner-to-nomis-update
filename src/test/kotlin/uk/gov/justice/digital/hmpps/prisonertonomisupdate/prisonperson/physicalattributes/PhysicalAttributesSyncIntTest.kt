@@ -139,7 +139,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
           .also { waitForAnyProcessingToComplete() }
 
         // should never call out
-        dpsApi.verify(0, getRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
+        dpsApi.verify(0, getRequestedFor(urlPathEqualTo("/sync/prisoners/A1234AA/physical-attributes")))
         physicalAttributesNomisApi.verify(0, putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
         // should publish ignore event
         verify(telemetryClient).trackEvent(
@@ -164,7 +164,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
           }
 
         // should call DPS for each retry
-        dpsApi.verify(3, getRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
+        dpsApi.verify(3, getRequestedFor(urlPathEqualTo("/sync/prisoners/A1234AA/physical-attributes")))
         // should never call NOMIS API
         physicalAttributesNomisApi.verify(0, putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
         // should publish failed telemetry for each retry
@@ -174,7 +174,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
             assertThat(it).containsExactlyInAnyOrderEntriesOf(
               mapOf(
                 "offenderNo" to "A1234AA",
-                "reason" to "400 Bad Request from GET http://localhost:8097/prisoners/A1234AA/physical-attributes",
+                "reason" to "400 Bad Request from GET http://localhost:8097/sync/prisoners/A1234AA/physical-attributes",
                 "fields" to "null",
               ),
             )
@@ -196,7 +196,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
           }
 
         // should call DPS for each retry
-        dpsApi.verify(3, getRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
+        dpsApi.verify(3, getRequestedFor(urlPathEqualTo("/sync/prisoners/A1234AA/physical-attributes")))
         // should never call NOMIS API
         physicalAttributesNomisApi.verify(0, putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
         // should publish failed telemetry for each retry
@@ -229,7 +229,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
           }
 
         // should call DPS and NOMIS APIs for each retry
-        dpsApi.verify(3, getRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
+        dpsApi.verify(3, getRequestedFor(urlPathEqualTo("/sync/prisoners/A1234AA/physical-attributes")))
         physicalAttributesNomisApi.verify(3, putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
         // should publish failed telemetry for each retry
         verify(telemetryClient, times(3)).trackEvent(
@@ -296,7 +296,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
           {
             "eventType":"prison-person.physical-attributes.updated",
             "additionalInformation": {
-              "url":"https://prison-person-api-dev.prison.service.justice.gov.uk/prisoners/$prisonerNumber",
+              "url":"https://prison-person-api-dev.prison.service.justice.gov.uk/sync/prisoners/$prisonerNumber/physical-attributes",
               "source":"$source",
               "prisonerNumber":"$prisonerNumber"
               $fieldsJson
@@ -362,7 +362,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "offenderNo" to "A1234AA",
-              "reason" to "400 Bad Request from GET http://localhost:8097/prisoners/A1234AA/physical-attributes",
+              "reason" to "400 Bad Request from GET http://localhost:8097/sync/prisoners/A1234AA/physical-attributes",
               "fields" to "null",
             ),
           )
@@ -408,7 +408,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
 
   private fun verifyDpsApiCall() {
     dpsApi.verify(
-      getRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")),
+      getRequestedFor(urlPathEqualTo("/sync/prisoners/A1234AA/physical-attributes")),
     )
   }
 

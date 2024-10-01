@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonPersonReconciliationResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PhysicalAttributesDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PhysicalAttributesSyncDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.physicalattributes.PhysicalAttributesDpsApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
@@ -61,15 +61,15 @@ class PrisonPersonReconService(
     telemetryClient.trackEvent("prison-person-reconciliation-prisoner-error", mapOf("offenderNo" to offenderNo, "error" to (it.message ?: "unknown error")))
   }.getOrNull()
 
-  private fun findDifferenceTelemetry(offenderNo: String, nomisPrisoner: PrisonPersonReconciliationResponse?, dpsPrisoner: PhysicalAttributesDto?): MutableMap<String, String> {
+  private fun findDifferenceTelemetry(offenderNo: String, nomisPrisoner: PrisonPersonReconciliationResponse?, dpsPrisoner: PhysicalAttributesSyncDto?): MutableMap<String, String> {
     val failureTelemetry = mutableMapOf<String, String>()
     val differences = mutableListOf<String>()
 
-    if (nomisPrisoner?.height != dpsPrisoner?.height?.value) {
+    if (nomisPrisoner?.height != dpsPrisoner?.height) {
       differences += "height"
     }
 
-    if (nomisPrisoner?.weight != dpsPrisoner?.weight?.value) {
+    if (nomisPrisoner?.weight != dpsPrisoner?.weight) {
       differences += "weight"
     }
 
