@@ -102,6 +102,50 @@ class LocationsReconciliationServiceTest {
   }
 
   @Test
+  fun `will report mismatch where only nomis has a parent`() = runTest {
+    assertThat(
+      locationsReconciliationService.doesNotMatch(
+        nomisResponse(),
+        dpsResponse(DPS_LOCATION_ID).copy(parentId = null),
+        "nomis-parent-UUID",
+      ),
+    ).isEqualTo("Parent mismatch")
+  }
+
+  @Test
+  fun `will report mismatch where only DPS has a parent`() = runTest {
+    assertThat(
+      locationsReconciliationService.doesNotMatch(
+        nomisResponse().copy(parentLocationId = null),
+        dpsResponse(DPS_LOCATION_ID),
+        null,
+      ),
+    ).isEqualTo("Parent mismatch")
+  }
+
+  @Test
+  fun `will report mismatch where locations have a different parent`() = runTest {
+    assertThat(
+      locationsReconciliationService.doesNotMatch(
+        nomisResponse().copy(parentLocationId = 54321),
+        dpsResponse(DPS_LOCATION_ID).copy(parentId = UUID.fromString("00000000-2345-6789-abcd-000011112222")),
+        "nomis-parent-UUID",
+      ),
+    ).isEqualTo("Parent mismatch")
+  }
+
+  @Test
+  fun `will NOT report mismatch where location is permanently deactivated`() = runTest {
+    assertThat(
+      locationsReconciliationService.doesNotMatch(
+        nomisResponse().copy(comment = "different"),
+        dpsResponse(DPS_LOCATION_ID).copy(permanentlyDeactivated = true),
+        "nomis-parent-UUID",
+      ),
+    ).isNull()
+  }
+
+  @Test
   fun `will continue after a GET mapping error`() = runTest {
     whenever(nomisApiService.getLocations(0, 10)).thenReturn(
       PageImpl(
