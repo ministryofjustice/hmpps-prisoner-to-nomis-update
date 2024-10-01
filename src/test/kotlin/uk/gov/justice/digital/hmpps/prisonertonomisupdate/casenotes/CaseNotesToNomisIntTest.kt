@@ -78,6 +78,30 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
+    @DisplayName("when casenote is DPS-only")
+    inner class WhenDpsOnly {
+      @BeforeEach
+      fun setup() {
+        publishCreateCaseNoteDomainEvent(syncToNomis = false)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing it ignored the create`() {
+        verify(telemetryClient).trackEvent(
+          eq("casenotes-create-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not try to create the CaseNote in NOMIS`() {
+        caseNotesNomisApi.verify(0, postRequestedFor(anyUrl()))
+      }
+    }
+
+    @Nested
     @DisplayName("when DPS is the origin of a CaseNote create")
     inner class WhenDpsCreated {
       @Nested
@@ -320,6 +344,30 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
+    @DisplayName("when casenote is DPS-only")
+    inner class WhenDpsOnly {
+      @BeforeEach
+      fun setup() {
+        publishUpdateCaseNoteDomainEvent(syncToNomis = false)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing it ignored the update`() {
+        verify(telemetryClient).trackEvent(
+          eq("casenotes-amend-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not try to update the CaseNote in NOMIS`() {
+        caseNotesNomisApi.verify(0, putRequestedFor(anyUrl()))
+      }
+    }
+
+    @Nested
     @DisplayName("when DPS is the origin of the CaseNote update")
     inner class WhenDpsUpdated {
       @Nested
@@ -514,6 +562,30 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
+    @DisplayName("when casenote is DPS-only")
+    inner class WhenDpsOnly {
+      @BeforeEach
+      fun setup() {
+        publishDeleteCaseNoteDomainEvent(syncToNomis = false)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing it ignored the update`() {
+        verify(telemetryClient).trackEvent(
+          eq("casenotes-deleted-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not try to delete the CaseNote in NOMIS`() {
+        caseNotesNomisApi.verify(0, deleteRequestedFor(anyUrl()))
+      }
+    }
+
+    @Nested
     @DisplayName("when DPS is the origin of the CaseNote delete")
     inner class WhenDpsDeleted {
       @Nested
@@ -647,27 +719,30 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
     offenderNo: String = OFFENDER_NO,
     caseNoteUuid: String = UUID.randomUUID().toString(),
     source: CaseNoteSource = CaseNoteSource.DPS,
+    syncToNomis: Boolean = true,
     legacyId: Long = 3L,
   ) {
-    publishCaseNoteDomainEvent("person.case-note.created", offenderNo, caseNoteUuid, NOMIS_CASE_NOTE_ID2, source, legacyId)
+    publishCaseNoteDomainEvent("person.case-note.created", offenderNo, caseNoteUuid, NOMIS_CASE_NOTE_ID2, source, syncToNomis, legacyId)
   }
 
   private fun publishUpdateCaseNoteDomainEvent(
     offenderNo: String = OFFENDER_NO,
     caseNoteUuid: String = UUID.randomUUID().toString(),
     source: CaseNoteSource = CaseNoteSource.DPS,
+    syncToNomis: Boolean = true,
     legacyId: Long = 3L,
   ) {
-    publishCaseNoteDomainEvent("person.case-note.updated", offenderNo, caseNoteUuid, NOMIS_CASE_NOTE_ID2, source, legacyId)
+    publishCaseNoteDomainEvent("person.case-note.updated", offenderNo, caseNoteUuid, NOMIS_CASE_NOTE_ID2, source, syncToNomis, legacyId)
   }
 
   private fun publishDeleteCaseNoteDomainEvent(
     offenderNo: String = OFFENDER_NO,
     caseNoteUuid: String = UUID.randomUUID().toString(),
     source: CaseNoteSource = CaseNoteSource.DPS,
+    syncToNomis: Boolean = true,
     legacyId: Long = 3L,
   ) {
-    publishCaseNoteDomainEvent("person.case-note.deleted", offenderNo, caseNoteUuid, NOMIS_CASE_NOTE_ID2, source, legacyId)
+    publishCaseNoteDomainEvent("person.case-note.deleted", offenderNo, caseNoteUuid, NOMIS_CASE_NOTE_ID2, source, syncToNomis, legacyId)
   }
 
   private fun publishCaseNoteDomainEvent(
@@ -676,6 +751,7 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
     caseNoteUuid: String,
     nomisCaseNoteId: Long,
     source: CaseNoteSource,
+    syncToNomis: Boolean,
     legacyId: Long,
   ) {
     awsSnsClient.publish(
@@ -687,6 +763,7 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
             caseNoteUuid = caseNoteUuid,
             nomisCaseNoteId = nomisCaseNoteId,
             source = source,
+            syncToNomis = syncToNomis,
             legacyId = legacyId,
           ),
         )
@@ -705,6 +782,7 @@ fun caseNoteMessagePayload(
   caseNoteUuid: String,
   nomisCaseNoteId: Long,
   source: CaseNoteSource,
+  syncToNomis: Boolean,
   legacyId: Long,
 ) =
   //language=JSON
@@ -718,7 +796,7 @@ fun caseNoteMessagePayload(
         "type": "CODE",
         "subType": "SUBCODE",
         "source": "${source.name}",
-        "syncToNomis": true,
+        "syncToNomis": $syncToNomis,
         "systemGenerated": false
       },
       "personReference": {

@@ -35,7 +35,7 @@ class CaseNotesService(
       "offenderNo" to offenderNo,
     )
 
-    if (caseNoteEvent.wasCreatedInDPS()) {
+    if (caseNoteEvent.wasCreatedInDPS() && caseNoteEvent.notDpsOnly()) {
       synchronise {
         name = "casenotes"
         telemetryClient = this@CaseNotesService.telemetryClient
@@ -85,7 +85,7 @@ class CaseNotesService(
       "offenderNo" to offenderNo,
     )
 
-    if (caseNoteEvent.wasAmendedInDPS()) {
+    if (caseNoteEvent.wasAmendedInDPS() && caseNoteEvent.notDpsOnly()) {
       runCatching {
         val mapping = mappingApiService.getOrNullByDpsId(dpsCaseNoteId)
           ?: throw IllegalStateException("Tried to amend an casenote that has no mapping")
@@ -115,7 +115,7 @@ class CaseNotesService(
       "dpsCaseNoteId" to dpsCaseNoteId,
       "offenderNo" to offenderNo,
     )
-    if (caseNoteEvent.wasDeletedInDPS()) {
+    if (caseNoteEvent.wasDeletedInDPS() && caseNoteEvent.notDpsOnly()) {
       runCatching {
         mappingApiService.getOrNullByDpsId(dpsCaseNoteId)?.also { mapping ->
           telemetryMap["nomisBookingId"] = mapping.nomisBookingId.toString()
@@ -189,3 +189,4 @@ fun CaseNoteEvent.wasCreatedInDPS() = wasSourceDPS()
 fun CaseNoteEvent.wasAmendedInDPS() = wasSourceDPS()
 fun CaseNoteEvent.wasDeletedInDPS() = wasSourceDPS()
 fun CaseNoteEvent.wasSourceDPS() = this.additionalInformation.source == CaseNoteSource.DPS
+fun CaseNoteEvent.notDpsOnly() = this.additionalInformation.syncToNomis
