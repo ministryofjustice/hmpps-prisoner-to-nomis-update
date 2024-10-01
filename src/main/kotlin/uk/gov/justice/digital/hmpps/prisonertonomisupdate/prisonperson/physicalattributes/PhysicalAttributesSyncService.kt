@@ -16,7 +16,7 @@ class PhysicalAttributesSyncService(
 
   suspend fun updatePhysicalAttributesEvent(event: PhysicalAttributesDomainEvent) {
     if (event.additionalInformation.source == "DPS") {
-      val fields = event.additionalInformation.fields?.parseFields()
+      val fields = event.additionalInformation.fields
       updatePhysicalAttributes(event.additionalInformation.prisonerNumber, fields)
     } else {
       telemetryClient.trackEvent(
@@ -25,12 +25,6 @@ class PhysicalAttributesSyncService(
       )
     }
   }
-
-  private fun String?.parseFields(): List<String>? =
-    this?.removeSurrounding("[", "]")
-      ?.split(",")
-      ?.toList()
-      ?.map { it.trim() }
 
   suspend fun updatePhysicalAttributes(offenderNo: String, fields: List<String>? = null) =
     runCatching {
@@ -126,7 +120,7 @@ data class PhysicalAttributesDomainEvent(
 data class PhysicalAttributesAdditionalInformation(
   val source: String,
   val prisonerNumber: String,
-  val fields: String?,
+  val fields: List<String>?,
 )
 
 class ProfileDetailsSyncException(message: String) : RuntimeException(message)
