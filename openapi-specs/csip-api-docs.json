@@ -2,12 +2,12 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Challenge, Support, and Intervention Plan API",
-    "description": "API for retrieving and managing Challenge, Support, and Intervention Plan (CSIP) relating to a person.\n\n## Authentication\n\nThis API uses OAuth2 with JWTs. You will need to pass the JWT in the `Authorization` header using the `Bearer` scheme.\n\n## Authorisation\n\nThe API uses roles to control access to the endpoints. The roles required for each endpoint are documented in the endpoint descriptions.\n\n## Identifying the user\n\nThe majority of the endpoints in this API require the user to be identified via their username. This is to correctly populate the change history of CSIP records e.g. who created or updated a CSIP record and for auditing purposes. The username is required when the service is called directly by a user or when another service is acting on behalf of a user. The following methods for supplying the username are supported to cater for these scenarios:\n\n1. **Token claim** - The username can be passed in via a `user_name` or `username` claim in the JWT.\n2. **Username header** - The username can be passed in via a `Username` header in the request.\n\nThe username is taken in priority order from the `user_name` or `username` claim in the JWT if present, followed by the `Username` header if no claim is found.\n\n### 4XX response codes related to username:\n\n- A 400 Bad Request response will be returned if the username cannot be found via any of the above methods.\n- A 400 Bad Request response will be returned if the username cannot be found in the user management service.\n- A 403 Forbidden response will also be returned if the user identified by the username does not have access to the caseload associated with the person.",
+    "description": "API for retrieving and managing Challenge, Support, and Intervention Plan (CSIP) relating to a person.\n\n## Authentication\n\nThis API uses OAuth2 with JWTs. You will need to pass the JWT in the `Authorization` header using the `Bearer` scheme.\n\n## Authorisation\n\nThe API uses roles to control access to the endpoints. The roles required for each endpoint are documented in the endpoint descriptions.\n\n## Identifying the user\n\nThe majority of the endpoints in this API require the user to be identified via their username. This is to correctly populate the change history of CSIP records e.g. who created or updated a CSIP record and for auditing purposes. The username is required when the service is called directly by a user or when another service is acting on behalf of a user. The method to supply the username is via the `subject` claim in the JWT.\n### 4XX response codes related to username:\n\n- A 400 Bad Request response will be returned if the username cannot be found in the user management service.\n",
     "contact": {
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-08-12.1424.88378e1"
+    "version": "2024-10-01.2201.eaa3a36"
   },
   "servers": [
     {
@@ -37,6 +37,10 @@
       "description": "Endpoints for Plans And Identified Needs operations"
     },
     {
+      "name": "7. Reference Data Controller",
+      "description": "Endpoints for Reference Data operations"
+    },
+    {
       "name": "6. Reviews Controller",
       "description": "Endpoints for Reviews And Attendees operations"
     },
@@ -45,62 +49,39 @@
       "description": "Endpoints for Referral and Contributory Factor operations"
     },
     {
-      "name": "7. Reference Data Controller",
-      "description": "Endpoints for Reference Data operations"
-    },
-    {
       "name": "3. Safer Custody Screening Outcome Controller",
       "description": "Endpoints for Safer Custody Screening Outcome operations"
     },
     {
       "name": "5. Decision And Actions Controller",
       "description": "Endpoints for Decision And Actions operations"
+    },
+    {
+      "name": "Sync CSIP Record Controller",
+      "description": "Endpoint for sync operations"
     }
   ],
   "paths": {
-    "/csip-records/{recordUuid}/referral/investigation": {
+    "/sync/csip-records": {
       "put": {
         "tags": [
-          "4. Investigations Controller"
+          "Sync CSIP Record Controller"
         ],
-        "summary": "Add or update the investigation.",
-        "description": "Create or update the investigation. Publishes person.csip.record.updated event with affected component of Investigation\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI\n* ROLE_NOMIS_CSIP",
-        "operationId": "upsertInvestigation",
-        "parameters": [
-          {
-            "name": "recordUuid",
-            "in": "path",
-            "description": "CSIP record unique identifier",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
+        "description": "\n\nRequires one of the following roles:\n* ROLE_NOMIS_CSIP",
+        "operationId": "syncCsipRecord",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpsertInvestigationRequest"
+                "$ref": "#/components/schemas/SyncCsipRequest"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "404": {
-            "description": "The CSIP referral associated with this identifier was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict. The CSIP referral already has an Investigation created.",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -110,37 +91,17 @@
             }
           },
           "200": {
-            "description": "Investigation updated and/or interviews added to CSIP referral",
+            "description": "CSIP record merged",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Investigation"
+                  "$ref": "#/components/schemas/SyncResponse"
                 }
               }
             }
           },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "Investigation and interviews added to CSIP referral",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Investigation"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -160,7 +121,397 @@
             }
           }
         }
+      }
+    },
+    "/csip-records/{recordUuid}/referral/decision-and-actions": {
+      "put": {
+        "tags": [
+          "5. Decision And Actions Controller"
+        ],
+        "summary": "Add decision and actions to the referral.",
+        "description": "Create or update the decision and actions. Publishes person.csip.record.updated event with affected component of DecisionAndActions\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
+        "operationId": "upsertDecision",
+        "parameters": [
+          {
+            "name": "recordUuid",
+            "in": "path",
+            "description": "CSIP record unique identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDecisionAndActionsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Decision and actions updated for CSIP referral",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionAndActions"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The CSIP referral associated with this identifier already has a decision and actions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Decision and actions added to CSIP referral",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionAndActions"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The CSIP referral associated with this identifier was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{prisonNumber}/csip-records": {
+      "get": {
+        "tags": [
+          "1. CSIP Record Controller"
+        ],
+        "summary": "Retrieve and filter all CSIP records for a prisoner.",
+        "description": "Returns the CSIP records for a prisoner. Supports log code filtering.\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
+        "operationId": "getCsipRecordsByPrisonNumbers",
+        "parameters": [
+          {
+            "name": "prisonNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "logCode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "maxLength": 10,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "createdAtStart",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "createdAtEnd",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "CSIP records found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsipSummaries"
+                }
+              }
+            }
+          }
+        }
       },
+      "post": {
+        "tags": [
+          "1. CSIP Record Controller"
+        ],
+        "summary": "Create a CSIP record for a prisoner.",
+        "description": "Create the CSIP record, referral and contributory factors. This starts the CSIP process. Publishes person.csip.record.created and person.csip.contributory-factor.created events\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
+        "operationId": "createCsipRecord",
+        "parameters": [
+          {
+            "name": "prisonNumber",
+            "in": "path",
+            "description": "Prison Number of the prisoner",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCsipRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "CSIP record created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsipRecord"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csip-records/{recordUuid}/referral/safer-custody-screening": {
+      "post": {
+        "tags": [
+          "3. Safer Custody Screening Outcome Controller"
+        ],
+        "summary": "Add safer custody screening outcome to the referral.",
+        "description": "Create the safer custody screening outcome. Publishes person.csip.record.updated event with saferCustodyScreeningOutcomeAffected = true\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
+        "operationId": "createScreeningOutcome",
+        "parameters": [
+          {
+            "name": "recordUuid",
+            "in": "path",
+            "description": "CSIP record unique identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSaferCustodyScreeningOutcomeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Safer Custody Screening Outcome added to CSIP referral",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaferCustodyScreeningOutcome"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict. The CSIP referral already has a Safer Custody Screening Outcome created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The CSIP referral associated with this identifier was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csip-records/{recordUuid}/referral/investigation": {
       "post": {
         "tags": [
           "4. Investigations Controller"
@@ -191,18 +542,8 @@
           "required": true
         },
         "responses": {
-          "404": {
-            "description": "The CSIP referral associated with this identifier was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict. The CSIP referral already has an Investigation created.",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -213,6 +554,16 @@
           },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -231,8 +582,8 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "409": {
+            "description": "Conflict. The CSIP referral already has an Investigation created.",
             "content": {
               "application/json": {
                 "schema": {
@@ -241,8 +592,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "The CSIP referral associated with this identifier was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -252,16 +603,14 @@
             }
           }
         }
-      }
-    },
-    "/csip-records/{recordUuid}/referral/decision-and-actions": {
-      "put": {
+      },
+      "patch": {
         "tags": [
-          "5. Decision And Actions Controller"
+          "4. Investigations Controller"
         ],
-        "summary": "Add decision and actions to the referral.",
-        "description": "Create or update the decision and actions. Publishes person.csip.record.updated event with affected component of DecisionAndActions\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI\n* ROLE_NOMIS_CSIP",
-        "operationId": "upsertDecision",
+        "summary": "Add or update the investigation.",
+        "description": "Create or update the investigation. Publishes person.csip.record.updated event with affected component of Investigation\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
+        "operationId": "updateInvestigation",
         "parameters": [
           {
             "name": "recordUuid",
@@ -278,15 +627,15 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpsertDecisionAndActionsRequest"
+                "$ref": "#/components/schemas/UpdateInvestigationRequest"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "404": {
-            "description": "The CSIP referral associated with this identifier was not found.",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -296,37 +645,17 @@
             }
           },
           "200": {
-            "description": "Decision and actions updated for CSIP referral",
+            "description": "Investigation updated and/or interviews added to CSIP referral",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DecisionAndActions"
+                  "$ref": "#/components/schemas/Investigation"
                 }
               }
             }
           },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "Decision and actions added to CSIP referral",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DecisionAndActions"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -345,8 +674,196 @@
               }
             }
           },
+          "201": {
+            "description": "Investigation and interviews added to CSIP referral",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Investigation"
+                }
+              }
+            }
+          },
           "409": {
-            "description": "The CSIP referral associated with this identifier already has a decision and actions",
+            "description": "Conflict. The CSIP referral already has an Investigation created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The CSIP referral associated with this identifier was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csip-records/{recordUuid}/referral/investigation/interviews": {
+      "post": {
+        "tags": [
+          "4. Investigations Controller"
+        ],
+        "summary": "Add an interview to the investigation.",
+        "description": "Add an interview to the investigation. Publishes person.csip.interview.created event\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
+        "operationId": "createInterview",
+        "parameters": [
+          {
+            "name": "recordUuid",
+            "in": "path",
+            "description": "CSIP record unique identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInterviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The CSIP referral associated with this identifier was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Interview added to CSIP referral",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Interview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csip-records/{recordUuid}/referral/contributory-factors": {
+      "post": {
+        "tags": [
+          "2. Referral Controller"
+        ],
+        "summary": "Add a contributory factor to the referral.",
+        "description": "Add a contributory factor to the referral. Publishes person.csip.contributory-factor.created event\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
+        "operationId": "createContributoryFactor",
+        "parameters": [
+          {
+            "name": "recordUuid",
+            "in": "path",
+            "description": "CSIP record unique identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContributoryFactorRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "New contributory factor added to CSIP referral",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContributoryFactor"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The CSIP referral associated with this identifier was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -359,98 +876,6 @@
       }
     },
     "/csip-records/{recordUuid}/plan": {
-      "put": {
-        "tags": [
-          "6. Plans Controller"
-        ],
-        "summary": "Create or update the CSIP plan",
-        "description": "Create or update the CSIP plan. Publishes person.csip.record.updated event with affected component of Plan\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI\n* ROLE_NOMIS_CSIP",
-        "operationId": "upsertPlan",
-        "parameters": [
-          {
-            "name": "recordUuid",
-            "in": "path",
-            "description": "CSIP record unique identifier",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertPlanRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "404": {
-            "description": "The CSIP referral associated with this identifier was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "CSIP plan created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Plan"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "CSIP plan updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Plan"
-                }
-              }
-            }
-          }
-        }
-      },
       "post": {
         "tags": [
           "6. Plans Controller"
@@ -481,8 +906,28 @@
           "required": true
         },
         "responses": {
-          "404": {
-            "description": "The CSIP referral associated with this identifier was not found.",
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -501,150 +946,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/prisoners/{prisonNumber}/csip-records": {
-      "get": {
-        "tags": [
-          "1. CSIP Record Controller"
-        ],
-        "summary": "Retrieve and filter all CSIP records for a prisoner.",
-        "description": "Returns the CSIP records for a prisoner. Supports log code filtering.\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
-        "operationId": "getCsipRecordsByPrisonNumber",
-        "parameters": [
-          {
-            "name": "prisonNumber",
-            "in": "path",
-            "description": "Prison Number of the prisoner",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "logCode",
-            "in": "query",
-            "description": "Filter CSIP records that contain the search text in their Log Code. The search is case insensitive.",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "example": "Search text"
-          },
-          {
-            "name": "createdAtStart",
-            "in": "query",
-            "description": "Filter CSIP records that have a created timestamp at or after the supplied time.",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "example": "2021-09-27T14:19:25"
-          },
-          {
-            "name": "createdAtEnd",
-            "in": "query",
-            "description": "Filter CSIP records that have a created timestamp at or before the supplied time.",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "example": "2021-09-27T14:19:25"
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "description": "Zero-based page index (0..N)",
-            "required": false,
-            "schema": {
-              "minimum": 0,
-              "type": "integer",
-              "default": 0
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "description": "The size of the page to be returned",
-            "required": false,
-            "schema": {
-              "minimum": 1,
-              "type": "integer",
-              "default": 10
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "default": [
-                "createdAt,DESC"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "CSIP records found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PageCsipRecord"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "The CSIP referral associated with this identifier was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -655,86 +958,13 @@
           }
         }
       },
-      "post": {
+      "patch": {
         "tags": [
-          "1. CSIP Record Controller"
+          "6. Plans Controller"
         ],
-        "summary": "Create a CSIP record for a prisoner.",
-        "description": "Create the CSIP record, referral and contributory factors. This starts the CSIP process. Publishes person.csip.record.created and person.csip.contributory-factor.created events\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI\n* ROLE_NOMIS_CSIP",
-        "operationId": "createCsipRecord",
-        "parameters": [
-          {
-            "name": "prisonNumber",
-            "in": "path",
-            "description": "Prison Number of the prisoner",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateCsipRecordRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "CSIP record created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CsipRecord"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/csip-records/{recordUuid}/referral/safer-custody-screening": {
-      "post": {
-        "tags": [
-          "3. Safer Custody Screening Outcome Controller"
-        ],
-        "summary": "Add safer custody screening outcome to the referral.",
-        "description": "Create the safer custody screening outcome. Publishes person.csip.record.updated event with saferCustodyScreeningOutcomeAffected = true\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI\n* ROLE_NOMIS_CSIP",
-        "operationId": "createScreeningOutcome",
+        "summary": "Create or update the CSIP plan",
+        "description": "Create or update the CSIP plan. Publishes person.csip.record.updated event with affected component of Plan\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
+        "operationId": "updatePlan",
         "parameters": [
           {
             "name": "recordUuid",
@@ -751,109 +981,15 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateSaferCustodyScreeningOutcomeRequest"
+                "$ref": "#/components/schemas/UpdatePlanRequest"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "404": {
-            "description": "The CSIP referral associated with this identifier was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "Safer Custody Screening Outcome added to CSIP referral",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SaferCustodyScreeningOutcome"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "400": {
             "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict. The CSIP referral already has a Safer Custody Screening Outcome created.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/csip-records/{recordUuid}/referral/investigation/interviews": {
-      "post": {
-        "tags": [
-          "4. Investigations Controller"
-        ],
-        "summary": "Add an interview to the investigation.",
-        "description": "Add an interview to the investigation. Publishes person.csip.interview.created event\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI\n* ROLE_NOMIS_CSIP",
-        "operationId": "createInterview",
-        "parameters": [
-          {
-            "name": "recordUuid",
-            "in": "path",
-            "description": "CSIP record unique identifier",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateInterviewRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "404": {
-            "description": "The CSIP referral associated with this identifier was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -872,26 +1008,6 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "Interview added to CSIP referral",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Interview"
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -901,41 +1017,17 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/csip-records/{recordUuid}/referral/contributory-factors": {
-      "post": {
-        "tags": [
-          "2. Referral Controller"
-        ],
-        "summary": "Add a contributory factor to the referral.",
-        "description": "Add a contributory factor to the referral. Publishes person.csip.contributory-factor.created event\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI\n* ROLE_NOMIS_CSIP",
-        "operationId": "createContributoryFactor",
-        "parameters": [
-          {
-            "name": "recordUuid",
-            "in": "path",
-            "description": "CSIP record unique identifier",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateContributoryFactorRequest"
+          },
+          "201": {
+            "description": "CSIP plan created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Plan"
+                }
               }
             }
           },
-          "required": true
-        },
-        "responses": {
           "404": {
             "description": "The CSIP referral associated with this identifier was not found.",
             "content": {
@@ -946,42 +1038,12 @@
               }
             }
           },
-          "201": {
-            "description": "New contributory factor added to CSIP referral",
+          "200": {
+            "description": "CSIP plan updated",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContributoryFactor"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/Plan"
                 }
               }
             }
@@ -995,7 +1057,7 @@
           "6. Reviews Controller"
         ],
         "summary": "Add a review of the plan and any attendees.",
-        "description": "Create a review of the plan and any attendees. Publishes prisoner-csip.review-created and prisoner-csip.attendee-created events\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI\n* ROLE_NOMIS_CSIP",
+        "description": "Create a review of the plan and any attendees. Publishes prisoner-csip.review-created and prisoner-csip.attendee-created events\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
         "operationId": "createReview",
         "parameters": [
           {
@@ -1020,6 +1082,16 @@
           "required": true
         },
         "responses": {
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "201": {
             "description": "Reviews and attendees added to CSIP plan",
             "content": {
@@ -1040,8 +1112,8 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1059,16 +1131,6 @@
                 }
               }
             }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
           }
         }
       }
@@ -1079,7 +1141,7 @@
           "6. Plans Controller"
         ],
         "summary": "Add an identified need to the plan.",
-        "description": "Add an identified need to the plan. Publishes prisoner-csip.identified-need.created event\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI\n* ROLE_NOMIS_CSIP",
+        "description": "Add an identified need to the plan. Publishes prisoner-csip.identified-need.created event\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
         "operationId": "createIdentifiedNeed",
         "parameters": [
           {
@@ -1104,16 +1166,6 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "400": {
             "description": "Bad request",
             "content": {
@@ -1124,8 +1176,18 @@
               }
             }
           },
-          "404": {
-            "description": "The CSIP plan associated with this identifier was not found.",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1144,8 +1206,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "The CSIP plan associated with this identifier was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1163,7 +1225,7 @@
           "6. Reviews Controller"
         ],
         "summary": "Add an attendee to a review of the plan.",
-        "description": "Add an attendee to a review of the plan. Publishes prisoner-csip.attendee-created event\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI\n* ROLE_NOMIS_CSIP",
+        "description": "Add an attendee to a review of the plan. Publishes prisoner-csip.attendee-created event\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
         "operationId": "createAttendee",
         "parameters": [
           {
@@ -1188,12 +1250,12 @@
           "required": true
         },
         "responses": {
-          "201": {
-            "description": "Attendee added to review",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Attendee"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1208,18 +1270,18 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "201": {
+            "description": "Attendee added to review",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/Attendee"
                 }
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1262,6 +1324,16 @@
           }
         ],
         "responses": {
+          "404": {
+            "description": "The CSIP record associated with this identifier was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "CSIP record found",
             "content": {
@@ -1274,16 +1346,6 @@
           },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The CSIP record associated with this identifier was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1309,8 +1371,8 @@
           "1. CSIP Record Controller"
         ],
         "summary": "Delete a complete CSIP record.",
-        "description": "Delete the whole of a CSIP record, including its referral and plan. Publishes prisoner-csip.csip-record-deleted event\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI\n* ROLE_NOMIS_CSIP",
-        "operationId": "deleteCsipRecord",
+        "description": "Delete the whole of a CSIP record, including its referral and plan. Publishes prisoner-csip.csip-record-deleted event\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
+        "operationId": "deleteCsipRecord_1",
         "parameters": [
           {
             "name": "recordUuid",
@@ -1324,8 +1386,28 @@
           }
         ],
         "responses": {
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1344,32 +1426,12 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "CSIP previously deleted or never existed",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Unit"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1381,7 +1443,7 @@
           "1. CSIP Record Controller"
         ],
         "summary": "Update the log code for a CSIP record and/or optionally the referral.",
-        "description": "Update the log code for a CSIP record. Publishes person.csip.record.updated event with affected component of `Record`\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI\n* ROLE_NOMIS_CSIP",
+        "description": "Update the log code for a CSIP record. Publishes person.csip.record.updated event with affected component of `Record`\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
         "operationId": "updateCsipRecord",
         "parameters": [
           {
@@ -1406,8 +1468,8 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -1426,8 +1488,8 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1460,61 +1522,6 @@
       }
     },
     "/csip-records/referral/investigation/interviews/{interviewUuid}": {
-      "delete": {
-        "tags": [
-          "4. Investigations Controller"
-        ],
-        "summary": "Remove an interview from the investigation.",
-        "description": "Remove an interview from the investigation. Publishes prisoner-csip.interview-deleted event\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
-        "operationId": "deleteInterview",
-        "parameters": [
-          {
-            "name": "interviewUuid",
-            "in": "path",
-            "description": "Interview unique identifier",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The interview associated with this identifier was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "204": {
-            "description": "Interview deleted"
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
       "patch": {
         "tags": [
           "4. Investigations Controller"
@@ -1545,8 +1552,8 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -1565,73 +1572,6 @@
               }
             }
           },
-          "200": {
-            "description": "Interview updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Interview"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/csip-records/referral/contributory-factors/{contributoryFactorUuid}": {
-      "delete": {
-        "tags": [
-          "2. Referral Controller"
-        ],
-        "summary": "Remove a contributory factor on the referral.",
-        "description": "Remove a contributory factor from the referral. Publishes prisoner-csip.contributory-factor-deleted event\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
-        "operationId": "deleteContributoryFactor",
-        "parameters": [
-          {
-            "name": "contributoryFactorUuid",
-            "in": "path",
-            "description": "Contributory Factor unique identifier",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Contributory factor deleted"
-          },
-          "404": {
-            "description": "The contributory factor associated with this identifier was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -1651,9 +1591,21 @@
                 }
               }
             }
+          },
+          "200": {
+            "description": "Interview updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Interview"
+                }
+              }
+            }
           }
         }
-      },
+      }
+    },
+    "/csip-records/referral/contributory-factors/{contributoryFactorUuid}": {
       "patch": {
         "tags": [
           "2. Referral Controller"
@@ -1684,8 +1636,8 @@
           "required": true
         },
         "responses": {
-          "404": {
-            "description": "The contributory factor associated with this identifier was not found.",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -1704,8 +1656,8 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1714,8 +1666,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "The contributory factor associated with this identifier was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1768,12 +1720,12 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "Review updated",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Review"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1788,18 +1740,18 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "200": {
+            "description": "Review updated",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/Review"
                 }
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1822,61 +1774,6 @@
       }
     },
     "/csip-records/plan/reviews/attendees/{attendeeUuid}": {
-      "delete": {
-        "tags": [
-          "6. Reviews Controller"
-        ],
-        "summary": "Remove an attendee from a review of the plan.",
-        "description": "Remove an attendee from a review of the plan. Publishes prisoner-csip.attendee-deleted event\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
-        "operationId": "deleteAttendee",
-        "parameters": [
-          {
-            "name": "attendeeUuid",
-            "in": "path",
-            "description": "Attendee unique identifier",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Attendee deleted"
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The attendee associated with this identifier was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
       "patch": {
         "tags": [
           "6. Reviews Controller"
@@ -1907,26 +1804,6 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "Attendee updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Attendee"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "400": {
             "description": "Bad request",
             "content": {
@@ -1947,53 +1824,6 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/csip-records/plan/identified-needs/{identifiedNeedUuid}": {
-      "delete": {
-        "tags": [
-          "6. Plans Controller"
-        ],
-        "summary": "Remove an identified need from the plan.",
-        "description": "Remove an identified need from the plan. Publishes prisoner-csip.identified-need-deleted event\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
-        "operationId": "deleteIdentifiedNeed",
-        "parameters": [
-          {
-            "name": "identifiedNeedUuid",
-            "in": "path",
-            "description": "Identified Need unique identifier",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Identified need deleted"
-          },
-          "404": {
-            "description": "The identified need associated with this identifier was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -2013,9 +1843,21 @@
                 }
               }
             }
+          },
+          "200": {
+            "description": "Attendee updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attendee"
+                }
+              }
+            }
           }
         }
-      },
+      }
+    },
+    "/csip-records/plan/identified-needs/{identifiedNeedUuid}": {
       "patch": {
         "tags": [
           "6. Plans Controller"
@@ -2046,8 +1888,8 @@
           "required": true
         },
         "responses": {
-          "404": {
-            "description": "The identified need associated with this identifier was not found.",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -2066,6 +1908,16 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Identified Need updated",
             "content": {
@@ -2076,18 +1928,8 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "The identified need associated with this identifier was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2118,12 +1960,13 @@
               "enum": [
                 "area-of-work",
                 "contributory-factor-type",
+                "decision-outcome-type",
                 "role",
                 "incident-involvement",
                 "incident-location",
                 "incident-type",
                 "interviewee-role",
-                "outcome-type"
+                "screening-outcome-type"
               ]
             }
           },
@@ -2138,6 +1981,16 @@
           }
         ],
         "responses": {
+          "404": {
+            "description": "The reference data associated with this domain was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -2148,8 +2001,8 @@
               }
             }
           },
-          "404": {
-            "description": "The reference data associated with this domain was not found.",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -2170,109 +2023,42 @@
                 }
               }
             }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
           }
         }
       }
     },
-    "/prisons/{prisonCode}/csip-records": {
-      "get": {
+    "/sync/csip-records/{id}": {
+      "delete": {
         "tags": [
-          "1. CSIP Record Controller"
+          "Sync CSIP Record Controller"
         ],
-        "summary": "Retrieve and filter all CSIP records for prisoners resident in the prison.",
-        "description": "Returns the CSIP records for prisoners resident in the prison. Supports log code filtering.\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
-        "operationId": "getCsipRecordsByPrisonCode",
+        "description": "\n\nRequires one of the following roles:\n* ROLE_NOMIS_CSIP",
+        "operationId": "deleteCsipRecord",
         "parameters": [
           {
-            "name": "prisonCode",
+            "name": "id",
             "in": "path",
-            "description": "Prison Code of the prison",
             "required": true,
             "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "logCode",
-            "in": "query",
-            "description": "Filter CSIP records that contain the search text in their Log Code. The search is case insensitive.",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "example": "Search text"
-          },
-          {
-            "name": "createdAtStart",
-            "in": "query",
-            "description": "Filter CSIP records that have a created timestamp at or after the supplied time.",
-            "required": false,
-            "schema": {
               "type": "string",
-              "format": "date-time"
-            },
-            "example": "2021-09-27T14:19:25"
-          },
-          {
-            "name": "createdAtEnd",
-            "in": "query",
-            "description": "Filter CSIP records that have a created timestamp at or before the supplied time.",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "example": "2021-09-27T14:19:25"
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "description": "Zero-based page index (0..N)",
-            "required": false,
-            "schema": {
-              "minimum": 0,
-              "type": "integer",
-              "default": 0
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "description": "The size of the page to be returned",
-            "required": false,
-            "schema": {
-              "minimum": 1,
-              "type": "integer",
-              "default": 10
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "default": [
-                "createdAt,DESC"
-              ]
+              "format": "uuid"
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DefaultLegacyActioned"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
+          "200": {
+            "description": "CSIP record merged"
+          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -2283,16 +2069,6 @@
               }
             }
           },
-          "200": {
-            "description": "CSIP records found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PageCsipRecord"
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -2302,6 +2078,9 @@
                 }
               }
             }
+          },
+          "204": {
+            "description": "No Content"
           }
         }
       }
@@ -2309,47 +2088,707 @@
   },
   "components": {
     "schemas": {
-      "UpsertInvestigationRequest": {
+      "SyncAttendeeRequest": {
+        "required": [
+          "createdAt",
+          "createdBy",
+          "createdByDisplayName",
+          "legacyId"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "role": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string"
+          },
+          "isAttended": {
+            "type": "boolean"
+          },
+          "contribution": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "legacyId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdByDisplayName": {
+            "type": "string"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastModifiedBy": {
+            "type": "string"
+          },
+          "lastModifiedByDisplayName": {
+            "type": "string"
+          }
+        }
+      },
+      "SyncContributoryFactorRequest": {
+        "required": [
+          "createdAt",
+          "createdBy",
+          "createdByDisplayName",
+          "factorTypeCode",
+          "legacyId"
+        ],
+        "type": "object",
+        "properties": {
+          "factorTypeCode": {
+            "maxLength": 12,
+            "minLength": 1,
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "legacyId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdByDisplayName": {
+            "type": "string"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastModifiedBy": {
+            "type": "string"
+          },
+          "lastModifiedByDisplayName": {
+            "type": "string"
+          }
+        }
+      },
+      "SyncCsipRequest": {
+        "required": [
+          "actionedAt",
+          "actionedBy",
+          "actionedByDisplayName",
+          "createdAt",
+          "createdBy",
+          "createdByDisplayName",
+          "legacyId",
+          "prisonNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "prisonNumber": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string"
+          },
+          "logCode": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string"
+          },
+          "referral": {
+            "$ref": "#/components/schemas/SyncReferralRequest"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/SyncPlanRequest"
+          },
+          "prisonCodeWhenRecorded": {
+            "type": "string"
+          },
+          "actionedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actionedBy": {
+            "type": "string"
+          },
+          "actionedByDisplayName": {
+            "type": "string"
+          },
+          "activeCaseloadId": {
+            "type": "string"
+          },
+          "legacyId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdByDisplayName": {
+            "type": "string"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastModifiedBy": {
+            "type": "string"
+          },
+          "lastModifiedByDisplayName": {
+            "type": "string"
+          }
+        }
+      },
+      "SyncDecisionAndActionsRequest": {
+        "required": [
+          "actions"
+        ],
+        "type": "object",
+        "properties": {
+          "conclusion": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "outcomeTypeCode": {
+            "maxLength": 12,
+            "minLength": 1,
+            "type": "string"
+          },
+          "signedOffByRoleCode": {
+            "maxLength": 12,
+            "minLength": 0,
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "recordedBy": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": "string"
+          },
+          "recordedByDisplayName": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string"
+          },
+          "nextSteps": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "actionOther": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "actions": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "OPEN_CSIP_ALERT",
+                "NON_ASSOCIATIONS_UPDATED",
+                "OBSERVATION_BOOK",
+                "UNIT_OR_CELL_MOVE",
+                "CSRA_OR_RSRA_REVIEW",
+                "SERVICE_REFERRAL",
+                "SIM_REFERRAL"
+              ]
+            }
+          }
+        }
+      },
+      "SyncInterviewRequest": {
+        "required": [
+          "createdAt",
+          "createdBy",
+          "createdByDisplayName",
+          "interviewDate",
+          "interviewee",
+          "intervieweeRoleCode",
+          "legacyId"
+        ],
+        "type": "object",
+        "properties": {
+          "interviewee": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "interviewDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "intervieweeRoleCode": {
+            "maxLength": 12,
+            "minLength": 1,
+            "type": "string"
+          },
+          "interviewText": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "legacyId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdByDisplayName": {
+            "type": "string"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastModifiedBy": {
+            "type": "string"
+          },
+          "lastModifiedByDisplayName": {
+            "type": "string"
+          }
+        }
+      },
+      "SyncInvestigationRequest": {
+        "required": [
+          "interviews"
+        ],
         "type": "object",
         "properties": {
           "staffInvolved": {
             "maxLength": 4000,
             "minLength": 0,
-            "type": "string",
-            "description": "The names of the staff involved in the investigation."
+            "type": "string"
           },
           "evidenceSecured": {
             "maxLength": 4000,
             "minLength": 0,
-            "type": "string",
-            "description": "Any evidence that was secured as part of the investigation."
+            "type": "string"
           },
           "occurrenceReason": {
             "maxLength": 4000,
             "minLength": 0,
-            "type": "string",
-            "description": "The reasons why the incident occurred."
+            "type": "string"
           },
           "personsUsualBehaviour": {
             "maxLength": 4000,
             "minLength": 0,
-            "type": "string",
-            "description": "The normal behaviour of the person in prison."
+            "type": "string"
           },
           "personsTrigger": {
             "maxLength": 4000,
             "minLength": 0,
-            "type": "string",
-            "description": "What triggers the person in prison has that could have motivated the incident."
+            "type": "string"
           },
           "protectiveFactors": {
             "maxLength": 4000,
             "minLength": 0,
-            "type": "string",
-            "description": "Any protective factors to reduce the person's risk factors and prevent triggers for instance of violence"
+            "type": "string"
+          },
+          "interviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncInterviewRequest"
+            }
           }
-        },
-        "description": "The request body to update an investigation on the incident that motivated the CSIP referral."
+        }
+      },
+      "SyncNeedRequest": {
+        "required": [
+          "createdAt",
+          "createdBy",
+          "createdByDisplayName",
+          "createdDate",
+          "identifiedNeed",
+          "intervention",
+          "legacyId",
+          "responsiblePerson",
+          "targetDate"
+        ],
+        "type": "object",
+        "properties": {
+          "identifiedNeed": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "responsiblePerson": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "targetDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "closedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "intervention": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "progression": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "legacyId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdByDisplayName": {
+            "type": "string"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastModifiedBy": {
+            "type": "string"
+          },
+          "lastModifiedByDisplayName": {
+            "type": "string"
+          }
+        }
+      },
+      "SyncPlanRequest": {
+        "required": [
+          "identifiedNeeds",
+          "reviews"
+        ],
+        "type": "object",
+        "properties": {
+          "caseManager": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "reasonForPlan": {
+            "maxLength": 240,
+            "minLength": 0,
+            "type": "string"
+          },
+          "firstCaseReviewDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "identifiedNeeds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncNeedRequest"
+            }
+          },
+          "reviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncReviewRequest"
+            }
+          }
+        }
+      },
+      "SyncReferralRequest": {
+        "required": [
+          "contributoryFactors",
+          "incidentDate",
+          "incidentLocationCode",
+          "incidentTypeCode",
+          "isSaferCustodyTeamInformed",
+          "refererAreaCode",
+          "referralDate",
+          "referredBy"
+        ],
+        "type": "object",
+        "properties": {
+          "referralDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "incidentDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "incidentTime": {
+            "type": "string",
+            "format": "partial-time"
+          },
+          "incidentTypeCode": {
+            "maxLength": 12,
+            "minLength": 1,
+            "type": "string"
+          },
+          "incidentLocationCode": {
+            "maxLength": 12,
+            "minLength": 1,
+            "type": "string"
+          },
+          "referredBy": {
+            "maxLength": 240,
+            "minLength": 1,
+            "type": "string"
+          },
+          "refererAreaCode": {
+            "maxLength": 12,
+            "minLength": 1,
+            "type": "string"
+          },
+          "isProactiveReferral": {
+            "type": "boolean"
+          },
+          "isStaffAssaulted": {
+            "type": "boolean"
+          },
+          "assaultedStaffName": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "incidentInvolvementCode": {
+            "maxLength": 12,
+            "minLength": 1,
+            "type": "string"
+          },
+          "descriptionOfConcern": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "knownReasons": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "otherInformation": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "isSaferCustodyTeamInformed": {
+            "type": "string",
+            "enum": [
+              "YES",
+              "NO",
+              "DO_NOT_KNOW"
+            ]
+          },
+          "isReferralComplete": {
+            "type": "boolean"
+          },
+          "completedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "completedBy": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": "string"
+          },
+          "completedByDisplayName": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string"
+          },
+          "contributoryFactors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncContributoryFactorRequest"
+            }
+          },
+          "saferCustodyScreeningOutcome": {
+            "$ref": "#/components/schemas/SyncScreeningOutcomeRequest"
+          },
+          "investigation": {
+            "$ref": "#/components/schemas/SyncInvestigationRequest"
+          },
+          "decisionAndActions": {
+            "$ref": "#/components/schemas/SyncDecisionAndActionsRequest"
+          }
+        }
+      },
+      "SyncReviewRequest": {
+        "required": [
+          "actions",
+          "attendees",
+          "createdAt",
+          "createdBy",
+          "createdByDisplayName",
+          "legacyId",
+          "recordedBy",
+          "recordedByDisplayName"
+        ],
+        "type": "object",
+        "properties": {
+          "reviewDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "recordedBy": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": "string"
+          },
+          "recordedByDisplayName": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string"
+          },
+          "nextReviewDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "csipClosedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "summary": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "actions": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "RESPONSIBLE_PEOPLE_INFORMED",
+                "CSIP_UPDATED",
+                "REMAIN_ON_CSIP",
+                "CASE_NOTE",
+                "CLOSE_CSIP"
+              ]
+            }
+          },
+          "attendees": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncAttendeeRequest"
+            }
+          },
+          "legacyId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdByDisplayName": {
+            "type": "string"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastModifiedBy": {
+            "type": "string"
+          },
+          "lastModifiedByDisplayName": {
+            "type": "string"
+          }
+        }
+      },
+      "SyncScreeningOutcomeRequest": {
+        "required": [
+          "date",
+          "outcomeTypeCode",
+          "recordedBy",
+          "recordedByDisplayName"
+        ],
+        "type": "object",
+        "properties": {
+          "outcomeTypeCode": {
+            "maxLength": 12,
+            "minLength": 1,
+            "type": "string"
+          },
+          "reasonForDecision": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "recordedBy": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": "string"
+          },
+          "recordedByDisplayName": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string"
+          }
+        }
       },
       "ErrorResponse": {
         "required": [
@@ -2375,146 +2814,60 @@
           }
         }
       },
-      "Interview": {
+      "ResponseMapping": {
         "required": [
-          "createdAt",
-          "createdBy",
-          "createdByDisplayName",
-          "interviewDate",
-          "interviewUuid",
-          "interviewee",
-          "intervieweeRole"
+          "component",
+          "id",
+          "uuid"
         ],
         "type": "object",
         "properties": {
-          "interviewUuid": {
+          "component": {
             "type": "string",
-            "description": "The unique identifier assigned to the Interview",
-            "format": "uuid",
-            "example": "8cdadcf3-b003-4116-9956-c99bd8df6a00"
+            "enum": [
+              "RECORD",
+              "REFERRAL",
+              "CONTRIBUTORY_FACTOR",
+              "SAFER_CUSTODY_SCREENING_OUTCOME",
+              "INVESTIGATION",
+              "INTERVIEW",
+              "DECISION_AND_ACTIONS",
+              "PLAN",
+              "IDENTIFIED_NEED",
+              "REVIEW",
+              "ATTENDEE"
+            ]
           },
-          "interviewee": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "uuid": {
             "type": "string",
-            "description": "Name of the person being interviewed."
-          },
-          "interviewDate": {
-            "type": "string",
-            "description": "The date the interview took place.",
-            "format": "date",
-            "example": "2021-09-27"
-          },
-          "intervieweeRole": {
-            "$ref": "#/components/schemas/ReferenceData"
-          },
-          "interviewText": {
-            "type": "string",
-            "description": "Information provided in interview."
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "The date and time the Interview was created",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "The username of the user who created the Interview",
-            "example": "USER1234"
-          },
-          "createdByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who created the Interview",
-            "example": "Firstname Lastname"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "description": "The date and time the Interview was last modified",
-            "format": "date-time"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "The username of the user who last modified the Interview",
-            "example": "USER1234"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who last modified the Interview",
-            "example": "Firstname Lastname"
+            "format": "uuid"
           }
-        },
-        "description": "An interview in relation to the investigation on the incident that motivated the CSIP referral"
+        }
       },
-      "Investigation": {
+      "SyncResponse": {
         "required": [
-          "interviews"
+          "mappings"
         ],
         "type": "object",
         "properties": {
-          "staffInvolved": {
-            "type": "string",
-            "description": "The names of the staff involved in the investigation."
-          },
-          "evidenceSecured": {
-            "type": "string",
-            "description": "Any evidence that was secured as part of the investigation."
-          },
-          "occurrenceReason": {
-            "type": "string",
-            "description": "The reasons why the incident occurred."
-          },
-          "personsUsualBehaviour": {
-            "type": "string",
-            "description": "The normal behaviour of the person in prison."
-          },
-          "personsTrigger": {
-            "type": "string",
-            "description": "What triggers the person in prison has that could have motivated the incident."
-          },
-          "protectiveFactors": {
-            "type": "string",
-            "description": "Any protective factors to reduce the person's risk factors and prevent triggers for instance of violence"
-          },
-          "interviews": {
+          "mappings": {
+            "uniqueItems": true,
             "type": "array",
-            "description": "The interviews in relation to the Investigation",
             "items": {
-              "$ref": "#/components/schemas/Interview"
+              "$ref": "#/components/schemas/ResponseMapping"
             }
           }
-        },
-        "description": "The investigation on the incident that motivated the CSIP referral"
-      },
-      "ReferenceData": {
-        "required": [
-          "code"
-        ],
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string",
-            "description": "The short code of a reference data"
-          },
-          "description": {
-            "type": "string",
-            "description": "The description of the reference data code"
-          },
-          "listSequence": {
-            "type": "integer",
-            "description": "The sequence number of the code. Used for ordering codes correctly in lists and drop downs. ",
-            "format": "int32",
-            "example": 3
-          },
-          "deactivatedAt": {
-            "type": "string",
-            "description": "The date and time the code was deactivated",
-            "format": "date-time"
-          }
-        },
-        "description": "A reference data code to categorise various aspects related to a CSIP record"
+        }
       },
       "UpsertDecisionAndActionsRequest": {
         "required": [
           "actions",
-          "outcomeTypeCode"
+          "outcomeTypeCode",
+          "signedOffByRoleCode"
         ],
         "type": "object",
         "properties": {
@@ -2537,7 +2890,7 @@
             "description": "The role of the person making the outcome decision."
           },
           "recordedBy": {
-            "maxLength": 100,
+            "maxLength": 64,
             "minLength": 0,
             "type": "string",
             "description": "The username of the user who recorded the outcome decision."
@@ -2589,8 +2942,7 @@
       },
       "DecisionAndActions": {
         "required": [
-          "actions",
-          "outcome"
+          "actions"
         ],
         "type": "object",
         "properties": {
@@ -2647,34 +2999,181 @@
         },
         "description": "The Decision and Actions for the CSIP referral"
       },
-      "UpsertPlanRequest": {
+      "ReferenceData": {
         "required": [
-          "caseManager",
-          "firstCaseReviewDate",
-          "reasonForPlan"
+          "code"
         ],
         "type": "object",
         "properties": {
-          "caseManager": {
-            "maxLength": 100,
-            "minLength": 0,
+          "code": {
             "type": "string",
-            "description": "The case manager assigned to the CSIP plan."
+            "description": "The short code of a reference data"
           },
-          "reasonForPlan": {
-            "maxLength": 240,
-            "minLength": 0,
+          "description": {
             "type": "string",
-            "description": "The reasons motivating the creation of a CSIP plan."
+            "description": "The description of the reference data code"
           },
-          "firstCaseReviewDate": {
+          "listSequence": {
+            "type": "integer",
+            "description": "The sequence number of the code. Used for ordering codes correctly in lists and drop downs. ",
+            "format": "int32",
+            "example": 3
+          },
+          "deactivatedAt": {
             "type": "string",
-            "description": "The first date the CSIP plan should be reviewed.",
-            "format": "date",
-            "example": "2021-09-27"
+            "description": "The date and time the code was deactivated",
+            "format": "date-time"
           }
         },
-        "description": "The request for creating a CSIP Plan for a CSIP record"
+        "description": "A reference data code to categorise various aspects related to a CSIP record"
+      },
+      "CreateContributoryFactorRequest": {
+        "required": [
+          "factorTypeCode"
+        ],
+        "type": "object",
+        "properties": {
+          "factorTypeCode": {
+            "maxLength": 12,
+            "minLength": 1,
+            "type": "string",
+            "description": "The type of contributory factor to the incident or motivation for CSIP referral."
+          },
+          "comment": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string",
+            "description": "Additional information about the contributory factor to the incident or motivation for CSIP referral."
+          }
+        },
+        "description": "The request body to create a contributory factor to the incident that motivated the CSIP referral"
+      },
+      "CreateCsipRecordRequest": {
+        "required": [
+          "referral"
+        ],
+        "type": "object",
+        "properties": {
+          "logCode": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string",
+            "description": "User entered identifier for the CSIP record. Defaults to the prison code."
+          },
+          "referral": {
+            "$ref": "#/components/schemas/CreateReferralRequest"
+          }
+        },
+        "description": "The request body for creating a new CSIP Record for a person"
+      },
+      "CreateReferralRequest": {
+        "required": [
+          "contributoryFactors",
+          "incidentDate",
+          "incidentLocationCode",
+          "incidentTypeCode",
+          "isSaferCustodyTeamInformed",
+          "refererAreaCode",
+          "referredBy"
+        ],
+        "type": "object",
+        "properties": {
+          "incidentDate": {
+            "type": "string",
+            "description": "The date the incident that motivated the CSIP referral occurred",
+            "format": "date",
+            "example": "2021-09-27"
+          },
+          "incidentTime": {
+            "type": "string",
+            "description": "The time the incident that motivated the CSIP referral occurred",
+            "format": "partial-time",
+            "example": "14:19:25"
+          },
+          "incidentTypeCode": {
+            "maxLength": 12,
+            "minLength": 1,
+            "type": "string",
+            "description": "The type of incident that motivated the CSIP referral."
+          },
+          "incidentLocationCode": {
+            "maxLength": 12,
+            "minLength": 1,
+            "type": "string",
+            "description": "The location of incident that motivated the CSIP referral."
+          },
+          "referredBy": {
+            "maxLength": 240,
+            "minLength": 1,
+            "type": "string",
+            "description": "The person reporting the incident or creating the CSIP referral."
+          },
+          "refererAreaCode": {
+            "maxLength": 12,
+            "minLength": 1,
+            "type": "string",
+            "description": "The area of work of the person reporting the incident or creating the CSIP referral."
+          },
+          "isProactiveReferral": {
+            "type": "boolean",
+            "description": "Was this referral proactive or preventative."
+          },
+          "isStaffAssaulted": {
+            "type": "boolean",
+            "description": "Were any members of staff assaulted in the incident."
+          },
+          "assaultedStaffName": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": "string",
+            "description": "Name or names of assaulted members of staff if any."
+          },
+          "incidentInvolvementCode": {
+            "maxLength": 12,
+            "minLength": 1,
+            "type": "string",
+            "description": "The type of involvement the person had in the incident"
+          },
+          "descriptionOfConcern": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string",
+            "description": "The reasons why there is cause for concern."
+          },
+          "knownReasons": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string",
+            "description": "The reasons already known about the causes of the incident or motivation for CSIP referral."
+          },
+          "otherInformation": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string",
+            "description": "Any other information about the incident or reasons for CSIP referral."
+          },
+          "isSaferCustodyTeamInformed": {
+            "type": "string",
+            "description": "Records whether the safer custody team been informed.",
+            "enum": [
+              "YES",
+              "NO",
+              "DO_NOT_KNOW"
+            ]
+          },
+          "isReferralComplete": {
+            "type": "boolean",
+            "description": "Is the referral complete."
+          },
+          "contributoryFactors": {
+            "type": "array",
+            "description": "Contributory factors to the incident that motivated the referral.",
+            "items": {
+              "$ref": "#/components/schemas/CreateContributoryFactorRequest"
+            }
+          }
+        },
+        "description": "The request body for creating a CSIP referral"
       },
       "Attendee": {
         "required": [
@@ -2739,404 +3238,6 @@
           }
         },
         "description": "An Attendee or Contributor to a Review of a CSIP Plan"
-      },
-      "IdentifiedNeed": {
-        "required": [
-          "createdAt",
-          "createdBy",
-          "createdByDisplayName",
-          "createdDate",
-          "identifiedNeed",
-          "identifiedNeedUuid",
-          "intervention",
-          "responsiblePerson",
-          "targetDate"
-        ],
-        "type": "object",
-        "properties": {
-          "identifiedNeedUuid": {
-            "type": "string",
-            "description": "The unique identifier assigned to the Contributory Factor",
-            "format": "uuid",
-            "example": "8cdadcf3-b003-4116-9956-c99bd8df6a00"
-          },
-          "identifiedNeed": {
-            "type": "string",
-            "description": "Details of the need identified in the CSIP plan."
-          },
-          "responsiblePerson": {
-            "type": "string",
-            "description": "The name of the person who is responsible for taking action on the intervention."
-          },
-          "createdDate": {
-            "type": "string",
-            "description": "The date the need was identified.",
-            "format": "date",
-            "example": "2021-09-27"
-          },
-          "targetDate": {
-            "type": "string",
-            "description": "The target date the need should be progressed or resolved.",
-            "format": "date",
-            "example": "2021-09-27"
-          },
-          "closedDate": {
-            "type": "string",
-            "description": "The date the identified need was resolved or closed.",
-            "format": "date",
-            "example": "2021-09-27"
-          },
-          "intervention": {
-            "type": "string",
-            "description": "The planned intervention for the identified need."
-          },
-          "progression": {
-            "type": "string",
-            "description": "How the plan to address the identified need is progressing."
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "The date and time the Identified Need was created",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "The username of the user who created the Identified Need",
-            "example": "USER1234"
-          },
-          "createdByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who created the Identified Need",
-            "example": "Firstname Lastname"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "description": "The date and time the Identified Need was last modified",
-            "format": "date-time"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "The username of the user who last modified the Identified Need",
-            "example": "USER1234"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who last modified the Identified Need",
-            "example": "Firstname Lastname"
-          }
-        },
-        "description": "A need identified in the CSIP Plan"
-      },
-      "Plan": {
-        "required": [
-          "caseManager",
-          "firstCaseReviewDate",
-          "identifiedNeeds",
-          "reasonForPlan",
-          "reviews"
-        ],
-        "type": "object",
-        "properties": {
-          "caseManager": {
-            "type": "string",
-            "description": "The case manager assigned to the CSIP plan."
-          },
-          "reasonForPlan": {
-            "type": "string",
-            "description": "The reasons motivating the creation of a CSIP plan."
-          },
-          "firstCaseReviewDate": {
-            "type": "string",
-            "description": "The first date the CSIP plan should be reviewed.",
-            "format": "date",
-            "example": "2021-09-27"
-          },
-          "identifiedNeeds": {
-            "type": "array",
-            "description": "The needs identified in the CSIP plan.",
-            "items": {
-              "$ref": "#/components/schemas/IdentifiedNeed"
-            }
-          },
-          "reviews": {
-            "type": "array",
-            "description": "Regular reviews of the CSIP Plan",
-            "items": {
-              "$ref": "#/components/schemas/Review"
-            }
-          }
-        },
-        "description": "The CSIP Plan of a CSIP record"
-      },
-      "Review": {
-        "required": [
-          "actions",
-          "attendees",
-          "createdAt",
-          "createdBy",
-          "createdByDisplayName",
-          "recordedBy",
-          "recordedByDisplayName",
-          "reviewSequence",
-          "reviewUuid"
-        ],
-        "type": "object",
-        "properties": {
-          "reviewUuid": {
-            "type": "string",
-            "description": "The unique identifier assigned to the Review",
-            "format": "uuid",
-            "example": "8cdadcf3-b003-4116-9956-c99bd8df6a00"
-          },
-          "reviewSequence": {
-            "type": "integer",
-            "description": "The sequence number of the Review. Used for ordering reviews correctly in lists and/or drop downs. ",
-            "format": "int32",
-            "example": 3
-          },
-          "reviewDate": {
-            "type": "string",
-            "description": "The date of the review.",
-            "format": "date",
-            "example": "2021-09-27"
-          },
-          "recordedBy": {
-            "type": "string",
-            "description": "The username of the person who recorded the review."
-          },
-          "recordedByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the person who recorded the review."
-          },
-          "nextReviewDate": {
-            "type": "string",
-            "description": "The date of the next review.",
-            "format": "date",
-            "example": "2021-09-27"
-          },
-          "csipClosedDate": {
-            "type": "string",
-            "description": "The date the CSIP plan was closed following a review outcome decision to close it.",
-            "format": "date",
-            "example": "2021-09-27"
-          },
-          "summary": {
-            "type": "string",
-            "description": "Additional information about the review."
-          },
-          "actions": {
-            "uniqueItems": true,
-            "type": "array",
-            "description": "A list of actions following the review.",
-            "items": {
-              "type": "string",
-              "description": "A list of actions following the review.",
-              "enum": [
-                "RESPONSIBLE_PEOPLE_INFORMED",
-                "CSIP_UPDATED",
-                "REMAIN_ON_CSIP",
-                "CASE_NOTE",
-                "CLOSE_CSIP"
-              ]
-            }
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "The date and time the Review was created",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "The username of the user who created the Review",
-            "example": "USER1234"
-          },
-          "createdByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who created the Review",
-            "example": "Firstname Lastname"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "description": "The date and time the Review was last modified",
-            "format": "date-time"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "The username of the user who last modified the Review",
-            "example": "USER1234"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who last modified the Review",
-            "example": "Firstname Lastname"
-          },
-          "attendees": {
-            "type": "array",
-            "description": "The attendees/contributors to the review.",
-            "items": {
-              "$ref": "#/components/schemas/Attendee"
-            }
-          }
-        },
-        "description": "A regular review of a CSIP Plan"
-      },
-      "CreateContributoryFactorRequest": {
-        "required": [
-          "factorTypeCode"
-        ],
-        "type": "object",
-        "properties": {
-          "factorTypeCode": {
-            "maxLength": 12,
-            "minLength": 1,
-            "type": "string",
-            "description": "The type of contributory factor to the incident or motivation for CSIP referral."
-          },
-          "comment": {
-            "type": "string",
-            "description": "Additional information about the contributory factor to the incident or motivation for CSIP referral."
-          }
-        },
-        "description": "The request body to create a contributory factor to the incident that motivated the CSIP referral"
-      },
-      "CreateCsipRecordRequest": {
-        "required": [
-          "referral"
-        ],
-        "type": "object",
-        "properties": {
-          "logCode": {
-            "maxLength": 10,
-            "minLength": 0,
-            "type": "string",
-            "description": "User entered identifier for the CSIP record. Defaults to the prison code."
-          },
-          "referral": {
-            "$ref": "#/components/schemas/CreateReferralRequest"
-          }
-        },
-        "description": "The request body for creating a new CSIP Record for a person"
-      },
-      "CreateReferralRequest": {
-        "required": [
-          "contributoryFactors",
-          "incidentDate",
-          "incidentLocationCode",
-          "incidentTypeCode",
-          "isSaferCustodyTeamInformed",
-          "refererAreaCode",
-          "referredBy"
-        ],
-        "type": "object",
-        "properties": {
-          "incidentDate": {
-            "type": "string",
-            "description": "The date the incident that motivated the CSIP referral occurred",
-            "format": "date",
-            "example": "2021-09-27"
-          },
-          "incidentTime": {
-            "pattern": "HH:mm:SS",
-            "type": "string",
-            "description": "The time the incident that motivated the CSIP referral occurred",
-            "example": "14:19:25"
-          },
-          "incidentTypeCode": {
-            "maxLength": 12,
-            "minLength": 1,
-            "type": "string",
-            "description": "The type of incident that motivated the CSIP referral."
-          },
-          "incidentLocationCode": {
-            "maxLength": 12,
-            "minLength": 1,
-            "type": "string",
-            "description": "The location of incident that motivated the CSIP referral."
-          },
-          "referredBy": {
-            "maxLength": 240,
-            "minLength": 1,
-            "type": "string",
-            "description": "The person reporting the incident or creating the CSIP referral."
-          },
-          "refererAreaCode": {
-            "maxLength": 12,
-            "minLength": 1,
-            "type": "string",
-            "description": "The area of work of the person reporting the incident or creating the CSIP referral."
-          },
-          "isProactiveReferral": {
-            "type": "boolean",
-            "description": "Was this referral proactive or preventative."
-          },
-          "isStaffAssaulted": {
-            "type": "boolean",
-            "description": "Were any members of staff assaulted in the incident."
-          },
-          "assaultedStaffName": {
-            "maxLength": 1000,
-            "minLength": 0,
-            "type": "string",
-            "description": "Name or names of assaulted members of staff if any."
-          },
-          "incidentInvolvementCode": {
-            "maxLength": 12,
-            "minLength": 1,
-            "type": "string",
-            "description": "The type of involvement the person had in the incident"
-          },
-          "descriptionOfConcern": {
-            "type": "string",
-            "description": "The reasons why there is cause for concern."
-          },
-          "knownReasons": {
-            "type": "string",
-            "description": "The reasons already known about the causes of the incident or motivation for CSIP referral."
-          },
-          "otherInformation": {
-            "type": "string",
-            "description": "Any other information about the incident or reasons for CSIP referral."
-          },
-          "isSaferCustodyTeamInformed": {
-            "type": "string",
-            "description": "Records whether the safer custody team been informed.",
-            "enum": [
-              "YES",
-              "NO",
-              "DO_NOT_KNOW"
-            ]
-          },
-          "isReferralComplete": {
-            "type": "boolean",
-            "description": "Is the referral complete."
-          },
-          "completedDate": {
-            "type": "string",
-            "description": "The date the referral was completed.",
-            "format": "date",
-            "example": "2024-07-29"
-          },
-          "completedBy": {
-            "maxLength": 32,
-            "minLength": 0,
-            "type": "string",
-            "description": "The username of the person who completed the referral."
-          },
-          "completedByDisplayName": {
-            "maxLength": 255,
-            "minLength": 0,
-            "type": "string",
-            "description": "The displayable name of the person who completed the referral."
-          },
-          "contributoryFactors": {
-            "type": "array",
-            "description": "Contributory factors to the incident that motivated the referral.",
-            "items": {
-              "$ref": "#/components/schemas/CreateContributoryFactorRequest"
-            }
-          }
-        },
-        "description": "The request body for creating a CSIP referral"
       },
       "ContributoryFactor": {
         "required": [
@@ -3280,6 +3381,239 @@
         },
         "description": "A CSIP Record associated with a person"
       },
+      "IdentifiedNeed": {
+        "required": [
+          "createdAt",
+          "createdBy",
+          "createdByDisplayName",
+          "createdDate",
+          "identifiedNeed",
+          "identifiedNeedUuid",
+          "intervention",
+          "responsiblePerson",
+          "targetDate"
+        ],
+        "type": "object",
+        "properties": {
+          "identifiedNeedUuid": {
+            "type": "string",
+            "description": "The unique identifier assigned to the Contributory Factor",
+            "format": "uuid",
+            "example": "8cdadcf3-b003-4116-9956-c99bd8df6a00"
+          },
+          "identifiedNeed": {
+            "type": "string",
+            "description": "Details of the need identified in the CSIP plan."
+          },
+          "responsiblePerson": {
+            "type": "string",
+            "description": "The name of the person who is responsible for taking action on the intervention."
+          },
+          "createdDate": {
+            "type": "string",
+            "description": "The date the need was identified.",
+            "format": "date",
+            "example": "2021-09-27"
+          },
+          "targetDate": {
+            "type": "string",
+            "description": "The target date the need should be progressed or resolved.",
+            "format": "date",
+            "example": "2021-09-27"
+          },
+          "closedDate": {
+            "type": "string",
+            "description": "The date the identified need was resolved or closed.",
+            "format": "date",
+            "example": "2021-09-27"
+          },
+          "intervention": {
+            "type": "string",
+            "description": "The planned intervention for the identified need."
+          },
+          "progression": {
+            "type": "string",
+            "description": "How the plan to address the identified need is progressing."
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "The date and time the Identified Need was created",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the user who created the Identified Need",
+            "example": "USER1234"
+          },
+          "createdByDisplayName": {
+            "type": "string",
+            "description": "The displayable name of the user who created the Identified Need",
+            "example": "Firstname Lastname"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "description": "The date and time the Identified Need was last modified",
+            "format": "date-time"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the user who last modified the Identified Need",
+            "example": "USER1234"
+          },
+          "lastModifiedByDisplayName": {
+            "type": "string",
+            "description": "The displayable name of the user who last modified the Identified Need",
+            "example": "Firstname Lastname"
+          }
+        },
+        "description": "A need identified in the CSIP Plan"
+      },
+      "Interview": {
+        "required": [
+          "createdAt",
+          "createdBy",
+          "createdByDisplayName",
+          "interviewDate",
+          "interviewUuid",
+          "interviewee",
+          "intervieweeRole"
+        ],
+        "type": "object",
+        "properties": {
+          "interviewUuid": {
+            "type": "string",
+            "description": "The unique identifier assigned to the Interview",
+            "format": "uuid",
+            "example": "8cdadcf3-b003-4116-9956-c99bd8df6a00"
+          },
+          "interviewee": {
+            "type": "string",
+            "description": "Name of the person being interviewed."
+          },
+          "interviewDate": {
+            "type": "string",
+            "description": "The date the interview took place.",
+            "format": "date",
+            "example": "2021-09-27"
+          },
+          "intervieweeRole": {
+            "$ref": "#/components/schemas/ReferenceData"
+          },
+          "interviewText": {
+            "type": "string",
+            "description": "Information provided in interview."
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "The date and time the Interview was created",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the user who created the Interview",
+            "example": "USER1234"
+          },
+          "createdByDisplayName": {
+            "type": "string",
+            "description": "The displayable name of the user who created the Interview",
+            "example": "Firstname Lastname"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "description": "The date and time the Interview was last modified",
+            "format": "date-time"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the user who last modified the Interview",
+            "example": "USER1234"
+          },
+          "lastModifiedByDisplayName": {
+            "type": "string",
+            "description": "The displayable name of the user who last modified the Interview",
+            "example": "Firstname Lastname"
+          }
+        },
+        "description": "An interview in relation to the investigation on the incident that motivated the CSIP referral"
+      },
+      "Investigation": {
+        "required": [
+          "interviews"
+        ],
+        "type": "object",
+        "properties": {
+          "staffInvolved": {
+            "type": "string",
+            "description": "The names of the staff involved in the investigation."
+          },
+          "evidenceSecured": {
+            "type": "string",
+            "description": "Any evidence that was secured as part of the investigation."
+          },
+          "occurrenceReason": {
+            "type": "string",
+            "description": "The reasons why the incident occurred."
+          },
+          "personsUsualBehaviour": {
+            "type": "string",
+            "description": "The normal behaviour of the person in prison."
+          },
+          "personsTrigger": {
+            "type": "string",
+            "description": "What triggers the person in prison has that could have motivated the incident."
+          },
+          "protectiveFactors": {
+            "type": "string",
+            "description": "Any protective factors to reduce the person's risk factors and prevent triggers for instance of violence"
+          },
+          "interviews": {
+            "type": "array",
+            "description": "The interviews in relation to the Investigation",
+            "items": {
+              "$ref": "#/components/schemas/Interview"
+            }
+          }
+        },
+        "description": "The investigation on the incident that motivated the CSIP referral"
+      },
+      "Plan": {
+        "required": [
+          "identifiedNeeds",
+          "reviews"
+        ],
+        "type": "object",
+        "properties": {
+          "caseManager": {
+            "type": "string",
+            "description": "The case manager assigned to the CSIP plan."
+          },
+          "reasonForPlan": {
+            "type": "string",
+            "description": "The reasons motivating the creation of a CSIP plan."
+          },
+          "firstCaseReviewDate": {
+            "type": "string",
+            "description": "The first date the CSIP plan should be reviewed.",
+            "format": "date",
+            "example": "2021-09-27"
+          },
+          "identifiedNeeds": {
+            "type": "array",
+            "description": "The needs identified in the CSIP plan.",
+            "items": {
+              "$ref": "#/components/schemas/IdentifiedNeed"
+            }
+          },
+          "reviews": {
+            "type": "array",
+            "description": "Regular reviews of the CSIP Plan",
+            "items": {
+              "$ref": "#/components/schemas/Review"
+            }
+          }
+        },
+        "description": "The CSIP Plan of a CSIP record"
+      },
       "Referral": {
         "required": [
           "contributoryFactors",
@@ -3288,10 +3622,17 @@
           "incidentType",
           "isSaferCustodyTeamInformed",
           "refererArea",
+          "referralDate",
           "referredBy"
         ],
         "type": "object",
         "properties": {
+          "referralDate": {
+            "type": "string",
+            "description": "The date the referral was made",
+            "format": "date",
+            "example": "2021-09-27"
+          },
           "incidentDate": {
             "type": "string",
             "description": "The date the incident that motivated the CSIP referral occurred",
@@ -3299,9 +3640,9 @@
             "example": "2021-09-27"
           },
           "incidentTime": {
-            "pattern": "HH:mm:SS",
             "type": "string",
             "description": "The time the incident that motivated the CSIP referral occurred",
+            "format": "partial-time",
             "example": "14:19:25"
           },
           "incidentType": {
@@ -3357,6 +3698,19 @@
             "type": "boolean",
             "description": "Is the referral complete."
           },
+          "referralCompletedDate": {
+            "type": "string",
+            "description": "The date the referral was completed.",
+            "format": "date"
+          },
+          "referralCompletedBy": {
+            "type": "string",
+            "description": "The username of the person completing the referral"
+          },
+          "referralCompletedByDisplayName": {
+            "type": "string",
+            "description": "The name of the person completing the referral"
+          },
           "contributoryFactors": {
             "type": "array",
             "description": "Contributory factors to the incident that motivated the referral.",
@@ -3376,11 +3730,122 @@
         },
         "description": "The referral of a CSIP record"
       },
+      "Review": {
+        "required": [
+          "actions",
+          "attendees",
+          "createdAt",
+          "createdBy",
+          "createdByDisplayName",
+          "recordedBy",
+          "recordedByDisplayName",
+          "reviewSequence",
+          "reviewUuid"
+        ],
+        "type": "object",
+        "properties": {
+          "reviewUuid": {
+            "type": "string",
+            "description": "The unique identifier assigned to the Review",
+            "format": "uuid",
+            "example": "8cdadcf3-b003-4116-9956-c99bd8df6a00"
+          },
+          "reviewSequence": {
+            "type": "integer",
+            "description": "The sequence number of the Review. Used for ordering reviews correctly in lists and/or drop downs.",
+            "format": "int32",
+            "example": 3
+          },
+          "reviewDate": {
+            "type": "string",
+            "description": "The date of the review.",
+            "format": "date",
+            "example": "2021-09-27"
+          },
+          "recordedBy": {
+            "type": "string",
+            "description": "The username of the person who recorded the review."
+          },
+          "recordedByDisplayName": {
+            "type": "string",
+            "description": "The displayable name of the person who recorded the review."
+          },
+          "nextReviewDate": {
+            "type": "string",
+            "description": "The date of the next review.",
+            "format": "date",
+            "example": "2021-09-27"
+          },
+          "csipClosedDate": {
+            "type": "string",
+            "description": "The date the CSIP plan was closed following a review outcome decision to close it.",
+            "format": "date",
+            "example": "2021-09-27"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Additional information about the review."
+          },
+          "actions": {
+            "uniqueItems": true,
+            "type": "array",
+            "description": "A list of actions following the review.",
+            "items": {
+              "type": "string",
+              "description": "A list of actions following the review.",
+              "enum": [
+                "RESPONSIBLE_PEOPLE_INFORMED",
+                "CSIP_UPDATED",
+                "REMAIN_ON_CSIP",
+                "CASE_NOTE",
+                "CLOSE_CSIP"
+              ]
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "The date and time the Review was created",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The username of the user who created the Review",
+            "example": "USER1234"
+          },
+          "createdByDisplayName": {
+            "type": "string",
+            "description": "The displayable name of the user who created the Review",
+            "example": "Firstname Lastname"
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "description": "The date and time the Review was last modified",
+            "format": "date-time"
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "description": "The username of the user who last modified the Review",
+            "example": "USER1234"
+          },
+          "lastModifiedByDisplayName": {
+            "type": "string",
+            "description": "The displayable name of the user who last modified the Review",
+            "example": "Firstname Lastname"
+          },
+          "attendees": {
+            "type": "array",
+            "description": "The attendees/contributors to the review.",
+            "items": {
+              "$ref": "#/components/schemas/Attendee"
+            }
+          }
+        },
+        "description": "A regular review of a CSIP Plan"
+      },
       "SaferCustodyScreeningOutcome": {
         "required": [
           "date",
           "outcome",
-          "reasonForDecision",
           "recordedBy",
           "recordedByDisplayName"
         ],
@@ -3439,7 +3904,7 @@
             "description": "The reasons for the safer custody screening outcome decision."
           },
           "recordedBy": {
-            "maxLength": 100,
+            "maxLength": 64,
             "minLength": 0,
             "type": "string",
             "description": "The username of the user who recorded the screening outcome."
@@ -3662,6 +4127,8 @@
       },
       "CreateReviewRequest": {
         "required": [
+          "actions",
+          "attendees",
           "recordedBy",
           "recordedByDisplayName"
         ],
@@ -3674,7 +4141,7 @@
             "example": "2021-09-27"
           },
           "recordedBy": {
-            "maxLength": 32,
+            "maxLength": 64,
             "minLength": 0,
             "type": "string",
             "description": "The username of the person who recorded the review."
@@ -3762,9 +4229,9 @@
             "example": "2021-09-27"
           },
           "incidentTime": {
-            "pattern": "HH:mm:SS",
             "type": "string",
             "description": "The time the incident that motivated the CSIP referral occurred",
+            "format": "partial-time",
             "example": "14:19:25"
           },
           "incidentTypeCode": {
@@ -3812,14 +4279,20 @@
             "description": "The type of involvement the person had in the incident"
           },
           "descriptionOfConcern": {
+            "maxLength": 4000,
+            "minLength": 0,
             "type": "string",
             "description": "The reasons why there is cause for concern."
           },
           "knownReasons": {
+            "maxLength": 4000,
+            "minLength": 0,
             "type": "string",
             "description": "The reasons already known about the causes of the incident or motivation for CSIP referral."
           },
           "otherInformation": {
+            "maxLength": 4000,
+            "minLength": 0,
             "type": "string",
             "description": "Any other information about the incident or reasons for CSIP referral."
           },
@@ -3835,27 +4308,80 @@
           "isReferralComplete": {
             "type": "boolean",
             "description": "Is the referral complete."
-          },
-          "completedDate": {
-            "type": "string",
-            "description": "The date the referral was completed.",
-            "format": "date",
-            "example": "2024-07-29"
-          },
-          "completedBy": {
-            "maxLength": 32,
-            "minLength": 0,
-            "type": "string",
-            "description": "The username of the person who completed the referral."
-          },
-          "completedByDisplayName": {
-            "maxLength": 255,
-            "minLength": 0,
-            "type": "string",
-            "description": "The displayable name of the person who completed the referral."
           }
         },
         "description": "The detail for updating a CSIP referral"
+      },
+      "UpdateInvestigationRequest": {
+        "type": "object",
+        "properties": {
+          "staffInvolved": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string",
+            "description": "The names of the staff involved in the investigation."
+          },
+          "evidenceSecured": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string",
+            "description": "Any evidence that was secured as part of the investigation."
+          },
+          "occurrenceReason": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string",
+            "description": "The reasons why the incident occurred."
+          },
+          "personsUsualBehaviour": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string",
+            "description": "The normal behaviour of the person in prison."
+          },
+          "personsTrigger": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string",
+            "description": "What triggers the person in prison has that could have motivated the incident."
+          },
+          "protectiveFactors": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string",
+            "description": "Any protective factors to reduce the person's risk factors and prevent triggers for instance of violence"
+          }
+        },
+        "description": "The request body to update an investigation on the incident that motivated the CSIP referral."
+      },
+      "UpdatePlanRequest": {
+        "required": [
+          "caseManager",
+          "firstCaseReviewDate",
+          "reasonForPlan"
+        ],
+        "type": "object",
+        "properties": {
+          "caseManager": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "The case manager assigned to the CSIP plan."
+          },
+          "reasonForPlan": {
+            "maxLength": 240,
+            "minLength": 0,
+            "type": "string",
+            "description": "The reasons motivating the creation of a CSIP plan."
+          },
+          "firstCaseReviewDate": {
+            "type": "string",
+            "description": "The first date the CSIP plan should be reviewed.",
+            "format": "date",
+            "example": "2021-09-27"
+          }
+        },
+        "description": "The request for creating a CSIP Plan for a CSIP record"
       },
       "UpdateInterviewRequest": {
         "required": [
@@ -3905,6 +4431,8 @@
             "description": "The type of contributory factor to the incident or motivation for CSIP referral."
           },
           "comment": {
+            "maxLength": 4000,
+            "minLength": 0,
             "type": "string",
             "description": "Additional information about the contributory factor to the incident or motivation for CSIP referral."
           }
@@ -3913,6 +4441,7 @@
       },
       "UpdateReviewRequest": {
         "required": [
+          "actions",
           "recordedBy",
           "recordedByDisplayName"
         ],
@@ -3925,7 +4454,7 @@
             "example": "2021-09-27"
           },
           "recordedBy": {
-            "maxLength": 32,
+            "maxLength": 64,
             "minLength": 0,
             "type": "string",
             "description": "The username of the person who recorded the review."
@@ -3942,26 +4471,6 @@
             "format": "date",
             "example": "2021-09-27"
           },
-          "isActionResponsiblePeopleInformed": {
-            "type": "boolean",
-            "description": "If an action following the review was to inform people responsible for the person in prison."
-          },
-          "isActionCsipUpdated": {
-            "type": "boolean",
-            "description": "If an action following the review was to update the CSIP plan."
-          },
-          "isActionRemainOnCsip": {
-            "type": "boolean",
-            "description": "If the outcome decision following the review was the person should remain on the CSIP plan."
-          },
-          "isActionCaseNote": {
-            "type": "boolean",
-            "description": "If an action following the review was to add a CSIP case note."
-          },
-          "isActionCloseCsip": {
-            "type": "boolean",
-            "description": "If the outcome decision following the review was closing the CSIP plan."
-          },
           "csipClosedDate": {
             "type": "string",
             "description": "The date the CSIP plan was closed following a review outcome decision to close it.",
@@ -3973,6 +4482,22 @@
             "minLength": 0,
             "type": "string",
             "description": "Additional information about the review."
+          },
+          "actions": {
+            "uniqueItems": true,
+            "type": "array",
+            "description": "A list of actions following the review.",
+            "items": {
+              "type": "string",
+              "description": "A list of actions following the review.",
+              "enum": [
+                "RESPONSIBLE_PEOPLE_INFORMED",
+                "CSIP_UPDATED",
+                "REMAIN_ON_CSIP",
+                "CASE_NOTE",
+                "CLOSE_CSIP"
+              ]
+            }
           }
         },
         "description": "The request body to update a Review for a CSIP Plan"
@@ -4060,101 +4585,108 @@
         },
         "description": "The request body to update an Identified Need in a CSIP Plan"
       },
-      "PageCsipRecord": {
+      "CsipSummaries": {
+        "required": [
+          "content",
+          "metadata"
+        ],
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CsipSummary"
+            }
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/PageMeta"
+          }
+        }
+      },
+      "CsipSummary": {
+        "required": [
+          "id",
+          "incidentType",
+          "prisonNumber",
+          "referralDate",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "prisonNumber": {
+            "type": "string"
+          },
+          "logCode": {
+            "type": "string"
+          },
+          "referralDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "nextReviewDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "incidentType": {
+            "$ref": "#/components/schemas/ReferenceData"
+          },
+          "caseManager": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "CSIP_CLOSED",
+              "CSIP_OPEN",
+              "AWAITING_DECISION",
+              "ACCT_SUPPORT",
+              "PLAN_PENDING",
+              "INVESTIGATION_PENDING",
+              "NO_FURTHER_ACTION",
+              "SUPPORT_OUTSIDE_CSIP",
+              "REFERRAL_SUBMITTED",
+              "REFERRAL_PENDING",
+              "UNKNOWN"
+            ]
+          }
+        }
+      },
+      "PageMeta": {
+        "required": [
+          "totalElements"
+        ],
         "type": "object",
         "properties": {
           "totalElements": {
             "type": "integer",
             "format": "int64"
-          },
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "size": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "content": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CsipRecord"
-            }
-          },
-          "number": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
-          "empty": {
-            "type": "boolean"
           }
         }
       },
-      "PageableObject": {
+      "DefaultLegacyActioned": {
+        "required": [
+          "actionedAt",
+          "actionedBy",
+          "actionedByDisplayName"
+        ],
         "type": "object",
         "properties": {
-          "offset": {
-            "type": "integer",
-            "format": "int64"
+          "actionedAt": {
+            "type": "string",
+            "format": "date-time"
           },
-          "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
-          },
-          "pageSize": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "paged": {
-            "type": "boolean"
-          },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "unpaged": {
-            "type": "boolean"
-          }
-        }
-      },
-      "SortObject": {
-        "type": "object",
-        "properties": {
-          "direction": {
+          "actionedBy": {
             "type": "string"
           },
-          "nullHandling": {
+          "actionedByDisplayName": {
             "type": "string"
           },
-          "ascending": {
-            "type": "boolean"
-          },
-          "property": {
+          "activeCaseloadId": {
             "type": "string"
-          },
-          "ignoreCase": {
-            "type": "boolean"
           }
         }
       },

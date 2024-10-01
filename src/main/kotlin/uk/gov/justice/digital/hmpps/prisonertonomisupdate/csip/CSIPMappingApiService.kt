@@ -24,4 +24,22 @@ class CSIPMappingApiService(@Qualifier("mappingWebClient") private val webClient
       .retrieve()
       .awaitBodilessEntity()
   }
+
+  suspend fun createMapping(csipFullMappingDto: CSIPFullMappingDto) {
+    webClient.post()
+      .uri("/mapping/csip/all")
+      .bodyValue(csipFullMappingDto)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+  /*
+  wip
+  suspend fun createChildMapping(csipFullMappingDto: CSIPFullMappingDto) {
+    webClient.post()
+      .uri("/mapping/csip/children/all")
+      .bodyValue(csipFullMappingDto)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+   */
 }
