@@ -5,13 +5,17 @@ import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
+import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -25,8 +29,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPDpsApiExtension.Companion.csipDpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CSIPFullMappingDto
+import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.util.UUID
 
 class CSIPToNomisIntTest : SqsIntegrationTestBase() {
@@ -37,7 +43,268 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
   private lateinit var csipMappingApi: CSIPMappingApiMockServer
 
   @Nested
-  @DisplayName("person.csip.record.deleted")
+  @DisplayName("person.csip-record.created")
+  inner class CSIPCreated {
+    @Nested
+    @DisplayName("when NOMIS is the origin of a CSIP create")
+    inner class WhenNomisCreated {
+      @BeforeEach
+      fun setup() {
+        publishCreateCSIPDomainEvent(source = CSIPSource.NOMIS)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing it ignore the create`() {
+        verify(telemetryClient).trackEvent(
+          eq("csip-create-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not try to create the CSIP in NOMIS`() {
+        csipNomisApi.verify(0, postRequestedFor(anyUrl()))
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a CSIP create")
+    inner class WhenDpsCreated {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val offenderNo = "A1234KT"
+        private val dpsCSIPId = UUID.randomUUID().toString()
+        private val nomisCSIPReportId = 43217L
+
+        @BeforeEach
+        fun setUp() {
+          csipMappingApi.stubGetByDpsReportId(HttpStatus.NOT_FOUND)
+          csipDpsApi.stubGetCsipReport(
+            dpsCsipRecord().copy(
+              recordUuid = UUID.fromString(dpsCSIPId),
+              prisonNumber = offenderNo,
+              createdBy = "BOBBY.BEANS",
+            ),
+          )
+          csipNomisApi.stubPutCSIP(
+            csipResponse =
+            upsertCSIPResponse(nomisCSIPReportId = nomisCSIPReportId),
+          )
+          csipMappingApi.stubPostMapping()
+          publishCreateCSIPDomainEvent(offenderNo = offenderNo, dpsCSIPReportId = dpsCSIPId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the create`() {
+          verify(telemetryClient).trackEvent(
+            eq("csip-create-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the csip created`() {
+          verify(telemetryClient).trackEvent(
+            eq("csip-create-success"),
+            check {
+              assertThat(it).containsEntry("dpsCSIPReportId", dpsCSIPId)
+              assertThat(it).containsEntry("offenderNo", offenderNo)
+              assertThat(it).containsEntry("nomisCSIPReportId", "$nomisCSIPReportId")
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call back to DPS to get csip details`() {
+          csipDpsApi.verify(getRequestedFor(urlMatching("/csip-records/$dpsCSIPId")))
+        }
+
+        @Test
+        fun `will create the csip in NOMIS`() {
+          csipNomisApi.verify(putRequestedFor(urlEqualTo("/csip")))
+        }
+
+        @Test
+        fun `the created csip will contain details of the DPS csip`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("offenderNo", "A1234KT")
+              .withRequestBodyJsonPath("incidentDate", "2024-10-01")
+              .withRequestBodyJsonPath("typeCode", "INT")
+              .withRequestBodyJsonPath("locationCode", "LIB")
+              .withRequestBodyJsonPath("areaOfWorkCode", "EDU")
+              .withRequestBodyJsonPath("reportedBy", "JIM_ADM")
+              .withRequestBodyJsonPath("reportedDate", "2024-10-01")
+              .withRequestBodyJsonPath("createUsername", "BOBBY.BEANS"),
+
+          )
+        }
+
+        @Test
+        fun `will create a mapping between the NOMIS and DPS ids with no child mappings`() {
+          csipMappingApi.verify(
+            postRequestedFor(urlEqualTo("/mapping/csip/all"))
+              .withRequestBodyJsonPath("nomisCSIPReportId", nomisCSIPReportId)
+              .withRequestBodyJsonPath("dpsCSIPReportId", dpsCSIPId)
+              .withRequestBodyJsonPath("mappingType", "DPS_CREATED")
+              .withRequestBody(matchingJsonPath("attendeeMappings.size()", equalTo("0")))
+              .withRequestBody(matchingJsonPath("factorMappings.size()", equalTo("0")))
+              .withRequestBody(matchingJsonPath("interviewMappings.size()", equalTo("0")))
+              .withRequestBody(matchingJsonPath("planMappings.size()", equalTo("0")))
+              .withRequestBody(matchingJsonPath("reviewMappings.size()", equalTo("0"))),
+          )
+        }
+
+        @Test
+        fun `the created mapping will contain the IDs`() {
+          csipMappingApi.verify(
+            postRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("nomisCSIPReportId", nomisCSIPReportId)
+              .withRequestBodyJsonPath("dpsCSIPReportId", dpsCSIPId)
+              .withRequestBodyJsonPath("mappingType", CSIPFullMappingDto.MappingType.DPS_CREATED.name),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when the create of the mapping fails")
+      inner class WithCreateMappingFailures {
+        private val offenderNo = "A1234KT"
+        private val dpsCSIPId = UUID.randomUUID().toString()
+        private val nomisCSIPReportId = 43217L
+
+        @BeforeEach
+        fun setUp() {
+          csipMappingApi.stubGetByDpsReportId(HttpStatus.NOT_FOUND)
+          csipDpsApi.stubGetCsipReport(dpsCsipRecord().copy(recordUuid = UUID.fromString(dpsCSIPId)))
+          csipNomisApi.stubPutCSIP(
+            csipResponse = upsertCSIPResponse(nomisCSIPReportId = nomisCSIPReportId),
+          )
+        }
+
+        @Nested
+        @DisplayName("fails once")
+        inner class MappingFailsOnce {
+          @BeforeEach
+          fun setUp() {
+            csipMappingApi.stubPostMappingFollowedBySuccess(HttpStatus.INTERNAL_SERVER_ERROR)
+            publishCreateCSIPDomainEvent(offenderNo = offenderNo, dpsCSIPReportId = dpsCSIPId)
+          }
+
+          @Test
+          fun `will eventually send telemetry for success`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("csip-create-success"),
+                any(),
+                isNull(),
+              )
+            }
+          }
+
+          @Test
+          fun `will create the csip in NOMIS once`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("csip-create-success"),
+                any(),
+                isNull(),
+              )
+            }
+
+            csipNomisApi.verify(1, putRequestedFor(urlEqualTo("/csip")))
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the csip created`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("csip-create-success"),
+                check {
+                  assertThat(it).containsEntry("dpsCSIPReportId", dpsCSIPId)
+                  assertThat(it).containsEntry("offenderNo", offenderNo)
+                  assertThat(it).containsEntry("nomisCSIPReportId", "$nomisCSIPReportId")
+                },
+                isNull(),
+              )
+            }
+          }
+        }
+
+        @Nested
+        @DisplayName("always fails")
+        inner class MappingAlwaysFails {
+          @BeforeEach
+          fun setUp() {
+            csipMappingApi.stubPostMapping(HttpStatus.INTERNAL_SERVER_ERROR)
+            publishCreateCSIPDomainEvent(offenderNo = offenderNo, dpsCSIPReportId = dpsCSIPId)
+          }
+
+          @Test
+          fun `will add message to dead letter queue`() {
+            await untilCallTo {
+              awsSqsCSIPDlqClient!!.countAllMessagesOnQueue(csipDlqUrl!!).get()
+            } matches { it == 1 }
+          }
+
+          @Test
+          fun `will create the csip in NOMIS once`() {
+            await untilCallTo {
+              awsSqsCSIPDlqClient!!.countAllMessagesOnQueue(csipDlqUrl!!).get()
+            } matches { it == 1 }
+
+            csipNomisApi.verify(1, putRequestedFor(urlEqualTo("/csip")))
+          }
+        }
+      }
+
+      @Nested
+      @DisplayName("when csip has already been created")
+      inner class WhenCSIPAlreadyCreated {
+        private val dpsCSIPId = UUID.randomUUID().toString()
+        private val nomisCSIPReportId = 43217L
+        private val offenderNo = "A1234KT"
+
+        @BeforeEach
+        fun setUp() {
+          csipMappingApi.stubGetByDpsReportId(
+            dpsCSIPReportId = dpsCSIPId,
+            CSIPFullMappingDto(
+              dpsCSIPReportId = dpsCSIPId,
+              nomisCSIPReportId = nomisCSIPReportId,
+              mappingType = CSIPFullMappingDto.MappingType.DPS_CREATED,
+              attendeeMappings = listOf(),
+              factorMappings = listOf(),
+              interviewMappings = listOf(),
+              planMappings = listOf(),
+              reviewMappings = listOf(),
+            ),
+          )
+          publishCreateCSIPDomainEvent(offenderNo = offenderNo, dpsCSIPReportId = dpsCSIPId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `it will not call back to DPS API`() {
+          csipDpsApi.verify(0, getRequestedFor(anyUrl()))
+        }
+
+        @Test
+        fun `it will not create the csip again in NOMIS`() {
+          csipNomisApi.verify(0, postRequestedFor(anyUrl()))
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("person.csip-record.deleted")
   inner class CSIPDeleted {
     @Nested
     @DisplayName("when NOMIS is the origin of the CSIP delete")
@@ -74,7 +341,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
       inner class WhenNoMappingFound {
         @BeforeEach
         fun setUp() {
-          csipMappingApi.stubGetByDpsId(HttpStatus.NOT_FOUND)
+          csipMappingApi.stubGetByDpsReportId(HttpStatus.NOT_FOUND)
           publishDeleteCSIPDomainEvent()
           waitForAnyProcessingToComplete()
         }
@@ -98,8 +365,9 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          csipMappingApi.stubGetByDpsId(
-            CSIPFullMappingDto(
+          csipMappingApi.stubGetByDpsReportId(
+            dpsCSIPReportId = dpsCSIPReportId,
+            mapping = CSIPFullMappingDto(
               dpsCSIPReportId = dpsCSIPReportId,
               nomisCSIPReportId = nomisCSIPReportId,
               attendeeMappings = listOf(),
@@ -162,8 +430,9 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          csipMappingApi.stubGetByDpsId(
-            CSIPFullMappingDto(
+          csipMappingApi.stubGetByDpsReportId(
+            dpsCSIPReportId = dpsCSIPReportId,
+            mapping = CSIPFullMappingDto(
               dpsCSIPReportId = dpsCSIPReportId,
               nomisCSIPReportId = nomisCSIPReportId,
               attendeeMappings = listOf(),
@@ -204,12 +473,20 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  private fun publishCreateCSIPDomainEvent(
+    offenderNo: String = "A1234KT",
+    dpsCSIPReportId: String = UUID.randomUUID().toString(),
+    source: CSIPSource = CSIPSource.DPS,
+  ) {
+    publishCSIPDomainEvent("person.csip-record.created", offenderNo, dpsCSIPReportId, source)
+  }
+
   private fun publishDeleteCSIPDomainEvent(
     offenderNo: String = "A1234KT",
     dpsCSIPReportId: String = UUID.randomUUID().toString(),
     source: CSIPSource = CSIPSource.DPS,
   ) {
-    publishCSIPDomainEvent("person.csip.record.deleted", offenderNo, dpsCSIPReportId, source)
+    publishCSIPDomainEvent("person.csip-record.deleted", offenderNo, dpsCSIPReportId, source)
   }
 
   private fun publishCSIPDomainEvent(

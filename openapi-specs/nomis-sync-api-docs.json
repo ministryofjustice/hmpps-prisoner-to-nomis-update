@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-09-27.9214.6fc6ed4"
+    "version": "2024-10-01.9264.6d524a8"
   },
   "servers": [
     {
@@ -2636,14 +2636,7 @@
         },
         "responses": {
           "200": {
-            "description": "CaseNote Updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CaseNoteResponse"
-                }
-              }
-            }
+            "description": "CaseNote Updated"
           },
           "400": {
             "description": "One or more fields in the request contains invalid data",
@@ -2710,14 +2703,7 @@
         ],
         "responses": {
           "201": {
-            "description": "CaseNote Deleted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CaseNoteResponse"
-                }
-              }
-            }
+            "description": "CaseNote Deleted"
           },
           "401": {
             "description": "Unauthorized to access this endpoint",
@@ -12552,8 +12538,7 @@
           "description": {
             "type": "string"
           }
-        },
-        "description": "The case note subtype"
+        }
       },
       "NomisAudit": {
         "required": [
@@ -13244,7 +13229,6 @@
           "areaOfWorkCode",
           "createUsername",
           "incidentDate",
-          "incidentTime",
           "locationCode",
           "offenderNo",
           "proActiveReferral",
@@ -13321,141 +13305,6 @@
           }
         },
         "description": "CSIP Report create/update request"
-      },
-      "CaseNoteAmendment": {
-        "required": [
-          "authorUsername",
-          "createdDateTime",
-          "text"
-        ],
-        "type": "object",
-        "properties": {
-          "text": {
-            "type": "string",
-            "description": "Free format text body of amendment"
-          },
-          "authorUsername": {
-            "type": "string",
-            "description": "Author login name of person or department that added the amendment"
-          },
-          "authorStaffId": {
-            "type": "integer",
-            "description": "Author STAFF_ID",
-            "format": "int64"
-          },
-          "authorFirstName": {
-            "type": "string",
-            "description": "Author first name"
-          },
-          "authorLastName": {
-            "type": "string",
-            "description": "Author last name"
-          },
-          "createdDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Amendment created timestamp",
-            "example": "2021-07-05T10:35:17"
-          }
-        },
-        "description": "Amendments to the text"
-      },
-      "CaseNoteResponse": {
-        "required": [
-          "amendments",
-          "authorLastName",
-          "authorStaffId",
-          "authorUsername",
-          "bookingId",
-          "caseNoteId",
-          "caseNoteSubType",
-          "caseNoteText",
-          "caseNoteType",
-          "createdDatetime",
-          "createdUsername"
-        ],
-        "type": "object",
-        "properties": {
-          "caseNoteId": {
-            "type": "integer",
-            "description": "The primary key",
-            "format": "int64"
-          },
-          "bookingId": {
-            "type": "integer",
-            "description": "The prisoner's bookingId related to this case note",
-            "format": "int64"
-          },
-          "caseNoteType": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "caseNoteSubType": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "noteSourceCode": {
-            "type": "string",
-            "description": "Whether system-generated",
-            "enum": [
-              "AUTO",
-              "EXT",
-              "INST"
-            ]
-          },
-          "occurrenceDateTime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Date case note occurred",
-            "example": "2021-07-05T10:35:17"
-          },
-          "authorStaffId": {
-            "type": "integer",
-            "description": "Author STAFF_ID",
-            "format": "int64"
-          },
-          "authorUsername": {
-            "type": "string",
-            "description": "Author username or login name"
-          },
-          "authorFirstName": {
-            "type": "string",
-            "description": "Author first name"
-          },
-          "authorLastName": {
-            "type": "string",
-            "description": "Author last name"
-          },
-          "prisonId": {
-            "type": "string",
-            "description": "Prison id"
-          },
-          "caseNoteText": {
-            "type": "string",
-            "description": "Free format text body of case note"
-          },
-          "amendments": {
-            "type": "array",
-            "description": "Amendments to the text",
-            "items": {
-              "$ref": "#/components/schemas/CaseNoteAmendment"
-            }
-          },
-          "createdDatetime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Created timestamp",
-            "example": "2021-07-05T10:35:17"
-          },
-          "createdUsername": {
-            "type": "string",
-            "description": "Created username"
-          },
-          "auditModuleName": {
-            "type": "string",
-            "description": "Which screen (or DPS) created the case note",
-            "example": "false"
-          }
-        },
-        "description": "The data held in NOMIS about a case note associated with a prisoner"
       },
       "UpdateAmendment": {
         "required": [
@@ -16535,15 +16384,15 @@
             "type": "integer",
             "format": "int32"
           },
+          "unpaged": {
+            "type": "boolean"
+          },
           "paged": {
             "type": "boolean"
           },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
-          },
-          "unpaged": {
-            "type": "boolean"
           }
         }
       },
@@ -18078,6 +17927,9 @@
         "description": "CSIP Details"
       },
       "Decision": {
+        "required": [
+          "actions"
+        ],
         "type": "object",
         "properties": {
           "conclusion": {
@@ -18543,6 +18395,141 @@
           }
         },
         "description": "Safer custody screening"
+      },
+      "CaseNoteAmendment": {
+        "required": [
+          "authorUsername",
+          "createdDateTime",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Free format text body of amendment"
+          },
+          "authorUsername": {
+            "type": "string",
+            "description": "Author login name of person or department that added the amendment"
+          },
+          "authorStaffId": {
+            "type": "integer",
+            "description": "Author STAFF_ID",
+            "format": "int64"
+          },
+          "authorFirstName": {
+            "type": "string",
+            "description": "Author first name"
+          },
+          "authorLastName": {
+            "type": "string",
+            "description": "Author last name"
+          },
+          "createdDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Amendment created timestamp",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "Amendments to the text"
+      },
+      "CaseNoteResponse": {
+        "required": [
+          "amendments",
+          "authorLastName",
+          "authorStaffId",
+          "authorUsername",
+          "bookingId",
+          "caseNoteId",
+          "caseNoteSubType",
+          "caseNoteText",
+          "caseNoteType",
+          "createdDatetime",
+          "createdUsername"
+        ],
+        "type": "object",
+        "properties": {
+          "caseNoteId": {
+            "type": "integer",
+            "description": "The primary key",
+            "format": "int64"
+          },
+          "bookingId": {
+            "type": "integer",
+            "description": "The prisoner's bookingId related to this case note",
+            "format": "int64"
+          },
+          "caseNoteType": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "caseNoteSubType": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "noteSourceCode": {
+            "type": "string",
+            "description": "Whether system-generated",
+            "enum": [
+              "AUTO",
+              "EXT",
+              "INST"
+            ]
+          },
+          "occurrenceDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date case note occurred",
+            "example": "2021-07-05T10:35:17"
+          },
+          "authorStaffId": {
+            "type": "integer",
+            "description": "Author STAFF_ID",
+            "format": "int64"
+          },
+          "authorUsername": {
+            "type": "string",
+            "description": "Author username or login name"
+          },
+          "authorFirstName": {
+            "type": "string",
+            "description": "Author first name"
+          },
+          "authorLastName": {
+            "type": "string",
+            "description": "Author last name"
+          },
+          "prisonId": {
+            "type": "string",
+            "description": "Prison id"
+          },
+          "caseNoteText": {
+            "type": "string",
+            "description": "Free format text body of case note"
+          },
+          "amendments": {
+            "type": "array",
+            "description": "Amendments to the text",
+            "items": {
+              "$ref": "#/components/schemas/CaseNoteAmendment"
+            }
+          },
+          "createdDatetime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Created timestamp",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdUsername": {
+            "type": "string",
+            "description": "Created username"
+          },
+          "auditModuleName": {
+            "type": "string",
+            "description": "Which screen (or DPS) created the case note",
+            "example": "false"
+          }
+        },
+        "description": "The data held in NOMIS about a case note associated with a prisoner"
       },
       "PrisonerCaseNotesResponse": {
         "required": [
