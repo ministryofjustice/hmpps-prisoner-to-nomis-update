@@ -1,21 +1,82 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CSIPFullMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 
 @Service
 class CSIPService(
   private val telemetryClient: TelemetryClient,
   private val nomisApiService: CSIPNomisApiService,
+  private val dpsApiService: CSIPDpsApiService,
   private val mappingApiService: CSIPMappingApiService,
+  private val csipRetryQueueService: CSIPRetryQueueService,
+  private val objectMapper: ObjectMapper,
 ) : CreateMappingRetryable {
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
+
+  suspend fun createCSIPReport(csipEvent: CSIPEvent) {
+    val dpsCsipReportId = csipEvent.additionalInformation.recordUuid
+    val offenderNo = requireNotNull(csipEvent.personReference.findNomsNumber())
+    val telemetryMap = mapOf(
+      "dpsCsipReportId" to dpsCsipReportId,
+      "offenderNo" to offenderNo,
+    )
+
+    if (csipEvent.wasCreatedInDPS()) {
+      synchronise {
+        name = "csip"
+        telemetryClient = this@CSIPService.telemetryClient
+        retryQueueService = csipRetryQueueService
+        eventTelemetry = telemetryMap
+
+        checkMappingDoesNotExist {
+          mappingApiService.getOrNullByDpsId(dpsCsipReportId)
+        }
+        transform {
+          dpsApiService.getCsipReport(dpsCsipReportId)
+            .let { dpsCsip ->
+              nomisApiService.upsertCsipReport(dpsCsip.toNomisUpsertRequest()).let { nomisCsip ->
+                CSIPFullMappingDto(
+                  dpsCSIPReportId = dpsCsipReportId,
+                  nomisCSIPReportId = nomisCsip.nomisCSIPReportId,
+                  mappingType = CSIPFullMappingDto.MappingType.DPS_CREATED,
+                  attendeeMappings = listOf(),
+                  factorMappings = listOf(),
+                  interviewMappings = listOf(),
+                  planMappings = listOf(),
+                  reviewMappings = listOf(),
+                )
+              }
+            }
+        }
+        saveMapping { mappingApiService.createMapping(it) }
+      }
+    } else {
+      telemetryClient.trackEvent("csip-create-ignored", telemetryMap)
+    }
+  }
+
+  suspend fun createMapping(message: CreateMappingRetryMessage<CSIPFullMappingDto>) =
+    mappingApiService.createMapping(message.mapping).also {
+      telemetryClient.trackEvent(
+        "csip-create-success",
+        message.telemetryAttributes,
+        null,
+      )
+    }
+
+  override suspend fun retryCreateMapping(message: String) = createMapping(message.fromJson())
 
   suspend fun deleteCsipReport(csipEvent: CSIPEvent) {
     val dpsCsipReportId = csipEvent.additionalInformation.recordUuid
@@ -50,9 +111,8 @@ class CSIPService(
     log.warn("Unable to delete mapping for csip $dpsCsipId. Please delete manually", e)
   }
 
-  override suspend fun retryCreateMapping(message: String) {
-    TODO("Not yet implemented")
-  }
+  private inline fun <reified T> String.fromJson(): T =
+    objectMapper.readValue(this)
 }
 
 data class CSIPEvent(

@@ -6,9 +6,11 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
+import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CSIPFullMappingDto
@@ -18,10 +20,11 @@ import java.util.UUID
 
 @Component
 class CSIPMappingApiMockServer(private val objectMapper: ObjectMapper) {
-  fun stubGetByDpsId(
+  fun stubGetByDpsReportId(
+    dpsCSIPReportId: String = UUID.randomUUID().toString(),
     mapping: CSIPFullMappingDto = CSIPFullMappingDto(
       nomisCSIPReportId = 123456,
-      dpsCSIPReportId = UUID.randomUUID().toString(),
+      dpsCSIPReportId = dpsCSIPReportId,
       attendeeMappings = listOf(),
       factorMappings = listOf(),
       interviewMappings = listOf(),
@@ -40,14 +43,61 @@ class CSIPMappingApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
 
-  fun stubGetByDpsId(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+  fun stubGetByDpsReportId(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
     mappingServer.stubFor(
-      get(WireMock.urlPathMatching("/mapping/csip/dps-csip-id/\\S+/all")).willReturn(
+      get(WireMock.urlPathMatching("/mapping/csip/dps-csip-id/\\S+/all"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(objectMapper.writeValueAsString(error)),
+        ),
+    )
+  }
+
+  fun stubPostMapping() {
+    mappingServer.stubFor(
+      post("/mapping/csip/all").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+  fun stubPostMapping(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      post("/mapping/csip/all").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
           .withBody(objectMapper.writeValueAsString(error)),
       ),
+    )
+  }
+
+  fun stubPostMappingFollowedBySuccess(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      post("/mapping/csip/all")
+        .inScenario("Retry Mapping CSIP Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(objectMapper.writeValueAsString(error)),
+        ).willSetStateTo("Cause Mapping CSIP Success"),
+    )
+
+    mappingServer.stubFor(
+      post("/mapping/csip/all")
+        .inScenario("Retry Mapping CSIP Scenario")
+        .whenScenarioStateIs("Cause Mapping CSIP Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 
