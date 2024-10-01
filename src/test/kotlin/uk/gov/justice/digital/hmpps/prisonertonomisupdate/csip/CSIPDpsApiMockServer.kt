@@ -14,8 +14,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.CsipRecord
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.ReferenceData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Referral
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.SyncCsipRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.SyncReferralRequest
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -88,9 +86,9 @@ fun dpsCsipRecord() =
       incidentType = ReferenceData(code = "INT"),
       incidentLocation = ReferenceData(code = "LIB"),
       referredBy = "JIM_ADM",
+      referralDate = LocalDate.parse("2024-10-01"),
       refererArea = ReferenceData(code = "EDU"),
       isSaferCustodyTeamInformed = Referral.IsSaferCustodyTeamInformed.NO,
       contributoryFactors = listOf(),
     ),
   )
-

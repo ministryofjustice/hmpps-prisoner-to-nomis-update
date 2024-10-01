@@ -20,4 +20,3 @@ fun CsipRecord.toNomisUpsertRequest(nomisId: Long? = null) =
     logNumber = logCode,
     staffAssaultedName = referral.assaultedStaffName,
   )
-

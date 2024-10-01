@@ -76,6 +76,8 @@ class CSIPNomisApiServiceTest {
       reportedBy = "Jane Reporter",
       reportedDate = LocalDate.now(),
       createUsername = "FRED.JAMES",
+      staffAssaulted = false,
+      proActiveReferral = false,
     )
   }
 
