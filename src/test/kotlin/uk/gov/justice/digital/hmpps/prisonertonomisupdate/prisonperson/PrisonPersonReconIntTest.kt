@@ -190,7 +190,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "offenderNo" to "A1234AA",
-              "error" to "500 Internal Server Error from GET http://localhost:8097/prisoners/A1234AA/physical-attributes",
+              "error" to "500 Internal Server Error from GET http://localhost:8097/sync/prisoners/A1234AA/physical-attributes",
             ),
           )
         },
@@ -282,7 +282,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
             getRequestedFor(urlPathEqualTo("/prisoners/$offenderNo/prison-person/reconciliation")),
           )
           dpsApi.verify(
-            getRequestedFor(urlPathEqualTo("/prisoners/$offenderNo/physical-attributes")),
+            getRequestedFor(urlPathEqualTo("/sync/prisoners/$offenderNo/physical-attributes")),
           )
         }
 
@@ -445,7 +445,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
             )
             dpsApi.verify(
               count,
-              getRequestedFor(urlPathEqualTo("/prisoners/$offenderNo/physical-attributes")),
+              getRequestedFor(urlPathEqualTo("/sync/prisoners/$offenderNo/physical-attributes")),
             )
           }
 
@@ -550,7 +550,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
           )
           dpsApi.verify(
             2,
-            getRequestedFor(urlPathEqualTo("/prisoners/A0007TZ/physical-attributes")),
+            getRequestedFor(urlPathEqualTo("/sync/prisoners/A0007TZ/physical-attributes")),
           )
 
           // should NOT publish error telemetry for prisoner
