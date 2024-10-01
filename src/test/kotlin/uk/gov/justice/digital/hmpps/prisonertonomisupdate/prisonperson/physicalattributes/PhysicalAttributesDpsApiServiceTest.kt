@@ -44,7 +44,7 @@ class PhysicalAttributesDpsApiServiceTest {
       dpsApiService.getPhysicalAttributes(prisonerNumber = "A1234AA")
 
       dpsApi.verify(
-        getRequestedFor(urlEqualTo("/prisoners/A1234AA/physical-attributes")),
+        getRequestedFor(urlEqualTo("/sync/prisoners/A1234AA/physical-attributes")),
       )
     }
 
@@ -54,8 +54,8 @@ class PhysicalAttributesDpsApiServiceTest {
 
       val pa = dpsApiService.getPhysicalAttributes(prisonerNumber = "A1234AA")
 
-      assertThat(pa?.height?.value).isEqualTo(180)
-      assertThat(pa?.weight?.value).isEqualTo(80)
+      assertThat(pa?.height).isEqualTo(180)
+      assertThat(pa?.weight).isEqualTo(80)
     }
 
     @Test

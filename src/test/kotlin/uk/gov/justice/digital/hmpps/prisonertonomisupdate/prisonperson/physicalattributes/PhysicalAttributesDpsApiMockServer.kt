@@ -11,13 +11,8 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.PrisonPersonDpsApiExtension.Companion.dpsApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PhysicalAttributesDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.ReferenceDataSimpleDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.ValueWithMetadataInteger
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.ValueWithMetadataReferenceDataSimpleDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.ValueWithMetadataString
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PhysicalAttributesSyncDto
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
-import java.time.LocalDateTime
 
 @Component
 class PhysicalAttributesDpsApiMockServer(private val objectMapper: ObjectMapper) {
@@ -51,7 +46,7 @@ class PhysicalAttributesDpsApiMockServer(private val objectMapper: ObjectMapper)
     shoeSize: String? = "9.5",
   ) {
     dpsApi.stubFor(
-      get(urlMatching("/prisoners/$offenderNo/physical-attributes"))
+      get(urlMatching("/sync/prisoners/$offenderNo/physical-attributes"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -63,7 +58,7 @@ class PhysicalAttributesDpsApiMockServer(private val objectMapper: ObjectMapper)
 
   fun stubGetPhysicalAttributes(errorStatus: HttpStatus) {
     dpsApi.stubFor(
-      get(urlMatching("/prisoners/.*/physical-attributes"))
+      get(urlMatching("/sync/prisoners/.*/physical-attributes"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -78,7 +73,7 @@ class PhysicalAttributesDpsApiMockServer(private val objectMapper: ObjectMapper)
     weight: Int? = 80,
   ) {
     dpsApi.stubFor(
-      get(urlMatching("/prisoners/$offenderNo/physical-attributes"))
+      get(urlMatching("/sync/prisoners/$offenderNo/physical-attributes"))
         .inScenario("Retry Prison Person")
         .whenScenarioStateIs(Scenario.STARTED)
         .willReturn(
@@ -88,7 +83,7 @@ class PhysicalAttributesDpsApiMockServer(private val objectMapper: ObjectMapper)
     )
 
     dpsApi.stubFor(
-      get(urlMatching("/prisoners/$offenderNo/physical-attributes"))
+      get(urlMatching("/sync/prisoners/$offenderNo/physical-attributes"))
         .inScenario("Retry Prison Person")
         .whenScenarioStateIs("Prison Person first call failed")
         .willReturn(
@@ -114,38 +109,14 @@ fun physicalAttributes(
   leftEyeColour: String? = "BLUE",
   rightEyeColour: String? = "GREEN",
   shoeSize: String? = "9.5",
-): PhysicalAttributesDto = PhysicalAttributesDto(
-  height = integer(height),
-  weight = integer(weight),
-  build = referenceData(build),
-  face = referenceData(face),
-  facialHair = referenceData(facialHair),
-  hair = referenceData(hair),
-  leftEyeColour = referenceData(leftEyeColour),
-  rightEyeColour = referenceData(rightEyeColour),
-  shoeSize = string(shoeSize),
+): PhysicalAttributesSyncDto = PhysicalAttributesSyncDto(
+  height = height,
+  weight = weight,
+  build = build,
+  face = face,
+  facialHair = facialHair,
+  hair = hair,
+  leftEyeColour = leftEyeColour,
+  rightEyeColour = rightEyeColour,
+  shoeSize = shoeSize,
 )
-
-private fun integer(value: Int?) = value?.let {
-  ValueWithMetadataInteger(
-    value = value,
-    lastModifiedAt = LocalDateTime.now().toString(),
-    lastModifiedBy = "someone",
-  )
-}
-
-private fun string(value: String?) = value?.let {
-  ValueWithMetadataString(
-    value = value,
-    lastModifiedAt = LocalDateTime.now().toString(),
-    lastModifiedBy = "someone",
-  )
-}
-
-private fun referenceData(id: String?) = id?.let {
-  ValueWithMetadataReferenceDataSimpleDto(
-    value = ReferenceDataSimpleDto(id = id, description = id, listSequence = 1, isActive = true),
-    lastModifiedAt = LocalDateTime.now().toString(),
-    lastModifiedBy = "someone",
-  )
-}

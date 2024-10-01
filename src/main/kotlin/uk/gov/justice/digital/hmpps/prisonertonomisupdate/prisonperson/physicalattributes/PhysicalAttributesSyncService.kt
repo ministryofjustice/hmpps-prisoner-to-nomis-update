@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.physical
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PhysicalAttributesDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.PhysicalAttributesSyncDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.profiledetails.ProfileDetailsNomisApiService
 
 @Service
@@ -47,9 +47,9 @@ class PhysicalAttributesSyncService(
       throw e
     }
 
-  private suspend fun updateNomis(offenderNo: String, dpsAttributes: PhysicalAttributesDto, fields: List<String>?) {
+  private suspend fun updateNomis(offenderNo: String, dpsAttributes: PhysicalAttributesSyncDto, fields: List<String>?) {
     if (fields == null || "HEIGHT" in fields || "WEIGHT" in fields) {
-      physicalAttributesNomisApi.upsertPhysicalAttributes(offenderNo, dpsAttributes.height?.value, dpsAttributes.weight?.value)
+      physicalAttributesNomisApi.upsertPhysicalAttributes(offenderNo, dpsAttributes.height, dpsAttributes.weight)
         .also {
           publishTelemetry(
             type = "physical-attributes-update-success",
@@ -103,15 +103,15 @@ class PhysicalAttributesSyncService(
       else -> this
     }
 
-  private fun PhysicalAttributesDto.valueOf(field: String) =
+  private fun PhysicalAttributesSyncDto.valueOf(field: String) =
     when (field) {
-      "BUILD" -> build?.value?.id
-      "FACE" -> face?.value?.id
-      "FACIAL_HAIR" -> facialHair?.value?.id
-      "HAIR" -> hair?.value?.id
-      "LEFT_EYE_COLOUR" -> leftEyeColour?.value?.id
-      "RIGHT_EYE_COLOUR" -> rightEyeColour?.value?.id
-      "SHOE_SIZE" -> shoeSize?.value
+      "BUILD" -> build
+      "FACE" -> face
+      "FACIAL_HAIR" -> facialHair
+      "HAIR" -> hair
+      "LEFT_EYE_COLOUR" -> leftEyeColour
+      "RIGHT_EYE_COLOUR" -> rightEyeColour
+      "SHOE_SIZE" -> shoeSize
       else -> throw ProfileDetailsSyncException("Unknown field: $field")
     }
 }
