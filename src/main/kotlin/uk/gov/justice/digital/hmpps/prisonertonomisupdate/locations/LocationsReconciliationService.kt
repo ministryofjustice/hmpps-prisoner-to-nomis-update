@@ -162,7 +162,9 @@ class LocationsReconciliationService(
         async { locationsApiService.getLocation(mapping.dpsLocationId, false) }
     }.awaitBoth()
 
-    val verdict = doesNotMatch(nomisRecord, dpsRecord)
+    val parentMapped = nomisRecord.parentLocationId?.let { mappingService.getMappingGivenNomisIdOrNull(it)?.dpsLocationId }
+
+    val verdict = doesNotMatch(nomisRecord, dpsRecord, parentMapped)
     return if (verdict != null) {
       val mismatch =
         MismatchLocation(
@@ -230,7 +232,16 @@ class LocationsReconciliationService(
   internal fun doesNotMatch(
     nomis: LocationResponse,
     dps: LegacyLocation,
+    nomisParentMappedToUUID: String?,
   ): String? {
+    if (dps.permanentlyDeactivated) {
+      return null
+    }
+    if (((nomisParentMappedToUUID == null) xor (dps.parentId == null)) ||
+      (nomisParentMappedToUUID != null && nomisParentMappedToUUID != dps.parentId.toString())
+    ) {
+      return "Parent mismatch"
+    }
     if (nomis.locationCode != dps.code) return "Location code mismatch"
     if (nomis.prisonId != dps.prisonId) return "Prison id mismatch"
     if (nomis.listSequence != dps.orderWithinParentLocation) return "order mismatch nomis=${nomis.listSequence} dps=${dps.orderWithinParentLocation}"

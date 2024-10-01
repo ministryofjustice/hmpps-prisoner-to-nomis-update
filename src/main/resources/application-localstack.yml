@@ -153,6 +153,14 @@ hmpps.sqs:
             "person.csip.identified-need.created",
             "person.csip.interview.created",
             "person.csip.review.created"]}
+    prisonperson:
+      queueName: hmpps_prisoner_to_nomis_prisonperson_queue
+      dlqName: hmpps_prisoner_to_nomis_prisonperson_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "prison-person.physical-attributes.updated"
+        ]}
 
   topics:
     domainevents:
