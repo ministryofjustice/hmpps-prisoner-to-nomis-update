@@ -53,9 +53,9 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
       @ParameterizedTest
       @CsvSource(
         "null",
-        "[HEIGHT]",
-        "[WEIGHT]",
-        "'[HEIGHT, WEIGHT]'",
+        """["HEIGHT"]""",
+        """["WEIGHT"]""",
+        """'["HEIGHT","WEIGHT"]'""",
         nullValues = ["null"],
       )
       fun `should update height and weight`(fields: String?) {
@@ -66,18 +66,18 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
 
         verifyDpsApiCall()
         verifyNomisPutPhysicalAttributes(height = equalTo("180"), weight = equalTo("80"))
-        verifyTelemetry("physical-attributes-update-success", (fields ?: "null"))
+        verifyTelemetry("physical-attributes-update-success", fields?.replace(",", ", ")?.replace("\"", "") ?: "null")
       }
 
       @ParameterizedTest
       @CsvSource(
-        "[BUILD],BUILD,SMALL",
-        "[FACE],FACE,ROUND",
-        "[FACIAL_HAIR],FACIAL_HAIR,CLEAN_SHAVEN",
-        "[HAIR],HAIR,BLACK",
-        "[LEFT_EYE_COLOUR],L_EYE_C,BLUE",
-        "[RIGHT_EYE_COLOUR],R_EYE_C,GREEN",
-        "[SHOE_SIZE],SHOESIZE,9.5",
+        """["BUILD"],BUILD,SMALL""",
+        """["FACE"],FACE,ROUND""",
+        """["FACIAL_HAIR"],FACIAL_HAIR,CLEAN_SHAVEN""",
+        """["HAIR"],HAIR,BLACK""",
+        """["LEFT_EYE_COLOUR"],L_EYE_C,BLUE""",
+        """["RIGHT_EYE_COLOUR"],R_EYE_C,GREEN""",
+        """["SHOE_SIZE"],SHOESIZE,9.5""",
       )
       fun `should update single profile details`(requestedFields: String, nomisField: String, expectedValue: String) {
         profileDetailsNomisApi.stubPutProfileDetails(offenderNo = "A1234AA")
@@ -87,7 +87,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
 
         verifyDpsApiCall()
         verifyNomisPutProfileDetails(profileType = equalTo(nomisField), profileCode = equalTo(expectedValue))
-        verifyTelemetry("profile-details-update-success", requestedFields)
+        verifyTelemetry("profile-details-update-success", requestedFields.replace("\"", ""))
       }
 
       @Test
@@ -95,7 +95,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
         physicalAttributesNomisApi.stubPutPhysicalAttributes(offenderNo = "A1234AA")
         profileDetailsNomisApi.stubPutProfileDetails(offenderNo = "A1234AA")
 
-        awsSnsClient.publish(physicalAttributesRequest(fields = "[HEIGHT, BUILD, SHOE_SIZE]")).get()
+        awsSnsClient.publish(physicalAttributesRequest(fields = """["HEIGHT","BUILD","SHOE_SIZE"]""")).get()
           .also { waitForAnyProcessingToComplete(3) }
 
         verifyDpsApiCall()
@@ -115,7 +115,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
         physicalAttributesNomisApi.stubPutPhysicalAttributes(offenderNo = "A1234AA")
         profileDetailsNomisApi.stubPutProfileDetails(offenderNo = "A1234AA")
 
-        awsSnsClient.publish(physicalAttributesRequest(fields = "[HEIGHT, BUILD]")).get()
+        awsSnsClient.publish(physicalAttributesRequest(fields = """["HEIGHT","BUILD"]""")).get()
           .also { waitForAnyProcessingToComplete(2) }
 
         verifyDpsApiCall()
@@ -251,7 +251,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
       fun `should fail for unknown profile type`() = runTest {
         dpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
 
-        awsSnsClient.publish(physicalAttributesRequest(fields = "[UNKNOWN]")).get()
+        awsSnsClient.publish(physicalAttributesRequest(fields = """["UNKNOWN"]""")).get()
           .also {
             // event should end up on the DLQ
             await untilCallTo {
@@ -266,7 +266,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
               mapOf(
                 "offenderNo" to "A1234AA",
                 "reason" to "Unknown field: UNKNOWN",
-                "fields" to "[UNKNOWN]",
+                "fields" to """[UNKNOWN]""",
               ),
             )
           },
@@ -289,7 +289,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
   private fun physicalAttributesMessage(prisonerNumber: String, source: String, fields: String?) =
     (
       fields
-        ?.let { ""","fields": "$fields"""" }
+        ?.let { ""","fields": $fields""" }
         ?: ""
       ).let { fieldsJson ->
       """
@@ -328,7 +328,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
       verify(telemetryClient).trackEvent(
         eq("physical-attributes-update-requested"),
         check {
-          assertThat(it).containsExactlyEntriesOf(mapOf("offenderNo" to "A1234AA", "fields" to "[HEIGHT, BUILD]"))
+          assertThat(it).containsExactlyEntriesOf(mapOf("offenderNo" to "A1234AA", "fields" to """[HEIGHT, BUILD]"""))
         },
         isNull(),
       )
@@ -428,7 +428,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
     )
   }
 
-  private fun verifyTelemetry(event: String, fields: String) {
+  private fun verifyTelemetry(event: String, fields: String?) {
     verify(telemetryClient).trackEvent(
       eq(event),
       check {
