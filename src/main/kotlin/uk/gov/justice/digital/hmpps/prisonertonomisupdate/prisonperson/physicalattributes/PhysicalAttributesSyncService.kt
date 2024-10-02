@@ -58,7 +58,7 @@ class PhysicalAttributesSyncService(
       profileDetailsNomisApi.upsertProfileDetails(offenderNo, field.toNomisProfileType(), dpsAttributes.valueOf(field))
         .also {
           publishTelemetry(
-            type = "profile-details-update-success",
+            type = "physical-attributes-profile-details-update-success",
             offenderNo = offenderNo,
             fields = listOf(field),
             bookingId = it.bookingId,
