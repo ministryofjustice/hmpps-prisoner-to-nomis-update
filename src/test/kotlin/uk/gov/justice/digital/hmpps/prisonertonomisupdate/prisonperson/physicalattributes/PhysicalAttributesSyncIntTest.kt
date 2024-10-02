@@ -87,7 +87,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
 
         verifyDpsApiCall()
         verifyNomisPutProfileDetails(profileType = equalTo(nomisField), profileCode = equalTo(expectedValue))
-        verifyTelemetry("profile-details-update-success", requestedFields.replace("\"", ""))
+        verifyTelemetry("physical-attributes-profile-details-update-success", requestedFields.replace("\"", ""))
       }
 
       @Test
@@ -105,8 +105,8 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
         verifyNomisPutProfileDetails(profileType = equalTo("SHOESIZE"), profileCode = equalTo("9.5"))
 
         verifyTelemetry("physical-attributes-update-success", "[HEIGHT]")
-        verifyTelemetry("profile-details-update-success", "[BUILD]")
-        verifyTelemetry("profile-details-update-success", "[SHOE_SIZE]")
+        verifyTelemetry("physical-attributes-profile-details-update-success", "[BUILD]")
+        verifyTelemetry("physical-attributes-profile-details-update-success", "[SHOE_SIZE]")
       }
 
       @Test
@@ -124,7 +124,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
         verifyNomisPutProfileDetails(profileType = equalTo("BUILD"), profileCode = absent())
 
         verifyTelemetry("physical-attributes-update-success", "[HEIGHT]")
-        verifyTelemetry("profile-details-update-success", "[BUILD]")
+        verifyTelemetry("physical-attributes-profile-details-update-success", "[BUILD]")
       }
     }
 
@@ -333,7 +333,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
         isNull(),
       )
       verifyTelemetry("physical-attributes-update-success", "[HEIGHT]")
-      verifyTelemetry("profile-details-update-success", "[BUILD]")
+      verifyTelemetry("physical-attributes-profile-details-update-success", "[BUILD]")
     }
 
     @Test
