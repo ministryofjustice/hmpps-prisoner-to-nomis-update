@@ -134,7 +134,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
           csipNomisApi.verify(
             putRequestedFor(anyUrl())
               .withRequestBodyJsonPath("offenderNo", "A1234KT")
-              .withRequestBodyJsonPath("incidentDate", "2024-10-01")
+              .withRequestBodyJsonPath("incidentDate", "2024-08-09")
               .withRequestBodyJsonPath("typeCode", "INT")
               .withRequestBodyJsonPath("locationCode", "LIB")
               .withRequestBodyJsonPath("areaOfWorkCode", "EDU")
