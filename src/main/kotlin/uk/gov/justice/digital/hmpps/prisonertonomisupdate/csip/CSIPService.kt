@@ -33,37 +33,33 @@ class CSIPService(
       "offenderNo" to offenderNo,
     )
 
-    if (csipEvent.wasCreatedInDPS()) {
-      synchronise {
-        name = "csip"
-        telemetryClient = this@CSIPService.telemetryClient
-        retryQueueService = csipRetryQueueService
-        eventTelemetry = telemetryMap
+    synchronise {
+      name = "csip"
+      telemetryClient = this@CSIPService.telemetryClient
+      retryQueueService = csipRetryQueueService
+      eventTelemetry = telemetryMap
 
-        checkMappingDoesNotExist {
-          mappingApiService.getOrNullByDpsId(dpsCsipReportId)
-        }
-        transform {
-          dpsApiService.getCsipReport(dpsCsipReportId)
-            .let { dpsCsip ->
-              nomisApiService.upsertCsipReport(dpsCsip.toNomisUpsertRequest()).let { nomisCsip ->
-                CSIPFullMappingDto(
-                  dpsCSIPReportId = dpsCsipReportId,
-                  nomisCSIPReportId = nomisCsip.nomisCSIPReportId,
-                  mappingType = CSIPFullMappingDto.MappingType.DPS_CREATED,
-                  attendeeMappings = listOf(),
-                  factorMappings = listOf(),
-                  interviewMappings = listOf(),
-                  planMappings = listOf(),
-                  reviewMappings = listOf(),
-                )
-              }
-            }
-        }
-        saveMapping { mappingApiService.createMapping(it) }
+      checkMappingDoesNotExist {
+        mappingApiService.getOrNullByDpsId(dpsCsipReportId)
       }
-    } else {
-      telemetryClient.trackEvent("csip-create-ignored", telemetryMap)
+      transform {
+        dpsApiService.getCsipReport(dpsCsipReportId)
+          .let { dpsCsip ->
+            nomisApiService.upsertCsipReport(dpsCsip.toNomisUpsertRequest()).let { nomisCsip ->
+              CSIPFullMappingDto(
+                dpsCSIPReportId = dpsCsipReportId,
+                nomisCSIPReportId = nomisCsip.nomisCSIPReportId,
+                mappingType = CSIPFullMappingDto.MappingType.DPS_CREATED,
+                attendeeMappings = listOf(),
+                factorMappings = listOf(),
+                interviewMappings = listOf(),
+                planMappings = listOf(),
+                reviewMappings = listOf(),
+              )
+            }
+          }
+      }
+      saveMapping { mappingApiService.createMapping(it) }
     }
   }
 
@@ -85,22 +81,19 @@ class CSIPService(
       "dpsCsipReportId" to dpsCsipReportId,
       "offenderNo" to offenderNo,
     )
-    if (csipEvent.wasDeletedInDPS()) {
-      runCatching {
-        mappingApiService.getOrNullByDpsId(dpsCsipReportId)?.also { mapping ->
 
-          nomisApiService.deleteCsipReport(csipReportId = mapping.nomisCSIPReportId)
-          tryToDeletedMapping(dpsCsipReportId)
-          telemetryClient.trackEvent("csip-deleted-success", telemetryMap)
-        } ?: also {
-          telemetryClient.trackEvent("csip-deleted-skipped", telemetryMap)
-        }
-      }.onFailure { e ->
-        telemetryClient.trackEvent("csip-deleted-failed", telemetryMap)
-        throw e
+    runCatching {
+      mappingApiService.getOrNullByDpsId(dpsCsipReportId)?.also { mapping ->
+
+        nomisApiService.deleteCsipReport(csipReportId = mapping.nomisCSIPReportId)
+        tryToDeletedMapping(dpsCsipReportId)
+        telemetryClient.trackEvent("csip-deleted-success", telemetryMap)
+      } ?: also {
+        telemetryClient.trackEvent("csip-deleted-skipped", telemetryMap)
       }
-    } else {
-      telemetryClient.trackEvent("csip-deleted-ignored", telemetryMap)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("csip-deleted-failed", telemetryMap)
+      throw e
     }
   }
 
@@ -124,8 +117,6 @@ data class CSIPEvent(
 
 data class CSIPAdditionalInformation(
   val recordUuid: String,
-  val affectedComponents: List<AffectedComponent>,
-  val source: CSIPSource,
 )
 
 data class PersonReference(val identifiers: List<Identifier> = listOf()) {
@@ -139,17 +130,3 @@ data class PersonReference(val identifiers: List<Identifier> = listOf()) {
 
   data class Identifier(val type: String, val value: String)
 }
-
-enum class CSIPSource {
-  DPS,
-  NOMIS,
-}
-
-enum class AffectedComponent {
-  RECORD,
-  CONTRIBUTORY_FACTOR,
-}
-
-fun CSIPEvent.wasCreatedInDPS() = wasSourceDPS()
-fun CSIPEvent.wasDeletedInDPS() = wasSourceDPS()
-fun CSIPEvent.wasSourceDPS() = this.additionalInformation.source == CSIPSource.DPS
