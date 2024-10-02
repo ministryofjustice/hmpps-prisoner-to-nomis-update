@@ -45,32 +45,8 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
   @DisplayName("person.csip-record.created")
   inner class CSIPCreated {
     @Nested
-    @DisplayName("when NOMIS is the origin of a CSIP create")
-    inner class WhenNomisCreated {
-      @BeforeEach
-      fun setup() {
-        publishCreateCSIPDomainEvent(source = CSIPSource.NOMIS)
-        waitForAnyProcessingToComplete()
-      }
-
-      @Test
-      fun `will send telemetry event showing it ignore the create`() {
-        verify(telemetryClient).trackEvent(
-          eq("csip-create-ignored"),
-          any(),
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `will not try to create the CSIP in NOMIS`() {
-        csipNomisApi.verify(0, postRequestedFor(anyUrl()))
-      }
-    }
-
-    @Nested
-    @DisplayName("when DPS is the origin of a CSIP create")
-    inner class WhenDpsCreated {
+    @DisplayName("when CSIP created")
+    inner class WhenCreated {
       @Nested
       @DisplayName("when all goes ok")
       inner class HappyPath {
@@ -306,34 +282,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
   @DisplayName("person.csip-record.deleted")
   inner class CSIPDeleted {
     @Nested
-    @DisplayName("when NOMIS is the origin of the CSIP delete")
-    inner class WhenNomisDeleted {
-      @Nested
-      inner class WhenUserDeleted {
-        @BeforeEach
-        fun setup() {
-          publishDeleteCSIPDomainEvent(source = CSIPSource.NOMIS)
-          waitForAnyProcessingToComplete()
-        }
-
-        @Test
-        fun `will send telemetry event showing it ignored the update`() {
-          verify(telemetryClient).trackEvent(
-            eq("csip-deleted-ignored"),
-            any(),
-            isNull(),
-          )
-        }
-
-        @Test
-        fun `will not try to delete the CSIP in NOMIS`() {
-          csipNomisApi.verify(0, deleteRequestedFor(anyUrl()))
-        }
-      }
-    }
-
-    @Nested
-    @DisplayName("when DPS is the origin of the CSIP delete")
+    @DisplayName("When CSIP deleted")
     inner class WhenDpsDeleted {
       @Nested
       @DisplayName("when no mapping found")
@@ -475,24 +424,21 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
   private fun publishCreateCSIPDomainEvent(
     offenderNo: String = "A1234KT",
     dpsCSIPReportId: String = UUID.randomUUID().toString(),
-    source: CSIPSource = CSIPSource.DPS,
   ) {
-    publishCSIPDomainEvent("person.csip-record.created", offenderNo, dpsCSIPReportId, source)
+    publishCSIPDomainEvent("person.csip-record.created", offenderNo, dpsCSIPReportId)
   }
 
   private fun publishDeleteCSIPDomainEvent(
     offenderNo: String = "A1234KT",
     dpsCSIPReportId: String = UUID.randomUUID().toString(),
-    source: CSIPSource = CSIPSource.DPS,
   ) {
-    publishCSIPDomainEvent("person.csip-record.deleted", offenderNo, dpsCSIPReportId, source)
+    publishCSIPDomainEvent("person.csip-record.deleted", offenderNo, dpsCSIPReportId)
   }
 
   private fun publishCSIPDomainEvent(
     eventType: String,
     offenderNo: String,
     recordUuid: String,
-    source: CSIPSource,
   ) {
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -501,7 +447,6 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
             eventType = eventType,
             offenderNo = offenderNo,
             recordUuid = recordUuid,
-            source = source,
           ),
         )
         .messageAttributes(
@@ -518,25 +463,25 @@ fun csipMessagePayload(
   eventType: String,
   offenderNo: String,
   recordUuid: String,
-  source: CSIPSource,
 ) =
   //language=JSON
   """
     {
-      "eventType":"$eventType", 
-      "detailUrl":"https://somecallback", 
+      "eventType": "$eventType",
+      "detailUrl": "https://somecallback",
       "additionalInformation": {
-        "recordUuid": "$recordUuid",
-        "source": "${source.name}",
-        "affectedComponents": []
+        "recordUuid": "$recordUuid"
       },
+      "description": "A CSIP record change in the CSIP service",
+      "occurredAt": "2024-07-15T09:03:38.927167845+01:00",
       "personReference": {
         "identifiers": [
           {
-            "type" : "NOMS",
+            "type": "NOMS",
             "value": "$offenderNo"
           }
         ]
-      }
+      },
+      "version": 1
     }
     """
