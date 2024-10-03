@@ -23,8 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.ReferenceDa
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Referral
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Review
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.SaferCustodyScreeningOutcome
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.SyncCsipRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.SyncReferralRequest
+
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
