@@ -22,6 +22,7 @@ import org.mockito.Mockito.eq
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -45,7 +46,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
   @DisplayName("person.csip-record.created")
   inner class CSIPCreated {
     @Nested
-    @DisplayName("when CSIP created")
+    @DisplayName("When CSIP created")
     inner class WhenCreated {
       @Nested
       @DisplayName("when all goes ok")
@@ -58,7 +59,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           csipMappingApi.stubGetByDpsReportId(HttpStatus.NOT_FOUND)
           csipDpsApi.stubGetCsipReport(
-            dpsCsipRecord().copy(
+            dpsCsipRecordMinimal().copy(
               recordUuid = UUID.fromString(dpsCSIPId),
               prisonNumber = offenderNo,
               createdBy = "BOBBY.BEANS",
@@ -69,7 +70,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
             upsertCSIPResponse(nomisCSIPReportId = nomisCSIPReportId),
           )
           csipMappingApi.stubPostMapping()
-          publishCreateCSIPDomainEvent(offenderNo = offenderNo, dpsCSIPReportId = dpsCSIPId)
+          publishCreateCSIPDomainEvent(offenderNo = offenderNo, recordUuid = dpsCSIPId)
           waitForAnyProcessingToComplete()
         }
 
@@ -157,7 +158,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           csipMappingApi.stubGetByDpsReportId(HttpStatus.NOT_FOUND)
-          csipDpsApi.stubGetCsipReport(dpsCsipRecord().copy(recordUuid = UUID.fromString(dpsCSIPId)))
+          csipDpsApi.stubGetCsipReport(dpsCsipRecordMinimal().copy(recordUuid = UUID.fromString(dpsCSIPId)))
           csipNomisApi.stubPutCSIP(
             csipResponse = upsertCSIPResponse(nomisCSIPReportId = nomisCSIPReportId),
           )
@@ -169,7 +170,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
           @BeforeEach
           fun setUp() {
             csipMappingApi.stubPostMappingFollowedBySuccess(HttpStatus.INTERNAL_SERVER_ERROR)
-            publishCreateCSIPDomainEvent(offenderNo = offenderNo, dpsCSIPReportId = dpsCSIPId)
+            publishCreateCSIPDomainEvent(offenderNo = offenderNo, recordUuid = dpsCSIPId)
           }
 
           @Test
@@ -218,7 +219,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
           @BeforeEach
           fun setUp() {
             csipMappingApi.stubPostMapping(HttpStatus.INTERNAL_SERVER_ERROR)
-            publishCreateCSIPDomainEvent(offenderNo = offenderNo, dpsCSIPReportId = dpsCSIPId)
+            publishCreateCSIPDomainEvent(offenderNo = offenderNo, recordUuid = dpsCSIPId)
           }
 
           @Test
@@ -261,7 +262,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
               reviewMappings = listOf(),
             ),
           )
-          publishCreateCSIPDomainEvent(offenderNo = offenderNo, dpsCSIPReportId = dpsCSIPId)
+          publishCreateCSIPDomainEvent(offenderNo = offenderNo, recordUuid = dpsCSIPId)
           waitForAnyProcessingToComplete()
         }
 
@@ -273,6 +274,132 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `it will not create the csip again in NOMIS`() {
           csipNomisApi.verify(0, postRequestedFor(anyUrl()))
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("person.csip-report.updated")
+  inner class CSIPUpdated {
+
+    @Nested
+    @DisplayName("When CSIP updated")
+    inner class WhenCSIPUpdated {
+      @Nested
+      @DisplayName("when no mapping found")
+      inner class WhenNoMappingFound {
+        @BeforeEach
+        fun setUp() {
+          csipMappingApi.stubGetByDpsReportId(HttpStatus.NOT_FOUND)
+          publishUpdateCSIPDomainEvent()
+        }
+
+        @Test
+        fun `will treat this as an error and message will go on DLQ`() {
+          await untilCallTo {
+            awsSqsCSIPDlqClient!!.countAllMessagesOnQueue(csipDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+
+        @Test
+        fun `will send telemetry event showing it failed to update for each retry`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              eq("csip-updated-failed"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+      }
+
+      @Nested
+      @DisplayName("when mapping is found")
+      inner class WhenMappingIsFound {
+        private val dpsCSIPReportId = UUID.randomUUID().toString()
+        private val nomisCSIPReportId = 43217L
+        private val offenderNo = "A1234KT"
+
+        @BeforeEach
+        fun setUp() {
+          csipMappingApi.stubGetByDpsReportId(
+            dpsCSIPReportId,
+            CSIPFullMappingDto(
+              dpsCSIPReportId = dpsCSIPReportId,
+              nomisCSIPReportId = nomisCSIPReportId,
+              mappingType = CSIPFullMappingDto.MappingType.DPS_CREATED,
+              attendeeMappings = listOf(),
+              factorMappings = listOf(),
+              interviewMappings = listOf(),
+              planMappings = listOf(),
+              reviewMappings = listOf(),
+            ),
+          )
+          csipDpsApi.stubGetCsipReport(
+            dpsCsipReport = dpsCsipRecord().copy(
+              recordUuid = UUID.fromString(dpsCSIPReportId),
+              lastModifiedBy = "RASHEED.BAKE",
+              logCode = "LG123",
+            ),
+          )
+          csipNomisApi.stubPutCSIP()
+          publishUpdateCSIPDomainEvent(recordUuid = dpsCSIPReportId, offenderNo = offenderNo)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the update`() {
+          verify(telemetryClient).trackEvent(
+            eq("csip-updated-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the updated csip`() {
+          verify(telemetryClient).trackEvent(
+            eq("csip-updated-success"),
+            check {
+              assertThat(it).containsEntry("dpsCSIPReportId", dpsCSIPReportId)
+              assertThat(it).containsEntry("offenderNo", offenderNo)
+              assertThat(it).containsEntry("nomisCSIPReportId", "$nomisCSIPReportId")
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call the mapping service to get the NOMIS csip id`() {
+          csipMappingApi.verify(getRequestedFor(urlMatching("/mapping/csip/dps-csip-id/$dpsCSIPReportId/all")))
+        }
+
+        @Test
+        fun `will call back to DPS to get csip details`() {
+          csipDpsApi.verify(getRequestedFor(urlMatching("/csip-records/$dpsCSIPReportId")))
+        }
+
+        @Test
+        fun `will update the csip in NOMIS`() {
+          csipNomisApi.verify(putRequestedFor(urlEqualTo("/csip")))
+        }
+
+        @Test
+        fun `the update csip will contain details of the DPS csip`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("id", nomisCSIPReportId)
+              .withRequestBodyJsonPath("logNumber", "LG123")
+              .withRequestBodyJsonPath("offenderNo", "A1234KT")
+              .withRequestBodyJsonPath("incidentDate", "2024-08-09")
+              .withRequestBodyJsonPath("typeCode", "INT")
+              .withRequestBodyJsonPath("locationCode", "LIB")
+              .withRequestBodyJsonPath("areaOfWorkCode", "EDU")
+              .withRequestBodyJsonPath("reportedBy", "JIM_ADM")
+              .withRequestBodyJsonPath("reportedDate", "2024-10-01")
+              .withRequestBodyJsonPath("createUsername", "JSMITH"),
+          )
         }
       }
     }
@@ -328,7 +455,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
           )
           csipNomisApi.stubDeleteCSIP(nomisCSIPReportId = nomisCSIPReportId)
           csipMappingApi.stubDeleteByDpsId(dpsCSIPReportId)
-          publishDeleteCSIPDomainEvent(dpsCSIPReportId = dpsCSIPReportId, offenderNo = offenderNo)
+          publishDeleteCSIPDomainEvent(recordUuid = dpsCSIPReportId, offenderNo = offenderNo)
           waitForAnyProcessingToComplete()
         }
 
@@ -346,7 +473,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
           verify(telemetryClient).trackEvent(
             eq("csip-deleted-success"),
             check {
-              assertThat(it).containsEntry("dpsCsipReportId", dpsCSIPReportId)
+              assertThat(it).containsEntry("dpsCSIPReportId", dpsCSIPReportId)
               assertThat(it).containsEntry("offenderNo", offenderNo)
             },
             isNull(),
@@ -393,7 +520,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
           )
           csipNomisApi.stubDeleteCSIP(nomisCSIPReportId = nomisCSIPReportId)
           csipMappingApi.stubDeleteByDpsId(status = HttpStatus.INTERNAL_SERVER_ERROR)
-          publishDeleteCSIPDomainEvent(dpsCSIPReportId = dpsCSIPReportId, offenderNo = offenderNo)
+          publishDeleteCSIPDomainEvent(recordUuid = dpsCSIPReportId, offenderNo = offenderNo)
           await untilAsserted {
             verify(telemetryClient).trackEvent(
               eq("csip-deleted-success"),
@@ -423,16 +550,23 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
 
   private fun publishCreateCSIPDomainEvent(
     offenderNo: String = "A1234KT",
-    dpsCSIPReportId: String = UUID.randomUUID().toString(),
+    recordUuid: String = UUID.randomUUID().toString(),
   ) {
-    publishCSIPDomainEvent("person.csip-record.created", offenderNo, dpsCSIPReportId)
+    publishCSIPDomainEvent("person.csip-record.created", offenderNo, recordUuid)
+  }
+
+  private fun publishUpdateCSIPDomainEvent(
+    offenderNo: String = "A1234KT",
+    recordUuid: String = UUID.randomUUID().toString(),
+  ) {
+    publishCSIPDomainEvent("person.csip-record.updated", offenderNo, recordUuid)
   }
 
   private fun publishDeleteCSIPDomainEvent(
     offenderNo: String = "A1234KT",
-    dpsCSIPReportId: String = UUID.randomUUID().toString(),
+    recordUuid: String = UUID.randomUUID().toString(),
   ) {
-    publishCSIPDomainEvent("person.csip-record.deleted", offenderNo, dpsCSIPReportId)
+    publishCSIPDomainEvent("person.csip-record.deleted", offenderNo, recordUuid)
   }
 
   private fun publishCSIPDomainEvent(

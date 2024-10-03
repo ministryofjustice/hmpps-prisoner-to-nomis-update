@@ -11,9 +11,18 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Attendee
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.ContributoryFactor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.CsipRecord
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.DecisionAndActions
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.IdentifiedNeed
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Interview
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Investigation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Plan
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.ReferenceData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Referral
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Review
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.SaferCustodyScreeningOutcome
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -60,7 +69,7 @@ class CSIPDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     return this
   }
 
-  fun stubGetCsipReport(dpsCsipReport: CsipRecord = dpsCsipRecord()) {
+  fun stubGetCsipReport(dpsCsipReport: CsipRecord = dpsCsipRecordMinimal()) {
     stubFor(
       get(urlMatching("/csip-records/\\S+"))
         .willReturn(
@@ -73,10 +82,10 @@ class CSIPDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 }
 
-fun dpsCsipRecord() =
+fun dpsCsipRecordMinimal() =
   CsipRecord(
     recordUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6a00"),
-    prisonNumber = "A12234",
+    prisonNumber = "A1234KT",
     createdAt = LocalDateTime.now(),
     createdBy = "JSMITH",
     createdByDisplayName = "JOHN SMITH",
@@ -90,5 +99,164 @@ fun dpsCsipRecord() =
       refererArea = ReferenceData(code = "EDU"),
       isSaferCustodyTeamInformed = Referral.IsSaferCustodyTeamInformed.NO,
       contributoryFactors = listOf(),
+    ),
+  )
+
+fun dpsCsipRecord() =
+  CsipRecord(
+    recordUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6a00"),
+    prisonNumber = "A1234KT",
+    createdAt = LocalDateTime.parse("2024-04-01T10:32:12.867081"),
+    createdBy = "JSMITH",
+    createdByDisplayName = "JOHN SMITH",
+    status = CsipRecord.Status.CSIP_OPEN,
+    referral = Referral(
+      incidentDate = LocalDate.parse("2024-08-09"),
+      incidentType = ReferenceData(code = "INT"),
+      incidentLocation = ReferenceData(code = "LIB"),
+      referredBy = "JIM_ADM",
+      referralDate = LocalDate.parse("2024-10-01"),
+      refererArea = ReferenceData(code = "EDU"),
+      isSaferCustodyTeamInformed = Referral.IsSaferCustodyTeamInformed.NO,
+
+      incidentTime = "10:32:12",
+      isProactiveReferral = true,
+      isStaffAssaulted = true,
+      assaultedStaffName = "Fred Jones",
+      incidentInvolvement = ReferenceData(code = "PER"),
+      descriptionOfConcern = "There was a worry about the offender",
+      knownReasons = "known reasons details go in here",
+      otherInformation = "other information goes in here",
+      isReferralComplete = true,
+      referralCompletedDate = LocalDate.parse("2024-04-04"),
+      referralCompletedBy = "JIM_ADM",
+      referralCompletedByDisplayName = "",
+      saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(
+        outcome = ReferenceData("CUR"),
+        reasonForDecision = "There is a reason for the decision - it goes here",
+        date = LocalDate.parse("2024-04-08"),
+        recordedBy = "FRED_ADM",
+        recordedByDisplayName = "Fred Admin",
+      ),
+
+      investigation = Investigation(
+        interviews = listOf(
+          Interview(
+            interviewUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6222"),
+            interviewee = "Bill Black",
+            interviewDate = LocalDate.parse("2024-06-06"),
+            intervieweeRole = ReferenceData("WITNESS"),
+            createdAt = LocalDateTime.parse("2024-04-04T15:12:32.004620"),
+            createdBy = "AA_ADM",
+            createdByDisplayName = "ADAM SMITH",
+            interviewText = "Saw a pipe in his hand",
+            lastModifiedAt = LocalDateTime.parse("2024-08-12T11:32:15"),
+            lastModifiedBy = "BB_ADM",
+            lastModifiedByDisplayName = "Bebe SMITH",
+          ),
+        ),
+        staffInvolved = "some people",
+        evidenceSecured = "A piece of pipe",
+        occurrenceReason = "bad behaviour",
+        personsUsualBehaviour = "Good person",
+        personsTrigger = "missed meal",
+        protectiveFactors = "ensure taken to canteen",
+      ),
+      decisionAndActions =
+      DecisionAndActions(
+        outcome = ReferenceData("OPE"),
+        actions = setOf(
+          DecisionAndActions.Actions.NON_ASSOCIATIONS_UPDATED,
+          DecisionAndActions.Actions.OBSERVATION_BOOK,
+          DecisionAndActions.Actions.SERVICE_REFERRAL,
+        ),
+        conclusion = "Offender needs help",
+        signedOffByRole = ReferenceData("CUSTMAN"),
+        date = LocalDate.parse("2024-04-08"),
+        recordedBy = "FRED_ADM",
+        recordedByDisplayName = "Fred Admin",
+        nextSteps = null,
+        actionOther = "Some other info here",
+      ),
+
+      contributoryFactors = listOf(
+        ContributoryFactor(
+          factorUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6111"),
+          factorType = ReferenceData("BUL"),
+          comment = "Offender causes trouble",
+          createdAt = LocalDateTime.parse("2024-04-01T10:00:00"),
+          createdBy = "CFACTOR",
+          createdByDisplayName = "CFACTOR",
+          lastModifiedAt = null,
+          lastModifiedBy = null,
+          lastModifiedByDisplayName = null,
+        ),
+      ),
+    ),
+    logCode = "ASI-001",
+    prisonCodeWhenRecorded = "MDI",
+    lastModifiedAt = null,
+    lastModifiedBy = null,
+    lastModifiedByDisplayName = null,
+
+    plan = Plan(
+      caseManager = "C Jones",
+      reasonForPlan = "helper",
+      firstCaseReviewDate = LocalDate.parse("2024-04-15"),
+      identifiedNeeds = listOf(
+        IdentifiedNeed(
+          identifiedNeedUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6333"),
+          identifiedNeed = "they need help",
+          responsiblePerson = "Jason", intervention = "dd",
+          progression = "there was some improvement",
+          targetDate = LocalDate.parse("2024-08-20"),
+          closedDate = LocalDate.parse("2024-04-17"),
+          createdDate = LocalDate.parse("2024-04-16"),
+
+          createdAt = LocalDateTime.parse("2024-03-16T11:32:15"),
+          createdBy = "PPLAN",
+          createdByDisplayName = "Peter Plan",
+          lastModifiedAt = null,
+          lastModifiedBy = null,
+          lastModifiedByDisplayName = null,
+        ),
+      ),
+      reviews = listOf(
+        Review(
+          reviewUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6444"),
+          reviewSequence = 1,
+          reviewDate = LocalDate.parse("2024-04-01"),
+          nextReviewDate = null,
+          csipClosedDate = LocalDate.parse("2024-04-16"),
+          summary = null,
+          recordedBy = "JSMITH",
+          recordedByDisplayName = "JOHN SMITH",
+
+          createdAt = LocalDateTime.parse("2024-04-01T10:00"),
+          createdBy = "FJAMES",
+          createdByDisplayName = "FRED JAMES",
+          lastModifiedAt = null,
+          lastModifiedBy = null,
+          lastModifiedByDisplayName = null,
+
+          actions = setOf(
+            Review.Actions.REMAIN_ON_CSIP,
+            Review.Actions.CLOSE_CSIP,
+          ),
+
+          attendees = listOf(
+            Attendee(
+              attendeeUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6555"),
+              name = "same jones",
+              role = "person",
+              isAttended = true,
+              contribution = "talked about things",
+              createdAt = LocalDateTime.parse("2024-08-20T10:33:48.946787"),
+              createdBy = "DBULL_ADM",
+              createdByDisplayName = "DOM BULL",
+            ),
+          ),
+        ),
+      ),
     ),
   )
