@@ -19,6 +19,7 @@ class CSIPService(
   private val dpsApiService: CSIPDpsApiService,
   private val mappingApiService: CSIPMappingApiService,
   private val csipRetryQueueService: CSIPRetryQueueService,
+
   private val objectMapper: ObjectMapper,
 ) : CreateMappingRetryable {
   private companion object {
@@ -28,8 +29,8 @@ class CSIPService(
   suspend fun createCSIPReport(csipEvent: CSIPEvent) {
     val dpsCsipReportId = csipEvent.additionalInformation.recordUuid
     val offenderNo = requireNotNull(csipEvent.personReference.findNomsNumber())
-    val telemetryMap = mapOf(
-      "dpsCsipReportId" to dpsCsipReportId,
+    val telemetryMap = mutableMapOf(
+      "dpsCSIPReportId" to dpsCsipReportId,
       "offenderNo" to offenderNo,
     )
 
@@ -44,8 +45,8 @@ class CSIPService(
       }
       transform {
         dpsApiService.getCsipReport(dpsCsipReportId)
-          .let { dpsCsip ->
-            nomisApiService.upsertCsipReport(dpsCsip.toNomisUpsertRequest()).let { nomisCsip ->
+          .let { dpsCsipRecord ->
+            nomisApiService.upsertCsipReport(dpsCsipRecord.toNomisUpsertRequest()).let { nomisCsip ->
               CSIPFullMappingDto(
                 dpsCSIPReportId = dpsCsipReportId,
                 nomisCSIPReportId = nomisCsip.nomisCSIPReportId,
@@ -60,6 +61,41 @@ class CSIPService(
           }
       }
       saveMapping { mappingApiService.createMapping(it) }
+    }
+  }
+
+  suspend fun updateCSIPReport(csipEvent: CSIPEvent) {
+    val dpsCsipReportId = csipEvent.additionalInformation.recordUuid
+    val offenderNo = requireNotNull(csipEvent.personReference.findNomsNumber())
+    val telemetryMap = mutableMapOf(
+      "dpsCSIPReportId" to dpsCsipReportId,
+      "offenderNo" to offenderNo,
+    )
+
+    runCatching {
+      val mapping = mappingApiService.getOrNullByDpsId(dpsCsipReportId)
+        ?: throw IllegalStateException("Tried to update an csip that has never been created")
+      telemetryMap["nomisCSIPReportId"] = mapping.nomisCSIPReportId.toString()
+
+      val dpsCsipRecord = dpsApiService.getCsipReport(dpsCsipReportId)
+      nomisApiService.upsertCsipReport(dpsCsipRecord.toNomisUpsertRequest(mapping.nomisCSIPReportId))
+        .let { nomisCsip ->
+          CSIPFullMappingDto(
+            dpsCSIPReportId = dpsCsipReportId,
+            nomisCSIPReportId = nomisCsip.nomisCSIPReportId,
+            mappingType = CSIPFullMappingDto.MappingType.DPS_CREATED,
+            attendeeMappings = listOf(),
+            factorMappings = listOf(),
+            interviewMappings = listOf(),
+            planMappings = listOf(),
+            reviewMappings = listOf(),
+          )
+        }
+      // TODO Check and update child mappings
+      telemetryClient.trackEvent("csip-updated-success", telemetryMap)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("csip-updated-failed", telemetryMap)
+      throw e
     }
   }
 
@@ -78,7 +114,7 @@ class CSIPService(
     val dpsCsipReportId = csipEvent.additionalInformation.recordUuid
     val offenderNo = requireNotNull(csipEvent.personReference.findNomsNumber())
     val telemetryMap = mutableMapOf(
-      "dpsCsipReportId" to dpsCsipReportId,
+      "dpsCSIPReportId" to dpsCsipReportId,
       "offenderNo" to offenderNo,
     )
 
@@ -100,7 +136,7 @@ class CSIPService(
   private suspend fun tryToDeletedMapping(dpsCsipId: String) = kotlin.runCatching {
     mappingApiService.deleteByDpsId(dpsCsipId)
   }.onFailure { e ->
-    telemetryClient.trackEvent("csip-mapping-deleted-failed", mapOf("dpsCsipId" to dpsCsipId))
+    telemetryClient.trackEvent("csip-mapping-deleted-failed", mapOf("dpsCSIPReportId" to dpsCsipId))
     log.warn("Unable to delete mapping for csip $dpsCsipId. Please delete manually", e)
   }
 

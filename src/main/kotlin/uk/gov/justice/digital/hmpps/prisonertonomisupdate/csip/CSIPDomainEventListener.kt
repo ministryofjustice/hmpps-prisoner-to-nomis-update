@@ -36,7 +36,7 @@ class CSIPDomainEventListener(
   ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "person.csip-record.created" -> csipService.createCSIPReport(message.fromJson())
-      "person.csip-record.updated" -> log.info("Received csip.record.updated event")
+      "person.csip-record.updated" -> csipService.updateCSIPReport(message.fromJson())
       "person.csip-record.deleted" -> csipService.deleteCsipReport(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
