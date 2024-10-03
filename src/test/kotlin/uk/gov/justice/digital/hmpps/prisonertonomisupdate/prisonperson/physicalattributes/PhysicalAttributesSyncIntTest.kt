@@ -406,6 +406,85 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class ReadmissionSwitchBookingEvent {
+    @Nested
+    inner class SyncFeatureSwitchedOn {
+      @Test
+      fun `should update NOMIS`() {
+        dpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
+
+        physicalAttributesNomisApi.stubPutPhysicalAttributes(offenderNo = "A1234AA")
+
+        awsSnsClient.publish(readmissionSwitchBookingRequest("A1234AA")).get()
+          .also { waitForAnyProcessingToComplete() }
+
+        verifyDpsApiCall()
+        verifyNomisPutPhysicalAttributes(height = equalTo("180"), weight = equalTo("80"))
+        verifyNeverNomisPutProfileDetails()
+        verifyTelemetry("physical-attributes-update-success", "[HEIGHT, WEIGHT]")
+      }
+
+      @Test
+      fun `should handle a failure`() = runTest {
+        dpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
+        physicalAttributesNomisApi.stubPutPhysicalAttributes(HttpStatus.BAD_GATEWAY)
+
+        awsSnsClient.publish(readmissionSwitchBookingRequest("A1234AA")).get()
+          .also {
+            // event should end up on the DLQ
+            await untilCallTo {
+              prisonPersonDlqClient!!.countAllMessagesOnQueue(prisonPersonDlqUrl!!).get()
+            } matches { it == 1 }
+          }
+
+        // should call DPS and NOMIS APIs for each retry
+        dpsApi.verify(3, getRequestedFor(urlPathEqualTo("/sync/prisoners/A1234AA/physical-attributes")))
+        physicalAttributesNomisApi.verify(3, putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
+        // should publish failed telemetry for each retry
+        verify(telemetryClient, times(3)).trackEvent(
+          eq("physical-attributes-update-error"),
+          check {
+            assertThat(it).containsExactlyInAnyOrderEntriesOf(
+              mapOf(
+                "offenderNo" to "A1234AA",
+                "reason" to "502 Bad Gateway from PUT http://localhost:8082/prisoners/A1234AA/physical-attributes",
+                "fields" to "[HEIGHT, WEIGHT]",
+              ),
+            )
+          },
+          isNull(),
+        )
+      }
+    }
+
+    private fun readmissionSwitchBookingRequest(prisonerNumber: String = "A1234AA") =
+      PublishRequest.builder().topicArn(topicArn)
+        .message(readmissionSwitchBookingMessage(prisonerNumber))
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue("prisoner-offender-search.prisoner.received").build(),
+          ),
+        ).build()
+
+    private fun readmissionSwitchBookingMessage(prisonerNumber: String) =
+      """
+      {
+        "additionalInformation":{
+          "nomsNumber":"$prisonerNumber",
+          "reason":"READMISSION_SWITCH_BOOKING",
+          "prisonId":"DNI"
+        },
+        "occurredAt":"2024-10-01T14:58:12.576513753+01:00",
+        "eventType":"prisoner-offender-search.prisoner.received",
+        "version":1,
+        "description":"A prisoner has been received into a prison with reason: re-admission but switched to old booking",
+        "detailUrl":"https://prisoner-search.prison.service.justice.gov.uk/prisoner/$prisonerNumber"
+      }
+    """
+  }
+
   private fun verifyDpsApiCall() {
     dpsApi.verify(
       getRequestedFor(urlPathEqualTo("/sync/prisoners/A1234AA/physical-attributes")),
@@ -428,7 +507,14 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
     )
   }
 
-  private fun verifyTelemetry(event: String, fields: String?) {
+  private fun verifyNeverNomisPutProfileDetails() {
+    profileDetailsNomisApi.verify(
+      0,
+      putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/profile-details")),
+    )
+  }
+
+  private fun verifyTelemetry(event: String, fields: String? = null) {
     verify(telemetryClient).trackEvent(
       eq(event),
       check {
