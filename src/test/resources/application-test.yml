@@ -244,5 +244,10 @@ reports:
   locations:
     reconciliation:
       page-size: 10
+  prisonperson:
+    reconciliation:
+      page-size: 3
 
 api.locations.timeout: 1s
+
+feature.recon.prison-person.profile-details: true

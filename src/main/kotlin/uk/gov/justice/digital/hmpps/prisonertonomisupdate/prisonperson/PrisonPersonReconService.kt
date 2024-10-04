@@ -22,6 +22,8 @@ class PrisonPersonReconService(
   private val prisonPersonNomisApi: PrisonPersonNomisApiService,
   private val nomisApi: NomisApiService,
   @Value("\${reports.prisonperson.reconciliation.page-size:20}") private val pageSize: Long = 20,
+  // TODO SDIT-2016 Remove this feature switch when live in all environments
+  @Value("\${feature.recon.prison-person.profile-details}") private val profileDetailsReconciliation: Boolean = true,
   private val telemetryClient: TelemetryClient,
 ) {
 
@@ -63,17 +65,10 @@ class PrisonPersonReconService(
 
   private fun findDifferenceTelemetry(offenderNo: String, nomisPrisoner: PrisonPersonReconciliationResponse?, dpsPrisoner: PhysicalAttributesSyncDto?): MutableMap<String, String> {
     val failureTelemetry = mutableMapOf<String, String>()
-    val differences = mutableListOf<String>()
+    val differences = physicalAttributesDifferences(nomisPrisoner, dpsPrisoner) +
+      physicalAttributesProfileDetailsDifferences(nomisPrisoner, dpsPrisoner)
 
-    if (nomisPrisoner?.height != dpsPrisoner?.height) {
-      differences += "height"
-    }
-
-    if (nomisPrisoner?.weight != dpsPrisoner?.weight) {
-      differences += "weight"
-    }
-
-    if (differences.size > 0) {
+    if (differences.isNotEmpty()) {
       failureTelemetry["offenderNo"] = offenderNo
       failureTelemetry["differences"] = differences.joinToString()
     }
@@ -89,5 +84,57 @@ class PrisonPersonReconService(
     }
 
     return failureTelemetry
+  }
+
+  private fun physicalAttributesDifferences(nomisPrisoner: PrisonPersonReconciliationResponse?, dpsPrisoner: PhysicalAttributesSyncDto?): List<String> {
+    val differences = mutableListOf<String>()
+
+    if (nomisPrisoner?.height != dpsPrisoner?.height) {
+      differences += "height"
+    }
+
+    if (nomisPrisoner?.weight != dpsPrisoner?.weight) {
+      differences += "weight"
+    }
+
+    return differences.toList()
+  }
+
+  private fun physicalAttributesProfileDetailsDifferences(nomisPrisoner: PrisonPersonReconciliationResponse?, dpsPrisoner: PhysicalAttributesSyncDto?): List<String> {
+    if (!profileDetailsReconciliation) {
+      return emptyList()
+    }
+
+    val differences = mutableListOf<String>()
+
+    if (nomisPrisoner?.face != dpsPrisoner?.face) {
+      differences += "face"
+    }
+
+    if (nomisPrisoner?.build != dpsPrisoner?.build) {
+      differences += "build"
+    }
+
+    if (nomisPrisoner?.facialHair != dpsPrisoner?.facialHair) {
+      differences += "facialHair"
+    }
+
+    if (nomisPrisoner?.hair != dpsPrisoner?.hair) {
+      differences += "hair"
+    }
+
+    if (nomisPrisoner?.leftEyeColour != dpsPrisoner?.leftEyeColour) {
+      differences += "leftEyeColour"
+    }
+
+    if (nomisPrisoner?.rightEyeColour != dpsPrisoner?.rightEyeColour) {
+      differences += "rightEyeColour"
+    }
+
+    if (nomisPrisoner?.shoeSize != dpsPrisoner?.shoeSize) {
+      differences += "shoeSize"
+    }
+
+    return differences.toList()
   }
 }
