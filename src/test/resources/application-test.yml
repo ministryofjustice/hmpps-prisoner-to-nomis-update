@@ -216,7 +216,8 @@ hmpps.sqs:
       subscribeTopicId: domainevents
       subscribeFilter: >-
         { "eventType":[
-          "prison-person.physical-attributes.updated"
+          "prison-person.physical-attributes.updated",
+          "prisoner-offender-search.prisoner.received"
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
