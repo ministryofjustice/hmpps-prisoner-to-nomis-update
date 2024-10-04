@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-10-01.9264.6d524a8"
+    "version": "2024-10-04.9344.b11f4e1"
   },
   "servers": [
     {
@@ -5167,6 +5167,97 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/case_identifiers": {
+      "post": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "Refreshes the list of Case identifiers associated with the case",
+        "description": "Required role NOMIS_SENTENCING Refreshes the list of Case identifiers associated with the case (identifier type CASE/INFO#)",
+        "operationId": "refreshCaseIdentifiers",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender no",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender no",
+              "example": "AB1234A"
+            },
+            "example": "AB1234A"
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "description": "Case Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Case Id",
+              "example": 34565
+            },
+            "example": 34565
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourtAppearanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Case Identifiers Refreshed"
+          },
+          "400": {
+            "description": "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Court case does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/casenotes": {
       "get": {
         "tags": [
@@ -8705,6 +8796,80 @@
           },
           "404": {
             "description": "Person does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons/ids": {
+      "get": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Get all Ids",
+        "description": "Retrieves all person Ids - typically for a migration. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "getPersonIds",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "description": "Filter results by persons that were created on or after the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "description": "Filter results by persons that were created on or before the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page of person Ids",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagePersonIdResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -16384,15 +16549,15 @@
             "type": "integer",
             "format": "int32"
           },
-          "unpaged": {
-            "type": "boolean"
-          },
           "paged": {
             "type": "boolean"
           },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
+          },
+          "unpaged": {
+            "type": "boolean"
           }
         }
       },
@@ -17451,6 +17616,41 @@
             "description": "The weight of the prisoner in kilograms",
             "format": "int32",
             "example": 80
+          },
+          "face": {
+            "type": "string",
+            "description": "Shape of face",
+            "example": "ROUND"
+          },
+          "build": {
+            "type": "string",
+            "description": "Build",
+            "example": "SLIM"
+          },
+          "facialHair": {
+            "type": "string",
+            "description": "Facial hair",
+            "example": "CLEAN_SHAVEN"
+          },
+          "hair": {
+            "type": "string",
+            "description": "Hair colour",
+            "example": "BLACK"
+          },
+          "leftEyeColour": {
+            "type": "string",
+            "description": "Left eye colour",
+            "example": "BLUE"
+          },
+          "rightEyeColour": {
+            "type": "string",
+            "description": "Right eye colour",
+            "example": "BROWN"
+          },
+          "shoeSize": {
+            "type": "string",
+            "description": "Shoe size",
+            "example": "8.5"
           }
         },
         "description": "Reconciliation details held against a prisoner"
@@ -19611,6 +19811,68 @@
           }
         },
         "description": "The data held in NOMIS about a phone number"
+      },
+      "PagePersonIdResponse": {
+        "type": "object",
+        "properties": {
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonIdResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SortObject"
+            }
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PersonIdResponse": {
+        "required": [
+          "personId"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "integer",
+            "description": "The person Id",
+            "format": "int64"
+          }
+        }
       },
       "NonAssociationResponse": {
         "required": [

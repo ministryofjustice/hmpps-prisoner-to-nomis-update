@@ -24,13 +24,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_GATEWAY
 import org.springframework.http.HttpStatus.NOT_FOUND
-import org.springframework.test.context.TestPropertySource
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.physicalattributes.PhysicalAttributesDpsApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 
-@TestPropertySource(properties = ["reports.prisonperson.reconciliation.page-size=3"])
 class PrisonPersonReconIntTest : IntegrationTestBase() {
 
   @Autowired
@@ -56,9 +54,9 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should report differences to height and weight`() = runTest {
-      dpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = 170, weight = 70)
-      nomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = 180, weight = 80)
+    fun `should report differences`() = runTest {
+      dpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = 170, weight = 70, face = "ROUND", build = "SMALL", facialHair = "CLEAN_SHAVEN", hair = "BLACK", leftEyeColour = "BLUE", rightEyeColour = "GREEN", shoeSize = "9.5")
+      nomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = 180, weight = 80, face = "SQUARE", build = "LARGE", facialHair = "FULL_BEARD", hair = "BROWN", leftEyeColour = "GREEN", rightEyeColour = "BLUE", shoeSize = "10")
 
       reconService.checkPrisoner("A1234AA")
         .also { assertThat(it).isEqualTo("A1234AA") }
@@ -69,7 +67,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "offenderNo" to "A1234AA",
-              "differences" to "height, weight",
+              "differences" to "height, weight, face, build, facialHair, hair, leftEyeColour, rightEyeColour, shoeSize",
             ),
           )
         },
@@ -79,7 +77,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
 
     @Test
     fun `should report differences if null in DPS`() = runTest {
-      dpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = null, weight = null)
+      dpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = null, weight = null, face = null, build = null, facialHair = null, hair = null, leftEyeColour = null, rightEyeColour = null, shoeSize = null)
       nomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = 180, weight = 80)
 
       reconService.checkPrisoner("A1234AA")
@@ -88,7 +86,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
         eq("prison-person-reconciliation-prisoner-failed"),
         check {
           assertThat(it).containsAllEntriesOf(
-            mapOf("differences" to "height, weight"),
+            mapOf("differences" to "height, weight, face, build, facialHair, hair, leftEyeColour, rightEyeColour, shoeSize"),
           )
         },
         isNull(),
@@ -98,7 +96,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
     @Test
     fun `should report differences if null in NOMIS`() = runTest {
       dpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = 170, weight = 70)
-      nomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = null, weight = null)
+      nomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = null, weight = null, face = null, build = null, facialHair = null, hair = null, leftEyeColour = null, rightEyeColour = null, shoeSize = null)
 
       reconService.checkPrisoner("A1234AA")
 
@@ -106,7 +104,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
         eq("prison-person-reconciliation-prisoner-failed"),
         check {
           assertThat(it).containsAllEntriesOf(
-            mapOf("differences" to "height, weight"),
+            mapOf("differences" to "height, weight, face, build, facialHair, hair, leftEyeColour, rightEyeColour, shoeSize"),
           )
         },
         isNull(),
@@ -126,7 +124,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "offenderNo" to "A1234AA",
-              "differences" to "height, weight",
+              "differences" to "height, weight, face, build, facialHair, hair, leftEyeColour, rightEyeColour, shoeSize",
               "dpsPrisoner" to "null",
             ),
           )
@@ -148,7 +146,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "offenderNo" to "A1234AA",
-              "differences" to "height, weight",
+              "differences" to "height, weight, face, build, facialHair, hair, leftEyeColour, rightEyeColour, shoeSize",
               "nomisPrisoner" to "null",
             ),
           )
@@ -159,8 +157,8 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
 
     @Test
     fun `should not report differences if null in both`() = runTest {
-      dpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = null, weight = null)
-      nomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = null, weight = null)
+      dpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA", height = null, weight = null, face = null, build = null, facialHair = null, hair = null, leftEyeColour = null, rightEyeColour = null, shoeSize = null)
+      nomisApi.stubGetReconciliation(offenderNo = "A1234AA", height = null, weight = null, face = null, build = null, facialHair = null, hair = null, leftEyeColour = null, rightEyeColour = null, shoeSize = null)
 
       reconService.checkPrisoner("A1234AA")
 
