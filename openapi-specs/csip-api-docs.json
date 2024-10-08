@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-10-01.2201.eaa3a36"
+    "version": "2024-10-03.2257.1a57b27"
   },
   "servers": [
     {
@@ -90,16 +90,6 @@
               }
             }
           },
-          "200": {
-            "description": "CSIP record merged",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SyncResponse"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -116,6 +106,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "CSIP record merged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncResponse"
                 }
               }
             }
@@ -154,16 +154,6 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "Decision and actions updated for CSIP referral",
             "content": {
@@ -174,8 +164,8 @@
               }
             }
           },
-          "409": {
-            "description": "The CSIP referral associated with this identifier already has a decision and actions",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -210,6 +200,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DecisionAndActions"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The CSIP referral associated with this identifier already has a decision and actions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -323,22 +323,22 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "CSIP records found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CsipSummaries"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -572,22 +572,22 @@
               }
             }
           },
-          "201": {
-            "description": "Investigation and interviews added to CSIP referral",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Investigation"
-                }
-              }
-            }
-          },
           "409": {
             "description": "Conflict. The CSIP referral already has an Investigation created.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Investigation and interviews added to CSIP referral",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Investigation"
                 }
               }
             }
@@ -644,16 +644,6 @@
               }
             }
           },
-          "200": {
-            "description": "Investigation updated and/or interviews added to CSIP referral",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Investigation"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -674,8 +664,8 @@
               }
             }
           },
-          "201": {
-            "description": "Investigation and interviews added to CSIP referral",
+          "200": {
+            "description": "Investigation updated and/or interviews added to CSIP referral",
             "content": {
               "application/json": {
                 "schema": {
@@ -690,6 +680,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Investigation and interviews added to CSIP referral",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Investigation"
                 }
               }
             }
@@ -768,22 +768,22 @@
               }
             }
           },
-          "404": {
-            "description": "The CSIP referral associated with this identifier was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "201": {
             "description": "Interview added to CSIP referral",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Interview"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The CSIP referral associated with this identifier was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -832,16 +832,6 @@
               }
             }
           },
-          "201": {
-            "description": "New contributory factor added to CSIP referral",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContributoryFactor"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -858,6 +848,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "New contributory factor added to CSIP referral",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContributoryFactor"
                 }
               }
             }
@@ -1028,22 +1028,22 @@
               }
             }
           },
-          "404": {
-            "description": "The CSIP referral associated with this identifier was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "CSIP plan updated",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Plan"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The CSIP referral associated with this identifier was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1092,16 +1092,6 @@
               }
             }
           },
-          "201": {
-            "description": "Reviews and attendees added to CSIP plan",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Review"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -1118,6 +1108,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Reviews and attendees added to CSIP plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Review"
                 }
               }
             }
@@ -1260,8 +1260,8 @@
               }
             }
           },
-          "404": {
-            "description": "The review associated with this identifier was not found.",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1270,18 +1270,8 @@
               }
             }
           },
-          "201": {
-            "description": "Attendee added to review",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Attendee"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "The review associated with this identifier was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1296,6 +1286,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Attendee added to review",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attendee"
                 }
               }
             }
@@ -1334,16 +1334,6 @@
               }
             }
           },
-          "200": {
-            "description": "CSIP record found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CsipRecord"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -1360,6 +1350,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "CSIP record found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsipRecord"
                 }
               }
             }
@@ -1468,8 +1468,8 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "Bad request",
+          "404": {
+            "description": "The CSIP record associated with this identifier was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1478,8 +1478,8 @@
               }
             }
           },
-          "404": {
-            "description": "The CSIP record associated with this identifier was not found.",
+          "400": {
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
@@ -1562,16 +1562,6 @@
               }
             }
           },
-          "404": {
-            "description": "The interview associated with this identifier was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -1598,6 +1588,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Interview"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The interview associated with this identifier was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1730,6 +1730,16 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "The review associated with this identifier was not found.",
             "content": {
@@ -1746,16 +1756,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Review"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1814,16 +1814,6 @@
               }
             }
           },
-          "404": {
-            "description": "The attendee associated with this identifier was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -1836,6 +1826,16 @@
           },
           "403": {
             "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The attendee associated with this identifier was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1918,22 +1918,22 @@
               }
             }
           },
-          "200": {
-            "description": "Identified Need updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IdentifiedNeed"
-                }
-              }
-            }
-          },
           "404": {
             "description": "The identified need associated with this identifier was not found.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Identified Need updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentifiedNeed"
                 }
               }
             }
@@ -2056,9 +2056,6 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "CSIP record merged"
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -2078,6 +2075,9 @@
                 }
               }
             }
+          },
+          "200": {
+            "description": "CSIP record merged"
           },
           "204": {
             "description": "No Content"
@@ -4355,11 +4355,6 @@
         "description": "The request body to update an investigation on the incident that motivated the CSIP referral."
       },
       "UpdatePlanRequest": {
-        "required": [
-          "caseManager",
-          "firstCaseReviewDate",
-          "reasonForPlan"
-        ],
         "type": "object",
         "properties": {
           "caseManager": {
@@ -4669,9 +4664,7 @@
       },
       "DefaultLegacyActioned": {
         "required": [
-          "actionedAt",
-          "actionedBy",
-          "actionedByDisplayName"
+          "actionedAt"
         ],
         "type": "object",
         "properties": {

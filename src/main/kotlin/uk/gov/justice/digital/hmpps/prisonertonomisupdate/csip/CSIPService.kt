@@ -78,7 +78,7 @@ class CSIPService(
       telemetryMap["nomisCSIPReportId"] = mapping.nomisCSIPReportId.toString()
 
       val dpsCsipRecord = dpsApiService.getCsipReport(dpsCsipReportId)
-      nomisApiService.upsertCsipReport(dpsCsipRecord.toNomisUpsertRequest(mapping.nomisCSIPReportId))
+      nomisApiService.upsertCsipReport(dpsCsipRecord.toNomisUpsertRequest(mapping))
         .let { nomisCsip ->
           CSIPFullMappingDto(
             dpsCSIPReportId = dpsCsipReportId,
