@@ -78,9 +78,6 @@ class CSIPNomisApiServiceTest {
       reportedDate = LocalDate.now(),
       staffAssaulted = false,
       proActiveReferral = false,
-      auditDetails = AuditDetailsRequest(
-        createUsername = "FRED.JAMES",
-      ),
     )
   }
 
