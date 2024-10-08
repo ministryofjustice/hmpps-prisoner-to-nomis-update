@@ -16,10 +16,10 @@ const val COURT_CHARGE_1_OFFENCE_CODE = "PS90031"
 const val COURT_CHARGE_2_OFFENCE_CODE = "PS90032"
 const val COURT_CHARGE_3_OFFENCE_CODE = "PS90033"
 const val COURT_CHARGE_4_OFFENCE_CODE = "PS90034"
-const val COURT_CHARGE_1_RESULT_CODE = "Remand in Custody 1 (Bail Refused)"
-const val COURT_CHARGE_2_RESULT_CODE = "Remand in Custody 2 (Bail Refused)"
-const val COURT_CHARGE_3_RESULT_CODE = "Imprisonment"
-const val COURT_CHARGE_4_RESULT_CODE = "Imprisonment"
+const val COURT_CHARGE_1_RESULT_CODE = "4531"
+const val COURT_CHARGE_2_RESULT_CODE = "4531"
+const val COURT_CHARGE_3_RESULT_CODE = "1002"
+const val COURT_CHARGE_4_RESULT_CODE = "1002"
 const val COURT_CHARGE_1_OFFENCE_DATE = "2024-01-11"
 const val COURT_CHARGE_2_OFFENCE_DATE = "2024-01-12"
 const val COURT_CHARGE_3_OFFENCE_DATE = "2024-01-13"
@@ -80,6 +80,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
         "outcome": {
             "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+            "relatedChargeOutcomeUuid": "9928aa1b-8e2c-4c77-ad32-6feca8b0e459",
             "outcomeName": "Remanded in custody",
             "nomisCode": "4531",
             "outcomeType": "UNKNOWN",
@@ -103,7 +104,13 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "offenceCode": "PS90037",
                 "offenceStartDate": "2024-01-15",
                 "offenceEndDate": null,
-                "outcome": "Remand in Custody (Bail Refused)",
+                "outcome": {
+                  "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+                  "outcomeName": "description of outcome",
+                  "nomisCode": "$COURT_CHARGE_1_RESULT_CODE",
+                  "outcomeType": "UNKNOWN",
+                  "displayOrder": 0
+                },
                 "terrorRelated": null,
                 "sentence": null
             },
@@ -113,7 +120,13 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "offenceCode": "PS90090",
                 "offenceStartDate": "2024-01-17",
                 "offenceEndDate": "2024-01-19",
-                "outcome": "Remand in Custody Different outcome",
+                "outcome": {
+                  "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+                  "outcomeName": "description of outcome",
+                  "nomisCode": "$COURT_CHARGE_2_RESULT_CODE",
+                  "outcomeType": "UNKNOWN",
+                  "displayOrder": 0
+                },
                 "terrorRelated": null,
                 "sentence": null
             }
@@ -125,6 +138,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
             "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
             "outcome": {
               "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+              "relatedChargeOutcomeUuid": "9928aa1b-8e2c-4c77-ad32-6feca8b0e459",
               "outcomeName": "Remanded in custody",
               "nomisCode": "4531",
               "outcomeType": "UNKNOWN",
@@ -148,7 +162,13 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "offenceCode": "PS90037",
                 "offenceStartDate": "2024-01-15",
                 "offenceEndDate": null,
-                "outcome": "Remand in Custody (Bail Refused)",
+                  "outcome": {
+                    "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+                    "outcomeName": "description of outcome",
+                    "nomisCode": "$COURT_CHARGE_1_RESULT_CODE",
+                    "outcomeType": "UNKNOWN",
+                    "displayOrder": 0
+                  },
                 "terrorRelated": null,
                 "sentence": null
               },
@@ -158,7 +178,13 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
                   "offenceCode": "PS90090",
                   "offenceStartDate": "2024-01-17",
                   "offenceEndDate": "2024-01-19",
-                  "outcome": "Remand in Custody (Bail Refused)",
+                  "outcome": {
+                    "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+                    "outcomeName": "description of outcome",
+                    "nomisCode": "$COURT_CHARGE_2_RESULT_CODE",
+                    "outcomeType": "UNKNOWN",
+                    "displayOrder": 0
+                  },
                   "terrorRelated": null,
                   "sentence": null
               }
@@ -186,6 +212,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
             "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
             "outcome": {
               "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+              "relatedChargeOutcomeUuid": "9928aa1b-8e2c-4c77-ad32-6feca8b0e459",
               "outcomeName": "Remanded in custody",
               "nomisCode": "4531",
               "outcomeType": "UNKNOWN",
@@ -209,7 +236,13 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "offenceCode": "$COURT_CHARGE_1_OFFENCE_CODE",
                 "offenceStartDate": "$COURT_CHARGE_1_OFFENCE_DATE",
                 "offenceEndDate": "$COURT_CHARGE_1_OFFENCE_END_DATE",
-                "outcome": "$COURT_CHARGE_1_RESULT_CODE",
+                "outcome": {
+                  "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+                  "outcomeName": "description of outcome",
+                  "nomisCode": "$COURT_CHARGE_1_RESULT_CODE",
+                  "outcomeType": "UNKNOWN",
+                  "displayOrder": 0
+                },
                 "terrorRelated": null,
                 "sentence": null
             },
@@ -219,7 +252,13 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "offenceCode": "$COURT_CHARGE_2_OFFENCE_CODE",
                 "offenceStartDate": "$COURT_CHARGE_2_OFFENCE_DATE",
                 "offenceEndDate": "$COURT_CHARGE_2_OFFENCE_END_DATE",
-                "outcome": "$COURT_CHARGE_2_RESULT_CODE",
+                "outcome": {
+                  "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+                  "outcomeName": "description of outcome",
+                  "nomisCode": "$COURT_CHARGE_2_RESULT_CODE",
+                  "outcomeType": "UNKNOWN",
+                  "displayOrder": 0
+                },
                 "terrorRelated": null,
                 "sentence": null
             },
@@ -229,7 +268,13 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "offenceCode": "$COURT_CHARGE_3_OFFENCE_CODE",
                 "offenceStartDate": "$COURT_CHARGE_3_OFFENCE_DATE",
                 "offenceEndDate": null,
-                "outcome": "$COURT_CHARGE_3_RESULT_CODE",
+                "outcome": {
+                  "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+                  "outcomeName": "Remanded in custody",
+                  "nomisCode": "$COURT_CHARGE_3_RESULT_CODE",
+                  "outcomeType": "UNKNOWN",
+                  "displayOrder": 0
+                },
                 "terrorRelated": null,
                 "sentence": null
             },
@@ -239,7 +284,13 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "offenceCode": "$COURT_CHARGE_4_OFFENCE_CODE",
                 "offenceStartDate": "$COURT_CHARGE_4_OFFENCE_DATE",
                 "offenceEndDate": null,
-                "outcome": "$COURT_CHARGE_4_RESULT_CODE",
+                "outcome": {
+                  "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+                  "outcomeName": "Remanded in custody",
+                  "nomisCode": "$COURT_CHARGE_4_RESULT_CODE",
+                  "outcomeType": "UNKNOWN",
+                  "displayOrder": 0
+                },
                 "terrorRelated": null,
                 "sentence": null
             }
