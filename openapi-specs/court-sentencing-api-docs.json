@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-09-30.2392.f7a7fea"
+    "version": "2024-10-07.2547.d2b0585"
   },
   "servers": [
     {
@@ -47,6 +47,10 @@
     {
       "name": "person-controller",
       "description": "Get person details"
+    },
+    {
+      "name": "charge-outcome-controller",
+      "description": "Charge outcome"
     },
     {
       "name": "charge-controller",
@@ -1168,6 +1172,183 @@
         }
       }
     },
+    "/charge-outcome/{outcomeUuid}": {
+      "get": {
+        "tags": [
+          "charge-outcome-controller"
+        ],
+        "summary": "Get charge outcome by UUID",
+        "description": "This endpoint will retrieve charge outcome by UUID",
+        "operationId": "getChargeOutcomeByUuid",
+        "parameters": [
+          {
+            "name": "outcomeUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not found if no charge outcome at uuid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChargeOutcome"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChargeOutcome"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChargeOutcome"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Returns charge outcome",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChargeOutcome"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/charge-outcome/all": {
+      "get": {
+        "tags": [
+          "charge-outcome-controller"
+        ],
+        "summary": "Get all charge outcomes",
+        "description": "This endpoint will get all charge outcomes",
+        "operationId": "getAllChargeOutcomes",
+        "responses": {
+          "200": {
+            "description": "Returns charge outcomes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChargeOutcome"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChargeOutcome"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChargeOutcome"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appearance-outcome/{outcomeUuid}": {
+      "get": {
+        "tags": [
+          "appearance-outcome-controller"
+        ],
+        "summary": "Get appearance outcome by UUID",
+        "description": "This endpoint will retrieve appearance outcome by UUID",
+        "operationId": "getAppearanceOutcomeByUuid",
+        "parameters": [
+          {
+            "name": "outcomeUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns appearance outcome",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtAppearanceOutcome"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtAppearanceOutcome"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtAppearanceOutcome"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found if no appearance outcome at uuid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtAppearanceOutcome"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/appearance-outcome/all": {
       "get": {
         "tags": [
@@ -1269,11 +1450,50 @@
           }
         }
       },
+      "ChargeLegacyData": {
+        "type": "object",
+        "properties": {
+          "offenderChargeId": {
+            "type": "string"
+          },
+          "bookingId": {
+            "type": "string"
+          },
+          "postedDate": {
+            "type": "string"
+          },
+          "nomisOutcomeCode": {
+            "type": "string"
+          },
+          "outcomeDescription": {
+            "type": "string"
+          }
+        }
+      },
+      "CourtAppearanceLegacyData": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string"
+          },
+          "caseId": {
+            "type": "string"
+          },
+          "postedDate": {
+            "type": "string"
+          },
+          "nomisOutcomeCode": {
+            "type": "string"
+          },
+          "outcomeDescription": {
+            "type": "string"
+          }
+        }
+      },
       "CreateCharge": {
         "required": [
           "offenceCode",
-          "offenceStartDate",
-          "outcome"
+          "offenceStartDate"
         ],
         "type": "object",
         "properties": {
@@ -1292,14 +1512,18 @@
             "type": "string",
             "format": "date"
           },
-          "outcome": {
-            "type": "string"
+          "outcomeUuid": {
+            "type": "string",
+            "format": "uuid"
           },
           "terrorRelated": {
             "type": "boolean"
           },
           "sentence": {
             "$ref": "#/components/schemas/CreateSentence"
+          },
+          "legacyData": {
+            "$ref": "#/components/schemas/ChargeLegacyData"
           }
         }
       },
@@ -1358,6 +1582,9 @@
           "overallConvictionDate": {
             "type": "string",
             "format": "date"
+          },
+          "legacyData": {
+            "$ref": "#/components/schemas/CourtAppearanceLegacyData"
           }
         }
       },
@@ -1393,7 +1620,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "11:57:01.228893078"
+            "example": "14:36:39.593431476"
           },
           "courtCode": {
             "type": "string"
@@ -1698,8 +1925,7 @@
           "chargeUuid",
           "lifetimeUuid",
           "offenceCode",
-          "offenceStartDate",
-          "outcome"
+          "offenceStartDate"
         ],
         "type": "object",
         "properties": {
@@ -1723,13 +1949,49 @@
             "format": "date"
           },
           "outcome": {
-            "type": "string"
+            "$ref": "#/components/schemas/ChargeOutcome"
           },
           "terrorRelated": {
             "type": "boolean"
           },
           "sentence": {
             "$ref": "#/components/schemas/Sentence"
+          },
+          "legacyData": {
+            "$ref": "#/components/schemas/JsonNode"
+          }
+        }
+      },
+      "ChargeOutcome": {
+        "required": [
+          "displayOrder",
+          "isSubList",
+          "nomisCode",
+          "outcomeName",
+          "outcomeType",
+          "outcomeUuid"
+        ],
+        "type": "object",
+        "properties": {
+          "outcomeUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outcomeName": {
+            "type": "string"
+          },
+          "nomisCode": {
+            "type": "string"
+          },
+          "outcomeType": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isSubList": {
+            "type": "boolean"
           }
         }
       },
@@ -1790,16 +2052,21 @@
           "overallConvictionDate": {
             "type": "string",
             "format": "date"
+          },
+          "legacyData": {
+            "$ref": "#/components/schemas/JsonNode"
           }
         }
       },
       "CourtAppearanceOutcome": {
         "required": [
           "displayOrder",
+          "isSubList",
           "nomisCode",
           "outcomeName",
           "outcomeType",
-          "outcomeUuid"
+          "outcomeUuid",
+          "relatedChargeOutcomeUuid"
         ],
         "type": "object",
         "properties": {
@@ -1819,6 +2086,13 @@
           "displayOrder": {
             "type": "integer",
             "format": "int32"
+          },
+          "relatedChargeOutcomeUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "isSubList": {
+            "type": "boolean"
           }
         }
       },
@@ -1847,6 +2121,9 @@
           }
         }
       },
+      "JsonNode": {
+        "type": "object"
+      },
       "NextCourtAppearance": {
         "required": [
           "appearanceDate",
@@ -1861,7 +2138,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "11:57:01.228893078"
+            "example": "14:36:39.593431476"
           },
           "courtCode": {
             "type": "string"
@@ -1958,12 +2235,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "paged": {
+            "type": "boolean"
+          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
-          },
-          "paged": {
-            "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
