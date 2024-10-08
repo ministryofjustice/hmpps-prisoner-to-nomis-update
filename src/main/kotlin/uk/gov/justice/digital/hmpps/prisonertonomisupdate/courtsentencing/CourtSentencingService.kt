@@ -30,9 +30,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDateTime
 import java.time.LocalTime
 
-const val HARDCODED_IMPRISONMENT_RESULT_CODE = "1002"
-const val HARDCODED_REMAND_RESULT_CODE = "4531"
-
 @Service
 class CourtSentencingService(
   private val courtSentencingApiService: CourtSentencingApiService,
@@ -361,26 +358,20 @@ fun CourtAppearance.toNomisCourtAppearance(
 }
 
 fun Charge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeRequest(
-  // guaranteed to match nomis this way  (nomis has additional codes so sync back harder)
   offenceCode = this.offenceCode,
   offenceDate = this.offenceStartDate,
   offenceEndDate = this.offenceEndDate,
-  resultCode1 = getHardcodedNomisResultCode(this.outcome),
+  resultCode1 = this.outcome?.nomisCode,
   // TODO determine if this comes from DPS or is it determined
   offencesCount = 1,
 )
-
-fun getHardcodedNomisResultCode(dpsResultCode: String): String {
-  // map to remand or imprisonment NOMIS codes
-  return if ("remand" in dpsResultCode.lowercase()) HARDCODED_REMAND_RESULT_CODE else HARDCODED_IMPRISONMENT_RESULT_CODE
-}
 
 fun Charge.toExistingNomisCourtCharge(nomisId: Long): ExistingOffenderChargeRequest = ExistingOffenderChargeRequest(
   offenderChargeId = nomisId,
   offenceCode = this.offenceCode,
   offenceDate = this.offenceStartDate,
   offenceEndDate = this.offenceEndDate,
-  resultCode1 = getHardcodedNomisResultCode(this.outcome),
+  resultCode1 = this.outcome?.nomisCode,
   offencesCount = 1,
 )
 
