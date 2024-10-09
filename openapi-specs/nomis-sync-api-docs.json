@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-10-08.9373.3c3d2cf"
+    "version": "2024-10-09.9399.6a7ef96"
   },
   "servers": [
     {
@@ -12370,10 +12370,6 @@
           "offenceCode": {
             "type": "string"
           },
-          "offencesCount": {
-            "type": "integer",
-            "format": "int32"
-          },
           "offenceDate": {
             "type": "string",
             "format": "date"
@@ -12396,10 +12392,6 @@
         "properties": {
           "offenceCode": {
             "type": "string"
-          },
-          "offencesCount": {
-            "type": "integer",
-            "format": "int32"
           },
           "offenceDate": {
             "type": "string",
