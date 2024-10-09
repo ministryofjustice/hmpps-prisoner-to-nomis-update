@@ -52,7 +52,6 @@ private const val DPS_COURT_CHARGE_2_ID = "9996aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_COURT_CHARGE_3_ID = "4566aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_COURT_CHARGE_4_ID = "1236aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val OFFENDER_NO = "AB12345"
-private const val OFFENCES_COUNT = 1
 private const val DONCASTER_COURT_CODE = "DRBYYC"
 private const val PRISON_ID = "MDI"
 private const val CASE_REFERENCE = "G123456789"
@@ -747,12 +746,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               WireMock.matchingJsonPath(
                 "courtEventChargesToUpdate[1].offenceCode",
                 WireMock.equalTo("$COURT_CHARGE_3_OFFENCE_CODE"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtEventChargesToUpdate[1].offencesCount",
-                WireMock.equalTo("$OFFENCES_COUNT"),
               ),
             )
             .withRequestBody(
