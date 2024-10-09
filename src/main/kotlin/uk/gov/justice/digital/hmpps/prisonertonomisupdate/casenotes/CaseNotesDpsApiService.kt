@@ -3,11 +3,12 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.domain.Page
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNote
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.PageCaseNote
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RestResponsePage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.typeReference
 import java.net.URI
@@ -32,7 +33,7 @@ class CaseNotesDpsApiService(
       }
       .retrieve()
       .bodyToMono(CaseNote::class.java)
-      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "casenotes-api", "url", url.path)))
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "casenotes-api.getCaseNote", "url", url.path)))
       .awaitSingle()
   }
 
@@ -40,7 +41,7 @@ class CaseNotesDpsApiService(
     offenderIdentifier: String,
     pageNumber: Long,
     pageSize: Long,
-  ): PageCaseNote {
+  ): Page<CaseNote> {
     lateinit var url: URI
     return webClient
       .get()
@@ -52,8 +53,8 @@ class CaseNotesDpsApiService(
         url
       }
       .retrieve()
-      .bodyToMono(typeReference<PageCaseNote>())
-      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "casenotes-api", "url", url.path)))
+      .bodyToMono(typeReference<RestResponsePage<CaseNote>>())
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "casenotes-api.getCaseNotesForPrisoner", "url", url.path)))
       .awaitSingle()
   }
 }

@@ -134,7 +134,7 @@ fun pagedResponse(
       "last": false,
       "totalPages": ${totalElements / pageSize + 1},
       "totalElements": $totalElements,
-      "propertySize": $pageSize,
+      "size": $pageSize,
       "number": $pageNumber,
       "numberOfElements": $pageElements,
       "empty": false

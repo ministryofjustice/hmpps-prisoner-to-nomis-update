@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-09-30.6750.f63a960"
+    "version": "2024-10-08.6883.074817d"
   },
   "servers": [
     {
@@ -65,18 +65,8 @@
           "required": true
         },
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "400": {
+            "description": "Bad request",
             "content": {
               "*/*": {
                 "schema": {
@@ -95,8 +85,18 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "200": {
+            "description": "Case Note successfully updated",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "*/*": {
                 "schema": {
@@ -105,12 +105,12 @@
               }
             }
           },
-          "200": {
-            "description": "Case Note successfully updated",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/SyncResult"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -363,8 +363,8 @@
           "required": true
         },
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "400": {
+            "description": "Bad request",
             "content": {
               "*/*": {
                 "schema": {
@@ -393,8 +393,8 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "*/*": {
                 "schema": {
@@ -406,14 +406,26 @@
         }
       }
     },
-    "/migrate/case-notes": {
+    "/migrate/case-notes/{personIdentifier}": {
       "post": {
         "tags": [
           "Sync Case Notes"
         ],
-        "summary": "Endpoint to migrate case notes from nomis to dps.",
-        "description": "Case notes that don't exist in dps will be created.\nRequires one of the following roles: \n* ROLE_PRISONER_CASE_NOTES__SYNC__RW",
+        "summary": "Endpoint to migrate all the case notes for a person from NOMIS to DPS.",
+        "description": "\n    Existing case notes associated with the person will be deleted and recreated. \n    This will change the mapping information for the recreated notes therefore the caller should replace all existing mapping information with the response.\n    \nRequires one of the following roles: \n* ROLE_PRISONER_CASE_NOTES__SYNC__RW",
         "operationId": "migrateCaseNotes",
+        "parameters": [
+          {
+            "name": "personIdentifier",
+            "in": "path",
+            "description": "Person Identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "A1234AA"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -428,18 +440,8 @@
           "required": true
         },
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "400": {
+            "description": "Bad request",
             "content": {
               "*/*": {
                 "schema": {
@@ -461,8 +463,18 @@
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "*/*": {
                 "schema": {
@@ -662,32 +674,22 @@
               }
             }
           },
-          "401": {
-            "description": "The client does not have authorisation to make this request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected error occurred",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "Request successfully processed - content found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SubjectAccessRequestContent"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -702,8 +704,18 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "The client does not have authorisation to make this request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error occurred",
             "content": {
               "application/json": {
                 "schema": {
@@ -841,15 +853,8 @@
           }
         ],
         "responses": {
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
+          "204": {
+            "description": "Case Note successfully deleted"
           },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
@@ -861,8 +866,15 @@
               }
             }
           },
-          "204": {
-            "description": "Case Note successfully deleted"
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -873,7 +885,7 @@
           "case-notes"
         ],
         "summary": "Deletes a case note",
-        "operationId": "softDeleteCaseNote",
+        "operationId": "deleteCaseNote_1",
         "parameters": [
           {
             "name": "personIdentifier",
@@ -894,14 +906,6 @@
               "type": "string"
             },
             "example": "518b2200-6489-4c77-8514-10cf80ccd488"
-          },
-          {
-            "name": "CaseloadId",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -1211,8 +1215,9 @@
           },
           "source": {
             "type": "string",
-            "description": "Source Type",
-            "example": "INST"
+            "description": "Deprecated for removal",
+            "example": "INST|AUTO|OCNS",
+            "deprecated": true
           },
           "creationDateTime": {
             "type": "string",
@@ -1389,7 +1394,6 @@
           "legacyId",
           "locationId",
           "occurrenceDateTime",
-          "personIdentifier",
           "source",
           "subType",
           "systemGenerated",
@@ -1403,11 +1407,6 @@
             "description": "The nomis id for the case note, reflected back for mapping",
             "format": "int64",
             "example": 1645251
-          },
-          "personIdentifier": {
-            "type": "string",
-            "description": "The offender/prison/prisoner/noms number - used to identify the person in prison",
-            "example": "A1234BC"
           },
           "locationId": {
             "type": "string",
@@ -1704,13 +1703,13 @@
       "PageCaseNote": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -1738,12 +1737,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -1763,16 +1762,16 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
           "pageSize": {
             "type": "integer",
             "format": "int32"
           },
           "paged": {
             "type": "boolean"
-          },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
           },
           "unpaged": {
             "type": "boolean"
@@ -1802,7 +1801,6 @@
       "CaseNoteSubType": {
         "required": [
           "active",
-          "activeFlag",
           "code",
           "description",
           "restrictedUse",
@@ -1846,13 +1844,6 @@
                 "ALL"
               ]
             }
-          },
-          "activeFlag": {
-            "type": "string",
-            "enum": [
-              "Y",
-              "N"
-            ]
           }
         },
         "description": "List of case note sub types"

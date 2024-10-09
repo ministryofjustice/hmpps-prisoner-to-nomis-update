@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import java.time.LocalDate
@@ -961,6 +962,67 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetAllPrisonersInitialCount(totalElements: Long, numberOfElements: Long) {
+    stubFor(
+      get(
+        urlPathEqualTo("/prisoners/ids/all"),
+      )
+        .withQueryParam("page", WireMock.equalTo("0"))
+        .withQueryParam("size", WireMock.equalTo("1"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(allPrisonersPagedResponse(totalElements = totalElements, numberOfElements = numberOfElements, pageSize = 1)),
+        ),
+    )
+  }
+
+  fun stubGetAllPrisonersPage(
+    totalElements: Long,
+    pageNumber: Long,
+    numberOfElements: Long = 10,
+    pageSize: Long = 10,
+  ) {
+    stubFor(
+      get(
+        urlPathEqualTo("/prisoners/ids/all"),
+      )
+        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
+        .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withFixedDelay(500)
+            .withBody(
+              allPrisonersPagedResponse(
+                totalElements = totalElements,
+                numberOfElements = numberOfElements,
+                pageNumber = pageNumber,
+                pageSize = pageSize,
+              ),
+            ),
+        ),
+    )
+  }
+
+  fun stubGetAllPrisonersPageWithError(pageNumber: Long, pageSize: Long? = null, responseCode: Int) {
+    stubFor(
+      get(
+        urlPathEqualTo("/prisoners/ids/all"),
+      )
+        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
+        .apply { pageSize?.also { withQueryParam("size", WireMock.equalTo(it.toString())) } }
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(responseCode)
+            .withBody("""{"message":"Error"}"""),
+        ),
+    )
+  }
+
   fun stubCurrentIncentiveGet(bookingId: Long, iepCode: String) {
     stubFor(
       get("/incentives/booking-id/$bookingId/current").willReturn(
@@ -1023,6 +1085,51 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     },
     "first": true,
     "numberOfElements": ${activePrisonerId.size},
+    "empty": false
+}                
+      
+    """.trimIndent()
+  }
+
+  private fun allPrisonersPagedResponse(
+    totalElements: Long = 10,
+    numberOfElements: Long = 10,
+    pageSize: Long = 10,
+    pageNumber: Long = 0,
+  ): String {
+    val prisonerIdList = (1..numberOfElements).map { it + (pageNumber * pageSize) }
+      .map { PrisonerId(offenderNo = generateOffenderNo(sequence = it)) }
+    val content = prisonerIdList.map { """{ "offenderNo": "${it.offenderNo}" }""" }
+      .joinToString { it }
+    return """
+{
+    "content": [
+        $content
+    ],
+    "pageable": {
+        "sort": {
+            "empty": false,
+            "sorted": true,
+            "unsorted": false
+        },
+        "offset": 0,
+        "pageSize": $pageSize,
+        "pageNumber": $pageNumber,
+        "paged": true,
+        "unpaged": false
+    },
+    "last": false,
+    "totalPages": ${totalElements / pageSize + 1},
+    "totalElements": $totalElements,
+    "size": $pageSize,
+    "number": $pageNumber,
+    "sort": {
+        "empty": false,
+        "sorted": true,
+        "unsorted": false
+    },
+    "first": true,
+    "numberOfElements": ${prisonerIdList.size},
     "empty": false
 }                
       
