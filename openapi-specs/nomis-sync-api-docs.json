@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-10-07.9366.2794d08"
+    "version": "2024-10-08.9373.3c3d2cf"
   },
   "servers": [
     {
@@ -13428,10 +13428,19 @@
       "AttendeeRequest": {
         "required": [
           "attended",
-          "auditDetails"
+          "dpsId"
         ],
         "type": "object",
         "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Review Attendee/Contributor Id",
+            "format": "int64"
+          },
+          "dpsId": {
+            "type": "string",
+            "description": "DPS Attendee id"
+          },
           "name": {
             "type": "string",
             "description": "Name of attendee/contributor"
@@ -13447,47 +13456,25 @@
           "contribution": {
             "type": "string",
             "description": "Contribution"
-          },
-          "auditDetails": {
-            "$ref": "#/components/schemas/AuditDetailsRequest"
           }
         },
         "description": "Attendees to the review"
       },
-      "AuditDetailsRequest": {
-        "required": [
-          "createUsername"
-        ],
-        "type": "object",
-        "properties": {
-          "createUsername": {
-            "type": "string",
-            "description": "Username of person that created the record (might also be a system)"
-          },
-          "modifyUsername": {
-            "type": "string",
-            "description": "Username of person that last modified the record (might also be a system)"
-          },
-          "modifyDatetime": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Date time record was last modified",
-            "example": "2021-07-05T10:35:17"
-          }
-        },
-        "description": "Common Audit request details"
-      },
       "CSIPFactorRequest": {
         "required": [
-          "auditDetails",
+          "dpsId",
           "typeCode"
         ],
         "type": "object",
         "properties": {
           "id": {
             "type": "integer",
-            "description": "Factor type id",
+            "description": "Contributory Factor id",
             "format": "int64"
+          },
+          "dpsId": {
+            "type": "string",
+            "description": "DPS Factor id"
           },
           "typeCode": {
             "type": "string",
@@ -13496,9 +13483,6 @@
           "comment": {
             "type": "string",
             "description": "Factor comment"
-          },
-          "auditDetails": {
-            "$ref": "#/components/schemas/AuditDetailsRequest"
           }
         },
         "description": "Contributory factors"
@@ -13546,13 +13530,22 @@
       },
       "InterviewDetailRequest": {
         "required": [
-          "auditDetails",
           "date",
+          "dpsId",
           "interviewee",
           "roleCode"
         ],
         "type": "object",
         "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Interview Id",
+            "format": "int64"
+          },
+          "dpsId": {
+            "type": "string",
+            "description": "DPS Interview id"
+          },
           "interviewee": {
             "type": "string",
             "description": "Person being interviewed"
@@ -13569,9 +13562,6 @@
           "comments": {
             "type": "string",
             "description": "Additional data regarding the interview"
-          },
-          "auditDetails": {
-            "$ref": "#/components/schemas/AuditDetailsRequest"
           }
         },
         "description": "Interview"
@@ -13615,10 +13605,11 @@
       },
       "PlanRequest": {
         "required": [
-          "auditDetails",
           "createdDate",
+          "dpsId",
           "identifiedNeed",
           "intervention",
+          "referredBy",
           "targetDate"
         ],
         "type": "object",
@@ -13627,6 +13618,10 @@
             "type": "integer",
             "description": "Plan Id",
             "format": "int64"
+          },
+          "dpsId": {
+            "type": "string",
+            "description": "DPS Plan/IdentifiedNeed id"
           },
           "identifiedNeed": {
             "type": "string",
@@ -13658,19 +13653,16 @@
             "type": "string",
             "description": "Plan closed date",
             "format": "date"
-          },
-          "auditDetails": {
-            "$ref": "#/components/schemas/AuditDetailsRequest"
           }
         },
         "description": "CSIP Plans"
       },
       "ReviewRequest": {
         "required": [
-          "auditDetails",
           "caseNote",
           "closeCSIP",
           "csipUpdated",
+          "dpsId",
           "peopleInformed",
           "recordedBy",
           "recordedDate",
@@ -13682,6 +13674,10 @@
             "type": "integer",
             "description": "Review Id",
             "format": "int64"
+          },
+          "dpsId": {
+            "type": "string",
+            "description": "DPS Review id"
           },
           "attendees": {
             "type": "array",
@@ -13732,9 +13728,6 @@
           "recordedBy": {
             "type": "string",
             "description": "The username of the person who recorded the review"
-          },
-          "auditDetails": {
-            "$ref": "#/components/schemas/AuditDetailsRequest"
           }
         },
         "description": "CSIP Reviews"
@@ -13770,7 +13763,6 @@
       "UpsertCSIPRequest": {
         "required": [
           "areaOfWorkCode",
-          "auditDetails",
           "incidentDate",
           "locationCode",
           "offenderNo",
@@ -13841,9 +13833,6 @@
           "staffAssaultedName": {
             "type": "string",
             "description": "If assaulted, the staff member name"
-          },
-          "auditDetails": {
-            "$ref": "#/components/schemas/AuditDetailsRequest"
           },
           "prisonCodeWhenRecorded": {
             "type": "string",

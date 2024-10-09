@@ -26,7 +26,6 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
-import org.springframework.http.HttpStatus.NOT_FOUND
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPDpsApiExtension.Companion.csipDpsApi
@@ -123,7 +122,6 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("incidentTime", "10:32:12")
               .withRequestBodyJsonPath("staffAssaulted", true)
               .withRequestBodyJsonPath("staffAssaultedName", "Fred Jones")
-              .withRequestBodyJsonPath("auditDetails.createUsername", "BOBBY.BEANS")
               .withRequestBodyJsonPath("reportDetailRequest.involvementCode", "PER")
               .withRequestBodyJsonPath("reportDetailRequest.concern", "There was a worry about the offender")
               .withRequestBodyJsonPath("reportDetailRequest.knownReasons", "known reasons details go in here")
@@ -139,10 +137,9 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
         fun `the created csip will contain details of the DPS csip factor`() {
           csipNomisApi.verify(
             putRequestedFor(anyUrl())
-              // TODO .withRequestBodyJsonPath("reportDetailRequest.factors[0].dpsId", "8cdadcf3-b003-4116-9956-c99bd8df6111")
+              .withRequestBodyJsonPath("reportDetailRequest.factors[0].dpsId", "8cdadcf3-b003-4116-9956-c99bd8df6111")
               .withRequestBodyJsonPath("reportDetailRequest.factors[0].typeCode", "BUL")
-              .withRequestBodyJsonPath("reportDetailRequest.factors[0].comment", "Offender causes trouble")
-              .withRequestBodyJsonPath("reportDetailRequest.factors[0].auditDetails.createUsername", "CFACTOR"),
+              .withRequestBodyJsonPath("reportDetailRequest.factors[0].comment", "Offender causes trouble"),
           )
         }
 
@@ -222,9 +219,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("locationCode", "LIB")
               .withRequestBodyJsonPath("areaOfWorkCode", "EDU")
               .withRequestBodyJsonPath("reportedBy", "JIM_ADM")
-              .withRequestBodyJsonPath("reportedDate", "2024-10-01")
-              .withRequestBodyJsonPath("auditDetails.createUsername", "BOBBY.BEANS"),
-
+              .withRequestBodyJsonPath("reportedDate", "2024-10-01"),
           )
         }
 
@@ -443,7 +438,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
             ),
           )
           csipDpsApi.stubGetCsipReport(
-            dpsCsipReport = dpsCsipRecordMinimal().copy(
+            dpsCsipReport = dpsCsipRecord().copy(
               recordUuid = UUID.fromString(dpsCSIPReportId),
               lastModifiedBy = "RASHEED.BAKE",
               logCode = "LG123",
@@ -503,8 +498,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("locationCode", "LIB")
               .withRequestBodyJsonPath("areaOfWorkCode", "EDU")
               .withRequestBodyJsonPath("reportedBy", "JIM_ADM")
-              .withRequestBodyJsonPath("reportedDate", "2024-10-01")
-              .withRequestBodyJsonPath("auditDetails.createUsername", "JSMITH"),
+              .withRequestBodyJsonPath("reportedDate", "2024-10-01"),
           )
         }
       }

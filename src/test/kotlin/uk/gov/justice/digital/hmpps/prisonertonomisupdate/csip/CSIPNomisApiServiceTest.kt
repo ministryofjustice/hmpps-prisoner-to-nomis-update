@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AuditDetailsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertCSIPRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertCSIPResponse
 import java.time.LocalDate
@@ -78,9 +77,6 @@ class CSIPNomisApiServiceTest {
       reportedDate = LocalDate.now(),
       staffAssaulted = false,
       proActiveReferral = false,
-      auditDetails = AuditDetailsRequest(
-        createUsername = "FRED.JAMES",
-      ),
     )
   }
 

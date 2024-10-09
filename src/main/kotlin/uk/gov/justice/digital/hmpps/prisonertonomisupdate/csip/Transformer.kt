@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Actions
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ActionsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AttendeeRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AuditDetailsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CSIPFactorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DecisionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.InterviewDetailRequest
@@ -41,10 +40,6 @@ fun CsipRecord.toNomisUpsertRequest(mapping: CSIPFullMappingDto? = null) =
     staffAssaulted = referral.isStaffAssaulted ?: false,
     logNumber = logCode,
     staffAssaultedName = referral.assaultedStaffName,
-    auditDetails = AuditDetailsRequest(
-      createUsername = createdBy,
-      modifyUsername = lastModifiedBy,
-    ),
     prisonCodeWhenRecorded = prisonCodeWhenRecorded,
     reportDetailRequest = referral.toNomisReportDetails(mapping?.factorMappings),
     saferCustodyScreening = referral.saferCustodyScreeningOutcome?.toSCSRequest(),
@@ -60,6 +55,7 @@ fun CsipRecord.toNomisUpsertRequest(mapping: CSIPFullMappingDto? = null) =
 fun Review.toNomisReviewRequest(nomisReviewId: Long? = null) =
   ReviewRequest(
     id = nomisReviewId,
+    dpsId = reviewUuid.toString(),
     remainOnCSIP = actions.contains(Review.Actions.REMAIN_ON_CSIP),
     csipUpdated = actions.contains(Review.Actions.CSIP_UPDATED),
     caseNote = actions.contains(Review.Actions.CASE_NOTE),
@@ -71,24 +67,17 @@ fun Review.toNomisReviewRequest(nomisReviewId: Long? = null) =
     summary = summary,
     nextReviewDate = nextReviewDate,
     closeDate = csipClosedDate,
-    auditDetails = AuditDetailsRequest(
-      createUsername = createdBy,
-      modifyUsername = lastModifiedBy,
-    ),
     attendees = attendees.map { it.toNomisAttendeeRequest() },
   )
 
 fun Attendee.toNomisAttendeeRequest(nomisAttendeeId: Long? = null) =
   AttendeeRequest(
-    // TODO id = nomisAttendeeId,
+    id = nomisAttendeeId,
+    dpsId = attendeeUuid.toString(),
     attended = isAttended ?: false,
     name = name,
     role = role,
     contribution = contribution,
-    auditDetails = AuditDetailsRequest(
-      createUsername = createdBy,
-      modifyUsername = lastModifiedBy,
-    ),
   )
 
 fun DecisionAndActions.toNomisDecisionRequest() =
@@ -126,15 +115,12 @@ fun Investigation.toNomisInvestigationRequest() =
 
 fun Interview.toNomisInterviewRequest(nomisInterviewId: Long? = null) =
   InterviewDetailRequest(
-    // TODO id = nomisInterviewId,
+    id = nomisInterviewId,
+    dpsId = interviewUuid.toString(),
     interviewee = interviewee,
     date = interviewDate,
     roleCode = intervieweeRole.code,
     comments = interviewText,
-    auditDetails = AuditDetailsRequest(
-      createUsername = createdBy,
-      modifyUsername = lastModifiedBy,
-    ),
   )
 
 fun Referral.toNomisReportDetails(mappings: List<CSIPFactorMappingDto>? = null) =
@@ -159,13 +145,9 @@ fun Referral.toNomisReportDetails(mappings: List<CSIPFactorMappingDto>? = null) 
 fun ContributoryFactor.toNomisFactorRequest(nomisFactorId: Long? = null) =
   CSIPFactorRequest(
     id = nomisFactorId,
-    // TODO dpsId = factorUuid.toString(),
+    dpsId = factorUuid.toString(),
     typeCode = factorType.code,
     comment = comment,
-    auditDetails = AuditDetailsRequest(
-      createUsername = createdBy,
-      modifyUsername = lastModifiedBy,
-    ),
   )
 
 fun SaferCustodyScreeningOutcome.toSCSRequest() = SaferCustodyScreeningRequest(
@@ -177,16 +159,12 @@ fun SaferCustodyScreeningOutcome.toSCSRequest() = SaferCustodyScreeningRequest(
 fun IdentifiedNeed.toNomisPlanRequest(nomisPlanId: Long? = null) =
   PlanRequest(
     id = nomisPlanId,
+    dpsId = identifiedNeedUuid.toString(),
     identifiedNeed = identifiedNeed,
     intervention = intervention,
     createdDate = createdAt.toLocalDate(),
     targetDate = targetDate,
     progression = progression,
     referredBy = responsiblePerson,
-
     closedDate = closedDate,
-    auditDetails = AuditDetailsRequest(
-      createUsername = createdBy,
-      modifyUsername = lastModifiedBy,
-    ),
   )
