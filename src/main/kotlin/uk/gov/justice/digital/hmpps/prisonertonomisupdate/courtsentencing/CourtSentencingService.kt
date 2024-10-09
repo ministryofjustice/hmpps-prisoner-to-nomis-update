@@ -362,8 +362,6 @@ fun Charge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeRequest(
   offenceDate = this.offenceStartDate,
   offenceEndDate = this.offenceEndDate,
   resultCode1 = this.outcome?.nomisCode,
-  // TODO determine if this comes from DPS or is it determined
-  offencesCount = 1,
 )
 
 fun Charge.toExistingNomisCourtCharge(nomisId: Long): ExistingOffenderChargeRequest = ExistingOffenderChargeRequest(
@@ -372,7 +370,6 @@ fun Charge.toExistingNomisCourtCharge(nomisId: Long): ExistingOffenderChargeRequ
   offenceDate = this.offenceStartDate,
   offenceEndDate = this.offenceEndDate,
   resultCode1 = this.outcome?.nomisCode,
-  offencesCount = 1,
 )
 
 private fun CourtChargeBatchUpdateMappingDto.hasAnyMappingsToUpdate(): Boolean =

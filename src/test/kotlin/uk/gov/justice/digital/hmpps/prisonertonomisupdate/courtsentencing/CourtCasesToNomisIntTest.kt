@@ -727,12 +727,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             )
             .withRequestBody(
               WireMock.matchingJsonPath(
-                "courtEventChargesToUpdate[0].offencesCount",
-                WireMock.equalTo("$OFFENCES_COUNT"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
                 "courtEventChargesToUpdate[0].offenceEndDate",
                 WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_END_DATE"),
               ),
@@ -787,12 +781,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             )
             .withRequestBody(
               WireMock.matchingJsonPath(
-                "courtEventChargesToCreate[0].offencesCount",
-                WireMock.equalTo("$OFFENCES_COUNT"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
                 "courtEventChargesToCreate[0].offenceEndDate",
                 WireMock.equalTo("$COURT_CHARGE_2_OFFENCE_END_DATE"),
               ),
@@ -813,12 +801,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               WireMock.matchingJsonPath(
                 "courtEventChargesToCreate[1].offenceCode",
                 WireMock.equalTo("$COURT_CHARGE_4_OFFENCE_CODE"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtEventChargesToCreate[1].offencesCount",
-                WireMock.equalTo("$OFFENCES_COUNT"),
               ),
             )
             .withRequestBody(
