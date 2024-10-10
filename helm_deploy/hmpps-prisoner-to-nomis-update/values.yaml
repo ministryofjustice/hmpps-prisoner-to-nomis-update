@@ -52,6 +52,10 @@ generic-service:
           deny all;
           return 401;
         }
+        location /casenotes/reports/reconciliation {
+          deny all;
+          return 401;
+        }
         location /activities/mappings/unknown-mappings {
           deny all;
           return 401;
