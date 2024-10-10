@@ -75,7 +75,7 @@ class CaseNotesDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetCaseNotesForPrisoner(offenderNo: String, response: String) {
     stubFor(
-      get(urlPathEqualTo("/case-notes/$offenderNo"))
+      get(urlPathEqualTo("/sync/case-notes/$offenderNo"))
         .willReturn(okJson(response)),
     )
   }

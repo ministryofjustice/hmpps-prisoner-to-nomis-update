@@ -155,7 +155,7 @@ reports:
       page-size: 20
   casenotes:
     reconciliation:
-      page-size: 10
+      page-size: 40
   non-associations:
     reconciliation:
       page-size: 40

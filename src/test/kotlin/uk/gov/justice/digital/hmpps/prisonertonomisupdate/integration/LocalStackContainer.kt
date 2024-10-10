@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration
 import org.slf4j.LoggerFactory
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.testcontainers.containers.localstack.LocalStackContainer
+import org.testcontainers.containers.output.OutputFrame
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.DockerImageName
@@ -34,7 +35,7 @@ object LocalStackContainer {
         Wait.forLogMessage(".*Ready.*", 1),
       )
       start()
-      followOutput(logConsumer)
+      followOutput(logConsumer, OutputFrame.OutputType.STDERR, OutputFrame.OutputType.END)
     }
   }
 

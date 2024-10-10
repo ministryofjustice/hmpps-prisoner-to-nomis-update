@@ -32,5 +32,5 @@ class CaseNotesConfiguration(
     )
 
   @Component("caseNotesApi")
-  class SentenceAdjustmentsApiHealth(@Qualifier("caseNotesApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
+  class CaseNotesApiHealth(@Qualifier("caseNotesApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
 }

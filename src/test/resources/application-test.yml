@@ -235,6 +235,9 @@ reports:
   alerts:
     reconciliation:
       page-size: 10
+  casenotes:
+    reconciliation:
+      page-size: 10
   sentencing:
     reconciliation:
       page-size: 10

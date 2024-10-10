@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.ParameterizedTypeReference
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
@@ -45,6 +46,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Locati
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UnquashHearingResultAwardRequest
@@ -257,7 +259,7 @@ class NomisApiService(
   suspend fun getActivePrisoners(
     pageNumber: Long,
     pageSize: Long,
-  ): PageImpl<PrisonerIds> =
+  ): Page<PrisonerIds> =
     webClient.get()
       .uri {
         it.path("/prisoners/ids/active")
@@ -267,6 +269,21 @@ class NomisApiService(
       }
       .retrieve()
       .bodyToMono(typeReference<RestResponsePage<PrisonerIds>>())
+      .awaitSingle()
+
+  suspend fun getAllPrisoners(
+    pageNumber: Long,
+    pageSize: Long,
+  ): Page<PrisonerId> =
+    webClient.get()
+      .uri {
+        it.path("/prisoners/ids/all")
+          .queryParam("page", pageNumber)
+          .queryParam("size", pageSize)
+          .build()
+      }
+      .retrieve()
+      .bodyToMono(typeReference<RestResponsePage<PrisonerId>>())
       .awaitSingle()
 
   suspend fun updatePrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest) =
@@ -529,7 +546,7 @@ class NomisApiService(
   suspend fun getNonAssociations(
     pageNumber: Long,
     pageSize: Long,
-  ): PageImpl<NonAssociationIdResponse> =
+  ): Page<NonAssociationIdResponse> =
     webClient
       .get()
       .uri {
@@ -785,9 +802,7 @@ class RestResponsePage<T>(
   @JsonProperty("size") size: Int,
   @JsonProperty("totalElements") totalElements: Long,
   @Suppress("UNUSED_PARAMETER")
-  @JsonProperty(
-    "pageable",
-  )
+  @JsonProperty("pageable")
   pageable: JsonNode,
 ) : PageImpl<T>(content, PageRequest.of(number, size), totalElements)
 
