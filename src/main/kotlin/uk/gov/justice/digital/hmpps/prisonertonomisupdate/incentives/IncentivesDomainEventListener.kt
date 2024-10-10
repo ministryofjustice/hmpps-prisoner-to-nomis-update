@@ -3,8 +3,6 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import io.awspring.cloud.sqs.annotation.SqsListener
-import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.annotations.WithSpan
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -31,7 +29,6 @@ class IncentivesDomainEventListener(
   }
 
   @SqsListener("incentive", factory = "hmppsQueueContainerFactoryProxy")
-  @WithSpan(value = "syscon-devs-hmpps_prisoner_to_nomis_incentive_queue", kind = SpanKind.SERVER)
   fun onMessage(rawMessage: String): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "incentives.iep-review.inserted" -> incentivesService.createIncentive(message.fromJson())

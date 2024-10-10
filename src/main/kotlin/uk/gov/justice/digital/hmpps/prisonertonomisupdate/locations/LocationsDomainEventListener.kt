@@ -3,8 +3,6 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import io.awspring.cloud.sqs.annotation.SqsListener
-import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.annotations.WithSpan
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -30,7 +28,6 @@ class LocationsDomainEventListener(
   }
 
   @SqsListener("location", factory = "hmppsQueueContainerFactoryProxy")
-  @WithSpan(value = "syscon-devs-hmpps_prisoner_to_nomis_location_queue", kind = SpanKind.SERVER)
   fun onMessage(rawMessage: String): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "location.inside.prison.created" -> locationsService.createLocation(message.fromJson())
