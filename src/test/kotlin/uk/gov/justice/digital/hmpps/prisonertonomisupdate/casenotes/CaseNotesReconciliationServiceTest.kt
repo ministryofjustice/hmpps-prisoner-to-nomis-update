@@ -8,8 +8,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNote
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseNoteAmendment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseNoteResponse
@@ -65,7 +63,7 @@ class CaseNotesReconciliationServiceTest {
         creationDateTime = LocalDateTime.parse("2024-01-01T01:02:03"),
       ),
     ),
-  ) = PageImpl(
+  ) =
     listOf(
       CaseNote(
         caseNoteId = DPS_CASE_NOTE_ID,
@@ -87,10 +85,7 @@ class CaseNotesReconciliationServiceTest {
         systemGenerated = false,
         legacyId = 1L,
       ),
-    ),
-    Pageable.ofSize(10),
-    1,
-  )
+    )
 
   private val caseNotesReconciliationService =
     CaseNotesReconciliationService(telemetryClient, caseNotesApiService, caseNotesNomisApiService, nomisApiService, 10)
@@ -101,7 +96,7 @@ class CaseNotesReconciliationServiceTest {
     @Test
     fun `will not report mismatch where details match`() = runTest {
       whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(nomisPrisoner)
-      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO, 0, 1000000)).thenReturn(dpsPrisoner())
+      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(dpsPrisoner())
 
       assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNull()
     }
@@ -109,20 +104,17 @@ class CaseNotesReconciliationServiceTest {
     @Test
     fun `mismatch in type`() = runTest {
       whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(nomisPrisoner)
-      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO, 0, 1000000)).thenReturn(
+      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
         dpsPrisoner(type = "OTHER"),
       )
 
       assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNotNull()
-//        .isEqualTo(
-//        MismatchCaseNote(OFFENDER_NO, emptySet(), emptySet())
-//      )
     }
 
     @Test
     fun `mismatch of amendments`() = runTest {
       whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(nomisPrisoner)
-      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO, 0, 1000000)).thenReturn(
+      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
         dpsPrisoner(amendments = emptyList()),
       )
 
@@ -132,7 +124,7 @@ class CaseNotesReconciliationServiceTest {
     @Test
     fun `mismatch within amendment`() = runTest {
       whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(nomisPrisoner)
-      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO, 0, 1000000)).thenReturn(
+      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
         dpsPrisoner(amendmentText = "discrepant"),
       )
 

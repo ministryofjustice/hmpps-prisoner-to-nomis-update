@@ -25,7 +25,7 @@ class CaseNotesReconciliationService(
   @Value("\${reports.casenotes.reconciliation.page-size}")
   private val pageSize: Long = 20,
 ) {
-  private companion object {
+  internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
@@ -75,8 +75,8 @@ class CaseNotesReconciliationService(
         }
         .toSortedSet(fieldsComparator)
 
-      val dpsCaseNotes = caseNotesDpsApiService.getCaseNotesForPrisoner(offenderNo, 0, 1_000_000)
-        .content
+      val dpsCaseNotes = caseNotesDpsApiService.getCaseNotesForPrisoner(offenderNo)
+        .filter { !it.sensitive }
         .map { c ->
           CommonCaseNoteFields(
             c.text,
@@ -87,7 +87,7 @@ class CaseNotesReconciliationService(
             c.amendments.map { a ->
               CommonAmendmentFields(
                 text = a.additionalNoteText,
-                occurrenceDateTime = a.creationDateTime.toString(),
+                occurrenceDateTime = a.creationDateTime?.format(DateTimeFormatter.ISO_DATE_TIME),
                 authorUsername = a.authorUserName,
               )
             },
@@ -95,22 +95,38 @@ class CaseNotesReconciliationService(
         }
         .toSortedSet(fieldsComparator)
 
-      return if (dpsCaseNotes.size != nomisCaseNotes.size || dpsCaseNotes.zip(nomisCaseNotes).any { (d, n) -> d != n }) {
+      val pairedCaseNotes = dpsCaseNotes.zip(nomisCaseNotes)
+      return if (dpsCaseNotes.size != nomisCaseNotes.size || pairedCaseNotes.any { (d, n) -> d != n }) {
         val missingFromNomis = dpsCaseNotes - nomisCaseNotes
         val missingFromDps = nomisCaseNotes - dpsCaseNotes
-
-        // val diffs = dpsCaseNotes.zip(nomisCaseNotes).filter { (a, b) -> a != b }
-        // log.info("diffs are $diffs")
-        MismatchCaseNote(offenderNo = offenderNo, missingFromDps = missingFromDps, missingFromNomis = missingFromNomis).also { mismatch ->
-          log.info("CaseNotes Mismatch found: prisoner $offenderNo, dps total = ${dpsCaseNotes.size}, nomis total = ${nomisCaseNotes.size}, missingFromNomis = ${missingFromNomis.size}, missingFromDps = ${missingFromDps.size}")
+        if (!missingFromDps.isEmpty() || !missingFromNomis.isEmpty()) {
+          log.info("missingFromNomis = $missingFromNomis")
+          log.info("missingFromDps   = $missingFromDps")
           telemetryClient.trackEvent(
             "casenotes-reports-reconciliation-mismatch",
             mapOf(
-              "offenderNo" to mismatch.offenderNo,
-              "missingFromDps" to (mismatch.missingFromDps.joinToString()),
-              "missingFromNomis" to (mismatch.missingFromNomis.joinToString()),
+              "offenderNo" to offenderNo,
+              "missingFromDps" to (missingFromDps.joinToString()),
+              "missingFromNomis" to (missingFromNomis.joinToString()),
             ),
           )
+          MismatchCaseNote(offenderNo = offenderNo, missingFromDps = missingFromDps, missingFromNomis = missingFromNomis)
+        } else {
+          val diffs = pairedCaseNotes.filter { (a, b) -> a != b }
+          val dpsDiffs = diffs.map { it.first }
+          val diffsNomis = diffs.map { it.second }
+          log.info("diffs are dps = $dpsDiffs")
+          log.info("        nomis = $diffsNomis")
+          // log.info("CaseNotes Mismatch found: prisoner $offenderNo, dps total = ${dpsCaseNotes.size}, nomis total = ${nomisCaseNotes.size}, missingFromNomis = ${missingFromNomis.size}, missingFromDps = ${missingFromDps.size}")
+          telemetryClient.trackEvent(
+            "casenotes-reports-reconciliation-mismatch",
+            mapOf(
+              "offenderNo" to offenderNo,
+              "diffs-dps" to (dpsDiffs.joinToString()),
+              "diffs-nomis" to (diffsNomis.joinToString()),
+            ),
+          )
+          MismatchCaseNote(offenderNo = offenderNo, missingFromDps = missingFromDps, missingFromNomis = missingFromNomis)
         }
       } else {
         null
@@ -149,8 +165,16 @@ data class CommonCaseNoteFields(
       type == other.type &&
       subType == other.subType &&
       occurrenceDateTime == other.occurrenceDateTime &&
-      // authorUsername == other.authorUsername && // OMS_OWNER vs XTAG
-      compare(this, other) == 0
+      equalUsers(other) && // OMS_OWNER vs XTAG
+      equalAmendments(this, other)
+  }
+
+  private fun equalUsers(other: CommonCaseNoteFields): Boolean {
+    val equal = authorUsername == "OMS_OWNER" || authorUsername == other.authorUsername
+    if (!equal) {
+      CaseNotesReconciliationService.log.info("authorUsername not equal: $authorUsername != $(other.authorUsername}")
+    }
+    return equal
   }
 
   override fun hashCode(): Int = javaClass.hashCode()
@@ -170,23 +194,14 @@ private val fieldsComparator = compareBy(
   CommonCaseNoteFields::authorUsername,
 )
 
-private val amendmentsComparator = compareBy(
-  CommonAmendmentFields::text,
-  CommonAmendmentFields::authorUsername,
-  CommonAmendmentFields::occurrenceDateTime,
-)
-
-private fun compare(v1: CommonCaseNoteFields, v2: CommonCaseNoteFields): Int {
+private fun equalAmendments(v1: CommonCaseNoteFields, v2: CommonCaseNoteFields): Boolean {
   val a1 = v1.amendments
   val a2 = v2.amendments
-
   if (a1.size != a2.size) {
-    return 1
+    return false
   }
-
   if (a1.zip(a2).all { (a, b) -> a == b }) {
-    return 0
+    return true
   }
-
-  return -1
+  return false
 }

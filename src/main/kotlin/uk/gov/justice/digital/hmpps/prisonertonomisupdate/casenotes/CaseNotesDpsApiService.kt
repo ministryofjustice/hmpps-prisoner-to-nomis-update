@@ -3,12 +3,10 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.domain.Page
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNote
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RestResponsePage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.typeReference
 import java.net.URI
@@ -27,8 +25,7 @@ class CaseNotesDpsApiService(
     return webClient
       .get()
       .uri {
-        url = it.path("/case-notes/{offenderNo}/{caseNoteIdentifier}")
-          .build(offenderNo, caseNoteId)
+        url = it.path("/case-notes/{offenderNo}/{caseNoteIdentifier}").build(offenderNo, caseNoteId)
         url
       }
       .retrieve()
@@ -37,23 +34,16 @@ class CaseNotesDpsApiService(
       .awaitSingle()
   }
 
-  suspend fun getCaseNotesForPrisoner(
-    offenderIdentifier: String,
-    pageNumber: Long,
-    pageSize: Long,
-  ): Page<CaseNote> {
+  suspend fun getCaseNotesForPrisoner(offenderIdentifier: String): List<CaseNote> {
     lateinit var url: URI
     return webClient
       .get()
       .uri {
-        url = it.path("/case-notes/{offenderIdentifier}")
-          .queryParam("page", pageNumber)
-          .queryParam("size", pageSize)
-          .build(offenderIdentifier)
+        url = it.path("/sync/case-notes/{offenderIdentifier}").build(offenderIdentifier)
         url
       }
       .retrieve()
-      .bodyToMono(typeReference<RestResponsePage<CaseNote>>())
+      .bodyToMono(typeReference<List<CaseNote>>())
       .retryWhen(backoffSpec.withRetryContext(Context.of("api", "casenotes-api.getCaseNotesForPrisoner", "url", url.path)))
       .awaitSingle()
   }
