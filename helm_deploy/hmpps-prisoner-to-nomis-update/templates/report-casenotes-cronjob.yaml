@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "app.fullname" . }}-report-alerts
+  name: {{ include "app.fullname" . }}-report-casenotes
   labels:
     {{- include "app.labels" . | nindent 4 }}
 spec:
@@ -18,7 +18,7 @@ spec:
       template:
         spec:
           containers:
-            - name: report-alerts
+            - name: report-casenotes
               image: ghcr.io/ministryofjustice/hmpps-devops-tools
               args:
                 - /bin/sh

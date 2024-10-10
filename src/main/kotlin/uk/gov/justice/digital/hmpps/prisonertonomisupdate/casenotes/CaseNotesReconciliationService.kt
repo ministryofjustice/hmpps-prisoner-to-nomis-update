@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Prison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import java.time.format.DateTimeFormatter
+import java.util.Objects
 import kotlin.String
 
 @Service
@@ -110,7 +111,7 @@ class CaseNotesReconciliationService(
               "missingFromNomis" to (missingFromNomis.joinToString()),
             ),
           )
-          MismatchCaseNote(offenderNo = offenderNo, missingFromDps = missingFromDps, missingFromNomis = missingFromNomis)
+          MismatchCaseNote(offenderNo, missingFromDps, missingFromNomis)
         } else {
           val diffs = pairedCaseNotes.filter { (a, b) -> a != b }
           val dpsDiffs = diffs.map { it.first }
@@ -178,13 +179,21 @@ data class CommonCaseNoteFields(
   }
 
   override fun hashCode(): Int = javaClass.hashCode()
+
+  override fun toString(): String {
+    return "{text-hash=${Objects.hashCode(text)}, type=$type, subType=$subType, occurrenceDateTime=$occurrenceDateTime, authorUsername=$authorUsername, amendments=$amendments}"
+  }
 }
 
 data class CommonAmendmentFields(
   val text: String,
   val occurrenceDateTime: String?,
   val authorUsername: String,
-)
+) {
+  override fun toString(): String {
+    return "{text-hash=${Objects.hashCode(text)}, occurrenceDateTime=$occurrenceDateTime, authorUsername=$authorUsername}"
+  }
+}
 
 private val fieldsComparator = compareBy(
   CommonCaseNoteFields::type,
