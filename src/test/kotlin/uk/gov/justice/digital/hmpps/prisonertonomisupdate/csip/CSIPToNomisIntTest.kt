@@ -59,7 +59,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           csipMappingApi.stubGetByDpsReportId(HttpStatus.NOT_FOUND)
           csipDpsApi.stubGetCsipReport(
-            dpsCsipRecordMinimal().copy(
+            dpsCsipRecord().copy(
               recordUuid = UUID.fromString(dpsCSIPId),
               prisonNumber = offenderNo,
               createdBy = "BOBBY.BEANS",
@@ -117,8 +117,109 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("areaOfWorkCode", "EDU")
               .withRequestBodyJsonPath("reportedBy", "JIM_ADM")
               .withRequestBodyJsonPath("reportedDate", "2024-10-01")
-              .withRequestBodyJsonPath("createUsername", "BOBBY.BEANS"),
+              .withRequestBodyJsonPath("prisonCodeWhenRecorded", "MDI")
+              .withRequestBodyJsonPath("logNumber", "ASI-001")
+              .withRequestBodyJsonPath("incidentTime", "10:32:12")
+              .withRequestBodyJsonPath("staffAssaulted", true)
+              .withRequestBodyJsonPath("staffAssaultedName", "Fred Jones")
+              .withRequestBodyJsonPath("reportDetailRequest.involvementCode", "PER")
+              .withRequestBodyJsonPath("reportDetailRequest.concern", "There was a worry about the offender")
+              .withRequestBodyJsonPath("reportDetailRequest.knownReasons", "known reasons details go in here")
+              .withRequestBodyJsonPath("reportDetailRequest.otherInformation", "other information goes in here")
+              .withRequestBodyJsonPath("reportDetailRequest.saferCustodyTeamInformed", false)
+              .withRequestBodyJsonPath("reportDetailRequest.referralComplete", true)
+              .withRequestBodyJsonPath("reportDetailRequest.referralCompletedBy", "JIM_ADM")
+              .withRequestBodyJsonPath("reportDetailRequest.referralCompletedDate", "2024-04-04"),
+          )
+        }
 
+        @Test
+        fun `the created csip will contain details of the DPS csip factor`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("reportDetailRequest.factors[0].dpsId", "8cdadcf3-b003-4116-9956-c99bd8df6111")
+              .withRequestBodyJsonPath("reportDetailRequest.factors[0].typeCode", "BUL")
+              .withRequestBodyJsonPath("reportDetailRequest.factors[0].comment", "Offender causes trouble"),
+          )
+        }
+
+        @Test
+        fun `the created csip will contain the Safer Custody Screening details`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("saferCustodyScreening.scsOutcomeCode", "CUR")
+              .withRequestBodyJsonPath("saferCustodyScreening.recordedBy", "FRED_ADM")
+              .withRequestBodyJsonPath("saferCustodyScreening.recordedDate", "2024-04-08")
+              .withRequestBodyJsonPath("saferCustodyScreening.reasonForDecision", "There is a reason for the decision - it goes here"),
+          )
+        }
+
+        @Test
+        fun `will create a mapping between the NOMIS and DPS ids with child mappings`() {
+          /* TODO
+          csipMappingApi.verify(
+            postRequestedFor(urlEqualTo("/mapping/csip/all"))
+              .withRequestBodyJsonPath("nomisCSIPReportId", nomisCSIPReportId)
+              .withRequestBodyJsonPath("dpsCSIPReportId", dpsCSIPId)
+              .withRequestBodyJsonPath("mappingType", "DPS_CREATED")
+              .withRequestBody(matchingJsonPath("attendeeMappings.size()", equalTo("1")))
+              .withRequestBody(matchingJsonPath("factorMappings.size()", equalTo("1")))
+              .withRequestBody(matchingJsonPath("interviewMappings.size()", equalTo("1")))
+              .withRequestBody(matchingJsonPath("planMappings.size()", equalTo("1")))
+              .withRequestBody(matchingJsonPath("reviewMappings.size()", equalTo("1"))),
+          )
+           */
+        }
+
+        @Test
+        fun `the created mapping will contain the IDs`() {
+          csipMappingApi.verify(
+            postRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("nomisCSIPReportId", nomisCSIPReportId)
+              .withRequestBodyJsonPath("dpsCSIPReportId", dpsCSIPId)
+              .withRequestBodyJsonPath("mappingType", CSIPFullMappingDto.MappingType.DPS_CREATED.name),
+            // TODO Add the new mapping Ids in for children
+          )
+        }
+      }
+
+      @Nested
+      inner class WhenCreateByNomisSuccessWithMinimalData {
+        private val offenderNo = "A1234KT"
+        private val dpsCSIPId = UUID.randomUUID().toString()
+        private val nomisCSIPReportId = 43217L
+
+        @BeforeEach
+        fun setUp() {
+          csipMappingApi.stubGetByDpsReportId(HttpStatus.NOT_FOUND)
+          csipDpsApi.stubGetCsipReport(
+            dpsCsipRecordMinimal().copy(
+              recordUuid = UUID.fromString(dpsCSIPId),
+              prisonNumber = offenderNo,
+              createdBy = "BOBBY.BEANS",
+            ),
+          )
+          csipNomisApi.stubPutCSIP(
+            csipResponse =
+            upsertCSIPResponse(nomisCSIPReportId = nomisCSIPReportId),
+          )
+          csipMappingApi.stubPostMapping()
+          publishCreateCSIPDomainEvent(offenderNo = offenderNo, recordUuid = dpsCSIPId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `the created csip will contain details of the DPS csip`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("offenderNo", "A1234KT")
+              .withRequestBodyJsonPath("incidentDate", "2024-08-09")
+              .withRequestBodyJsonPath("typeCode", "INT")
+              .withRequestBodyJsonPath("prisonCodeWhenRecorded", "ASI")
+              .withRequestBodyJsonPath("locationCode", "LIB")
+              .withRequestBodyJsonPath("areaOfWorkCode", "EDU")
+              .withRequestBodyJsonPath("reportedBy", "JIM_ADM")
+              .withRequestBodyJsonPath("reportedDate", "2024-10-01"),
           )
         }
 
@@ -397,8 +498,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("locationCode", "LIB")
               .withRequestBodyJsonPath("areaOfWorkCode", "EDU")
               .withRequestBodyJsonPath("reportedBy", "JIM_ADM")
-              .withRequestBodyJsonPath("reportedDate", "2024-10-01")
-              .withRequestBodyJsonPath("createUsername", "JSMITH"),
+              .withRequestBodyJsonPath("reportedDate", "2024-10-01"),
           )
         }
       }

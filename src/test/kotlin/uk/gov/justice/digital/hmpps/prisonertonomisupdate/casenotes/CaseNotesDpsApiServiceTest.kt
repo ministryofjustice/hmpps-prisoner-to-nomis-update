@@ -65,9 +65,9 @@ class CaseNotesDpsApiServiceTest {
   inner class GetCaseNotesForPrisoner {
     @Test
     fun `will pass oath2 token to service`() = runTest {
-      caseNotesDpsApi.stubGetCaseNotesForPrisoner("A1234TK", caseNotesDpsPagedResponse())
+      caseNotesDpsApi.stubGetCaseNotesForPrisoner("A1234TK", caseNotesDpsResponse())
 
-      apiService.getCaseNotesForPrisoner("A1234TK", 0, 10)
+      apiService.getCaseNotesForPrisoner("A1234TK")
 
       caseNotesDpsApi.verify(
         getRequestedFor(anyUrl())
@@ -77,69 +77,35 @@ class CaseNotesDpsApiServiceTest {
 
     @Test
     fun `will pass offenderNo to service`() = runTest {
-      caseNotesDpsApi.stubGetCaseNotesForPrisoner("A1234TK", caseNotesDpsPagedResponse())
+      caseNotesDpsApi.stubGetCaseNotesForPrisoner("A1234TK", caseNotesDpsResponse())
 
-      apiService.getCaseNotesForPrisoner("A1234TK", 0, 10)
+      apiService.getCaseNotesForPrisoner("A1234TK")
 
       caseNotesDpsApi.verify(
-        getRequestedFor(urlPathEqualTo("/case-notes/A1234TK")),
+        getRequestedFor(urlPathEqualTo("/sync/case-notes/A1234TK")),
       )
     }
 
     @Test
     fun `will return caseNotes`() = runTest {
-      caseNotesDpsApi.stubGetCaseNotesForPrisoner("A1234TK", caseNotesDpsPagedResponse(300, 300, 400, 0))
+      caseNotesDpsApi.stubGetCaseNotesForPrisoner("A1234TK", caseNotesDpsResponse(300))
 
-      val caseNotes = apiService.getCaseNotesForPrisoner("A1234TK", 0, 400)
+      val caseNotes = apiService.getCaseNotesForPrisoner("A1234TK")
 
-      assertThat(caseNotes.content).hasSize(300)
+      assertThat(caseNotes).hasSize(300)
     }
   }
 }
 
-fun caseNotesDpsPagedResponse(
-  totalElements: Int = 10,
+fun caseNotesDpsResponse(
   numberOfElements: Int = 10,
-  pageSize: Int = 10,
-  pageNumber: Int = 0,
 ): String {
   val content =
     (1..numberOfElements)
-      .map { it + (pageNumber * pageSize) }
       .map { caseNoteDpsJson(id = generateUUID(it), it.toLong()) }
       .joinToString { it }
-  return pagedResponse(content, pageSize, pageNumber, totalElements, numberOfElements)
+  return "[$content]"
 }
-
-fun pagedResponse(
-  content: String,
-  pageSize: Int,
-  pageNumber: Int,
-  totalElements: Int,
-  pageElements: Int,
-) =
-  """
-  {
-      "content": [
-          $content
-      ],
-      "pageable": {
-          "offset": 0,
-          "pageSize": $pageSize,
-          "pageNumber": $pageNumber,
-          "paged": true,
-          "unpaged": false
-      },
-      "first": true,
-      "last": false,
-      "totalPages": ${totalElements / pageSize + 1},
-      "totalElements": $totalElements,
-      "propertySize": $pageSize,
-      "number": $pageNumber,
-      "numberOfElements": $pageElements,
-      "empty": false
-  }                
-  """.trimIndent()
 
 fun caseNoteDpsJson(id: String, nomisId: Long) =
   """

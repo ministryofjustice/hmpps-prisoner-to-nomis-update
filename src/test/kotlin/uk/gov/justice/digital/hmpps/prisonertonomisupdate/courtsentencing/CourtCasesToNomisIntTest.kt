@@ -21,13 +21,17 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_DATE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_END_DATE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_RESULT_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_2_OFFENCE_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_2_OFFENCE_DATE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_2_OFFENCE_END_DATE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_2_RESULT_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_3_OFFENCE_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_3_OFFENCE_DATE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_3_RESULT_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_4_OFFENCE_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_4_OFFENCE_DATE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_4_RESULT_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.CourtSentencingApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
@@ -48,7 +52,6 @@ private const val DPS_COURT_CHARGE_2_ID = "9996aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_COURT_CHARGE_3_ID = "4566aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_COURT_CHARGE_4_ID = "1236aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val OFFENDER_NO = "AB12345"
-private const val OFFENCES_COUNT = 1
 private const val DONCASTER_COURT_CODE = "DRBYYC"
 private const val PRISON_ID = "MDI"
 private const val CASE_REFERENCE = "G123456789"
@@ -723,12 +726,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             )
             .withRequestBody(
               WireMock.matchingJsonPath(
-                "courtEventChargesToUpdate[0].offencesCount",
-                WireMock.equalTo("$OFFENCES_COUNT"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
                 "courtEventChargesToUpdate[0].offenceEndDate",
                 WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_END_DATE"),
               ),
@@ -742,19 +739,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(
               WireMock.matchingJsonPath(
                 "courtEventChargesToUpdate[0].resultCode1",
-                WireMock.equalTo(HARDCODED_REMAND_RESULT_CODE),
+                WireMock.equalTo(COURT_CHARGE_1_RESULT_CODE),
               ),
             )
             .withRequestBody(
               WireMock.matchingJsonPath(
                 "courtEventChargesToUpdate[1].offenceCode",
                 WireMock.equalTo("$COURT_CHARGE_3_OFFENCE_CODE"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtEventChargesToUpdate[1].offencesCount",
-                WireMock.equalTo("$OFFENCES_COUNT"),
               ),
             )
             .withRequestBody(
@@ -772,19 +763,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(
               WireMock.matchingJsonPath(
                 "courtEventChargesToUpdate[1].resultCode1",
-                WireMock.equalTo(HARDCODED_IMPRISONMENT_RESULT_CODE),
+                WireMock.equalTo(COURT_CHARGE_3_RESULT_CODE),
               ),
             )
             .withRequestBody(
               WireMock.matchingJsonPath(
                 "courtEventChargesToCreate[0].offenceCode",
                 WireMock.equalTo("$COURT_CHARGE_2_OFFENCE_CODE"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtEventChargesToCreate[0].offencesCount",
-                WireMock.equalTo("$OFFENCES_COUNT"),
               ),
             )
             .withRequestBody(
@@ -802,19 +787,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(
               WireMock.matchingJsonPath(
                 "courtEventChargesToCreate[0].resultCode1",
-                WireMock.equalTo(HARDCODED_REMAND_RESULT_CODE),
+                WireMock.equalTo(COURT_CHARGE_2_RESULT_CODE),
               ),
             )
             .withRequestBody(
               WireMock.matchingJsonPath(
                 "courtEventChargesToCreate[1].offenceCode",
                 WireMock.equalTo("$COURT_CHARGE_4_OFFENCE_CODE"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtEventChargesToCreate[1].offencesCount",
-                WireMock.equalTo("$OFFENCES_COUNT"),
               ),
             )
             .withRequestBody(
@@ -832,7 +811,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(
               WireMock.matchingJsonPath(
                 "courtEventChargesToCreate[1].resultCode1",
-                WireMock.equalTo(HARDCODED_IMPRISONMENT_RESULT_CODE),
+                WireMock.equalTo(COURT_CHARGE_4_RESULT_CODE),
               ),
             ),
         )

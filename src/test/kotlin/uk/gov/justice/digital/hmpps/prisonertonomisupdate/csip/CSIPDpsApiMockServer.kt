@@ -87,6 +87,7 @@ fun dpsCsipRecordMinimal() =
     recordUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6a00"),
     prisonNumber = "A1234KT",
     createdAt = LocalDateTime.now(),
+    prisonCodeWhenRecorded = "ASI",
     createdBy = "JSMITH",
     createdByDisplayName = "JOHN SMITH",
     status = CsipRecord.Status.CSIP_OPEN,

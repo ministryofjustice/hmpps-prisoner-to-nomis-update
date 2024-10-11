@@ -20,12 +20,19 @@ class PrisonPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
     offenderNo: String = "A1234AA",
     height: Int? = 180,
     weight: Int? = 80,
+    build: String? = "SMALL",
+    face: String? = "ROUND",
+    facialHair: String? = "CLEAN_SHAVEN",
+    hair: String? = "BLACK",
+    leftEyeColour: String? = "BLUE",
+    rightEyeColour: String? = "GREEN",
+    shoeSize: String? = "9.5",
   ) = nomisApi.stubFor(
     get(urlEqualTo("/prisoners/$offenderNo/prison-person/reconciliation")).willReturn(
       aResponse()
         .withHeader("Content-Type", "application/json")
         .withStatus(HttpStatus.OK.value())
-        .withBody(objectMapper.writeValueAsString(PrisonPersonReconciliationResponse(offenderNo, height, weight))),
+        .withBody(objectMapper.writeValueAsString(PrisonPersonReconciliationResponse(offenderNo, height, weight, face, build, facialHair, hair, leftEyeColour, rightEyeColour, shoeSize))),
     ),
   )
 
@@ -43,6 +50,13 @@ class PrisonPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
     offenderNo: String = "A1234AA",
     height: Int? = 180,
     weight: Int? = 80,
+    build: String? = "SMALL",
+    face: String? = "ROUND",
+    facialHair: String? = "CLEAN_SHAVEN",
+    hair: String? = "BLACK",
+    leftEyeColour: String? = "BLUE",
+    rightEyeColour: String? = "GREEN",
+    shoeSize: String? = "9.5",
   ) {
     nomisApi.stubFor(
       get(urlEqualTo("/prisoners/$offenderNo/prison-person/reconciliation"))
@@ -62,7 +76,7 @@ class PrisonPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.OK.value())
-            .withBody(objectMapper.writeValueAsString(PrisonPersonReconciliationResponse(offenderNo, height, weight))),
+            .withBody(objectMapper.writeValueAsString(PrisonPersonReconciliationResponse(offenderNo, height, weight, face, build, facialHair, hair, leftEyeColour, rightEyeColour, shoeSize))),
         ).willSetStateTo(Scenario.STARTED),
     )
   }

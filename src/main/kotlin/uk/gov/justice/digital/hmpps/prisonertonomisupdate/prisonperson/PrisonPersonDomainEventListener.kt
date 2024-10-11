@@ -33,6 +33,7 @@ class PrisonPersonDomainEventListener(
   ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "prison-person.physical-attributes.updated" -> physicalAttributesSyncService.updatePhysicalAttributesEvent(message.fromJson())
+      "prisoner-offender-search.prisoner.received" -> physicalAttributesSyncService.readmissionSwitchBookingEvent(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }

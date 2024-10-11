@@ -18,10 +18,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCaseNoteResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAmendment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCaseNoteRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 
 @SpringAPIServiceTest
-@Import(CaseNotesNomisApiService::class, CaseNotesNomisApiMockServer::class)
+@Import(CaseNotesNomisApiService::class, CaseNotesNomisApiMockServer::class, RetryApiService::class)
 class CaseNotesNomisApiServiceTest {
   @Autowired
   private lateinit var apiService: CaseNotesNomisApiService

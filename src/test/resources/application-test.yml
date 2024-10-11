@@ -216,7 +216,8 @@ hmpps.sqs:
       subscribeTopicId: domainevents
       subscribeFilter: >-
         { "eventType":[
-          "prison-person.physical-attributes.updated"
+          "prison-person.physical-attributes.updated",
+          "prisoner-offender-search.prisoner.received"
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
@@ -234,6 +235,9 @@ reports:
   alerts:
     reconciliation:
       page-size: 10
+  casenotes:
+    reconciliation:
+      page-size: 10
   sentencing:
     reconciliation:
       page-size: 10
@@ -243,5 +247,10 @@ reports:
   locations:
     reconciliation:
       page-size: 10
+  prisonperson:
+    reconciliation:
+      page-size: 3
 
 api.locations.timeout: 1s
+
+feature.recon.prison-person.profile-details: true

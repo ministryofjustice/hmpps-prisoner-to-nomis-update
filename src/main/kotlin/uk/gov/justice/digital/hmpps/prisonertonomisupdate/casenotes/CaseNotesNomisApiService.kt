@@ -1,18 +1,30 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes
 
+import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
+import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseNoteResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCaseNoteRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCaseNoteResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerCaseNotesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCaseNoteRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import java.net.URI
 
 @Service
-class CaseNotesNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
+class CaseNotesNomisApiService(
+  @Qualifier("nomisApiWebClient") private val webClient: WebClient,
+  @Value("\${hmpps.web-client.casenotes-nomis.max-retries:#{null}}") private val maxRetryAttempts: Long?,
+  @Value("\${hmpps.web-client.casenotes-nomis.backoff-millis:#{null}}") private val backoffMillis: Long?,
+  retryApiService: RetryApiService,
+) {
+  private val backoffSpec = retryApiService.getBackoffSpec(maxRetryAttempts, backoffMillis)
+
   suspend fun getCaseNote(caseNoteId: Long): CaseNoteResponse =
     webClient.get().uri(
       "/casenotes/{caseNoteId}",
@@ -50,11 +62,17 @@ class CaseNotesNomisApiService(@Qualifier("nomisApiWebClient") private val webCl
       .awaitBodilessEntity()
   }
 
-  suspend fun getCaseNotesForPrisoner(offenderNo: String): PrisonerCaseNotesResponse =
-    webClient.get().uri(
-      "/prisoners/{offenderNo}/casenotes",
-      offenderNo,
-    )
+  suspend fun getCaseNotesForPrisoner(offenderNo: String): PrisonerCaseNotesResponse {
+    lateinit var url: URI
+    return webClient.get()
+      .uri {
+        url = it.path("/prisoners/{offenderNo}/casenotes")
+          .build(offenderNo)
+        url
+      }
       .retrieve()
-      .awaitBody()
+      .bodyToMono(PrisonerCaseNotesResponse::class.java)
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "casenotes-nomis-api", "url", url.path)))
+      .awaitSingle()
+  }
 }
