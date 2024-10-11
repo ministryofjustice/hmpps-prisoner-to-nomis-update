@@ -10,9 +10,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Investigati
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Referral
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Review
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.SaferCustodyScreeningOutcome
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CSIPFactorMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CSIPChildMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CSIPFullMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Actions
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ActionsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AttendeeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CSIPFactorRequest
@@ -123,7 +122,7 @@ fun Interview.toNomisInterviewRequest(nomisInterviewId: Long? = null) =
     comments = interviewText,
   )
 
-fun Referral.toNomisReportDetails(mappings: List<CSIPFactorMappingDto>? = null) =
+fun Referral.toNomisReportDetails(mappings: List<CSIPChildMappingDto>? = null) =
   UpsertReportDetailsRequest(
     saferCustodyTeamInformed = (isSaferCustodyTeamInformed == Referral.IsSaferCustodyTeamInformed.YES),
     referralComplete = isReferralComplete ?: false,
@@ -137,8 +136,8 @@ fun Referral.toNomisReportDetails(mappings: List<CSIPFactorMappingDto>? = null) 
       dpsFactor.toNomisFactorRequest(
         mappings?.find {
             mappingFactor ->
-          mappingFactor.dpsCSIPFactorId == dpsFactor.factorUuid.toString()
-        }?.nomisCSIPFactorId,
+          mappingFactor.dpsId == dpsFactor.factorUuid.toString()
+        }?.nomisId,
       )
     },
   )
@@ -162,7 +161,6 @@ fun IdentifiedNeed.toNomisPlanRequest(nomisPlanId: Long? = null) =
     dpsId = identifiedNeedUuid.toString(),
     identifiedNeed = identifiedNeed,
     intervention = intervention,
-    createdDate = createdAt.toLocalDate(),
     targetDate = targetDate,
     progression = progression,
     referredBy = responsiblePerson,

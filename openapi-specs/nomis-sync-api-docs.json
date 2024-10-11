@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-10-09.9399.6a7ef96"
+    "version": "2024-10-10.9437.0fefa08"
   },
   "servers": [
     {
@@ -13357,9 +13357,40 @@
         },
         "description": "Incentive information"
       },
+      "ResponseMapping": {
+        "required": [
+          "component",
+          "dpsId",
+          "nomisId"
+        ],
+        "type": "object",
+        "properties": {
+          "component": {
+            "type": "string",
+            "description": "The child component created",
+            "enum": [
+              "ATTENDEE",
+              "FACTOR",
+              "INTERVIEW",
+              "PLAN",
+              "REVIEW"
+            ]
+          },
+          "nomisId": {
+            "type": "integer",
+            "description": "The nomisId of the created component",
+            "format": "int64"
+          },
+          "dpsId": {
+            "type": "string",
+            "description": "The dpsId of the created component"
+          }
+        },
+        "description": "Any new CSIP components that were created"
+      },
       "UpsertCSIPResponse": {
         "required": [
-          "created",
+          "mappings",
           "nomisCSIPReportId",
           "offenderNo"
         ],
@@ -13374,9 +13405,12 @@
             "type": "string",
             "description": "The prisoner nomis Id relating to this csip"
           },
-          "created": {
-            "type": "boolean",
-            "description": "Whether or not the csip was created"
+          "mappings": {
+            "type": "array",
+            "description": "Any new CSIP components that were created",
+            "items": {
+              "$ref": "#/components/schemas/ResponseMapping"
+            }
           }
         },
         "description": "A response after a csip has been upserted in NOMIS"
@@ -13597,7 +13631,6 @@
       },
       "PlanRequest": {
         "required": [
-          "createdDate",
           "dpsId",
           "identifiedNeed",
           "intervention",
@@ -13630,11 +13663,6 @@
           "referredBy": {
             "type": "string",
             "description": "The person reporting - free text"
-          },
-          "createdDate": {
-            "type": "string",
-            "description": "When created",
-            "format": "date"
           },
           "targetDate": {
             "type": "string",
@@ -16938,13 +16966,13 @@
       "PageVisitIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -17001,12 +17029,12 @@
             "type": "integer",
             "format": "int32"
           },
-          "paged": {
-            "type": "boolean"
-          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
+          },
+          "paged": {
+            "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
@@ -17388,13 +17416,13 @@
       "PageQuestionnaireIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -19238,13 +19266,13 @@
       "PagePrisonerIds": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -19308,13 +19336,13 @@
       "PagePrisonerId": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -19795,98 +19823,6 @@
         },
         "description": "The list of alerts held against a booking"
       },
-      "Address": {
-        "required": [
-          "addressId",
-          "mailAddress",
-          "phoneNumbers",
-          "primaryAddress",
-          "validatedPAF"
-        ],
-        "type": "object",
-        "properties": {
-          "addressId": {
-            "type": "integer",
-            "description": "Unique NOMIS Id of number",
-            "format": "int64"
-          },
-          "type": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "flat": {
-            "type": "string",
-            "description": "Flat name or number",
-            "example": "Apartment 3"
-          },
-          "premise": {
-            "type": "string",
-            "description": "Premise",
-            "example": "22"
-          },
-          "street": {
-            "type": "string",
-            "description": "Street",
-            "example": "West Street"
-          },
-          "locality": {
-            "type": "string",
-            "description": "Locality",
-            "example": "Keighley"
-          },
-          "postcode": {
-            "type": "string",
-            "description": "Post code",
-            "example": "MK15 2ST"
-          },
-          "city": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "county": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "country": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "phoneNumbers": {
-            "type": "array",
-            "description": "List of phone numbers for the address",
-            "items": {
-              "$ref": "#/components/schemas/PhoneNumber"
-            }
-          },
-          "validatedPAF": {
-            "type": "boolean",
-            "description": "true if address validated by Post Office Address file??"
-          },
-          "noFixedAddress": {
-            "type": "boolean",
-            "description": "true if address not fixed. for example homeless"
-          },
-          "primaryAddress": {
-            "type": "boolean",
-            "description": "true if this is the person's primary address"
-          },
-          "mailAddress": {
-            "type": "boolean",
-            "description": "true if this is used for mail"
-          },
-          "comment": {
-            "type": "string",
-            "description": "Free format comment about the address"
-          },
-          "startDate": {
-            "type": "string",
-            "description": "Date address was valid from",
-            "format": "date"
-          },
-          "endDate": {
-            "type": "string",
-            "description": "Date address was valid to",
-            "format": "date"
-          }
-        },
-        "description": "The data held in NOMIS about a address number"
-      },
       "ContactForPrisoner": {
         "required": [
           "bookingId",
@@ -19999,35 +19935,35 @@
             "type": "array",
             "description": "List of phone numbers for the person",
             "items": {
-              "$ref": "#/components/schemas/PhoneNumber"
+              "$ref": "#/components/schemas/PersonPhoneNumber"
             }
           },
           "addresses": {
             "type": "array",
             "description": "List of addresses for the person",
             "items": {
-              "$ref": "#/components/schemas/Address"
+              "$ref": "#/components/schemas/PersonAddress"
             }
           },
           "emailAddresses": {
             "type": "array",
             "description": "List of email addresses for the person",
             "items": {
-              "$ref": "#/components/schemas/EmailAddress"
+              "$ref": "#/components/schemas/PersonEmailAddress"
             }
           },
           "employments": {
             "type": "array",
             "description": "List of employments for the person",
             "items": {
-              "$ref": "#/components/schemas/Employment"
+              "$ref": "#/components/schemas/PersonEmployment"
             }
           },
           "identifiers": {
             "type": "array",
             "description": "List of identifiers for the person",
             "items": {
-              "$ref": "#/components/schemas/Identifier"
+              "$ref": "#/components/schemas/PersonIdentifier"
             }
           },
           "contacts": {
@@ -20079,100 +20015,116 @@
             "format": "date"
           },
           "enteredStaff": {
-            "$ref": "#/components/schemas/Staff"
+            "$ref": "#/components/schemas/ContactRestrictionEnteredStaff"
           }
         },
         "description": "The data held in NOMIS about a person's restriction with a prisoner"
       },
-      "Corporate": {
+      "ContactRestrictionEnteredStaff": {
         "required": [
-          "id"
+          "staffId"
         ],
         "type": "object",
         "properties": {
-          "id": {
+          "staffId": {
             "type": "integer",
-            "description": "Unique NOMIS Id of corporate address",
+            "description": "NOMIS staff id",
             "format": "int64"
-          },
-          "name": {
-            "type": "string",
-            "description": "The corporate name",
-            "example": "Police"
           }
         },
-        "description": "The data held in NOMIS about a corporate entity"
+        "description": "Staff member who created the restriction"
       },
-      "EmailAddress": {
+      "PersonAddress": {
         "required": [
-          "email",
-          "emailAddressId"
+          "addressId",
+          "mailAddress",
+          "phoneNumbers",
+          "primaryAddress",
+          "validatedPAF"
         ],
         "type": "object",
         "properties": {
-          "emailAddressId": {
+          "addressId": {
             "type": "integer",
-            "description": "Unique NOMIS Id of email address",
-            "format": "int64"
-          },
-          "email": {
-            "type": "string",
-            "description": "The email address",
-            "example": "john.smith@internet.co.uk"
-          }
-        },
-        "description": "The data held in NOMIS about a email address"
-      },
-      "Employment": {
-        "required": [
-          "active",
-          "sequence"
-        ],
-        "type": "object",
-        "properties": {
-          "sequence": {
-            "type": "integer",
-            "description": "Unique NOMIS sequence for this employment for this person",
-            "format": "int64"
-          },
-          "corporate": {
-            "$ref": "#/components/schemas/Corporate"
-          },
-          "active": {
-            "type": "boolean",
-            "description": "True is employment is active"
-          }
-        },
-        "description": "The data held in NOMIS about a person's employment"
-      },
-      "Identifier": {
-        "required": [
-          "identifier",
-          "sequence",
-          "type"
-        ],
-        "type": "object",
-        "properties": {
-          "sequence": {
-            "type": "integer",
-            "description": "Unique NOMIS sequence for this identifier for this person",
+            "description": "Unique NOMIS Id of number",
             "format": "int64"
           },
           "type": {
             "$ref": "#/components/schemas/CodeDescription"
           },
-          "identifier": {
+          "flat": {
             "type": "string",
-            "description": "The identifier value",
-            "example": "NE121212T"
+            "description": "Flat name or number",
+            "example": "Apartment 3"
           },
-          "issuedAuthority": {
+          "premise": {
             "type": "string",
-            "description": "The issued authority",
-            "example": "Police"
+            "description": "Premise",
+            "example": "22"
+          },
+          "street": {
+            "type": "string",
+            "description": "Street",
+            "example": "West Street"
+          },
+          "locality": {
+            "type": "string",
+            "description": "Locality",
+            "example": "Keighley"
+          },
+          "postcode": {
+            "type": "string",
+            "description": "Post code",
+            "example": "MK15 2ST"
+          },
+          "city": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "county": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "country": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "description": "List of phone numbers for the address",
+            "items": {
+              "$ref": "#/components/schemas/PersonPhoneNumber"
+            }
+          },
+          "validatedPAF": {
+            "type": "boolean",
+            "description": "true if address validated by Post Office Address file??"
+          },
+          "noFixedAddress": {
+            "type": "boolean",
+            "description": "true if address not fixed. for example homeless"
+          },
+          "primaryAddress": {
+            "type": "boolean",
+            "description": "true if this is the person's primary address"
+          },
+          "mailAddress": {
+            "type": "boolean",
+            "description": "true if this is used for mail"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Free format comment about the address"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Date address was valid from",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Date address was valid to",
+            "format": "date"
           }
         },
-        "description": "The data held in NOMIS about a person's identifiers"
+        "description": "The data held in NOMIS about a address number"
       },
       "PersonContact": {
         "required": [
@@ -20237,7 +20189,97 @@
         },
         "description": "The data held in NOMIS about a person's contact with a prisoner"
       },
-      "PhoneNumber": {
+      "PersonEmailAddress": {
+        "required": [
+          "email",
+          "emailAddressId"
+        ],
+        "type": "object",
+        "properties": {
+          "emailAddressId": {
+            "type": "integer",
+            "description": "Unique NOMIS Id of email address",
+            "format": "int64"
+          },
+          "email": {
+            "type": "string",
+            "description": "The email address",
+            "example": "john.smith@internet.co.uk"
+          }
+        },
+        "description": "The data held in NOMIS about a email address"
+      },
+      "PersonEmployment": {
+        "required": [
+          "active",
+          "sequence"
+        ],
+        "type": "object",
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "description": "Unique NOMIS sequence for this employment for this person",
+            "format": "int64"
+          },
+          "corporate": {
+            "$ref": "#/components/schemas/PersonEmploymentCorporate"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "True is employment is active"
+          }
+        },
+        "description": "The data held in NOMIS about a person's employment"
+      },
+      "PersonEmploymentCorporate": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique NOMIS Id of corporate address",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "description": "The corporate name",
+            "example": "Police"
+          }
+        },
+        "description": "The data held in NOMIS about a corporate entity"
+      },
+      "PersonIdentifier": {
+        "required": [
+          "identifier",
+          "sequence",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "description": "Unique NOMIS sequence for this identifier for this person",
+            "format": "int64"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "The identifier value",
+            "example": "NE121212T"
+          },
+          "issuedAuthority": {
+            "type": "string",
+            "description": "The issued authority",
+            "example": "Police"
+          }
+        },
+        "description": "The data held in NOMIS about a person's identifiers"
+      },
+      "PersonPhoneNumber": {
         "required": [
           "number",
           "phoneId",
@@ -20267,13 +20309,13 @@
       "PagePersonIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -20423,13 +20465,13 @@
       "PageNonAssociationIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -20681,13 +20723,13 @@
       "PageLocationIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -21264,13 +21306,13 @@
       "PageIncidentIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -21387,13 +21429,13 @@
       "PageIncentiveIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -21531,13 +21573,13 @@
       "PageCSIPIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -21594,13 +21636,13 @@
       "PageCourtCaseIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -21790,13 +21832,13 @@
       "PageAppointmentIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -22119,13 +22161,13 @@
       "PageFindActiveAllocationIdsResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -22187,13 +22229,13 @@
       "PageAdjustmentIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -22261,13 +22303,13 @@
       "PageAdjudicationChargeIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -22569,13 +22611,13 @@
       "PageFindActiveActivityIdsResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"

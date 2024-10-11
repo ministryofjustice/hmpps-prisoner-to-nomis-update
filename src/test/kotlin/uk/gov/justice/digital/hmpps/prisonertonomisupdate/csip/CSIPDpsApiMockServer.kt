@@ -248,7 +248,7 @@ fun dpsCsipRecord() =
           attendees = listOf(
             Attendee(
               attendeeUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6555"),
-              name = "same jones",
+              name = "sam jones",
               role = "person",
               isAttended = true,
               contribution = "talked about things",
