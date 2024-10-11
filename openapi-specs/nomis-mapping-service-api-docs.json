@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-09-20.5092.0ec3499"
+    "version": "2024-10-11.5202.6cfa18c"
   },
   "servers": [
     {
@@ -1612,7 +1612,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CSIPReviewMappingDto"
+                "$ref": "#/components/schemas/CSIPChildMappingDto"
               }
             }
           },
@@ -1664,7 +1664,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CSIPPlanMappingDto"
+                "$ref": "#/components/schemas/CSIPChildMappingDto"
               }
             }
           },
@@ -1716,7 +1716,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CSIPInterviewMappingDto"
+                "$ref": "#/components/schemas/CSIPChildMappingDto"
               }
             }
           },
@@ -1768,7 +1768,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CSIPFactorMappingDto"
+                "$ref": "#/components/schemas/CSIPChildMappingDto"
               }
             }
           },
@@ -1808,6 +1808,51 @@
         }
       }
     },
+    "/mapping/csip/children/all": {
+      "post": {
+        "tags": [
+          "csip-mapping-resource"
+        ],
+        "summary": "Adds new child mappings to a CSIP Report",
+        "description": "Adds child csip mappings. Requires role NOMIS_CSIP",
+        "operationId": "createChildMappings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CSIPFullMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping entry/entries created"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate csip child has been rejected. If Error code = 409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/csip/attendees": {
       "post": {
         "tags": [
@@ -1820,7 +1865,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CSIPAttendeeMappingDto"
+                "$ref": "#/components/schemas/CSIPChildMappingDto"
               }
             }
           },
@@ -1872,7 +1917,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CSIPReportMappingDto"
+                "$ref": "#/components/schemas/CSIPFullMappingDto"
               }
             }
           },
@@ -2186,6 +2231,61 @@
         }
       }
     },
+    "/mapping/contact-person/migrate": {
+      "post": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Creates a tree of contact person mappings typically for a migration",
+        "description": "Creates a tree of contact person mappings typically for a migration between NOMIS ids and dps ids. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "createMappings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactPersonMappingsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mappings created"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/casenotes/{offenderNo}/all": {
       "get": {
         "tags": [
@@ -2370,7 +2470,7 @@
         ],
         "summary": "Creates a batch of new casenote mappings",
         "description": "Creates a mapping between a batch of nomis casenote ids and dps casenote id. Requires ROLE_NOMIS_CASENOTES",
-        "operationId": "createMappings",
+        "operationId": "createMappings_1",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2481,7 +2581,7 @@
         ],
         "summary": "Deletes all casenote mappings",
         "description": "Deletes all casenote mappings regardless of source. This is expected to only ever been used in a non-production environment. Requires ROLE_NOMIS_CASENOTES",
-        "operationId": "deleteAllMappings_1",
+        "operationId": "deleteAllMappings_2",
         "parameters": [
           {
             "name": "onlyMigrated",
@@ -2663,7 +2763,7 @@
         ],
         "summary": "Creates a batch of new alert mappings",
         "description": "Creates a mapping between a batch of nomis alert ids and dps alert id. Requires ROLE_NOMIS_ALERTS",
-        "operationId": "createMappings_1",
+        "operationId": "createMappings_2",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2824,7 +2924,7 @@
         ],
         "summary": "Deletes all alert mappings",
         "description": "Deletes all alert mappings regardless of source. This is expected to only ever been used in a non-production environment. Requires ROLE_NOMIS_ALERTS",
-        "operationId": "deleteAllMappings_2",
+        "operationId": "deleteAllMappings_3",
         "responses": {
           "204": {
             "description": "Mappings deleted"
@@ -2902,7 +3002,7 @@
         ],
         "summary": "Delete all adjudication related mapping entries",
         "description": "Delete mapping entries created during any migration or synchronisation for adjudications and associated hearings and punishments",
-        "operationId": "deleteAllMappings_3",
+        "operationId": "deleteAllMappings_4",
         "parameters": [
           {
             "name": "migrationOnly",
@@ -5030,7 +5130,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CSIPReviewMappingDto"
+                  "$ref": "#/components/schemas/CSIPChildMappingDto"
                 }
               }
             }
@@ -5086,7 +5186,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CSIPReviewMappingDto"
+                  "$ref": "#/components/schemas/CSIPChildMappingDto"
                 }
               }
             }
@@ -5189,7 +5289,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CSIPPlanMappingDto"
+                  "$ref": "#/components/schemas/CSIPChildMappingDto"
                 }
               }
             }
@@ -5245,7 +5345,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CSIPPlanMappingDto"
+                  "$ref": "#/components/schemas/CSIPChildMappingDto"
                 }
               }
             }
@@ -5498,7 +5598,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CSIPInterviewMappingDto"
+                  "$ref": "#/components/schemas/CSIPChildMappingDto"
                 }
               }
             }
@@ -5554,7 +5654,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CSIPInterviewMappingDto"
+                  "$ref": "#/components/schemas/CSIPChildMappingDto"
                 }
               }
             }
@@ -5657,7 +5757,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CSIPFactorMappingDto"
+                  "$ref": "#/components/schemas/CSIPChildMappingDto"
                 }
               }
             }
@@ -5713,7 +5813,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CSIPFactorMappingDto"
+                  "$ref": "#/components/schemas/CSIPChildMappingDto"
                 }
               }
             }
@@ -5928,7 +6028,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CSIPAttendeeMappingDto"
+                  "$ref": "#/components/schemas/CSIPChildMappingDto"
                 }
               }
             }
@@ -5984,7 +6084,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CSIPAttendeeMappingDto"
+                  "$ref": "#/components/schemas/CSIPChildMappingDto"
                 }
               }
             }
@@ -6631,6 +6731,136 @@
           },
           "404": {
             "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/contact-person/person/nomis-person-id/{nomisPersonId}": {
+      "get": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Get person mapping by nomis person Id",
+        "description": "Retrieves the person a mapping by NOMIS Person Id. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "getPersonMappingByNomisId",
+        "parameters": [
+          {
+            "name": "nomisPersonId",
+            "in": "path",
+            "description": "NOMIS person id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS person id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Person mapping data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access this endpoint is forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/contact-person/person/migration-id/{migrationId}": {
+      "get": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Get paged person mappings by migration id",
+        "description": "Retrieve all person mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "getPersonMappingsByMigrationId",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          },
+          {
+            "name": "migrationId",
+            "in": "path",
+            "description": "Migration Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Migration Id",
+              "example": "2020-03-24T12:00:00"
+            },
+            "example": "2020-03-24T12:00:00"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Person mapping page returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagePersonMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint",
             "content": {
               "application/json": {
                 "schema": {
@@ -8713,6 +8943,41 @@
         }
       }
     },
+    "/mapping/contact-person": {
+      "delete": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Deletes all contact person mappings",
+        "description": "Deletes all contact person mappings regardless of source. This includes person, phone, address, email, employment, identifiers, restrictions, contacts and contact restrictions. This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "deleteAllMappings_1",
+        "responses": {
+          "204": {
+            "description": "All mappings deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/casenotes/nomis-casenote-id/{nomisCaseNoteId}": {
       "delete": {
         "tags": [
@@ -9844,23 +10109,23 @@
         },
         "description": "Adjudication mapping (same value for NOMIS and DPS)"
       },
-      "CSIPReviewMappingDto": {
+      "CSIPChildMappingDto": {
         "required": [
           "dpsCSIPReportId",
-          "dpsCSIPReviewId",
+          "dpsId",
           "mappingType",
-          "nomisCSIPReviewId"
+          "nomisId"
         ],
         "type": "object",
         "properties": {
-          "nomisCSIPReviewId": {
+          "nomisId": {
             "type": "integer",
-            "description": "NOMIS CSIP Review id",
+            "description": "NOMIS CSIP child id",
             "format": "int64"
           },
-          "dpsCSIPReviewId": {
+          "dpsId": {
             "type": "string",
-            "description": "DPS CSIP Review id"
+            "description": "DPS CSIP child id"
           },
           "dpsCSIPReportId": {
             "type": "string",
@@ -9888,7 +10153,7 @@
             "example": "2021-07-05T10:35:17"
           }
         },
-        "description": "CSIP Review mapping"
+        "description": "CSIP Child mapping"
       },
       "CSIPReviewMapping": {
         "required": [
@@ -9939,52 +10204,6 @@
           }
         }
       },
-      "CSIPPlanMappingDto": {
-        "required": [
-          "dpsCSIPPlanId",
-          "dpsCSIPReportId",
-          "mappingType",
-          "nomisCSIPPlanId"
-        ],
-        "type": "object",
-        "properties": {
-          "nomisCSIPPlanId": {
-            "type": "integer",
-            "description": "NOMIS CSIP Plan id",
-            "format": "int64"
-          },
-          "dpsCSIPPlanId": {
-            "type": "string",
-            "description": "DPS CSIP Plan id"
-          },
-          "dpsCSIPReportId": {
-            "type": "string",
-            "description": "DPS CSIP Report id"
-          },
-          "label": {
-            "maxLength": 20,
-            "minLength": 0,
-            "type": "string",
-            "description": "Label (a timestamp for migrated ids)"
-          },
-          "mappingType": {
-            "type": "string",
-            "description": "Mapping type",
-            "enum": [
-              "MIGRATED",
-              "NOMIS_CREATED",
-              "DPS_CREATED"
-            ]
-          },
-          "whenCreated": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Date-time the mapping was created",
-            "example": "2021-07-05T10:35:17"
-          }
-        },
-        "description": "CSIP Plan mapping"
-      },
       "CSIPPlanMapping": {
         "required": [
           "dpsCSIPPlanId",
@@ -10033,52 +10252,6 @@
             "type": "boolean"
           }
         }
-      },
-      "CSIPInterviewMappingDto": {
-        "required": [
-          "dpsCSIPInterviewId",
-          "dpsCSIPReportId",
-          "mappingType",
-          "nomisCSIPInterviewId"
-        ],
-        "type": "object",
-        "properties": {
-          "nomisCSIPInterviewId": {
-            "type": "integer",
-            "description": "NOMIS CSIP Interview id",
-            "format": "int64"
-          },
-          "dpsCSIPInterviewId": {
-            "type": "string",
-            "description": "DPS CSIP Interview id"
-          },
-          "dpsCSIPReportId": {
-            "type": "string",
-            "description": "DPS CSIP Report id"
-          },
-          "label": {
-            "maxLength": 20,
-            "minLength": 0,
-            "type": "string",
-            "description": "Label (a timestamp for migrated ids)"
-          },
-          "mappingType": {
-            "type": "string",
-            "description": "Mapping type",
-            "enum": [
-              "MIGRATED",
-              "NOMIS_CREATED",
-              "DPS_CREATED"
-            ]
-          },
-          "whenCreated": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Date-time the mapping was created",
-            "example": "2021-07-05T10:35:17"
-          }
-        },
-        "description": "CSIP Interview mapping"
       },
       "CSIPInterviewMapping": {
         "required": [
@@ -10129,52 +10302,6 @@
           }
         }
       },
-      "CSIPFactorMappingDto": {
-        "required": [
-          "dpsCSIPFactorId",
-          "dpsCSIPReportId",
-          "mappingType",
-          "nomisCSIPFactorId"
-        ],
-        "type": "object",
-        "properties": {
-          "nomisCSIPFactorId": {
-            "type": "integer",
-            "description": "NOMIS CSIP Factor id",
-            "format": "int64"
-          },
-          "dpsCSIPFactorId": {
-            "type": "string",
-            "description": "DPS CSIP Factor id"
-          },
-          "dpsCSIPReportId": {
-            "type": "string",
-            "description": "DPS CSIP Report id"
-          },
-          "label": {
-            "maxLength": 20,
-            "minLength": 0,
-            "type": "string",
-            "description": "Label (a timestamp for migrated ids)"
-          },
-          "mappingType": {
-            "type": "string",
-            "description": "Mapping type",
-            "enum": [
-              "MIGRATED",
-              "NOMIS_CREATED",
-              "DPS_CREATED"
-            ]
-          },
-          "whenCreated": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Date-time the mapping was created",
-            "example": "2021-07-05T10:35:17"
-          }
-        },
-        "description": "CSIP Factor mapping"
-      },
       "CSIPFactorMapping": {
         "required": [
           "dpsCSIPFactorId",
@@ -10224,27 +10351,27 @@
           }
         }
       },
-      "CSIPAttendeeMappingDto": {
+      "CSIPFullMappingDto": {
         "required": [
-          "dpsCSIPAttendeeId",
+          "attendeeMappings",
           "dpsCSIPReportId",
+          "factorMappings",
+          "interviewMappings",
           "mappingType",
-          "nomisCSIPAttendeeId"
+          "nomisCSIPReportId",
+          "planMappings",
+          "reviewMappings"
         ],
         "type": "object",
         "properties": {
-          "nomisCSIPAttendeeId": {
+          "nomisCSIPReportId": {
             "type": "integer",
-            "description": "NOMIS CSIP Attendee id",
+            "description": "NOMIS CSIP Report id",
             "format": "int64"
-          },
-          "dpsCSIPAttendeeId": {
-            "type": "string",
-            "description": "DPS CSIP Attendee id"
           },
           "dpsCSIPReportId": {
             "type": "string",
-            "description": "DPS CSIP Report id"
+            "description": "DPS CSIP Report id from DPS CSIP service"
           },
           "label": {
             "maxLength": 20,
@@ -10266,9 +10393,44 @@
             "type": "string",
             "description": "Date-time the mapping was created",
             "example": "2021-07-05T10:35:17"
+          },
+          "attendeeMappings": {
+            "type": "array",
+            "description": "CSIP Attendee Mappings",
+            "items": {
+              "$ref": "#/components/schemas/CSIPChildMappingDto"
+            }
+          },
+          "factorMappings": {
+            "type": "array",
+            "description": "CSIP Factor Mappings",
+            "items": {
+              "$ref": "#/components/schemas/CSIPChildMappingDto"
+            }
+          },
+          "interviewMappings": {
+            "type": "array",
+            "description": "CSIP Interview Mappings",
+            "items": {
+              "$ref": "#/components/schemas/CSIPChildMappingDto"
+            }
+          },
+          "planMappings": {
+            "type": "array",
+            "description": "CSIP Plan Mappings",
+            "items": {
+              "$ref": "#/components/schemas/CSIPChildMappingDto"
+            }
+          },
+          "reviewMappings": {
+            "type": "array",
+            "description": "CSIP Review Mappings",
+            "items": {
+              "$ref": "#/components/schemas/CSIPChildMappingDto"
+            }
           }
         },
-        "description": "CSIP Attendee mapping"
+        "description": "Full CSIP mapping"
       },
       "CSIPAttendeeMapping": {
         "required": [
@@ -10809,6 +10971,146 @@
           }
         }
       },
+      "ContactPersonMappingsDto": {
+        "required": [
+          "mappingType",
+          "personAddressMapping",
+          "personContactMapping",
+          "personContactRestrictionMapping",
+          "personEmailMapping",
+          "personEmploymentMapping",
+          "personIdentifierMapping",
+          "personMapping",
+          "personPhoneMapping",
+          "personRestrictionMapping"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Label (a timestamp for migrated ids)"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "Mapping type",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED",
+              "NOMIS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date time the mapping was created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "personMapping": {
+            "$ref": "#/components/schemas/ContactPersonSimpleMappingIdDto"
+          },
+          "personAddressMapping": {
+            "type": "array",
+            "description": "Person address mapping",
+            "items": {
+              "$ref": "#/components/schemas/ContactPersonSimpleMappingIdDto"
+            }
+          },
+          "personPhoneMapping": {
+            "type": "array",
+            "description": "Person phone mapping",
+            "items": {
+              "$ref": "#/components/schemas/ContactPersonSimpleMappingIdDto"
+            }
+          },
+          "personEmailMapping": {
+            "type": "array",
+            "description": "Person email mapping",
+            "items": {
+              "$ref": "#/components/schemas/ContactPersonSimpleMappingIdDto"
+            }
+          },
+          "personEmploymentMapping": {
+            "type": "array",
+            "description": "Person employment mapping",
+            "items": {
+              "$ref": "#/components/schemas/ContactPersonSequenceMappingIdDto"
+            }
+          },
+          "personIdentifierMapping": {
+            "type": "array",
+            "description": "Person identifier mapping",
+            "items": {
+              "$ref": "#/components/schemas/ContactPersonSequenceMappingIdDto"
+            }
+          },
+          "personRestrictionMapping": {
+            "type": "array",
+            "description": "Person restriction mapping",
+            "items": {
+              "$ref": "#/components/schemas/ContactPersonSimpleMappingIdDto"
+            }
+          },
+          "personContactMapping": {
+            "type": "array",
+            "description": "Person contact mapping",
+            "items": {
+              "$ref": "#/components/schemas/ContactPersonSimpleMappingIdDto"
+            }
+          },
+          "personContactRestrictionMapping": {
+            "type": "array",
+            "description": "Person contact restriction mapping",
+            "items": {
+              "$ref": "#/components/schemas/ContactPersonSimpleMappingIdDto"
+            }
+          }
+        },
+        "description": "Mappings for a Person and there associated child entities"
+      },
+      "ContactPersonSequenceMappingIdDto": {
+        "required": [
+          "dpsId",
+          "nomisPersonId",
+          "nomisSequenceNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsId": {
+            "type": "string",
+            "description": "DPS id"
+          },
+          "nomisPersonId": {
+            "type": "integer",
+            "description": "NOMIS id",
+            "format": "int64"
+          },
+          "nomisSequenceNumber": {
+            "type": "integer",
+            "description": "NOMIS sequence",
+            "format": "int64"
+          }
+        },
+        "description": "NOMIS to DPS simple mapping IDs"
+      },
+      "ContactPersonSimpleMappingIdDto": {
+        "required": [
+          "dpsId",
+          "nomisId"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsId": {
+            "type": "string",
+            "description": "DPS id"
+          },
+          "nomisId": {
+            "type": "integer",
+            "description": "NOMIS id",
+            "format": "int64"
+          }
+        },
+        "description": "NOMIS to DPS simple mapping IDs"
+      },
       "CaseNoteMappingIdDto": {
         "required": [
           "dpsCaseNoteId",
@@ -11181,87 +11483,6 @@
           }
         }
       },
-      "CSIPFullMappingDto": {
-        "required": [
-          "attendeeMappings",
-          "dpsCSIPReportId",
-          "factorMappings",
-          "interviewMappings",
-          "mappingType",
-          "nomisCSIPReportId",
-          "planMappings",
-          "reviewMappings"
-        ],
-        "type": "object",
-        "properties": {
-          "nomisCSIPReportId": {
-            "type": "integer",
-            "description": "NOMIS CSIP Report id",
-            "format": "int64"
-          },
-          "dpsCSIPReportId": {
-            "type": "string",
-            "description": "CSIP Report id from DPS CSIP service"
-          },
-          "label": {
-            "maxLength": 20,
-            "minLength": 0,
-            "type": "string",
-            "description": "Label (a timestamp for migrated ids)"
-          },
-          "mappingType": {
-            "type": "string",
-            "description": "Mapping type",
-            "enum": [
-              "MIGRATED",
-              "NOMIS_CREATED",
-              "DPS_CREATED"
-            ]
-          },
-          "whenCreated": {
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
-            "type": "string",
-            "description": "Date-time the mapping was created",
-            "example": "2021-07-05T10:35:17"
-          },
-          "attendeeMappings": {
-            "type": "array",
-            "description": "CSIP Attendee Mappings",
-            "items": {
-              "$ref": "#/components/schemas/CSIPAttendeeMappingDto"
-            }
-          },
-          "factorMappings": {
-            "type": "array",
-            "description": "CSIP Factor Mappings",
-            "items": {
-              "$ref": "#/components/schemas/CSIPFactorMappingDto"
-            }
-          },
-          "interviewMappings": {
-            "type": "array",
-            "description": "CSIP Interview Mappings",
-            "items": {
-              "$ref": "#/components/schemas/CSIPInterviewMappingDto"
-            }
-          },
-          "planMappings": {
-            "type": "array",
-            "description": "CSIP Plan Mappings",
-            "items": {
-              "$ref": "#/components/schemas/CSIPPlanMappingDto"
-            }
-          },
-          "reviewMappings": {
-            "type": "array",
-            "description": "CSIP Review Mappings",
-            "items": {
-              "$ref": "#/components/schemas/CSIPReviewMappingDto"
-            }
-          }
-        },
-        "description": "Full CSIP mapping"
-      },
       "CourtCaseMappingDto": {
         "required": [
           "dpsCourtCaseId",
@@ -11399,6 +11620,90 @@
             "type": "string"
           },
           "ignoreCase": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PersonMappingDto": {
+        "required": [
+          "dpsId",
+          "mappingType",
+          "nomisId"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsId": {
+            "type": "string",
+            "description": "DPS id"
+          },
+          "nomisId": {
+            "type": "integer",
+            "description": "NOMIS id",
+            "format": "int64"
+          },
+          "label": {
+            "type": "string"
+          },
+          "mappingType": {
+            "type": "string",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED",
+              "NOMIS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          }
+        }
+      },
+      "PagePersonMappingDto": {
+        "type": "object",
+        "properties": {
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonMappingDto"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SortObject"
+            }
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "empty": {
             "type": "boolean"
           }
         }

@@ -7,7 +7,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CSIPChildMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CSIPFullMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ResponseMapping
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertCSIPResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
@@ -46,23 +49,38 @@ class CSIPService(
       transform {
         dpsApiService.getCsipReport(dpsCsipReportId)
           .let { dpsCsipRecord ->
-            nomisApiService.upsertCsipReport(dpsCsipRecord.toNomisUpsertRequest()).let { nomisCsip ->
-              CSIPFullMappingDto(
-                dpsCSIPReportId = dpsCsipReportId,
-                nomisCSIPReportId = nomisCsip.nomisCSIPReportId,
-                mappingType = CSIPFullMappingDto.MappingType.DPS_CREATED,
-                attendeeMappings = listOf(),
-                factorMappings = listOf(),
-                interviewMappings = listOf(),
-                planMappings = listOf(),
-                reviewMappings = listOf(),
-              )
-            }
+            nomisApiService.upsertCsipReport(dpsCsipRecord.toNomisUpsertRequest())
+              .let {
+                it.createNewMappings(dpsCsipReportId)
+              }
           }
       }
       saveMapping { mappingApiService.createMapping(it) }
     }
   }
+
+  fun UpsertCSIPResponse.createNewMappings(dpsCsipReportId: String) =
+    CSIPFullMappingDto(
+      dpsCSIPReportId = dpsCsipReportId,
+      nomisCSIPReportId = nomisCSIPReportId,
+      mappingType = CSIPFullMappingDto.MappingType.DPS_CREATED,
+      attendeeMappings = filterMappingsByType(dpsCsipReportId, ResponseMapping.Component.ATTENDEE),
+      factorMappings = filterMappingsByType(dpsCsipReportId, ResponseMapping.Component.FACTOR),
+      interviewMappings = filterMappingsByType(dpsCsipReportId, ResponseMapping.Component.INTERVIEW),
+      planMappings = filterMappingsByType(dpsCsipReportId, ResponseMapping.Component.PLAN),
+      reviewMappings = filterMappingsByType(dpsCsipReportId, ResponseMapping.Component.REVIEW),
+    )
+
+  fun UpsertCSIPResponse.filterMappingsByType(dpsCSIPReportId: String, childType: ResponseMapping.Component) =
+    mappings.filter { it.component == childType }
+      .map {
+        CSIPChildMappingDto(
+          dpsCSIPReportId = dpsCSIPReportId,
+          nomisId = it.nomisId,
+          dpsId = it.dpsId,
+          mappingType = CSIPChildMappingDto.MappingType.DPS_CREATED,
+        )
+      }
 
   suspend fun updateCSIPReport(csipEvent: CSIPEvent) {
     val dpsCsipReportId = csipEvent.additionalInformation.recordUuid
@@ -79,19 +97,13 @@ class CSIPService(
 
       val dpsCsipRecord = dpsApiService.getCsipReport(dpsCsipReportId)
       nomisApiService.upsertCsipReport(dpsCsipRecord.toNomisUpsertRequest(mapping))
-        .let { nomisCsip ->
-          CSIPFullMappingDto(
-            dpsCSIPReportId = dpsCsipReportId,
-            nomisCSIPReportId = nomisCsip.nomisCSIPReportId,
-            mappingType = CSIPFullMappingDto.MappingType.DPS_CREATED,
-            attendeeMappings = listOf(),
-            factorMappings = listOf(),
-            interviewMappings = listOf(),
-            planMappings = listOf(),
-            reviewMappings = listOf(),
-          )
+        .also {
+          if (it.mappings.isNotEmpty()) {
+            it.createNewMappings(dpsCsipReportId)
+          }
         }
-      // TODO Check and update child mappings
+      // TODO send child mappings just created !!
+      // mapping.createChildMappings()
       telemetryClient.trackEvent("csip-updated-success", telemetryMap)
     }.onFailure { e ->
       telemetryClient.trackEvent("csip-updated-failed", telemetryMap)

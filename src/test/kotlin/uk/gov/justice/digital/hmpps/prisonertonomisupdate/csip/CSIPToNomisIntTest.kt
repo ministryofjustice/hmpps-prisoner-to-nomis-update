@@ -4,7 +4,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
-import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -144,6 +143,31 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
         }
 
         @Test
+        fun `the created csip will contain details of the DPS csip investigation`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("investigation.staffInvolved", "some people")
+              .withRequestBodyJsonPath("investigation.evidenceSecured", "A piece of pipe")
+              .withRequestBodyJsonPath("investigation.reasonOccurred", "bad behaviour")
+              .withRequestBodyJsonPath("investigation.usualBehaviour", "Good person")
+              .withRequestBodyJsonPath("investigation.trigger", "missed meal")
+              .withRequestBodyJsonPath("investigation.protectiveFactors", "ensure taken to canteen"),
+          )
+        }
+
+        @Test
+        fun `the created csip will contain details of the DPS csip intervies`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("investigation.interviews[0].dpsId", "8cdadcf3-b003-4116-9956-c99bd8df6222")
+              .withRequestBodyJsonPath("investigation.interviews[0].interviewee", "Bill Black")
+              .withRequestBodyJsonPath("investigation.interviews[0].date", "2024-06-06")
+              .withRequestBodyJsonPath("investigation.interviews[0].roleCode", "WITNESS")
+              .withRequestBodyJsonPath("investigation.interviews[0].comments", "Saw a pipe in his hand"),
+          )
+        }
+
+        @Test
         fun `the created csip will contain the Safer Custody Screening details`() {
           csipNomisApi.verify(
             putRequestedFor(anyUrl())
@@ -155,20 +179,86 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
         }
 
         @Test
+        fun `the created csip will contain details of the DPS csip plan`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("caseManager", "C Jones")
+              .withRequestBodyJsonPath("firstCaseReviewDate", "2024-04-15")
+              .withRequestBodyJsonPath("planReason", "helper")
+              .withRequestBodyJsonPath("plans[0].dpsId", "8cdadcf3-b003-4116-9956-c99bd8df6333")
+              .withRequestBodyJsonPath("plans[0].identifiedNeed", "they need help")
+              .withRequestBodyJsonPath("plans[0].intervention", "dd")
+              .withRequestBodyJsonPath("plans[0].identifiedNeed", "they need help")
+              .withRequestBodyJsonPath("plans[0].referredBy", "Jason")
+              .withRequestBodyJsonPath("plans[0].targetDate", "2024-08-20")
+              .withRequestBodyJsonPath("plans[0].progression", "there was some improvement")
+              .withRequestBodyJsonPath("plans[0].closedDate", "2024-04-17"),
+          )
+        }
+
+        @Test
+        fun `the created csip will contain details of the DPS csip reviews`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("reviews[0].dpsId", "8cdadcf3-b003-4116-9956-c99bd8df6444")
+              .withRequestBodyJsonPath("reviews[0].remainOnCSIP", true)
+              .withRequestBodyJsonPath("reviews[0].csipUpdated", false)
+              .withRequestBodyJsonPath("reviews[0].caseNote", false)
+              .withRequestBodyJsonPath("reviews[0].closeCSIP", true)
+              .withRequestBodyJsonPath("reviews[0].peopleInformed", false)
+              .withRequestBodyJsonPath("reviews[0].recordedDate", "2024-04-01")
+              .withRequestBodyJsonPath("reviews[0].recordedBy", "JSMITH")
+              .withRequestBodyJsonPath("reviews[0].closeDate", "2024-04-16"),
+
+          )
+        }
+
+        @Test
+        fun `the created csip will contain details of the DPS csip attendees`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("reviews[0].attendees[0].dpsId", "8cdadcf3-b003-4116-9956-c99bd8df6555")
+              .withRequestBodyJsonPath("reviews[0].attendees[0].attended", true)
+              .withRequestBodyJsonPath("reviews[0].attendees[0].name", "sam jones")
+              .withRequestBodyJsonPath("reviews[0].attendees[0].role", "person")
+              .withRequestBodyJsonPath("reviews[0].attendees[0].contribution", "talked about things"),
+          )
+        }
+
+        @Test
+        fun `the created csip will contain details of the DPS csip decision and actions`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("decision.conclusion", "Offender needs help")
+              .withRequestBodyJsonPath("decision.decisionOutcomeCode", "OPE")
+              .withRequestBodyJsonPath("decision.signedOffRoleCode", "CUSTMAN")
+              .withRequestBodyJsonPath("decision.recordedBy", "FRED_ADM")
+              .withRequestBodyJsonPath("decision.recordedDate", "2024-04-08")
+              .withRequestBodyJsonPath("decision.otherDetails", "Some other info here")
+              .withRequestBodyJsonPath("decision.actions.openCSIPAlert", false)
+              .withRequestBodyJsonPath("decision.actions.nonAssociationsUpdated", true)
+              .withRequestBodyJsonPath("decision.actions.observationBook", true)
+              .withRequestBodyJsonPath("decision.actions.unitOrCellMove", false)
+              .withRequestBodyJsonPath("decision.actions.csraOrRsraReview", false)
+              .withRequestBodyJsonPath("decision.actions.serviceReferral", true)
+              .withRequestBodyJsonPath("decision.actions.simReferral", false),
+
+          )
+        }
+
+        @Test
         fun `will create a mapping between the NOMIS and DPS ids with child mappings`() {
-          /* TODO
           csipMappingApi.verify(
             postRequestedFor(urlEqualTo("/mapping/csip/all"))
               .withRequestBodyJsonPath("nomisCSIPReportId", nomisCSIPReportId)
               .withRequestBodyJsonPath("dpsCSIPReportId", dpsCSIPId)
               .withRequestBodyJsonPath("mappingType", "DPS_CREATED")
-              .withRequestBody(matchingJsonPath("attendeeMappings.size()", equalTo("1")))
-              .withRequestBody(matchingJsonPath("factorMappings.size()", equalTo("1")))
-              .withRequestBody(matchingJsonPath("interviewMappings.size()", equalTo("1")))
-              .withRequestBody(matchingJsonPath("planMappings.size()", equalTo("1")))
-              .withRequestBody(matchingJsonPath("reviewMappings.size()", equalTo("1"))),
+              .withRequestBodyJsonPath("attendeeMappings.size()", equalTo("0"))
+              .withRequestBodyJsonPath("factorMappings.size()", equalTo("1"))
+              .withRequestBodyJsonPath("interviewMappings.size()", equalTo("0"))
+              .withRequestBodyJsonPath("planMappings.size()", equalTo("1"))
+              .withRequestBodyJsonPath("reviewMappings.size()", equalTo("0")),
           )
-           */
         }
 
         @Test
@@ -230,11 +320,11 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("nomisCSIPReportId", nomisCSIPReportId)
               .withRequestBodyJsonPath("dpsCSIPReportId", dpsCSIPId)
               .withRequestBodyJsonPath("mappingType", "DPS_CREATED")
-              .withRequestBody(matchingJsonPath("attendeeMappings.size()", equalTo("0")))
-              .withRequestBody(matchingJsonPath("factorMappings.size()", equalTo("0")))
-              .withRequestBody(matchingJsonPath("interviewMappings.size()", equalTo("0")))
-              .withRequestBody(matchingJsonPath("planMappings.size()", equalTo("0")))
-              .withRequestBody(matchingJsonPath("reviewMappings.size()", equalTo("0"))),
+              .withRequestBodyJsonPath("attendeeMappings.size()", equalTo("0"))
+              .withRequestBodyJsonPath("factorMappings.size()", equalTo("1"))
+              .withRequestBodyJsonPath("interviewMappings.size()", equalTo("0"))
+              .withRequestBodyJsonPath("planMappings.size()", equalTo("1"))
+              .withRequestBodyJsonPath("reviewMappings.size()", equalTo("0")),
           )
         }
 

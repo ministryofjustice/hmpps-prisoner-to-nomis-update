@@ -8,6 +8,9 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ResponseMapping
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ResponseMapping.Component.FACTOR
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ResponseMapping.Component.PLAN
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertCSIPResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
@@ -44,5 +47,8 @@ class CSIPNomisApiMockServer(private val objectMapper: ObjectMapper) {
 fun upsertCSIPResponse(nomisCSIPReportId: Long = 12345) = UpsertCSIPResponse(
   nomisCSIPReportId = nomisCSIPReportId,
   offenderNo = "A1234BC",
-  created = true,
+  mappings = listOf(
+    ResponseMapping(FACTOR, 111, "8cdadcf3-b003-4116-9956-c99bd8df6111"),
+    ResponseMapping(PLAN, 222, "8cdadcf3-b003-4116-9956-c99bd8df6333"),
+  ),
 )
