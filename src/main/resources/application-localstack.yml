@@ -156,6 +156,14 @@ hmpps.sqs:
         { "eventType":[
           "prison-person.physical-attributes.updated"
         ]}
+    contactperson:
+      queueName: hmpps_prisoner_to_nomis_contactperson_queue
+      dlqName: hmpps_prisoner_to_nomis_contactperson_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "TBD"
+        ]}
 
   topics:
     domainevents:

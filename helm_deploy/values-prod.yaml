@@ -77,3 +77,6 @@ generic-prometheus-alerts:
     prisonperson:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_prisonperson_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_prisonperson_dlq"
+    contactperson:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_contactperson_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_contactperson_dlq"
