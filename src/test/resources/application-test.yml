@@ -221,6 +221,16 @@ hmpps.sqs:
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
+    contactperson:
+      queueName: "contactperson-${random.uuid}"
+      dlqName: "contactperson-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "TBD"
+        ]}
+      dlqMaxReceiveCount: 3
+      visibilityTimeout: 120
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}
