@@ -121,6 +121,8 @@ generic-service:
       CASENOTES_CLIENT_SECRET: "CASENOTES_CLIENT_SECRET"
       PRISON_PERSON_CLIENT_ID: "PRISON_PERSON_CLIENT_ID"
       PRISON_PERSON_CLIENT_SECRET: "PRISON_PERSON_CLIENT_SECRET"
+      CONTACT_PERSON_CLIENT_ID: "CONTACT_PERSON_CLIENT_ID"
+      CONTACT_PERSON_CLIENT_SECRET: "CONTACT_PERSON_CLIENT_SECRET"
     domain-events-sqs-nomis-update-visit:
       HMPPS_SQS_QUEUES_VISIT_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-visit-dlq:
@@ -173,6 +175,10 @@ generic-service:
       HMPPS_SQS_QUEUES_PRISONPERSON_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-prisonperson-dlq:
       HMPPS_SQS_QUEUES_PRISONPERSON_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-contactperson:
+      HMPPS_SQS_QUEUES_CONTACTPERSON_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-contactperson-dlq:
+      HMPPS_SQS_QUEUES_CONTACTPERSON_DLQ_NAME: "sqs_queue_name"
 
   allowlist:
     groups:
