@@ -23,6 +23,7 @@ import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtAppearanceResponse
@@ -665,6 +666,13 @@ class NomisApiService(
       .bodyValue(request)
       .retrieve()
       .awaitBody()
+
+  suspend fun refreshCaseReferences(offenderNo: String, nomisCourtCaseId: Long, request: CaseIdentifierRequest) =
+    webClient.post()
+      .uri("/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/case-identifiers", offenderNo, nomisCourtCaseId)
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
 
   suspend fun mergesSinceDate(offenderNo: String, fromDate: LocalDate): List<MergeDetail> =
     webClient.get()

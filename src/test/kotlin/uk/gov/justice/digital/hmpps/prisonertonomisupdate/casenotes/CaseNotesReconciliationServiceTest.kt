@@ -43,11 +43,13 @@ class CaseNotesReconciliationServiceTest {
             text = "the amendment text",
             authorUsername = "AMUSER",
             createdDateTime = "2024-01-01T01:02:03",
+            sourceSystem = CaseNoteAmendment.SourceSystem.DPS,
           ),
         ),
         occurrenceDateTime = "2024-01-01T01:02:03",
         createdDatetime = "notused",
         createdUsername = "notused",
+        sourceSystem = CaseNoteResponse.SourceSystem.DPS,
       ),
     ),
   )

@@ -190,7 +190,19 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
               }
             ]
         }
-    ]
+    ],
+    "legacyData": {
+        "caseReferences": [
+          {
+            "updatedDate": "2024-10-14T10:27:42Z",
+            "offenderCaseReference": "VB12345677"
+          },
+          {
+            "updatedDate": "2024-10-14T10:37:00Z",
+            "offenderCaseReference": "NN12345666"
+          }
+        ]
+      }
 }   
             """.trimIndent(),
           )

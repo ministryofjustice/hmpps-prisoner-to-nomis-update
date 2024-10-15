@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-10-10.9437.0fefa08"
+    "version": "2024-10-14.9466.decfc4f"
   },
   "servers": [
     {
@@ -5205,7 +5205,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CourtAppearanceRequest"
+                "$ref": "#/components/schemas/CaseIdentifierRequest"
               }
             }
           },
@@ -15077,6 +15077,39 @@
         },
         "description": "Create court case response"
       },
+      "CaseIdentifier": {
+        "required": [
+          "createdDate",
+          "reference"
+        ],
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string"
+          },
+          "createdDate": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "Court case associated reference"
+      },
+      "CaseIdentifierRequest": {
+        "required": [
+          "caseIdentifiers"
+        ],
+        "type": "object",
+        "properties": {
+          "caseIdentifiers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CaseIdentifier"
+            }
+          }
+        },
+        "description": "Case identifier list"
+      },
       "CreateCaseNoteResponse": {
         "required": [
           "bookingId",
@@ -17029,12 +17062,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "paged": {
+            "type": "boolean"
+          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
-          },
-          "paged": {
-            "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
@@ -19080,6 +19113,7 @@
         "required": [
           "authorUsername",
           "createdDateTime",
+          "sourceSystem",
           "text"
         ],
         "type": "object",
@@ -19110,6 +19144,15 @@
             "type": "string",
             "description": "Amendment created timestamp",
             "example": "2021-07-05T10:35:17"
+          },
+          "sourceSystem": {
+            "type": "string",
+            "description": "Which system (Nomis or DPS) created the amendment",
+            "example": "DPS",
+            "enum": [
+              "DPS",
+              "NOMIS"
+            ]
           }
         },
         "description": "Amendments to the text"
@@ -19126,7 +19169,8 @@
           "caseNoteText",
           "caseNoteType",
           "createdDatetime",
-          "createdUsername"
+          "createdUsername",
+          "sourceSystem"
         ],
         "type": "object",
         "properties": {
@@ -19206,7 +19250,16 @@
           "auditModuleName": {
             "type": "string",
             "description": "Which screen (or DPS) created the case note",
-            "example": "false"
+            "example": "OIDABCDE"
+          },
+          "sourceSystem": {
+            "type": "string",
+            "description": "Which system (Nomis or DPS) created the case note",
+            "example": "DPS",
+            "enum": [
+              "DPS",
+              "NOMIS"
+            ]
           }
         },
         "description": "The data held in NOMIS about a case note associated with a prisoner"

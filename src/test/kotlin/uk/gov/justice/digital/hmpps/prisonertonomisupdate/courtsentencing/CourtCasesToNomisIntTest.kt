@@ -76,7 +76,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           OFFENDER_NO,
           nomisCourtCaseCreateResponseWithTwoCharges(),
         )
-        MappingExtension.mappingServer.stubGetCreateCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
+        MappingExtension.mappingServer.stubGetCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
         MappingExtension.mappingServer.stubCreateCourtCase()
         publishCreateCourtCaseDomainEvent()
       }
@@ -365,7 +365,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           OFFENDER_NO,
           nomisCourtCaseCreateResponseWithTwoCharges(),
         )
-        MappingExtension.mappingServer.stubGetCreateCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
+        MappingExtension.mappingServer.stubGetCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
         MappingExtension.mappingServer.stubCreateCourtCaseWithErrorFollowedBySlowSuccess()
         publishCreateCourtCaseDomainEvent()
 
@@ -937,6 +937,94 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class RefreshCaseReferences {
+    @Nested
+    inner class WhenCourtAppearanceHasBeenUpdatedInDPS {
+      @BeforeEach
+      fun setUp() {
+        NomisApiExtension.nomisApi.stubCaseReferenceRefresh(
+          OFFENDER_NO,
+          NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+
+        CourtSentencingApiExtension.courtSentencingApi.stubCourtCaseGet(
+          COURT_CASE_ID_FOR_CREATION,
+          offenderNo = OFFENDER_NO,
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+          courtCharge1Id = DPS_COURT_CHARGE_ID,
+          courtCharge2Id = DPS_COURT_CHARGE_2_ID,
+          courtId = DONCASTER_COURT_CODE,
+        )
+        publishCaseReferencesUpdatedDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to court sentencing service to get more details`() {
+        waitForAnyProcessingToComplete()
+        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/court-case/${COURT_CASE_ID_FOR_CREATION}")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("case-references-refreshed-success"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to refresh the refs`() {
+        waitForAnyProcessingToComplete()
+        NomisApiExtension.nomisApi.verify(WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/case-identifiers")))
+      }
+    }
+
+    @Nested
+    inner class WhenMappingDoesntExistForCourtCase {
+
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(
+          DPS_COURT_APPEARANCE_ID,
+          404,
+        )
+        publishCaseReferencesUpdatedDomainEvent()
+      }
+
+      @Test
+      fun `will not update an court appearance in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(3)).trackEvent(
+            eq("case-references-refreshed-failure"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            },
+            isNull(),
+          )
+        }
+
+        NomisApiExtension.nomisApi.verify(
+          0,
+          WireMock.putRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$COURT_CASE_ID_FOR_CREATION/case-identifiers")),
+        )
+      }
+    }
+  }
+
   private fun publishCreateCourtCaseDomainEvent(source: String = "DPS") {
     val eventType = "court-case.inserted"
     awsSnsClient.publish(
@@ -1000,6 +1088,26 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
+  private fun publishCaseReferencesUpdatedDomainEvent() {
+    val eventType = "legacy.court-case-references.updated"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(
+          caseReferencePayload(
+            courtCaseId = COURT_CASE_ID_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            eventType = eventType,
+          ),
+        )
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
   fun courtCaseMessagePayload(courtCaseId: String, offenderNo: String, eventType: String, source: String = "DPS") =
     """{"eventType":"$eventType", "additionalInformation": {"courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
@@ -1038,4 +1146,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       | }
     """.trimMargin()
   }
+
+  fun caseReferencePayload(courtCaseId: String, offenderNo: String, eventType: String, source: String = "DPS") =
+    """{"eventType":"$eventType", "additionalInformation": {"courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 }

@@ -119,6 +119,7 @@ hmpps.sqs:
       subscribeFilter: >-
         { "eventType":[
         "court-case.inserted",
+        "legacy.court-case-references.updated",
         "court-sentencing.court-appearance.created",
         "court-sentencing.court-appearance.updated"]}
     alerts:
