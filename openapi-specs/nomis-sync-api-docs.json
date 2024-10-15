@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-10-15.9478.acb2687"
+    "version": "2024-10-15.9494.f8ea920"
   },
   "servers": [
     {
@@ -8234,8 +8234,8 @@
         "tags": [
           "prisoners-resource"
         ],
-        "summary": "Gets the identifiers for all prisoners. By default only active prisoners will be return unless active=false",
-        "description": "Requires role SYNCHRONISATION_REPORTING.",
+        "summary": "Gets the identifiers for all prisoners. By default only active prisoners will be returned unless active=false",
+        "description": "Requires role SYNCHRONISATION_REPORTING or ROLE_NOMIS_ALERTS.",
         "operationId": "getPrisonerIdentifiers",
         "parameters": [
           {
@@ -8298,7 +8298,7 @@
           "prisoners-resource"
         ],
         "summary": "Gets the identifier for all prisoners.",
-        "description": "Requires role SYNCHRONISATION_REPORTING.",
+        "description": "Requires role SYNCHRONISATION_REPORTING, NOMIS_ALERTS or NOMIS_PRISON_PERSON.",
         "operationId": "getAllPrisoners",
         "parameters": [
           {
@@ -8317,6 +8317,73 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PagePrisonerId"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING or ROLE_NOMIS_ALERTS not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/ids/all-from-id": {
+      "get": {
+        "tags": [
+          "prisoners-resource"
+        ],
+        "summary": "Gets the identifier for all prisoners.",
+        "description": "Gets the specified number of prisoners starting after the given id number.\n      Clients can iterate through all prisoners by calling this endpoint using the id from the last call (omit for first call).\n      Requires role SYNCHRONISATION_REPORTING or NOMIS_CASENOTES.",
+        "operationId": "getAllPrisonersFromId",
+        "parameters": [
+          {
+            "name": "offenderId",
+            "in": "query",
+            "description": "If supplied get offenders starting after this id",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "If supplied get offenders starting after this id",
+              "example": 1555999
+            },
+            "example": 1555999
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of offenders to get",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Number of offenders to get",
+              "default": "10"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "list of prisoner ids",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrisonerNosWithLast"
                 }
               }
             }
@@ -19448,6 +19515,25 @@
           }
         },
         "description": "Prisoner identifier"
+      },
+      "PrisonerNosWithLast": {
+        "required": [
+          "lastOffenderId",
+          "prisonerIds"
+        ],
+        "type": "object",
+        "properties": {
+          "prisonerIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrisonerId"
+            }
+          },
+          "lastOffenderId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
       },
       "SentenceResponse": {
         "required": [
