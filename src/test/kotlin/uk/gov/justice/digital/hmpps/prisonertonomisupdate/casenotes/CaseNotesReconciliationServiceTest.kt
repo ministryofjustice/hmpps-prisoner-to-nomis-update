@@ -44,7 +44,7 @@ class CaseNotesReconciliationServiceTest {
             authorUsername = "AMUSER",
             createdDateTime = "2024-01-01T01:02:03",
             sourceSystem = CaseNoteAmendment.SourceSystem.DPS,
-            authorStaffId =  101L,
+            authorStaffId = 101L,
             authorFirstName = "Jack",
             authorLastName = "Smith",
           ),
