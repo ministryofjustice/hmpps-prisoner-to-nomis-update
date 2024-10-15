@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.health
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesDpsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.PrisonPersonDpsApiExtension
@@ -107,5 +108,6 @@ class HealthCheckTest : IntegrationTestBase() {
     CaseNotesDpsApiExtension.caseNotesDpsApi.stubHealthPing(status)
     PrisonPersonDpsApiExtension.dpsApi.stubHealthPing(status)
     CSIPDpsApiExtension.csipDpsApi.stubHealthPing(status)
+    ContactPersonDpsApiExtension.dpsContactPersonServer.stubHealthPing(status)
   }
 }

@@ -25,6 +25,9 @@ generic-service:
     API_BASE_URL_CSIP: https://csip-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_CASENOTES: https://preprod.offender-case-notes.service.justice.gov.uk
     API_BASE_URL_PRISONPERSON: https://prison-person-api-preprod.prison.service.justice.gov.uk
+    API_BASE_URL_CONTACT_PERSON: https://prisoner-nomis-migration-preprod.hmpps.service.justice.gov.uk
+    # switch to this when available
+    # API_BASE_URL_CONTACT_PERSON: https://contacts-api-preprod.hmpps.service.justice.gov.uk
     FEATURE_EVENT_COURT_SENTENCING_COURT_APPEARANCE_CREATED: false
     FEATURE_EVENT_COURT_SENTENCING_COURT_APPEARANCE_UPDATED: false
     FEATURE_EVENT_PERSON_CASE_NOTE_CREATED: false
