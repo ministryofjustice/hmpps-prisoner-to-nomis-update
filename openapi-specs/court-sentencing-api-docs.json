@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-10-07.2547.d2b0585"
+    "version": "2024-10-11.2606.1b8c939"
   },
   "servers": [
     {
@@ -1235,6 +1235,71 @@
         }
       }
     },
+    "/charge-outcome/uuid/multiple": {
+      "get": {
+        "tags": [
+          "charge-outcome-controller"
+        ],
+        "summary": "get all charge outcomes by uuids",
+        "description": "This endpoint will get all charge outcomes by uuids",
+        "operationId": "getChargeOutcomesByIds",
+        "parameters": [
+          {
+            "name": "uuids",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns charge outcomes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChargeOutcome"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChargeOutcome"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChargeOutcome"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/charge-outcome/all": {
       "get": {
         "tags": [
@@ -1450,6 +1515,21 @@
           }
         }
       },
+      "CaseReferenceLegacyData": {
+        "required": [
+          "offenderCaseReference",
+          "updatedDate"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderCaseReference": {
+            "type": "string"
+          },
+          "updatedDate": {
+            "type": "string"
+          }
+        }
+      },
       "ChargeLegacyData": {
         "type": "object",
         "properties": {
@@ -1487,6 +1567,20 @@
           },
           "outcomeDescription": {
             "type": "string"
+          }
+        }
+      },
+      "CourtCaseLegacyData": {
+        "required": [
+          "caseReferences"
+        ],
+        "type": "object",
+        "properties": {
+          "caseReferences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CaseReferenceLegacyData"
+            }
           }
         }
       },
@@ -1603,6 +1697,9 @@
             "items": {
               "$ref": "#/components/schemas/CreateCourtAppearance"
             }
+          },
+          "legacyData": {
+            "$ref": "#/components/schemas/CourtCaseLegacyData"
           }
         }
       },
@@ -1620,7 +1717,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "14:36:39.593431476"
+            "example": "13:52:27.899285297"
           },
           "courtCode": {
             "type": "string"
@@ -2118,6 +2215,9 @@
             "items": {
               "$ref": "#/components/schemas/CourtAppearance"
             }
+          },
+          "legacyData": {
+            "$ref": "#/components/schemas/JsonNode"
           }
         }
       },
@@ -2138,7 +2238,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "14:36:39.593431476"
+            "example": "13:52:27.899285297"
           },
           "courtCode": {
             "type": "string"
@@ -2206,12 +2306,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"

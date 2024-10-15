@@ -1384,7 +1384,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetCreateCaseMappingGivenDpsIdWithError(id: String, status: Int = 500) {
+  fun stubGetCaseMappingGivenDpsIdWithError(id: String, status: Int = 500) {
     stubFor(
       get("/mapping/court-sentencing/court-cases/dps-court-case-id/$id").willReturn(
         aResponse()

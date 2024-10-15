@@ -2158,6 +2158,16 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubCaseReferenceRefresh(offenderNo: String, courtCaseId: Long) {
+    stubFor(
+      post("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/case-identifiers").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200),
+      ),
+    )
+  }
+
   fun postCountFor(url: String) = this.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
   fun putCountFor(url: String) = this.findAll(WireMock.putRequestedFor(WireMock.urlEqualTo(url))).count()
 

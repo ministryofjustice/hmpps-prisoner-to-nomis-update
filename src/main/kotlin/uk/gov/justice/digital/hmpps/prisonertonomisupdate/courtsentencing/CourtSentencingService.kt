@@ -16,6 +16,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeNomisIdDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseIdentifier
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ExistingOffenderChargeRequest
@@ -288,6 +290,53 @@ class CourtSentencingService(
   private inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
 
+  suspend fun refreshCaseReferences(createEvent: CaseReferencesUpdatedEvent) {
+    val dpsCourtCaseId = createEvent.additionalInformation.courtCaseId
+    val offenderNo = createEvent.personReference.identifiers.first { it.type == "NOMS" }.value
+    val telemetryMap = mutableMapOf(
+      "dpsCourtCaseId" to dpsCourtCaseId,
+      "offenderNo" to offenderNo,
+    )
+
+    courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = dpsCourtCaseId)?.let { courtCaseMapping ->
+      telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
+      courtSentencingApiService.getCourtCase(dpsCourtCaseId).let { dpsCourtCase ->
+        nomisApiService.refreshCaseReferences(
+          offenderNo = offenderNo,
+          nomisCourtCaseId = courtCaseMapping.nomisCourtCaseId,
+          request = CaseIdentifierRequest(caseIdentifiers = dpsCourtCase.getNomisCaseIdentifiers()),
+        )
+
+        telemetryClient.trackEvent(
+          "case-references-refreshed-success",
+          telemetryMap,
+          null,
+        )
+      }
+    } ?: let {
+      telemetryClient.trackEvent(
+        "case-references-refreshed-failure",
+        telemetryMap,
+        null,
+      )
+      throw IllegalStateException(
+        "Attempt to refresh case references on a dps court case without a nomis mapping. Dps court case id: $dpsCourtCaseId not found",
+      )
+    }
+  }
+
+  // legacyData is an untyped kotlin Any
+  fun CourtCase.getNomisCaseIdentifiers(): List<CaseIdentifier> {
+    val legacyData: Map<String, Any> = this.legacyData as Map<String, Any>? ?: return emptyList()
+    val caseReferences = legacyData["caseReferences"] as List<Map<String, Any>>
+    return caseReferences.map { caseReference ->
+      CaseIdentifier(
+        reference = caseReference["offenderCaseReference"] as String,
+        createdDate = caseReference["updatedDate"] as String,
+      )
+    }
+  }
+
   data class AdditionalInformation(
     val courtCaseId: String,
     val source: String,
@@ -300,6 +349,11 @@ class CourtSentencingService(
     val courtCaseId: String,
   )
 
+  data class CaseReferencesAdditionalInformation(
+    val courtCaseId: String,
+    val source: String,
+  )
+
   data class CourtCaseCreatedEvent(
     val additionalInformation: AdditionalInformation,
     val personReference: PersonReferenceList,
@@ -307,6 +361,11 @@ class CourtSentencingService(
 
   data class CourtAppearanceCreatedEvent(
     val additionalInformation: CourtAppearanceAdditionalInformation,
+  )
+
+  data class CaseReferencesUpdatedEvent(
+    val additionalInformation: CaseReferencesAdditionalInformation,
+    val personReference: PersonReferenceList,
   )
 }
 
