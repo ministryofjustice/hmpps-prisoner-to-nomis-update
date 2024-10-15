@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ResponseMapping
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CSIPComponent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertCSIPRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertCSIPResponse
 import java.time.LocalDate
@@ -56,8 +56,8 @@ class CSIPNomisApiServiceTest {
         csipResponse = UpsertCSIPResponse(
           nomisCSIPReportId = 1234567,
           offenderNo = "A1234BC",
-          mappings = listOf(
-            ResponseMapping(ResponseMapping.Component.FACTOR, 111, "8cdadcf3-b003-4116-9956-c99bd8df6111"),
+          components = listOf(
+            CSIPComponent(CSIPComponent.Component.FACTOR, 111, "8cdadcf3-b003-4116-9956-c99bd8df6111"),
           ),
 
         ),
@@ -67,7 +67,7 @@ class CSIPNomisApiServiceTest {
 
       assertThat(nomisCSIP.nomisCSIPReportId).isEqualTo(1234567)
       assertThat(nomisCSIP.offenderNo).isEqualTo("A1234BC")
-      assertThat(nomisCSIP.mappings.size).isEqualTo(1)
+      assertThat(nomisCSIP.components.size).isEqualTo(1)
     }
 
     private fun createCSIPRequest(): UpsertCSIPRequest = UpsertCSIPRequest(

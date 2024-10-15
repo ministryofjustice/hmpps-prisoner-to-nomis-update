@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CSIPChildMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CSIPFullMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ResponseMapping
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CSIPComponent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertCSIPResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
@@ -51,7 +51,7 @@ class CSIPService(
           .let { dpsCsipRecord ->
             nomisApiService.upsertCsipReport(dpsCsipRecord.toNomisUpsertRequest())
               .let {
-                it.createNewMappings(dpsCsipReportId)
+                it.createNewMappingDto(dpsCsipReportId)
               }
           }
       }
@@ -59,20 +59,20 @@ class CSIPService(
     }
   }
 
-  fun UpsertCSIPResponse.createNewMappings(dpsCsipReportId: String) =
+  fun UpsertCSIPResponse.createNewMappingDto(dpsCsipReportId: String) =
     CSIPFullMappingDto(
       dpsCSIPReportId = dpsCsipReportId,
       nomisCSIPReportId = nomisCSIPReportId,
       mappingType = CSIPFullMappingDto.MappingType.DPS_CREATED,
-      attendeeMappings = filterMappingsByType(dpsCsipReportId, ResponseMapping.Component.ATTENDEE),
-      factorMappings = filterMappingsByType(dpsCsipReportId, ResponseMapping.Component.FACTOR),
-      interviewMappings = filterMappingsByType(dpsCsipReportId, ResponseMapping.Component.INTERVIEW),
-      planMappings = filterMappingsByType(dpsCsipReportId, ResponseMapping.Component.PLAN),
-      reviewMappings = filterMappingsByType(dpsCsipReportId, ResponseMapping.Component.REVIEW),
+      attendeeMappings = filterMappingsByType(dpsCsipReportId, CSIPComponent.Component.ATTENDEE),
+      factorMappings = filterMappingsByType(dpsCsipReportId, CSIPComponent.Component.FACTOR),
+      interviewMappings = filterMappingsByType(dpsCsipReportId, CSIPComponent.Component.INTERVIEW),
+      planMappings = filterMappingsByType(dpsCsipReportId, CSIPComponent.Component.PLAN),
+      reviewMappings = filterMappingsByType(dpsCsipReportId, CSIPComponent.Component.REVIEW),
     )
 
-  fun UpsertCSIPResponse.filterMappingsByType(dpsCSIPReportId: String, childType: ResponseMapping.Component) =
-    mappings.filter { it.component == childType }
+  fun UpsertCSIPResponse.filterMappingsByType(dpsCSIPReportId: String, childType: CSIPComponent.Component) =
+    components.filter { it.component == childType }
       .map {
         CSIPChildMappingDto(
           dpsCSIPReportId = dpsCSIPReportId,
@@ -98,8 +98,8 @@ class CSIPService(
       val dpsCsipRecord = dpsApiService.getCsipReport(dpsCsipReportId)
       nomisApiService.upsertCsipReport(dpsCsipRecord.toNomisUpsertRequest(mapping))
         .also {
-          if (it.mappings.isNotEmpty()) {
-            it.createNewMappings(dpsCsipReportId)
+          if (it.components.isNotEmpty()) {
+            it.createNewMappingDto(dpsCsipReportId)
           }
         }
       // TODO send child mappings just created !!
