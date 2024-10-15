@@ -91,6 +91,11 @@ spring:
             client-id: ${csip.client.id}
             client-secret: ${csip.client.secret}
             authorization-grant-type: client_credentials
+          contact-person-api:
+            provider: hmpps-auth
+            client-id: ${contact.person.client.id}
+            client-secret: ${contact.person.client.secret}
+            authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${api.base.url.hmpps-auth}/oauth/token

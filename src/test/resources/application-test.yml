@@ -22,6 +22,7 @@ api.base.url:
   casenotes: http://localhost:8096
   prisonperson: http://localhost:8097
   csip: http://localhost:8098
+  contact.person: http://localhost:8099
 
 hmpps.sqs:
   provider: localstack
@@ -219,6 +220,16 @@ hmpps.sqs:
         { "eventType":[
           "prison-person.physical-attributes.updated",
           "prisoner-offender-search.prisoner.received"
+        ]}
+      dlqMaxReceiveCount: 3
+      visibilityTimeout: 120
+    contactperson:
+      queueName: "contactperson-${random.uuid}"
+      dlqName: "contactperson-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "TBD"
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
