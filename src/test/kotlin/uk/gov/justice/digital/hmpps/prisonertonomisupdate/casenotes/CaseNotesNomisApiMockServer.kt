@@ -107,4 +107,6 @@ fun caseNoteResponse(caseNoteId: Long) = CaseNoteResponse(
   noteSourceCode = CaseNoteResponse.NoteSourceCode.INST,
   occurrenceDateTime = "2021-02-03T04:05:06",
   caseNoteText = "the actual casenote",
+  sourceSystem = CaseNoteResponse.SourceSystem.DPS,
+  auditModuleName = "audit",
 )
