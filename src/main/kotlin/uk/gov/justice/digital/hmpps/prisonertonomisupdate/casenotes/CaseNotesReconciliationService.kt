@@ -9,10 +9,11 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNote
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseNoteResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import java.time.format.DateTimeFormatter
 import java.util.Objects
 import kotlin.String
@@ -30,73 +31,58 @@ class CaseNotesReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun generateReconciliationReport(prisonerCount: Long): List<MismatchCaseNote> =
-    prisonerCount.asPages(pageSize).flatMap { page ->
-      val prisoners = getAllPrisonersForPage(page)
+  suspend fun generateReconciliationReport(): List<MismatchCaseNote> {
+    log.info("started service generateReconciliationReport()")
+    var last: Long = 0
+    var size: Int = 0
+    var pageNumber = 0
+    var pageErrors = 0
+    val results = mutableListOf<MismatchCaseNote>()
+    do {
+      runCatching {
+        results.addAll(
+          nomisApiService.getAllPrisoners(last, pageSize.toInt()).let {
+            size = it.prisonerIds.size
+            log.info("Page $pageNumber requested from id $last, with $size prisoners")
+            last = it.lastOffenderId
+            pageNumber++
 
-      withContext(Dispatchers.Unconfined) {
-        prisoners.map { async { checkMatch(it) } }
-      }.awaitAll().filterNotNull()
-    }
-
-  internal suspend fun getAllPrisonersForPage(page: Pair<Long, Long>) =
-    runCatching { nomisApiService.getAllPrisoners(page.first, page.second).content }
-      .onFailure {
-        telemetryClient.trackEvent(
-          "casenotes-reports-reconciliation-mismatch-page-error",
-          mapOf(
-            "page" to page.first.toString(),
-          ),
+            withContext(Dispatchers.Unconfined) {
+              it.prisonerIds.map { async { checkMatch(it) } }
+            }.awaitAll().filterNotNull()
+          },
         )
-        log.error("Unable to match entire page of prisoners: $page", it)
       }
-      .getOrElse { emptyList() }
-      .also { log.info("Page requested: $page, with ${it.size} prisoners") }
+        .onFailure {
+          pageErrors++
+          telemetryClient.trackEvent(
+            "casenotes-reports-reconciliation-mismatch-page-error",
+            mapOf(
+              "page" to pageNumber.toString(),
+              "pageErrors" to pageErrors.toString(),
+            ),
+          )
+          log.error("Unable to match entire page of prisoners: page $pageNumber, pageErrors $pageErrors", it)
+        }.getOrNull()
+    } while (size == pageSize.toInt() && pageErrors < 100)
+    return results
+  }
 
   suspend fun checkMatch(prisonerId: PrisonerId): MismatchCaseNote? {
     val offenderNo = prisonerId.offenderNo
+
     return runCatching {
       val nomisCaseNotes = caseNotesNomisApiService.getCaseNotesForPrisoner(offenderNo)
         .caseNotes
-        .map { c ->
-          CommonCaseNoteFields(
-            c.caseNoteText,
-            c.caseNoteType.code,
-            c.caseNoteSubType.code,
-            c.occurrenceDateTime,
-            c.authorUsername,
-            c.amendments.map { a ->
-              CommonAmendmentFields(
-                text = a.text,
-                occurrenceDateTime = a.createdDateTime,
-                authorUsername = a.authorUsername,
-              )
-            },
-          )
-        }
+        .map(::transformFromNomis)
         .toSortedSet(fieldsComparator)
 
       val dpsCaseNotes = caseNotesDpsApiService.getCaseNotesForPrisoner(offenderNo)
-        .filter { !it.sensitive }
-        .map { c ->
-          CommonCaseNoteFields(
-            c.text,
-            c.type,
-            c.subType,
-            c.occurrenceDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
-            c.authorUsername,
-            c.amendments.map { a ->
-              CommonAmendmentFields(
-                text = a.additionalNoteText,
-                occurrenceDateTime = a.creationDateTime?.format(DateTimeFormatter.ISO_DATE_TIME),
-                authorUsername = a.authorUserName,
-              )
-            },
-          )
-        }
+        .filter { !it.sensitive && it.type != "OMIC" }
+        .map(::transformFromDps)
         .toSortedSet(fieldsComparator)
 
-      val pairedCaseNotes = dpsCaseNotes.zip(nomisCaseNotes)
+      val pairedCaseNotes = dpsCaseNotes zip nomisCaseNotes
       return if (dpsCaseNotes.size != nomisCaseNotes.size || pairedCaseNotes.any { (d, n) -> d != n }) {
         val missingFromNomis = dpsCaseNotes - nomisCaseNotes
         val missingFromDps = nomisCaseNotes - dpsCaseNotes
@@ -143,6 +129,38 @@ class CaseNotesReconciliationService(
       )
     }.getOrNull()
   }
+
+  private fun transformFromDps(c: CaseNote) = CommonCaseNoteFields(
+    c.text,
+    c.type,
+    c.subType,
+    c.occurrenceDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
+    c.authorUsername,
+    c.amendments.map { a ->
+      CommonAmendmentFields(
+        text = a.additionalNoteText,
+        occurrenceDateTime = a.creationDateTime?.format(DateTimeFormatter.ISO_DATE_TIME),
+        authorUsername = a.authorUserName,
+      )
+    },
+    c.legacyId,
+  )
+
+  private fun transformFromNomis(c: CaseNoteResponse) = CommonCaseNoteFields(
+    c.caseNoteText,
+    c.caseNoteType.code,
+    c.caseNoteSubType.code,
+    c.occurrenceDateTime,
+    c.authorUsername,
+    c.amendments.map { a ->
+      CommonAmendmentFields(
+        text = a.text,
+        occurrenceDateTime = a.createdDateTime,
+        authorUsername = a.authorUsername,
+      )
+    },
+    c.caseNoteId,
+  )
 }
 
 data class MismatchCaseNote(
@@ -158,6 +176,7 @@ data class CommonCaseNoteFields(
   val occurrenceDateTime: String?,
   val authorUsername: String,
   val amendments: List<CommonAmendmentFields>,
+  val legacyId: Long,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -171,7 +190,7 @@ data class CommonCaseNoteFields(
   }
 
   private fun equalUsers(other: CommonCaseNoteFields): Boolean {
-    val equal = authorUsername == "OMS_OWNER" || authorUsername == other.authorUsername
+    val equal = authorUsername == other.authorUsername || authorUsername == "OMS_OWNER"
     if (!equal) {
       CaseNotesReconciliationService.log.info("authorUsername not equal: $authorUsername != $(other.authorUsername}")
     }
@@ -181,7 +200,7 @@ data class CommonCaseNoteFields(
   override fun hashCode(): Int = javaClass.hashCode()
 
   override fun toString(): String {
-    return "{text-hash=${Objects.hashCode(text)}, type=$type, subType=$subType, occurrenceDateTime=$occurrenceDateTime, authorUsername=$authorUsername, amendments=$amendments}"
+    return "{id=$legacyId text-hash=${Objects.hashCode(text)}, type=$type, subType=$subType, occurrenceDateTime=$occurrenceDateTime, authorUsername=$authorUsername, amendments=$amendments}"
   }
 }
 
@@ -196,11 +215,7 @@ data class CommonAmendmentFields(
 }
 
 private val fieldsComparator = compareBy(
-  CommonCaseNoteFields::type,
-  CommonCaseNoteFields::subType,
-  CommonCaseNoteFields::occurrenceDateTime,
-  CommonCaseNoteFields::text,
-  CommonCaseNoteFields::authorUsername,
+  CommonCaseNoteFields::legacyId,
 )
 
 private fun equalAmendments(v1: CommonCaseNoteFields, v2: CommonCaseNoteFields): Boolean {
@@ -209,7 +224,7 @@ private fun equalAmendments(v1: CommonCaseNoteFields, v2: CommonCaseNoteFields):
   if (a1.size != a2.size) {
     return false
   }
-  if (a1.zip(a2).all { (a, b) -> a == b }) {
+  if ((a1 zip a2).all { (a, b) -> a == b }) {
     return true
   }
   return false
