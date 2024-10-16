@@ -123,7 +123,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(
               WireMock.matchingJsonPath(
                 "legalCaseType",
-                WireMock.equalTo("A"),
+                WireMock.equalTo("NE"),
               ),
             )
             .withRequestBody(
