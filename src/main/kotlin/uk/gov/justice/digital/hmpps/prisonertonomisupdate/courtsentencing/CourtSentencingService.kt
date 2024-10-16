@@ -383,8 +383,8 @@ fun CourtCase.toNomisCourtCase(): CreateCourtCaseRequest {
         dpsCharge.toNomisCourtCharge()
       },
     ),
-    // LEG_CASE_TYP on NOMIS - defaulting to Adult as suggested in the Sentencing document
-    legalCaseType = "A",
+    // new LEG_CASE_TYP on NOMIS - "Not Entered"
+    legalCaseType = "NE",
     // CASE_STS on NOMIS - no decision from DPS yet - defaulting to Active
     status = "A",
   )
