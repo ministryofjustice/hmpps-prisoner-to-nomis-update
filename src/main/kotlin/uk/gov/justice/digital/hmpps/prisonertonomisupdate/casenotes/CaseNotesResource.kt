@@ -27,13 +27,13 @@ class CaseNotesResource(
   @PutMapping("/casenotes/reports/reconciliation")
   @ResponseStatus(HttpStatus.ACCEPTED)
   suspend fun generateReconciliationReport() {
-    val prisonersCount = nomisApiService.getAllPrisoners(0, 1).totalElements
+    val prisonersCount = nomisApiService.getAllPrisonersPaged(0, 1).totalElements
 
     telemetryClient.trackEvent("casenotes-reports-reconciliation-requested", mapOf("casenotes-nomis-total" to prisonersCount.toString()))
     log.info("casenotes reconciliation report requested for $prisonersCount prisoners")
 
     reportScope.launch {
-      runCatching { caseNotesReconciliationService.generateReconciliationReport(prisonersCount) }
+      runCatching { caseNotesReconciliationService.generateReconciliationReport() }
         .onSuccess {
           log.info("Casenotes reconciliation report completed with ${it.size} mismatches")
           val map = if (it.isEmpty()) {

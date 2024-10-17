@@ -49,6 +49,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAss
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerNosWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UnquashHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCapacityRequest
@@ -272,7 +273,7 @@ class NomisApiService(
       .bodyToMono(typeReference<RestResponsePage<PrisonerIds>>())
       .awaitSingle()
 
-  suspend fun getAllPrisoners(
+  suspend fun getAllPrisonersPaged(
     pageNumber: Long,
     pageSize: Long,
   ): Page<PrisonerId> =
@@ -285,6 +286,22 @@ class NomisApiService(
       }
       .retrieve()
       .bodyToMono(typeReference<RestResponsePage<PrisonerId>>())
+      .awaitSingle()
+
+  suspend fun getAllPrisoners(
+    fromId: Long,
+    pageSize: Int,
+  ): PrisonerNosWithLast =
+    webClient.get()
+      .uri {
+        it.path("/prisoners/ids/all-from-id")
+          .queryParam("offenderId", fromId)
+          .queryParam("pageSize", pageSize)
+          .build()
+      }
+      .retrieve()
+      .bodyToMono(PrisonerNosWithLast::class.java)
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all-from-id")))
       .awaitSingle()
 
   suspend fun updatePrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest) =
