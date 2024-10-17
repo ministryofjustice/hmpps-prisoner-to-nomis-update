@@ -3,9 +3,10 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
+import io.opentelemetry.context.Context
+import io.opentelemetry.extension.kotlin.asContextElement
 import io.swagger.v3.oas.annotations.media.Schema
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.future
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -75,7 +76,7 @@ abstract class DomainEventListener(
 
 private fun asCompletableFuture(
   process: suspend () -> Unit,
-): CompletableFuture<Void> = CoroutineScope(Dispatchers.Default).future {
+): CompletableFuture<Void> = CoroutineScope(Context.current().asContextElement()).future {
   process()
 }.thenAccept { }
 
