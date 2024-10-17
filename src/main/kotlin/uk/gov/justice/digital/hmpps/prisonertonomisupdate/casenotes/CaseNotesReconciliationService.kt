@@ -78,7 +78,6 @@ class CaseNotesReconciliationService(
         .toSortedSet(fieldsComparator)
 
       val dpsCaseNotes = caseNotesDpsApiService.getCaseNotesForPrisoner(offenderNo)
-        .filter { !it.sensitive && it.type != "OMIC" }
         .map(::transformFromDps)
         .toSortedSet(fieldsComparator)
 
@@ -142,7 +141,7 @@ class CaseNotesReconciliationService(
         occurrenceDateTime = a.creationDateTime?.format(DateTimeFormatter.ISO_DATE_TIME),
         authorUsername = a.authorUserName,
       )
-    },
+    }.toSortedSet(amendmentComparator),
     c.legacyId,
   )
 
@@ -158,7 +157,7 @@ class CaseNotesReconciliationService(
         occurrenceDateTime = a.createdDateTime,
         authorUsername = a.authorUsername,
       )
-    },
+    }.toSortedSet(amendmentComparator),
     c.caseNoteId,
   )
 }
@@ -175,7 +174,7 @@ data class CommonCaseNoteFields(
   val subType: String,
   val occurrenceDateTime: String?,
   val authorUsername: String,
-  val amendments: List<CommonAmendmentFields>,
+  val amendments: Set<CommonAmendmentFields>,
   val legacyId: Long,
 ) {
   override fun equals(other: Any?): Boolean {
@@ -216,6 +215,12 @@ data class CommonAmendmentFields(
 
 private val fieldsComparator = compareBy(
   CommonCaseNoteFields::legacyId,
+)
+
+private val amendmentComparator = compareBy(
+  CommonAmendmentFields::occurrenceDateTime,
+  CommonAmendmentFields::text,
+  CommonAmendmentFields::authorUsername,
 )
 
 private fun equalAmendments(v1: CommonCaseNoteFields, v2: CommonCaseNoteFields): Boolean {

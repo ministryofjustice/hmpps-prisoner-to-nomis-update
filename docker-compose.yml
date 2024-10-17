@@ -1,4 +1,3 @@
-version: "3"
 services:
   hmpps-prisoner-to-nomis-update:
     build:
