@@ -34,7 +34,7 @@ class CourtSentencingDomainEventListener(
     when (eventType) {
       "court-case.inserted" ->
         courtSentencingService.createCourtCase(message.fromJson())
-      "court-sentencing.court-appearance.created" ->
+      "court-appearance.inserted" ->
         courtSentencingService.createCourtAppearance(message.fromJson())
       "court-sentencing.court-appearance.updated" ->
         courtSentencingService.updateCourtAppearance(message.fromJson())
