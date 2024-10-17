@@ -164,7 +164,7 @@ hmpps.sqs:
         { "eventType":[
         "court-case.inserted",
         "legacy.court-case-references.updated",
-        "court-sentencing.court-appearance.created",
+        "court-appearance.inserted",
         "court-sentencing.court-appearance.updated"]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120

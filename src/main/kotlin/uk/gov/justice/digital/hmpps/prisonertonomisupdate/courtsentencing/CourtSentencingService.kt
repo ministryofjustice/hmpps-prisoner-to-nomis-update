@@ -400,7 +400,6 @@ fun CourtAppearance.toNomisCourtAppearance(
       this.appearanceDate,
       LocalTime.MIDNIGHT,
     ).toString(),
-    // DPS confirmed courtEventType would be defaulted to Court Appearance
     courtEventType = "CRT",
     courtId = this.courtCode,
     outcomeReasonCode = this.outcome?.nomisCode,
