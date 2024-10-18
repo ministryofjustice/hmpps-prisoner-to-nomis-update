@@ -1118,7 +1118,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     eventType: String,
     source: String = "DPS",
   ) =
-    """{"eventType":"$eventType", "additionalInformation": {"id":"$courtAppearanceId", "courtCaseId":"$courtCaseId", "offenderNo": "$offenderNo", "source": "$source"}}"""
+    """{"eventType":"$eventType", "additionalInformation": {"courtAppearanceId":"$courtAppearanceId", "courtCaseId":"$courtCaseId", "offenderNo": "$offenderNo", "source": "$source"}}"""
 
   fun nomisCourtCaseCreateResponseWithTwoCharges(): String {
     return """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION, "courtAppearanceIds": [{"id": $NOMIS_COURT_APPEARANCE_ID, "nextCourtAppearanceId": $NOMIS_NEXT_COURT_APPEARANCE_ID, "courtEventChargesIds": [{"offenderChargeId": $NOMIS_COURT_CHARGE_ID }, {"offenderChargeId": $NOMIS_COURT_CHARGE_2_ID }] }] }"""
