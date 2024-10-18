@@ -126,7 +126,6 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will send telemetry event showing the create`() {
-          println(awsSqsCaseNotesClient.countMessagesOnQueue(caseNotesQueueUrl))
           verify(telemetryClient).trackEvent(
             eq("casenotes-create-success"),
             any(),
