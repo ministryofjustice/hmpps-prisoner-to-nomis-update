@@ -32,7 +32,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegra
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CaseNoteMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
-import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -126,7 +125,6 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will send telemetry event showing the create`() {
-          println(awsSqsCaseNotesClient.countMessagesOnQueue(caseNotesQueueUrl))
           verify(telemetryClient).trackEvent(
             eq("casenotes-create-success"),
             any(),

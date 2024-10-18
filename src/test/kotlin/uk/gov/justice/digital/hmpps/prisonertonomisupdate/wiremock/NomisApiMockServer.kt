@@ -978,30 +978,51 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetAllPrisonersPage(
-    totalElements: Long,
-    pageNumber: Long,
-    numberOfElements: Long = 10,
-    pageSize: Long = 10,
-  ) {
+  fun stubGetAllPrisonersPage1() {
     stubFor(
-      get(
-        urlPathEqualTo("/prisoners/ids/all"),
-      )
-        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
-        .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
+      get(urlPathEqualTo("/prisoners/ids/all-from-id"))
+        .withQueryParam("offenderId", WireMock.equalTo("0"))
+        .withQueryParam("pageSize", WireMock.equalTo("5"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.OK.value())
-            .withFixedDelay(500)
             .withBody(
-              allPrisonersPagedResponse(
-                totalElements = totalElements,
-                numberOfElements = numberOfElements,
-                pageNumber = pageNumber,
-                pageSize = pageSize,
-              ),
+              """
+              { "prisonerIds": [ 
+               {"offenderNo": "A0001BB"},
+               {"offenderNo": "A0002BB"},
+               {"offenderNo": "A0003BB"},
+               {"offenderNo": "A0004BB"},
+               {"offenderNo": "A0005BB"}
+                ],
+                "lastOffenderId": 5
+              }
+              """,
+            ),
+        ),
+    )
+  }
+
+  fun stubGetAllPrisonersPage2() {
+    stubFor(
+      get(urlPathEqualTo("/prisoners/ids/all-from-id"))
+        .withQueryParam("offenderId", WireMock.equalTo("5"))
+        .withQueryParam("pageSize", WireMock.equalTo("5"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(
+              """
+              { "prisonerIds": [ 
+               {"offenderNo": "A0006BB"},
+               {"offenderNo": "A0007BB"},
+               {"offenderNo": "A0008BB"}
+                ],
+                "lastOffenderId": 8
+              }
+              """,
             ),
         ),
     )

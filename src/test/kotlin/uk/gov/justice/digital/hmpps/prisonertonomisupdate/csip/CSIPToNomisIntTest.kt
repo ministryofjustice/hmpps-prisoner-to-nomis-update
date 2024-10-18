@@ -8,6 +8,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -209,7 +210,6 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("reviews[0].recordedDate", "2024-04-01")
               .withRequestBodyJsonPath("reviews[0].recordedBy", "JSMITH")
               .withRequestBodyJsonPath("reviews[0].closeDate", "2024-04-16"),
-
           )
         }
 
@@ -242,7 +242,6 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("decision.actions.csraOrRsraReview", false)
               .withRequestBodyJsonPath("decision.actions.serviceReferral", true)
               .withRequestBodyJsonPath("decision.actions.simReferral", false),
-
           )
         }
 
@@ -268,7 +267,6 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("nomisCSIPReportId", nomisCSIPReportId)
               .withRequestBodyJsonPath("dpsCSIPReportId", dpsCSIPId)
               .withRequestBodyJsonPath("mappingType", CSIPFullMappingDto.MappingType.DPS_CREATED.name),
-            // TODO Add the new mapping Ids in for children
           )
         }
       }
@@ -368,7 +366,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
           fun `will eventually send telemetry for success`() {
             await untilAsserted {
               verify(telemetryClient).trackEvent(
-                eq("csip-create-success"),
+                eq("csip-create-mapping-retry-success"),
                 any(),
                 isNull(),
               )
@@ -379,7 +377,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
           fun `will create the csip in NOMIS once`() {
             await untilAsserted {
               verify(telemetryClient).trackEvent(
-                eq("csip-create-success"),
+                eq("csip-create-mapping-retry-success"),
                 any(),
                 isNull(),
               )
@@ -392,7 +390,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
           fun `telemetry will contain key facts about the csip created`() {
             await untilAsserted {
               verify(telemetryClient).trackEvent(
-                eq("csip-create-success"),
+                eq("csip-create-mapping-retry-success"),
                 check {
                   assertThat(it).containsEntry("dpsCSIPReportId", dpsCSIPId)
                   assertThat(it).containsEntry("offenderNo", offenderNo)
@@ -497,7 +495,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
         fun `will send telemetry event showing it failed to update for each retry`() {
           await untilAsserted {
             verify(telemetryClient, times(3)).trackEvent(
-              eq("csip-updated-failed"),
+              eq("csip-children-create-failed"),
               any(),
               isNull(),
             )
@@ -507,7 +505,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
 
       @Nested
       @DisplayName("when mapping is found")
-      inner class WhenMappingIsFound {
+      inner class HappyPath {
         private val dpsCSIPReportId = UUID.randomUUID().toString()
         private val nomisCSIPReportId = 43217L
         private val offenderNo = "A1234KT"
@@ -534,7 +532,9 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
               logCode = "LG123",
             ),
           )
-          csipNomisApi.stubPutCSIP()
+          csipNomisApi.stubPutCSIP(upsertCSIPResponse().copy(nomisCSIPReportId = nomisCSIPReportId))
+          csipMappingApi.stubPostChildrenMapping()
+
           publishUpdateCSIPDomainEvent(recordUuid = dpsCSIPReportId, offenderNo = offenderNo)
           waitForAnyProcessingToComplete()
         }
@@ -542,7 +542,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will send telemetry event showing the update`() {
           verify(telemetryClient).trackEvent(
-            eq("csip-updated-success"),
+            eq("csip-children-create-success"),
             any(),
             isNull(),
           )
@@ -551,11 +551,12 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `telemetry will contain key facts about the updated csip`() {
           verify(telemetryClient).trackEvent(
-            eq("csip-updated-success"),
+            eq("csip-children-create-success"),
             check {
               assertThat(it).containsEntry("dpsCSIPReportId", dpsCSIPReportId)
               assertThat(it).containsEntry("offenderNo", offenderNo)
               assertThat(it).containsEntry("nomisCSIPReportId", "$nomisCSIPReportId")
+              // TODO add in assertThat(it).containsEntry("factorMappings", "$nomisCSIPReportId")
             },
             isNull(),
           )
@@ -590,6 +591,123 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("reportedBy", "JIM_ADM")
               .withRequestBodyJsonPath("reportedDate", "2024-10-01"),
           )
+        }
+
+        @Test
+        fun `will create a mapping for the csip children`() {
+          csipMappingApi.verify(1, postRequestedFor(urlPathEqualTo("/mapping/csip/children/all")))
+        }
+      }
+
+      @Nested
+      @DisplayName("when the update of the child mappings fails")
+      inner class WithUpdateChildrenMappingFailures {
+        private val offenderNo = "A1234KT"
+        private val dpsCSIPReportId = UUID.randomUUID().toString()
+        private val nomisCSIPReportId = 43217L
+
+        @BeforeEach
+        fun setUp() {
+          csipMappingApi.stubGetByDpsReportId(
+            dpsCSIPReportId,
+            CSIPFullMappingDto(
+              dpsCSIPReportId = dpsCSIPReportId,
+              nomisCSIPReportId = nomisCSIPReportId,
+              mappingType = CSIPFullMappingDto.MappingType.DPS_CREATED,
+              attendeeMappings = listOf(),
+              factorMappings = listOf(),
+              interviewMappings = listOf(),
+              planMappings = listOf(),
+              reviewMappings = listOf(),
+            ),
+          )
+          csipDpsApi.stubGetCsipReport(
+            dpsCsipReport = dpsCsipRecord().copy(
+              recordUuid = UUID.fromString(dpsCSIPReportId),
+              lastModifiedBy = "RASHEED.BAKE",
+              logCode = "LG123",
+            ),
+          )
+          csipNomisApi.stubPutCSIP(
+            csipResponse = upsertCSIPResponse().copy(
+              nomisCSIPReportId = nomisCSIPReportId,
+            ),
+          )
+        }
+
+        @Nested
+        @DisplayName("fails once")
+        inner class MappingFailsOnce {
+          @BeforeEach
+          fun setUp() {
+            csipMappingApi.stubPostChildrenMappingFollowedBySuccess(HttpStatus.INTERNAL_SERVER_ERROR)
+            publishUpdateCSIPDomainEvent(offenderNo = offenderNo, recordUuid = dpsCSIPReportId)
+          }
+
+          @Test
+          fun `will eventually send telemetry for success`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("csip-children-create-mapping-retry-success"),
+                any(),
+                isNull(),
+              )
+            }
+          }
+
+          @Test
+          fun `will create the csip in NOMIS once`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("csip-children-create-mapping-retry-success"),
+                any(),
+                isNull(),
+              )
+            }
+
+            csipNomisApi.verify(1, putRequestedFor(urlEqualTo("/csip")))
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the csip created`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("csip-children-create-mapping-retry-success"),
+                check {
+                  assertThat(it).containsEntry("dpsCSIPReportId", dpsCSIPReportId)
+                  assertThat(it).containsEntry("offenderNo", offenderNo)
+                  assertThat(it).containsEntry("nomisCSIPReportId", "$nomisCSIPReportId")
+                },
+                isNull(),
+              )
+            }
+          }
+        }
+
+        @Nested
+        @DisplayName("always fails")
+        inner class MappingSaveAlwaysFails {
+          @BeforeEach
+          fun setUp() {
+            csipMappingApi.stubPostMapping(HttpStatus.INTERNAL_SERVER_ERROR)
+            publishUpdateCSIPDomainEvent(offenderNo = offenderNo, recordUuid = dpsCSIPReportId)
+          }
+
+          @Test
+          fun `will add message to dead letter queue`() {
+            await untilCallTo {
+              awsSqsCSIPDlqClient!!.countAllMessagesOnQueue(csipDlqUrl!!).get()
+            } matches { it == 1 }
+          }
+
+          @Test
+          fun `will create the csip in NOMIS once`() {
+            await untilCallTo {
+              awsSqsCSIPDlqClient!!.countAllMessagesOnQueue(csipDlqUrl!!).get()
+            } matches { it == 1 }
+
+            csipNomisApi.verify(1, putRequestedFor(urlEqualTo("/csip")))
+          }
         }
       }
     }
