@@ -114,7 +114,7 @@ class CourtSentencingService(
 
   suspend fun createCourtAppearance(createEvent: CourtAppearanceCreatedEvent) {
     val courtCaseId = createEvent.additionalInformation.courtCaseId
-    val courtAppearanceId = createEvent.additionalInformation.id
+    val courtAppearanceId = createEvent.additionalInformation.courtAppearanceId
     val offenderNo: String = createEvent.additionalInformation.offenderNo
     val telemetryMap = mutableMapOf(
       "dpsCourtCaseId" to courtCaseId,
@@ -180,7 +180,7 @@ class CourtSentencingService(
 
   suspend fun updateCourtAppearance(createEvent: CourtAppearanceCreatedEvent) {
     val courtCaseId = createEvent.additionalInformation.courtCaseId
-    val courtAppearanceId = createEvent.additionalInformation.id
+    val courtAppearanceId = createEvent.additionalInformation.courtAppearanceId
     val offenderNo: String = createEvent.additionalInformation.offenderNo
     val telemetryMap = mutableMapOf(
       "dpsCourtCaseId" to courtCaseId,
@@ -343,7 +343,7 @@ class CourtSentencingService(
   )
 
   data class CourtAppearanceAdditionalInformation(
-    val id: String,
+    val courtAppearanceId: String,
     val offenderNo: String,
     val source: String,
     val courtCaseId: String,
