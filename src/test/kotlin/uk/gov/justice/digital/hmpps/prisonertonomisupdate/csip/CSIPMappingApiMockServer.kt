@@ -55,6 +55,16 @@ class CSIPMappingApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
 
+  fun stubPostChildrenMapping() {
+    mappingServer.stubFor(
+      post("/mapping/csip/children/all").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
   fun stubPostMapping() {
     mappingServer.stubFor(
       post("/mapping/csip/all").willReturn(
@@ -90,6 +100,32 @@ class CSIPMappingApiMockServer(private val objectMapper: ObjectMapper) {
 
     mappingServer.stubFor(
       post("/mapping/csip/all")
+        .inScenario("Retry Mapping CSIP Scenario")
+        .whenScenarioStateIs("Cause Mapping CSIP Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubPostChildrenMappingFollowedBySuccess(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      post("/mapping/csip/children/all")
+        .inScenario("Retry Mapping CSIP Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(objectMapper.writeValueAsString(error)),
+        ).willSetStateTo("Cause Mapping CSIP Success"),
+    )
+
+    mappingServer.stubFor(
+      post("/mapping/csip/children/all")
         .inScenario("Retry Mapping CSIP Scenario")
         .whenScenarioStateIs("Cause Mapping CSIP Success")
         .willReturn(

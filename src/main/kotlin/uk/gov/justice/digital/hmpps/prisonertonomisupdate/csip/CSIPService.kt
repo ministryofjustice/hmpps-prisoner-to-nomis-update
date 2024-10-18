@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CSIPCo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertCSIPResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 
 @Service
@@ -38,7 +39,7 @@ class CSIPService(
     )
 
     synchronise {
-      name = "csip"
+      name = EntityType.CSIP.displayName
       telemetryClient = this@CSIPService.telemetryClient
       retryQueueService = csipRetryQueueService
       eventTelemetry = telemetryMap
@@ -92,35 +93,73 @@ class CSIPService(
 
     runCatching {
       val mapping = mappingApiService.getOrNullByDpsId(dpsCsipReportId)
-        ?: throw IllegalStateException("Tried to update an csip that has never been created")
+        ?: throw IllegalStateException("Tried to update a csip that has never been created")
+
       telemetryMap["nomisCSIPReportId"] = mapping.nomisCSIPReportId.toString()
 
-      val dpsCsipRecord = dpsApiService.getCsipReport(dpsCsipReportId)
-      nomisApiService.upsertCsipReport(dpsCsipRecord.toNomisUpsertRequest(mapping))
-        .also {
-          if (it.components.isNotEmpty()) {
-            it.createNewMappingDto(dpsCsipReportId)
-          }
+      dpsApiService.getCsipReport(dpsCsipReportId)
+        .also { dpsCsipRecord ->
+          nomisApiService.upsertCsipReport(dpsCsipRecord.toNomisUpsertRequest(mapping))
+            .takeIf { it.components.isNotEmpty() }
+            ?. run {
+              createNewMappingDto(dpsCsipReportId)
+                .apply {
+                  createMapping(
+                    mapping = this,
+                    telemetryClient = telemetryClient,
+                    retryQueueService = csipRetryQueueService,
+                    eventTelemetry = telemetryMap,
+                    name = EntityType.CSIP_CHILDREN.displayName,
+                    postMapping = {
+                      mappingApiService.createChildMappings(it)
+                    },
+                    log = log,
+                  )
+                }
+            }
         }
-      // TODO send child mappings just created !!
-      // mapping.createChildMappings()
-      telemetryClient.trackEvent("csip-updated-success", telemetryMap)
+      telemetryClient.trackEvent(
+        "${EntityType.CSIP_CHILDREN.displayName}-create-success",
+        telemetryMap,
+      )
     }.onFailure { e ->
-      telemetryClient.trackEvent("csip-updated-failed", telemetryMap)
+      telemetryClient.trackEvent("${EntityType.CSIP_CHILDREN.displayName}-create-failed", telemetryMap, null)
       throw e
     }
   }
 
-  suspend fun createMapping(message: CreateMappingRetryMessage<CSIPFullMappingDto>) =
+  suspend fun createMappingRetry(message: CreateMappingRetryMessage<CSIPFullMappingDto>) =
     mappingApiService.createMapping(message.mapping).also {
       telemetryClient.trackEvent(
-        "csip-create-success",
+        "csip-create-mapping-retry-success",
         message.telemetryAttributes,
         null,
       )
     }
 
-  override suspend fun retryCreateMapping(message: String) = createMapping(message.fromJson())
+  suspend fun createChildMappingsRetry(message: CreateMappingRetryMessage<CSIPFullMappingDto>) =
+    mappingApiService.createChildMappings(message.mapping).also {
+      telemetryClient.trackEvent(
+        "csip-children-create-mapping-retry-success",
+        message.telemetryAttributes,
+        null,
+      )
+    }
+
+  enum class EntityType(val displayName: String) {
+    CSIP("csip"),
+    CSIP_CHILDREN("csip-children"),
+  }
+
+  override suspend fun retryCreateMapping(message: String) {
+    val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
+    when (baseMapping.entityName) {
+      EntityType.CSIP.displayName -> createMappingRetry(message.fromJson())
+      EntityType.CSIP_CHILDREN.displayName -> createChildMappingsRetry(message.fromJson())
+
+      else -> throw IllegalArgumentException("Unknown entity type: ${baseMapping.entityName}")
+    }
+  }
 
   suspend fun deleteCsipReport(csipEvent: CSIPEvent) {
     val dpsCsipReportId = csipEvent.additionalInformation.recordUuid
@@ -134,7 +173,7 @@ class CSIPService(
       mappingApiService.getOrNullByDpsId(dpsCsipReportId)?.also { mapping ->
 
         nomisApiService.deleteCsipReport(csipReportId = mapping.nomisCSIPReportId)
-        tryToDeletedMapping(dpsCsipReportId)
+        tryToDeleteMapping(dpsCsipReportId)
         telemetryClient.trackEvent("csip-deleted-success", telemetryMap)
       } ?: also {
         telemetryClient.trackEvent("csip-deleted-skipped", telemetryMap)
@@ -145,7 +184,7 @@ class CSIPService(
     }
   }
 
-  private suspend fun tryToDeletedMapping(dpsCsipId: String) = kotlin.runCatching {
+  private suspend fun tryToDeleteMapping(dpsCsipId: String) = kotlin.runCatching {
     mappingApiService.deleteByDpsId(dpsCsipId)
   }.onFailure { e ->
     telemetryClient.trackEvent("csip-mapping-deleted-failed", mapOf("dpsCSIPReportId" to dpsCsipId))
