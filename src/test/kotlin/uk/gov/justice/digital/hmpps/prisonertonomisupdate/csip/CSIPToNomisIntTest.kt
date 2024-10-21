@@ -30,6 +30,7 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPDpsApiExtension.Companion.csipDpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CSIPChildMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CSIPFullMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
@@ -596,6 +597,139 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will create a mapping for the csip children`() {
           csipMappingApi.verify(1, postRequestedFor(urlPathEqualTo("/mapping/csip/children/all")))
+        }
+      }
+
+      @Nested
+      @DisplayName("when mapping is found")
+      inner class HappyPathWithExistingMappings {
+        private val dpsCSIPReportId = UUID.randomUUID().toString()
+        private val dpsCSIPAttendeeId = "8cdadcf3-b003-4116-9956-c99bd8df6555"
+        private val dpsCSIPFactorId = "8cdadcf3-b003-4116-9956-c99bd8df6111"
+        private val dpsCSIPInterviewId = "8cdadcf3-b003-4116-9956-c99bd8df6222"
+        private val dpsCSIPPlanId = "8cdadcf3-b003-4116-9956-c99bd8df6333"
+        private val dpsCSIPReviewId = "8cdadcf3-b003-4116-9956-c99bd8df6444"
+        private val nomisCSIPReportId = 43217L
+        private val offenderNo = "A1234KT"
+
+        @BeforeEach
+        fun setUp() {
+          csipMappingApi.stubGetByDpsReportId(
+            dpsCSIPReportId,
+            CSIPFullMappingDto(
+              dpsCSIPReportId = dpsCSIPReportId,
+              nomisCSIPReportId = nomisCSIPReportId,
+              mappingType = CSIPFullMappingDto.MappingType.DPS_CREATED,
+              attendeeMappings = listOf(
+                CSIPChildMappingDto(
+                  dpsCSIPReportId = dpsCSIPReportId,
+                  dpsId = dpsCSIPAttendeeId,
+                  nomisId = 6555,
+                  mappingType = CSIPChildMappingDto.MappingType.DPS_CREATED,
+                ),
+              ),
+              factorMappings = listOf(
+                CSIPChildMappingDto(
+                  dpsCSIPReportId = dpsCSIPReportId,
+                  dpsId = dpsCSIPFactorId,
+                  nomisId = 6111,
+                  mappingType = CSIPChildMappingDto.MappingType.DPS_CREATED,
+                ),
+              ),
+              interviewMappings = listOf(
+                CSIPChildMappingDto(
+                  dpsCSIPReportId = dpsCSIPReportId,
+                  dpsId = dpsCSIPInterviewId,
+                  nomisId = 6222,
+                  mappingType = CSIPChildMappingDto.MappingType.DPS_CREATED,
+                ),
+              ),
+              planMappings = listOf(
+                CSIPChildMappingDto(
+                  dpsCSIPReportId = dpsCSIPReportId,
+                  dpsId = dpsCSIPPlanId,
+                  nomisId = 6333,
+                  mappingType = CSIPChildMappingDto.MappingType.DPS_CREATED,
+                ),
+              ),
+              reviewMappings = listOf(
+                CSIPChildMappingDto(
+                  dpsCSIPReportId = dpsCSIPReportId,
+                  dpsId = dpsCSIPReviewId,
+                  nomisId = 6444,
+                  mappingType = CSIPChildMappingDto.MappingType.DPS_CREATED,
+                ),
+              ),
+            ),
+          )
+          csipDpsApi.stubGetCsipReport(
+            dpsCsipReport = dpsCsipRecord().copy(
+              recordUuid = UUID.fromString(dpsCSIPReportId),
+              lastModifiedBy = "RASHEED.BAKE",
+              logCode = "LG123",
+
+            ),
+          )
+          csipNomisApi.stubPutCSIP(upsertCSIPResponse().copy(nomisCSIPReportId = nomisCSIPReportId))
+          csipMappingApi.stubPostChildrenMapping()
+
+          publishUpdateCSIPDomainEvent(recordUuid = dpsCSIPReportId, offenderNo = offenderNo)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the update`() {
+          verify(telemetryClient).trackEvent(
+            eq("csip-children-create-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `the update csip will contain details of the DPS csip factor being updated`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("reportDetailRequest.factors[0].dpsId", dpsCSIPFactorId)
+              .withRequestBodyJsonPath("reportDetailRequest.factors[0].id", 6111),
+
+          )
+        }
+
+        @Test
+        fun `the update csip will contain details of the DPS csip plan being updated`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("plans[0].dpsId", dpsCSIPPlanId)
+              .withRequestBodyJsonPath("plans[0].id", 6333),
+          )
+        }
+
+        @Test
+        fun `the update csip will contain details of the DPS csip interview being updated`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("investigation.interviews[0].dpsId", dpsCSIPInterviewId)
+              .withRequestBodyJsonPath("investigation.interviews[0].id", 6222),
+          )
+        }
+
+        @Test
+        fun `the update csip will contain details of the DPS csip review being updated`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("reviews[0].dpsId", dpsCSIPReviewId)
+              .withRequestBodyJsonPath("reviews[0].id", 6444),
+          )
+        }
+
+        @Test
+        fun `the update csip will contain details of the DPS csip attendee being updated`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("reviews[0].attendees[0].dpsId", dpsCSIPAttendeeId)
+              .withRequestBodyJsonPath("reviews[0].attendees[0].id", 6555),
+          )
         }
       }
 
