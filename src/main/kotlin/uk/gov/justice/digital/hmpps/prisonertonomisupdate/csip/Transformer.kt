@@ -42,16 +42,26 @@ fun CsipRecord.toNomisUpsertRequest(mapping: CSIPFullMappingDto? = null) =
     prisonCodeWhenRecorded = prisonCodeWhenRecorded,
     reportDetailRequest = referral.toNomisReportDetails(mapping?.factorMappings),
     saferCustodyScreening = referral.saferCustodyScreeningOutcome?.toSCSRequest(),
-    investigation = referral.investigation?.toNomisInvestigationRequest(),
+    investigation = referral.investigation?.toNomisInvestigationRequest(mapping?.interviewMappings),
     decision = referral.decisionAndActions?.toNomisDecisionRequest(),
     caseManager = plan?.caseManager,
     planReason = plan?.reasonForPlan,
     firstCaseReviewDate = plan?.firstCaseReviewDate,
-    plans = plan?.identifiedNeeds?.map { it.toNomisPlanRequest() },
-    reviews = plan?.reviews?.map { it.toNomisReviewRequest() },
+    plans = plan?.identifiedNeeds?.map {
+      it.toNomisPlanRequest(mapping?.planMappings?.find(it.identifiedNeedUuid.toString())?.nomisId)
+    },
+    reviews = plan?.reviews?.map {
+      it.toNomisReviewRequest(
+        mapping?.reviewMappings?.find(it.reviewUuid.toString())?.nomisId,
+        mapping?.attendeeMappings,
+      )
+    },
   )
 
-fun Review.toNomisReviewRequest(nomisReviewId: Long? = null) =
+fun List<CSIPChildMappingDto>.find(dpsId: String): CSIPChildMappingDto? =
+  find { it.dpsId == dpsId }
+
+fun Review.toNomisReviewRequest(nomisReviewId: Long? = null, attendeeMappings: List<CSIPChildMappingDto>? = null) =
   ReviewRequest(
     id = nomisReviewId,
     dpsId = reviewUuid.toString(),
@@ -66,7 +76,11 @@ fun Review.toNomisReviewRequest(nomisReviewId: Long? = null) =
     summary = summary,
     nextReviewDate = nextReviewDate,
     closeDate = csipClosedDate,
-    attendees = attendees.map { it.toNomisAttendeeRequest() },
+    attendees = attendees.map {
+      it.toNomisAttendeeRequest(
+        attendeeMappings?.find(it.attendeeUuid.toString())?.nomisId,
+      )
+    },
   )
 
 fun Attendee.toNomisAttendeeRequest(nomisAttendeeId: Long? = null) =
@@ -101,7 +115,7 @@ fun DecisionAndActions.toNomisActionRequest() =
     serviceReferral = actions.contains(DecisionAndActions.Actions.SERVICE_REFERRAL),
     simReferral = actions.contains(DecisionAndActions.Actions.SIM_REFERRAL),
   )
-fun Investigation.toNomisInvestigationRequest() =
+fun Investigation.toNomisInvestigationRequest(interviewMappings: List<CSIPChildMappingDto>? = null) =
   InvestigationDetailRequest(
     staffInvolved = staffInvolved,
     evidenceSecured = evidenceSecured,
@@ -109,7 +123,12 @@ fun Investigation.toNomisInvestigationRequest() =
     usualBehaviour = personsUsualBehaviour,
     trigger = personsTrigger,
     protectiveFactors = protectiveFactors,
-    interviews = interviews.map { it.toNomisInterviewRequest() },
+    interviews = interviews.map {
+      it.toNomisInterviewRequest(
+        interviewMappings?.find(it.interviewUuid.toString())?.nomisId,
+      )
+    },
+
   )
 
 fun Interview.toNomisInterviewRequest(nomisInterviewId: Long? = null) =
@@ -122,7 +141,7 @@ fun Interview.toNomisInterviewRequest(nomisInterviewId: Long? = null) =
     comments = interviewText,
   )
 
-fun Referral.toNomisReportDetails(mappings: List<CSIPChildMappingDto>? = null) =
+fun Referral.toNomisReportDetails(factorMappings: List<CSIPChildMappingDto>? = null) =
   UpsertReportDetailsRequest(
     saferCustodyTeamInformed = (isSaferCustodyTeamInformed == Referral.IsSaferCustodyTeamInformed.YES),
     referralComplete = isReferralComplete ?: false,
@@ -132,13 +151,8 @@ fun Referral.toNomisReportDetails(mappings: List<CSIPChildMappingDto>? = null) =
     otherInformation = otherInformation,
     referralCompletedBy = referralCompletedBy,
     referralCompletedDate = referralCompletedDate,
-    factors = contributoryFactors.map { dpsFactor ->
-      dpsFactor.toNomisFactorRequest(
-        mappings?.find {
-            mappingFactor ->
-          mappingFactor.dpsId == dpsFactor.factorUuid.toString()
-        }?.nomisId,
-      )
+    factors = contributoryFactors.map {
+      it.toNomisFactorRequest(factorMappings?.find(it.factorUuid.toString())?.nomisId)
     },
   )
 fun ContributoryFactor.toNomisFactorRequest(nomisFactorId: Long? = null) =
