@@ -533,7 +533,6 @@ internal fun adjustment(
   fromDate = fromDate,
   toDate = fromDate.plusDays(effectiveDays.toLong()),
   effectiveDays = effectiveDays,
-  daysBetween = effectiveDays,
   status = AdjustmentDto.Status.ACTIVE,
   lastUpdatedBy = "NOMIS",
   lastUpdatedDate = LocalDateTime.now(),
