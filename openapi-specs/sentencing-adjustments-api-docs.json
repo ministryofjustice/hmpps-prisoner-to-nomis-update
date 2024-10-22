@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-01-26.1607.ccba529"
+    "version": "2024-10-21.4000.408fe31"
   },
   "servers": [
     {
@@ -23,6 +23,10 @@
     {
       "name": "legacy-controller",
       "description": "CRUD operations for syncing data from NOMIS into adjustments api database."
+    },
+    {
+      "name": "ada-adjudication-controller",
+      "description": "Read operations for additional days logic"
     }
   ],
   "paths": {
@@ -697,6 +701,90 @@
         }
       }
     },
+    "/adjustments/person/{person}/manual-unused-deductions": {
+      "post": {
+        "tags": [
+          "adjustment-controller"
+        ],
+        "summary": "Update the unused deduction days for a person",
+        "description": "Update the unused deduction days for a person",
+        "operationId": "setUnusedDaysManually",
+        "parameters": [
+          {
+            "name": "person",
+            "in": "path",
+            "description": "The person",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualUnusedDeductionsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token"
+          },
+          "200": {
+            "description": "Adjustment update"
+          },
+          "404": {
+            "description": "Adjustment not found"
+          }
+        }
+      }
+    },
+    "/adjustments/additional-days/{person}/reject-prospective-ada": {
+      "post": {
+        "tags": [
+          "ada-adjudication-controller"
+        ],
+        "summary": "Reject prospective ADA.",
+        "operationId": "rejectProspectiveAda",
+        "parameters": [
+          {
+            "name": "person",
+            "in": "path",
+            "description": "The noms ID of the person",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "AA1256A"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProspectiveAdaRejectionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Reject a prospective ADA"
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token"
+          },
+          "404": {
+            "description": "Adjustment not found"
+          }
+        }
+      }
+    },
     "/queue-admin/get-dlq-messages/{dlqName}": {
       "get": {
         "tags": [
@@ -736,31 +824,131 @@
           }
         }
       }
+    },
+    "/adjustments/person/{person}/unused-deductions-result": {
+      "get": {
+        "tags": [
+          "adjustment-controller"
+        ],
+        "summary": "Get the unused deductions result",
+        "description": "Get the unused deductions result",
+        "operationId": "getUnusedDeductionsResult",
+        "parameters": [
+          {
+            "name": "person",
+            "in": "path",
+            "description": "The person",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnusedDeductionsCalculationResultDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnusedDeductionsCalculationResultDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Person not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnusedDeductionsCalculationResultDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/adjustments/additional-days/{person}/adjudication-details": {
+      "get": {
+        "tags": [
+          "ada-adjudication-controller"
+        ],
+        "summary": "Get all details of adjudications and associated adjustments",
+        "operationId": "getAdaAdjudicationDetails",
+        "parameters": [
+          {
+            "name": "person",
+            "in": "path",
+            "description": "The noms ID of the person",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "AA1256A"
+          },
+          {
+            "name": "selectedProspectiveAdaDates",
+            "in": "query",
+            "description": "The dates of selected prospective adas",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "example": "2022-01-10,2022-02-11"
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdaAdjudicationDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Details of adjudications and adjustments returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdaAdjudicationDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Adjustment not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdaAdjudicationDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
-      "DlqMessage": {
-        "required": [
-          "body",
-          "messageId"
-        ],
-        "type": "object",
-        "properties": {
-          "body": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "object"
-            }
-          },
-          "messageId": {
-            "type": "string"
-          }
-        }
-      },
       "RetryDlqResult": {
         "required": [
-          "messages",
           "messagesFoundCount"
         ],
         "type": "object",
@@ -768,12 +956,6 @@
           "messagesFoundCount": {
             "type": "integer",
             "format": "int32"
-          },
-          "messages": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DlqMessage"
-            }
           }
         }
       },
@@ -856,6 +1038,10 @@
           "bookingReleased": {
             "type": "boolean",
             "description": "Has the prisoner been released from the NOMIS booking"
+          },
+          "agencyId": {
+            "type": "string",
+            "description": "The ID of the agency the prisoner is located"
           }
         },
         "description": "An adjustment structured for synchronising with the NOMIS system"
@@ -871,9 +1057,8 @@
             "type": "array",
             "description": "The id of the adjudication that resulted in the ADA",
             "items": {
-              "type": "integer",
-              "description": "The id of the adjudication that resulted in the ADA",
-              "format": "int64"
+              "type": "string",
+              "description": "The id of the adjudication that resulted in the ADA"
             }
           },
           "prospective": {
@@ -930,7 +1115,7 @@
           },
           "days": {
             "type": "integer",
-            "description": "The number of adjustment days",
+            "description": "The number of days of the adjustment",
             "format": "int32"
           },
           "remand": {
@@ -942,20 +1127,46 @@
           "unlawfullyAtLarge": {
             "$ref": "#/components/schemas/UnlawfullyAtLargeDto"
           },
+          "lawfullyAtLarge": {
+            "$ref": "#/components/schemas/LawfullyAtLargeDto"
+          },
+          "specialRemission": {
+            "$ref": "#/components/schemas/SpecialRemissionDto"
+          },
           "taggedBail": {
             "$ref": "#/components/schemas/TaggedBailDto"
           },
-          "prisonId": {
+          "sentenceSequence": {
+            "type": "integer",
+            "description": "The NOMIS sentence sequence of the adjustment",
+            "format": "int32"
+          },
+          "adjustmentTypeText": {
             "type": "string",
-            "description": "The prison where the prisoner was located at the time the adjustment was created (a 3 character code identifying the prison)",
+            "description": "Human readable text for type of adjustment",
+            "readOnly": true
+          },
+          "adjustmentArithmeticType": {
+            "type": "string",
+            "description": "Indicates whether the adjustment was an addition or deduction",
             "readOnly": true,
-            "example": "LDS"
+            "enum": [
+              "ADDITION",
+              "DEDUCTION",
+              "NONE"
+            ]
           },
           "prisonName": {
             "type": "string",
             "description": "The name name of the prison where the prisoner was located at the time the adjustment was created ",
             "readOnly": true,
             "example": "Leeds"
+          },
+          "prisonId": {
+            "type": "string",
+            "description": "The prison where the prisoner was located at the time the adjustment was created (a 3 character code identifying the prison)",
+            "readOnly": true,
+            "example": "LDS"
           },
           "lastUpdatedBy": {
             "type": "string",
@@ -991,19 +1202,31 @@
             "format": "int32",
             "readOnly": true
           },
-          "sentenceSequence": {
-            "type": "integer",
-            "description": "The NOMIS sentence sequence of the adjustment",
-            "format": "int32"
-          },
-          "daysBetween": {
-            "type": "integer",
-            "description": "The days between the from and two date",
-            "format": "int32",
-            "readOnly": true
+          "source": {
+            "type": "string",
+            "description": "Where was the adjustment last changed",
+            "readOnly": true,
+            "enum": [
+              "NOMIS",
+              "DPS"
+            ]
           }
         },
         "description": "The adjustment and its identifier"
+      },
+      "LawfullyAtLargeDto": {
+        "type": "object",
+        "properties": {
+          "affectsDates": {
+            "type": "string",
+            "description": "The type of LAL",
+            "enum": [
+              "YES",
+              "NO"
+            ]
+          }
+        },
+        "description": "The details of a LAL adjustment"
       },
       "RemandDto": {
         "required": [
@@ -1022,6 +1245,21 @@
           }
         },
         "description": "The details of remand adjustment"
+      },
+      "SpecialRemissionDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of Special Remission",
+            "enum": [
+              "MERITORIOUS_CONDUCT",
+              "RELEASE_DATE_CALCULATED_TOO_EARLY",
+              "RELEASE_IN_ERROR"
+            ]
+          }
+        },
+        "description": "The details of a Special Remission adjustment"
       },
       "TaggedBailDto": {
         "required": [
@@ -1047,7 +1285,8 @@
               "RECALL",
               "ESCAPE",
               "SENTENCED_IN_ABSENCE",
-              "RELEASE_IN_ERROR"
+              "RELEASE_IN_ERROR",
+              "IMMIGRATION_DETENTION"
             ]
           }
         },
@@ -1130,7 +1369,15 @@
               "UAL_TYPE_NOT_NULL",
               "UAL_FIRST_DATE_CANNOT_BE_FUTURE",
               "UAL_LAST_DATE_CANNOT_BE_FUTURE",
-              "UAL_DATE_MUST_BE_AFTER_SENTENCE_DATE"
+              "UAL_DATE_MUST_BE_AFTER_SENTENCE_DATE",
+              "LAL_FROM_DATE_NOT_NULL",
+              "LAL_TO_DATE_NOT_NULL",
+              "LAL_FROM_DATE_AFTER_TO_DATE",
+              "LAL_AFFECTS_DATES_NOT_NULL",
+              "LAL_FIRST_DATE_CANNOT_BE_FUTURE",
+              "LAL_LAST_DATE_CANNOT_BE_FUTURE",
+              "LAL_DATE_MUST_BE_AFTER_SENTENCE_DATE",
+              "SREM_TYPE_NOT_NULL"
             ]
           },
           "arguments": {
@@ -1170,6 +1417,63 @@
         },
         "description": "The adjustment UUID"
       },
+      "ManualUnusedDeductionsDto": {
+        "required": [
+          "days"
+        ],
+        "type": "object",
+        "properties": {
+          "days": {
+            "type": "integer",
+            "description": "The number of unused days",
+            "format": "int32"
+          }
+        },
+        "description": "Details of the number of unused days"
+      },
+      "ProspectiveAdaRejectionDto": {
+        "required": [
+          "dateChargeProved",
+          "days",
+          "person"
+        ],
+        "type": "object",
+        "properties": {
+          "person": {
+            "type": "string",
+            "description": "The NOMIS ID of the person this pada is rejected applies to"
+          },
+          "days": {
+            "type": "integer",
+            "description": "The number of days that were rejected",
+            "format": "int32"
+          },
+          "dateChargeProved": {
+            "type": "string",
+            "description": "The date of the charges proved that were rejected",
+            "format": "date"
+          }
+        },
+        "description": "The DTO representing the PADAs rejected"
+      },
+      "DlqMessage": {
+        "required": [
+          "body",
+          "messageId"
+        ],
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            }
+          },
+          "messageId": {
+            "type": "string"
+          }
+        }
+      },
       "GetDlqResult": {
         "required": [
           "messages",
@@ -1191,6 +1495,240 @@
             "items": {
               "$ref": "#/components/schemas/DlqMessage"
             }
+          }
+        }
+      },
+      "UnusedDeductionsCalculationResultDto": {
+        "required": [
+          "calculationAt",
+          "person",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "person": {
+            "type": "string"
+          },
+          "calculationAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "NOMIS_ADJUSTMENT",
+              "VALIDATION",
+              "UNSUPPORTED",
+              "RECALL",
+              "UNKNOWN",
+              "CALCULATED",
+              "IN_PROGRESS"
+            ]
+          }
+        }
+      },
+      "Ada": {
+        "required": [
+          "chargeNumber",
+          "dateChargeProved",
+          "days",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "dateChargeProved": {
+            "type": "string",
+            "format": "date"
+          },
+          "chargeNumber": {
+            "type": "string"
+          },
+          "toBeServed": {
+            "type": "string"
+          },
+          "heardAt": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "AWARDED_OR_PENDING",
+              "SUSPENDED",
+              "QUASHED",
+              "PROSPECTIVE"
+            ]
+          },
+          "days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "consecutiveToChargeNumber": {
+            "type": "string"
+          }
+        }
+      },
+      "AdaAdjudicationDetails": {
+        "required": [
+          "awaitingApproval",
+          "awarded",
+          "intercept",
+          "prospective",
+          "quashed",
+          "recallWithMissingOutcome",
+          "showExistingAdaMessage",
+          "suspended",
+          "totalAwaitingApproval",
+          "totalAwarded",
+          "totalExistingAdas",
+          "totalProspective",
+          "totalQuashed",
+          "totalSuspended"
+        ],
+        "type": "object",
+        "properties": {
+          "awarded": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdasByDateCharged"
+            }
+          },
+          "totalAwarded": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "suspended": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdasByDateCharged"
+            }
+          },
+          "totalSuspended": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quashed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdasByDateCharged"
+            }
+          },
+          "totalQuashed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "awaitingApproval": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdasByDateCharged"
+            }
+          },
+          "totalAwaitingApproval": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "prospective": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdasByDateCharged"
+            }
+          },
+          "totalProspective": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "intercept": {
+            "$ref": "#/components/schemas/AdaIntercept"
+          },
+          "totalExistingAdas": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "showExistingAdaMessage": {
+            "type": "boolean"
+          },
+          "recallWithMissingOutcome": {
+            "type": "boolean"
+          },
+          "earliestNonRecallSentenceDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "earliestRecallDate": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "AdaIntercept": {
+        "required": [
+          "anyProspective",
+          "messageArguments",
+          "number",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "FIRST_TIME",
+              "UPDATE",
+              "PADA"
+            ]
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "anyProspective": {
+            "type": "boolean"
+          },
+          "messageArguments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "AdasByDateCharged": {
+        "required": [
+          "charges",
+          "dateChargeProved"
+        ],
+        "type": "object",
+        "properties": {
+          "dateChargeProved": {
+            "type": "string",
+            "format": "date"
+          },
+          "charges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Ada"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "AWARDED",
+              "PENDING_APPROVAL",
+              "SUSPENDED",
+              "QUASHED",
+              "PROSPECTIVE"
+            ]
+          },
+          "adjustmentId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       }
