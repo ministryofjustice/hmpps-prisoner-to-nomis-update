@@ -5,9 +5,9 @@ import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.6"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.7"
   kotlin("plugin.spring") version "2.0.20"
-  id("org.openapi.generator") version "7.8.0"
+  id("org.openapi.generator") version "7.9.0"
 }
 
 configurations {
@@ -19,26 +19,26 @@ configurations {
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.0.7")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("org.springframework.data:spring-data-commons:3.3.4")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:4.4.4")
+  implementation("org.springframework.data:spring-data-commons:3.3.5")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.0.1")
 
   implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.6.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.6.0")
-  implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.40.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.9.0")
+  implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.43.0")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.0.7")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.22") {
     exclude(group = "io.swagger.core.v3")
   }
-  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.23")
+  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.25")
 
   testImplementation("org.wiremock:wiremock-standalone:3.9.1")
   testImplementation("org.mockito:mockito-inline:5.2.0")
-  testImplementation("org.testcontainers:localstack:1.20.1")
-  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.772")
+  testImplementation("org.testcontainers:localstack:1.20.2")
+  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.777")
   testImplementation("org.awaitility:awaitility-kotlin:4.2.2")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 }
