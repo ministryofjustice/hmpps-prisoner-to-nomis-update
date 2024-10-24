@@ -22,6 +22,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityCategory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityLite
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleInstance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleInstance.TimeSlot.AM
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleLite
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
 import java.time.LocalDate
@@ -218,6 +219,7 @@ private fun newScheduledInstance() = ActivityScheduleInstance(
   attendances = listOf(),
   cancelledTime = null,
   cancelledBy = null,
+  timeSlot = AM,
   activitySchedule =
   ActivityScheduleLite(
     id = ACTIVITY_SCHEDULE_ID,
@@ -226,6 +228,7 @@ private fun newScheduledInstance() = ActivityScheduleInstance(
     slots = listOf(),
     startDate = LocalDate.parse("2023-02-01"),
     scheduleWeeks = 1,
+    usePrisonRegimeTime = false,
     activity =
     ActivityLite(
       id = ACTIVITY_ID,

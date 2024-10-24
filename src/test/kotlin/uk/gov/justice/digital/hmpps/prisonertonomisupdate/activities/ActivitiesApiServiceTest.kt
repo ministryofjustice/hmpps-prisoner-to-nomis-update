@@ -48,6 +48,7 @@ internal class ActivitiesApiServiceTest {
             "cancelled": false,
             "cancelledTime": "2022-12-30T14:03:06.365Z",
             "cancelledBy": "Adam Smith",
+            "timeSlot": "AM",
             "attendances": [
               {
                 "id": 123456,
@@ -165,7 +166,8 @@ internal class ActivitiesApiServiceTest {
             "thursdayFlag": false,
             "fridayFlag": false,
             "saturdayFlag": false,
-            "sundayFlag": false
+            "sundayFlag": false,
+            "timeSlot": "AM"
           }
         ],
         "startDate" : "2023-01-20",
@@ -273,6 +275,7 @@ internal class ActivitiesApiServiceTest {
               "cancelled": false,
               "cancelledTime": "2022-12-30T16:09:11.127Z",
               "cancelledBy": "Adam Smith",
+              "timeSlot": "AM",
               "attendances": [
                 {
                   "id": 123456,
@@ -391,7 +394,8 @@ internal class ActivitiesApiServiceTest {
               "thursdayFlag": false,
               "fridayFlag": false,
               "saturdayFlag": false,
-              "sundayFlag": false
+              "sundayFlag": false,
+              "timeSlot": "AM"
             }
           ],
           "startDate" : "2023-01-20",
@@ -692,6 +696,7 @@ internal class ActivitiesApiServiceTest {
   "nextScheduledInstanceId": 60,
   "nextScheduledInstanceDate": "2023-05-02",
   "attendances": [],
+  "timeSlot": "AM",
   "activitySchedule": {
     "id": 4,
     "description": "Pen testing again",
@@ -744,7 +749,8 @@ internal class ActivitiesApiServiceTest {
         "thursdayFlag": true,
         "fridayFlag": true,
         "saturdayFlag": false,
-        "sundayFlag": false
+        "sundayFlag": false,
+        "timeSlot": "AM"
       },
       {
         "id": 6,
@@ -763,7 +769,8 @@ internal class ActivitiesApiServiceTest {
         "thursdayFlag": true,
         "fridayFlag": true,
         "saturdayFlag": false,
-        "sundayFlag": false
+        "sundayFlag": false,
+        "timeSlot": "PM"
       }
     ],
     "startDate": "2023-04-20",

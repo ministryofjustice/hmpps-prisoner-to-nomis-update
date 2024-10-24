@@ -19,6 +19,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Alloc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.ACTIVE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.PrisonPayBand
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Slot
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Slot.TimeSlot.AM
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Slot.TimeSlot.ED
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Slot.TimeSlot.PM
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationExclusion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationResponse
 import java.time.LocalDate
@@ -122,7 +125,7 @@ class AllocationServiceTest {
 
     @Test
     fun `should return single slot`() {
-      val exclusions = listOf(aSlot(timeSlot = "AM", daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY)))
+      val exclusions = listOf(aSlot(timeSlot = AM, daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY)))
 
       assertThat(allocationService.toAllocationExclusions(exclusions))
         .containsExactly(AllocationExclusion(AllocationExclusion.Day.MON, AllocationExclusion.Slot.AM))
@@ -131,8 +134,8 @@ class AllocationServiceTest {
     @Test
     fun `should return multiple slots`() {
       val exclusions = listOf(
-        aSlot(timeSlot = "AM", daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY)),
-        aSlot(timeSlot = "PM", daysOfWeek = setOf(Slot.DaysOfWeek.TUESDAY, Slot.DaysOfWeek.WEDNESDAY)),
+        aSlot(timeSlot = AM, daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY)),
+        aSlot(timeSlot = PM, daysOfWeek = setOf(Slot.DaysOfWeek.TUESDAY, Slot.DaysOfWeek.WEDNESDAY)),
       )
 
       assertThat(allocationService.toAllocationExclusions(exclusions))
@@ -146,9 +149,9 @@ class AllocationServiceTest {
     @Test
     fun `should return a whole day`() {
       val exclusions = listOf(
-        aSlot(timeSlot = "AM", daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY)),
-        aSlot(timeSlot = "PM", daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY)),
-        aSlot(timeSlot = "ED", daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY)),
+        aSlot(timeSlot = AM, daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY)),
+        aSlot(timeSlot = PM, daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY)),
+        aSlot(timeSlot = ED, daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY)),
       )
 
       assertThat(allocationService.toAllocationExclusions(exclusions))
@@ -160,9 +163,9 @@ class AllocationServiceTest {
     @Test
     fun `should handle multiple scenarios`() {
       val exclusions = listOf(
-        aSlot(timeSlot = "AM", daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY, Slot.DaysOfWeek.WEDNESDAY, Slot.DaysOfWeek.THURSDAY)),
-        aSlot(timeSlot = "PM", daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY, Slot.DaysOfWeek.THURSDAY, Slot.DaysOfWeek.SATURDAY)),
-        aSlot(timeSlot = "ED", daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY, Slot.DaysOfWeek.THURSDAY, Slot.DaysOfWeek.SUNDAY)),
+        aSlot(timeSlot = AM, daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY, Slot.DaysOfWeek.WEDNESDAY, Slot.DaysOfWeek.THURSDAY)),
+        aSlot(timeSlot = PM, daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY, Slot.DaysOfWeek.THURSDAY, Slot.DaysOfWeek.SATURDAY)),
+        aSlot(timeSlot = ED, daysOfWeek = setOf(Slot.DaysOfWeek.MONDAY, Slot.DaysOfWeek.THURSDAY, Slot.DaysOfWeek.SUNDAY)),
       )
 
       assertThat(allocationService.toAllocationExclusions(exclusions))
@@ -175,7 +178,7 @@ class AllocationServiceTest {
         )
     }
 
-    private fun aSlot(timeSlot: String, daysOfWeek: Set<Slot.DaysOfWeek>) =
+    private fun aSlot(timeSlot: Slot.TimeSlot, daysOfWeek: Set<Slot.DaysOfWeek>) =
       Slot(
         weekNumber = 1,
         timeSlot = timeSlot,
@@ -192,20 +195,18 @@ class AllocationServiceTest {
   }
 }
 
-private fun newAllocation(): Allocation {
-  return Allocation(
-    id = ALLOCATION_ID,
-    prisonerNumber = OFFENDER_NO,
-    activitySummary = "summary",
-    activityId = ACTIVITY_ID,
-    bookingId = NOMIS_BOOKING_ID,
-    startDate = LocalDate.parse("2023-01-12"),
-    endDate = LocalDate.parse("2023-01-13"),
-    prisonPayBand = PrisonPayBand(1, 1, "", "", 1, "MDI"),
-    scheduleDescription = "description",
-    scheduleId = ACTIVITY_SCHEDULE_ID,
-    isUnemployment = false,
-    status = ACTIVE,
-    exclusions = emptyList(),
-  )
-}
+private fun newAllocation(): Allocation = Allocation(
+  id = ALLOCATION_ID,
+  prisonerNumber = OFFENDER_NO,
+  activitySummary = "summary",
+  activityId = ACTIVITY_ID,
+  bookingId = NOMIS_BOOKING_ID,
+  startDate = LocalDate.parse("2023-01-12"),
+  endDate = LocalDate.parse("2023-01-13"),
+  prisonPayBand = PrisonPayBand(1, 1, "", "", 1, "MDI"),
+  scheduleDescription = "description",
+  scheduleId = ACTIVITY_SCHEDULE_ID,
+  isUnemployment = false,
+  status = ACTIVE,
+  exclusions = emptyList(),
+)
