@@ -162,25 +162,23 @@ class ActivitiesService(
       programCode = categoryCode,
     )
 
-  private fun toCreateActivityRequest(schedule: ActivitySchedule, activity: Activity): CreateActivityRequest {
-    return CreateActivityRequest(
-      code = schedule.id.toString(),
-      startDate = activity.startDate,
-      endDate = activity.endDate,
-      prisonId = activity.prisonCode,
-      internalLocationId = schedule.internalLocation?.id?.toLong(),
-      capacity = schedule.capacity,
-      payRates = activity.pay.toPayRateRequests(),
-      description = toNomisActivityDescription(activity.summary),
-      programCode = activity.category.code,
-      payPerSession = schedule.toCreatePayPerSession(),
-      schedules = schedule.instances.toCourseScheduleRequests(),
-      scheduleRules = schedule.slots.toScheduleRuleRequests(),
-      // Nomis models the negative (exclude) and Activities models the positive (runs on)
-      excludeBankHolidays = !schedule.runsOnBankHoliday,
-      outsideWork = activity.outsideWork,
-    )
-  }
+  private fun toCreateActivityRequest(schedule: ActivitySchedule, activity: Activity): CreateActivityRequest = CreateActivityRequest(
+    code = schedule.id.toString(),
+    startDate = activity.startDate,
+    endDate = activity.endDate,
+    prisonId = activity.prisonCode,
+    internalLocationId = schedule.internalLocation?.id?.toLong(),
+    capacity = schedule.capacity,
+    payRates = activity.pay.toPayRateRequests(),
+    description = toNomisActivityDescription(activity.summary),
+    programCode = activity.category.code,
+    payPerSession = schedule.toCreatePayPerSession(),
+    schedules = schedule.instances.toCourseScheduleRequests(),
+    scheduleRules = schedule.slots.toScheduleRuleRequests(),
+    // Nomis models the negative (exclude) and Activities models the positive (runs on)
+    excludeBankHolidays = !schedule.runsOnBankHoliday,
+    outsideWork = activity.outsideWork,
+  )
 
   private fun toNomisActivityDescription(activityDescription: String): String =
     activityDescription.substring(0, min(40, activityDescription.length))
@@ -206,6 +204,7 @@ class ActivitiesService(
         incentiveLevel = p.incentiveNomisCode,
         payBand = p.prisonPayBand.nomisPayBand.toString(),
         rate = BigDecimal(p.rate!!).movePointLeft(2),
+        startDate = p.startDate,
       )
     }
 

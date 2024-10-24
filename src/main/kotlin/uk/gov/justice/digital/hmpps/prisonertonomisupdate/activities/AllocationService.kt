@@ -104,7 +104,7 @@ class AllocationService(
       .consolidateFullDays()
 
   private fun Slot.DaysOfWeek.toNomis() = AllocationExclusion.Day.entries.first { value.startsWith(it.value) }
-  private fun String.toNomis() = AllocationExclusion.Slot.entries.first { this == it.value }
+  private fun Slot.TimeSlot.toNomis() = AllocationExclusion.Slot.entries.first { this.value == it.value }
 
   /*
    * In NOMIS a full day is represented by a null slot rather than a record for each slot.

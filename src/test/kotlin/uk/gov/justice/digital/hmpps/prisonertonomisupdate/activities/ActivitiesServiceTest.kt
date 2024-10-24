@@ -379,6 +379,7 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
       endTime = "11:00",
       cancelled = false,
       attendances = listOf(),
+      timeSlot = ScheduledInstance.TimeSlot.AM,
     ),
     ScheduledInstance(
       id = 2,
@@ -387,6 +388,7 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
       endTime = "11:00",
       cancelled = false,
       attendances = listOf(),
+      timeSlot = ScheduledInstance.TimeSlot.AM,
     ),
   ),
   allocations = emptyList(),
@@ -436,6 +438,7 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
   endDate = endDate,
   runsOnBankHoliday = true,
   scheduleWeeks = 1,
+  usePrisonRegimeTime = false,
 )
 
 private fun newActivity(): Activity = Activity(
@@ -479,4 +482,5 @@ private fun newActivity(): Activity = Activity(
   onWing = false,
   offWing = false,
   paid = true,
+  schedules = listOf(),
 )
