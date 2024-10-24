@@ -165,7 +165,7 @@ hmpps.sqs:
         "court-case.inserted",
         "legacy.court-case-references.updated",
         "court-appearance.inserted",
-        "court-sentencing.court-appearance.updated"]}
+        "court-appearance.updated"]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
     alerts:

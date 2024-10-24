@@ -121,8 +121,7 @@ hmpps.sqs:
         "court-case.inserted",
         "court-appearance.inserted",
         "legacy.court-case-references.updated",
-        "court-sentencing.court-appearance.created",
-        "court-sentencing.court-appearance.updated"]}
+        "court-appearance.updated"]}
     alerts:
       queueName: hmpps_prisoner_to_nomis_alerts_queue
       dlqName: hmpps_prisoner_to_nomis_alerts_dlq
