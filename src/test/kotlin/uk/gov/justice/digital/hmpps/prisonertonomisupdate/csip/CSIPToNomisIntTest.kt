@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip
 
+import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
@@ -268,6 +269,39 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("nomisCSIPReportId", nomisCSIPReportId)
               .withRequestBodyJsonPath("dpsCSIPReportId", dpsCSIPId)
               .withRequestBodyJsonPath("mappingType", CSIPFullMappingDto.MappingType.DPS_CREATED.name),
+          )
+        }
+      }
+
+      @Nested
+      inner class WhenCreateInDpsWithNonNomisData {
+        private val offenderNo = "A1234KP"
+        private val dpsCSIPId = UUID.randomUUID().toString()
+        private val nomisCSIPReportId = 43218L
+
+        @BeforeEach
+        fun setUp() {
+          csipMappingApi.stubGetByDpsReportId(HttpStatus.NOT_FOUND)
+          csipDpsApi.stubGetCsipReport(
+            dpsCsipRecord(decisionSignedOffRole = "OTHER").copy(
+              recordUuid = UUID.fromString(dpsCSIPId),
+            ),
+          )
+          csipNomisApi.stubPutCSIP(
+            csipResponse =
+            upsertCSIPResponse(nomisCSIPReportId = nomisCSIPReportId),
+          )
+          csipMappingApi.stubPostMapping()
+          publishCreateCSIPDomainEvent(offenderNo = offenderNo, recordUuid = dpsCSIPId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `the created csip will not contain details of the DPS csip signed off role if set to "OTHER"`() {
+          csipNomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("decision.actions.nonAssociationsUpdated", true)
+              .withRequestBodyJsonPath("decision.signedOffRoleCode", absent()),
           )
         }
       }

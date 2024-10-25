@@ -97,7 +97,7 @@ fun DecisionAndActions.toNomisDecisionRequest() =
   DecisionRequest(
     conclusion = conclusion,
     decisionOutcomeCode = outcome?.code,
-    signedOffRoleCode = signedOffByRole?.code,
+    signedOffRoleCode = if (signedOffByRole?.code != "OTHER") signedOffByRole?.code else null,
     recordedBy = recordedBy,
     recordedDate = date,
     nextSteps = nextSteps,
