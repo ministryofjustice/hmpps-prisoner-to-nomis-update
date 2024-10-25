@@ -136,6 +136,7 @@ fun dpsCsipRecord(
   incidentType: String = "INT",
   scsOutcomeCode: String = "CUR",
   reviewOutcome: Set<Review.Actions> = setOf(Review.Actions.REMAIN_ON_CSIP, Review.Actions.CLOSE_CSIP),
+  decisionSignedOffRole: String = "CUSTMAN",
 ) =
   CsipRecord(
     recordUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6a00"),
@@ -205,7 +206,7 @@ fun dpsCsipRecord(
           DecisionAndActions.Actions.SERVICE_REFERRAL,
         ),
         conclusion = "Offender needs help",
-        signedOffByRole = ReferenceData("CUSTMAN"),
+        signedOffByRole = ReferenceData(decisionSignedOffRole),
         date = LocalDate.parse("2024-04-08"),
         recordedBy = "FRED_ADM",
         recordedByDisplayName = "Fred Admin",
