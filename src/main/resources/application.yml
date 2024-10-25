@@ -167,7 +167,9 @@ reports:
   locations:
     reconciliation:
       page-size: 20
-
+  csip:
+    reconciliation:
+      page-size: 20
 hmpps.sqs:
   queues:
     location:

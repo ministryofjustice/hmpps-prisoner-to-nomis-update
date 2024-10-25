@@ -21,6 +21,7 @@ class ResourceServerConfiguration {
         "/alerts/reports/reconciliation",
         "/casenotes/reports/reconciliation",
         "/prisonperson/reports/reconciliation",
+        "/csip/reports/reconciliation",
         "/activities/mappings/unknown-mappings",
       )
     }

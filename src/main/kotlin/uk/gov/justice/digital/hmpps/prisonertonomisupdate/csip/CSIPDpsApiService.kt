@@ -14,4 +14,11 @@ class CSIPDpsApiService(@Qualifier("csipApiWebClient") private val webClient: We
       .uri("/csip-records/{csipReportId}", csipReportId)
       .retrieve()
       .awaitBody()
+
+  suspend fun getCSIPsForPrisoner(offenderNo: String): List<CsipRecord> =
+    webClient
+      .get()
+      .uri("/sync/csip-records/{offenderNo}", offenderNo)
+      .retrieve()
+      .awaitBody()
 }
