@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
@@ -104,6 +105,31 @@ class CSIPNomisApiServiceTest {
 
       csipNomisApiMockServer.verify(
         deleteRequestedFor(urlPathEqualTo("/csip/1234567")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetCSIPsForReconciliation {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      csipNomisApiMockServer.stubGetCSIPsForReconciliation(offenderNo = "A1234BC")
+
+      apiService.getCSIPsForReconciliation("A1234BC")
+
+      csipNomisApiMockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass offenderNo to service`() = runTest {
+      csipNomisApiMockServer.stubGetCSIPsForReconciliation(offenderNo = "A1234BC")
+
+      apiService.getCSIPsForReconciliation("A1234BC")
+
+      csipNomisApiMockServer.verify(
+        getRequestedFor(urlPathEqualTo("/prisoners/A1234BC/csip/reconciliation")),
       )
     }
   }

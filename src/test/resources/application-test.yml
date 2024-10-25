@@ -262,6 +262,9 @@ reports:
   prisonperson:
     reconciliation:
       page-size: 3
+  csip:
+    reconciliation:
+      page-size: 10
 
 api.locations.timeout: 1s
 

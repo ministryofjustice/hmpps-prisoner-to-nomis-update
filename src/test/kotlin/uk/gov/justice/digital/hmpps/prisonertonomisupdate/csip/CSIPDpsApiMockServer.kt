@@ -6,10 +6,12 @@ import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Attendee
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.ContributoryFactor
@@ -23,6 +25,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.ReferenceDa
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Referral
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Review
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.SaferCustodyScreeningOutcome
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -80,6 +83,32 @@ class CSIPDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         ),
     )
   }
+
+  fun stubGetCSIPsForPrisoner(offenderNo: String, vararg csips: CsipRecord) {
+    stubFor(
+      get(urlPathEqualTo("/sync/csip-records/$offenderNo"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              csips.toList(),
+            )
+            .withStatus(200),
+        ),
+    )
+  }
+
+  fun stubGetCSIPsForPrisoner(offenderNo: String, status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    stubFor(
+      get(urlPathEqualTo("/sync/csip-records/$offenderNo"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(error),
+        ),
+    )
+  }
 }
 
 fun dpsCsipRecordMinimal() =
@@ -103,7 +132,11 @@ fun dpsCsipRecordMinimal() =
     ),
   )
 
-fun dpsCsipRecord() =
+fun dpsCsipRecord(
+  incidentType: String = "INT",
+  scsOutcomeCode: String = "CUR",
+  reviewOutcome: Set<Review.Actions> = setOf(Review.Actions.REMAIN_ON_CSIP, Review.Actions.CLOSE_CSIP),
+) =
   CsipRecord(
     recordUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6a00"),
     prisonNumber = "A1234KT",
@@ -113,7 +146,7 @@ fun dpsCsipRecord() =
     status = CsipRecord.Status.CSIP_OPEN,
     referral = Referral(
       incidentDate = LocalDate.parse("2024-08-09"),
-      incidentType = ReferenceData(code = "INT"),
+      incidentType = ReferenceData(code = incidentType),
       incidentLocation = ReferenceData(code = "LIB"),
       referredBy = "JIM_ADM",
       referralDate = LocalDate.parse("2024-10-01"),
@@ -133,7 +166,7 @@ fun dpsCsipRecord() =
       referralCompletedBy = "JIM_ADM",
       referralCompletedByDisplayName = "",
       saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(
-        outcome = ReferenceData("CUR"),
+        outcome = ReferenceData(scsOutcomeCode),
         reasonForDecision = "There is a reason for the decision - it goes here",
         date = LocalDate.parse("2024-04-08"),
         recordedBy = "FRED_ADM",
@@ -239,12 +272,7 @@ fun dpsCsipRecord() =
           lastModifiedAt = null,
           lastModifiedBy = null,
           lastModifiedByDisplayName = null,
-
-          actions = setOf(
-            Review.Actions.REMAIN_ON_CSIP,
-            Review.Actions.CLOSE_CSIP,
-          ),
-
+          actions = reviewOutcome,
           attendees = listOf(
             Attendee(
               attendeeUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6555"),
