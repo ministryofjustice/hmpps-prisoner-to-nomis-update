@@ -521,8 +521,7 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
       "cancelled": false,
       "cancelledTime": "2023-01-13T09:38:26.092Z",
       "cancelledBy": "Adam Smith",
-      "attendances": [],
-      "timeSlot": "AM"
+      "attendances": []
     },
     {
       "id": ${SCHEDULE_INSTANCE_ID + 1},
@@ -532,8 +531,7 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
       "cancelled": true,
       "cancelledTime": "2023-01-13T09:38:26.092Z",
       "cancelledBy": "Adam Smith",
-      "attendances": [],
-      "timeSlot": "PM"
+      "attendances": []
     }
   ],
   "allocations": [],
@@ -594,8 +592,7 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
     "thursdayFlag": true,
     "fridayFlag": false,
     "saturdayFlag": false,
-    "sundayFlag": true,
-    "timeSlot": "AM"
+    "sundayFlag": true
   },
   {
     "id"        : 555666002,
@@ -608,8 +605,7 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
     "thursdayFlag": false,
     "fridayFlag": false,
     "saturdayFlag": false,
-    "sundayFlag": false,
-    "timeSlot": "PM"
+    "sundayFlag": false
   }],
   "startDate" : "2023-01-20",
   "endDate" : "2023-01-23",
@@ -630,8 +626,7 @@ fun buildGetScheduleResponseWithMissingInstance(id: Long = ACTIVITY_SCHEDULE_ID)
       "cancelled": true,
       "cancelledTime": "2023-01-13T09:38:26.092Z",
       "cancelledBy": "Adam Smith",
-      "attendances": [],
-      "timeSlot": "PM"
+      "attendances": []
     }
   ],
   "allocations": [],
@@ -692,8 +687,7 @@ fun buildGetScheduleResponseWithMissingInstance(id: Long = ACTIVITY_SCHEDULE_ID)
     "thursdayFlag": true,
     "fridayFlag": false,
     "saturdayFlag": false,
-    "sundayFlag": true,
-    "timeSlot": "AM"
+    "sundayFlag": true
   },
   {
     "id"        : 555666002,
@@ -706,8 +700,7 @@ fun buildGetScheduleResponseWithMissingInstance(id: Long = ACTIVITY_SCHEDULE_ID)
     "thursdayFlag": false,
     "fridayFlag": false,
     "saturdayFlag": false,
-    "sundayFlag": false,
-    "timeSlot": "PM"
+    "sundayFlag": false
   }],
   "startDate" : "2023-01-20",
   "endDate" : "2023-01-23",

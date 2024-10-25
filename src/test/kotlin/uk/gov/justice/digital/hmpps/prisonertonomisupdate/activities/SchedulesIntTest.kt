@@ -83,7 +83,6 @@ private fun buildGetScheduledInstanceResponse() =
       "attendances": [],
       "cancelledTime": null,
       "cancelledBy": null,
-      "timeSlot": "AM",
       "activitySchedule": {
         "id": $ACTIVITY_SCHEDULE_ID,
         "description": "activity",
