@@ -372,7 +372,8 @@ class LocationsService(
       else -> null
     },
     reactivateDate = location.proposedReactivationDate,
-    force = location.permanentlyDeactivated,
+    // A deactivation event could occur if just the reason has changed, so always disable the checking of whether it is already inactive
+    force = true,
   )
 
   private fun isDpsCreated(additionalInformation: LocationAdditionalInformation) =
