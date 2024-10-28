@@ -146,7 +146,7 @@ fun dpsCsipRecord(
     createdByDisplayName = "JOHN SMITH",
     status = CsipRecord.Status.CSIP_OPEN,
     referral = Referral(
-      incidentDate = LocalDate.parse("2024-08-09"),
+      incidentDate = LocalDate.parse("2024-06-12"),
       incidentType = ReferenceData(code = incidentType),
       incidentLocation = ReferenceData(code = "LIB"),
       referredBy = "JIM_ADM",

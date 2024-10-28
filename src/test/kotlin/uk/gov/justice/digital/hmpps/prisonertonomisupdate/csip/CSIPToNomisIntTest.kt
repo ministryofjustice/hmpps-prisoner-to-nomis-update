@@ -113,7 +113,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
           csipNomisApi.verify(
             putRequestedFor(anyUrl())
               .withRequestBodyJsonPath("offenderNo", "A1234KT")
-              .withRequestBodyJsonPath("incidentDate", "2024-08-09")
+              .withRequestBodyJsonPath("incidentDate", "2024-06-12")
               .withRequestBodyJsonPath("typeCode", "INT")
               .withRequestBodyJsonPath("locationCode", "LIB")
               .withRequestBodyJsonPath("areaOfWorkCode", "EDU")
@@ -619,7 +619,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("id", nomisCSIPReportId)
               .withRequestBodyJsonPath("logNumber", "LG123")
               .withRequestBodyJsonPath("offenderNo", "A1234KT")
-              .withRequestBodyJsonPath("incidentDate", "2024-08-09")
+              .withRequestBodyJsonPath("incidentDate", "2024-06-12")
               .withRequestBodyJsonPath("typeCode", "INT")
               .withRequestBodyJsonPath("locationCode", "LIB")
               .withRequestBodyJsonPath("areaOfWorkCode", "EDU")
