@@ -93,7 +93,7 @@ class CSIPService(
 
     runCatching {
       val mapping = mappingApiService.getOrNullByDpsId(dpsCsipReportId)
-        ?: throw IllegalStateException("Tried to update a csip that has never been created")
+        ?: throw IllegalStateException("Tried to update csip $dpsCsipReportId that has never been created")
 
       telemetryMap["nomisCSIPReportId"] = mapping.nomisCSIPReportId.toString()
 
