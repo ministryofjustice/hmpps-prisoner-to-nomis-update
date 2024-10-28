@@ -38,8 +38,7 @@ class CSIPResource(
           log.info("CSIP reconciliation report completed with ${it.size} mismatches")
           telemetryClient.trackEvent(
             "csip-reports-reconciliation-report",
-            mapOf("mismatch-count" to it.size.toString(), "success" to "true"),
-            // TODO ADD BACK IN + it.asMap(),
+            mapOf("mismatch-count" to it.size.toString(), "success" to "true") + it.asMap(),
           )
         }
         .onFailure {
@@ -47,5 +46,15 @@ class CSIPResource(
           log.error("CSIP reconciliation report failed", it)
         }
     }
+  }
+}
+
+fun List<MismatchCSIPs>.asMap(): Map<String, String> {
+  return this.associate {
+    it.offenderNo to
+      (
+        "total-dps=${it.dpsCSIPCount}:total-nomis=${it.nomisCSIPCount}; " +
+          "missing-dps=${it.missingFromDps.size}:missing-nomis=${it.missingFromNomis.size}"
+        )
   }
 }

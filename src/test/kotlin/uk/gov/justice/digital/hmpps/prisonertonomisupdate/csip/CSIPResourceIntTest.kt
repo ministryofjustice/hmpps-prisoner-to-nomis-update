@@ -84,7 +84,7 @@ class CSIPResourceIntTest : IntegrationTestBase() {
       csipDpsApi.stubGetCSIPsForPrisoner(
         "A0034TZ",
         dpsCsipRecord().copy(referral = dpsCsipRecord().referral.copy(incidentType = ReferenceData(code = "VIP"))),
-        dpsCsipRecord().copy(referral = dpsCsipRecord().referral.copy(incidentType = ReferenceData(code = "OTH"))),
+        dpsCsipRecord().copy(plan = dpsCsipRecord().plan!!.copy(identifiedNeeds = listOf())),
 
       )
       csipNomisApi.stubGetCSIPsForReconciliation(
@@ -156,6 +156,9 @@ class CSIPResourceIntTest : IntegrationTestBase() {
         eq("csip-reports-reconciliation-report"),
         check {
           assertThat(it).containsEntry("mismatch-count", "3")
+          assertThat(it).containsEntry("A0001TZ", "total-dps=2:total-nomis=1; missing-dps=0:missing-nomis=1")
+          assertThat(it).containsEntry("A0002TZ", "total-dps=2:total-nomis=1; missing-dps=0:missing-nomis=1")
+          assertThat(it).containsEntry("A0034TZ", "total-dps=2:total-nomis=3; missing-dps=2:missing-nomis=1")
         },
         isNull(),
       )
@@ -165,6 +168,32 @@ class CSIPResourceIntTest : IntegrationTestBase() {
         telemetryCaptor.capture(),
         isNull(),
       )
+
+      val mismatchedRecords = telemetryCaptor.allValues.map { it["offenderNo"] }
+
+      assertThat(mismatchedRecords).containsOnly("A0001TZ", "A0002TZ", "A0034TZ")
+      with(telemetryCaptor.allValues.find { it["offenderNo"] == "A0001TZ" }) {
+        assertThat(this).containsEntry("bookingId", "1")
+        assertThat(this).containsEntry("missingFromDps", "")
+        assertThat(this).containsEntry("missingFromNomis", "CSIPReportSummary(incidentTypeCode=VIP, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=true)")
+      }
+      with(telemetryCaptor.allValues.find { it["offenderNo"] == "A0002TZ" }) {
+        assertThat(this).containsEntry("bookingId", "2")
+        assertThat(this).containsEntry("missingFromDps", "")
+        assertThat(this).containsEntry("missingFromNomis", "CSIPReportSummary(incidentTypeCode=INT, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=true)")
+      }
+      with(telemetryCaptor.allValues.find { it["offenderNo"] == "A0034TZ" }) {
+        assertThat(this).containsEntry("bookingId", "34")
+        assertThat(this).containsEntry(
+          "missingFromDps",
+          "CSIPReportSummary(incidentTypeCode=INT, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=true), " +
+            "CSIPReportSummary(incidentTypeCode=ISO, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=true)",
+        )
+        assertThat(this).containsEntry(
+          "missingFromNomis",
+          "CSIPReportSummary(incidentTypeCode=INT, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=0, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=true)",
+        )
+      }
     }
 
     @Test
@@ -187,6 +216,8 @@ class CSIPResourceIntTest : IntegrationTestBase() {
         eq("csip-reports-reconciliation-report"),
         check {
           assertThat(it).containsEntry("mismatch-count", "2")
+          assertThat(it).containsKeys("A0001TZ", "A0034TZ")
+          assertThat(it).doesNotContainKey("A0002TZ")
         },
         isNull(),
       )
@@ -221,6 +252,8 @@ class CSIPResourceIntTest : IntegrationTestBase() {
         eq("csip-reports-reconciliation-report"),
         check {
           assertThat(it).containsEntry("mismatch-count", "3")
+          assertThat(it).containsKeys("A0001TZ", "A0002TZ", "A0034TZ")
+          assertThat(it).doesNotContainKey("A0033TZ")
         },
         isNull(),
       )

@@ -10,10 +10,14 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.CsipRecord
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Review
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CSIPResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
+import java.time.LocalDate
 
 @Service
 class CSIPReconciliationService(
@@ -51,20 +55,33 @@ class CSIPReconciliationService(
       .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
   suspend fun checkOpenCSIPsMatch(prisonerId: PrisonerIds): MismatchCSIPs? = runCatching {
-    val nomisCSIPs = doApiCallWithRetries { nomisCSIPApiService.getCSIPsForReconciliation(prisonerId.offenderNo) }.offenderCSIPs.size
-    val dpsCSIPs = doApiCallWithRetries { dpsCSIPApiService.getCSIPsForPrisoner(prisonerId.offenderNo) }.size
+    val nomisCSIPList = doApiCallWithRetries { nomisCSIPApiService.getCSIPsForReconciliation(prisonerId.offenderNo) }.offenderCSIPs
+    val dpsCSIPList = doApiCallWithRetries { dpsCSIPApiService.getCSIPsForPrisoner(prisonerId.offenderNo) }
 
-    val mismatchCSIP = dpsCSIPs - nomisCSIPs
-    return if (mismatchCSIP != 0) {
-      MismatchCSIPs(offenderNo = prisonerId.offenderNo, nomisCSIPCount = nomisCSIPs, dpsCSIPCount = dpsCSIPs).also { mismatch ->
+    val dpsCSIPs = dpsCSIPList.map { it.toCSIPSummary() }.toSet()
+    val nomisCSIPs = nomisCSIPList.map { it.toCSIPSummary() }.toSet()
+
+    val mismatchCount = nomisCSIPList.size - dpsCSIPList.size
+    val missingFromNomis = dpsCSIPs - nomisCSIPs
+    val missingFromDps = nomisCSIPs - dpsCSIPs
+    return if (mismatchCount != 0 || missingFromNomis.isNotEmpty() || missingFromDps.isNotEmpty()) {
+      MismatchCSIPs(
+        offenderNo = prisonerId.offenderNo,
+        dpsCSIPCount = dpsCSIPList.size,
+        nomisCSIPCount = nomisCSIPList.size,
+        missingFromDps = missingFromDps,
+        missingFromNomis = missingFromNomis,
+      ).also { mismatch ->
         log.info("CSIP Mismatch found  $mismatch")
         telemetryClient.trackEvent(
           "csip-reports-reconciliation-mismatch",
           mapOf(
             "offenderNo" to mismatch.offenderNo,
             "bookingId" to prisonerId.bookingId.toString(),
-            "dpsCSIPCount" to mismatch.dpsCSIPCount.toString(),
-            "nomisCSIPCount" to mismatch.nomisCSIPCount.toString(),
+            "dpsCount" to mismatch.dpsCSIPCount.toString(),
+            "nomisCount" to mismatch.nomisCSIPCount.toString(),
+            "missingFromDps" to (mismatch.missingFromDps.joinToString()),
+            "missingFromNomis" to (mismatch.missingFromNomis.joinToString()),
           ),
         )
       }
@@ -83,8 +100,55 @@ class CSIPReconciliationService(
   }.getOrNull()
 }
 
+fun CSIPResponse.toCSIPSummary() =
+  CSIPReportSummary(
+    incidentTypeCode = type.code,
+    incidentDate = incidentDate,
+    incidentTime = incidentTime,
+    attendeeCount = reviews.flatMap { it.attendees }.size,
+    factorCount = reportDetails.factors.size,
+    interviewCount = investigation.interviews?.size ?: 0,
+    planCount = plans.size,
+    reviewCount = reviews.size,
+    scsOutcomeCode = saferCustodyScreening.outcome?.code,
+    decisionOutcomeCode = decision.decisionOutcome?.code,
+    csipClosedFlag = reviews.any { it.closeCSIP },
+  )
+
+fun CsipRecord.toCSIPSummary() =
+  CSIPReportSummary(
+    incidentTypeCode = referral.incidentType.code,
+    incidentDate = referral.incidentDate,
+    incidentTime = referral.incidentTime,
+    attendeeCount = plan?.reviews?.flatMap { it.attendees }?.size ?: 0,
+    factorCount = referral.contributoryFactors.size,
+    interviewCount = referral.investigation?.interviews?.size ?: 0,
+    planCount = plan?.identifiedNeeds?.size ?: 0,
+    reviewCount = plan?.reviews?.size ?: 0,
+    scsOutcomeCode = referral.saferCustodyScreeningOutcome?.outcome?.code,
+    decisionOutcomeCode = referral.decisionAndActions?.outcome?.code,
+    csipClosedFlag = plan?.reviews?.any { it.actions.contains(Review.Actions.CLOSE_CSIP) } ?: false,
+  )
+
+data class CSIPReportSummary(
+  val incidentTypeCode: String,
+  val incidentDate: LocalDate,
+  val incidentTime: String? = null,
+  val attendeeCount: Int,
+  val factorCount: Int,
+  val interviewCount: Int,
+  val planCount: Int,
+  val reviewCount: Int,
+  val scsOutcomeCode: String? = "",
+  val decisionOutcomeCode: String? = null,
+  val csipClosedFlag: Boolean,
+)
+
 data class MismatchCSIPs(
   val offenderNo: String,
   val nomisCSIPCount: Int,
   val dpsCSIPCount: Int,
+  val missingFromDps: Set<CSIPReportSummary>,
+  val missingFromNomis: Set<CSIPReportSummary>,
+
 )
