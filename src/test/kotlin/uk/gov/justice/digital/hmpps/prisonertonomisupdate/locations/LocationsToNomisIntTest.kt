@@ -519,7 +519,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBody(matchingJsonPath("reasonCode", equalTo("I")))
               .withRequestBody(matchingJsonPath("reactivateDate", equalTo("2024-02-14")))
               .withRequestBody(matchingJsonPath("deactivateDate", equalTo("2024-02-01")))
-              .withRequestBody(matchingJsonPath("force", equalTo("false"))),
+              .withRequestBody(matchingJsonPath("force", equalTo("true"))),
           )
         }
       }
