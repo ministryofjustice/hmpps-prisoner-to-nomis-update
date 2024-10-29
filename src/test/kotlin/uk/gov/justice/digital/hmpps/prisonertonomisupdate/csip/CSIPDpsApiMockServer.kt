@@ -119,7 +119,7 @@ fun dpsCsipRecordMinimal() =
     prisonCodeWhenRecorded = "ASI",
     createdBy = "JSMITH",
     createdByDisplayName = "JOHN SMITH",
-    status = CsipRecord.Status.CSIP_OPEN,
+    status = ReferenceData(code = "CSIP_OPEN"),
     referral = Referral(
       incidentDate = LocalDate.parse("2024-08-09"),
       incidentType = ReferenceData(code = "INT"),
@@ -144,7 +144,7 @@ fun dpsCsipRecord(
     createdAt = LocalDateTime.parse("2024-04-01T10:32:12.867081"),
     createdBy = "JSMITH",
     createdByDisplayName = "JOHN SMITH",
-    status = CsipRecord.Status.CSIP_OPEN,
+    status = ReferenceData(code = "CSIP_OPEN"),
     referral = Referral(
       incidentDate = LocalDate.parse("2024-06-12"),
       incidentType = ReferenceData(code = incidentType),
