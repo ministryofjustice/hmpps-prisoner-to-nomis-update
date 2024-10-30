@@ -30,7 +30,7 @@ class CourtSentencingDomainEventListener(
   @SqsListener("courtsentencing", factory = "hmppsQueueContainerFactoryProxy")
   fun onMessage(
     rawMessage: String,
-  ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
+  ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "court-case.inserted" ->
         courtSentencingService.createCourtCase(message.fromJson())

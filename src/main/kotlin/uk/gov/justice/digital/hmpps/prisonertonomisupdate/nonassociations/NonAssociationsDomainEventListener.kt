@@ -28,7 +28,7 @@ class NonAssociationsDomainEventListener(
   }
 
   @SqsListener("nonassociation", factory = "hmppsQueueContainerFactoryProxy")
-  fun onMessage(rawMessage: String): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
+  fun onMessage(rawMessage: String): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "non-associations.created" -> nonAssociationsService.createNonAssociation(message.fromJson())
       "non-associations.amended" -> nonAssociationsService.amendNonAssociation(message.fromJson())

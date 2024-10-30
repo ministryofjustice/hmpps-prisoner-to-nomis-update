@@ -28,7 +28,7 @@ class AppointmentsDomainEventListener(
   }
 
   @SqsListener("appointment", factory = "hmppsQueueContainerFactoryProxy")
-  fun onMessage(rawMessage: String): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
+  fun onMessage(rawMessage: String): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "appointments.appointment-instance.created" -> appointmentsService.createAppointment(message.fromJson())
       "appointments.appointment-instance.updated" -> appointmentsService.updateAppointment(message.fromJson())

@@ -30,7 +30,7 @@ class PrisonPersonDomainEventListener(
   @SqsListener("prisonperson", factory = "hmppsQueueContainerFactoryProxy")
   fun onMessage(
     rawMessage: String,
-  ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
+  ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "prison-person.physical-attributes.updated" -> physicalAttributesSyncService.updatePhysicalAttributesEvent(message.fromJson())
       "prisoner-offender-search.prisoner.received" -> physicalAttributesSyncService.readmissionSwitchBookingEvent(message.fromJson())

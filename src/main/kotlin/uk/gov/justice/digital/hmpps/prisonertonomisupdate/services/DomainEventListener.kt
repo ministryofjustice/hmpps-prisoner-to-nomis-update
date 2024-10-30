@@ -25,7 +25,7 @@ abstract class DomainEventListenerNoMapping(
   fun onDomainEvent(
     rawMessage: String,
     processMessage: suspend (eventType: String, message: String) -> Unit,
-  ): CompletableFuture<Void> {
+  ): CompletableFuture<Void?> {
     log.debug("Received message {}", rawMessage)
     val sqsMessage: SQSMessage = rawMessage.fromJson()
     return asCompletableFuture {
@@ -76,9 +76,10 @@ abstract class DomainEventListener(
 
 private fun asCompletableFuture(
   process: suspend () -> Unit,
-): CompletableFuture<Void> = CoroutineScope(Context.current().asContextElement()).future {
+): CompletableFuture<Void?> = CoroutineScope(Context.current().asContextElement()).future {
   process()
-}.thenAccept { }
+  null
+}
 
 interface CreateMappingRetryable {
   suspend fun retryCreateMapping(message: String)

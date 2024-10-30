@@ -30,7 +30,7 @@ class SentencingDomainEventListener(
   @SqsListener("sentencing", factory = "hmppsQueueContainerFactoryProxy")
   fun onMessage(
     rawMessage: String,
-  ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
+  ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "release-date-adjustments.adjustment.inserted" ->
         sentencingAdjustmentsService.createAdjustment(message.fromJson())

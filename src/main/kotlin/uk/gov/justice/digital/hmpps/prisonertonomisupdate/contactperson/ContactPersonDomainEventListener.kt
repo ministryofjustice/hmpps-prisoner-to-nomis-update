@@ -30,7 +30,7 @@ class ContactPersonDomainEventListener(
   @SqsListener("contactperson", factory = "hmppsQueueContainerFactoryProxy")
   fun onMessage(
     rawMessage: String,
-  ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
+  ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     @Suppress("UNUSED_EXPRESSION")
     when (eventType) {
       else -> log.info("Received a message I wasn't expecting: {}", eventType)

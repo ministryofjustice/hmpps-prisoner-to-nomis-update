@@ -29,7 +29,7 @@ class VisitsDomainEventListener(
   }
 
   @SqsListener("visit", factory = "hmppsQueueContainerFactoryProxy")
-  fun onMessage(rawMessage: String): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
+  fun onMessage(rawMessage: String): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "prison-visit.booked" -> visitsService.createVisit(objectMapper.readValue(message))
       "prison-visit.cancelled" -> visitsService.cancelVisit(objectMapper.readValue(message))
