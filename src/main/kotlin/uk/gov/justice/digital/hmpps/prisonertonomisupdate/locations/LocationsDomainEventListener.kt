@@ -28,7 +28,7 @@ class LocationsDomainEventListener(
   }
 
   @SqsListener("location", factory = "hmppsQueueContainerFactoryProxy")
-  fun onMessage(rawMessage: String): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
+  fun onMessage(rawMessage: String): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "location.inside.prison.created" -> locationsService.createLocation(message.fromJson())
       "location.inside.prison.amended" -> locationsService.amendLocation(message.fromJson())

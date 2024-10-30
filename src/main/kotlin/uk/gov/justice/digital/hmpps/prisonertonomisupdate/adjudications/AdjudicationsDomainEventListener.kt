@@ -30,7 +30,7 @@ class AdjudicationsDomainEventListener(
   @SqsListener("adjudication", factory = "hmppsQueueContainerFactoryProxy")
   fun onMessage(
     rawMessage: String,
-  ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
+  ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "adjudication.report.created" -> adjudicationsService.createAdjudication(message.fromJson())
       "adjudication.damages.updated" -> adjudicationsService.updateAdjudicationDamages(message.fromJson())

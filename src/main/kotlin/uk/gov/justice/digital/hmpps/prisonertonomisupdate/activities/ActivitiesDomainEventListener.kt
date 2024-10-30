@@ -31,7 +31,7 @@ class ActivitiesDomainEventListener(
   }
 
   @SqsListener("activity", factory = "hmppsQueueContainerFactoryProxy")
-  fun onMessage(rawMessage: String): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
+  fun onMessage(rawMessage: String): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "activities.activity-schedule.created" -> activitiesService.createActivityEvent(message.fromJson())
       "activities.activity-schedule.amended" -> activitiesService.updateActivityEvent(message.fromJson())

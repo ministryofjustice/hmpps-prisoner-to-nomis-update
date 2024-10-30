@@ -31,7 +31,7 @@ class AlertsDomainEventListener(
   @SqsListener("alerts", factory = "hmppsQueueContainerFactoryProxy")
   fun onMessage(
     rawMessage: String,
-  ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
+  ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "person.alert.created" -> alertsService.createAlert(message.fromJson())
 

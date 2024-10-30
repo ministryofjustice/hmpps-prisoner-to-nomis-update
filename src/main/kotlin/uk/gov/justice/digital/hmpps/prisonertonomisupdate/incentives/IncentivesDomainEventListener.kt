@@ -29,7 +29,7 @@ class IncentivesDomainEventListener(
   }
 
   @SqsListener("incentive", factory = "hmppsQueueContainerFactoryProxy")
-  fun onMessage(rawMessage: String): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
+  fun onMessage(rawMessage: String): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "incentives.iep-review.inserted" -> incentivesService.createIncentive(message.fromJson())
       "incentives.level.changed" -> incentivesReferenceService.globalIncentiveLevelChange(message.fromJson())

@@ -29,7 +29,7 @@ class CaseNotesDomainEventListener(
   @SqsListener("casenotes", factory = "hmppsQueueContainerFactoryProxy")
   fun onMessage(
     rawMessage: String,
-  ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
+  ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "person.case-note.created" -> caseNotesService.createCaseNote(message.fromJson())
 

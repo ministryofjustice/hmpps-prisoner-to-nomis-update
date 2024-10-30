@@ -30,7 +30,7 @@ class CSIPDomainEventListener(
   @SqsListener("csip", factory = "hmppsQueueContainerFactoryProxy")
   fun onMessage(
     rawMessage: String,
-  ): CompletableFuture<Void> = onDomainEvent(rawMessage) { eventType, message ->
+  ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "person.csip-record.created" -> csipService.createCSIPReport(message.fromJson())
       "person.csip-record.updated" -> csipService.updateCSIPReport(message.fromJson())
