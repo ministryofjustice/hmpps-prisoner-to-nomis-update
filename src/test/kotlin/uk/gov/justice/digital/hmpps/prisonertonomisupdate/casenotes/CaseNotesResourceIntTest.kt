@@ -61,7 +61,7 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
       caseNotesDpsApi.stubGetCaseNotesForPrisoner("A0007BB", "[]")
       caseNotesDpsApi.stubGetCaseNotesForPrisoner("A0008BB", "[]")
 
-      webTestClient.put().uri("/casenotes/reports/reconciliation")
+      webTestClient.put().uri("/casenotes/reports/reconciliation?activeOnly=false")
         .exchange()
         .expectStatus().isAccepted
 
@@ -71,6 +71,7 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
         eq("casenotes-reports-reconciliation-requested"),
         check {
           assertThat(it).containsEntry("casenotes-nomis-total", "8")
+          assertThat(it).containsEntry("activeOnly", "false")
         },
         isNull(),
       )
@@ -88,9 +89,9 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
     @Test
     fun `will output report failure telemetry`() = runTest {
       nomisApi.stubGetAllPrisonersInitialCount(1, 1)
-      doThrow(RuntimeException("test")).whenever(caseNotesReconciliationService).generateReconciliationReport()
+      doThrow(RuntimeException("test")).whenever(caseNotesReconciliationService).generateReconciliationReport(1, false)
 
-      webTestClient.put().uri("/casenotes/reports/reconciliation")
+      webTestClient.put().uri("/casenotes/reports/reconciliation?activeOnly=false")
         .exchange()
         .expectStatus().isAccepted
 
@@ -109,6 +110,53 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
         check {
           assertThat(it).containsEntry("success", "false")
           assertThat(it).containsEntry("error", "test")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `active only`() {
+      nomisApi.stubGetActivePrisonersInitialCount(8)
+      nomisApi.stubGetActivePrisonersPage(8, 0, 5, 5)
+      nomisApi.stubGetActivePrisonersPage(8, 1, 3, 5)
+      caseNotesNomisApiMockServer.stubGetCaseNotesForPrisoner("A0001TZ")
+      caseNotesNomisApiMockServer.stubGetCaseNotesForPrisoner("A0002TZ")
+      caseNotesNomisApiMockServer.stubGetCaseNotesForPrisoner("A0003TZ")
+      caseNotesNomisApiMockServer.stubGetCaseNotesForPrisoner("A0004TZ")
+      caseNotesNomisApiMockServer.stubGetCaseNotesForPrisoner("A0005TZ")
+      caseNotesNomisApiMockServer.stubGetCaseNotesForPrisoner("A0006TZ")
+      caseNotesNomisApiMockServer.stubGetCaseNotesForPrisoner("A0007TZ")
+      caseNotesNomisApiMockServer.stubGetCaseNotesForPrisoner("A0008TZ")
+      caseNotesDpsApi.stubGetCaseNotesForPrisoner("A0001TZ", "[]")
+      caseNotesDpsApi.stubGetCaseNotesForPrisoner("A0002TZ", "[]")
+      caseNotesDpsApi.stubGetCaseNotesForPrisoner("A0003TZ", "[]")
+      caseNotesDpsApi.stubGetCaseNotesForPrisoner("A0004TZ", "[]")
+      caseNotesDpsApi.stubGetCaseNotesForPrisoner("A0005TZ", "[]")
+      caseNotesDpsApi.stubGetCaseNotesForPrisoner("A0006TZ", "[]")
+      caseNotesDpsApi.stubGetCaseNotesForPrisoner("A0007TZ", "[]")
+      caseNotesDpsApi.stubGetCaseNotesForPrisoner("A0008TZ", "[]")
+
+      webTestClient.put().uri("/casenotes/reports/reconciliation?activeOnly=true")
+        .exchange()
+        .expectStatus().isAccepted
+
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("casenotes-reports-reconciliation-requested"),
+        check {
+          assertThat(it).containsEntry("casenotes-nomis-total", "8")
+          assertThat(it).containsEntry("activeOnly", "true")
+        },
+        isNull(),
+      )
+
+      verify(telemetryClient).trackEvent(
+        eq("casenotes-reports-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("mismatch-count", "0")
+          assertThat(it).containsEntry("success", "true")
         },
         isNull(),
       )

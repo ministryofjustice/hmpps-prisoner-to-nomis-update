@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseNoteResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import java.time.format.DateTimeFormatter
 import java.util.Objects
 import kotlin.String
@@ -31,54 +32,81 @@ class CaseNotesReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun generateReconciliationReport(): List<MismatchCaseNote> {
-    log.info("started service generateReconciliationReport()")
-    var last: Long = 0
-    var size: Int = 0
-    var pageNumber = 0
-    var pageErrors = 0
-    val results = mutableListOf<MismatchCaseNote>()
-    do {
-      runCatching {
-        results.addAll(
-          nomisApiService.getAllPrisoners(last, pageSize.toInt()).let {
-            size = it.prisonerIds.size
-            log.info("Page $pageNumber requested from id $last, with $size prisoners")
-            last = it.lastOffenderId
-            pageNumber++
+  suspend fun generateReconciliationReport(prisonerCount: Long, activeOnly: Boolean): List<MismatchCaseNote> {
+    if (activeOnly) {
+      return prisonerCount.asPages(pageSize).flatMap { page ->
+        val prisoners = getAllPrisonersForPage(page)
 
-            withContext(Dispatchers.Unconfined) {
-              it.prisonerIds.map { async { checkMatch(it) } }
-            }.awaitAll().filterNotNull()
-          },
-        )
+        withContext(Dispatchers.Unconfined) {
+          prisoners.map { prisonerId -> async { checkMatch(prisonerId) } }
+        }
+          .awaitAll().filterNotNull()
       }
-        .onFailure {
-          pageErrors++
-          telemetryClient.trackEvent(
-            "casenotes-reports-reconciliation-mismatch-page-error",
-            mapOf(
-              "page" to pageNumber.toString(),
-              "pageErrors" to pageErrors.toString(),
-            ),
+    } else {
+      val results = mutableListOf<MismatchCaseNote>()
+      var last: Long = 0
+      var size: Int = 0
+      var pageNumber = 0
+      var pageErrors = 0
+      do {
+        runCatching {
+          results.addAll(
+            nomisApiService.getAllPrisoners(last, pageSize.toInt()).let {
+              size = it.prisonerIds.size
+              log.info("Page $pageNumber requested from id $last, with $size prisoners")
+              last = it.lastOffenderId
+              pageNumber++
+
+              withContext(Dispatchers.Unconfined) {
+                it.prisonerIds.map { async { checkMatch(it) } }
+              }.awaitAll().filterNotNull()
+            },
           )
-          log.error("Unable to match entire page of prisoners: page $pageNumber, pageErrors $pageErrors", it)
-        }.getOrNull()
-    } while (size == pageSize.toInt() && pageErrors < 100)
-    return results
+        }
+          .onFailure {
+            pageErrors++
+            telemetryClient.trackEvent(
+              "casenotes-reports-reconciliation-mismatch-page-error",
+              mapOf(
+                "page" to pageNumber.toString(),
+                "pageErrors" to pageErrors.toString(),
+              ),
+            )
+            log.error("Unable to match entire page of prisoners: page $pageNumber, pageErrors $pageErrors", it)
+          }.getOrNull()
+      } while (size == pageSize.toInt() && pageErrors < 100)
+      return results
+    }
   }
+
+  internal suspend fun getAllPrisonersForPage(page: Pair<Long, Long>) =
+    runCatching {
+      nomisApiService.getActivePrisoners(page.first, page.second)
+        .content.map { PrisonerId(it.offenderNo) }
+    }
+      .onFailure {
+        telemetryClient.trackEvent(
+          "casenotes-reports-reconciliation-mismatch-page-error",
+          mapOf(
+            "page" to page.first.toString(),
+          ),
+        )
+        log.error("Unable to match entire page of prisoners: $page", it)
+      }
+      .getOrElse { emptyList() }
+      .also { log.info("Page requested: $page, with ${it.size} prisoners") }
 
   suspend fun checkMatch(prisonerId: PrisonerId): MismatchCaseNote? {
     val offenderNo = prisonerId.offenderNo
 
     return runCatching {
-      val nomisCaseNotes = caseNotesNomisApiService.getCaseNotesForPrisoner(offenderNo)
-        .caseNotes
-        .map(::transformFromNomis)
+      val dpsCaseNotes = caseNotesDpsApiService.getCaseNotesForPrisoner(offenderNo)
+        .map { it.transformFromDps() }
         .toSortedSet(fieldsComparator)
 
-      val dpsCaseNotes = caseNotesDpsApiService.getCaseNotesForPrisoner(offenderNo)
-        .map(::transformFromDps)
+      val nomisCaseNotes = caseNotesNomisApiService.getCaseNotesForPrisoner(offenderNo)
+        .caseNotes
+        .map { it.transformFromNomis() }
         .toSortedSet(fieldsComparator)
 
       val pairedCaseNotes = dpsCaseNotes zip nomisCaseNotes
@@ -129,36 +157,36 @@ class CaseNotesReconciliationService(
     }.getOrNull()
   }
 
-  private fun transformFromDps(c: CaseNote) = CommonCaseNoteFields(
-    c.text,
-    c.type,
-    c.subType,
-    c.occurrenceDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
-    c.authorUsername,
-    c.amendments.map { a ->
+  private fun CaseNote.transformFromDps() = CommonCaseNoteFields(
+    text,
+    type,
+    subType,
+    occurrenceDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
+    authorUsername,
+    amendments.map { a ->
       CommonAmendmentFields(
         text = a.additionalNoteText,
         occurrenceDateTime = a.creationDateTime?.format(DateTimeFormatter.ISO_DATE_TIME),
         authorUsername = a.authorUserName,
       )
     }.toSortedSet(amendmentComparator),
-    c.legacyId,
+    legacyId,
   )
 
-  private fun transformFromNomis(c: CaseNoteResponse) = CommonCaseNoteFields(
-    c.caseNoteText,
-    c.caseNoteType.code,
-    c.caseNoteSubType.code,
-    c.occurrenceDateTime,
-    c.authorUsername,
-    c.amendments.map { a ->
+  private fun CaseNoteResponse.transformFromNomis() = CommonCaseNoteFields(
+    caseNoteText,
+    caseNoteType.code,
+    caseNoteSubType.code,
+    occurrenceDateTime,
+    authorUsername,
+    amendments.map { a ->
       CommonAmendmentFields(
         text = a.text,
         occurrenceDateTime = a.createdDateTime,
         authorUsername = a.authorUsername,
       )
     }.toSortedSet(amendmentComparator),
-    c.caseNoteId,
+    caseNoteId,
   )
 }
 
