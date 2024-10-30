@@ -135,6 +135,7 @@ class CaseNotesReconciliationServiceTest {
 
     @Test
     fun `will continue after a Nomis api error`() = runTest {
+      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(dpsPrisoner())
       whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenThrow(RuntimeException("test"))
 
       assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNull()
