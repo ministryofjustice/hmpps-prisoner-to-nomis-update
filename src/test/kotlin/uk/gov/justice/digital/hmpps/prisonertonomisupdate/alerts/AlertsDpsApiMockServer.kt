@@ -161,7 +161,6 @@ fun dpsAlert(): Alert = Alert(
   activeFrom = LocalDate.parse("2021-09-27"),
   activeTo = LocalDate.parse("2022-07-15"),
   isActive = true,
-  comments = emptyList(),
   createdAt = LocalDateTime.parse("2024-02-28T13:56:10"),
   createdBy = "USER1234",
   createdByDisplayName = "Firstname Lastname",
