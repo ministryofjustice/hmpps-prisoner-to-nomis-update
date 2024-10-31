@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Review
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.SaferCustodyScreeningOutcome
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 class CSIPDpsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
@@ -115,10 +114,7 @@ fun dpsCsipRecordMinimal() =
   CsipRecord(
     recordUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6a00"),
     prisonNumber = "A1234KT",
-    createdAt = LocalDateTime.now(),
     prisonCodeWhenRecorded = "ASI",
-    createdBy = "JSMITH",
-    createdByDisplayName = "JOHN SMITH",
     status = ReferenceData(code = "CSIP_OPEN"),
     referral = Referral(
       incidentDate = LocalDate.parse("2024-08-09"),
@@ -141,9 +137,6 @@ fun dpsCsipRecord(
   CsipRecord(
     recordUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6a00"),
     prisonNumber = "A1234KT",
-    createdAt = LocalDateTime.parse("2024-04-01T10:32:12.867081"),
-    createdBy = "JSMITH",
-    createdByDisplayName = "JOHN SMITH",
     status = ReferenceData(code = "CSIP_OPEN"),
     referral = Referral(
       incidentDate = LocalDate.parse("2024-06-12"),
@@ -181,13 +174,7 @@ fun dpsCsipRecord(
             interviewee = "Bill Black",
             interviewDate = LocalDate.parse("2024-06-06"),
             intervieweeRole = ReferenceData("WITNESS"),
-            createdAt = LocalDateTime.parse("2024-04-04T15:12:32.004620"),
-            createdBy = "AA_ADM",
-            createdByDisplayName = "ADAM SMITH",
             interviewText = "Saw a pipe in his hand",
-            lastModifiedAt = LocalDateTime.parse("2024-08-12T11:32:15"),
-            lastModifiedBy = "BB_ADM",
-            lastModifiedByDisplayName = "Bebe SMITH",
           ),
         ),
         staffInvolved = "some people",
@@ -219,20 +206,11 @@ fun dpsCsipRecord(
           factorUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6111"),
           factorType = ReferenceData("BUL"),
           comment = "Offender causes trouble",
-          createdAt = LocalDateTime.parse("2024-04-01T10:00:00"),
-          createdBy = "CFACTOR",
-          createdByDisplayName = "CFACTOR",
-          lastModifiedAt = null,
-          lastModifiedBy = null,
-          lastModifiedByDisplayName = null,
         ),
       ),
     ),
     logCode = "ASI-001",
     prisonCodeWhenRecorded = "MDI",
-    lastModifiedAt = null,
-    lastModifiedBy = null,
-    lastModifiedByDisplayName = null,
 
     plan = Plan(
       caseManager = "C Jones",
@@ -242,18 +220,12 @@ fun dpsCsipRecord(
         IdentifiedNeed(
           identifiedNeedUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6333"),
           identifiedNeed = "they need help",
-          responsiblePerson = "Jason", intervention = "dd",
+          responsiblePerson = "Jason",
+          intervention = "dd",
           progression = "there was some improvement",
           targetDate = LocalDate.parse("2024-08-20"),
           closedDate = LocalDate.parse("2024-04-17"),
           createdDate = LocalDate.parse("2024-04-16"),
-
-          createdAt = LocalDateTime.parse("2024-03-16T11:32:15"),
-          createdBy = "PPLAN",
-          createdByDisplayName = "Peter Plan",
-          lastModifiedAt = null,
-          lastModifiedBy = null,
-          lastModifiedByDisplayName = null,
         ),
       ),
       reviews = listOf(
@@ -267,12 +239,6 @@ fun dpsCsipRecord(
           recordedBy = "JSMITH",
           recordedByDisplayName = "JOHN SMITH",
 
-          createdAt = LocalDateTime.parse("2024-04-01T10:00"),
-          createdBy = "FJAMES",
-          createdByDisplayName = "FRED JAMES",
-          lastModifiedAt = null,
-          lastModifiedBy = null,
-          lastModifiedByDisplayName = null,
           actions = reviewOutcome,
           attendees = listOf(
             Attendee(
@@ -281,9 +247,6 @@ fun dpsCsipRecord(
               role = "person",
               isAttended = true,
               contribution = "talked about things",
-              createdAt = LocalDateTime.parse("2024-08-20T10:33:48.946787"),
-              createdBy = "DBULL_ADM",
-              createdByDisplayName = "DOM BULL",
             ),
           ),
         ),

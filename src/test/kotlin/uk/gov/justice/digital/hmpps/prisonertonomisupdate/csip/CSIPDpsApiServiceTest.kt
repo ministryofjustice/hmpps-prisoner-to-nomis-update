@@ -58,7 +58,7 @@ class CSIPDpsApiServiceTest {
       val csip = apiService.getCsipReport(csipReportId = dpsCSIPId)
 
       assertThat(csip.recordUuid.toString()).isEqualTo(dpsCSIPId)
-      assertThat(csip.createdByDisplayName).isEqualTo("JOHN SMITH")
+      assertThat(csip.logCode).isEqualTo("ASI-001")
     }
   }
 }
