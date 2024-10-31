@@ -2,12 +2,12 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Challenge, Support, and Intervention Plan API",
-    "description": "API for retrieving and managing Challenge, Support, and Intervention Plan (CSIP) relating to a person.\n\n## Authentication\n\nThis API uses OAuth2 with JWTs. You will need to pass the JWT in the `Authorization` header using the `Bearer` scheme.\n\n## Authorisation\n\nThe API uses roles to control access to the endpoints. The roles required for each endpoint are documented in the endpoint descriptions.\n\n## Identifying the user\n\nThe majority of the endpoints in this API require the user to be identified via their username. This is to correctly populate the change history of CSIP records e.g. who created or updated a CSIP record and for auditing purposes. The username is required when the service is called directly by a user or when another service is acting on behalf of a user. The method to supply the username is via the `subject` claim in the JWT.\n### 4XX response codes related to username:\n\n- A 400 Bad Request response will be returned if the username cannot be found in the user management service.\n",
+    "description": "API for retrieving and managing Challenge, Support, and Intervention Plan (CSIP) relating to a person.\n\nThis API is only intended for use by the CSIP UI and the prisoner profile. Any other proposed consumers of this API should discuss the requirements first with the current maintainers of the CSIP service. See the developer portal for this information.\n\n## Authentication\n\nThis API uses OAuth2 with JWTs. You will need to pass the JWT in the `Authorization` header using the `Bearer` scheme.\n\n## Authorisation\n\nThe API uses roles to control access to the endpoints. The roles required for each endpoint are documented in the endpoint descriptions.\n\n## Identifying the user\n\nThe majority of the endpoints in this API require the user to be identified via their username. This is to correctly populate the change history of CSIP records e.g. who created or updated a CSIP record and for auditing purposes. The username is required when the service is called directly by a user or when another service is acting on behalf of a user. The method to supply the username is via the `subject` claim in the JWT.\n### 4XX response codes related to username:\n\n- A 400 Bad Request response will be returned if the username cannot be found in the user management service.\n",
     "contact": {
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-10-29.2564.512b633"
+    "version": "2024-10-31.2599.6fee3b7"
   },
   "servers": [
     {
@@ -84,8 +84,8 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -94,8 +94,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -145,8 +145,8 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -155,8 +155,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -174,91 +174,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/queue-admin/retry-dlq/{dlqName}": {
-      "put": {
-        "tags": [
-          "hmpps-queue-resource"
-        ],
-        "description": "\n\nRequires one of the following roles:\n* ROLE_CSIP_ADMIN",
-        "operationId": "retryDlq",
-        "parameters": [
-          {
-            "name": "dlqName",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/RetryDlqResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/queue-admin/retry-all-dlqs": {
-      "put": {
-        "tags": [
-          "hmpps-queue-resource"
-        ],
-        "operationId": "retryAllDlqs",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RetryDlqResult"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/queue-admin/purge-queue/{queueName}": {
-      "put": {
-        "tags": [
-          "hmpps-queue-resource"
-        ],
-        "description": "\n\nRequires one of the following roles:\n* ROLE_CSIP_ADMIN",
-        "operationId": "purgeQueue",
-        "parameters": [
-          {
-            "name": "queueName",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/PurgeQueueResult"
                 }
               }
             }
@@ -297,6 +212,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Decision and actions updated for CSIP referral",
             "content": {
@@ -317,8 +242,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "409": {
+            "description": "The CSIP referral associated with this identifier already has a decision and actions",
             "content": {
               "application/json": {
                 "schema": {
@@ -333,16 +258,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DecisionAndActions"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "The CSIP referral associated with this identifier already has a decision and actions",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -371,120 +286,6 @@
       }
     },
     "/prisoners/{prisonNumber}/csip-records": {
-      "get": {
-        "tags": [
-          "1. CSIP Record Controller"
-        ],
-        "summary": "Retrieve and filter all CSIP records for a prisoner.",
-        "description": "Returns the CSIP records for a prisoner. Supports log code filtering.\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
-        "operationId": "getCsipRecordsByPrisonNumbers_1",
-        "parameters": [
-          {
-            "name": "prisonNumber",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "logCode",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "maxLength": 10,
-              "minLength": 0,
-              "type": "string"
-            }
-          },
-          {
-            "name": "createdAtStart",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "createdAtEnd",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "CSIP records found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CsipSummaries"
-                }
-              }
-            }
-          }
-        }
-      },
       "post": {
         "tags": [
           "1. CSIP Record Controller"
@@ -514,8 +315,8 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -524,8 +325,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -588,6 +389,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "409": {
             "description": "Conflict. The CSIP referral already has a Safer Custody Screening Outcome created.",
             "content": {
@@ -600,16 +411,6 @@
           },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -682,16 +483,6 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -704,6 +495,16 @@
           },
           "409": {
             "description": "Conflict. The CSIP referral already has an Investigation created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -774,16 +575,6 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -796,6 +587,16 @@
           },
           "409": {
             "description": "Conflict. The CSIP referral already has an Investigation created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -878,8 +679,8 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -888,8 +689,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -962,8 +763,8 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -972,8 +773,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1046,8 +847,8 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1056,8 +857,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1128,8 +929,8 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1138,8 +939,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1222,8 +1023,8 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1242,8 +1043,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1306,16 +1107,6 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -1326,8 +1117,8 @@
               }
             }
           },
-          "404": {
-            "description": "The CSIP plan associated with this identifier was not found.",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1342,6 +1133,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/IdentifiedNeed"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The CSIP plan associated with this identifier was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1390,8 +1191,8 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1400,8 +1201,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1464,8 +1265,8 @@
           }
         ],
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1484,8 +1285,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1526,8 +1327,8 @@
           }
         ],
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1536,8 +1337,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1608,8 +1409,8 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1618,8 +1419,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1692,8 +1493,8 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1702,8 +1503,18 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "The interview associated with this identifier was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1718,16 +1529,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Interview"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The interview associated with this identifier was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1776,8 +1577,8 @@
           "required": true
         },
         "responses": {
-          "404": {
-            "description": "The contributory factor associated with this identifier was not found.",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1796,8 +1597,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "The contributory factor associated with this identifier was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1860,6 +1661,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Review updated",
             "content": {
@@ -1872,16 +1683,6 @@
           },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -1944,6 +1745,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -1954,8 +1765,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "The attendee associated with this identifier was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1970,16 +1781,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Attendee"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The attendee associated with this identifier was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2028,6 +1829,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "The identified need associated with this identifier was not found.",
             "content": {
@@ -2040,16 +1851,6 @@
           },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -2100,8 +1901,8 @@
           }
         ],
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -2110,8 +1911,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -2210,8 +2011,8 @@
           }
         ],
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "*/*": {
                 "schema": {
@@ -2220,8 +2021,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "*/*": {
                 "schema": {
@@ -2293,8 +2094,8 @@
           }
         ],
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -2303,8 +2104,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -2339,47 +2140,6 @@
         }
       }
     },
-    "/queue-admin/get-dlq-messages/{dlqName}": {
-      "get": {
-        "tags": [
-          "hmpps-queue-resource"
-        ],
-        "description": "\n\nRequires one of the following roles:\n* ROLE_CSIP_ADMIN",
-        "operationId": "getDlqMessages",
-        "parameters": [
-          {
-            "name": "dlqName",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "maxMessages",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 100
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetDlqResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/prisons/{prisonCode}/csip-records/overview": {
       "get": {
         "tags": [
@@ -2399,8 +2159,8 @@
           }
         ],
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "*/*": {
                 "schema": {
@@ -2409,8 +2169,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "*/*": {
                 "schema": {
@@ -2451,8 +2211,8 @@
           }
         ],
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -2461,8 +2221,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -2523,8 +2283,8 @@
           "required": true
         },
         "responses": {
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -2533,8 +2293,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -2582,9 +2342,6 @@
       },
       "SyncAttendeeRequest": {
         "required": [
-          "createdAt",
-          "createdBy",
-          "createdByDisplayName",
           "legacyId"
         ],
         "type": "object",
@@ -2618,35 +2375,12 @@
           "id": {
             "type": "string",
             "format": "uuid"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string"
-          },
-          "createdByDisplayName": {
-            "type": "string"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "lastModifiedBy": {
-            "type": "string"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string"
           }
         },
         "description": "The attendees/contributors to the review."
       },
       "SyncContributoryFactorRequest": {
         "required": [
-          "createdAt",
-          "createdBy",
-          "createdByDisplayName",
           "factorTypeCode",
           "legacyId"
         ],
@@ -2671,26 +2405,6 @@
           "id": {
             "type": "string",
             "format": "uuid"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string"
-          },
-          "createdByDisplayName": {
-            "type": "string"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "lastModifiedBy": {
-            "type": "string"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string"
           }
         },
         "description": "Contributory factors to the incident that motivated the referral."
@@ -2699,10 +2413,6 @@
         "required": [
           "actionedAt",
           "actionedBy",
-          "actionedByDisplayName",
-          "createdAt",
-          "createdBy",
-          "createdByDisplayName",
           "legacyId",
           "prisonNumber"
         ],
@@ -2735,9 +2445,6 @@
           "actionedBy": {
             "type": "string"
           },
-          "actionedByDisplayName": {
-            "type": "string"
-          },
           "activeCaseloadId": {
             "type": "string"
           },
@@ -2751,26 +2458,6 @@
           },
           "personSummary": {
             "$ref": "#/components/schemas/PersonSummaryRequest"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string"
-          },
-          "createdByDisplayName": {
-            "type": "string"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "lastModifiedBy": {
-            "type": "string"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string"
           }
         }
       },
@@ -2850,9 +2537,6 @@
       },
       "SyncInterviewRequest": {
         "required": [
-          "createdAt",
-          "createdBy",
-          "createdByDisplayName",
           "interviewDate",
           "interviewee",
           "intervieweeRoleCode",
@@ -2891,26 +2575,6 @@
           "id": {
             "type": "string",
             "format": "uuid"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string"
-          },
-          "createdByDisplayName": {
-            "type": "string"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "lastModifiedBy": {
-            "type": "string"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string"
           }
         },
         "description": "The interviews in relation to the investigation"
@@ -2968,9 +2632,6 @@
       },
       "SyncNeedRequest": {
         "required": [
-          "createdAt",
-          "createdBy",
-          "createdByDisplayName",
           "createdDate",
           "identifiedNeed",
           "intervention",
@@ -3029,26 +2690,6 @@
           "id": {
             "type": "string",
             "format": "uuid"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string"
-          },
-          "createdByDisplayName": {
-            "type": "string"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "lastModifiedBy": {
-            "type": "string"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string"
           }
         },
         "description": "The needs identified in the CSIP plan."
@@ -3239,9 +2880,6 @@
         "required": [
           "actions",
           "attendees",
-          "createdAt",
-          "createdBy",
-          "createdByDisplayName",
           "legacyId",
           "recordedBy",
           "recordedByDisplayName"
@@ -3313,26 +2951,6 @@
           "id": {
             "type": "string",
             "format": "uuid"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string"
-          },
-          "createdByDisplayName": {
-            "type": "string"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "lastModifiedBy": {
-            "type": "string"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string"
           }
         },
         "description": "The reviews of the CSIP plan."
@@ -3472,30 +3090,6 @@
               "type": "string",
               "format": "uuid"
             }
-          }
-        }
-      },
-      "RetryDlqResult": {
-        "required": [
-          "messagesFoundCount"
-        ],
-        "type": "object",
-        "properties": {
-          "messagesFoundCount": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "PurgeQueueResult": {
-        "required": [
-          "messagesFoundCount"
-        ],
-        "type": "object",
-        "properties": {
-          "messagesFoundCount": {
-            "type": "integer",
-            "format": "int32"
           }
         }
       },
@@ -3813,10 +3407,7 @@
       },
       "Attendee": {
         "required": [
-          "attendeeUuid",
-          "createdAt",
-          "createdBy",
-          "createdByDisplayName"
+          "attendeeUuid"
         ],
         "type": "object",
         "properties": {
@@ -3841,45 +3432,12 @@
           "contribution": {
             "type": "string",
             "description": "Description of attendee contribution."
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "The date and time the Attendee was created",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "The username of the user who created the Attendee",
-            "example": "USER1234"
-          },
-          "createdByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who created the Attendee",
-            "example": "Firstname Lastname"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "description": "The date and time the Attendee was last modified",
-            "format": "date-time"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "The username of the user who last modified the Attendee",
-            "example": "USER1234"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who last modified the Attendee",
-            "example": "Firstname Lastname"
           }
         },
         "description": "An Attendee or Contributor to a Review of a CSIP Plan"
       },
       "ContributoryFactor": {
         "required": [
-          "createdAt",
-          "createdBy",
-          "createdByDisplayName",
           "factorType",
           "factorUuid"
         ],
@@ -3897,45 +3455,12 @@
           "comment": {
             "type": "string",
             "description": "Additional information about the contributory factor to the incident or motivation for CSIP referral."
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "The date and time the Contributory Factor was created",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "The username of the user who created the Contributory Factor",
-            "example": "USER1234"
-          },
-          "createdByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who created the Contributory Factor",
-            "example": "Firstname Lastname"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "description": "The date and time the Contributory Factor was last modified",
-            "format": "date-time"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "The username of the user who last modified the Contributory Factor",
-            "example": "USER1234"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who last modified the Contributory Factor",
-            "example": "Firstname Lastname"
           }
         },
         "description": "The contributory factor to the incident that motivated the CSIP referral"
       },
       "CsipRecord": {
         "required": [
-          "createdAt",
-          "createdBy",
-          "createdByDisplayName",
           "prisonNumber",
           "recordUuid",
           "referral",
@@ -3961,36 +3486,6 @@
             "type": "string",
             "description": "User entered identifier for the CSIP record. Defaults to the prison code."
           },
-          "createdAt": {
-            "type": "string",
-            "description": "The date and time the CSIP Record was created",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "The username of the user who created the CSIP Record",
-            "example": "USER1234"
-          },
-          "createdByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who created the CSIP Record",
-            "example": "Firstname Lastname"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "description": "The date and time the CSIP Record was last modified",
-            "format": "date-time"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "The username of the user who last modified the CSIP Record",
-            "example": "USER1234"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who last modified the CSIP Record",
-            "example": "Firstname Lastname"
-          },
           "referral": {
             "$ref": "#/components/schemas/Referral"
           },
@@ -4005,9 +3500,6 @@
       },
       "IdentifiedNeed": {
         "required": [
-          "createdAt",
-          "createdBy",
-          "createdByDisplayName",
           "createdDate",
           "identifiedNeed",
           "identifiedNeedUuid",
@@ -4056,45 +3548,12 @@
           "progression": {
             "type": "string",
             "description": "How the plan to address the identified need is progressing."
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "The date and time the Identified Need was created",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "The username of the user who created the Identified Need",
-            "example": "USER1234"
-          },
-          "createdByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who created the Identified Need",
-            "example": "Firstname Lastname"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "description": "The date and time the Identified Need was last modified",
-            "format": "date-time"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "The username of the user who last modified the Identified Need",
-            "example": "USER1234"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who last modified the Identified Need",
-            "example": "Firstname Lastname"
           }
         },
         "description": "A need identified in the CSIP Plan"
       },
       "Interview": {
         "required": [
-          "createdAt",
-          "createdBy",
-          "createdByDisplayName",
           "interviewDate",
           "interviewUuid",
           "interviewee",
@@ -4124,36 +3583,6 @@
           "interviewText": {
             "type": "string",
             "description": "Information provided in interview."
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "The date and time the Interview was created",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "The username of the user who created the Interview",
-            "example": "USER1234"
-          },
-          "createdByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who created the Interview",
-            "example": "Firstname Lastname"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "description": "The date and time the Interview was last modified",
-            "format": "date-time"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "The username of the user who last modified the Interview",
-            "example": "USER1234"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who last modified the Interview",
-            "example": "Firstname Lastname"
           }
         },
         "description": "An interview in relation to the investigation on the incident that motivated the CSIP referral"
@@ -4362,9 +3791,6 @@
         "required": [
           "actions",
           "attendees",
-          "createdAt",
-          "createdBy",
-          "createdByDisplayName",
           "recordedBy",
           "recordedByDisplayName",
           "reviewSequence",
@@ -4428,36 +3854,6 @@
                 "CLOSE_CSIP"
               ]
             }
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "The date and time the Review was created",
-            "format": "date-time"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "The username of the user who created the Review",
-            "example": "USER1234"
-          },
-          "createdByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who created the Review",
-            "example": "Firstname Lastname"
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "description": "The date and time the Review was last modified",
-            "format": "date-time"
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "description": "The username of the user who last modified the Review",
-            "example": "USER1234"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string",
-            "description": "The displayable name of the user who last modified the Review",
-            "example": "Firstname Lastname"
           },
           "attendees": {
             "type": "array",
@@ -5289,48 +4685,6 @@
           }
         }
       },
-      "DlqMessage": {
-        "required": [
-          "body",
-          "messageId"
-        ],
-        "type": "object",
-        "properties": {
-          "body": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "object"
-            }
-          },
-          "messageId": {
-            "type": "string"
-          }
-        }
-      },
-      "GetDlqResult": {
-        "required": [
-          "messages",
-          "messagesFoundCount",
-          "messagesReturnedCount"
-        ],
-        "type": "object",
-        "properties": {
-          "messagesFoundCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "messagesReturnedCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "messages": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DlqMessage"
-            }
-          }
-        }
-      },
       "CsipCounts": {
         "required": [
           "awaitingDecisions",
@@ -5376,63 +4730,6 @@
         "properties": {
           "counts": {
             "$ref": "#/components/schemas/CsipCounts"
-          }
-        }
-      },
-      "CsipSummaries": {
-        "required": [
-          "content",
-          "metadata"
-        ],
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CsipSummary"
-            }
-          },
-          "metadata": {
-            "$ref": "#/components/schemas/PageMeta"
-          }
-        }
-      },
-      "CsipSummary": {
-        "required": [
-          "id",
-          "incidentType",
-          "prisonNumber",
-          "referralDate",
-          "status"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "prisonNumber": {
-            "type": "string"
-          },
-          "logCode": {
-            "type": "string"
-          },
-          "referralDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "nextReviewDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "incidentType": {
-            "$ref": "#/components/schemas/ReferenceData"
-          },
-          "caseManager": {
-            "type": "string"
-          },
-          "status": {
-            "$ref": "#/components/schemas/ReferenceData"
           }
         }
       },
@@ -5494,9 +4791,6 @@
             "format": "date-time"
           },
           "actionedBy": {
-            "type": "string"
-          },
-          "actionedByDisplayName": {
             "type": "string"
           },
           "activeCaseloadId": {

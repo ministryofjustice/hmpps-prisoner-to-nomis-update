@@ -64,7 +64,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
             dpsCsipRecord().copy(
               recordUuid = UUID.fromString(dpsCSIPId),
               prisonNumber = offenderNo,
-              createdBy = "BOBBY.BEANS",
+              logCode = "A1234",
             ),
           )
           csipNomisApi.stubPutCSIP(
@@ -120,7 +120,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("reportedBy", "JIM_ADM")
               .withRequestBodyJsonPath("reportedDate", "2024-10-01")
               .withRequestBodyJsonPath("prisonCodeWhenRecorded", "MDI")
-              .withRequestBodyJsonPath("logNumber", "ASI-001")
+              .withRequestBodyJsonPath("logNumber", "A1234")
               .withRequestBodyJsonPath("incidentTime", "10:32:12")
               .withRequestBodyJsonPath("staffAssaulted", true)
               .withRequestBodyJsonPath("staffAssaultedName", "Fred Jones")
@@ -319,7 +319,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
             dpsCsipRecordMinimal().copy(
               recordUuid = UUID.fromString(dpsCSIPId),
               prisonNumber = offenderNo,
-              createdBy = "BOBBY.BEANS",
+              logCode = "A1234",
             ),
           )
           csipNomisApi.stubPutCSIP(
@@ -563,7 +563,6 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
           csipDpsApi.stubGetCsipReport(
             dpsCsipReport = dpsCsipRecord().copy(
               recordUuid = UUID.fromString(dpsCSIPReportId),
-              lastModifiedBy = "RASHEED.BAKE",
               logCode = "LG123",
             ),
           )
@@ -699,7 +698,6 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
           csipDpsApi.stubGetCsipReport(
             dpsCsipReport = dpsCsipRecord().copy(
               recordUuid = UUID.fromString(dpsCSIPReportId),
-              lastModifiedBy = "RASHEED.BAKE",
               logCode = "LG123",
 
             ),
@@ -792,7 +790,6 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
           csipDpsApi.stubGetCsipReport(
             dpsCsipReport = dpsCsipRecord().copy(
               recordUuid = UUID.fromString(dpsCSIPReportId),
-              lastModifiedBy = "RASHEED.BAKE",
               logCode = "LG123",
             ),
           )
