@@ -27,13 +27,11 @@ import org.springframework.http.HttpStatus
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension.Companion.alertsDpsApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.Comment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AlertMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 class AlertsToNomisIntTest : SqsIntegrationTestBase() {
@@ -393,15 +391,6 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
               isActive = false,
               authorisedBy = "Rasheed",
               lastModifiedBy = "RASHEED.BAKE",
-              comments = listOf(
-                Comment(
-                  UUID.randomUUID(),
-                  comment = "The only comment",
-                  createdBy = "SOMEONE",
-                  createdAt = LocalDateTime.now(),
-                  createdByDisplayName = "Some One",
-                ),
-              ),
               description = "Alert added for good reasons",
               alertCode = dpsAlert().alertCode.copy(code = "HPI"),
             ),
