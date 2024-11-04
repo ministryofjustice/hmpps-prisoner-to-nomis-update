@@ -20,23 +20,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '21'
+          cache: 'gradle'
       - name: Check API docs
         id: check-api
         run: ./check-api-docs.bash ${{ inputs.project }}
 
       - name: Upload differences report
-        if: check-api.outputs.differences == 'true'
+        if: steps.check-api.outputs.differences == 'true'
         uses: actions/upload-artifact@v4
         with:
           path: build/api.diff
 
       - name: Create Pull Request
-        if: check-api.outputs.differences == 'true'
+        if: steps.check-api.outputs.differences == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: Update api docs to ${{ check-api.output.new_version }}
-          title: Update api docs to ${{ check-api.output.new_version }}
-          body: Update api docs from ${{ check-api.output.old_version }} to from ${{ check-api.output.new_version }}
+          commit-message: Update api docs to ${{ steps.check-api.output.new_version }}
+          title: Update api docs to ${{ steps.check-api.output.new_version }}
+          body: Update api docs from ${{ steps.check-api.output.old_version }} to from ${{ steps.check-api.output.new_version }}
           branch: api-docs-${{ inputs.project }}
           base: main
