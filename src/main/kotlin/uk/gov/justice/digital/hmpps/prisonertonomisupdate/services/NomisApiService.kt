@@ -271,6 +271,7 @@ class NomisApiService(
       }
       .retrieve()
       .bodyToMono(typeReference<RestResponsePage<PrisonerIds>>())
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/active")))
       .awaitSingle()
 
   suspend fun getAllPrisonersPaged(
