@@ -55,8 +55,7 @@ class PhysicalAttributesSyncService(
       return
     }
 
-    // For now we only sync back the height and weight, but will add profile details when they are proven to be required too
-    updatePhysicalAttributes(event.additionalInformation.nomsNumber, listOf("HEIGHT", "WEIGHT"))
+    updatePhysicalAttributes(event.additionalInformation.nomsNumber, listOf("HEIGHT", "WEIGHT", "BUILD", "FACE", "FACIAL_HAIR", "HAIR", "LEFT_EYE_COLOUR", "RIGHT_EYE_COLOUR", "SHOE_SIZE"))
   }
 
   private suspend fun updateNomis(offenderNo: String, dpsAttributes: PhysicalAttributesSyncDto, fields: List<String>?) {
