@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-10-24.9553.b04f173"
+    "version": "2024-11-05.9765.b919a81"
   },
   "servers": [
     {
@@ -7952,14 +7952,14 @@
         }
       }
     },
-    "/prisoners/{offenderNo}/csip/to-migrate": {
+    "/prisoners/{offenderNo}/csip/reconciliation": {
       "get": {
         "tags": [
           "csip-resource"
         ],
-        "summary": "Gets csips for an offender",
-        "description": "Retrieves csips for a prisoner from all bookings. Requires ROLE_NOMIS_CSIP",
-        "operationId": "getCSIPsToMigrate",
+        "summary": "Gets csips for an offender for reconciliation",
+        "description": "Retrieves a list of csips for a prisoner. Requires ROLE_NOMIS_CSIP",
+        "operationId": "getCSIPsForPrisoner",
         "parameters": [
           {
             "name": "offenderNo",
@@ -9666,6 +9666,83 @@
         }
       }
     },
+    "/incidents/booking/{bookingId}": {
+      "get": {
+        "tags": [
+          "incident-resource"
+        ],
+        "summary": "Get a list of Incidents for a booking",
+        "description": "Gets a list of all incidents relating to an offender booking. Requires role NOMIS_INCIDENTS",
+        "operationId": "getIncidentsForBooking",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "booking id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "booking id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IncidentResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_INCIDENTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/incentives/ids": {
       "get": {
         "tags": [
@@ -10338,6 +10415,83 @@
           },
           "403": {
             "description": "Forbidden, requires role NOMIS_CSIP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csip/booking/{bookingId}": {
+      "get": {
+        "tags": [
+          "csip-resource"
+        ],
+        "summary": "Get a list of CSIP Ids for a booking",
+        "description": "Gets a list of all csip ids relating to an offender booking. Requires role NOMIS_CSIP",
+        "operationId": "getCSIPIdsForBooking",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "booking id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "booking id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CSIPIdResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_CSIP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -12505,10 +12659,6 @@
             "items": {
               "$ref": "#/components/schemas/CreateCourtEventChargesResponse"
             }
-          },
-          "nextCourtAppearanceId": {
-            "type": "integer",
-            "format": "int64"
           }
         },
         "description": "Create adjustment response"
@@ -15128,10 +15278,6 @@
             "items": {
               "$ref": "#/components/schemas/CreateCourtEventChargesResponse"
             }
-          },
-          "nextCourtAppearanceId": {
-            "type": "integer",
-            "format": "int64"
           }
         },
         "description": "Create adjustment response"
@@ -17086,6 +17232,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -17106,18 +17258,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -17536,6 +17682,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -17556,18 +17708,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -18483,10 +18629,6 @@
             "type": "string",
             "description": "The username of the person who created the attendee"
           },
-          "createdByDisplayName": {
-            "type": "string",
-            "description": "Real name of the person who created the attendee"
-          },
           "lastModifiedDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
@@ -18496,10 +18638,6 @@
           "lastModifiedBy": {
             "type": "string",
             "description": "The username of the person who last updated the attendee"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string",
-            "description": "Real name of the person who last updated the attendee"
           }
         },
         "description": "Attendees to the review"
@@ -18535,10 +18673,6 @@
             "type": "string",
             "description": "The username of the person who created the factor"
           },
-          "createdByDisplayName": {
-            "type": "string",
-            "description": "Real name of the person who created the factor"
-          },
           "lastModifiedDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
@@ -18548,10 +18682,6 @@
           "lastModifiedBy": {
             "type": "string",
             "description": "The username of the person who last updated the factor"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string",
-            "description": "Real name of the person who last updated the factor"
           }
         },
         "description": "Contributory factors"
@@ -18697,10 +18827,6 @@
             "type": "string",
             "description": "The username of the person who created the report"
           },
-          "createdByDisplayName": {
-            "type": "string",
-            "description": "Real name of the person who created the report"
-          },
           "lastModifiedDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
@@ -18710,10 +18836,6 @@
           "lastModifiedBy": {
             "type": "string",
             "description": "The username of the person who last updated the report"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string",
-            "description": "Real name of the person who last updated the report"
           }
         },
         "description": "CSIP Details"
@@ -18817,10 +18939,6 @@
             "type": "string",
             "description": "The username of the person who created the interview"
           },
-          "createdByDisplayName": {
-            "type": "string",
-            "description": "Real name of the person who created the interview"
-          },
           "lastModifiedDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
@@ -18830,10 +18948,6 @@
           "lastModifiedBy": {
             "type": "string",
             "description": "The username of the person who last updated the interview"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string",
-            "description": "Real name of the person who last updated the interview"
           }
         },
         "description": "Interview"
@@ -18955,10 +19069,6 @@
             "type": "string",
             "description": "The username of the person who created the plan"
           },
-          "createdByDisplayName": {
-            "type": "string",
-            "description": "Real name of the person who created the plan"
-          },
           "lastModifiedDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
@@ -18968,10 +19078,6 @@
           "lastModifiedBy": {
             "type": "string",
             "description": "The username of the person who last updated the plan"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string",
-            "description": "Real name of the person who last updated the plan"
           }
         },
         "description": "CSIP Plans"
@@ -19141,10 +19247,6 @@
             "type": "string",
             "description": "The username of the person who created the review"
           },
-          "createdByDisplayName": {
-            "type": "string",
-            "description": "Real name of the person who created the plan"
-          },
           "lastModifiedDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
@@ -19154,10 +19256,6 @@
           "lastModifiedBy": {
             "type": "string",
             "description": "The username of the person who last updated the review"
-          },
-          "lastModifiedByDisplayName": {
-            "type": "string",
-            "description": "Real name of the person who last updated the review"
           }
         },
         "description": "CSIP Reviews"
@@ -19406,6 +19504,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -19426,18 +19530,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -19476,6 +19574,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -19496,18 +19600,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -19977,6 +20075,7 @@
       "ContactForPrisoner": {
         "required": [
           "bookingId",
+          "bookingSequence",
           "firstName",
           "lastName",
           "offenderNo"
@@ -19986,6 +20085,11 @@
           "bookingId": {
             "type": "integer",
             "description": "Unique NOMIS Id of booking associated with the prisoner",
+            "format": "int64"
+          },
+          "bookingSequence": {
+            "type": "integer",
+            "description": "Booking sequence this contact is related to. WHen 1 this indicates contact is for current term",
             "format": "int64"
           },
           "offenderNo": {
@@ -20016,7 +20120,6 @@
           "firstName",
           "identifiers",
           "interpreterRequired",
-          "keepBiometrics",
           "lastName",
           "personId",
           "phoneNumbers",
@@ -20073,11 +20176,7 @@
           },
           "isRemitter": {
             "type": "boolean",
-            "description": "No longer used in NOMIS since 2018"
-          },
-          "keepBiometrics": {
-            "type": "boolean",
-            "description": "No longer used in NOMIS since 2019"
+            "description": "Set to true when person created via finance remitter page"
           },
           "audit": {
             "$ref": "#/components/schemas/NomisAudit"
@@ -20136,6 +20235,7 @@
       },
       "ContactRestriction": {
         "required": [
+          "audit",
           "effectiveDate",
           "enteredStaff",
           "id",
@@ -20167,13 +20267,17 @@
           },
           "enteredStaff": {
             "$ref": "#/components/schemas/ContactRestrictionEnteredStaff"
+          },
+          "audit": {
+            "$ref": "#/components/schemas/NomisAudit"
           }
         },
         "description": "The data held in NOMIS about a person's restriction with a prisoner"
       },
       "ContactRestrictionEnteredStaff": {
         "required": [
-          "staffId"
+          "staffId",
+          "username"
         ],
         "type": "object",
         "properties": {
@@ -20181,6 +20285,10 @@
             "type": "integer",
             "description": "NOMIS staff id",
             "format": "int64"
+          },
+          "username": {
+            "type": "string",
+            "description": "username for staff member. For staff with multiple accounts this will be the general account username."
           }
         },
         "description": "Staff member who created the restriction"
@@ -20188,6 +20296,7 @@
       "PersonAddress": {
         "required": [
           "addressId",
+          "audit",
           "mailAddress",
           "phoneNumbers",
           "primaryAddress",
@@ -20273,6 +20382,9 @@
             "type": "string",
             "description": "Date address was valid to",
             "format": "date"
+          },
+          "audit": {
+            "$ref": "#/components/schemas/NomisAudit"
           }
         },
         "description": "The data held in NOMIS about a address number"
@@ -20281,6 +20393,7 @@
         "required": [
           "active",
           "approvedVisitor",
+          "audit",
           "contactType",
           "emergencyContact",
           "id",
@@ -20336,12 +20449,16 @@
             "items": {
               "$ref": "#/components/schemas/ContactRestriction"
             }
+          },
+          "audit": {
+            "$ref": "#/components/schemas/NomisAudit"
           }
         },
         "description": "The data held in NOMIS about a person's contact with a prisoner"
       },
       "PersonEmailAddress": {
         "required": [
+          "audit",
           "email",
           "emailAddressId"
         ],
@@ -20356,6 +20473,9 @@
             "type": "string",
             "description": "The email address",
             "example": "john.smith@internet.co.uk"
+          },
+          "audit": {
+            "$ref": "#/components/schemas/NomisAudit"
           }
         },
         "description": "The data held in NOMIS about a email address"
@@ -20363,6 +20483,8 @@
       "PersonEmployment": {
         "required": [
           "active",
+          "audit",
+          "corporate",
           "sequence"
         ],
         "type": "object",
@@ -20378,13 +20500,17 @@
           "active": {
             "type": "boolean",
             "description": "True is employment is active"
+          },
+          "audit": {
+            "$ref": "#/components/schemas/NomisAudit"
           }
         },
         "description": "The data held in NOMIS about a person's employment"
       },
       "PersonEmploymentCorporate": {
         "required": [
-          "id"
+          "id",
+          "name"
         ],
         "type": "object",
         "properties": {
@@ -20403,6 +20529,7 @@
       },
       "PersonIdentifier": {
         "required": [
+          "audit",
           "identifier",
           "sequence",
           "type"
@@ -20426,12 +20553,16 @@
             "type": "string",
             "description": "The issued authority",
             "example": "Police"
+          },
+          "audit": {
+            "$ref": "#/components/schemas/NomisAudit"
           }
         },
         "description": "The data held in NOMIS about a person's identifiers"
       },
       "PersonPhoneNumber": {
         "required": [
+          "audit",
           "number",
           "phoneId",
           "type"
@@ -20453,6 +20584,9 @@
           },
           "type": {
             "$ref": "#/components/schemas/CodeDescription"
+          },
+          "audit": {
+            "$ref": "#/components/schemas/NomisAudit"
           }
         },
         "description": "The data held in NOMIS about a phone number"
@@ -20467,6 +20601,12 @@
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "size": {
             "type": "integer",
@@ -20488,18 +20628,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -20624,6 +20758,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -20644,18 +20784,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -20882,6 +21016,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -20902,18 +21042,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -21465,6 +21599,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -21485,18 +21625,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -21588,6 +21722,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -21608,18 +21748,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -21732,6 +21866,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -21752,18 +21892,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -21795,6 +21929,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -21815,18 +21955,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -21991,6 +22125,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -22011,18 +22151,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -22153,6 +22287,7 @@
           "friday",
           "monday",
           "saturday",
+          "slotCategoryCode",
           "startTime",
           "sunday",
           "thursday",
@@ -22207,6 +22342,11 @@
             "type": "boolean",
             "description": "Runs on Sundays",
             "example": true
+          },
+          "slotCategoryCode": {
+            "type": "string",
+            "description": "Time slot",
+            "example": "AM"
           }
         },
         "description": "Activity Schedule Rules"
@@ -22320,6 +22460,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -22340,18 +22486,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -22388,6 +22528,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -22408,18 +22554,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -22462,6 +22602,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -22482,18 +22628,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -22770,6 +22910,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -22790,18 +22936,12 @@
               "$ref": "#/components/schemas/SortObject"
             }
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
