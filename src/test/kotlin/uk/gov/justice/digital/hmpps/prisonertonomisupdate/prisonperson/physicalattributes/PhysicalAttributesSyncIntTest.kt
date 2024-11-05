@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.physicalattributes
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -9,6 +11,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.tuple
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
@@ -27,6 +30,7 @@ import org.springframework.http.HttpStatus
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertProfileDetailsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.profiledetails.ProfileDetailsNomisApiMockServer
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
@@ -40,6 +44,9 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
 
   @Autowired
   private lateinit var dpsApi: PhysicalAttributesDpsApiMockServer
+
+  @Autowired
+  private lateinit var objectMapper: ObjectMapper
 
   @Nested
   inner class UpdatePhysicalAttributesEvent {
@@ -415,18 +422,36 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
         dpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
 
         physicalAttributesNomisApi.stubPutPhysicalAttributes(offenderNo = "A1234AA")
+        profileDetailsNomisApi.stubPutProfileDetails(offenderNo = "A1234AA")
 
         awsSnsClient.publish(readmissionSwitchBookingRequest("A1234AA")).get()
-          .also { waitForAnyProcessingToComplete() }
+          .also { waitForAnyProcessingToComplete(times = 8) }
 
         verifyDpsApiCall()
         verifyNomisPutPhysicalAttributes(height = equalTo("180"), weight = equalTo("80"))
-        verifyNeverNomisPutProfileDetails()
+        verifyMultipleNomisPutProfileDetails(
+          listOf(
+            "BUILD" to "SMALL",
+            "FACE" to "ROUND",
+            "FACIAL_HAIR" to "CLEAN_SHAVEN",
+            "HAIR" to "BLACK",
+            "L_EYE_C" to "BLUE",
+            "R_EYE_C" to "GREEN",
+            "SHOESIZE" to "9.5",
+          ),
+        )
         verifyTelemetry("physical-attributes-update-success", "[HEIGHT, WEIGHT]")
+        verifyTelemetry("physical-attributes-profile-details-update-success", "[BUILD]")
+        verifyTelemetry("physical-attributes-profile-details-update-success", "[FACE]")
+        verifyTelemetry("physical-attributes-profile-details-update-success", "[FACIAL_HAIR]")
+        verifyTelemetry("physical-attributes-profile-details-update-success", "[HAIR]")
+        verifyTelemetry("physical-attributes-profile-details-update-success", "[LEFT_EYE_COLOUR]")
+        verifyTelemetry("physical-attributes-profile-details-update-success", "[RIGHT_EYE_COLOUR]")
+        verifyTelemetry("physical-attributes-profile-details-update-success", "[SHOE_SIZE]")
       }
 
       @Test
-      fun `should handle a failure`() = runTest {
+      fun `should handle a failure in physical attributes`() = runTest {
         dpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
         physicalAttributesNomisApi.stubPutPhysicalAttributes(HttpStatus.BAD_GATEWAY)
 
@@ -441,6 +466,7 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
         // should call DPS and NOMIS APIs for each retry
         dpsApi.verify(3, getRequestedFor(urlPathEqualTo("/sync/prisoners/A1234AA/physical-attributes")))
         physicalAttributesNomisApi.verify(3, putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
+        verifyNeverNomisPutProfileDetails()
         // should publish failed telemetry for each retry
         verify(telemetryClient, times(3)).trackEvent(
           eq("physical-attributes-update-error"),
@@ -449,7 +475,54 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
               mapOf(
                 "offenderNo" to "A1234AA",
                 "reason" to "502 Bad Gateway from PUT http://localhost:8082/prisoners/A1234AA/physical-attributes",
+                "fields" to "[HEIGHT, WEIGHT, BUILD, FACE, FACIAL_HAIR, HAIR, LEFT_EYE_COLOUR, RIGHT_EYE_COLOUR, SHOE_SIZE]",
+              ),
+            )
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should handle a failure in profile details`() = runTest {
+        dpsApi.stubGetPhysicalAttributes(offenderNo = "A1234AA")
+        physicalAttributesNomisApi.stubPutPhysicalAttributes(offenderNo = "A1234AA")
+        profileDetailsNomisApi.stubPutProfileDetails(HttpStatus.BAD_GATEWAY)
+
+        awsSnsClient.publish(readmissionSwitchBookingRequest("A1234AA")).get()
+          .also {
+            // event should end up on the DLQ
+            await untilCallTo {
+              prisonPersonDlqClient!!.countAllMessagesOnQueue(prisonPersonDlqUrl!!).get()
+            } matches { it == 1 }
+          }
+
+        // should call DPS and NOMIS APIs for each retry
+        dpsApi.verify(3, getRequestedFor(urlPathEqualTo("/sync/prisoners/A1234AA/physical-attributes")))
+        physicalAttributesNomisApi.verify(3, putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/physical-attributes")))
+        // should publish failed telemetry for each retry
+        verify(telemetryClient, times(3)).trackEvent(
+          eq("physical-attributes-update-success"),
+          check {
+            assertThat(it).containsExactlyInAnyOrderEntriesOf(
+              mapOf(
+                "offenderNo" to "A1234AA",
+                "bookingId" to "12345",
+                "created" to "true",
                 "fields" to "[HEIGHT, WEIGHT]",
+              ),
+            )
+          },
+          isNull(),
+        )
+        verify(telemetryClient, times(3)).trackEvent(
+          eq("physical-attributes-update-error"),
+          check {
+            assertThat(it).containsExactlyInAnyOrderEntriesOf(
+              mapOf(
+                "offenderNo" to "A1234AA",
+                "reason" to "502 Bad Gateway from PUT http://localhost:8082/prisoners/A1234AA/profile-details",
+                "fields" to "[HEIGHT, WEIGHT, BUILD, FACE, FACIAL_HAIR, HAIR, LEFT_EYE_COLOUR, RIGHT_EYE_COLOUR, SHOE_SIZE]",
               ),
             )
           },
@@ -505,6 +578,14 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
         .withRequestBody(matchingJsonPath("profileType", profileType))
         .withRequestBody(matchingJsonPath("profileCode", profileCode)),
     )
+  }
+
+  private fun verifyMultipleNomisPutProfileDetails(profiles: List<Pair<String, String>>) {
+    val requested = profileDetailsNomisApi.findAllProfileDetailsRequests()
+      .map { objectMapper.readValue<UpsertProfileDetailsRequest>(it.bodyAsString) }
+    val expected = profiles.map { tuple(it.first, it.second) }
+    assertThat(requested).extracting("profileType", "profileCode")
+      .containsExactlyInAnyOrderElementsOf(expected)
   }
 
   private fun verifyNeverNomisPutProfileDetails() {
