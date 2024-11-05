@@ -244,14 +244,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               )
               .withRequestBody(
                 WireMock.matchingJsonPath(
-                  "courtAppearances[0].nomisNextCourtAppearanceId",
-                  WireMock.equalTo(
-                    NOMIS_NEXT_COURT_APPEARANCE_ID.toString(),
-                  ),
-                ),
-              )
-              .withRequestBody(
-                WireMock.matchingJsonPath(
                   "courtCharges[0].nomisCourtChargeId",
                   WireMock.equalTo(
                     NOMIS_COURT_CHARGE_ID.toString(),
@@ -1121,11 +1113,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     """{"eventType":"$eventType", "additionalInformation": {"courtAppearanceId":"$courtAppearanceId", "courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun nomisCourtCaseCreateResponseWithTwoCharges(): String {
-    return """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION, "courtAppearanceIds": [{"id": $NOMIS_COURT_APPEARANCE_ID, "nextCourtAppearanceId": $NOMIS_NEXT_COURT_APPEARANCE_ID, "courtEventChargesIds": [{"offenderChargeId": $NOMIS_COURT_CHARGE_ID }, {"offenderChargeId": $NOMIS_COURT_CHARGE_2_ID }] }] }"""
+    return """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION, "courtAppearanceIds": [{"id": $NOMIS_COURT_APPEARANCE_ID,"courtEventChargesIds": [{"offenderChargeId": $NOMIS_COURT_CHARGE_ID }, {"offenderChargeId": $NOMIS_COURT_CHARGE_2_ID }] }] }"""
   }
 
   fun nomisCourtAppearanceCreateResponseWithTwoCharges(): String {
-    return """{ "id": $NOMIS_COURT_APPEARANCE_ID, "nextCourtAppearanceId": $NOMIS_NEXT_COURT_APPEARANCE_ID, 
+    return """{ "id": $NOMIS_COURT_APPEARANCE_ID, 
       |"courtEventChargesIds": [
       |{"offenderChargeId": $NOMIS_COURT_CHARGE_2_ID },
       |{"offenderChargeId": $NOMIS_COURT_CHARGE_4_ID }
@@ -1134,7 +1126,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   fun nomisCourtAppearanceUpdateResponseWithTwoCreatedAndTwoDeletedCharges(): String {
-    return """{ "id": $NOMIS_COURT_APPEARANCE_ID, "nextCourtAppearanceId": $NOMIS_NEXT_COURT_APPEARANCE_ID, 
+    return """{ "id": $NOMIS_COURT_APPEARANCE_ID, 
       |"createdCourtEventChargesIds": [
       |{"offenderChargeId": $NOMIS_COURT_CHARGE_2_ID },
       |{"offenderChargeId": $NOMIS_COURT_CHARGE_4_ID }

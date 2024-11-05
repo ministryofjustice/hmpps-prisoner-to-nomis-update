@@ -86,7 +86,6 @@ class CourtSentencingService(
               CourtAppearanceMappingDto(
                 dpsCourtAppearanceId = firstAppearance.appearanceUuid.toString(),
                 nomisCourtAppearanceId = nomisCourtAppearanceResponse.id,
-                nomisNextCourtAppearanceId = nomisCourtAppearanceResponse.nextCourtAppearanceId,
               ),
             ),
             courtCharges = firstAppearance.charges.mapIndexed { index, dpsCharge ->
@@ -162,7 +161,6 @@ class CourtSentencingService(
         CourtAppearanceAllMappingDto(
           dpsCourtAppearanceId = courtAppearanceId,
           nomisCourtAppearanceId = nomisCourtAppearanceResponse.id,
-          nomisNextCourtAppearanceId = nomisCourtAppearanceResponse.nextCourtAppearanceId,
           courtCharges = courtEventChargesToCreate.zip(nomisCourtAppearanceResponse.courtEventChargesIds) { charge, nomisChargeResponseDto ->
             CourtChargeMappingDto(
               nomisCourtChargeId = nomisChargeResponseDto.offenderChargeId,
