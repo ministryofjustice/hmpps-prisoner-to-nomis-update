@@ -27,13 +27,16 @@ class CaseNotesReconciliationServiceTest {
   private val nomisApiService: NomisApiService = mock()
   private val telemetryClient: TelemetryClient = mock()
 
-  val nomisPrisoner = PrisonerCaseNotesResponse(
+  fun nomisPrisoner(
+    type: String = "CODE",
+    subType: String = "SUBCODE",
+  ) = PrisonerCaseNotesResponse(
     caseNotes = listOf(
       CaseNoteResponse(
         caseNoteId = 1L,
         bookingId = 1L,
-        caseNoteType = CodeDescription("CODE", "desc"),
-        caseNoteSubType = CodeDescription("SUBCODE", "desc"),
+        caseNoteType = CodeDescription(type, "desc"),
+        caseNoteSubType = CodeDescription(subType, "desc"),
         authorStaffId = 101L,
         authorUsername = "USER",
         authorLastName = "SMITH",
@@ -56,6 +59,7 @@ class CaseNotesReconciliationServiceTest {
 
   fun dpsPrisoner(
     type: String = "CODE",
+    subType: String = "SUBCODE",
     amendmentText: String = "the amendment text",
     amendments: List<uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNoteAmendment> = listOf(
       uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNoteAmendment(
@@ -71,7 +75,7 @@ class CaseNotesReconciliationServiceTest {
         caseNoteId = DPS_CASE_NOTE_ID,
         text = "the actual text",
         type = type,
-        subType = "SUBCODE",
+        subType = subType,
         offenderIdentifier = OFFENDER_NO,
         typeDescription = "notused",
         subTypeDescription = "notused",
@@ -97,7 +101,7 @@ class CaseNotesReconciliationServiceTest {
 
     @Test
     fun `will not report mismatch where details match`() = runTest {
-      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(nomisPrisoner)
+      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(nomisPrisoner())
       whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(dpsPrisoner())
 
       assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNull()
@@ -105,7 +109,7 @@ class CaseNotesReconciliationServiceTest {
 
     @Test
     fun `mismatch in type`() = runTest {
-      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(nomisPrisoner)
+      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(nomisPrisoner())
       whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
         dpsPrisoner(type = "OTHER"),
       )
@@ -115,7 +119,7 @@ class CaseNotesReconciliationServiceTest {
 
     @Test
     fun `mismatch of amendments`() = runTest {
-      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(nomisPrisoner)
+      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(nomisPrisoner())
       whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
         dpsPrisoner(amendments = emptyList()),
       )
@@ -125,12 +129,24 @@ class CaseNotesReconciliationServiceTest {
 
     @Test
     fun `mismatch within amendment`() = runTest {
-      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(nomisPrisoner)
+      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(nomisPrisoner())
       whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
         dpsPrisoner(amendmentText = "discrepant"),
       )
 
       assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNotNull()
+    }
+
+    @Test
+    fun `Ignore APP-CNOTE mismatch`() = runTest {
+      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
+        nomisPrisoner(type = "CNOTE", subType = "OUTCOME"),
+      )
+      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
+        dpsPrisoner(type = "APP", subType = "OUTCOME"),
+      )
+
+      assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNull()
     }
 
     @Test

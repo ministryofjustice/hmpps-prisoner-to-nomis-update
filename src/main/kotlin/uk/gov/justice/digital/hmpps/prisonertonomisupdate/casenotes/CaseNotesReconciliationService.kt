@@ -209,12 +209,14 @@ data class CommonCaseNoteFields(
     if (this === other) return true
     other as CommonCaseNoteFields
     return text == other.text &&
-      type == other.type &&
+      equalTypes(other) &&
       subType == other.subType &&
       occurrenceDateTime == other.occurrenceDateTime &&
       equalUsers(other) && // OMS_OWNER vs XTAG
       equalAmendments(this, other)
   }
+
+  private fun equalTypes(nomis: CommonCaseNoteFields): Boolean = (type == nomis.type || (type == "APP" && nomis.type == "CNOTE" && subType == "OUTCOME"))
 
   private fun equalUsers(other: CommonCaseNoteFields): Boolean {
     val equal = authorUsername == other.authorUsername || authorUsername == "OMS_OWNER"
