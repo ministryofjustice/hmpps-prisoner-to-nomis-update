@@ -30,5 +30,5 @@ class ContactPersonConfiguration(
     builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "contact-person-api", url = apiBaseUri, timeout)
 
   @Component("contactPersonApi")
-  class AlertsApiHealth(@Qualifier("contactPersonApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
+  class ContactPersonApiHealth(@Qualifier("contactPersonApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
 }

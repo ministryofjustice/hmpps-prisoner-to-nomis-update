@@ -9,6 +9,9 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.Contact
+import java.time.LocalDateTime
 
 class ContactPersonDpsApiExtension :
   BeforeAllCallback,
@@ -18,6 +21,17 @@ class ContactPersonDpsApiExtension :
     @JvmField
     val dpsContactPersonServer = ContactPersonDpsApiMockServer()
     lateinit var objectMapper: ObjectMapper
+
+    fun contact() = Contact(
+      id = 12345,
+      lastName = "KOFI",
+      firstName = "KWEKU",
+      isStaff = false,
+      interpreterRequired = false,
+      remitter = false,
+      createdBy = "JANE.SAM",
+      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+    )
   }
 
   override fun beforeAll(context: ExtensionContext) {
@@ -47,6 +61,18 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withBody(if (status == 200) "pong" else "some error")
           .withStatus(status),
       ),
+    )
+  }
+
+  fun stubGetContact(contactId: Long, response: Contact = contact()) {
+    stubFor(
+      get("/sync/contact/$contactId")
+        .willReturn(
+          aResponse()
+            .withStatus(201)
+            .withHeader("Content-Type", "application/json")
+            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+        ),
     )
   }
 }

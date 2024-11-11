@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture
 class ContactPersonDomainEventListener(
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
-  contactPersonService: ContactPersonService,
+  val contactPersonService: ContactPersonService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListener(
   service = contactPersonService,
@@ -31,9 +31,18 @@ class ContactPersonDomainEventListener(
   fun onMessage(
     rawMessage: String,
   ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
-    @Suppress("UNUSED_EXPRESSION")
     when (eventType) {
+      "contacts-api.contact.created" -> contactPersonService.contactCreated(message.fromJson())
+      "contacts-api.prisoner-contact.create" -> log.info(eventType)
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
 }
+
+data class ContactCreatedEvent(
+  val additionalInformation: ContactAdditionalData,
+)
+
+data class ContactAdditionalData(
+  val contactId: Long,
+)
