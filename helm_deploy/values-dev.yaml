@@ -27,6 +27,7 @@ generic-service:
     API_BASE_URL_PRISONPERSON: https://prison-person-api-dev.prison.service.justice.gov.uk
     API_BASE_URL_CONTACT_PERSON: https://contacts-api-dev.hmpps.service.justice.gov.uk
     FEATURE_EVENT_DELETEALL: true
+    FEATRUE_EVENT_CONTACTS-API_CONTACT_CREATED: false
 
 generic-prometheus-alerts:
   businessHoursOnly: true

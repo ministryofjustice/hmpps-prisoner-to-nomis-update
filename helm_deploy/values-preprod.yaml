@@ -31,6 +31,7 @@ generic-service:
     FEATURE_EVENT_PERSON_CSIP_RECORD_CREATED: false
     FEATURE_EVENT_PERSON_CSIP_RECORD_UPDATED: false
     FEATURE_EVENT_PERSON_CSIP_RECORD_DELETED: false
+    FEATRUE_EVENT_CONTACTS-API_CONTACT_CREATED: false
 
 generic-prometheus-alerts:
   businessHoursOnly: true
