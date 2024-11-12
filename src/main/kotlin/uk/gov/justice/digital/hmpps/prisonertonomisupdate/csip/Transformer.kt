@@ -70,8 +70,7 @@ fun Review.toNomisReviewRequest(nomisReviewId: Long? = null, attendeeMappings: L
     caseNote = actions.contains(Review.Actions.CASE_NOTE),
     closeCSIP = actions.contains(Review.Actions.CLOSE_CSIP),
     peopleInformed = actions.contains(Review.Actions.RESPONSIBLE_PEOPLE_INFORMED),
-    // TODO why is this nullable? CHECK/FIX
-    recordedDate = reviewDate!!,
+    recordedDate = reviewDate,
     recordedBy = recordedBy,
     summary = summary,
     nextReviewDate = nextReviewDate,
