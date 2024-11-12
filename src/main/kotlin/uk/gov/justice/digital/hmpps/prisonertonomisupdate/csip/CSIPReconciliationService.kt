@@ -36,7 +36,7 @@ class CSIPReconciliationService(
     val activePrisoners = getActivePrisonersForPage(page)
 
     withContext(Dispatchers.Unconfined) {
-      activePrisoners.map { async { checkOpenCSIPsMatch(it) } }
+      activePrisoners.map { async { checkCSIPsMatch(it) } }
     }.awaitAll().filterNotNull()
   }
 
@@ -54,7 +54,7 @@ class CSIPReconciliationService(
       .getOrElse { emptyList() }
       .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
-  suspend fun checkOpenCSIPsMatch(prisonerId: PrisonerIds): MismatchCSIPs? = runCatching {
+  suspend fun checkCSIPsMatch(prisonerId: PrisonerIds): MismatchCSIPs? = runCatching {
     val nomisCSIPList = doApiCallWithRetries { nomisCSIPApiService.getCSIPsForReconciliation(prisonerId.offenderNo) }.offenderCSIPs
     val dpsCSIPList = doApiCallWithRetries { dpsCSIPApiService.getCSIPsForPrisoner(prisonerId.offenderNo) }
 
