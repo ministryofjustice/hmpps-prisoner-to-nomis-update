@@ -7,6 +7,8 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
 @Component
@@ -18,6 +20,8 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
 
     fun createPersonRequest(): CreatePersonRequest = CreatePersonRequest(
       firstName = "John",
+      lastName = "Smith",
+      interpreterRequired = false,
     )
   }
 

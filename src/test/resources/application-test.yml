@@ -229,7 +229,7 @@ hmpps.sqs:
       subscribeTopicId: domainevents
       subscribeFilter: >-
         { "eventType":[
-          "TBD"
+          "contacts-api.contact.created"
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120

@@ -39,7 +39,7 @@ class ContactPersonDpsApiServiceTest {
       apiService.getContact(contactId = 1234567)
 
       dpsContactPersonServer.verify(
-        getRequestedFor(urlPathEqualTo("/sync/contact")),
+        getRequestedFor(urlPathEqualTo("/sync/contact/1234567")),
       )
     }
   }

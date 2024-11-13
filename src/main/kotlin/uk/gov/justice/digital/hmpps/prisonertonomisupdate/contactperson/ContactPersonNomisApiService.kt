@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonResponse
 
 @Service
 class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
@@ -15,13 +17,3 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
     .retrieve()
     .awaitBody()
 }
-
-// TODO - use real request
-data class CreatePersonRequest(
-  val firstName: String,
-)
-
-// TODO - use real response
-data class CreatePersonResponse(
-  val personId: Long,
-)
