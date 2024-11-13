@@ -76,7 +76,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     "prisonerId": "$offenderNo",
     "courtCaseUuid": "$courtCaseId",
     "latestAppearance": {
-        "appearanceUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
+        "appearanceUuid": "6c591b18-642a-484a-a967-2d17b5c9c5a1",
         "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
         "outcome": {
             "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
@@ -99,8 +99,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         },
         "charges": [
             {
-                "chargeUuid": "$courtCharge1Id",
-                "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
+                "chargeUuid": "6c591b18-642a-484a-a967-2d17b5c9c5a1",
+                "lifetimeUuid": "$courtCharge1Id",
                 "offenceCode": "PS90037",
                 "offenceStartDate": "2024-01-15",
                 "offenceEndDate": null,
@@ -115,8 +115,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "sentence": null
             },
             {
-                "chargeUuid": "$courtCharge2Id",
-                "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
+                "chargeUuid": "7c591b18-642a-484a-a967-2d17b5c9c5a1",
+                "lifetimeUuid": "$courtCharge2Id",
                 "offenceCode": "PS90090",
                 "offenceStartDate": "2024-01-17",
                 "offenceEndDate": "2024-01-19",
@@ -134,8 +134,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     },
     "appearances": [
         {
-            "appearanceUuid": "$courtAppearanceId",
-            "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
+            "appearanceUuid": "6c591b18-642a-484a-a967-2d17b5c9c5a1",
+            "lifetimeUuid": "$courtAppearanceId",
             "outcome": {
               "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
               "relatedChargeOutcomeUuid": "9928aa1b-8e2c-4c77-ad32-6feca8b0e459",
@@ -157,8 +157,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
             },
             "charges": [
               {
-                "chargeUuid": "$courtCharge1Id",
-                "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
+                "chargeUuid": "6c591b18-642a-484a-a967-2d17b5c9c5a1",
+                "lifetimeUuid": "$courtCharge1Id",
                 "offenceCode": "PS90037",
                 "offenceStartDate": "2024-01-15",
                 "offenceEndDate": null,
@@ -173,8 +173,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "sentence": null
               },
               {
-                  "chargeUuid": "$courtCharge2Id",
-                  "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
+                  "chargeUuid": "7c591b18-642a-484a-a967-2d17b5c9c5a1",
+                  "lifetimeUuid": "$courtCharge2Id",
                   "offenceCode": "PS90090",
                   "offenceStartDate": "2024-01-17",
                   "offenceEndDate": "2024-01-19",
@@ -220,8 +220,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
             // language=json
             """
            {
-            "appearanceUuid": "$courtAppearanceId",
-            "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
+            "appearanceUuid": "6c591b18-642a-484a-a967-2d17b5c9c5a1",
+            "lifetimeUuid": "$courtAppearanceId",
             "outcome": {
               "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
               "relatedChargeOutcomeUuid": "9928aa1b-8e2c-4c77-ad32-6feca8b0e459",
@@ -243,8 +243,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
             },
            "charges": [
             {
-                "chargeUuid": "$courtCharge1Id",
-                "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
+                "chargeUuid": "6c591b18-642a-484a-a967-2d17b5c9c5a1",
+                "lifetimeUuid": "$courtCharge1Id",
                 "offenceCode": "$COURT_CHARGE_1_OFFENCE_CODE",
                 "offenceStartDate": "$COURT_CHARGE_1_OFFENCE_DATE",
                 "offenceEndDate": "$COURT_CHARGE_1_OFFENCE_END_DATE",
@@ -259,8 +259,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "sentence": null
             },
             {
-                "chargeUuid": "$courtCharge2Id",
-                "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
+                "chargeUuid": "7c591b18-642a-484a-a967-2d17b5c9c5a1",
+                "lifetimeUuid": "$courtCharge2Id",
                 "offenceCode": "$COURT_CHARGE_2_OFFENCE_CODE",
                 "offenceStartDate": "$COURT_CHARGE_2_OFFENCE_DATE",
                 "offenceEndDate": "$COURT_CHARGE_2_OFFENCE_END_DATE",
@@ -275,8 +275,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "sentence": null
             },
             {
-                "chargeUuid": "$courtCharge3Id",
-                "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
+                "chargeUuid": "8c591b18-642a-484a-a967-2d17b5c9c5a1",
+                "lifetimeUuid": "$courtCharge3Id",
                 "offenceCode": "$COURT_CHARGE_3_OFFENCE_CODE",
                 "offenceStartDate": "$COURT_CHARGE_3_OFFENCE_DATE",
                 "offenceEndDate": null,
@@ -291,8 +291,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "sentence": null
             },
             {
-                "chargeUuid": "$courtCharge4Id",
-                "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
+                "chargeUuid": "8c591b18-642a-484a-a967-2d17b5c9c5a1",
+                "lifetimeUuid": "$courtCharge4Id",
                 "offenceCode": "$COURT_CHARGE_4_OFFENCE_CODE",
                 "offenceStartDate": "$COURT_CHARGE_4_OFFENCE_DATE",
                 "offenceEndDate": null,
