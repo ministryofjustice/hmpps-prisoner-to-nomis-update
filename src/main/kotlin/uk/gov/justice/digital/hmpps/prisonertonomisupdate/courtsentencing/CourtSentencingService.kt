@@ -84,14 +84,15 @@ class CourtSentencingService(
             // expecting a court case with 1 court appearance - separate event for subsequent appearances
             courtAppearances = listOf(
               CourtAppearanceMappingDto(
-                dpsCourtAppearanceId = firstAppearance.appearanceUuid.toString(),
+                // DPS use lifetimeUuid as the immutable identifier for appearances and charges
+                dpsCourtAppearanceId = firstAppearance.lifetimeUuid.toString(),
                 nomisCourtAppearanceId = nomisCourtAppearanceResponse.id,
               ),
             ),
             courtCharges = firstAppearance.charges.mapIndexed { index, dpsCharge ->
               CourtChargeMappingDto(
                 nomisCourtChargeId = nomisCourtAppearanceResponse.courtEventChargesIds[index].offenderChargeId,
-                dpsCourtChargeId = dpsCharge.chargeUuid.toString(),
+                dpsCourtChargeId = dpsCharge.lifetimeUuid.toString(),
               )
             },
           )
@@ -141,7 +142,7 @@ class CourtSentencingService(
         val courtEventChargesToUpdate: MutableList<Pair<Charge, Long>> = mutableListOf()
         val courtEventChargesToCreate: MutableList<Charge> = mutableListOf()
         courtAppearance.charges.forEach { charge ->
-          courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(charge.chargeUuid.toString())?.let { mapping ->
+          courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(charge.lifetimeUuid.toString())?.let { mapping ->
             courtEventChargesToUpdate.add(Pair(charge, mapping.nomisCourtChargeId))
           } ?: let {
             courtEventChargesToCreate.add(charge)
@@ -164,7 +165,7 @@ class CourtSentencingService(
           courtCharges = courtEventChargesToCreate.zip(nomisCourtAppearanceResponse.courtEventChargesIds) { charge, nomisChargeResponseDto ->
             CourtChargeMappingDto(
               nomisCourtChargeId = nomisChargeResponseDto.offenderChargeId,
-              dpsCourtChargeId = charge.chargeUuid.toString(),
+              dpsCourtChargeId = charge.lifetimeUuid.toString(),
             )
           },
         ).also {
@@ -202,7 +203,7 @@ class CourtSentencingService(
       val courtEventChargesToUpdate: MutableList<Pair<Charge, Long>> = mutableListOf()
       val courtEventChargesToCreate: MutableList<Charge> = mutableListOf()
       dpsCourtAppearance.charges.forEach { charge ->
-        courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(charge.chargeUuid.toString())?.let { mapping ->
+        courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(charge.lifetimeUuid.toString())?.let { mapping ->
           courtEventChargesToUpdate.add(Pair(charge, mapping.nomisCourtChargeId))
         } ?: let {
           courtEventChargesToCreate.add(charge)
@@ -223,7 +224,7 @@ class CourtSentencingService(
         courtChargesToCreate = courtEventChargesToCreate.zip(nomisResponse.createdCourtEventChargesIds) { charge, nomisChargeResponseDto ->
           CourtChargeMappingDto(
             nomisCourtChargeId = nomisChargeResponseDto.offenderChargeId,
-            dpsCourtChargeId = charge.chargeUuid.toString(),
+            dpsCourtChargeId = charge.lifetimeUuid.toString(),
           )
         },
         courtChargesToDelete = nomisResponse.deletedOffenderChargesIds.map {
