@@ -5,6 +5,8 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -126,6 +128,61 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("nomisId", nomisPersonId)
               .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
           )
+        }
+      }
+
+      @Nested
+      @DisplayName("when mapping service fails once")
+      inner class MappingFailure {
+        private val dpsContactId = 1234567L
+        private val nomisPersonId = 1234567L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactIdOrNull(dpsContactId = dpsContactId, null)
+          dpsApi.stubGetContact(
+            contactId = dpsContactId,
+            contact().copy(
+              id = dpsContactId,
+            ),
+          )
+          nomisApi.stubCreatePerson(createPersonResponse().copy(personId = nomisPersonId))
+          mappingApi.stubCreatePersonMappingFollowedBySuccess()
+          publishCreateContactDomainEvent(contactId = dpsContactId.toString())
+        }
+
+        @Test
+        fun `will send telemetry for initial failure`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("contactperson-mapping-create-failed"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will eventually send telemetry for success`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("contact-person-create-success"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will create the person in NOMIS once`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("contact-person-create-success"),
+              any(),
+              isNull(),
+            )
+            nomisApi.verify(1, postRequestedFor(urlEqualTo("/persons")))
+          }
         }
       }
     }
