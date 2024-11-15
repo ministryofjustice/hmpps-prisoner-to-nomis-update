@@ -23,6 +23,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.dpsContactPersonServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import java.time.LocalDate
 
@@ -178,6 +182,68 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
               eq("contact-person-create-success"),
+              any(),
+              isNull(),
+            )
+            nomisApi.verify(1, postRequestedFor(urlEqualTo("/persons")))
+          }
+        }
+      }
+
+      @Nested
+      @DisplayName("when mapping service detects a duplicate mapping")
+      inner class DuplicateMappingFailure {
+        private val dpsContactId = 1234567L
+        private val nomisPersonId = 1234567L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactIdOrNull(dpsContactId = dpsContactId, null)
+          dpsApi.stubGetContact(
+            contactId = dpsContactId,
+            contact().copy(
+              id = dpsContactId,
+            ),
+          )
+          nomisApi.stubCreatePerson(createPersonResponse().copy(personId = nomisPersonId))
+          mappingApi.stubCreatePersonMapping(
+            error = DuplicateMappingErrorResponse(
+              moreInfo = DuplicateErrorContentObject(
+                duplicate = PersonMappingDto(
+                  dpsId = dpsContactId.toString(),
+                  nomisId = nomisPersonId,
+                  mappingType = DPS_CREATED,
+                ),
+                existing = PersonMappingDto(
+                  dpsId = dpsContactId.toString(),
+                  nomisId = nomisPersonId,
+                  mappingType = DPS_CREATED,
+                ),
+              ),
+              errorCode = 1409,
+              status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+              userMessage = "Duplicate mapping",
+            ),
+          )
+          publishCreateContactDomainEvent(contactId = dpsContactId.toString())
+        }
+
+        @Test
+        fun `will send telemetry for duplicate`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("to-nomis-synch-contactperson-duplicate"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will create the person in NOMIS once`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("to-nomis-synch-contactperson-duplicate"),
               any(),
               isNull(),
             )
