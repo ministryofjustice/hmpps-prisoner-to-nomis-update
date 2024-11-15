@@ -233,7 +233,7 @@ tasks.register("buildCourtSentencingApiModel", GenerateTask::class) {
   configOptions.set(configValues)
   globalProperties.set(
     mapOf(
-      "models" to "CourtCase,Charge,ChargeOutcome,SentenceType,Sentence,CourtAppearance,PeriodLength,NextCourtAppearance,CourtAppearanceOutcome",
+      "models" to "CourtCase,Charge,ChargeOutcome,SentenceType,Sentence,CourtAppearance,PeriodLength,NextCourtAppearance,CourtAppearanceOutcome,FineAmount",
       "modelDocs" to "false",
       "modelTests" to "false",
     ),

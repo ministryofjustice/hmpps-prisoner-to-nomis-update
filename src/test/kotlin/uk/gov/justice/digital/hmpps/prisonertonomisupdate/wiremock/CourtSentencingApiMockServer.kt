@@ -213,7 +213,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubCourtAppearanceGetWithFourCharges(courtCaseId: String, courtAppearanceId: String, courtCharge1Id: String, courtCharge2Id: String, courtCharge3Id: String, courtCharge4Id: String, offenderNo: String = "A6160DZ") {
     stubFor(
-      get(WireMock.urlPathMatching("/court-appearance/$courtAppearanceId")).willReturn(
+      get(WireMock.urlPathMatching("/court-appearance/$courtAppearanceId/lifetime")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(

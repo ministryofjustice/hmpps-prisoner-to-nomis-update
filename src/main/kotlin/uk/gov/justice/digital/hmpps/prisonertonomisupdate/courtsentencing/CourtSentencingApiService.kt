@@ -19,14 +19,14 @@ class CourtSentencingApiService(private val courtSentencingApiWebClient: WebClie
 
   suspend fun getCourtAppearance(id: String): CourtAppearance {
     return courtSentencingApiWebClient.get()
-      .uri("/court-appearance/{id}", id)
+      .uri("/court-appearance/{id}/lifetime", id)
       .retrieve()
       .awaitBody()
   }
 
   suspend fun getCourtCharge(id: String): Charge {
     return courtSentencingApiWebClient.get()
-      .uri("/charge/{id}", id)
+      .uri("/charge/{id}/lifetime", id)
       .retrieve()
       .awaitBody()
   }
