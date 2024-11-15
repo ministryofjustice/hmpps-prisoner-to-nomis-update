@@ -7,6 +7,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
+import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
@@ -64,6 +65,32 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
           .withStatus(409)
           .withBody(objectMapper.writeValueAsString(error)),
       ),
+    )
+  }
+
+  fun stubCreatePersonMappingFollowedBySuccess(status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      post("/mapping/contact-person/person")
+        .inScenario("Retry Mapping Person Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(objectMapper.writeValueAsString(error)),
+        ).willSetStateTo("Cause Mapping Person Success"),
+    )
+
+    mappingServer.stubFor(
+      post("/mapping/contact-person/person")
+        .inScenario("Retry Mapping Person Scenario")
+        .whenScenarioStateIs("Cause Mapping Person Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 
