@@ -121,13 +121,7 @@ tasks.register("buildActivityApiModel", GenerateTask::class) {
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.api")
   configOptions.set(configValues)
-  globalProperties.set(
-    mapOf(
-      "models" to "Activity,ActivityLite,ActivityEligibility,EventTier,EventOrganiser,DeallocationReason,EarliestReleaseDate,PlannedDeallocation,PlannedSuspension,AttendanceHistory,AttendanceReason,ActivityScheduleLite,InternalLocation,EligibilityRule,ActivityCategory,ActivityMinimumEducationLevel,BookingCount,PrisonPayBand,Attendance,ActivityPay,ActivitySchedule,ActivityScheduleInstance,ActivityScheduleSlot,Allocation,AllocationReconciliationResponse,AppointmentInstance,AttendanceReconciliationResponse,AttendanceSync,ScheduledInstance,Slot,Suspension",
-      "modelDocs" to "false",
-      "modelTests" to "false",
-    ),
-  )
+  globalProperties.set(mapOf("models" to "", "modelDocs" to "false", "modelTests" to "false"))
 }
 
 tasks.register("buildAdjudicationApiModel", GenerateTask::class) {
@@ -138,13 +132,7 @@ tasks.register("buildAdjudicationApiModel", GenerateTask::class) {
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.api")
   configOptions.set(configValues)
-  globalProperties.set(
-    mapOf(
-      "models" to "HearingDto,HearingOutcomeDto,OffenceRuleDto,OffenceRuleDetailsDto,IncidentRoleDto,IncidentStatementDto,OutcomeDto,OutcomeHistoryDto,PunishmentDto,CombinedOutcomeDto,RehabilitativeActivityDto,PunishmentScheduleDto,ReportedAdjudicationDto,IncidentDetailsDto,OffenceDto,PunishmentCommentDto,ReportedWitnessDto,DisIssueHistoryDto,ReportedAdjudicationResponse,ReportedDamageDto,ReportedEvidenceDto,Type",
-      "modelDocs" to "false",
-      "modelTests" to "false",
-    ),
-  )
+  globalProperties.set(mapOf("models" to "", "modelDocs" to "false", "modelTests" to "false"))
 }
 
 tasks.register("buildNonAssociationApiModel", GenerateTask::class) {
@@ -154,13 +142,7 @@ tasks.register("buildNonAssociationApiModel", GenerateTask::class) {
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.api")
   configOptions.set(configValues)
-  globalProperties.set(
-    mapOf(
-      "models" to "LegacyNonAssociation,LegacyNonAssociationOtherPrisonerDetails,NonAssociation",
-      "modelDocs" to "false",
-      "modelTests" to "false",
-    ),
-  )
+  globalProperties.set(mapOf("models" to "", "modelDocs" to "false", "modelTests" to "false"))
 }
 
 tasks.register("buildLocationApiModel", GenerateTask::class) {
@@ -170,13 +152,7 @@ tasks.register("buildLocationApiModel", GenerateTask::class) {
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.api")
   configOptions.set(configValues)
-  globalProperties.set(
-    mapOf(
-      "models" to "ChangeHistory,LegacyLocation,Certification,Capacity,NonResidentialUsageDto",
-      "modelDocs" to "false",
-      "modelTests" to "false",
-    ),
-  )
+  globalProperties.set(mapOf("models" to "", "modelDocs" to "false", "modelTests" to "false"))
 }
 
 tasks.register("buildNomisSyncApiModel", GenerateTask::class) {
@@ -214,13 +190,7 @@ tasks.register("buildSentencingAdjustmentsApiModel", GenerateTask::class) {
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.api")
   configOptions.set(configValues)
-  globalProperties.set(
-    mapOf(
-      "models" to "RemandDto,LegacyAdjustment,UnlawfullyAtLargeDto,SpecialRemissionDto,AdjustmentDto,TaggedBailDto,SpecialRemissionDtoAdditionalDaysAwardedDto,LawfullyAtLargeDto,AdditionalDaysAwardedDto,",
-      "modelDocs" to "false",
-      "modelTests" to "false",
-    ),
-  )
+  globalProperties.set(mapOf("models" to "", "modelDocs" to "false", "modelTests" to "false"))
 }
 
 tasks.register("buildCourtSentencingApiModel", GenerateTask::class) {
@@ -231,13 +201,7 @@ tasks.register("buildCourtSentencingApiModel", GenerateTask::class) {
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.api")
   configOptions.set(configValues)
-  globalProperties.set(
-    mapOf(
-      "models" to "CourtCase,Charge,ChargeOutcome,SentenceType,Sentence,CourtAppearance,PeriodLength,NextCourtAppearance,CourtAppearanceOutcome,FineAmount",
-      "modelDocs" to "false",
-      "modelTests" to "false",
-    ),
-  )
+  globalProperties.set(mapOf("models" to "", "modelDocs" to "false", "modelTests" to "false"))
 }
 
 tasks.register("buildAlertsApiModel", GenerateTask::class) {
@@ -247,13 +211,7 @@ tasks.register("buildAlertsApiModel", GenerateTask::class) {
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.api")
   configOptions.set(configValues)
-  globalProperties.set(
-    mapOf(
-      "models" to "Alert,AlertCode,AlertType,AlertCodeSummary",
-      "modelDocs" to "false",
-      "modelTests" to "false",
-    ),
-  )
+  globalProperties.set(mapOf("models" to "", "modelDocs" to "false", "modelTests" to "false"))
 }
 
 tasks.register("buildCsipApiModel", GenerateTask::class) {
@@ -263,13 +221,7 @@ tasks.register("buildCsipApiModel", GenerateTask::class) {
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.api")
   configOptions.set(configValues)
-  globalProperties.set(
-    mapOf(
-      "models" to "Attendee,ContributoryFactor,CsipRecord,DecisionAndActions,IdentifiedNeed,Interview,Investigation,Plan,ReferenceData,Referral,Review,SaferCustodyScreeningOutcome",
-      "modelDocs" to "false",
-      "modelTests" to "false",
-    ),
-  )
+  globalProperties.set(mapOf("models" to "", "modelDocs" to "false", "modelTests" to "false"))
 }
 
 tasks.register("buildCaseNoteApiModel", GenerateTask::class) {
@@ -279,13 +231,7 @@ tasks.register("buildCaseNoteApiModel", GenerateTask::class) {
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.api")
   configOptions.set(configValues)
-  globalProperties.set(
-    mapOf(
-      "models" to "CaseNote,CaseNoteAmendment",
-      "modelDocs" to "false",
-      "modelTests" to "false",
-    ),
-  )
+  globalProperties.set(mapOf("models" to "", "modelDocs" to "false", "modelTests" to "false"))
 }
 
 tasks.register("buildPrisonPersonApiModel", GenerateTask::class) {
@@ -295,13 +241,7 @@ tasks.register("buildPrisonPersonApiModel", GenerateTask::class) {
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.api")
   configOptions.set(configValues)
-  globalProperties.set(
-    mapOf(
-      "models" to "PhysicalAttributesSyncDto",
-      "modelDocs" to "false",
-      "modelTests" to "false",
-    ),
-  )
+  globalProperties.set(mapOf("models" to "", "modelDocs" to "false", "modelTests" to "false"))
 }
 
 tasks.register("buildContactPersonApiModel", GenerateTask::class) {
@@ -311,13 +251,7 @@ tasks.register("buildContactPersonApiModel", GenerateTask::class) {
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model")
   apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.api")
   configOptions.set(configValues)
-  globalProperties.set(
-    mapOf(
-      "models" to "Contact",
-      "modelDocs" to "false",
-      "modelTests" to "false",
-    ),
-  )
+  globalProperties.set(mapOf("models" to "", "modelDocs" to "false", "modelTests" to "false"))
 }
 
 val generatedProjectDirs = listOf(
