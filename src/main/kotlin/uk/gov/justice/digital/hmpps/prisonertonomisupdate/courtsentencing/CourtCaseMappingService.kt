@@ -34,6 +34,14 @@ class CourtCaseMappingService(
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
+  suspend fun createChargeMapping(request: CourtChargeMappingDto) {
+    webClient.post()
+      .uri("/mapping/court-sentencing/court-charges")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntityOrThrowOnConflict()
+  }
+
   suspend fun createChargeBatchUpdateMapping(request: CourtChargeBatchUpdateMappingDto) {
     webClient.put()
       .uri("/mapping/court-sentencing/court-charges")
