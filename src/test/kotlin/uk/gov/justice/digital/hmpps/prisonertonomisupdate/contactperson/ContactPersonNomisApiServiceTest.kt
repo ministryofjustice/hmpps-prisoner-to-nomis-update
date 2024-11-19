@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonContactRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonContactResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -54,6 +56,40 @@ class ContactPersonNomisApiServiceTest {
       val response = apiService.createPerson(request = createPersonRequest())
 
       assertThat(response.personId).isEqualTo(123456)
+    }
+  }
+
+  @Nested
+  inner class CreatePersonContact {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubCreatePersonContact(personId = 1234567)
+
+      apiService.createPersonContact(personId = 1234567, request = createPersonContactRequest())
+
+      mockServer.verify(
+        postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call create endpoint`() = runTest {
+      mockServer.stubCreatePersonContact(personId = 1234567)
+
+      apiService.createPersonContact(personId = 1234567, request = createPersonContactRequest())
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/persons/1234567/contact")),
+      )
+    }
+
+    @Test
+    fun `will return contact id `() = runTest {
+      mockServer.stubCreatePersonContact(personId = 1234567, response = createPersonContactResponse().copy(personContactId = 123456))
+
+      val response = apiService.createPersonContact(personId = 1234567, request = createPersonContactRequest())
+
+      assertThat(response.personContactId).isEqualTo(123456)
     }
   }
 }

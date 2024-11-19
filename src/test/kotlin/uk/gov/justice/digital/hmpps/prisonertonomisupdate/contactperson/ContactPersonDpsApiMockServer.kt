@@ -10,7 +10,9 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.Contact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.PrisonerContact
 import java.time.LocalDateTime
 
 class ContactPersonDpsApiExtension :
@@ -29,6 +31,21 @@ class ContactPersonDpsApiExtension :
       isStaff = false,
       interpreterRequired = false,
       remitter = false,
+      createdBy = "JANE.SAM",
+      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+    )
+
+    fun prisonerContact() = PrisonerContact(
+      id = 12345,
+      contactId = 1234567,
+      prisonerNumber = "A1234KT",
+      contactType = "S",
+      relationshipType = "BRO",
+      nextOfKin = true,
+      emergencyContact = true,
+      approvedVisitor = false,
+      currentTerm = true,
+      active = true,
       createdBy = "JANE.SAM",
       createdTime = LocalDateTime.parse("2024-01-01T12:13"),
     )
@@ -67,6 +84,17 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetContact(contactId: Long, response: Contact = contact()) {
     stubFor(
       get("/sync/contact/$contactId")
+        .willReturn(
+          aResponse()
+            .withStatus(201)
+            .withHeader("Content-Type", "application/json")
+            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+  fun stubGetPrisonerContact(prisonerContactId: Long, response: PrisonerContact = prisonerContact()) {
+    stubFor(
+      get("/sync/prisoner-contact/$prisonerContactId")
         .willReturn(
           aResponse()
             .withStatus(201)

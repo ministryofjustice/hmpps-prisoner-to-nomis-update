@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-11-12.9855.5bb72a8"
+    "version": "2024-11-19.9951.ae8549a"
   },
   "servers": [
     {
@@ -5167,6 +5167,101 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/charges": {
+      "post": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "Creates a new Offender Charge",
+        "description": "Required role NOMIS_SENTENCING Creates a new Offender Charge for the offender and latest booking. Will not associate with a Court Event",
+        "operationId": "createCourtCharge",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender No",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender No",
+              "example": "AK1234B"
+            },
+            "example": "AK1234B"
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCourtCaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created Charge",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OffenderChargeIdResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offender does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/case-identifiers": {
       "post": {
         "tags": [
@@ -5972,7 +6067,7 @@
           "contact-person-resource"
         ],
         "summary": "Creates a person",
-        "description": "Retrieves a person. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "description": "Creates a person, typically a person who will become a contact of a prisoners. Requires ROLE_NOMIS_CONTACTPERSONS",
         "operationId": "createPerson",
         "requestBody": {
           "content": {
@@ -6015,8 +6110,104 @@
               }
             }
           },
+          "409": {
+            "description": "Person already exists with the same ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons/{personId}/contact": {
+      "post": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Creates a person contact",
+        "description": "Creates a person contact; the relationship between a prisoner and a person. Typically a prospective visitor. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "createPersonContact",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Person Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonContactRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Person Contact ID Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatePersonContactResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request contains bad for example prisoner does not exist or contact / relationship types do not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Person does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Contact with the specified relationship and type already exists for this prisoner's latest booking",
             "content": {
               "application/json": {
                 "schema": {
@@ -7287,16 +7478,6 @@
           },
           "403": {
             "description": "Forbidden, requires role NOMIS_SCREEN_ACCESS",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found if the screen (module) name does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -12930,9 +13111,9 @@
             "type": "string"
           }
         },
-        "description": "Court Event"
+        "description": "Court Charge"
       },
-      "CreateCourtEventChargesResponse": {
+      "OffenderChargeIdResponse": {
         "required": [
           "offenderChargeId"
         ],
@@ -12943,7 +13124,7 @@
             "format": "int64"
           }
         },
-        "description": "Create adjustment response"
+        "description": "Create offender charge response"
       },
       "UpdateCourtAppearanceResponse": {
         "required": [
@@ -12955,13 +13136,13 @@
           "createdCourtEventChargesIds": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/CreateCourtEventChargesResponse"
+              "$ref": "#/components/schemas/OffenderChargeIdResponse"
             }
           },
           "deletedOffenderChargesIds": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/CreateCourtEventChargesResponse"
+              "$ref": "#/components/schemas/OffenderChargeIdResponse"
             }
           }
         },
@@ -15580,7 +15761,7 @@
           "courtEventChargesIds": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/CreateCourtEventChargesResponse"
+              "$ref": "#/components/schemas/OffenderChargeIdResponse"
             }
           }
         },
@@ -16817,6 +16998,74 @@
         },
         "description": "Request to create an person (aka DPS contact) in NOMIS"
       },
+      "CreatePersonContactResponse": {
+        "required": [
+          "personContactId"
+        ],
+        "type": "object",
+        "properties": {
+          "personContactId": {
+            "type": "integer",
+            "description": "The contact Id",
+            "format": "int64"
+          }
+        }
+      },
+      "CreatePersonContactRequest": {
+        "required": [
+          "active",
+          "approvedVisitor",
+          "contactTypeCode",
+          "emergencyContact",
+          "nextOfKin",
+          "offenderNo",
+          "relationshipTypeCode"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderNo": {
+            "type": "string",
+            "description": "Offender no aka prisoner number. Contact will be added to latest booking",
+            "example": "A1234AA"
+          },
+          "contactTypeCode": {
+            "type": "string",
+            "description": "The contact type",
+            "example": "S"
+          },
+          "relationshipTypeCode": {
+            "type": "string",
+            "description": "The relationship type",
+            "example": "BRO"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "True if active"
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "Date contact is no longer active",
+            "format": "date"
+          },
+          "approvedVisitor": {
+            "type": "boolean",
+            "description": "True if approved to visit the prisoner"
+          },
+          "nextOfKin": {
+            "type": "boolean",
+            "description": "True if next of kin to the prisoner"
+          },
+          "emergencyContact": {
+            "type": "boolean",
+            "description": "True if emergency contact for the prisoner"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Free format comment text"
+          }
+        },
+        "description": "Request to create a contact (aka DPS prisoner contact) in NOMIS"
+      },
       "CreateNonAssociationRequest": {
         "required": [
           "effectiveDate",
@@ -17606,13 +17855,13 @@
       "PageVisitIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -17749,7 +17998,7 @@
         "properties": {
           "moduleName": {
             "type": "string",
-            "description": "The name of the module",
+            "description": "The name of the module/screen",
             "example": "OIDINCRS"
           },
           "accessBlockedType": {
@@ -18129,13 +18378,13 @@
       "PageQuestionnaireIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -19951,13 +20200,13 @@
       "PagePrisonerIds": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -20021,13 +20270,13 @@
       "PagePrisonerId": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -21049,13 +21298,13 @@
       "PagePersonIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -21205,13 +21454,13 @@
       "PageNonAssociationIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -21463,13 +21712,13 @@
       "PageLocationIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -22046,13 +22295,13 @@
       "PageIncidentIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -22169,13 +22418,13 @@
       "PageIncentiveIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -22313,13 +22562,13 @@
       "PageCSIPIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -22376,13 +22625,13 @@
       "PageCourtCaseIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -22572,13 +22821,13 @@
       "PageAppointmentIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -22907,13 +23156,13 @@
       "PageFindActiveAllocationIdsResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -22975,13 +23224,13 @@
       "PageAdjustmentIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -23049,13 +23298,13 @@
       "PageAdjudicationChargeIdResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -23378,13 +23627,13 @@
       "PageFindActiveActivityIdsResponse": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
