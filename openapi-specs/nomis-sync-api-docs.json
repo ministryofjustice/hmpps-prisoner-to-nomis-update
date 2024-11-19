@@ -6196,104 +6196,8 @@
               }
             }
           },
-          "409": {
-            "description": "Person already exists with the same ID",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/persons/{personId}/contact": {
-      "post": {
-        "tags": [
-          "contact-person-resource"
-        ],
-        "summary": "Creates a person contact",
-        "description": "Creates a person contact; the relationship between a prisoner and a person. Typically a prospective visitor. Requires ROLE_NOMIS_CONTACTPERSONS",
-        "operationId": "createPersonContact",
-        "parameters": [
-          {
-            "name": "personId",
-            "in": "path",
-            "description": "Person Id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Person Id",
-              "example": 12345
-            },
-            "example": 12345
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatePersonContactRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Person Contact ID Returned",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreatePersonContactResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The request contains bad for example prisoner does not exist or contact / relationship types do not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "404": {
             "description": "Person does not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Contact with the specified relationship and type already exists for this prisoner's latest booking",
             "content": {
               "application/json": {
                 "schema": {
@@ -7643,6 +7547,16 @@
           },
           "403": {
             "description": "Forbidden, requires role NOMIS_SCREEN_ACCESS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found if the screen (module) name does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -13146,7 +13060,7 @@
             "type": "string"
           }
         },
-        "description": "Court Charge"
+        "description": "Court Event"
       },
       "ExistingOffenderChargeRequest": {
         "required": [
