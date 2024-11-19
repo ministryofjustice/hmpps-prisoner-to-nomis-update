@@ -33,16 +33,38 @@ class ContactPersonDomainEventListener(
   ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "contacts-api.contact.created" -> contactPersonService.contactCreated(message.fromJson())
-      "contacts-api.prisoner-contact.create" -> log.info(eventType)
+      "contacts-api.prisoner-contact.created" -> contactPersonService.prisonerContactCreated(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
 }
 
+interface SourcedContactPersonEvent {
+  val additionalInformation: SourcedAdditionalData
+}
 data class ContactCreatedEvent(
-  val additionalInformation: ContactAdditionalData,
-)
+  override val additionalInformation: ContactAdditionalData,
+  val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent
 
 data class ContactAdditionalData(
   val contactId: Long,
-)
+  override val source: String,
+) : SourcedAdditionalData
+
+data class PrisonerContactCreatedEvent(
+  override val additionalInformation: PrisonerContactAdditionalData,
+  val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent
+
+data class PrisonerContactAdditionalData(
+  val prisonerContactId: Long,
+  override val source: String,
+) : SourcedAdditionalData
+
+data class ContactIdentifiers(val identifiers: List<ContactPersonReference>)
+data class ContactPersonReference(val type: String, val value: String)
+
+interface SourcedAdditionalData {
+  val source: String
+}
