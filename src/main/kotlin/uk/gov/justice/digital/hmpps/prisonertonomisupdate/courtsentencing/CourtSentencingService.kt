@@ -49,7 +49,7 @@ class CourtSentencingService(
   enum class EntityType(val displayName: String) {
     COURT_CASE("court-case"),
     COURT_APPEARANCE("court-appearance"),
-    COURT_CHARGE("court-appearance"),
+    COURT_CHARGE("charge"),
   }
 
   suspend fun createCourtCase(createEvent: CourtCaseCreatedEvent) {
@@ -177,6 +177,52 @@ class CourtSentencingService(
     }
   }
 
+  suspend fun createCharge(createEvent: CourtChargeCreatedEvent) {
+    val chargeId = createEvent.additionalInformation.courtChargeId
+    val courtCaseId = createEvent.additionalInformation.courtCaseId
+    val offenderNo: String = createEvent.personReference.identifiers.first { it.type == "NOMS" }.value
+    val telemetryMap = mutableMapOf(
+      "dpsChargeId" to chargeId,
+      "dpsCourtCaseId" to courtCaseId,
+      "offenderNo" to offenderNo,
+    )
+    synchronise {
+      name = EntityType.COURT_CHARGE.displayName
+      telemetryClient = this@CourtSentencingService.telemetryClient
+      retryQueueService = courtSentencingRetryQueueService
+      eventTelemetry = telemetryMap
+
+      checkMappingDoesNotExist {
+        courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(chargeId)
+      }
+
+      transform {
+        val courtCaseMapping = courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = courtCaseId)
+          ?: throw IllegalStateException(
+            "Attempt to create a charge on a dps court case without a nomis mapping. Dps court case id: $courtCaseId not found for DPS charge $chargeId",
+          )
+
+        val charge = courtSentencingApiService.getCourtCharge(chargeId)
+
+        val nomisChargeResponseDto =
+          nomisApiService.createCourtCharge(
+            offenderNo,
+            courtCaseMapping.nomisCourtCaseId,
+            charge.toNomisCourtCharge(),
+          )
+
+        CourtChargeMappingDto(
+          nomisCourtChargeId = nomisChargeResponseDto.offenderChargeId,
+          dpsCourtChargeId = charge.lifetimeUuid.toString(),
+        ).also {
+          telemetryMap["nomisChargeId"] = nomisChargeResponseDto.offenderChargeId.toString()
+          telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
+        }
+      }
+      saveMapping { courtCaseMappingService.createChargeMapping(it) }
+    }
+  }
+
   suspend fun updateCourtAppearance(createEvent: CourtAppearanceCreatedEvent) {
     val courtCaseId = createEvent.additionalInformation.courtCaseId
     val courtAppearanceId = createEvent.additionalInformation.courtAppearanceId
@@ -277,11 +323,21 @@ class CourtSentencingService(
       )
     }
 
+  suspend fun createChargeRetry(message: CreateMappingRetryMessage<CourtChargeMappingDto>) =
+    courtCaseMappingService.createChargeMapping(message.mapping).also {
+      telemetryClient.trackEvent(
+        "charge-create-mapping-retry-success",
+        message.telemetryAttributes,
+        null,
+      )
+    }
+
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (baseMapping.entityName) {
       EntityType.COURT_CASE.displayName -> createRetry(message.fromJson())
       EntityType.COURT_APPEARANCE.displayName -> createAppearanceRetry(message.fromJson())
+      EntityType.COURT_CHARGE.displayName -> createChargeRetry(message.fromJson())
       else -> throw IllegalArgumentException("Unknown entity type: ${baseMapping.entityName}")
     }
   }
@@ -347,6 +403,12 @@ class CourtSentencingService(
     val courtCaseId: String,
   )
 
+  data class CourtChargeAdditionalInformation(
+    val courtChargeId: String,
+    val source: String,
+    val courtCaseId: String,
+  )
+
   data class CaseReferencesAdditionalInformation(
     val courtCaseId: String,
     val source: String,
@@ -359,6 +421,11 @@ class CourtSentencingService(
 
   data class CourtAppearanceCreatedEvent(
     val additionalInformation: CourtAppearanceAdditionalInformation,
+    val personReference: PersonReferenceList,
+  )
+
+  data class CourtChargeCreatedEvent(
+    val additionalInformation: CourtChargeAdditionalInformation,
     val personReference: PersonReferenceList,
   )
 

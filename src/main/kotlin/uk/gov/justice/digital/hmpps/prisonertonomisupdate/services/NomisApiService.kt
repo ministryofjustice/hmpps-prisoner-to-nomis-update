@@ -47,6 +47,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Locati
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.OffenderChargeIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.OffenderChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerNosWithLast
@@ -674,6 +676,13 @@ class NomisApiService(
   suspend fun createCourtAppearance(offenderNo: String, nomisCourtCaseId: Long, request: CourtAppearanceRequest): CreateCourtAppearanceResponse =
     webClient.post()
       .uri("/prisoners/{offenderNo}/sentencing/court-cases/{courtCaseId}/court-appearances", offenderNo, nomisCourtCaseId)
+      .bodyValue(request)
+      .retrieve()
+      .awaitBody()
+
+  suspend fun createCourtCharge(offenderNo: String, nomisCourtCaseId: Long, request: OffenderChargeRequest): OffenderChargeIdResponse =
+    webClient.post()
+      .uri("/prisoners/{offenderNo}/sentencing/court-cases/{courtCaseId}/charges", offenderNo, nomisCourtCaseId)
       .bodyValue(request)
       .retrieve()
       .awaitBody()

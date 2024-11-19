@@ -315,6 +315,37 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetCourtCharge(courtChargeId: String, offenderNo: String = "A6160DZ") {
+    stubFor(
+      get(WireMock.urlPathMatching("/charge/$courtChargeId/lifetime")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            // language=json
+            """
+            {
+                "chargeUuid": "6c591b18-642a-484a-a967-2d17b5c9c5a1",
+                "lifetimeUuid": "$courtChargeId",
+                "offenceCode": "$COURT_CHARGE_1_OFFENCE_CODE",
+                "offenceStartDate": "$COURT_CHARGE_1_OFFENCE_DATE",
+                "offenceEndDate": "$COURT_CHARGE_1_OFFENCE_END_DATE",
+                "outcome": {
+                  "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+                  "outcomeName": "description of outcome",
+                  "nomisCode": "$COURT_CHARGE_1_RESULT_CODE",
+                  "outcomeType": "UNKNOWN",
+                  "displayOrder": 0
+                },
+                "terrorRelated": null,
+                "sentence": null
+            }
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
     this.withBody(NomisApiExtension.objectMapper.writeValueAsString(body))
     return this

@@ -2179,6 +2179,28 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubCourtChargeCreate(offenderNo: String, courtCaseId: Long, response: String) {
+    stubFor(
+      post("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/charges").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCourtChargeCreateWithError(offenderNo: String, courtCaseId: Long, status: Int = 500) {
+    stubFor(
+      post("/prisoners/$offenderNo/sentencing/court-cases/{caseId}/charges").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(ERROR_RESPONSE)
+          .withStatus(status),
+      ),
+    )
+  }
+
   fun stubCaseReferenceRefresh(offenderNo: String, courtCaseId: Long) {
     stubFor(
       post("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/case-identifiers").willReturn(

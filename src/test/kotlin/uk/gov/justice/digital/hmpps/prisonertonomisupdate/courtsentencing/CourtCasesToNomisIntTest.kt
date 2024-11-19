@@ -930,6 +930,195 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  inner class CreateCharge {
+    @Nested
+    inner class WhenCourtChargeHasBeenCreatedInDPS {
+      @BeforeEach
+      fun setUp() {
+        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCharge(
+          DPS_COURT_CHARGE_ID,
+          offenderNo = OFFENDER_NO,
+        )
+        NomisApiExtension.nomisApi.stubCourtChargeCreate(
+          OFFENDER_NO,
+          NOMIS_COURT_CASE_ID_FOR_CREATION,
+          nomisCourtChargeCreateResponse(),
+        )
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+
+        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_ID, 404)
+        MappingExtension.mappingServer.stubCreateCourtCharge()
+
+        publishCreateCourtChargeDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to court sentencing service to get more details`() {
+        waitForAnyProcessingToComplete()
+        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/charge/${DPS_COURT_CHARGE_ID}/lifetime")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("charge-create-success"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtCaseMapping.MappingType.DPS_CREATED.toString())
+            Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            Assertions.assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to create the Charge`() {
+        waitForAnyProcessingToComplete()
+        NomisApiExtension.nomisApi.verify(WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/charges")))
+      }
+
+      @Test
+      fun `will create a mapping between the two charges`() {
+        waitForAnyProcessingToComplete()
+
+        await untilAsserted {
+          MappingExtension.mappingServer.verify(
+            WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/court-sentencing/court-charges"))
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "dpsCourtChargeId",
+                  WireMock.equalTo(DPS_COURT_CHARGE_ID),
+                ),
+              )
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "nomisCourtChargeId",
+                  WireMock.equalTo(
+                    NOMIS_COURT_CHARGE_ID.toString(),
+                  ),
+                ),
+              ),
+          )
+        }
+        await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+      }
+    }
+
+    @Nested
+    inner class WhenMappingAlreadyCreatedForCourtCharge {
+
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(COURT_CASE_ID_FOR_CREATION)
+        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(
+          DPS_COURT_CHARGE_ID,
+          NOMIS_COURT_CHARGE_ID,
+        )
+        publishCreateCourtChargeDomainEvent()
+      }
+
+      @Test
+      fun `will not create an court case in NOMIS`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("charge-create-duplicate"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          },
+          isNull(),
+        )
+
+        NomisApiExtension.nomisApi.verify(
+          0,
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/offenderNo/$OFFENDER_NO/sentencing/court-charges")),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenMappingServiceFailsOnce {
+      @BeforeEach
+      fun setUp() {
+        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCharge(
+          DPS_COURT_CHARGE_ID,
+          offenderNo = OFFENDER_NO,
+        )
+        NomisApiExtension.nomisApi.stubCourtChargeCreate(
+          OFFENDER_NO,
+          NOMIS_COURT_CASE_ID_FOR_CREATION,
+          nomisCourtChargeCreateResponse(),
+        )
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_ID, 404)
+        MappingExtension.mappingServer.stubCreateCourtChargeWithErrorFollowedBySlowSuccess()
+        publishCreateCourtChargeDomainEvent()
+
+        await untilCallTo { CourtSentencingApiExtension.courtSentencingApi.getCountFor("/charge/$DPS_COURT_CHARGE_ID/lifetime") } matches { it == 1 }
+        await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/charges") } matches { it == 1 }
+      }
+
+      @Test
+      fun `should only create the NOMIS court charge once`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("charge-create-mapping-retry-success"),
+            any(),
+            isNull(),
+          )
+        }
+        NomisApiExtension.nomisApi.verify(
+          1,
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/charges")),
+        )
+      }
+
+      @Test
+      fun `will eventually create a mapping after NOMIS court charge is created`() {
+        await untilAsserted {
+          MappingExtension.mappingServer.verify(
+            2,
+            WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/court-sentencing/court-charges"))
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "dpsCourtChargeId",
+                  WireMock.equalTo(DPS_COURT_CHARGE_ID),
+                ),
+              )
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "nomisCourtChargeId",
+                  WireMock.equalTo(
+                    NOMIS_COURT_CHARGE_ID.toString(),
+                  ),
+                ),
+              ),
+          )
+        }
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("charge-create-mapping-retry-success"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
   inner class RefreshCaseReferences {
     @Nested
     inner class WhenCourtAppearanceHasBeenUpdatedInDPS {
@@ -1080,6 +1269,27 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
+  private fun publishCreateCourtChargeDomainEvent() {
+    val eventType = "charge.inserted"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(
+          courtChargeMessagePayload(
+            courtChargeId = DPS_COURT_CHARGE_ID,
+            courtCaseId = COURT_CASE_ID_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            eventType = eventType,
+          ),
+        )
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
   private fun publishCaseReferencesUpdatedDomainEvent() {
     val eventType = "legacy.court-case-references.updated"
     awsSnsClient.publish(
@@ -1112,6 +1322,15 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
   ) =
     """{"eventType":"$eventType", "additionalInformation": {"courtAppearanceId":"$courtAppearanceId", "courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
+  fun courtChargeMessagePayload(
+    courtCaseId: String,
+    courtChargeId: String,
+    offenderNo: String,
+    eventType: String,
+    source: String = "DPS",
+  ) =
+    """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+
   fun nomisCourtCaseCreateResponseWithTwoCharges(): String {
     return """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION, "courtAppearanceIds": [{"id": $NOMIS_COURT_APPEARANCE_ID,"courtEventChargesIds": [{"offenderChargeId": $NOMIS_COURT_CHARGE_ID }, {"offenderChargeId": $NOMIS_COURT_CHARGE_2_ID }] }] }"""
   }
@@ -1137,6 +1356,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       |]
       | }
     """.trimMargin()
+  }
+
+  fun nomisCourtChargeCreateResponse(): String {
+    return """{ "offenderChargeId": $NOMIS_COURT_CHARGE_ID }"""
   }
 
   fun caseReferencePayload(courtCaseId: String, offenderNo: String, eventType: String, source: String = "DPS") =

@@ -1486,6 +1486,33 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubCreateCourtChargeWithErrorFollowedBySlowSuccess() {
+    stubFor(
+      post("/mapping/court-sentencing/court-charges")
+        .inScenario("Retry Mapping Court Charge Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Create Mapping Court Charge Success"),
+    )
+
+    stubFor(
+      post("/mapping/court-sentencing/court-charges")
+        .inScenario("Retry Mapping Court Charge Scenario")
+        .whenScenarioStateIs("Create Mapping Court Charge Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201)
+            .withFixedDelay(1500),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
   fun stubGetCourtChargeMappingGivenDpsId(id: String, nomisCourtChargeId: Long) {
     stubFor(
       get("/mapping/court-sentencing/court-charges/dps-court-charge-id/$id").willReturn(
@@ -1504,6 +1531,16 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
             """.trimIndent(),
           )
           .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubCreateCourtCharge() {
+    stubFor(
+      post("/mapping/court-sentencing/court-charges").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
       ),
     )
   }
