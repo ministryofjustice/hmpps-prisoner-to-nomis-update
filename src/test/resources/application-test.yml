@@ -229,7 +229,8 @@ hmpps.sqs:
       subscribeTopicId: domainevents
       subscribeFilter: >-
         { "eventType":[
-          "contacts-api.contact.created"
+          "contacts-api.contact.created",
+          "contacts-api.prisoner-contact.created"
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
