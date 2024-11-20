@@ -49,7 +49,7 @@ data class ContactCreatedEvent(
 
 data class ContactAdditionalData(
   val contactId: Long,
-  override val source: String,
+  override val source: String = "DPS",
 ) : SourcedAdditionalData
 
 data class PrisonerContactCreatedEvent(
@@ -59,7 +59,7 @@ data class PrisonerContactCreatedEvent(
 
 data class PrisonerContactAdditionalData(
   val prisonerContactId: Long,
-  override val source: String,
+  override val source: String = "DPS",
 ) : SourcedAdditionalData
 
 data class ContactIdentifiers(val identifiers: List<ContactPersonReference>)
