@@ -5,8 +5,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.Contact
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.PrisonerContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncPrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
@@ -137,7 +137,7 @@ class ContactPersonService(
     objectMapper.readValue(this)
 }
 
-private fun Contact.toNomisCreateRequest(): CreatePersonRequest = CreatePersonRequest(
+private fun SyncContact.toNomisCreateRequest(): CreatePersonRequest = CreatePersonRequest(
   personId = this.id,
   firstName = this.firstName,
   lastName = this.lastName,
@@ -151,7 +151,7 @@ private fun Contact.toNomisCreateRequest(): CreatePersonRequest = CreatePersonRe
   isStaff = this.isStaff,
 )
 
-private fun PrisonerContact.toNomisCreateRequest(): CreatePersonContactRequest = CreatePersonContactRequest(
+private fun SyncPrisonerContact.toNomisCreateRequest(): CreatePersonContactRequest = CreatePersonContactRequest(
   offenderNo = this.prisonerNumber,
   contactTypeCode = this.contactType,
   relationshipTypeCode = this.relationshipType,

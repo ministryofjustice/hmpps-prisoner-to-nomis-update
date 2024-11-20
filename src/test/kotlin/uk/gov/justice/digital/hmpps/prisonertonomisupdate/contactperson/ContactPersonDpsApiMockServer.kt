@@ -11,8 +11,8 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.prisonerContact
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.Contact
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.PrisonerContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncPrisonerContact
 import java.time.LocalDateTime
 
 class ContactPersonDpsApiExtension :
@@ -24,7 +24,7 @@ class ContactPersonDpsApiExtension :
     val dpsContactPersonServer = ContactPersonDpsApiMockServer()
     lateinit var objectMapper: ObjectMapper
 
-    fun contact() = Contact(
+    fun contact() = SyncContact(
       id = 12345,
       lastName = "KOFI",
       firstName = "KWEKU",
@@ -35,7 +35,7 @@ class ContactPersonDpsApiExtension :
       createdTime = LocalDateTime.parse("2024-01-01T12:13"),
     )
 
-    fun prisonerContact() = PrisonerContact(
+    fun prisonerContact() = SyncPrisonerContact(
       id = 12345,
       contactId = 1234567,
       prisonerNumber = "A1234KT",
@@ -81,7 +81,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetContact(contactId: Long, response: Contact = contact()) {
+  fun stubGetContact(contactId: Long, response: SyncContact = contact()) {
     stubFor(
       get("/sync/contact/$contactId")
         .willReturn(
@@ -92,7 +92,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         ),
     )
   }
-  fun stubGetPrisonerContact(prisonerContactId: Long, response: PrisonerContact = prisonerContact()) {
+  fun stubGetPrisonerContact(prisonerContactId: Long, response: SyncPrisonerContact = prisonerContact()) {
     stubFor(
       get("/sync/prisoner-contact/$prisonerContactId")
         .willReturn(
