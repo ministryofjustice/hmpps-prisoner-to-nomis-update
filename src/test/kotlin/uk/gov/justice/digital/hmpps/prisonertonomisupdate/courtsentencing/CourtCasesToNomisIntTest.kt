@@ -608,11 +608,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
         MappingExtension.mappingServer.stubGetCourtAppearanceMappingGivenDpsIdWithError(DPS_COURT_APPEARANCE_ID, 404)
         MappingExtension.mappingServer.stubCreateCourtAppearance()
+
+        // a parent entity has initially not been created but then is available on retry
         MappingExtension.mappingServer.stubGetCourtChargeNotFoundFollowedBySlowSuccess(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
         publishCreateCourtAppearanceDomainEvent()
 
         await untilCallTo { CourtSentencingApiExtension.courtSentencingApi.getCountFor("/court-appearance/$DPS_COURT_APPEARANCE_ID/lifetime") } matches { it == 2 }
-        // await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/court-appearances") } matches { it == 1 }
+        await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/court-appearances") } matches { it == 1 }
       }
 
       @Test
