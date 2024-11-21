@@ -196,7 +196,12 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubCreateIncentiveWithDuplicateError(incentiveId: Long, nomisBookingId: Long, nomisIncentiveSequence: Long, duplicateNomisIncentiveSequence: Long) {
+  fun stubCreateIncentiveWithDuplicateError(
+    incentiveId: Long,
+    nomisBookingId: Long,
+    nomisIncentiveSequence: Long,
+    duplicateNomisIncentiveSequence: Long,
+  ) {
     stubFor(
       post("/mapping/incentives").willReturn(
         aResponse()
@@ -282,7 +287,11 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubCreateActivityWithDuplicateError(activityScheduleId: Long, nomisCourseActivityId: Long, duplicateNomisCourseActivityId: Long) {
+  fun stubCreateActivityWithDuplicateError(
+    activityScheduleId: Long,
+    nomisCourseActivityId: Long,
+    duplicateNomisCourseActivityId: Long,
+  ) {
     stubFor(
       post("/mapping/activities")
         .willReturn(
@@ -669,7 +678,11 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubCreateSentencingAdjustmentWithDuplicateError(adjustmentId: String, nomisAdjustmentId: Long, duplicateNomisAdjustmentId: Long) {
+  fun stubCreateSentencingAdjustmentWithDuplicateError(
+    adjustmentId: String,
+    nomisAdjustmentId: Long,
+    duplicateNomisAdjustmentId: Long,
+  ) {
     stubFor(
       post("/mapping/sentencing/adjustments").willReturn(
         aResponse()
@@ -1509,6 +1522,44 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
             .withStatus(201)
             .withFixedDelay(1500),
 
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetCourtChargeNotFoundFollowedBySlowSuccess(id: String, nomisCourtChargeId: Long = 54321) {
+    stubFor(
+      get("/mapping/court-sentencing/court-charges/dps-court-charge-id/$id")
+        .inScenario("Retry Mapping Court Charge Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(404) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Get Mapping Court Charge Success"),
+    )
+
+    stubFor(
+      get("/mapping/court-sentencing/court-charges/dps-court-charge-id/$id")
+        .inScenario("Retry Mapping Court Charge Scenario")
+        .whenScenarioStateIs("Get Mapping Court Charge Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              // language=json
+              """ 
+              {
+                "dpsCourtChargeId": "$id",
+                "nomisCourtChargeId": $nomisCourtChargeId,
+                "mappingType": "${CourtChargeMappingDto.MappingType.DPS_CREATED}",
+                "whenCreated": "2021-07-05T10:35:17"
+              }
+            
+              """.trimIndent(),
+            )
+            .withStatus(200)
+            .withFixedDelay(1500),
         ).willSetStateTo(Scenario.STARTED),
     )
   }

@@ -314,6 +314,62 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+  fun stubCourtAppearanceGetWitOneCharge(courtCaseId: String, courtAppearanceId: String, courtCharge1Id: String, offenderNo: String = "A6160DZ") {
+    stubFor(
+      get(WireMock.urlPathMatching("/court-appearance/$courtAppearanceId/lifetime")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            // language=json
+            """
+           {
+            "appearanceUuid": "6c591b18-642a-484a-a967-2d17b5c9c5a1",
+            "lifetimeUuid": "$courtAppearanceId",
+            "outcome": {
+              "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+              "relatedChargeOutcomeUuid": "9928aa1b-8e2c-4c77-ad32-6feca8b0e459",
+              "outcomeName": "Remanded in custody",
+              "nomisCode": "4531",
+              "outcomeType": "UNKNOWN",
+              "displayOrder": 0
+            },
+            "courtCode": "Doncaster Magistrates Court",
+            "courtCaseReference": "G123456789",
+            "appearanceDate": "2024-09-23",
+            "warrantId": "7e15b408-4f97-453e-98b7-24791978221c",
+            "warrantType": "REMAND",
+            "taggedBail": null,
+            "nextCourtAppearance": {
+                "appearanceDate": "2024-12-10",
+                "courtCode": "Doncaster Magistrates Court",
+                "appearanceType": "Court appearance"
+            },
+           "charges": [
+            {
+                "chargeUuid": "6c591b18-642a-484a-a967-2d17b5c9c5a1",
+                "lifetimeUuid": "$courtCharge1Id",
+                "offenceCode": "$COURT_CHARGE_1_OFFENCE_CODE",
+                "offenceStartDate": "$COURT_CHARGE_1_OFFENCE_DATE",
+                "offenceEndDate": "$COURT_CHARGE_1_OFFENCE_END_DATE",
+                "outcome": {
+                  "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
+                  "outcomeName": "description of outcome",
+                  "nomisCode": "$COURT_CHARGE_1_RESULT_CODE",
+                  "outcomeType": "UNKNOWN",
+                  "displayOrder": 0
+                },
+                "terrorRelated": null,
+                "sentence": null
+            }
+           
+        ]
+     }   
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
 
   fun stubGetCourtCharge(courtChargeId: String, offenderNo: String = "A6160DZ") {
     stubFor(

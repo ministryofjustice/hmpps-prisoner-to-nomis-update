@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-11-18.5433.1a04a03"
+    "version": "2024-11-20.5467.08c3d9c"
   },
   "servers": [
     {
@@ -2843,53 +2843,6 @@
             }
           }
         }
-      },
-      "delete": {
-        "tags": [
-          "case-notes-mapping-resource"
-        ],
-        "summary": "Deletes all casenote mappings",
-        "description": "Deletes all casenote mappings regardless of source. This is expected to only ever been used in a non-production environment. Requires ROLE_NOMIS_CASENOTES",
-        "operationId": "deleteAllMappings_2",
-        "parameters": [
-          {
-            "name": "onlyMigrated",
-            "in": "query",
-            "description": "Only delete migrated mappings",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "description": "Only delete migrated mappings",
-              "example": true
-            },
-            "example": true
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Mappings deleted"
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Access forbidden for this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/mapping/appointments": {
@@ -3193,7 +3146,7 @@
         ],
         "summary": "Deletes all alert mappings",
         "description": "Deletes all alert mappings regardless of source. This is expected to only ever been used in a non-production environment. Requires ROLE_NOMIS_ALERTS",
-        "operationId": "deleteAllMappings_3",
+        "operationId": "deleteAllMappings_2",
         "responses": {
           "204": {
             "description": "Mappings deleted"
@@ -3271,7 +3224,7 @@
         ],
         "summary": "Delete all adjudication related mapping entries",
         "description": "Delete mapping entries created during any migration or synchronisation for adjudications and associated hearings and punishments",
-        "operationId": "deleteAllMappings_4",
+        "operationId": "deleteAllMappings_3",
         "parameters": [
           {
             "name": "migrationOnly",
@@ -7597,14 +7550,14 @@
         }
       }
     },
-    "/mapping/casenotes/dps-casenote-id/{dpsCaseNoteId}": {
+    "/mapping/casenotes/dps-casenote-id/{dpsCaseNoteId}/all": {
       "get": {
         "tags": [
           "case-notes-mapping-resource"
         ],
-        "summary": "get mapping",
-        "description": "Retrieves a mapping by DPS id. Requires role NOMIS_CASENOTES",
-        "operationId": "getMappingByDpsId_1",
+        "summary": "get multiple mappings",
+        "description": "Retrieves mappings by DPS id. In case of past merges, there could be > 1 nomis id per dps id. Requires role NOMIS_CASENOTES",
+        "operationId": "getMappingsByDpsId",
         "parameters": [
           {
             "name": "dpsCaseNoteId",
@@ -7651,14 +7604,71 @@
             }
           }
         }
+      }
+    },
+    "/mapping/casenotes/dps-casenote-id/{dpsCaseNoteId}": {
+      "get": {
+        "tags": [
+          "case-notes-mapping-resource"
+        ],
+        "summary": "get mapping",
+        "description": "Retrieves a mapping by DPS id (just the first if > 1). Requires role NOMIS_CASENOTES",
+        "operationId": "getMappingByDpsId_1",
+        "parameters": [
+          {
+            "name": "dpsCaseNoteId",
+            "in": "path",
+            "description": "DPS casenote id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS casenote id",
+              "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+            },
+            "example": "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseNoteMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
       },
       "delete": {
         "tags": [
           "case-notes-mapping-resource"
         ],
         "summary": "Deletes mapping",
-        "description": "Deletes a mapping by DPS id. Requires role NOMIS_CASENOTES",
-        "operationId": "deleteMappingByDpsId_2",
+        "description": "Deletes mapping by DPS id (there could be more than one nomis id if a merge has taken place). Requires role NOMIS_CASENOTES",
+        "operationId": "deleteMappingsByDpsId",
         "parameters": [
           {
             "name": "dpsCaseNoteId",
@@ -8296,7 +8306,7 @@
         ],
         "summary": "Deletes mapping",
         "description": "Deletes a mapping by DPS id. Requires role NOMIS_ALERTS",
-        "operationId": "deleteMappingByDpsId_3",
+        "operationId": "deleteMappingByDpsId_2",
         "parameters": [
           {
             "name": "dpsAlertId",
@@ -8930,7 +8940,7 @@
     "/api/locations/nomis/{nomisLocationId}": {
       "get": {
         "tags": [
-          "NOMIS to DPS Mapping lookup"
+          "NOMIS / DPS Mapping lookup"
         ],
         "summary": "Retrieves the DPS location id from the NOMIS internal location id",
         "description": "Requires role <b>NOMIS_DPS_MAPPING__LOCATIONS__R</b>",
@@ -8996,7 +9006,7 @@
     "/api/locations/dps/{dpsLocationId}": {
       "get": {
         "tags": [
-          "DPS to NOMIS Mapping lookup"
+          "NOMIS / DPS Mapping lookup"
         ],
         "summary": "Retrieves the NOMIS location id from the DPS location id",
         "description": "Requires role <b>NOMIS_DPS_MAPPING__LOCATIONS__R</b>",

@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-11-19.9951.ae8549a"
+    "version": "2024-11-20.9974.f0be93a"
   },
   "servers": [
     {
@@ -17918,12 +17918,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "paged": {
+            "type": "boolean"
+          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
-          },
-          "paged": {
-            "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
@@ -20083,7 +20083,13 @@
           "occurrenceDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
-            "description": "Date case note occurred",
+            "description": "Datetime case note occurred",
+            "example": "2021-07-05T10:35:17"
+          },
+          "creationDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Datetime case note was created by user",
             "example": "2021-07-05T10:35:17"
           },
           "authorStaffId": {
@@ -20121,12 +20127,12 @@
           "createdDatetime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
-            "description": "Created timestamp",
+            "description": "Created DB timestamp",
             "example": "2021-07-05T10:35:17"
           },
           "createdUsername": {
             "type": "string",
-            "description": "Created username"
+            "description": "Created DB username"
           },
           "auditModuleName": {
             "type": "string",
