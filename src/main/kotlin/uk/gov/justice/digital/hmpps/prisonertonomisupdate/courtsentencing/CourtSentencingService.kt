@@ -412,7 +412,7 @@ fun LegacyCourtCase.toNomisCourtCase(): CreateCourtCaseRequest {
       // firstAppearance.appearanceDate,
       startDate = LocalDate.now(),
       // firstAppearance.courtCode,
-      courtId = "LEECC",
+      courtId = "DRBYYC",
       // firstAppearance.courtCaseReference,
       caseReference = "ABC4999",
       // new LEG_CASE_TYP on NOMIS - "Not Entered"
