@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMapping
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_DATE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_END_DATE
@@ -48,7 +49,7 @@ private const val DPS_COURT_CHARGE_4_ID = "1236aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val OFFENDER_NO = "AB12345"
 private const val DONCASTER_COURT_CODE = "DRBYYC"
 private const val PRISON_ID = "MDI"
-private const val CASE_REFERENCE = "G123456789"
+private const val CASE_REFERENCE = "ABC4999"
 
 class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
@@ -68,7 +69,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
         NomisApiExtension.nomisApi.stubCourtCaseCreate(
           OFFENDER_NO,
-          nomisCourtCaseCreateResponseWithTwoCharges(),
+          CreateCourtCaseResponse(
+            id = NOMIS_COURT_CASE_ID_FOR_CREATION,
+            courtAppearanceIds = emptyList(),
+          ),
         )
         MappingExtension.mappingServer.stubGetCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
         MappingExtension.mappingServer.stubCreateCourtCase()
@@ -78,7 +82,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/court-case/${COURT_CASE_ID_FOR_CREATION}")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/legacy/court-case/${COURT_CASE_ID_FOR_CREATION}")))
       }
 
       @Test
@@ -92,12 +96,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["mappingType"]).isEqualTo(CourtCaseMapping.MappingType.DPS_CREATED.toString())
-            Assertions.assertThat(it["courtAppearances"]).contains("dpsCourtAppearanceId=$DPS_COURT_APPEARANCE_ID")
-            Assertions.assertThat(it["courtAppearances"]).contains("nomisCourtAppearanceId=$NOMIS_COURT_APPEARANCE_ID")
-            Assertions.assertThat(it["courtCharges"]).contains("dpsCourtChargeId=$DPS_COURT_CHARGE_ID")
-            Assertions.assertThat(it["courtCharges"]).contains("nomisCourtChargeId=$NOMIS_COURT_CHARGE_ID")
-            Assertions.assertThat(it["courtCharges"]).contains("dpsCourtChargeId=$DPS_COURT_CHARGE_2_ID")
-            Assertions.assertThat(it["courtCharges"]).contains("nomisCourtChargeId=$NOMIS_COURT_CHARGE_2_ID")
           },
           isNull(),
         )
@@ -131,46 +129,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                 "courtId",
                 WireMock.equalTo(DONCASTER_COURT_CODE),
               ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtAppearance.courtEventType",
-                WireMock.equalTo(
-                  "CRT",
-                ),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtAppearance.courtId",
-                WireMock.equalTo(
-                  DONCASTER_COURT_CODE,
-                ),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtAppearance.nextCourtId",
-                WireMock.equalTo(
-                  DONCASTER_COURT_CODE,
-                ),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtAppearance.outcomeReasonCode",
-                WireMock.equalTo(
-                  "4531",
-                ),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtAppearance.nextEventDateTime",
-                WireMock.equalTo(
-                  "2024-12-10T00:00",
-                ),
-              ),
             ),
 
         )
@@ -196,47 +154,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                     NOMIS_COURT_CASE_ID_FOR_CREATION.toString(),
                   ),
                 ),
-              )
-              .withRequestBody(
-                WireMock.matchingJsonPath(
-                  "courtAppearances[0].nomisCourtAppearanceId",
-                  WireMock.equalTo(
-                    NOMIS_COURT_APPEARANCE_ID.toString(),
-                  ),
-                ),
-              )
-              .withRequestBody(
-                WireMock.matchingJsonPath(
-                  "courtCharges[0].nomisCourtChargeId",
-                  WireMock.equalTo(
-                    NOMIS_COURT_CHARGE_ID.toString(),
-                  ),
-                ),
-              )
-              .withRequestBody(
-                WireMock.matchingJsonPath(
-                  "courtCharges[0].dpsCourtChargeId",
-                  WireMock.equalTo(
-                    DPS_COURT_CHARGE_ID,
-                  ),
-                ),
-              )
-              .withRequestBody(
-                WireMock.matchingJsonPath(
-                  "courtCharges[1].nomisCourtChargeId",
-                  WireMock.equalTo(
-                    NOMIS_COURT_CHARGE_2_ID.toString(),
-                  ),
-                ),
-              )
-              .withRequestBody(
-                WireMock.matchingJsonPath(
-                  "courtCharges[1].dpsCourtChargeId",
-                  WireMock.equalTo(
-                    DPS_COURT_CHARGE_2_ID,
-                  ),
-                ),
               ),
+
           )
         }
         await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
@@ -318,13 +237,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
         NomisApiExtension.nomisApi.stubCourtCaseCreate(
           OFFENDER_NO,
-          nomisCourtCaseCreateResponseWithTwoCharges(),
+          CreateCourtCaseResponse(
+            id = NOMIS_COURT_CASE_ID_FOR_CREATION,
+            courtAppearanceIds = emptyList(),
+          ),
         )
         MappingExtension.mappingServer.stubGetCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
         MappingExtension.mappingServer.stubCreateCourtCaseWithErrorFollowedBySlowSuccess()
         publishCreateCourtCaseDomainEvent()
 
-        await untilCallTo { CourtSentencingApiExtension.courtSentencingApi.getCountFor("/court-case/$COURT_CASE_ID_FOR_CREATION") } matches { it == 1 }
+        await untilCallTo { CourtSentencingApiExtension.courtSentencingApi.getCountFor("/legacy/court-case/$COURT_CASE_ID_FOR_CREATION") } matches { it == 1 }
         await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/prisoners/$OFFENDER_NO/sentencing/court-cases") } matches { it == 1 }
       }
 
@@ -418,7 +340,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/court-appearance/${DPS_COURT_APPEARANCE_ID}/lifetime")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}")))
       }
 
       @Test
@@ -536,7 +458,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_4_ID, NOMIS_COURT_CHARGE_4_ID)
         publishCreateCourtAppearanceDomainEvent()
 
-        await untilCallTo { CourtSentencingApiExtension.courtSentencingApi.getCountFor("/court-appearance/$DPS_COURT_APPEARANCE_ID/lifetime") } matches { it == 1 }
+        await untilCallTo { CourtSentencingApiExtension.courtSentencingApi.getCountFor("/legacy/court-appearance/$DPS_COURT_APPEARANCE_ID") } matches { it == 1 }
         await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/court-appearances") } matches { it == 1 }
       }
 
@@ -613,7 +535,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         MappingExtension.mappingServer.stubGetCourtChargeNotFoundFollowedBySlowSuccess(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
         publishCreateCourtAppearanceDomainEvent()
 
-        await untilCallTo { CourtSentencingApiExtension.courtSentencingApi.getCountFor("/court-appearance/$DPS_COURT_APPEARANCE_ID/lifetime") } matches { it == 2 }
+        await untilCallTo { CourtSentencingApiExtension.courtSentencingApi.getCountFor("/legacy/court-appearance/$DPS_COURT_APPEARANCE_ID") } matches { it == 2 }
         await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/court-appearances") } matches { it == 1 }
       }
 
@@ -683,7 +605,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/court-appearance/${DPS_COURT_APPEARANCE_ID}/lifetime")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}")))
       }
 
       @Test
@@ -840,6 +762,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCharge(
           DPS_COURT_CHARGE_ID,
           offenderNo = OFFENDER_NO,
+          caseID = COURT_CASE_ID_FOR_CREATION,
         )
         NomisApiExtension.nomisApi.stubCourtChargeCreate(
           OFFENDER_NO,
@@ -860,7 +783,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/charge/${DPS_COURT_CHARGE_ID}/lifetime")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/legacy/charge/${DPS_COURT_CHARGE_ID}")))
       }
 
       @Test
@@ -954,6 +877,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCharge(
           DPS_COURT_CHARGE_ID,
           offenderNo = OFFENDER_NO,
+          caseID = COURT_CASE_ID_FOR_CREATION,
         )
         NomisApiExtension.nomisApi.stubCourtChargeCreate(
           OFFENDER_NO,
@@ -968,7 +892,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         MappingExtension.mappingServer.stubCreateCourtChargeWithErrorFollowedBySlowSuccess()
         publishCreateCourtChargeDomainEvent()
 
-        await untilCallTo { CourtSentencingApiExtension.courtSentencingApi.getCountFor("/charge/$DPS_COURT_CHARGE_ID/lifetime") } matches { it == 1 }
+        await untilCallTo { CourtSentencingApiExtension.courtSentencingApi.getCountFor("/legacy/charge/$DPS_COURT_CHARGE_ID") } matches { it == 1 }
         await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/charges") } matches { it == 1 }
       }
 
@@ -1050,7 +974,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/court-case/${COURT_CASE_ID_FOR_CREATION}")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/legacy/court-case/${COURT_CASE_ID_FOR_CREATION}")))
       }
 
       @Test
@@ -1233,8 +1157,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
   ) =
     """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
-  fun nomisCourtCaseCreateResponseWithTwoCharges(): String {
-    return """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION, "courtAppearanceIds": [{"id": $NOMIS_COURT_APPEARANCE_ID,"courtEventChargesIds": [{"offenderChargeId": $NOMIS_COURT_CHARGE_ID }, {"offenderChargeId": $NOMIS_COURT_CHARGE_2_ID }] }] }"""
+  fun nomisCourtCaseCreateResponse(): String {
+    return """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION }"""
   }
 
   fun nomisCourtAppearanceCreateResponse(): String {
