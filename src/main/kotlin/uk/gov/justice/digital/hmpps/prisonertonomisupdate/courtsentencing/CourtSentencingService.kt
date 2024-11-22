@@ -7,9 +7,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.Charge
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtAppearance
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCharge
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtAppearance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
@@ -29,6 +30,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
@@ -76,25 +78,11 @@ class CourtSentencingService(
           val nomisResponse =
             nomisApiService.createCourtCase(offenderNo, courtCase.toNomisCourtCase())
 
-          val nomisCourtAppearanceResponse = nomisResponse.courtAppearanceIds.first()
-          val firstAppearance = courtCase.latestAppearance!!
           CourtCaseAllMappingDto(
             nomisCourtCaseId = nomisResponse.id,
             dpsCourtCaseId = courtCaseId,
-            // expecting a court case with 1 court appearance - separate event for subsequent appearances
-            courtAppearances = listOf(
-              CourtAppearanceMappingDto(
-                // DPS use lifetimeUuid as the immutable identifier for appearances and charges
-                dpsCourtAppearanceId = firstAppearance.lifetimeUuid.toString(),
-                nomisCourtAppearanceId = nomisCourtAppearanceResponse.id,
-              ),
-            ),
-            courtCharges = firstAppearance.charges.mapIndexed { index, dpsCharge ->
-              CourtChargeMappingDto(
-                nomisCourtChargeId = nomisCourtAppearanceResponse.courtEventChargesIds[index].offenderChargeId,
-                dpsCourtChargeId = dpsCharge.lifetimeUuid.toString(),
-              )
-            },
+            courtCharges = emptyList(),
+            courtAppearances = emptyList(),
           )
         }
         saveMapping { courtCaseMappingService.createMapping(it) }
@@ -139,7 +127,7 @@ class CourtSentencingService(
 
         val courtAppearance = courtSentencingApiService.getCourtAppearance(courtAppearanceId)
 
-        val courtEventChargesToUpdate: MutableList<Pair<Charge, Long>> = mutableListOf()
+        val courtEventChargesToUpdate: MutableList<Pair<LegacyCharge, Long>> = mutableListOf()
         courtAppearance.charges.forEach { charge ->
           courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(charge.lifetimeUuid.toString())?.let { mapping ->
             courtEventChargesToUpdate.add(Pair(charge, mapping.nomisCourtChargeId))
@@ -237,7 +225,7 @@ class CourtSentencingService(
 
       val dpsCourtAppearance = courtSentencingApiService.getCourtAppearance(courtAppearanceId)
 
-      val courtEventChargesToUpdate: MutableList<Pair<Charge, Long>> = mutableListOf()
+      val courtEventChargesToUpdate: MutableList<Pair<LegacyCharge, Long>> = mutableListOf()
 
       dpsCourtAppearance.charges.forEach { charge ->
         courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(charge.lifetimeUuid.toString())?.let { mapping ->
@@ -344,7 +332,6 @@ class CourtSentencingService(
           nomisCourtCaseId = courtCaseMapping.nomisCourtCaseId,
           request = CaseIdentifierRequest(caseIdentifiers = dpsCourtCase.getNomisCaseIdentifiers()),
         )
-
         telemetryClient.trackEvent(
           "case-references-refreshed-success",
           telemetryMap,
@@ -363,14 +350,12 @@ class CourtSentencingService(
     }
   }
 
-  // legacyData is an untyped kotlin Any
-  fun CourtCase.getNomisCaseIdentifiers(): List<CaseIdentifier> {
-    val legacyData: Map<String, Any> = this.legacyData as Map<String, Any>? ?: return emptyList()
-    val caseReferences = legacyData["caseReferences"] as List<Map<String, Any>>
+  fun LegacyCourtCase.getNomisCaseIdentifiers(): List<CaseIdentifier> {
+    val caseReferences: List<CaseReferenceLegacyData> = this.legacyData?.caseReferences ?: emptyList()
     return caseReferences.map { caseReference ->
       CaseIdentifier(
-        reference = caseReference["offenderCaseReference"] as String,
-        createdDate = caseReference["updatedDate"] as String,
+        reference = caseReference.offenderCaseReference,
+        createdDate = caseReference.updatedDate,
       )
     }
   }
@@ -418,25 +403,26 @@ class CourtSentencingService(
   )
 }
 
-fun CourtCase.toNomisCourtCase(): CreateCourtCaseRequest {
+// TODO wire up when new dto available
+fun LegacyCourtCase.toNomisCourtCase(): CreateCourtCaseRequest {
   // we are guaranteed an appearance when a court case is created in DPS
-  val firstAppearance = this.latestAppearance!!
-  return CreateCourtCaseRequest(
-    // latest appearance is always the only appearance during a Creat Case request
-    startDate = firstAppearance.appearanceDate,
-    courtId = firstAppearance.courtCode,
-    caseReference = firstAppearance.courtCaseReference,
-    courtAppearance = firstAppearance.toNomisCourtAppearance(
-      courtEventChargesToUpdate = listOf(),
-    ),
-    // new LEG_CASE_TYP on NOMIS - "Not Entered"
-    legalCaseType = "NE",
-    // CASE_STS on NOMIS - no decision from DPS yet - defaulting to Active
-    status = "A",
-  )
+  val firstAppearance = // this.latestAppearance!!
+    return CreateCourtCaseRequest(
+      // latest appearance is always the only appearance during a Creat Case request
+      // firstAppearance.appearanceDate,
+      startDate = LocalDate.now(),
+      // firstAppearance.courtCode,
+      courtId = "LEECC",
+      // firstAppearance.courtCaseReference,
+      caseReference = "ABC4999",
+      // new LEG_CASE_TYP on NOMIS - "Not Entered"
+      legalCaseType = "NE",
+      // CASE_STS on NOMIS - no decision from DPS yet - defaulting to Active
+      status = "A",
+    )
 }
 
-fun CourtAppearance.toNomisCourtAppearance(
+fun LegacyCourtAppearance.toNomisCourtAppearance(
   courtEventChargesToUpdate: List<ExistingOffenderChargeRequest>,
 ): CourtAppearanceRequest {
   return CourtAppearanceRequest(
@@ -447,33 +433,30 @@ fun CourtAppearance.toNomisCourtAppearance(
     ).toString(),
     courtEventType = "CRT",
     courtId = this.courtCode,
-    outcomeReasonCode = this.outcome?.nomisCode,
-    nextEventDateTime = nextCourtAppearance?.let {
-      LocalDateTime.of(
-        it.appearanceDate,
-        LocalTime.MIDNIGHT,
-      ).toString()
-    },
+    outcomeReasonCode = this.nomisOutcomeCode,
+    nextEventDateTime = this.legacyData?.nextEventDateTime?.toString(),
     courtEventChargesToUpdate = courtEventChargesToUpdate,
     courtEventChargesToCreate = emptyList(),
-    nextCourtId = nextCourtAppearance?.let { it.courtCode },
+    // TODO wire up court code
+    nextCourtId = this.legacyData?.nextEventDateTime?.let { this.courtCode },
   )
 }
 
-fun Charge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeRequest(
+fun LegacyCharge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeRequest(
   offenceCode = this.offenceCode,
   offenceDate = this.offenceStartDate,
   offenceEndDate = this.offenceEndDate,
-  resultCode1 = this.outcome?.nomisCode,
+  resultCode1 = this.nomisOutcomeCode,
 )
 
-fun Charge.toExistingNomisCourtCharge(nomisId: Long): ExistingOffenderChargeRequest = ExistingOffenderChargeRequest(
-  offenderChargeId = nomisId,
-  offenceCode = this.offenceCode,
-  offenceDate = this.offenceStartDate,
-  offenceEndDate = this.offenceEndDate,
-  resultCode1 = this.outcome?.nomisCode,
-)
+fun LegacyCharge.toExistingNomisCourtCharge(nomisId: Long): ExistingOffenderChargeRequest =
+  ExistingOffenderChargeRequest(
+    offenderChargeId = nomisId,
+    offenceCode = this.offenceCode,
+    offenceDate = this.offenceStartDate,
+    offenceEndDate = this.offenceEndDate,
+    resultCode1 = this.nomisOutcomeCode,
+  )
 
 private fun CourtChargeBatchUpdateMappingDto.hasAnyMappingsToUpdate(): Boolean =
   this.courtChargesToCreate.isNotEmpty() || this.courtChargesToDelete.isNotEmpty()

@@ -19,7 +19,9 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
@@ -2108,12 +2110,12 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   // *************************************************** Court Sentencing **********************************************
 
-  fun stubCourtCaseCreate(offenderNo: String, response: String) {
+  fun stubCourtCaseCreate(offenderNo: String, response: CreateCourtCaseResponse) {
     stubFor(
       post("/prisoners/$offenderNo/sentencing/court-cases").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(response)
+          .withBody(objectMapper().writeValueAsString(response))
           .withStatus(201),
       ),
     )
