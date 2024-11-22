@@ -49,7 +49,7 @@ private const val DPS_COURT_CHARGE_4_ID = "1236aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val OFFENDER_NO = "AB12345"
 private const val DONCASTER_COURT_CODE = "DRBYYC"
 private const val PRISON_ID = "MDI"
-private const val CASE_REFERENCE = "G123456789"
+private const val CASE_REFERENCE = "ABC4999"
 
 class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
