@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-11-22.3310.98655f5"
+    "version": "2024-11-25.3378.0b733d9"
   },
   "servers": [
     {
@@ -444,6 +444,86 @@
         "parameters": [
           {
             "name": "lifetimeUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token"
+          },
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role"
+          }
+        }
+      }
+    },
+    "/legacy/court-appearance/{lifetimeUuid}/charge/{chargeLifetimeUuid}": {
+      "put": {
+        "tags": [
+          "legacy-court-appearance-controller"
+        ],
+        "summary": "link Appearance with Charge",
+        "description": "Synchronise a link between court appearance and charge from NOMIS into remand and sentencing API.",
+        "operationId": "linkAppearanceWithCharge",
+        "parameters": [
+          {
+            "name": "lifetimeUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "chargeLifetimeUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token"
+          },
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "legacy-court-appearance-controller"
+        ],
+        "summary": "Delete Appearance Charge link",
+        "description": "Synchronise a deletion of link between court appearance and charge from NOMIS into remand and sentencing API.",
+        "operationId": "unlinkAppearanceWithCharge",
+        "parameters": [
+          {
+            "name": "lifetimeUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "chargeLifetimeUuid",
             "in": "path",
             "required": true,
             "schema": {
@@ -1014,7 +1094,7 @@
         ],
         "summary": "Retrieve charge details",
         "description": "This endpoint will retrieve charge details",
-        "operationId": "getChargeDetails_1",
+        "operationId": "getChargeDetails",
         "parameters": [
           {
             "name": "chargeUuid",
@@ -1473,69 +1553,6 @@
         }
       }
     },
-    "/court-appearance/{appearanceUuid}/charge": {
-      "post": {
-        "tags": [
-          "court-appearance-controller"
-        ],
-        "summary": "Create Charge in appearance",
-        "description": "This endpoint will create a charge in a given court appearance",
-        "operationId": "createChargeInAppearance",
-        "parameters": [
-          {
-            "name": "appearanceUuid",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateCharge"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Returns charge UUID",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateChargeResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateChargeResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateChargeResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/charge": {
       "post": {
         "tags": [
@@ -1595,7 +1612,7 @@
         ],
         "summary": "Retrieve sentence details",
         "description": "This endpoint will retrieve sentence details",
-        "operationId": "getChargeDetails",
+        "operationId": "getChargeDetails_1",
         "parameters": [
           {
             "name": "sentenceUuid",
@@ -2377,47 +2394,6 @@
           }
         }
       }
-    },
-    "/court-appearance/{appearanceUuid}/charge/{chargeUuid}": {
-      "delete": {
-        "tags": [
-          "court-appearance-controller"
-        ],
-        "summary": "Disassociate charge with appearance",
-        "description": "This endpoint will disassociate a charge with an appearance",
-        "operationId": "disassociateChargeWithAppearance",
-        "parameters": [
-          {
-            "name": "appearanceUuid",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "chargeUuid",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token"
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role"
-          }
-        }
-      }
     }
   },
   "components": {
@@ -2762,7 +2738,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "15:09:54.493068341"
+            "example": "13:45:59.124773086"
           },
           "courtCode": {
             "type": "string"
@@ -3168,6 +3144,7 @@
       "LegacyCourtCase": {
         "required": [
           "active",
+          "caseReferences",
           "courtCaseUuid",
           "prisonerId"
         ],
@@ -3182,8 +3159,21 @@
           "active": {
             "type": "boolean"
           },
-          "legacyData": {
-            "$ref": "#/components/schemas/CourtCaseLegacyData"
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "courtId": {
+            "type": "string"
+          },
+          "caseReference": {
+            "type": "string"
+          },
+          "caseReferences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CaseReferenceLegacyData"
+            }
           }
         }
       },
@@ -3448,7 +3438,8 @@
         "required": [
           "appearances",
           "courtCaseUuid",
-          "prisonerId"
+          "prisonerId",
+          "status"
         ],
         "type": "object",
         "properties": {
@@ -3457,6 +3448,15 @@
           },
           "courtCaseUuid": {
             "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE",
+              "EDITED",
+              "DELETED"
+            ]
           },
           "latestAppearance": {
             "$ref": "#/components/schemas/CourtAppearance"
@@ -3489,7 +3489,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "15:09:54.493068341"
+            "example": "13:45:59.124773086"
           },
           "courtCode": {
             "type": "string"
@@ -3523,13 +3523,13 @@
       "PageCourtCase": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -3552,10 +3552,7 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
           },
           "numberOfElements": {
             "type": "integer",
@@ -3577,10 +3574,7 @@
             "format": "int64"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
           },
           "pageSize": {
             "type": "integer",
@@ -3601,19 +3595,13 @@
       "SortObject": {
         "type": "object",
         "properties": {
-          "direction": {
-            "type": "string"
-          },
-          "nullHandling": {
-            "type": "string"
-          },
-          "ascending": {
+          "empty": {
             "type": "boolean"
           },
-          "property": {
-            "type": "string"
+          "sorted": {
+            "type": "boolean"
           },
-          "ignoreCase": {
+          "unsorted": {
             "type": "boolean"
           }
         }
