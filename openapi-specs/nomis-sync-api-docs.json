@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-11-20.9974.f0be93a"
+    "version": "2024-11-25.10010.f9605a4"
   },
   "servers": [
     {
@@ -6208,6 +6208,92 @@
           },
           "409": {
             "description": "Contact with the specified relationship and type already exists for this prisoner's latest booking",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons/{personId}/address": {
+      "post": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Creates a person address",
+        "description": "Creates a person address in NOMIS. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "createPersonAddress",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Person Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonAddressRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Person Address ID Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatePersonAddressResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request contains bad for example type code does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Person does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -17066,6 +17152,99 @@
         },
         "description": "Request to create a contact (aka DPS prisoner contact) in NOMIS"
       },
+      "CreatePersonAddressResponse": {
+        "required": [
+          "personAddressId"
+        ],
+        "type": "object",
+        "properties": {
+          "personAddressId": {
+            "type": "integer",
+            "description": "The address Id",
+            "format": "int64"
+          }
+        }
+      },
+      "CreatePersonAddressRequest": {
+        "required": [
+          "mailAddress",
+          "primaryAddress"
+        ],
+        "type": "object",
+        "properties": {
+          "typeCode": {
+            "type": "string",
+            "description": "Address reference code",
+            "example": "HOME"
+          },
+          "flat": {
+            "type": "string",
+            "description": "Flat name or number",
+            "example": "Apartment 3"
+          },
+          "premise": {
+            "type": "string",
+            "description": "Premise",
+            "example": "22"
+          },
+          "street": {
+            "type": "string",
+            "description": "Street",
+            "example": "West Street"
+          },
+          "locality": {
+            "type": "string",
+            "description": "Locality",
+            "example": "Keighley"
+          },
+          "postcode": {
+            "type": "string",
+            "description": "Post code",
+            "example": "MK15 2ST"
+          },
+          "cityCode": {
+            "type": "string",
+            "description": "City reference code",
+            "example": "25343"
+          },
+          "countyCode": {
+            "type": "string",
+            "description": "County reference code",
+            "example": "S.YORKSHIRE"
+          },
+          "countryCode": {
+            "type": "string",
+            "description": "Country reference code",
+            "example": "ENG"
+          },
+          "noFixedAddress": {
+            "type": "boolean",
+            "description": "true if address not fixed. for example homeless"
+          },
+          "primaryAddress": {
+            "type": "boolean",
+            "description": "true if this is the person's primary address"
+          },
+          "mailAddress": {
+            "type": "boolean",
+            "description": "true if this is used for mail"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Free format comment about the address"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Date address was valid from",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Date address was valid to",
+            "format": "date"
+          }
+        }
+      },
       "CreateNonAssociationRequest": {
         "required": [
           "effectiveDate",
@@ -17918,12 +18097,12 @@
             "type": "integer",
             "format": "int32"
           },
-          "paged": {
-            "type": "boolean"
-          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
+          },
+          "paged": {
+            "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
