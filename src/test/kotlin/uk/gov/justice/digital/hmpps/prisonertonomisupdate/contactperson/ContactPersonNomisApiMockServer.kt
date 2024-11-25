@@ -41,6 +41,14 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
       emergencyContact = false,
       comment = "Best friends",
     )
+    fun createPersonAddressResponse(): CreatePersonAddressResponse = CreatePersonAddressResponse(
+      personAddressId = 123456,
+    )
+
+    fun createPersonAddressRequest(): CreatePersonAddressRequest = CreatePersonAddressRequest(
+      primaryAddress = true,
+      mailAddress = true,
+    )
   }
 
   fun stubCreatePerson(
@@ -62,6 +70,20 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
   ) {
     nomisApi.stubFor(
       post(urlEqualTo("/persons/$personId/contact")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubCreatePersonAddress(
+    personId: Long = 123456,
+    response: CreatePersonAddressResponse = createPersonAddressResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/persons/$personId/address")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())

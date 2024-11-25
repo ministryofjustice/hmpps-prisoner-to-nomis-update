@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonAddressRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonContactResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonRequest
@@ -90,6 +92,40 @@ class ContactPersonNomisApiServiceTest {
       val response = apiService.createPersonContact(personId = 1234567, request = createPersonContactRequest())
 
       assertThat(response.personContactId).isEqualTo(123456)
+    }
+  }
+
+  @Nested
+  inner class CreatePersonAddress {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubCreatePersonAddress(personId = 1234567)
+
+      apiService.createPersonAddress(personId = 1234567, request = createPersonAddressRequest())
+
+      mockServer.verify(
+        postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call create endpoint`() = runTest {
+      mockServer.stubCreatePersonAddress(personId = 1234567)
+
+      apiService.createPersonAddress(personId = 1234567, request = createPersonAddressRequest())
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/persons/1234567/address")),
+      )
+    }
+
+    @Test
+    fun `will return address id `() = runTest {
+      mockServer.stubCreatePersonAddress(personId = 1234567, response = createPersonAddressResponse().copy(personAddressId = 123456))
+
+      val response = apiService.createPersonAddress(personId = 1234567, request = createPersonAddressRequest())
+
+      assertThat(response.personAddressId).isEqualTo(123456)
     }
   }
 }
