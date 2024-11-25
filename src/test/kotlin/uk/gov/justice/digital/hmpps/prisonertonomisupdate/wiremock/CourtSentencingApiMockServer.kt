@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCharge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtAppearance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import java.time.LocalDate
 import java.util.UUID
@@ -69,147 +70,13 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubCourtCaseGet(courtCaseId: String, courtAppearanceId: String, courtCharge1Id: String, courtCharge2Id: String, caseReference: String = "G123456789", courtId: String = "DRBYYC", offenderNo: String = "A6160DZ") {
+  fun stubCourtCaseGet(courtCaseId: String, courtCaseResponse: LegacyCourtCase) {
     stubFor(
       get(WireMock.urlPathMatching("/legacy/court-case/$courtCaseId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            // language=json
-            """
-           {
-    "prisonerId": "$offenderNo",
-    "courtCaseUuid": "$courtCaseId",
-    "latestAppearance": {
-        "appearanceUuid": "6c591b18-642a-484a-a967-2d17b5c9c5a1",
-        "lifetimeUuid": "9c591b18-642a-484a-a967-2d17b5c9c5a1",
-        "outcome": {
-            "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
-            "relatedChargeOutcomeUuid": "9928aa1b-8e2c-4c77-ad32-6feca8b0e459",
-            "outcomeName": "Remanded in custody",
-            "nomisCode": "4531",
-            "outcomeType": "UNKNOWN",
-            "displayOrder": 0
-          },
-        "courtCode": "$courtId",
-        "courtCaseReference": "$caseReference",
-        "appearanceDate": "2024-09-23",
-        "warrantId": "7e15b408-4f97-453e-98b7-24791978221c",
-        "warrantType": "REMAND",
-        "taggedBail": null,
-        "nextCourtAppearance": {
-            "appearanceDate": "2024-12-10",
-            "courtCode": "$courtId",
-            "appearanceType": "Court appearance"
-        },
-        "charges": [
-            {
-                "chargeUuid": "6c591b18-642a-484a-a967-2d17b5c9c5a1",
-                "lifetimeUuid": "$courtCharge1Id",
-                "offenceCode": "PS90037",
-                "offenceStartDate": "2024-01-15",
-                "offenceEndDate": null,
-                "outcome": {
-                  "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
-                  "outcomeName": "description of outcome",
-                  "nomisCode": "$COURT_CHARGE_1_RESULT_CODE",
-                  "outcomeType": "UNKNOWN",
-                  "displayOrder": 0
-                },
-                "terrorRelated": null,
-                "sentence": null
-            },
-            {
-                "chargeUuid": "7c591b18-642a-484a-a967-2d17b5c9c5a1",
-                "lifetimeUuid": "$courtCharge2Id",
-                "offenceCode": "PS90090",
-                "offenceStartDate": "2024-01-17",
-                "offenceEndDate": "2024-01-19",
-                "outcome": {
-                  "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
-                  "outcomeName": "description of outcome",
-                  "nomisCode": "$COURT_CHARGE_2_RESULT_CODE",
-                  "outcomeType": "UNKNOWN",
-                  "displayOrder": 0
-                },
-                "terrorRelated": null,
-                "sentence": null
-            }
-        ]
-    },
-    "appearances": [
-        {
-            "appearanceUuid": "6c591b18-642a-484a-a967-2d17b5c9c5a1",
-            "lifetimeUuid": "$courtAppearanceId",
-            "outcome": {
-              "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
-              "relatedChargeOutcomeUuid": "9928aa1b-8e2c-4c77-ad32-6feca8b0e459",
-              "outcomeName": "Remanded in custody",
-              "nomisCode": "4531",
-              "outcomeType": "UNKNOWN",
-              "displayOrder": 0
-            },
-            "courtCode": "$courtId",
-            "courtCaseReference": "G123456789",
-            "appearanceDate": "2024-09-23",
-            "warrantId": "7e15b408-4f97-453e-98b7-24791978221c",
-            "warrantType": "REMAND",
-            "taggedBail": null,
-            "nextCourtAppearance": {
-                "appearanceDate": "2024-12-10",
-                "courtCode": "$courtId",
-                "appearanceType": "Court appearance"
-            },
-            "charges": [
-              {
-                "chargeUuid": "6c591b18-642a-484a-a967-2d17b5c9c5a1",
-                "lifetimeUuid": "$courtCharge1Id",
-                "offenceCode": "PS90037",
-                "offenceStartDate": "2024-01-15",
-                "offenceEndDate": null,
-                  "outcome": {
-                    "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
-                    "outcomeName": "description of outcome",
-                    "nomisCode": "$COURT_CHARGE_1_RESULT_CODE",
-                    "outcomeType": "UNKNOWN",
-                    "displayOrder": 0
-                  },
-                "terrorRelated": null,
-                "sentence": null
-              },
-              {
-                  "chargeUuid": "7c591b18-642a-484a-a967-2d17b5c9c5a1",
-                  "lifetimeUuid": "$courtCharge2Id",
-                  "offenceCode": "PS90090",
-                  "offenceStartDate": "2024-01-17",
-                  "offenceEndDate": "2024-01-19",
-                  "outcome": {
-                    "outcomeUuid": "8b28aa1b-8e2c-4c77-ad32-6feca8b0e459",
-                    "outcomeName": "description of outcome",
-                    "nomisCode": "$COURT_CHARGE_2_RESULT_CODE",
-                    "outcomeType": "UNKNOWN",
-                    "displayOrder": 0
-                  },
-                  "terrorRelated": null,
-                  "sentence": null
-              }
-            ]
-        }
-    ],
-    "legacyData": {
-        "caseReferences": [
-          {
-            "updatedDate": "2024-10-14T10:27:42Z",
-            "offenderCaseReference": "VB12345677"
-          },
-          {
-            "updatedDate": "2024-10-14T10:37:00Z",
-            "offenderCaseReference": "NN12345666"
-          }
-        ]
-      }
-}   
-            """.trimIndent(),
+            objectMapper().writeValueAsString(courtCaseResponse),
           )
           .withStatus(200),
       ),

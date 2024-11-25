@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
@@ -327,11 +326,13 @@ class CourtSentencingService(
     courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = dpsCourtCaseId)?.let { courtCaseMapping ->
       telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
       courtSentencingApiService.getCourtCase(dpsCourtCaseId).let { dpsCourtCase ->
+        val caseIdentifiers = dpsCourtCase.getNomisCaseIdentifiers()
         nomisApiService.refreshCaseReferences(
           offenderNo = offenderNo,
           nomisCourtCaseId = courtCaseMapping.nomisCourtCaseId,
-          request = CaseIdentifierRequest(caseIdentifiers = dpsCourtCase.getNomisCaseIdentifiers()),
+          request = CaseIdentifierRequest(caseIdentifiers = caseIdentifiers),
         )
+        telemetryMap["caseReferences"] = caseIdentifiers.toString()
         telemetryClient.trackEvent(
           "case-references-refreshed-success",
           telemetryMap,
@@ -344,14 +345,14 @@ class CourtSentencingService(
         telemetryMap,
         null,
       )
-      throw IllegalStateException(
+      throw ParentEntityNotFoundRetry(
         "Attempt to refresh case references on a dps court case without a nomis mapping. Dps court case id: $dpsCourtCaseId not found",
       )
     }
   }
 
   fun LegacyCourtCase.getNomisCaseIdentifiers(): List<CaseIdentifier> {
-    val caseReferences: List<CaseReferenceLegacyData> = this.legacyData?.caseReferences ?: emptyList()
+    val caseReferences: List<CaseReferenceLegacyData> = this.caseReferences
     return caseReferences.map { caseReference ->
       CaseIdentifier(
         reference = caseReference.offenderCaseReference,
@@ -405,21 +406,18 @@ class CourtSentencingService(
 
 // TODO wire up when new dto available
 fun LegacyCourtCase.toNomisCourtCase(): CreateCourtCaseRequest {
-  // we are guaranteed an appearance when a court case is created in DPS
-  val firstAppearance = // this.latestAppearance!!
-    return CreateCourtCaseRequest(
-      // latest appearance is always the only appearance during a Creat Case request
-      // firstAppearance.appearanceDate,
-      startDate = LocalDate.now(),
-      // firstAppearance.courtCode,
-      courtId = "DRBYYC",
-      // firstAppearance.courtCaseReference,
-      caseReference = "ABC4999",
-      // new LEG_CASE_TYP on NOMIS - "Not Entered"
-      legalCaseType = "NE",
-      // CASE_STS on NOMIS - no decision from DPS yet - defaulting to Active
-      status = "A",
-    )
+  return CreateCourtCaseRequest(
+    // latest appearance is always the only appearance during a Creat Case request
+    // shared dto - will always be present,
+    startDate = this.startDate!!,
+    // shared dto - will always be present,
+    courtId = this.courtId!!,
+    caseReference = this.caseReference,
+    // new LEG_CASE_TYP on NOMIS - "Not Entered"
+    legalCaseType = "NE",
+    // CASE_STS on NOMIS - no decision from DPS yet - defaulting to Active
+    status = "A",
+  )
 }
 
 fun LegacyCourtAppearance.toNomisCourtAppearance(
@@ -437,7 +435,7 @@ fun LegacyCourtAppearance.toNomisCourtAppearance(
     nextEventDateTime = this.legacyData?.nextEventDateTime?.toString(),
     courtEventChargesToUpdate = courtEventChargesToUpdate,
     courtEventChargesToCreate = emptyList(),
-    // TODO wire up court code
+    // TODO confirm this can't be captured in DPS
     nextCourtId = this.legacyData?.nextEventDateTime?.let { this.courtCode },
   )
 }
