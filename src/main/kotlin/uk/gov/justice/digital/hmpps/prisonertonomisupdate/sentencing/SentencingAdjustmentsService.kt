@@ -86,6 +86,9 @@ class SentencingAdjustmentsService(
       }
     }
 
+  suspend fun repairAdjustment(offenderNo: String, adjustmentId: String) =
+    updateAdjustment(AdjustmentUpdatedEvent(AdditionalInformation(id = adjustmentId, offenderNo = offenderNo, source = "DPS")))
+
   suspend fun updateAdjustment(createEvent: AdjustmentUpdatedEvent) {
     val adjustmentId = createEvent.additionalInformation.id
     val offenderNo = createEvent.additionalInformation.offenderNo
