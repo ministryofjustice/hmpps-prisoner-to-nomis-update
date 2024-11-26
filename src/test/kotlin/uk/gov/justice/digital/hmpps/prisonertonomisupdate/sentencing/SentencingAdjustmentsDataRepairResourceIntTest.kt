@@ -1,0 +1,112 @@
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
+
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.mockito.Mockito.eq
+import org.mockito.kotlin.check
+import org.mockito.kotlin.isNull
+import org.mockito.kotlin.verify
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension.Companion.sentencingAdjustmentsApi
+
+class SentencingAdjustmentsDataRepairResourceIntTest : SqsIntegrationTestBase() {
+  @DisplayName("POST /prisoners/{offenderNo}/sentencing-adjustments/repair/{adjustmentId}")
+  @Nested
+  inner class RepairAdjustments {
+    private val offenderNo = "A1234KT"
+    private val adjustmentId = "600dd113-b522-45c8-9dd2-9f35323af377"
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.post().uri("/prisoners/$offenderNo/sentencing-adjustments/$adjustmentId/repair")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.post().uri("/prisoners/$offenderNo/sentencing-adjustments/$adjustmentId/repair")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.post().uri("/prisoners/$offenderNo/sentencing-adjustments/$adjustmentId/repair")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+      private val nomisAdjustmentId = 98765L
+      private val sentenceSequence = 1L
+
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetByAdjustmentId(
+          adjustmentId = adjustmentId,
+          nomisAdjustmentId = nomisAdjustmentId,
+        )
+
+        nomisApi.stubSentenceAdjustmentUpdate(nomisAdjustmentId)
+
+        sentencingAdjustmentsApi.stubAdjustmentGet(
+          adjustmentId = adjustmentId,
+          sentenceSequence = sentenceSequence,
+          active = true,
+          adjustmentDays = 99,
+          adjustmentDate = "2022-01-01",
+          adjustmentType = "RX",
+          adjustmentFromDate = "2020-07-19",
+          comment = "Adjusted for remand",
+          bookingId = 123456,
+        )
+
+        webTestClient.post().uri("/prisoners/$offenderNo/sentencing-adjustments/$adjustmentId/repair")
+          .headers(setAuthorisation(roles = listOf("MIGRATE_SENTENCING")))
+          .exchange()
+          .expectStatus().isOk
+      }
+
+      @Test
+      fun `will log the repair details`() {
+        verify(telemetryClient).trackEvent(
+          eq("to-nomis-synch-adjustment-repair"),
+          check {
+            assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+            assertThat(it["adjustmentId"]).isEqualTo(adjustmentId)
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will update a sentence adjustment in NOMIS`() {
+        nomisApi.verify(
+          putRequestedFor(urlEqualTo("/sentence-adjustments/$nomisAdjustmentId"))
+            .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("RX")))
+            .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
+            .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
+            .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
+            .withRequestBody(matchingJsonPath("sentenceSequence", equalTo("$sentenceSequence")))
+            .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand"))),
+        )
+      }
+    }
+  }
+}
