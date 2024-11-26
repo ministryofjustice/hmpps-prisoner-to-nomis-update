@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncPrisonerContact
 
 @Service
@@ -16,6 +17,11 @@ class ContactPersonDpsApiService(@Qualifier("contactPersonApiWebClient") private
 
   suspend fun getPrisonerContact(prisonerContactId: Long): SyncPrisonerContact = webClient.get()
     .uri("/sync/prisoner-contact/{prisonerContactId}", prisonerContactId)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun getContactAddress(contactAddressId: Long): SyncContactAddress = webClient.get()
+    .uri("/sync/contact-address/{contactAddressId}", contactAddressId)
     .retrieve()
     .awaitBody()
 }

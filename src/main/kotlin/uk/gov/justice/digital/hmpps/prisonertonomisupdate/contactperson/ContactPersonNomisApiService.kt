@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonAddressRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonContactResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
@@ -22,6 +24,15 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
   suspend fun createPersonContact(personId: Long, request: CreatePersonContactRequest): CreatePersonContactResponse = webClient.post()
     .uri(
       "/persons/{personId}/contact",
+      personId,
+    )
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun createPersonAddress(personId: Long, request: CreatePersonAddressRequest): CreatePersonAddressResponse = webClient.post()
+    .uri(
+      "/persons/{personId}/address",
       personId,
     )
     .bodyValue(request)

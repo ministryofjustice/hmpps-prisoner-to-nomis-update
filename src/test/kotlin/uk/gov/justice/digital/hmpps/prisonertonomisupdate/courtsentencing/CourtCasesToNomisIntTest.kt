@@ -16,6 +16,8 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseResponse
@@ -30,6 +32,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.CourtSentencingApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
+import java.time.LocalDate
 
 private const val COURT_CASE_ID_FOR_CREATION = "12345"
 private const val NOMIS_COURT_CASE_ID_FOR_CREATION = 7L
@@ -61,11 +64,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun setUp() {
         CourtSentencingApiExtension.courtSentencingApi.stubCourtCaseGet(
           COURT_CASE_ID_FOR_CREATION,
-          offenderNo = OFFENDER_NO,
-          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
-          courtCharge1Id = DPS_COURT_CHARGE_ID,
-          courtCharge2Id = DPS_COURT_CHARGE_2_ID,
-          courtId = DONCASTER_COURT_CODE,
+          legacyCourtCaseResponse(),
         )
         NomisApiExtension.nomisApi.stubCourtCaseCreate(
           OFFENDER_NO,
@@ -120,6 +119,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             )
             .withRequestBody(
               WireMock.matchingJsonPath(
+                "startDate",
+                WireMock.equalTo("2024-01-01"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
                 "caseReference",
                 WireMock.equalTo(CASE_REFERENCE),
               ),
@@ -168,10 +173,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun setUp() {
         CourtSentencingApiExtension.courtSentencingApi.stubCourtCaseGet(
           COURT_CASE_ID_FOR_CREATION,
-          offenderNo = OFFENDER_NO,
-          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
-          courtCharge1Id = DPS_COURT_CHARGE_ID,
-          courtCharge2Id = DPS_COURT_CHARGE_2_ID,
+          legacyCourtCaseResponse(),
         )
         publishCreateCourtCaseDomainEvent(source = "NOMIS")
       }
@@ -230,10 +232,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun setUp() {
         CourtSentencingApiExtension.courtSentencingApi.stubCourtCaseGet(
           COURT_CASE_ID_FOR_CREATION,
-          offenderNo = OFFENDER_NO,
-          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
-          courtCharge1Id = DPS_COURT_CHARGE_ID,
-          courtCharge2Id = DPS_COURT_CHARGE_2_ID,
+          legacyCourtCaseResponse(),
         )
         NomisApiExtension.nomisApi.stubCourtCaseCreate(
           OFFENDER_NO,
@@ -327,12 +326,18 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         MappingExtension.mappingServer.stubCreateCourtAppearance()
         // stub two mappings for charges out of the 4 - which makes 2 creates and 2 updates
         MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
-        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_2_ID, NOMIS_COURT_CHARGE_2_ID)
+        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(
+          DPS_COURT_CHARGE_2_ID,
+          NOMIS_COURT_CHARGE_2_ID,
+        )
         MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(
           DPS_COURT_CHARGE_3_ID,
           NOMIS_COURT_CHARGE_3_ID,
         )
-        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_4_ID, NOMIS_COURT_CHARGE_4_ID)
+        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(
+          DPS_COURT_CHARGE_4_ID,
+          NOMIS_COURT_CHARGE_4_ID,
+        )
 
         publishCreateCourtAppearanceDomainEvent()
       }
@@ -453,9 +458,18 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         MappingExtension.mappingServer.stubCreateCourtAppearanceWithErrorFollowedBySlowSuccess()
 
         MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
-        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_2_ID, NOMIS_COURT_CHARGE_2_ID)
-        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_3_ID, NOMIS_COURT_CHARGE_3_ID)
-        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_4_ID, NOMIS_COURT_CHARGE_4_ID)
+        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(
+          DPS_COURT_CHARGE_2_ID,
+          NOMIS_COURT_CHARGE_2_ID,
+        )
+        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(
+          DPS_COURT_CHARGE_3_ID,
+          NOMIS_COURT_CHARGE_3_ID,
+        )
+        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(
+          DPS_COURT_CHARGE_4_ID,
+          NOMIS_COURT_CHARGE_4_ID,
+        )
         publishCreateCourtAppearanceDomainEvent()
 
         await untilCallTo { CourtSentencingApiExtension.courtSentencingApi.getCountFor("/legacy/court-appearance/$DPS_COURT_APPEARANCE_ID") } matches { it == 1 }
@@ -532,7 +546,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         MappingExtension.mappingServer.stubCreateCourtAppearance()
 
         // a parent entity has initially not been created but then is available on retry
-        MappingExtension.mappingServer.stubGetCourtChargeNotFoundFollowedBySlowSuccess(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
+        MappingExtension.mappingServer.stubGetCourtChargeNotFoundFollowedBySlowSuccess(
+          DPS_COURT_CHARGE_ID,
+          NOMIS_COURT_CHARGE_ID,
+        )
         publishCreateCourtAppearanceDomainEvent()
 
         await untilCallTo { CourtSentencingApiExtension.courtSentencingApi.getCountFor("/legacy/court-appearance/$DPS_COURT_APPEARANCE_ID") } matches { it == 2 }
@@ -589,7 +606,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         MappingExtension.mappingServer.stubCreateCourtAppearance()
         // mappings found for all 4 charges
         MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
-        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_2_ID, NOMIS_COURT_CHARGE_2_ID)
+        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(
+          DPS_COURT_CHARGE_2_ID,
+          NOMIS_COURT_CHARGE_2_ID,
+        )
         MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(
           DPS_COURT_CHARGE_3_ID,
           NOMIS_COURT_CHARGE_3_ID,
@@ -962,11 +982,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         CourtSentencingApiExtension.courtSentencingApi.stubCourtCaseGet(
           COURT_CASE_ID_FOR_CREATION,
-          offenderNo = OFFENDER_NO,
-          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
-          courtCharge1Id = DPS_COURT_CHARGE_ID,
-          courtCharge2Id = DPS_COURT_CHARGE_2_ID,
-          courtId = DONCASTER_COURT_CODE,
+          legacyCourtCaseResponse(),
         )
         publishCaseReferencesUpdatedDomainEvent()
       }
@@ -987,6 +1003,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
             Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["caseReferences"]).isEqualTo("[CaseIdentifier(reference=$CASE_REFERENCE, createdDate=2024-01-01)]")
           },
           isNull(),
         )
@@ -1181,6 +1198,21 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
   fun nomisCourtChargeCreateResponse(): String {
     return """{ "offenderChargeId": $NOMIS_COURT_CHARGE_ID }"""
   }
+
+  fun legacyCourtCaseResponse() = LegacyCourtCase(
+    courtCaseUuid = COURT_CASE_ID_FOR_CREATION,
+    prisonerId = OFFENDER_NO,
+    courtId = DONCASTER_COURT_CODE,
+    caseReference = CASE_REFERENCE,
+    startDate = LocalDate.of(2024, 1, 1),
+    active = true,
+    caseReferences = listOf(
+      CaseReferenceLegacyData(
+        offenderCaseReference = CASE_REFERENCE,
+        updatedDate = LocalDate.of(2024, 1, 1).toString(),
+      ),
+    ),
+  )
 
   fun caseReferencePayload(courtCaseId: String, offenderNo: String, eventType: String, source: String = "DPS") =
     """{"eventType":"$eventType", "additionalInformation": {"courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""

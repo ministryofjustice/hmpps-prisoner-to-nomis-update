@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
@@ -162,6 +163,82 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
       post("/mapping/contact-person/contact")
         .inScenario("Retry Mapping Contact Scenario")
         .whenScenarioStateIs("Cause Mapping Contact Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetByDpsContactAddressIdOrNull(
+    dpsContactAddressId: Long = 123456,
+    mapping: PersonAddressMappingDto? = PersonAddressMappingDto(
+      nomisId = 654321,
+      dpsId = dpsContactAddressId.toString(),
+      mappingType = PersonAddressMappingDto.MappingType.MIGRATED,
+    ),
+  ) {
+    mapping?.apply {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/contact-person/address/dps-contact-address-id/$dpsContactAddressId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(objectMapper.writeValueAsString(mapping)),
+        ),
+      )
+    } ?: run {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/contact-person/address/dps-contact-address-id/$dpsContactAddressId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.NOT_FOUND.value())
+            .withBody(objectMapper.writeValueAsString(ErrorResponse(status = 404))),
+        ),
+      )
+    }
+  }
+
+  fun stubCreateAddressMapping() {
+    mappingServer.stubFor(
+      post("/mapping/contact-person/address").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCreateAddressMapping(error: DuplicateMappingErrorResponse) {
+    mappingServer.stubFor(
+      post("/mapping/contact-person/address").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(409)
+          .withBody(objectMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubCreateAddressMappingFollowedBySuccess(status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      post("/mapping/contact-person/address")
+        .inScenario("Retry Mapping Address Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(objectMapper.writeValueAsString(error)),
+        ).willSetStateTo("Cause Mapping Address Success"),
+    )
+
+    mappingServer.stubFor(
+      post("/mapping/contact-person/address")
+        .inScenario("Retry Mapping Address Scenario")
+        .whenScenarioStateIs("Cause Mapping Address Success")
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")

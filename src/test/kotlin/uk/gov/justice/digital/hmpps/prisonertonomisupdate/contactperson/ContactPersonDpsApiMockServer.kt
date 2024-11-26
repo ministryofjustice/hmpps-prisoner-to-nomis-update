@@ -10,8 +10,10 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncPrisonerContact
 import java.time.LocalDateTime
 
@@ -46,6 +48,17 @@ class ContactPersonDpsApiExtension :
       approvedVisitor = false,
       currentTerm = true,
       active = true,
+      createdBy = "JANE.SAM",
+      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+    )
+
+    fun contactAddress() = SyncContactAddress(
+      contactAddressId = 1234567,
+      contactId = 12345,
+      primaryAddress = true,
+      verified = false,
+      mailFlag = false,
+      noFixedAddress = false,
       createdBy = "JANE.SAM",
       createdTime = LocalDateTime.parse("2024-01-01T12:13"),
     )
@@ -95,6 +108,18 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetPrisonerContact(prisonerContactId: Long, response: SyncPrisonerContact = prisonerContact()) {
     stubFor(
       get("/sync/prisoner-contact/$prisonerContactId")
+        .willReturn(
+          aResponse()
+            .withStatus(201)
+            .withHeader("Content-Type", "application/json")
+            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  fun stubGetContactAddress(contactAddressId: Long, response: SyncContactAddress = contactAddress()) {
+    stubFor(
+      get("/sync/contact-address/$contactAddressId")
         .willReturn(
           aResponse()
             .withStatus(201)

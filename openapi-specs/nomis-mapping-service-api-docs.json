@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-11-20.5467.08c3d9c"
+    "version": "2024-11-22.5488.db1c3eb"
   },
   "servers": [
     {
@@ -2513,6 +2513,61 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/PersonContactMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping created"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/contact-person/address": {
+      "post": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Creates person address mappings for synchronisation",
+        "description": "Creates person address mappings for synchronisation between NOMIS ids and dps ids. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "createPersonAddressMapping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonAddressMappingDto"
               }
             }
           },
@@ -7388,6 +7443,138 @@
         }
       }
     },
+    "/mapping/contact-person/address/nomis-address-id/{nomisAddressId}": {
+      "get": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Get person address mapping by nomis contact Id",
+        "description": "Retrieves the person address mapping by NOMIS Address Id. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "getPersonAddressMappingByNomisId",
+        "parameters": [
+          {
+            "name": "nomisAddressId",
+            "in": "path",
+            "description": "NOMIS address id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "NOMIS address id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Person address mapping data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonAddressMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access this endpoint is forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/contact-person/address/dps-contact-address-id/{dpsContactAddressId}": {
+      "get": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Get person contact mapping by dps contact address Id",
+        "description": "Retrieves the person address mapping by DPS Contact Address Id. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "getPersonAddressMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsContactAddressId",
+            "in": "path",
+            "description": "DPS contact address id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS contact address id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Person Address mapping data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonAddressMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access this endpoint is forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/casenotes/nomis-casenote-id/{caseNoteId}": {
       "get": {
         "tags": [
@@ -11894,6 +12081,41 @@
         "description": "NOMIS to DPS simple mapping IDs"
       },
       "PersonContactMappingDto": {
+        "required": [
+          "dpsId",
+          "mappingType",
+          "nomisId"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsId": {
+            "type": "string",
+            "description": "DPS id"
+          },
+          "nomisId": {
+            "type": "integer",
+            "description": "NOMIS id",
+            "format": "int64"
+          },
+          "label": {
+            "type": "string"
+          },
+          "mappingType": {
+            "type": "string",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED",
+              "NOMIS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          }
+        }
+      },
+      "PersonAddressMappingDto": {
         "required": [
           "dpsId",
           "mappingType",

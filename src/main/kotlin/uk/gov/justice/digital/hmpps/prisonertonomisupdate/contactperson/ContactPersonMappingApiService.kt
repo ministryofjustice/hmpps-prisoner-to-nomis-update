@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 
@@ -36,6 +37,21 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
   suspend fun createContactMapping(mappings: PersonContactMappingDto) =
     webClient.post()
       .uri("/mapping/contact-person/contact")
+      .bodyValue(mappings)
+      .retrieve()
+      .awaitBodilessEntityOrThrowOnConflict()
+
+  suspend fun getByDpsContactAddressIdOrNull(dpsContactAddressId: Long): PersonAddressMappingDto? = webClient.get()
+    .uri(
+      "/mapping/contact-person/address/dps-contact-address-id/{dpsContactAddressId}",
+      dpsContactAddressId,
+    )
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
+  suspend fun createAddressMapping(mappings: PersonAddressMappingDto) =
+    webClient.post()
+      .uri("/mapping/contact-person/address")
       .bodyValue(mappings)
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()

@@ -7,6 +7,8 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonAddressRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonContactResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
@@ -41,6 +43,14 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
       emergencyContact = false,
       comment = "Best friends",
     )
+    fun createPersonAddressResponse(): CreatePersonAddressResponse = CreatePersonAddressResponse(
+      personAddressId = 123456,
+    )
+
+    fun createPersonAddressRequest(): CreatePersonAddressRequest = CreatePersonAddressRequest(
+      primaryAddress = true,
+      mailAddress = true,
+    )
   }
 
   fun stubCreatePerson(
@@ -62,6 +72,20 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
   ) {
     nomisApi.stubFor(
       post(urlEqualTo("/persons/$personId/contact")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubCreatePersonAddress(
+    personId: Long = 123456,
+    response: CreatePersonAddressResponse = createPersonAddressResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/persons/$personId/address")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
