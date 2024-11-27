@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
+import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -68,7 +69,7 @@ class SentencingAdjustmentsDataRepairResourceIntTest : SqsIntegrationTestBase() 
         sentencingAdjustmentsApi.stubAdjustmentGet(
           adjustmentId = adjustmentId,
           sentenceSequence = sentenceSequence,
-          active = true,
+          active = false,
           adjustmentDays = 99,
           adjustmentDate = "2022-01-01",
           adjustmentType = "RX",
@@ -76,36 +77,80 @@ class SentencingAdjustmentsDataRepairResourceIntTest : SqsIntegrationTestBase() 
           comment = "Adjusted for remand",
           bookingId = 123456,
         )
-
-        webTestClient.post().uri("/prisoners/$offenderNo/sentencing-adjustments/$adjustmentId/repair")
-          .headers(setAuthorisation(roles = listOf("MIGRATE_SENTENCING")))
-          .exchange()
-          .expectStatus().isOk
       }
 
-      @Test
-      fun `will log the repair details`() {
-        verify(telemetryClient).trackEvent(
-          eq("to-nomis-synch-adjustment-repair"),
-          check {
-            assertThat(it["offenderNo"]).isEqualTo(offenderNo)
-            assertThat(it["adjustmentId"]).isEqualTo(adjustmentId)
-          },
-          isNull(),
-        )
+      @Nested
+      inner class WithNoForceStatusFlag {
+        @BeforeEach
+        fun setUp() {
+          webTestClient.post().uri("/prisoners/$offenderNo/sentencing-adjustments/$adjustmentId/repair")
+            .headers(setAuthorisation(roles = listOf("MIGRATE_SENTENCING")))
+            .exchange()
+            .expectStatus().isOk
+        }
+
+        @Test
+        fun `will log the repair details`() {
+          verify(telemetryClient).trackEvent(
+            eq("to-nomis-synch-adjustment-repair"),
+            check {
+              assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+              assertThat(it["adjustmentId"]).isEqualTo(adjustmentId)
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will update a sentence adjustment in NOMIS`() {
+          nomisApi.verify(
+            putRequestedFor(urlEqualTo("/sentence-adjustments/$nomisAdjustmentId"))
+              .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("RX")))
+              .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
+              .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
+              .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
+              .withRequestBody(matchingJsonPath("sentenceSequence", equalTo("$sentenceSequence")))
+              .withRequestBody(matchingJsonPath("active", absent()))
+              .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand"))),
+          )
+        }
       }
 
-      @Test
-      fun `will update a sentence adjustment in NOMIS`() {
-        nomisApi.verify(
-          putRequestedFor(urlEqualTo("/sentence-adjustments/$nomisAdjustmentId"))
-            .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("RX")))
-            .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
-            .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
-            .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
-            .withRequestBody(matchingJsonPath("sentenceSequence", equalTo("$sentenceSequence")))
-            .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand"))),
-        )
+      @Nested
+      inner class WithForceStatusFlag {
+        @BeforeEach
+        fun setUp() {
+          webTestClient.post().uri("/prisoners/$offenderNo/sentencing-adjustments/$adjustmentId/repair?force-status=true")
+            .headers(setAuthorisation(roles = listOf("MIGRATE_SENTENCING")))
+            .exchange()
+            .expectStatus().isOk
+        }
+
+        @Test
+        fun `will log the repair details`() {
+          verify(telemetryClient).trackEvent(
+            eq("to-nomis-synch-adjustment-repair"),
+            check {
+              assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+              assertThat(it["adjustmentId"]).isEqualTo(adjustmentId)
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will update a sentence adjustment in NOMIS`() {
+          nomisApi.verify(
+            putRequestedFor(urlEqualTo("/sentence-adjustments/$nomisAdjustmentId"))
+              .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("RX")))
+              .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
+              .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
+              .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
+              .withRequestBody(matchingJsonPath("sentenceSequence", equalTo("$sentenceSequence")))
+              .withRequestBody(matchingJsonPath("active", equalTo("false")))
+              .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand"))),
+          )
+        }
       }
     }
   }

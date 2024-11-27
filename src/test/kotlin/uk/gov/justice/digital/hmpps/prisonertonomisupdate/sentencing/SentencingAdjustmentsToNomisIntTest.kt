@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
+import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -820,6 +821,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
                 .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
                 .withRequestBody(matchingJsonPath("sentenceSequence", equalTo("$sentenceSequence")))
+                .withRequestBody(matchingJsonPath("active", absent()))
                 .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand"))),
             )
           }
@@ -879,6 +881,7 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
                 .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
                 .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
+                .withRequestBody(matchingJsonPath("active", absent()))
                 .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for absence"))),
             )
           }

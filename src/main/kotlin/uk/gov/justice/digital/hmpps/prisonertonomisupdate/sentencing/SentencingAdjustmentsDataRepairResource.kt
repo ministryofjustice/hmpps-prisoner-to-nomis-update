@@ -2,10 +2,12 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
 import com.microsoft.applicationinsights.TelemetryClient
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Schema
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
@@ -24,8 +26,10 @@ class SentencingAdjustmentsDataRepairResource(
   suspend fun repairAdjustments(
     @PathVariable offenderNo: String,
     @PathVariable adjustmentId: String,
+    @Schema(description = "Whether status of the DPS should be propagated to NOMIS", required = false, defaultValue = "false")
+    @RequestParam(name = "force-status", defaultValue = "false") forceStatus: Boolean,
   ) {
-    sentencingAdjustmentsService.repairAdjustment(offenderNo = offenderNo, adjustmentId = adjustmentId)
+    sentencingAdjustmentsService.repairAdjustment(offenderNo = offenderNo, adjustmentId = adjustmentId, forceStatus = forceStatus)
     telemetryClient.trackEvent(
       "to-nomis-synch-adjustment-repair",
       mapOf(
