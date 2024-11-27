@@ -806,6 +806,7 @@ data class UpdateSentencingAdjustmentRequest(
   val adjustmentDays: Long,
   val sentenceSequence: Int?,
   val comment: String?,
+  val active: Boolean? = null,
 )
 
 data class CreateSentencingAdjustmentResponse(val id: Long)
