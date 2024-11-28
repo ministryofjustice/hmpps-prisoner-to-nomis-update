@@ -42,6 +42,8 @@ class CourtSentencingDomainEventListener(
         courtSentencingService.refreshCaseReferences(message.fromJson())
       "charge.inserted" ->
         courtSentencingService.createCharge(message.fromJson())
+      "charge.updated" ->
+        courtSentencingService.updateCharge(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }

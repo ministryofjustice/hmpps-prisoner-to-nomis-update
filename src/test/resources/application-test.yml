@@ -166,6 +166,7 @@ hmpps.sqs:
         "legacy.court-case-references.updated",
         "court-appearance.inserted",
         "charge.inserted",
+        "charge.updated",
         "court-appearance.updated"]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120

@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-11-25.10010.f9605a4"
+    "version": "2024-11-27.10067.9721278"
   },
   "servers": [
     {
@@ -51,8 +51,9 @@
             "description": "Sentence adjustment id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Sentence adjustment id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -115,8 +116,9 @@
             "description": "Sentence adjustment id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Sentence adjustment id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -182,8 +184,9 @@
             "description": "Sentence adjustment id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Sentence adjustment id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -231,8 +234,9 @@
             "description": "Course schedule id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Course schedule id"
+              "type": "integer",
+              "description": "Course schedule id",
+              "format": "int64"
             }
           },
           {
@@ -241,8 +245,9 @@
             "description": "Booking id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Booking id"
+              "type": "integer",
+              "description": "Booking id",
+              "format": "int64"
             }
           }
         ],
@@ -313,8 +318,9 @@
             "description": "Course schedule id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Course schedule id"
+              "type": "integer",
+              "description": "Course schedule id",
+              "format": "int64"
             }
           },
           {
@@ -323,8 +329,9 @@
             "description": "Booking id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Booking id"
+              "type": "integer",
+              "description": "Booking id",
+              "format": "int64"
             }
           }
         ],
@@ -393,8 +400,9 @@
             "description": "Nomis visit Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Nomis visit Id",
+              "format": "int64",
               "example": 123456
             },
             "example": 123456
@@ -474,8 +482,9 @@
             "description": "Nomis Visit Id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Nomis Visit Id"
+              "type": "integer",
+              "description": "Nomis Visit Id",
+              "format": "int64"
             }
           }
         ],
@@ -553,8 +562,9 @@
             "description": "Case Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Case Id",
+              "format": "int64",
               "example": 34565
             },
             "example": 34565
@@ -565,8 +575,9 @@
             "description": "Case appearance Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Case appearance Id",
+              "format": "int64",
               "example": 34565
             },
             "example": 34565
@@ -625,6 +636,111 @@
           },
           "404": {
             "description": "Court appearance does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/charges/{chargeId}": {
+      "put": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "Updates Charge",
+        "description": "Required role NOMIS_SENTENCING Updates an offender charge for the offender and given Court Case (latest booking)",
+        "operationId": "updateCharge",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender no",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender no",
+              "example": "AB1234A"
+            },
+            "example": "AB1234A"
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "description": "Case Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Case Id",
+              "format": "int64",
+              "example": 34565
+            },
+            "example": 34565
+          },
+          {
+            "name": "chargeId",
+            "in": "path",
+            "description": "Charge Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Charge Id",
+              "format": "int64",
+              "example": 34565
+            },
+            "example": 34565
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourtAppearanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Offender Charge updated"
+          },
+          "400": {
+            "description": "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Court case does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -931,8 +1047,9 @@
             "description": "Sentence sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Sentence sequence",
+              "format": "int64",
               "example": 1
             },
             "example": 1
@@ -943,8 +1060,9 @@
             "description": "Offender Booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Offender Booking Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -1007,8 +1125,9 @@
             "description": "Booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Booking Id",
+              "format": "int64",
               "example": 4565456
             },
             "example": 4565456
@@ -1019,8 +1138,9 @@
             "description": "Sentence sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Sentence sequence",
+              "format": "int64",
               "example": 1
             },
             "example": 1
@@ -1096,8 +1216,9 @@
             "description": "Sentence sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Sentence sequence",
+              "format": "int64",
               "example": 1
             },
             "example": 1
@@ -1108,8 +1229,9 @@
             "description": "Offender Booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Offender Booking Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -1157,8 +1279,9 @@
             "description": "Booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Booking Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -1169,8 +1292,9 @@
             "description": "Alert sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Alert sequence",
+              "format": "int64",
               "example": 3
             },
             "example": 3
@@ -1233,8 +1357,9 @@
             "description": "Booking id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Booking id",
+              "format": "int64",
               "example": 1234567
             },
             "example": 1234567
@@ -1245,8 +1370,9 @@
             "description": "Alert sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Alert sequence",
+              "format": "int64",
               "example": 3
             },
             "example": 3
@@ -1329,8 +1455,9 @@
             "description": "Booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Booking Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -1341,8 +1468,9 @@
             "description": "Alert sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Alert sequence",
+              "format": "int64",
               "example": 3
             },
             "example": 3
@@ -1652,8 +1780,9 @@
             "description": "NOMIS location Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS location Id",
+              "format": "int64",
               "example": 1234567
             },
             "example": 1234567
@@ -1731,8 +1860,9 @@
             "description": "NOMIS location Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS location Id",
+              "format": "int64",
               "example": 1234567
             },
             "example": 1234567
@@ -1800,8 +1930,9 @@
             "description": "NOMIS location Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS location Id",
+              "format": "int64",
               "example": 1234567
             },
             "example": 1234567
@@ -1879,8 +2010,9 @@
             "description": "NOMIS location Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS location Id",
+              "format": "int64",
               "example": 1234567
             },
             "example": 1234567
@@ -1948,8 +2080,9 @@
             "description": "NOMIS location Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS location Id",
+              "format": "int64",
               "example": 1234567
             },
             "example": 1234567
@@ -2027,8 +2160,9 @@
             "description": "Key date adjustment id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Key date adjustment id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -2091,8 +2225,9 @@
             "description": "Key date adjustment id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Key date adjustment id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -2168,8 +2303,9 @@
             "description": "Key date adjustment id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Key date adjustment id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -2553,8 +2689,9 @@
             "description": "Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Id",
+              "format": "int64",
               "example": 1234578
             },
             "example": 1234578
@@ -2617,8 +2754,9 @@
             "description": "Case note id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Case note id",
+              "format": "int64",
               "example": 1234567
             },
             "example": 1234567
@@ -2694,8 +2832,9 @@
             "description": "Case note id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Case note id",
+              "format": "int64",
               "example": 1234567
             },
             "example": 1234567
@@ -2756,8 +2895,9 @@
             "description": "NOMIS event Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS event Id",
+              "format": "int64",
               "example": 1234567
             },
             "example": 1234567
@@ -2833,8 +2973,9 @@
             "description": "NOMIS event Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS event Id",
+              "format": "int64",
               "example": 1234567
             },
             "example": 1234567
@@ -2892,8 +3033,9 @@
             "description": "NOMIS event Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS event Id",
+              "format": "int64",
               "example": 1234567
             },
             "example": 1234567
@@ -2951,8 +3093,9 @@
             "description": "NOMIS event Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS event Id",
+              "format": "int64",
               "example": 1234567
             },
             "example": 1234567
@@ -3380,8 +3523,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -3456,8 +3600,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -3468,8 +3613,9 @@
             "description": "Hearing Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Hearing Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -3542,8 +3688,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -3554,8 +3701,9 @@
             "description": "Hearing Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Hearing Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -3613,8 +3761,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -3689,8 +3838,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -3701,8 +3851,9 @@
             "description": "Nomis charge sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Nomis charge sequence",
+              "format": "int32",
               "example": 1
             },
             "example": 1
@@ -3777,8 +3928,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -3789,8 +3941,9 @@
             "description": "Nomis charge sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Nomis charge sequence",
+              "format": "int32",
               "example": 1
             },
             "example": 1
@@ -3848,8 +4001,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -3860,8 +4014,9 @@
             "description": "Nomis charge sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Nomis charge sequence",
+              "format": "int32",
               "example": 1
             },
             "example": 1
@@ -3934,8 +4089,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -3946,8 +4102,9 @@
             "description": "Nomis charge sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Nomis charge sequence",
+              "format": "int32",
               "example": 1
             },
             "example": 1
@@ -4020,8 +4177,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -4032,8 +4190,9 @@
             "description": "Nomis charge sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Nomis charge sequence",
+              "format": "int32",
               "example": 1
             },
             "example": 1
@@ -4098,8 +4257,9 @@
             "description": "Course activity id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Course activity id"
+              "type": "integer",
+              "description": "Course activity id",
+              "format": "int64"
             }
           }
         ],
@@ -4170,8 +4330,9 @@
             "description": "Course activity id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Course activity id"
+              "type": "integer",
+              "description": "Course activity id",
+              "format": "int64"
             }
           }
         ],
@@ -4298,8 +4459,9 @@
             "description": "Course activity id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Course activity id"
+              "type": "integer",
+              "description": "Course activity id",
+              "format": "int64"
             }
           }
         ],
@@ -4382,8 +4544,9 @@
             "description": "Course activity id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Course activity id"
+              "type": "integer",
+              "description": "Course activity id",
+              "format": "int64"
             }
           },
           {
@@ -4459,8 +4622,9 @@
             "description": "Course activity id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Course activity id"
+              "type": "integer",
+              "description": "Course activity id",
+              "format": "int64"
             }
           }
         ],
@@ -5096,8 +5260,9 @@
             "description": "Case Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Case Id",
+              "format": "int64",
               "example": 34565
             },
             "example": 34565
@@ -5289,8 +5454,9 @@
             "description": "Case Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Case Id",
+              "format": "int64",
               "example": 34565
             },
             "example": 34565
@@ -5698,8 +5864,13 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "string",
-                "description": "A list of prisoner details"
+                "type": "array",
+                "description": "A list of prisoner details",
+                "items": {
+                  "type": "integer",
+                  "description": "A list of prisoner details",
+                  "format": "int64"
+                }
               }
             }
           },
@@ -5757,8 +5928,9 @@
             "description": "Booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Booking Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -5769,8 +5941,9 @@
             "description": "Sentence sequence number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Sentence sequence number",
+              "format": "int64",
               "example": 1
             },
             "example": 1
@@ -5855,8 +6028,9 @@
             "description": "Offender Booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Offender Booking Id",
+              "format": "int64",
               "example": 1234567
             },
             "example": 1234567
@@ -5931,8 +6105,9 @@
             "description": "Offender Booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Offender Booking Id",
+              "format": "int64",
               "example": 1234567
             },
             "example": 1234567
@@ -5990,8 +6165,9 @@
             "description": "Booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Booking Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -6138,8 +6314,9 @@
             "description": "Person Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Person Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -6234,8 +6411,9 @@
             "description": "Person Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Person Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -6799,8 +6977,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -6875,8 +7054,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -6887,8 +7067,9 @@
             "description": "Nomis Hearing Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Nomis Hearing Id",
+              "format": "int64",
               "example": 123
             },
             "example": 123
@@ -6899,8 +7080,9 @@
             "description": "Nomis charge sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Nomis charge sequence",
+              "format": "int32",
               "example": 1
             },
             "example": 1
@@ -6973,8 +7155,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -6985,8 +7168,9 @@
             "description": "Hearing Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Hearing Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -6997,8 +7181,9 @@
             "description": "Nomis charge sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Nomis charge sequence",
+              "format": "int32",
               "example": 1
             },
             "example": 1
@@ -7063,8 +7248,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -7075,8 +7261,9 @@
             "description": "Nomis charge sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Nomis charge sequence",
+              "format": "int32",
               "example": 1
             },
             "example": 1
@@ -7142,8 +7329,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -7154,8 +7342,9 @@
             "description": "Nomis charge sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Nomis charge sequence",
+              "format": "int32",
               "example": 1
             },
             "example": 1
@@ -7275,8 +7464,9 @@
             "description": "Nomis Visit Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Nomis Visit Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -7789,8 +7979,9 @@
             "description": "Incident Questionnaire id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Incident Questionnaire id"
+              "type": "integer",
+              "description": "Incident Questionnaire id",
+              "format": "int64"
             }
           }
         ],
@@ -8081,8 +8272,9 @@
             "description": "Offender Charge id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Offender Charge id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -8095,7 +8287,7 @@
             "schema": {
               "type": "string",
               "description": "Offender No",
-              "example": 12345
+              "example": "12345"
             },
             "example": 12345
           }
@@ -8159,8 +8351,9 @@
             "description": "Court case id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Court case id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -8173,7 +8366,7 @@
             "schema": {
               "type": "string",
               "description": "Offender No",
-              "example": 12345
+              "example": "12345"
             },
             "example": 12345
           }
@@ -8237,8 +8430,9 @@
             "description": "Court appearance id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Court appearance id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -8251,7 +8445,7 @@
             "schema": {
               "type": "string",
               "description": "Offender No",
-              "example": 12345
+              "example": "12345"
             },
             "example": 12345
           }
@@ -8530,8 +8724,9 @@
             "description": "Booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Booking Id",
+              "format": "int64",
               "example": 123
             },
             "example": 123
@@ -8843,9 +9038,11 @@
             "description": "If supplied get offenders starting after this id",
             "required": false,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "If supplied get offenders starting after this id",
-              "example": 1555999
+              "format": "int64",
+              "example": 1555999,
+              "default": 0
             },
             "example": 1555999
           },
@@ -8855,9 +9052,10 @@
             "description": "Number of offenders to get",
             "required": false,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Number of offenders to get",
-              "default": "10"
+              "format": "int32",
+              "default": 10
             }
           }
         ],
@@ -8962,8 +9160,9 @@
             "description": "Booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Booking Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -9031,8 +9230,9 @@
             "description": "NOMIS booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS booking Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -9043,8 +9243,9 @@
             "description": "Indicate if should return just active adjustments",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Indicate if should return just active adjustments"
+              "type": "boolean",
+              "description": "Indicate if should return just active adjustments",
+              "default": true
             }
           }
         ],
@@ -9097,8 +9298,9 @@
             "description": "NOMIS booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS booking Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -9109,8 +9311,9 @@
             "description": "Nomis sanction sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Nomis sanction sequence",
+              "format": "int32",
               "example": 1
             },
             "example": 1
@@ -9175,8 +9378,9 @@
             "description": "NOMIS booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS booking Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -9241,8 +9445,9 @@
             "description": "Booking id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Booking id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -9307,8 +9512,9 @@
             "description": "Person Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Person Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -9842,8 +10048,9 @@
             "description": "Incident id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Incident id"
+              "type": "integer",
+              "description": "Incident id",
+              "format": "int64"
             }
           }
         ],
@@ -10165,8 +10372,9 @@
             "description": "booking id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "booking id"
+              "type": "integer",
+              "description": "booking id",
+              "format": "int64"
             }
           }
         ],
@@ -10326,8 +10534,9 @@
             "description": "NOMIS booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS booking Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -10338,8 +10547,9 @@
             "description": "NOMIS Incentive sequence ",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS Incentive sequence ",
+              "format": "int64",
               "example": 1
             },
             "example": 1
@@ -10394,8 +10604,9 @@
             "description": "NOMIS booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS booking Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -10435,6 +10646,73 @@
         }
       }
     },
+    "/identifying-marks/images/{imageId}/details": {
+      "get": {
+        "tags": [
+          "identifying-mark-images-resource"
+        ],
+        "summary": "Get an identifying mark image details",
+        "description": "Retrieves an identifying mark image details. Note this does not include the image itself which is available on a separate endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
+        "operationId": "getIdentifyingMarksImage",
+        "parameters": [
+          {
+            "name": "imageId",
+            "in": "path",
+            "description": "Image id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Image id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image details returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentifyingMarkImageDetailsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Image does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/documents/{id}": {
       "get": {
         "tags": [
@@ -10450,8 +10728,9 @@
             "description": "The document id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "The document id"
+              "type": "integer",
+              "description": "The document id",
+              "format": "int64"
             }
           }
         ],
@@ -10525,8 +10804,9 @@
             "description": "The booking id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "The booking id"
+              "type": "integer",
+              "description": "The booking id",
+              "format": "int64"
             }
           },
           {
@@ -10605,8 +10885,9 @@
             "description": "CSIP id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "CSIP id"
+              "type": "integer",
+              "description": "CSIP id",
+              "format": "int64"
             }
           },
           {
@@ -10761,8 +11042,9 @@
             "description": "CSIP Factor id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "CSIP Factor id"
+              "type": "integer",
+              "description": "CSIP Factor id",
+              "format": "int64"
             }
           }
         ],
@@ -10833,8 +11115,9 @@
             "description": "CSIP Factor Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "CSIP Factor Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -10925,8 +11208,9 @@
             "description": "booking id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "booking id"
+              "type": "integer",
+              "description": "booking id",
+              "format": "int64"
             }
           }
         ],
@@ -11002,8 +11286,9 @@
             "description": "Court case id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Court case id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -11127,6 +11412,73 @@
         }
       }
     },
+    "/bookings/{bookingId}/identifying-marks": {
+      "get": {
+        "tags": [
+          "identifying-marks-resource"
+        ],
+        "summary": "Get identifying marks for a prisoner's booking",
+        "description": "Retrieves identifying marks for a booking. Requires ROLE_NOMIS_PRISON_PERSON",
+        "operationId": "getBookingIdentifyingMarks",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "Booking id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Booking id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Identifying marks Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingIdentifyingMarksResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prisoner does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/attendances/reconciliation/{prisonId}": {
       "get": {
         "tags": [
@@ -11153,7 +11505,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "description": "Date"
+              "description": "Date",
+              "format": "date"
             }
           }
         ],
@@ -11216,8 +11569,9 @@
             "description": "Event Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Event Id",
+              "format": "int64",
               "example": 12345678
             },
             "example": 12345678
@@ -11451,8 +11805,9 @@
             "description": "NOMIS booking Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS booking Id",
+              "format": "int64",
               "example": 1234567
             },
             "example": 1234567
@@ -11463,8 +11818,9 @@
             "description": "Appointment room internal location Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Appointment room internal location Id",
+              "format": "int64",
               "example": 1234567
             },
             "example": 1234567
@@ -11477,7 +11833,7 @@
             "schema": {
               "type": "string",
               "description": "Appointment date and start time",
-              "example": "2023-02-27T14:40"
+              "format": "date-time"
             },
             "example": "2023-02-27T14:40"
           }
@@ -11541,8 +11897,9 @@
             "description": "Allocation id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Allocation id"
+              "type": "integer",
+              "description": "Allocation id",
+              "format": "int64"
             }
           }
         ],
@@ -11625,8 +11982,7 @@
             "description": "Exclude program codes",
             "required": false,
             "schema": {
-              "type": "string",
-              "description": "Exclude program codes"
+              "$ref": "#/components/schemas/excludeProgramCode"
             }
           },
           {
@@ -11776,8 +12132,7 @@
             "description": "Exclude program codes",
             "required": false,
             "schema": {
-              "type": "string",
-              "description": "Exclude program codes"
+              "$ref": "#/components/schemas/excludeProgramCode"
             }
           },
           {
@@ -11871,8 +12226,7 @@
             "description": "Exclude program codes",
             "required": false,
             "schema": {
-              "type": "string",
-              "description": "Exclude program codes"
+              "$ref": "#/components/schemas/excludeProgramCode"
             }
           },
           {
@@ -12029,8 +12383,9 @@
             "description": "NOMIS Hearing Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS Hearing Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -12095,8 +12450,9 @@
             "description": "NOMIS Hearing Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "NOMIS Hearing Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -12107,8 +12463,9 @@
             "description": "Nomis charge sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Nomis charge sequence",
+              "format": "int32",
               "example": 1
             },
             "example": 1
@@ -12260,8 +12617,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -12326,8 +12684,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -12338,8 +12697,9 @@
             "description": "Charge sequence",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Charge sequence",
+              "format": "int32",
               "example": 1
             },
             "example": 1
@@ -12414,8 +12774,7 @@
             "description": "Exclude program codes",
             "required": false,
             "schema": {
-              "type": "string",
-              "description": "Exclude program codes"
+              "$ref": "#/components/schemas/excludeProgramCode"
             }
           },
           {
@@ -12501,8 +12860,7 @@
             "description": "Exclude program codes",
             "required": false,
             "schema": {
-              "type": "string",
-              "description": "Exclude program codes"
+              "$ref": "#/components/schemas/excludeProgramCode"
             }
           },
           {
@@ -12596,8 +12954,7 @@
             "description": "Exclude program codes",
             "required": false,
             "schema": {
-              "type": "string",
-              "description": "Exclude program codes"
+              "$ref": "#/components/schemas/excludeProgramCode"
             }
           },
           {
@@ -12680,8 +13037,9 @@
             "description": "Adjudication number",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "Adjudication number",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -12729,8 +13087,9 @@
             "description": "CSIP Factor Id",
             "required": true,
             "schema": {
-              "type": "string",
+              "type": "integer",
               "description": "CSIP Factor Id",
+              "format": "int64",
               "example": 12345
             },
             "example": 12345
@@ -18042,12 +18401,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -18063,10 +18416,13 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -18088,21 +18444,18 @@
             "format": "int64"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
           },
           "pageSize": {
             "type": "integer",
             "format": "int32"
           },
+          "paged": {
+            "type": "boolean"
+          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
-          },
-          "paged": {
-            "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"
@@ -18112,19 +18465,13 @@
       "SortObject": {
         "type": "object",
         "properties": {
-          "direction": {
-            "type": "string"
-          },
-          "nullHandling": {
-            "type": "string"
-          },
-          "ascending": {
+          "empty": {
             "type": "boolean"
           },
-          "property": {
-            "type": "string"
+          "sorted": {
+            "type": "boolean"
           },
-          "ignoreCase": {
+          "unsorted": {
             "type": "boolean"
           }
         }
@@ -18565,12 +18912,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -18586,10 +18927,13 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -20393,12 +20737,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -20414,10 +20752,13 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -20463,12 +20804,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -20484,10 +20819,13 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -21491,12 +21829,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -21512,10 +21844,13 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -21647,12 +21982,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -21668,10 +21997,13 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -21905,12 +22237,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -21926,10 +22252,13 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -22488,12 +22817,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -22509,10 +22832,13 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -22611,12 +22937,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -22632,10 +22952,13 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -22730,6 +23053,101 @@
         },
         "description": "Incentive information"
       },
+      "IdentifyingMarkImageDetailsResponse": {
+        "required": [
+          "bodyPartCode",
+          "bookingId",
+          "captureDateTime",
+          "createDateTime",
+          "createdBy",
+          "default",
+          "idMarksSeq",
+          "imageExists",
+          "imageId",
+          "imageSourceCode",
+          "markTypeCode"
+        ],
+        "type": "object",
+        "properties": {
+          "imageId": {
+            "type": "integer",
+            "description": "The unique image identifier",
+            "format": "int64",
+            "example": 1234567
+          },
+          "bookingId": {
+            "type": "integer",
+            "description": "The booking's unique identifier",
+            "format": "int64",
+            "example": 1234567
+          },
+          "idMarksSeq": {
+            "type": "integer",
+            "description": "The identifying mark sequence, part of the identifying mark unique key",
+            "format": "int64",
+            "example": 1
+          },
+          "captureDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The time the image was captured",
+            "example": "2021-07-05T10:35:17"
+          },
+          "bodyPartCode": {
+            "type": "string",
+            "description": "The body part",
+            "example": "ARM"
+          },
+          "markTypeCode": {
+            "type": "string",
+            "description": "The type of identifying mark",
+            "example": "TAT"
+          },
+          "default": {
+            "type": "boolean",
+            "description": "Whether this is the default image for the bookingId/idMarksSeq",
+            "example": true
+          },
+          "imageExists": {
+            "type": "boolean",
+            "description": "Whether image data exists yet. Image records are created prior to the actual image being added to them (which sometimes never happens).",
+            "example": true
+          },
+          "imageSourceCode": {
+            "type": "string",
+            "description": "The source of the image",
+            "example": "FILE"
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The time the image record was created. Note records are created without an image which is added later.",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The user who created the image record",
+            "example": "AQ425D"
+          },
+          "modifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The time the image record was last changed",
+            "example": "2021-07-05T10:35:17"
+          },
+          "modifiedBy": {
+            "type": "string",
+            "description": "The user who modified the image record",
+            "example": "AQ425D"
+          },
+          "auditModuleName": {
+            "type": "string",
+            "description": "The name of the module that last changed the image, indicates if this was NOMIS or the synchronisation service",
+            "example": "DPS_SYNCHRONISATION"
+          }
+        },
+        "description": "Image details, not including the image itself"
+      },
       "CSIPIdResponse": {
         "required": [
           "csipId"
@@ -22755,12 +23173,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -22776,10 +23188,13 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -22818,12 +23233,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -22839,10 +23248,13 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -22855,6 +23267,132 @@
             "type": "boolean"
           }
         }
+      },
+      "BookingIdentifyingMarksResponse": {
+        "required": [
+          "bookingId",
+          "identifyingMarks",
+          "latestBooking",
+          "startDateTime"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "The booking's unique identifier",
+            "format": "int64",
+            "example": 1234567
+          },
+          "startDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The start date of the booking",
+            "example": "2021-07-05T10:35:17"
+          },
+          "endDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The end date of the booking, or null if the booking is still active",
+            "example": "2021-07-05T10:35:17"
+          },
+          "latestBooking": {
+            "type": "boolean",
+            "description": "Whether this is the latest booking or not. Note that latest does not imply active.",
+            "example": true
+          },
+          "identifyingMarks": {
+            "type": "array",
+            "description": "A list of identifying marks for this booking",
+            "items": {
+              "$ref": "#/components/schemas/IdentifyingMarksResponse"
+            }
+          }
+        },
+        "description": "Identifying marks held against a booking"
+      },
+      "IdentifyingMarksResponse": {
+        "required": [
+          "bodyPartCode",
+          "createDateTime",
+          "createdBy",
+          "imageIds",
+          "markTypeCode"
+        ],
+        "type": "object",
+        "properties": {
+          "idMarksSeq": {
+            "type": "integer",
+            "description": "Multiple identifying marks records can be created for each booking",
+            "format": "int64",
+            "example": 1
+          },
+          "bodyPartCode": {
+            "type": "string",
+            "description": "The body part code",
+            "example": "TORSO"
+          },
+          "markTypeCode": {
+            "type": "string",
+            "description": "The mark type code",
+            "example": "TAT"
+          },
+          "sideCode": {
+            "type": "string",
+            "description": "The side code",
+            "example": "F"
+          },
+          "partOrientationCode": {
+            "type": "string",
+            "description": "The part orientation code",
+            "example": "LOW"
+          },
+          "commentText": {
+            "type": "string",
+            "description": "Optional comments",
+            "example": "Scar above left eye"
+          },
+          "imageIds": {
+            "type": "array",
+            "description": "The IDs of images associated to the mark",
+            "example": [
+              12345,
+              56789
+            ],
+            "items": {
+              "type": "integer",
+              "description": "The IDs of images associated to the mark",
+              "format": "int64"
+            }
+          },
+          "createDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The time the identifying marks were created",
+            "example": "2021-07-05T10:35:17"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The user who created the identifying marks",
+            "example": "AQ425D"
+          },
+          "modifiedDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The time the identifying marks were last changed",
+            "example": "2021-07-05T10:35:17"
+          },
+          "modifiedBy": {
+            "type": "string",
+            "description": "The user who modified the identifying marks",
+            "example": "AQ425D"
+          },
+          "auditModuleName": {
+            "type": "string",
+            "description": "The name of the module that last changed the identifying marks, indicates if this was NOMIS or the synchronisation service",
+            "example": "DPS_SYNCHRONISATION"
+          }
+        },
+        "description": "Identifying marks"
       },
       "AttendanceReconciliationResponse": {
         "required": [
@@ -23014,12 +23552,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -23035,10 +23567,13 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -23240,6 +23775,14 @@
         },
         "description": "Activity Schedule Rules"
       },
+      "excludeProgramCode": {
+        "type": "array",
+        "description": "Exclude program codes",
+        "items": {
+          "type": "string",
+          "description": "Exclude program codes"
+        }
+      },
       "FindSuspendedAllocationsResponse": {
         "required": [
           "courseActivityDescription",
@@ -23349,12 +23892,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -23370,10 +23907,13 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -23417,12 +23957,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -23438,10 +23972,13 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -23491,12 +24028,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -23512,10 +24043,13 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -23820,12 +24354,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -23841,10 +24369,13 @@
             "format": "int32"
           },
           "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SortObject"
-            }
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",

@@ -687,6 +687,13 @@ class NomisApiService(
       .retrieve()
       .awaitBody()
 
+  suspend fun updateCourtCharge(chargeId: Long, offenderNo: String, nomisCourtCaseId: Long, request: OffenderChargeRequest) =
+    webClient.put()
+      .uri("/prisoners/{offenderNo}/sentencing/court-cases/{courtCaseId}/charges/{chargeId}", offenderNo, nomisCourtCaseId, chargeId)
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+
   suspend fun updateCourtAppearance(offenderNo: String, nomisCourtCaseId: Long, nomisCourtAppearanceId: Long, request: CourtAppearanceRequest): UpdateCourtAppearanceResponse =
     webClient.put()
       .uri("/prisoners/{offenderNo}/sentencing/court-cases/{nomisCourtCaseId}/court-appearances/{nomisCourtAppearanceId}", offenderNo, nomisCourtCaseId, nomisCourtAppearanceId)
