@@ -78,4 +78,10 @@ class CourtCaseMappingService(
       .uri("/mapping/court-sentencing/court-charges/dps-court-charge-id/{dpsCourtChargeId}", dpsCourtChargeId)
       .retrieve()
       .awaitBodyOrNullForNotFound()
+
+  suspend fun getMappingGivenCourtChargeId(dpsCourtChargeId: String): CourtChargeMappingDto =
+    webClient.get()
+      .uri("/mapping/court-sentencing/court-charges/dps-court-charge-id/{dpsCourtChargeId}", dpsCourtChargeId)
+      .retrieve()
+      .awaitBody()
 }

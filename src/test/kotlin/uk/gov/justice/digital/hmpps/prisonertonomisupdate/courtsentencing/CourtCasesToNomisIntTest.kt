@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.CourtSentenci
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 private const val COURT_CASE_ID_FOR_CREATION = "12345"
 private const val NOMIS_COURT_CASE_ID_FOR_CREATION = 7L
@@ -299,6 +300,30 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
   @Nested
   inner class CreateCourtAppearance {
+
+    @Nested
+    inner class WhenCourtAppearanceHasBeenCreatedInNomis {
+      @BeforeEach
+      fun setUp() {
+        publishCreateCourtAppearanceDomainEvent(source = "NOMIS")
+      }
+
+      @Test
+      fun `will create ignore telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-appearance-create-ignored"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+          },
+          isNull(),
+        )
+      }
+    }
+
     @Nested
     inner class WhenCourtAppearanceHasBeenCreatedInDPS {
       @BeforeEach
@@ -575,6 +600,30 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
   @Nested
   inner class UpdateCourtAppearance {
+
+    @Nested
+    inner class WhenCourtAppearanceHasBeenUpdatedInNomis {
+      @BeforeEach
+      fun setUp() {
+        publishUpdateCourtAppearanceDomainEvent(source = "NOMIS")
+      }
+
+      @Test
+      fun `will create ignore telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-appearance-updated-ignored"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+          },
+          isNull(),
+        )
+      }
+    }
+
     @Nested
     inner class WhenCourtAppearanceHasBeenUpdatedInDPS {
       @BeforeEach
@@ -775,6 +824,30 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
   @Nested
   inner class CreateCharge {
+
+    @Nested
+    inner class WhenCourtChargeHasBeenCreatedInNomis {
+      @BeforeEach
+      fun setUp() {
+        publishCreateCourtChargeDomainEvent(source = "NOMIS")
+      }
+
+      @Test
+      fun `will create ignore telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("charge-create-ignored"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+          },
+          isNull(),
+        )
+      }
+    }
+
     @Nested
     inner class WhenCourtChargeHasBeenCreatedInDPS {
       @BeforeEach
@@ -965,6 +1038,139 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  inner class UpdateCharge {
+    @Nested
+    inner class WhenCourtChargeHasBeenUpdatedInNomis {
+      @BeforeEach
+      fun setUp() {
+        publishUpdatedCourtChargeDomainEvent(source = "NOMIS")
+      }
+
+      @Test
+      fun `will create ignore telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("charge-updated-ignored"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenCourtChargeHasBeenUpdatedInDPS {
+      @BeforeEach
+      fun setUp() {
+        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCharge(
+          DPS_COURT_CHARGE_ID,
+          offenderNo = OFFENDER_NO,
+          caseID = COURT_CASE_ID_FOR_CREATION,
+        )
+        NomisApiExtension.nomisApi.stubCourtChargeUpdate(
+          NOMIS_COURT_CHARGE_ID,
+          OFFENDER_NO,
+          NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+
+        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(
+          id = DPS_COURT_CHARGE_ID,
+          nomisCourtChargeId = NOMIS_COURT_CHARGE_ID,
+        )
+
+        publishUpdatedCourtChargeDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to court sentencing service to get more details`() {
+        waitForAnyProcessingToComplete()
+        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/legacy/charge/${DPS_COURT_CHARGE_ID}")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("charge-updated-success"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            Assertions.assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to update the Charge`() {
+        waitForAnyProcessingToComplete()
+        NomisApiExtension.nomisApi.verify(
+          WireMock.putRequestedFor(WireMock.anyUrl())
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "offenceCode",
+                WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_CODE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "offenceEndDate",
+                WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_END_DATE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "offenceDate",
+                WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_DATE"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "resultCode1",
+                WireMock.equalTo(COURT_CHARGE_1_RESULT_CODE),
+              ),
+            ),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenCourtChargeMappingDoesNotExist {
+
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(COURT_CASE_ID_FOR_CREATION)
+        MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsIdWithError(
+          DPS_COURT_CHARGE_ID,
+          404,
+        )
+        publishUpdatedCourtChargeDomainEvent()
+      }
+
+      @Test
+      fun `will not update an court case in NOMIS`() {
+        waitForAnyProcessingToComplete()
+
+        NomisApiExtension.nomisApi.verify(
+          0,
+          WireMock.putRequestedFor(WireMock.urlEqualTo("/prisoners/offenderNo/$OFFENDER_NO/sentencing/court-charges/$NOMIS_COURT_CHARGE_ID")),
+        )
+      }
+    }
+  }
+
+  @Nested
   inner class RefreshCaseReferences {
     @Nested
     inner class WhenCourtAppearanceHasBeenUpdatedInDPS {
@@ -1003,7 +1209,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
             Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["caseReferences"]).isEqualTo("[CaseIdentifier(reference=$CASE_REFERENCE, createdDate=2024-01-01)]")
+            Assertions.assertThat(it["caseReferences"])
+              .isEqualTo("[CaseIdentifier(reference=$CASE_REFERENCE, createdDate=2024-01-01T10:10)]")
           },
           isNull(),
         )
@@ -1070,7 +1277,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishCreateCourtAppearanceDomainEvent() {
+  private fun publishCreateCourtAppearanceDomainEvent(source: String = "DPS") {
     val eventType = "court-appearance.inserted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -1080,6 +1287,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             courtCaseId = COURT_CASE_ID_FOR_CREATION,
             offenderNo = OFFENDER_NO,
             eventType = eventType,
+            source = source,
           ),
         )
         .messageAttributes(
@@ -1091,7 +1299,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishUpdateCourtAppearanceDomainEvent() {
+  private fun publishUpdateCourtAppearanceDomainEvent(source: String = "DPS") {
     val eventType = "court-appearance.updated"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -1101,6 +1309,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             courtCaseId = COURT_CASE_ID_FOR_CREATION,
             offenderNo = OFFENDER_NO,
             eventType = eventType,
+            source = source,
           ),
         )
         .messageAttributes(
@@ -1112,7 +1321,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishCreateCourtChargeDomainEvent() {
+  private fun publishCreateCourtChargeDomainEvent(source: String = "DPS") {
     val eventType = "charge.inserted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -1122,6 +1331,29 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             courtCaseId = COURT_CASE_ID_FOR_CREATION,
             offenderNo = OFFENDER_NO,
             eventType = eventType,
+            source = source,
+          ),
+        )
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishUpdatedCourtChargeDomainEvent(source: String = "DPS") {
+    val eventType = "charge.updated"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(
+          courtChargeMessagePayload(
+            courtChargeId = DPS_COURT_CHARGE_ID,
+            courtCaseId = COURT_CASE_ID_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            eventType = eventType,
+            source = source,
           ),
         )
         .messageAttributes(
@@ -1209,7 +1441,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     caseReferences = listOf(
       CaseReferenceLegacyData(
         offenderCaseReference = CASE_REFERENCE,
-        updatedDate = LocalDate.of(2024, 1, 1).toString(),
+        updatedDate = LocalDateTime.of(2024, 1, 1, 10, 10, 0),
       ),
     ),
   )
