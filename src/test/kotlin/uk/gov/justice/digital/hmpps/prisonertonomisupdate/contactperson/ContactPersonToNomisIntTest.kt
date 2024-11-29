@@ -21,16 +21,19 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.dpsContactPersonServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonContactResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmailMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
@@ -775,6 +778,232 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  @DisplayName("contacts-api.contact-email.created")
+  inner class ContactEmailCreated {
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a Contact Email create")
+    inner class WhenNomisCreated {
+
+      @BeforeEach
+      fun setUp() {
+        publishCreateContactEmailDomainEvent(contactEmailId = "12345", source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contact-email-create-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Contact Email create")
+    inner class WhenDpsCreated {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val dpsContactEmailId = 1234567L
+        private val nomisEmailId = 7654321L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactEmailIdOrNull(dpsContactEmailId = dpsContactEmailId, null)
+          dpsApi.stubGetContactEmail(
+            contactEmailId = dpsContactEmailId,
+            contactEmail().copy(
+              contactEmailId = dpsContactEmailId,
+              contactId = nomisPersonIdAndDpsContactId,
+              emailAddress = "test@test.com",
+            ),
+          )
+          nomisApi.stubCreatePersonEmail(personId = nomisPersonIdAndDpsContactId, createPersonEmailResponse().copy(emailAddressId = nomisEmailId))
+          mappingApi.stubCreateEmailMapping()
+          publishCreateContactEmailDomainEvent(contactEmailId = dpsContactEmailId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the create`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-email-create-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the email created`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-email-create-success"),
+            check {
+              assertThat(it).containsEntry("dpsContactEmailId", dpsContactEmailId.toString())
+              assertThat(it).containsEntry("nomisInternetAddressId", nomisEmailId.toString())
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call back to DPS to get email details`() {
+          dpsApi.verify(getRequestedFor(urlEqualTo("/sync/contact-email/$dpsContactEmailId")))
+        }
+
+        @Test
+        fun `will create the email in NOMIS`() {
+          nomisApi.verify(postRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/email")))
+        }
+
+        @Test
+        fun `the created email will contain details of the DPS contact email`() {
+          nomisApi.verify(
+            postRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("email", "test@test.com"),
+          )
+        }
+
+        @Test
+        fun `will create a mapping between the NOMIS and DPS ids`() {
+          mappingApi.verify(
+            postRequestedFor(urlEqualTo("/mapping/contact-person/email"))
+              .withRequestBodyJsonPath("dpsId", "$dpsContactEmailId")
+              .withRequestBodyJsonPath("nomisId", nomisEmailId)
+              .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when mapping service fails once")
+      inner class MappingFailure {
+        private val dpsContactEmailId = 1234567L
+        private val nomisEmailId = 7654321L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactEmailIdOrNull(dpsContactEmailId = dpsContactEmailId, null)
+          dpsApi.stubGetContactEmail(
+            contactEmailId = dpsContactEmailId,
+            contactEmail().copy(
+              contactEmailId = dpsContactEmailId,
+              contactId = nomisPersonIdAndDpsContactId,
+            ),
+          )
+          nomisApi.stubCreatePersonEmail(personId = nomisPersonIdAndDpsContactId, createPersonEmailResponse().copy(emailAddressId = nomisEmailId))
+          mappingApi.stubCreateEmailMappingFollowedBySuccess()
+          publishCreateContactEmailDomainEvent(contactEmailId = dpsContactEmailId.toString())
+        }
+
+        @Test
+        fun `will send telemetry for initial failure`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("contact-email-mapping-create-failed"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will eventually send telemetry for success`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("contact-email-create-success"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will create the email in NOMIS once`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("contact-email-create-success"),
+              any(),
+              isNull(),
+            )
+            nomisApi.verify(1, postRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/email")))
+          }
+        }
+      }
+
+      @Nested
+      @DisplayName("when mapping service detects a duplicate mapping")
+      inner class DuplicateMappingFailure {
+        private val dpsContactEmailId = 1234567L
+        private val nomisEmailId = 7654321L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactEmailIdOrNull(dpsContactEmailId = dpsContactEmailId, null)
+          dpsApi.stubGetContactEmail(
+            contactEmailId = dpsContactEmailId,
+            contactEmail().copy(
+              contactEmailId = dpsContactEmailId,
+              contactId = nomisPersonIdAndDpsContactId,
+            ),
+          )
+          nomisApi.stubCreatePersonEmail(nomisPersonIdAndDpsContactId, createPersonEmailResponse().copy(emailAddressId = nomisEmailId))
+          mappingApi.stubCreateEmailMapping(
+            error = DuplicateMappingErrorResponse(
+              moreInfo = DuplicateErrorContentObject(
+                duplicate = PersonEmailMappingDto(
+                  dpsId = dpsContactEmailId.toString(),
+                  nomisId = 999999,
+                  mappingType = PersonEmailMappingDto.MappingType.DPS_CREATED,
+                ),
+                existing = PersonEmailMappingDto(
+                  dpsId = dpsContactEmailId.toString(),
+                  nomisId = nomisEmailId,
+                  mappingType = PersonEmailMappingDto.MappingType.DPS_CREATED,
+                ),
+              ),
+              errorCode = 1409,
+              status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+              userMessage = "Duplicate mapping",
+            ),
+          )
+          publishCreateContactEmailDomainEvent(contactEmailId = dpsContactEmailId.toString())
+        }
+
+        @Test
+        fun `will send telemetry for duplicate`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("to-nomis-synch-contact-email-duplicate"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will create the email in NOMIS once`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("to-nomis-synch-contact-email-duplicate"),
+              any(),
+              isNull(),
+            )
+            nomisApi.verify(1, postRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/email")))
+          }
+        }
+      }
+    }
+  }
+
   private fun publishCreateContactDomainEvent(contactId: String, source: String = "DPS") {
     with("contacts-api.contact.created") {
       publishDomainEvent(eventType = this, payload = contactMessagePayload(eventType = this, contactId = contactId, source = source))
@@ -790,6 +1019,12 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
   private fun publishCreateContactAddressDomainEvent(contactAddressId: String, source: String = "DPS") {
     with("contacts-api.contact-address.created") {
       publishDomainEvent(eventType = this, payload = contactAddressMessagePayload(eventType = this, contactAddressId = contactAddressId, source = source))
+    }
+  }
+
+  private fun publishCreateContactEmailDomainEvent(contactEmailId: String, source: String = "DPS") {
+    with("contacts-api.contact-email.created") {
+      publishDomainEvent(eventType = this, payload = contactEmailMessagePayload(eventType = this, contactEmailId = contactEmailId, source = source))
     }
   }
 
@@ -876,6 +1111,31 @@ fun contactAddressMessagePayload(
       "eventType":"$eventType", 
       "additionalInformation": {
         "contactAddressId": "$contactAddressId",
+        "source": "$source"
+      },
+      "personReference": {
+        "identifiers": [
+          {
+            "type": "DPS_CONTACT_ID",
+            "value": "$contactId"
+          }
+        ]
+      }
+    }
+    """
+
+fun contactEmailMessagePayload(
+  eventType: String,
+  contactEmailId: String,
+  source: String = "DPS",
+  contactId: String = "87654",
+) =
+  //language=JSON
+  """
+    {
+      "eventType":"$eventType", 
+      "additionalInformation": {
+        "contactEmailId": "$contactEmailId",
         "source": "$source"
       },
       "personReference": {
