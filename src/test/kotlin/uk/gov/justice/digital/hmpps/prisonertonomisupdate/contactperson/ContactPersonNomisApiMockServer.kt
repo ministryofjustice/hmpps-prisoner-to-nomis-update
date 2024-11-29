@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonContactResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -43,6 +45,7 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
       emergencyContact = false,
       comment = "Best friends",
     )
+
     fun createPersonAddressResponse(): CreatePersonAddressResponse = CreatePersonAddressResponse(
       personAddressId = 123456,
     )
@@ -50,6 +53,14 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
     fun createPersonAddressRequest(): CreatePersonAddressRequest = CreatePersonAddressRequest(
       primaryAddress = true,
       mailAddress = true,
+    )
+
+    fun createPersonEmailResponse(): CreatePersonEmailResponse = CreatePersonEmailResponse(
+      emailAddressId = 123456,
+    )
+
+    fun createPersonEmailRequest(): CreatePersonEmailRequest = CreatePersonEmailRequest(
+      email = "test@test.com",
     )
   }
 
@@ -86,6 +97,20 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
   ) {
     nomisApi.stubFor(
       post(urlEqualTo("/persons/$personId/address")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubCreatePersonEmail(
+    personId: Long = 123456,
+    response: CreatePersonEmailResponse = createPersonEmailResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/persons/$personId/email")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())

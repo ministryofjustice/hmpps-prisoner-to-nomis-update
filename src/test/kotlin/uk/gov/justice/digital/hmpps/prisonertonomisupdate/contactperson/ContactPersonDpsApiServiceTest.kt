@@ -95,4 +95,30 @@ class ContactPersonDpsApiServiceTest {
       )
     }
   }
+
+  @Nested
+  inner class GetContactEmail {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsContactPersonServer.stubGetContactEmail(contactEmailId = 1234567)
+
+      apiService.getContactEmail(contactEmailId = 1234567)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get sync endpoint`() = runTest {
+      dpsContactPersonServer.stubGetContactEmail(contactEmailId = 1234567)
+
+      apiService.getContactEmail(contactEmailId = 1234567)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/contact-email/1234567")),
+      )
+    }
+  }
 }

@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmailMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 
 @Service
@@ -52,6 +53,21 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
   suspend fun createAddressMapping(mappings: PersonAddressMappingDto) =
     webClient.post()
       .uri("/mapping/contact-person/address")
+      .bodyValue(mappings)
+      .retrieve()
+      .awaitBodilessEntityOrThrowOnConflict()
+
+  suspend fun getByDpsContactEmailIdOrNull(dpsContactEmailId: Long): PersonEmailMappingDto? = webClient.get()
+    .uri(
+      "/mapping/contact-person/email/dps-contact-email-id/{dpsContactEmailId}",
+      dpsContactEmailId,
+    )
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
+  suspend fun createEmailMapping(mappings: PersonEmailMappingDto) =
+    webClient.post()
+      .uri("/mapping/contact-person/email")
       .bodyValue(mappings)
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()
