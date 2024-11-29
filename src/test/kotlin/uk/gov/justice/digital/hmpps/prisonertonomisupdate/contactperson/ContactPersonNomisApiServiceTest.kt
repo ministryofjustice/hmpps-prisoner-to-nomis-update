@@ -14,6 +14,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonContactResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -126,6 +128,40 @@ class ContactPersonNomisApiServiceTest {
       val response = apiService.createPersonAddress(personId = 1234567, request = createPersonAddressRequest())
 
       assertThat(response.personAddressId).isEqualTo(123456)
+    }
+  }
+
+  @Nested
+  inner class CreatePersonEmail {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubCreatePersonEmail(personId = 1234567)
+
+      apiService.createPersonEmail(personId = 1234567, request = createPersonEmailRequest())
+
+      mockServer.verify(
+        postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call create endpoint`() = runTest {
+      mockServer.stubCreatePersonEmail(personId = 1234567)
+
+      apiService.createPersonEmail(personId = 1234567, request = createPersonEmailRequest())
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/persons/1234567/email")),
+      )
+    }
+
+    @Test
+    fun `will return email id `() = runTest {
+      mockServer.stubCreatePersonEmail(personId = 1234567, response = createPersonEmailResponse().copy(emailAddressId = 123456))
+
+      val response = apiService.createPersonEmail(personId = 1234567, request = createPersonEmailRequest())
+
+      assertThat(response.emailAddressId).isEqualTo(123456)
     }
   }
 }
