@@ -233,7 +233,8 @@ hmpps.sqs:
         { "eventType":[
           "contacts-api.contact.created",
           "contacts-api.prisoner-contact.created",
-          "contacts-api.contact-address.created"
+          "contacts-api.contact-address.created",
+          "contacts-api.contact-email.created"
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
