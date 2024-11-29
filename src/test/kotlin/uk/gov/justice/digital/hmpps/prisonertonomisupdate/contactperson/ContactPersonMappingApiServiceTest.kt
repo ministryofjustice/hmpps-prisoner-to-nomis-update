@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Du
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmailMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
 
@@ -359,6 +360,120 @@ class ContactPersonMappingApiServiceTest {
         apiService.createAddressMapping(
           PersonAddressMappingDto(
             mappingType = PersonAddressMappingDto.MappingType.NOMIS_CREATED,
+            nomisId = nomisId,
+            dpsId = dpsId,
+          ),
+        )
+      }.error
+
+      assertThat(error.moreInfo.existing!!["dpsId"]).isEqualTo(dpsId)
+      assertThat(error.moreInfo.existing!!["nomisId"]).isEqualTo(existingNomisId)
+      assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
+      assertThat(error.moreInfo.duplicate["nomisId"]).isEqualTo(nomisId)
+    }
+  }
+
+  @Nested
+  inner class GetByDpsContactEmailIdOrNull {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetByDpsContactEmailIdOrNull(dpsContactEmailId = 1234567)
+
+      apiService.getByDpsContactEmailIdOrNull(dpsContactEmailId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass DPS id to service`() = runTest {
+      mockServer.stubGetByDpsContactEmailIdOrNull()
+
+      apiService.getByDpsContactEmailIdOrNull(dpsContactEmailId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/contact-person/email/dps-contact-email-id/1234567")),
+      )
+    }
+
+    @Test
+    fun `will return dpsId when mapping exists`() = runTest {
+      mockServer.stubGetByDpsContactEmailIdOrNull(
+        dpsContactEmailId = 1234567,
+        mapping = PersonEmailMappingDto(
+          dpsId = "1234567",
+          nomisId = 1234567,
+          mappingType = PersonEmailMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      val mapping = apiService.getByDpsContactEmailIdOrNull(dpsContactEmailId = 1234567)
+
+      assertThat(mapping?.nomisId).isEqualTo(1234567)
+    }
+
+    @Test
+    fun `will return null if mapping does not exist`() = runTest {
+      mockServer.stubGetByDpsContactEmailIdOrNull(
+        dpsContactEmailId = 1234567,
+        mapping = null,
+      )
+
+      assertThat(apiService.getByDpsContactEmailIdOrNull(dpsContactEmailId = 1234567))
+    }
+  }
+
+  @Nested
+  inner class CreateEmailMapping {
+    @Test
+    internal fun `will pass oath2 token to create mapping endpoint`() = runTest {
+      mockServer.stubCreateEmailMapping()
+
+      apiService.createEmailMapping(
+        PersonEmailMappingDto(
+          mappingType = PersonEmailMappingDto.MappingType.DPS_CREATED,
+          nomisId = 1234567,
+          dpsId = "1234567",
+        ),
+      )
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/mapping/contact-person/email"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will throw error when 409 conflict`() = runTest {
+      val nomisId = 2234567890
+      val dpsId = "2234567890"
+      val existingNomisId = 3234567890
+
+      mockServer.stubCreateEmailMapping(
+        error = DuplicateMappingErrorResponse(
+          moreInfo = DuplicateErrorContentObject(
+            duplicate = PersonEmailMappingDto(
+              dpsId = dpsId,
+              nomisId = nomisId,
+              mappingType = PersonEmailMappingDto.MappingType.DPS_CREATED,
+            ),
+            existing = PersonEmailMappingDto(
+              dpsId = dpsId,
+              nomisId = existingNomisId,
+              mappingType = PersonEmailMappingDto.MappingType.DPS_CREATED,
+            ),
+          ),
+          errorCode = 1409,
+          status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+          userMessage = "Duplicate mapping",
+        ),
+      )
+
+      val error = assertThrows<DuplicateMappingException> {
+        apiService.createEmailMapping(
+          PersonEmailMappingDto(
+            mappingType = PersonEmailMappingDto.MappingType.NOMIS_CREATED,
             nomisId = nomisId,
             dpsId = dpsId,
           ),
