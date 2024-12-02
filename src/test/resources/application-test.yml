@@ -234,7 +234,9 @@ hmpps.sqs:
           "contacts-api.contact.created",
           "contacts-api.prisoner-contact.created",
           "contacts-api.contact-address.created",
-          "contacts-api.contact-email.created"
+          "contacts-api.contact-email.created",
+          "contacts-api.contact-phone.created",
+          "contacts-api.contact-address-phone.created"
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120

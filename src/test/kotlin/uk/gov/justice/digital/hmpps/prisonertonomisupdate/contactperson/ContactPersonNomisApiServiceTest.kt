@@ -16,6 +16,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonContactResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonPhoneRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -162,6 +164,74 @@ class ContactPersonNomisApiServiceTest {
       val response = apiService.createPersonEmail(personId = 1234567, request = createPersonEmailRequest())
 
       assertThat(response.emailAddressId).isEqualTo(123456)
+    }
+  }
+
+  @Nested
+  inner class CreatePersonPhone {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubCreatePersonPhone(personId = 1234567)
+
+      apiService.createPersonPhone(personId = 1234567, request = createPersonPhoneRequest())
+
+      mockServer.verify(
+        postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call create endpoint`() = runTest {
+      mockServer.stubCreatePersonPhone(personId = 1234567)
+
+      apiService.createPersonPhone(personId = 1234567, request = createPersonPhoneRequest())
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/persons/1234567/phone")),
+      )
+    }
+
+    @Test
+    fun `will return phone id `() = runTest {
+      mockServer.stubCreatePersonPhone(personId = 1234567, response = createPersonPhoneResponse().copy(phoneId = 123456))
+
+      val response = apiService.createPersonPhone(personId = 1234567, request = createPersonPhoneRequest())
+
+      assertThat(response.phoneId).isEqualTo(123456)
+    }
+  }
+
+  @Nested
+  inner class CreatePersonAddressPhone {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubCreatePersonAddressPhone(personId = 1234567, addressId = 67890)
+
+      apiService.createPersonAddressPhone(personId = 1234567, addressId = 67890, request = createPersonPhoneRequest())
+
+      mockServer.verify(
+        postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call create endpoint`() = runTest {
+      mockServer.stubCreatePersonAddressPhone(personId = 1234567, addressId = 67890)
+
+      apiService.createPersonAddressPhone(personId = 1234567, addressId = 67890, request = createPersonPhoneRequest())
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/persons/1234567/address/67890/phone")),
+      )
+    }
+
+    @Test
+    fun `will return phone id `() = runTest {
+      mockServer.stubCreatePersonAddressPhone(personId = 1234567, addressId = 67890, response = createPersonPhoneResponse().copy(phoneId = 123456))
+
+      val response = apiService.createPersonAddressPhone(personId = 1234567, addressId = 67890, request = createPersonPhoneRequest())
+
+      assertThat(response.phoneId).isEqualTo(123456)
     }
   }
 }

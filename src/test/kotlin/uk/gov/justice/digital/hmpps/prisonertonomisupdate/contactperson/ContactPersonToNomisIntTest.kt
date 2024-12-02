@@ -1028,6 +1028,20 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Suppress("unused")
+  private fun publishCreateContactPhoneDomainEvent(contactPhoneId: String, source: String = "DPS") {
+    with("contacts-api.contact-phone.created") {
+      publishDomainEvent(eventType = this, payload = contactPhoneMessagePayload(eventType = this, contactPhoneId = contactPhoneId, source = source))
+    }
+  }
+
+  @Suppress("unused")
+  private fun publishCreateContactAddressPhoneDomainEvent(contactAddressPhoneId: String, contactAddressId: String, source: String = "DPS") {
+    with("contacts-api.contact-address-phone.created") {
+      publishDomainEvent(eventType = this, payload = contactAddressPhoneMessagePayload(eventType = this, contactAddressPhoneId = contactAddressPhoneId, contactAddressId = contactAddressId, source = source))
+    }
+  }
+
   private fun publishDomainEvent(
     eventType: String,
     payload: String,
@@ -1136,6 +1150,58 @@ fun contactEmailMessagePayload(
       "eventType":"$eventType", 
       "additionalInformation": {
         "contactEmailId": "$contactEmailId",
+        "source": "$source"
+      },
+      "personReference": {
+        "identifiers": [
+          {
+            "type": "DPS_CONTACT_ID",
+            "value": "$contactId"
+          }
+        ]
+      }
+    }
+    """
+
+fun contactPhoneMessagePayload(
+  eventType: String,
+  contactPhoneId: String,
+  source: String = "DPS",
+  contactId: String = "87654",
+) =
+  //language=JSON
+  """
+    {
+      "eventType":"$eventType", 
+      "additionalInformation": {
+        "contactPhoneId": "$contactPhoneId",
+        "source": "$source"
+      },
+      "personReference": {
+        "identifiers": [
+          {
+            "type": "DPS_CONTACT_ID",
+            "value": "$contactId"
+          }
+        ]
+      }
+    }
+    """
+
+fun contactAddressPhoneMessagePayload(
+  eventType: String,
+  contactAddressPhoneId: String,
+  contactAddressId: String,
+  source: String = "DPS",
+  contactId: String = "87654",
+) =
+  //language=JSON
+  """
+    {
+      "eventType":"$eventType", 
+      "additionalInformation": {
+        "contactAddressPhoneId": "$contactAddressPhoneId",
+        "contactAddressId": "$contactAddressId",
         "source": "$source"
       },
       "personReference": {
