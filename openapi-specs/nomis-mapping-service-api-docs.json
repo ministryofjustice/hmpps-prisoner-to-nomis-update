@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-11-27.5506.8b8898f"
+    "version": "2024-12-02.5560.9954850"
   },
   "servers": [
     {
@@ -1412,6 +1412,130 @@
         }
       }
     },
+    "/mapping/prisonperson/identifying-mark-image": {
+      "post": {
+        "tags": [
+          "identifying-mark-image-resource"
+        ],
+        "summary": "Create an identifying mark image mapping",
+        "description": "Create an identifying mark image mapping. Requires ROLE_NOMIS_PRISONPERSON",
+        "operationId": "createIdentifyingMarkImageMapping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/prisonperson/identifying-mark": {
+      "post": {
+        "tags": [
+          "identifying-mark-resource"
+        ],
+        "summary": "Create an identifying mark mapping",
+        "description": "Create an identifying mark mapping. Requires ROLE_NOMIS_PRISONPERSON",
+        "operationId": "createIdentifyingMarkMapping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/non-associations": {
       "post": {
         "tags": [
@@ -2462,6 +2586,68 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CourtAppearanceMapping"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/contact-person/phone": {
+      "post": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Creates person phone mappings for synchronisation",
+        "description": "Creates person phone mappings for synchronisation between NOMIS ids and dps ids. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "createPersonPhoneMapping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonPhoneMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unit"
                 }
               }
             }
@@ -4563,6 +4749,141 @@
         }
       }
     },
+    "/mapping/prisonperson/nomis-offender-image-id/{nomisImageId}": {
+      "get": {
+        "tags": [
+          "identifying-mark-image-resource"
+        ],
+        "summary": "Gets a single identifying mark image mapping by NOMIS id",
+        "description": "Gets a single identifying mark image mapping by NOMIS id. Requires ROLE_NOMIS_PRISONPERSON",
+        "operationId": "getIdentifyingMarkImageMapping",
+        "parameters": [
+          {
+            "name": "nomisImageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentifyingMarkImageMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/prisonperson/nomis-booking-id/{bookingId}/identifying-mark-sequence/{sequence}": {
+      "get": {
+        "tags": [
+          "identifying-mark-resource"
+        ],
+        "summary": "Gets a single identifying mark mapping by NOMIS id",
+        "description": "Gets a single identifying mark mapping by NOMIS id. Requires ROLE_NOMIS_PRISONPERSON",
+        "operationId": "getIdentifyingMarkMapping",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "sequence",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentifyingMarkMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/prisonperson/migration/migration-id/{migrationId}": {
       "get": {
         "tags": [
@@ -4606,6 +4927,135 @@
           },
           "401": {
             "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/prisonperson/dps-image-id/{dpsImageId}": {
+      "get": {
+        "tags": [
+          "identifying-mark-image-resource"
+        ],
+        "summary": "Gets an identifying mark image mapping by DPS image id",
+        "description": "Gets an identifying mark image mapping by DPS image id. Requires ROLE_NOMIS_PRISONPERSON",
+        "operationId": "getIdentifyingMarkImageMappings",
+        "parameters": [
+          {
+            "name": "dpsImageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentifyingMarkImageMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/prisonperson/dps-identifying-mark-id/{dpsId}": {
+      "get": {
+        "tags": [
+          "identifying-mark-resource"
+        ],
+        "summary": "Gets all NOMIS identifying mark mappings by DPS id",
+        "description": "Gets all NOMIS identifying mark mappings by DPS id. Requires ROLE_NOMIS_PRISONPERSON",
+        "operationId": "getIdentifyingMarkMappings",
+        "parameters": [
+          {
+            "name": "dpsId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mapping returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IdentifyingMarkMappingDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -7572,6 +8022,205 @@
         }
       }
     },
+    "/mapping/contact-person/phone/nomis-phone-id/{nomisPhoneId}": {
+      "get": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Get person phone mapping by nomis phone Id",
+        "description": "Retrieves the person phone mapping by NOMIS Phone Id. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "getPersonPhoneMappingByNomisId",
+        "parameters": [
+          {
+            "name": "nomisPhoneId",
+            "in": "path",
+            "description": "NOMIS phone id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "NOMIS phone id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Person phone mapping data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonPhoneMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access this endpoint is forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/contact-person/phone/dps-contact-phone-id/{dpsContactPhoneId}": {
+      "get": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Get person phone mapping by dps contact phone Id",
+        "description": "Retrieves the person phone mapping by DPS Contact Phone Id. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "getPersonPhoneMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsContactPhoneId",
+            "in": "path",
+            "description": "DPS contact phone id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS contact phone id",
+              "example": "12345"
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Person Phone mapping data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonPhoneMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access this endpoint is forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/contact-person/phone/dps-contact-address-phone-id/{dpsContactAddressPhoneId}": {
+      "get": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Get person mapping by dps contact address phone Id",
+        "description": "Retrieves the person phone mapping by DPS Contact Address Phone Id. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "getPersonAddressPhoneMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsContactAddressPhoneId",
+            "in": "path",
+            "description": "DPS contact phone id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS contact phone id",
+              "example": "12345"
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Person Phone mapping data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonPhoneMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access this endpoint is forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/contact-person/person/nomis-person-id/{nomisPersonId}": {
       "get": {
         "tags": [
@@ -8107,7 +8756,7 @@
         "tags": [
           "contact-person-mapping-resource"
         ],
-        "summary": "Get person contact mapping by dps contact address Id",
+        "summary": "Get person address mapping by dps contact address Id",
         "description": "Retrieves the person address mapping by DPS Contact Address Id. Requires role ROLE_NOMIS_CONTACTPERSONS",
         "operationId": "getPersonAddressMappingByDpsId",
         "parameters": [
@@ -12640,6 +13289,50 @@
           }
         }
       },
+      "PersonPhoneMappingDto": {
+        "required": [
+          "dpsId",
+          "dpsPhoneType",
+          "mappingType",
+          "nomisId"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsId": {
+            "type": "string",
+            "description": "DPS id"
+          },
+          "nomisId": {
+            "type": "integer",
+            "description": "NOMIS id",
+            "format": "int64"
+          },
+          "dpsPhoneType": {
+            "type": "string",
+            "description": "DPS phone type",
+            "enum": [
+              "ADDRESS",
+              "PERSON"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "mappingType": {
+            "type": "string",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED",
+              "NOMIS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          }
+        }
+      },
       "PersonMappingDto": {
         "required": [
           "dpsId",
@@ -13268,6 +13961,116 @@
           }
         }
       },
+      "IdentifyingMarkImageMappingDto": {
+        "required": [
+          "dpsId",
+          "mappingType",
+          "nomisBookingId",
+          "nomisMarksSequence",
+          "nomisOffenderImageId",
+          "offenderNo",
+          "whenCreated"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisOffenderImageId": {
+            "type": "integer",
+            "description": "NOMIS OFFENDER_IMAGE_ID",
+            "format": "int64"
+          },
+          "nomisBookingId": {
+            "type": "integer",
+            "description": "NOMIS OFFENDER_BOOK_ID",
+            "format": "int64"
+          },
+          "nomisMarksSequence": {
+            "type": "integer",
+            "description": "NOMIS ID_MARKS_SEQ",
+            "format": "int64"
+          },
+          "dpsId": {
+            "type": "string",
+            "description": "DPS unique id",
+            "format": "uuid"
+          },
+          "offenderNo": {
+            "type": "string",
+            "description": "NOMIS OFFENDER_ID_DISPLAY"
+          },
+          "label": {
+            "type": "string",
+            "description": "Migration ID"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "The source of the mapping",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED",
+              "NOMIS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Created timestamp",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "NOMIS to DPS Identifying Mark Image Mapping"
+      },
+      "IdentifyingMarkMappingDto": {
+        "required": [
+          "dpsId",
+          "mappingType",
+          "nomisBookingId",
+          "nomisMarksSequence",
+          "offenderNo",
+          "whenCreated"
+        ],
+        "type": "object",
+        "properties": {
+          "nomisBookingId": {
+            "type": "integer",
+            "description": "NOMIS OFFENDER_BOOK_ID",
+            "format": "int64"
+          },
+          "nomisMarksSequence": {
+            "type": "integer",
+            "description": "NOMIS ID_MARKS_SEQ",
+            "format": "int64"
+          },
+          "dpsId": {
+            "type": "string",
+            "description": "DPS unique id",
+            "format": "uuid"
+          },
+          "offenderNo": {
+            "type": "string",
+            "description": "NOMIS OFFENDER_ID_DISPLAY"
+          },
+          "label": {
+            "type": "string",
+            "description": "Migration ID"
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "The source of the mapping",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED",
+              "NOMIS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Created timestamp",
+            "example": "2021-07-05T10:35:17"
+          }
+        },
+        "description": "NOMIS to DPS Identifying Mark Mapping"
+      },
       "CourtCaseMappingDto": {
         "required": [
           "dpsCourtCaseId",
@@ -13314,13 +14117,13 @@
       "PageCourtCaseMappingDto": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -13400,13 +14203,13 @@
       "PagePersonMappingDto": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -13462,13 +14265,13 @@
       "PagePrisonerAlertMappingsSummaryDto": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -13533,13 +14336,13 @@
       "PageAlertMappingDto": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"

@@ -200,6 +200,9 @@ class ContactPersonService(
     }
   }
 
+  suspend fun contactPhoneCreated(event: ContactPhoneCreatedEvent): Unit = TODO()
+  suspend fun contactAddressPhoneCreated(event: ContactAddressPhoneCreatedEvent): Unit = TODO()
+
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (MappingTypes.fromEntityName(baseMapping.entityName)) {

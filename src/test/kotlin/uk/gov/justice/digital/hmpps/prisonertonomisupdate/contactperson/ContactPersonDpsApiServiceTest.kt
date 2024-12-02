@@ -121,4 +121,56 @@ class ContactPersonDpsApiServiceTest {
       )
     }
   }
+
+  @Nested
+  inner class GetContactPhone {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsContactPersonServer.stubGetContactPhone(contactPhoneId = 1234567)
+
+      apiService.getContactPhone(contactPhoneId = 1234567)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get sync endpoint`() = runTest {
+      dpsContactPersonServer.stubGetContactPhone(contactPhoneId = 1234567)
+
+      apiService.getContactPhone(contactPhoneId = 1234567)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/contact-phone/1234567")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetContactAddressPhone {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsContactPersonServer.stubGetContactAddressPhone(contactAddressPhoneId = 1234567)
+
+      apiService.getContactAddressPhone(contactAddressPhoneId = 1234567)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get sync endpoint`() = runTest {
+      dpsContactPersonServer.stubGetContactAddressPhone(contactAddressPhoneId = 1234567)
+
+      apiService.getContactAddressPhone(contactAddressPhoneId = 1234567)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/contact-address-phone/1234567")),
+      )
+    }
+  }
 }

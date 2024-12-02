@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-11-27.1745.9ea2034"
+    "version": "2024-12-02.1791.3af9f86"
   },
   "servers": [
     {
@@ -25,8 +25,8 @@
   ],
   "tags": [
     {
-      "name": "Estate Wide Restrictions",
-      "description": "Estate wide restrictions for a contact"
+      "name": "Contact Global Restrictions",
+      "description": "Global restrictions for a contact, a.k.a. estate-wide restrictions or contact restrictions"
     }
   ],
   "paths": {
@@ -123,6 +123,16 @@
           "required": true
         },
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Successfully updated prisoner contact",
             "content": {
@@ -143,8 +153,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -159,16 +169,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SyncPrisonerContact"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -259,12 +259,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Found the prisoner contact restriction",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SyncPrisonerContactRestriction"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -279,8 +279,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -289,12 +289,12 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "200": {
+            "description": "Found the prisoner contact restriction",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/SyncPrisonerContactRestriction"
                 }
               }
             }
@@ -331,12 +331,12 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "Successfully updated prisoner contact restriction",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SyncPrisonerContactRestriction"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -351,18 +351,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Prisoner contact restriction or relationship was not found",
+          "200": {
+            "description": "Successfully updated prisoner contact restriction",
             "content": {
               "application/json": {
                 "schema": {
@@ -377,6 +367,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prisoner contact restriction or relationship was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPrisonerContactRestriction"
                 }
               }
             }
@@ -403,22 +403,22 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "No prisoner contact restriction reference with that id could be found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SyncPrisonerContactRestriction"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No prisoner contact restriction reference with that id could be found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPrisonerContactRestriction"
                 }
               }
             }
@@ -467,6 +467,16 @@
           }
         ],
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Found the contact",
             "content": {
@@ -483,16 +493,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SyncContact"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -539,6 +539,16 @@
           "required": true
         },
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Successfully updated contact",
             "content": {
@@ -565,16 +575,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SyncContact"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -611,9 +611,6 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "No contact reference with that id could be found"
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -624,8 +621,8 @@
               }
             }
           },
-          "204": {
-            "description": "Successfully deleted contact"
+          "404": {
+            "description": "No contact reference with that id could be found"
           },
           "403": {
             "description": "Forbidden, requires an appropriate role",
@@ -636,6 +633,9 @@
                 }
               }
             }
+          },
+          "204": {
+            "description": "Successfully deleted contact"
           }
         }
       }
@@ -809,8 +809,8 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "No contact reference with that id could be found",
+          "200": {
+            "description": "Found the contact phone",
             "content": {
               "application/json": {
                 "schema": {
@@ -819,8 +819,8 @@
               }
             }
           },
-          "200": {
-            "description": "Found the contact phone",
+          "404": {
+            "description": "No contact reference with that id could be found",
             "content": {
               "application/json": {
                 "schema": {
@@ -871,8 +871,8 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid input data",
+          "200": {
+            "description": "Successfully updated contact phone",
             "content": {
               "application/json": {
                 "schema": {
@@ -881,8 +881,8 @@
               }
             }
           },
-          "200": {
-            "description": "Successfully updated contact phone",
+          "400": {
+            "description": "Invalid input data",
             "content": {
               "application/json": {
                 "schema": {
@@ -1105,8 +1105,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Found the contact email",
+          "404": {
+            "description": "No contact email reference with that id could be found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1115,8 +1115,8 @@
               }
             }
           },
-          "404": {
-            "description": "No contact email reference with that id could be found",
+          "200": {
+            "description": "Found the contact email",
             "content": {
               "application/json": {
                 "schema": {
@@ -1157,16 +1157,6 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "Successfully updated contact email",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SyncContactEmail"
-                }
-              }
-            }
-          },
           "404": {
             "description": "Contact email not found",
             "content": {
@@ -1179,6 +1169,16 @@
           },
           "400": {
             "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncContactEmail"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successfully updated contact email",
             "content": {
               "application/json": {
                 "schema": {
@@ -1528,7 +1528,7 @@
         }
       }
     },
-    "/prisoner-contact/{prisonerContactId}/restrictions/{prisonerContactRestrictionId}": {
+    "/prisoner-contact/{prisonerContactId}/restriction/{prisonerContactRestrictionId}": {
       "put": {
         "tags": [
           "prisoner-contact"
@@ -1571,8 +1571,18 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "The request has invalid or missing fields",
+          "200": {
+            "description": "Updated the prisoner contact restriction successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrisonerContactRestrictionDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1591,18 +1601,104 @@
               }
             }
           },
-          "200": {
-            "description": "Updated the prisoner contact restriction successfully",
+          "400": {
+            "description": "The request has invalid or missing fields",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PrisonerContactRestrictionDetails"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contact/{contactId}/restriction/{contactRestrictionId}": {
+      "put": {
+        "tags": [
+          "Contact Global Restrictions"
+        ],
+        "summary": "Update global restriction for a contact",
+        "description": "Updates a global (estate-wide) restriction for the specified contact and restriction id",
+        "operationId": "updateContactGlobalRestriction",
+        "parameters": [
+          {
+            "name": "contactId",
+            "in": "path",
+            "description": "The id of the contact",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 123456
+          },
+          {
+            "name": "contactRestrictionId",
+            "in": "path",
+            "description": "The id of the global restriction",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 123456
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateContactRestrictionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Updated the global restriction successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactRestrictionDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Could not find the the contact or global restriction",
             "content": {
               "application/json": {
                 "schema": {
@@ -1657,8 +1753,8 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "Could not find the the contact or phone this request is for",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1667,8 +1763,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "Could not find the the contact or phone this request is for",
             "content": {
               "application/json": {
                 "schema": {
@@ -1741,16 +1837,6 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "The request has invalid or missing fields",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "Updated the contact phone successfully",
             "content": {
@@ -1773,6 +1859,16 @@
           },
           "404": {
             "description": "Could not find the the contact or phone by their ids",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
             "content": {
               "application/json": {
                 "schema": {
@@ -1825,22 +1921,22 @@
           }
         ],
         "responses": {
-          "204": {
-            "description": "Deleted the contact phone successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContactPhoneDetails"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Deleted the contact phone successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactPhoneDetails"
                 }
               }
             }
@@ -1901,26 +1997,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Found the identity successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContactIdentityDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Could not find the the contact or identity this request is for",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -1931,8 +2007,28 @@
               }
             }
           },
+          "200": {
+            "description": "Found the identity successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactIdentityDetails"
+                }
+              }
+            }
+          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Could not find the the contact or identity this request is for",
             "content": {
               "application/json": {
                 "schema": {
@@ -1985,8 +2081,8 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "The request has invalid or missing fields",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1995,8 +2091,8 @@
               }
             }
           },
-          "404": {
-            "description": "Could not find the the contact or identity by their ids",
+          "400": {
+            "description": "The request has invalid or missing fields",
             "content": {
               "application/json": {
                 "schema": {
@@ -2015,8 +2111,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "Could not find the the contact or identity by their ids",
             "content": {
               "application/json": {
                 "schema": {
@@ -2069,16 +2165,6 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "Could not find the the contact or identity by their ids",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "204": {
             "description": "Deleted the contact identity successfully",
             "content": {
@@ -2099,94 +2185,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/contact/{contactId}/estate-wide-restrictions/{contactRestrictionId}": {
-      "put": {
-        "tags": [
-          "Estate Wide Restrictions"
-        ],
-        "summary": "Update estate-wide restriction",
-        "description": "Updates an estate-wide restriction for the specified contact and restriction id",
-        "operationId": "updateEstateWideRestriction",
-        "parameters": [
-          {
-            "name": "contactId",
-            "in": "path",
-            "description": "The id of the contact",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "example": 123456
-          },
-          {
-            "name": "contactRestrictionId",
-            "in": "path",
-            "description": "The id of the estate-wide restriction",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "example": 123456
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateContactRestrictionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Updated the estate-wide restriction successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContactRestrictionDetails"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The request has invalid or missing fields",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "404": {
-            "description": "Could not find the the contact or estate-wide restriction",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+            "description": "Could not find the the contact or identity by their ids",
             "content": {
               "application/json": {
                 "schema": {
@@ -2241,6 +2241,16 @@
           }
         ],
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Found the email successfully",
             "content": {
@@ -2253,16 +2263,6 @@
           },
           "404": {
             "description": "Could not find the the contact or email this request is for",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -2325,8 +2325,8 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "The request has invalid or missing fields",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -2335,8 +2335,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "400": {
+            "description": "The request has invalid or missing fields",
             "content": {
               "application/json": {
                 "schema": {
@@ -2355,22 +2355,22 @@
               }
             }
           },
-          "200": {
-            "description": "Updated the contact email successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContactEmailDetails"
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Updated the contact email successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactEmailDetails"
                 }
               }
             }
@@ -2419,22 +2419,22 @@
               }
             }
           },
-          "404": {
-            "description": "Could not find the the contact or email by their ids",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "204": {
             "description": "Deleted the contact email successfully",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ContactEmailDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Could not find the the contact or email by their ids",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2471,6 +2471,16 @@
           "required": true
         },
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "400": {
             "description": "The request has invalid or missing fields",
             "content": {
@@ -2487,16 +2497,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SyncPrisonerContact"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2533,6 +2533,16 @@
           "required": true
         },
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "201": {
             "description": "Successfully created prisoner contact restriction",
             "content": {
@@ -2545,16 +2555,6 @@
           },
           "400": {
             "description": "The request has invalid or missing fields",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -2595,6 +2595,16 @@
           "required": true
         },
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "400": {
             "description": "The request has invalid or missing fields",
             "content": {
@@ -2611,16 +2621,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SyncContact"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2667,22 +2667,22 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "The request has invalid or missing fields",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "201": {
             "description": "Successfully created contact restriction",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SyncContactRestriction"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2751,22 +2751,22 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "The request has invalid or missing fields",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "201": {
             "description": "Successfully created contact identity",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SyncContactIdentity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2793,22 +2793,22 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "The request has invalid or missing fields",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "201": {
             "description": "Successfully created contact email",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SyncContactEmail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2835,22 +2835,22 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "The request has invalid or missing fields",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "201": {
             "description": "Successfully created contact address",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SyncContactAddress"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2877,22 +2877,22 @@
           "required": true
         },
         "responses": {
-          "201": {
-            "description": "Successfully created an address-specific phone number",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SyncContactAddressPhone"
-                }
-              }
-            }
-          },
           "400": {
             "description": "The request has invalid or missing fields",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Successfully created an address-specific phone number",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncContactAddressPhone"
                 }
               }
             }
@@ -2929,16 +2929,6 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "The request has invalid or missing fields",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "201": {
             "description": "Created the relationship successfully",
             "content": {
@@ -2949,8 +2939,8 @@
               }
             }
           },
-          "404": {
-            "description": "Could not find the prisoner or contact that this relationship relates to",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -2959,8 +2949,18 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Could not find the prisoner or contact that this relationship relates to",
             "content": {
               "application/json": {
                 "schema": {
@@ -2982,13 +2982,13 @@
         }
       }
     },
-    "/prisoner-contact/{prisonerContactId}/restrictions": {
+    "/prisoner-contact/{prisonerContactId}/restriction": {
       "get": {
         "tags": [
           "prisoner-contact"
         ],
         "summary": "Get the prisoner contact restrictions",
-        "description": "\n      Get the restrictions that apply for this relationship.\n      \n      This includes prisoner-contact restrictions for this specific relationship only and any estate-wide restrictions for the contact.\n      \n      If the prisoner and contact have multiple relationships, the prisoner-contact restrictions for the other relationships will not be returned. \n    ",
+        "description": "\n      Get the restrictions that apply for this relationship.\n      \n      This includes prisoner-contact restrictions for this specific relationship only and any global (estate-wide) restrictions for the contact.\n      \n      If the prisoner and contact have multiple relationships, the prisoner-contact restrictions for the other relationships will not be returned. \n    ",
         "operationId": "getPrisonerContactRestrictionsByPrisonerContactId",
         "parameters": [
           {
@@ -3004,12 +3004,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Prisoner Contact relationship",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PrisonerContactRestrictionsResponse"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -3024,12 +3024,12 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "200": {
+            "description": "Prisoner Contact relationship",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/PrisonerContactRestrictionsResponse"
                 }
               }
             }
@@ -3077,8 +3077,8 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "The request has invalid or missing fields",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -3087,8 +3087,8 @@
               }
             }
           },
-          "404": {
-            "description": "Could not find the the prisoner contact relationship this prisoner contact restriction is for",
+          "400": {
+            "description": "The request has invalid or missing fields",
             "content": {
               "application/json": {
                 "schema": {
@@ -3107,8 +3107,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -3117,8 +3117,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "Could not find the the prisoner contact relationship this prisoner contact restriction is for",
             "content": {
               "application/json": {
                 "schema": {
@@ -3159,8 +3159,8 @@
               }
             }
           },
-          "409": {
-            "description": "Conflict. The request contained a personId which already exists",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -3179,8 +3179,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "409": {
+            "description": "Conflict. The request contained a personId which already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -3221,8 +3221,25 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "The request has invalid or missing fields",
+          "201": {
+            "description": "Created the contact successfully",
+            "headers": {
+              "Location": {
+                "description": "The URL where you can load the contact",
+                "style": "simple",
+                "example": "/contact/123456"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactCreationResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -3233,6 +3250,137 @@
           },
           "404": {
             "description": "Could not find the prisoner that this contact has a relationship to",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contact/{contactId}/restriction": {
+      "get": {
+        "tags": [
+          "Contact Global Restrictions"
+        ],
+        "summary": "Get a contacts global restrictions",
+        "description": "\n      Get a contacts global restrictions only. Global restrictions apply to all of a contacts relationships and are known as estate-wide restrictions in NOMIS.\n\n      Additional restrictions between the contact and specific prisoners may also apply.\n      ",
+        "operationId": "getContactGlobalRestrictions",
+        "parameters": [
+          {
+            "name": "contactId",
+            "in": "path",
+            "description": "The id of the contact",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 123456
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Found the contact and their restrictions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ContactRestrictionDetails"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No contact with that id could be found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Contact Global Restrictions"
+        ],
+        "summary": "Create new global restriction",
+        "description": "Creates a new global (estate-wide) restriction for the specified contact",
+        "operationId": "createContactGlobalRestriction",
+        "parameters": [
+          {
+            "name": "contactId",
+            "in": "path",
+            "description": "The id of the contact",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 123456
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContactRestrictionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "Could not find the the contact this global restriction is for",
             "content": {
               "application/json": {
                 "schema": {
@@ -3252,18 +3400,21 @@
             }
           },
           "201": {
-            "description": "Created the contact successfully",
-            "headers": {
-              "Location": {
-                "description": "The URL where you can load the contact",
-                "style": "simple",
-                "example": "/contact/123456"
-              }
-            },
+            "description": "Created the global restriction successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContactCreationResult"
+                  "$ref": "#/components/schemas/ContactRestrictionDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -3313,18 +3464,8 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "The request has invalid or missing fields",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Could not find the the contact this phone is for",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -3343,8 +3484,18 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "Could not find the the contact this phone is for",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
             "content": {
               "application/json": {
                 "schema": {
@@ -3398,26 +3549,6 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "The request has invalid or missing fields",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Could not find the the contact this identity is for",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "201": {
             "description": "Created the contact identity successfully",
             "content": {
@@ -3438,117 +3569,6 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/contact/{contactId}/estate-wide-restrictions": {
-      "get": {
-        "tags": [
-          "Estate Wide Restrictions"
-        ],
-        "summary": "Get a contacts estate-wide restrictions",
-        "description": "\n      Get a contacts estate-wide restrictions only. Estate-wide restrictions apply to all of a contacts relationships.\n\n      Additional restrictions between the contact and specific prisoners may also apply.\n      ",
-        "operationId": "getEstateWideContactRestrictions",
-        "parameters": [
-          {
-            "name": "contactId",
-            "in": "path",
-            "description": "The id of the contact",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "example": 123456
-          }
-        ],
-        "responses": {
-          "404": {
-            "description": "No contact with that id could be found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Found the contact and their restrictions",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ContactRestrictionDetails"
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Estate Wide Restrictions"
-        ],
-        "summary": "Create new estate-wide restriction",
-        "description": "Creates a new estate-wide restriction for the specified contact",
-        "operationId": "createEstateWideRestriction",
-        "parameters": [
-          {
-            "name": "contactId",
-            "in": "path",
-            "description": "The id of the contact",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "example": 123456
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateContactRestrictionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
           "400": {
             "description": "The request has invalid or missing fields",
             "content": {
@@ -3559,28 +3579,8 @@
               }
             }
           },
-          "201": {
-            "description": "Created the estate-wide restriction successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContactRestrictionDetails"
-                }
-              }
-            }
-          },
           "404": {
-            "description": "Could not find the the contact this estate-wide restriction is for",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+            "description": "Could not find the the contact this identity is for",
             "content": {
               "application/json": {
                 "schema": {
@@ -3634,6 +3634,16 @@
           "required": true
         },
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "400": {
             "description": "The request has invalid or missing fields",
             "content": {
@@ -3654,28 +3664,18 @@
               }
             }
           },
-          "404": {
-            "description": "Could not find the the contact this email is for",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Could not find the the contact this email is for",
             "content": {
               "application/json": {
                 "schema": {
@@ -3708,8 +3708,8 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "The Prisoner contact relationship was not found.",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -3718,8 +3718,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "The Prisoner contact relationship was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3781,8 +3781,8 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "The request has invalid or missing fields",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -3801,18 +3801,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "400": {
+            "description": "The request has invalid or missing fields",
             "content": {
               "application/json": {
                 "schema": {
@@ -3823,6 +3813,16 @@
           },
           "404": {
             "description": "Could not find the prisoner contact that this relationship relates to",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -3866,8 +3866,8 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "No contact with that id could be found",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -3886,8 +3886,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -3896,8 +3896,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "404": {
+            "description": "No contact with that id could be found",
             "content": {
               "application/json": {
                 "schema": {
@@ -3939,8 +3939,8 @@
           "required": true
         },
         "responses": {
-          "404": {
-            "description": "No contact with that id could be found",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -3959,8 +3959,18 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No contact with that id could be found",
             "content": {
               "application/json": {
                 "schema": {
@@ -3975,16 +3985,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PatchContactResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -4087,22 +4087,22 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "List of all contacts for the prisoner",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PrisonerContactSummary"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "List of all contacts for the prisoner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrisonerContactSummary"
                 }
               }
             }
@@ -4169,8 +4169,8 @@
               }
             }
           },
-          "404": {
-            "description": "The Prisoner was not found.",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -4179,8 +4179,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "The Prisoner was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4211,22 +4211,22 @@
         "description": "Gets all language references",
         "operationId": "getAllLanguages",
         "responses": {
-          "200": {
-            "description": "Found the language reference",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Language"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Found the language reference",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Language"
                 }
               }
             }
@@ -4264,6 +4264,16 @@
           }
         ],
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "No language reference with that id could be found",
             "content": {
@@ -4280,16 +4290,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Language"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -4326,6 +4326,16 @@
           }
         ],
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "No language reference with that nomis code could be found",
             "content": {
@@ -4342,16 +4352,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Language"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -4388,12 +4388,12 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "No language reference with that ISO Alpha 3 code could be found",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Language"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -4408,12 +4408,12 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "No language reference with that ISO Alpha 3 code could be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/Language"
                 }
               }
             }
@@ -4450,12 +4450,12 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "No language reference with that ISO Alpha 2 code could be found",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Language"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -4470,12 +4470,12 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "No language reference with that ISO Alpha 2 code could be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/Language"
                 }
               }
             }
@@ -4502,22 +4502,22 @@
         "description": "Gets all county references",
         "operationId": "getAllCounties",
         "responses": {
-          "200": {
-            "description": "Found the county reference",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/County"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Found the county reference",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/County"
                 }
               }
             }
@@ -4555,12 +4555,12 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "No county reference with that id could be found",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/County"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -4575,12 +4575,12 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "404": {
+            "description": "No county reference with that id could be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/County"
                 }
               }
             }
@@ -4617,6 +4617,16 @@
           }
         ],
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "No county reference with that nomis code could be found",
             "content": {
@@ -4633,16 +4643,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/County"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -4784,16 +4784,6 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "No country reference with that nomis code could be found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Country"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -4806,6 +4796,16 @@
           },
           "200": {
             "description": "Found the country reference",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Country"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No country reference with that nomis code could be found",
             "content": {
               "application/json": {
                 "schema": {
@@ -4908,16 +4908,6 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "No country reference with that ISO Alpha 2 code could be found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Country"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -4930,6 +4920,16 @@
           },
           "200": {
             "description": "Found the country reference",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Country"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No country reference with that ISO Alpha 2 code could be found",
             "content": {
               "application/json": {
                 "schema": {
@@ -4980,16 +4980,6 @@
           }
         ],
         "responses": {
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -5000,8 +4990,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "400": {
+            "description": "Invalid request",
             "content": {
               "application/json": {
                 "schema": {
@@ -5019,6 +5009,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -5032,22 +5032,22 @@
         "description": "Gets all city references",
         "operationId": "getAllCities",
         "responses": {
-          "200": {
-            "description": "Found the city reference",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/City"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Found the city reference",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/City"
                 }
               }
             }
@@ -5095,22 +5095,22 @@
               }
             }
           },
-          "200": {
-            "description": "Found the city reference",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/City"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Found the city reference",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/City"
                 }
               }
             }
@@ -5147,6 +5147,16 @@
           }
         ],
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "No city reference with that nomis code could be found",
             "content": {
@@ -5163,16 +5173,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/City"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -5301,6 +5301,30 @@
         },
         "description": "Request object to update prisoner contact details"
       },
+      "ErrorResponse": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "userMessage": {
+            "type": "string"
+          },
+          "developerMessage": {
+            "type": "string"
+          },
+          "moreInfo": {
+            "type": "string"
+          }
+        }
+      },
       "SyncPrisonerContact": {
         "required": [
           "active",
@@ -5427,30 +5451,6 @@
           }
         },
         "description": "Response object with prisoner contact details"
-      },
-      "ErrorResponse": {
-        "required": [
-          "status"
-        ],
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "errorCode": {
-            "type": "string"
-          },
-          "userMessage": {
-            "type": "string"
-          },
-          "developerMessage": {
-            "type": "string"
-          },
-          "moreInfo": {
-            "type": "string"
-          }
-        }
       },
       "SyncUpdatePrisonerContactRestrictionRequest": {
         "required": [
@@ -6764,6 +6764,123 @@
         },
         "description": "Restriction related to a prisoner and contacts relationship"
       },
+      "UpdateContactRestrictionRequest": {
+        "required": [
+          "restrictionType",
+          "startDate",
+          "updatedBy"
+        ],
+        "type": "object",
+        "properties": {
+          "restrictionType": {
+            "type": "string",
+            "description": "\n    The coded type of restriction that applies to this contact.\n    This is a coded value from the group RESTRICTION in reference codes.\n    Example values include ACC, BAN, CHILD, CLOSED, RESTRICTED, DIHCON, NONCON.\n    ",
+            "example": "BAN"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Restriction start date",
+            "format": "date",
+            "example": "2024-01-01"
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "Restriction end date",
+            "format": "date",
+            "nullable": true,
+            "example": "2024-01-01"
+          },
+          "comments": {
+            "maxLength": 240,
+            "minLength": 0,
+            "type": "string",
+            "description": "Comments for the restriction",
+            "nullable": true,
+            "example": "N/A"
+          },
+          "updatedBy": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "User who updated the entry",
+            "example": "admin"
+          }
+        },
+        "description": "Request to update an existing global restriction on a contact, a.k.a an estate-wide restriction"
+      },
+      "ContactRestrictionDetails": {
+        "required": [
+          "contactId",
+          "contactRestrictionId",
+          "createdBy",
+          "createdTime",
+          "restrictionType",
+          "restrictionTypeDescription"
+        ],
+        "type": "object",
+        "properties": {
+          "contactRestrictionId": {
+            "type": "integer",
+            "description": "Unique identifier for the contact restriction",
+            "format": "int64",
+            "example": 1
+          },
+          "contactId": {
+            "type": "integer",
+            "description": "Unique identifier for the contact",
+            "format": "int64",
+            "example": 123
+          },
+          "restrictionType": {
+            "type": "string",
+            "description": "\n    The coded type of restriction that applies to this contact.\n    This is a coded value from the group RESTRICTION in reference codes.\n    Example values include ACC, BAN, CHILD, CLOSED, RESTRICTED, DIHCON, NONCON.\n    ",
+            "example": "BAN"
+          },
+          "restrictionTypeDescription": {
+            "type": "string",
+            "description": "The description of restrictionType",
+            "example": "Banned"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Restriction created date",
+            "format": "date",
+            "example": "2024-01-01"
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "Restriction end date ",
+            "format": "date",
+            "example": "2024-01-01"
+          },
+          "comments": {
+            "type": "string",
+            "description": "Comments for the restriction ",
+            "example": "N/A"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User who created the entry",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "description": "Timestamp when the entry was created",
+            "format": "date-time"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the entry",
+            "example": "admin2"
+          },
+          "updatedTime": {
+            "type": "string",
+            "description": "Timestamp when the entry was updated",
+            "format": "date-time"
+          }
+        },
+        "description": "Global restriction related to a contact, a.k.a estate-wide restrictions"
+      },
       "UpdatePhoneRequest": {
         "required": [
           "phoneNumber",
@@ -6984,123 +7101,6 @@
           }
         },
         "description": "Identity related to a contact"
-      },
-      "UpdateContactRestrictionRequest": {
-        "required": [
-          "restrictionType",
-          "startDate",
-          "updatedBy"
-        ],
-        "type": "object",
-        "properties": {
-          "restrictionType": {
-            "type": "string",
-            "description": "\n    The coded type of restriction that applies to this contact.\n    This is a coded value from the group RESTRICTION in reference codes.\n    Example values include ACC, BAN, CHILD, CLOSED, RESTRICTED, DIHCON, NONCON.\n    ",
-            "example": "BAN"
-          },
-          "startDate": {
-            "type": "string",
-            "description": "Restriction start date",
-            "format": "date",
-            "example": "2024-01-01"
-          },
-          "expiryDate": {
-            "type": "string",
-            "description": "Restriction end date",
-            "format": "date",
-            "nullable": true,
-            "example": "2024-01-01"
-          },
-          "comments": {
-            "maxLength": 240,
-            "minLength": 0,
-            "type": "string",
-            "description": "Comments for the restriction",
-            "nullable": true,
-            "example": "N/A"
-          },
-          "updatedBy": {
-            "maxLength": 100,
-            "minLength": 0,
-            "type": "string",
-            "description": "User who updated the entry",
-            "example": "admin"
-          }
-        },
-        "description": "Request to update an existing restriction on a contact, a.k.a an estate-wide restriction"
-      },
-      "ContactRestrictionDetails": {
-        "required": [
-          "contactId",
-          "contactRestrictionId",
-          "createdBy",
-          "createdTime",
-          "restrictionType",
-          "restrictionTypeDescription"
-        ],
-        "type": "object",
-        "properties": {
-          "contactRestrictionId": {
-            "type": "integer",
-            "description": "Unique identifier for the contact restriction",
-            "format": "int64",
-            "example": 1
-          },
-          "contactId": {
-            "type": "integer",
-            "description": "Unique identifier for the contact",
-            "format": "int64",
-            "example": 123
-          },
-          "restrictionType": {
-            "type": "string",
-            "description": "\n    The coded type of restriction that applies to this contact.\n    This is a coded value from the group RESTRICTION in reference codes.\n    Example values include ACC, BAN, CHILD, CLOSED, RESTRICTED, DIHCON, NONCON.\n    ",
-            "example": "BAN"
-          },
-          "restrictionTypeDescription": {
-            "type": "string",
-            "description": "The description of restrictionType",
-            "example": "Banned"
-          },
-          "startDate": {
-            "type": "string",
-            "description": "Restriction created date",
-            "format": "date",
-            "example": "2024-01-01"
-          },
-          "expiryDate": {
-            "type": "string",
-            "description": "Restriction end date ",
-            "format": "date",
-            "example": "2024-01-01"
-          },
-          "comments": {
-            "type": "string",
-            "description": "Comments for the restriction ",
-            "example": "N/A"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "User who created the entry",
-            "example": "admin"
-          },
-          "createdTime": {
-            "type": "string",
-            "description": "Timestamp when the entry was created",
-            "format": "date-time"
-          },
-          "updatedBy": {
-            "type": "string",
-            "description": "User who updated the entry",
-            "example": "admin2"
-          },
-          "updatedTime": {
-            "type": "string",
-            "description": "Timestamp when the entry was updated",
-            "format": "date-time"
-          }
-        },
-        "description": "Restriction related to a contact, a.k.a estate-wide restrictions"
       },
       "UpdateEmailRequest": {
         "required": [
@@ -9265,6 +9265,50 @@
         },
         "description": "The details of a contact as an individual"
       },
+      "CreateContactRestrictionRequest": {
+        "required": [
+          "createdBy",
+          "restrictionType",
+          "startDate"
+        ],
+        "type": "object",
+        "properties": {
+          "restrictionType": {
+            "type": "string",
+            "description": "\n    The coded type of restriction that applies to this contact.\n    This is a coded value from the group RESTRICTION in reference codes.\n    Example values include ACC, BAN, CHILD, CLOSED, RESTRICTED, DIHCON, NONCON.\n    ",
+            "example": "BAN"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Restriction start date",
+            "format": "date",
+            "example": "2024-01-01"
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "Restriction end date",
+            "format": "date",
+            "nullable": true,
+            "example": "2024-01-01"
+          },
+          "comments": {
+            "maxLength": 240,
+            "minLength": 0,
+            "type": "string",
+            "description": "Comments for the restriction",
+            "nullable": true,
+            "example": "N/A"
+          },
+          "createdBy": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "User who created the entry",
+            "example": "admin"
+          }
+        },
+        "description": "Request to create a new global restriction on a contact, a.k.a an estate-wide restriction"
+      },
       "CreatePhoneRequest": {
         "required": [
           "createdBy",
@@ -9344,50 +9388,6 @@
           }
         },
         "description": "Request to create a new contact identity"
-      },
-      "CreateContactRestrictionRequest": {
-        "required": [
-          "createdBy",
-          "restrictionType",
-          "startDate"
-        ],
-        "type": "object",
-        "properties": {
-          "restrictionType": {
-            "type": "string",
-            "description": "\n    The coded type of restriction that applies to this contact.\n    This is a coded value from the group RESTRICTION in reference codes.\n    Example values include ACC, BAN, CHILD, CLOSED, RESTRICTED, DIHCON, NONCON.\n    ",
-            "example": "BAN"
-          },
-          "startDate": {
-            "type": "string",
-            "description": "Restriction start date",
-            "format": "date",
-            "example": "2024-01-01"
-          },
-          "expiryDate": {
-            "type": "string",
-            "description": "Restriction end date",
-            "format": "date",
-            "nullable": true,
-            "example": "2024-01-01"
-          },
-          "comments": {
-            "maxLength": 240,
-            "minLength": 0,
-            "type": "string",
-            "description": "Comments for the restriction",
-            "nullable": true,
-            "example": "N/A"
-          },
-          "createdBy": {
-            "maxLength": 100,
-            "minLength": 0,
-            "type": "string",
-            "description": "User who created the entry",
-            "example": "admin"
-          }
-        },
-        "description": "Request to create a new restriction on a contact, a.k.a an estate-wide restriction"
       },
       "CreateEmailRequest": {
         "required": [
@@ -10035,7 +10035,7 @@
       },
       "PrisonerContactRestrictionsResponse": {
         "required": [
-          "contactEstateWideRestrictions",
+          "contactGlobalRestrictions",
           "prisonerContactRestrictions"
         ],
         "type": "object",
@@ -10047,9 +10047,9 @@
               "$ref": "#/components/schemas/PrisonerContactRestrictionDetails"
             }
           },
-          "contactEstateWideRestrictions": {
+          "contactGlobalRestrictions": {
             "type": "array",
-            "description": "Estate wide restrictions for the contact",
+            "description": "Global (estate-wide) restrictions for the contact",
             "items": {
               "$ref": "#/components/schemas/ContactRestrictionDetails"
             }

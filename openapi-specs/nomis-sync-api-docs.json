@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-11-28.10085.69ecda8"
+    "version": "2024-12-02.10107.be88fa3"
   },
   "servers": [
     {
@@ -6299,6 +6299,93 @@
         }
       }
     },
+    "/persons/{personId}/phone": {
+      "post": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Creates a person global phone",
+        "description": "Creates a person global phone in NOMIS. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "createPersonPhone",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonPhoneRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Person Phone ID Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatePersonPhoneResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data, e.g type is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Person does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/persons/{personId}/email": {
       "post": {
         "tags": [
@@ -6549,6 +6636,106 @@
           },
           "404": {
             "description": "Person does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons/{personId}/address/{addressId}/phone": {
+      "post": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Creates a person address phone",
+        "description": "Creates a person phone associated with an address in NOMIS. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "createPersonAddressPhone",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "addressId",
+            "in": "path",
+            "description": "Address Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Address Id",
+              "format": "int64",
+              "example": 56789
+            },
+            "example": 56789
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonPhoneRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Person Phone ID Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatePersonPhoneResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data, e.g type is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Person or address does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -17588,6 +17775,43 @@
         },
         "description": "Request to create an person (aka DPS contact) in NOMIS"
       },
+      "CreatePersonPhoneResponse": {
+        "required": [
+          "phoneId"
+        ],
+        "type": "object",
+        "properties": {
+          "phoneId": {
+            "type": "integer",
+            "description": "Unique NOMIS Id of phone",
+            "format": "int64"
+          }
+        }
+      },
+      "CreatePersonPhoneRequest": {
+        "required": [
+          "number",
+          "typeCode"
+        ],
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "string",
+            "description": "The number",
+            "example": "0114 555 555"
+          },
+          "extension": {
+            "type": "string",
+            "description": "Extension",
+            "example": "x432"
+          },
+          "typeCode": {
+            "type": "string",
+            "description": "Phone type code",
+            "example": "MOB"
+          }
+        }
+      },
       "CreatePersonEmailResponse": {
         "required": [
           "emailAddressId"
@@ -18621,15 +18845,15 @@
             "type": "integer",
             "format": "int32"
           },
-          "unpaged": {
-            "type": "boolean"
-          },
           "paged": {
             "type": "boolean"
           },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
+          },
+          "unpaged": {
+            "type": "boolean"
           }
         }
       },
