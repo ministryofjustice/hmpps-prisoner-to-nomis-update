@@ -133,7 +133,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       get("/sync/contact/$contactId")
         .willReturn(
           aResponse()
-            .withStatus(201)
+            .withStatus(200)
             .withHeader("Content-Type", "application/json")
             .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
         ),
@@ -144,7 +144,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       get("/sync/prisoner-contact/$prisonerContactId")
         .willReturn(
           aResponse()
-            .withStatus(201)
+            .withStatus(200)
             .withHeader("Content-Type", "application/json")
             .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
         ),
@@ -156,7 +156,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       get("/sync/contact-address/$contactAddressId")
         .willReturn(
           aResponse()
-            .withStatus(201)
+            .withStatus(200)
             .withHeader("Content-Type", "application/json")
             .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
         ),
@@ -168,7 +168,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       get("/sync/contact-email/$contactEmailId")
         .willReturn(
           aResponse()
-            .withStatus(201)
+            .withStatus(200)
             .withHeader("Content-Type", "application/json")
             .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
         ),
@@ -179,7 +179,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       get("/sync/contact-phone/$contactPhoneId")
         .willReturn(
           aResponse()
-            .withStatus(201)
+            .withStatus(200)
             .withHeader("Content-Type", "application/json")
             .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
         ),
@@ -190,7 +190,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       get("/sync/contact-address-phone/$contactAddressPhoneId")
         .willReturn(
           aResponse()
-            .withStatus(201)
+            .withStatus(200)
             .withHeader("Content-Type", "application/json")
             .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
         ),
