@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.reactor.awaitSingle
@@ -804,6 +805,7 @@ data class CreateSentencingAdjustmentRequest(
   val comment: String?,
 )
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class UpdateSentencingAdjustmentRequest(
   val adjustmentTypeCode: String,
   @JsonFormat(pattern = "yyyy-MM-dd")
