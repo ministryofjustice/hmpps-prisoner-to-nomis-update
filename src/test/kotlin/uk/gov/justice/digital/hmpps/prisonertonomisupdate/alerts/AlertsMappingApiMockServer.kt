@@ -7,6 +7,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
@@ -118,6 +119,16 @@ class AlertsMappingApiMockServer(private val objectMapper: ObjectMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
+  fun stubReplaceMappings(offenderNo: String) {
+    mappingServer.stubFor(
+      put("/mapping/alerts/$offenderNo/all").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200),
       ),
     )
   }

@@ -165,6 +165,66 @@ class AlertsNomisApiServiceTest {
   }
 
   @Nested
+  inner class ResynchroniseAlerts {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsNomisApiMockServer.stubResynchroniseAlerts(offenderNo = "A1234KT")
+
+      apiService.resynchroniseAlerts(offenderNo = "A1234KT", nomisAlerts = listOf(createAlertRequest()))
+
+      alertsNomisApiMockServer.verify(
+        postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass offender number to service`() = runTest {
+      alertsNomisApiMockServer.stubResynchroniseAlerts(offenderNo = "A1234KT")
+
+      apiService.resynchroniseAlerts(offenderNo = "A1234KT", nomisAlerts = listOf(createAlertRequest()))
+
+      alertsNomisApiMockServer.verify(
+        postRequestedFor(urlPathEqualTo("/prisoners/A1234KT/alerts/resynchronise")),
+      )
+    }
+
+    @Test
+    fun `will return NOMIS alert ids`() = runTest {
+      alertsNomisApiMockServer.stubResynchroniseAlerts(
+        offenderNo = "A1234KT",
+        alerts = listOf(
+          CreateAlertResponse(
+            bookingId = 1234567,
+            alertSequence = 3,
+            alertCode = CodeDescription("HPI", ""),
+            type = CodeDescription("X", ""),
+          ),
+          CreateAlertResponse(
+            bookingId = 1234567,
+            alertSequence = 4,
+            alertCode = CodeDescription("HPI", ""),
+            type = CodeDescription("X", ""),
+          ),
+        ),
+      )
+
+      val nomisAlerts = apiService.resynchroniseAlerts(offenderNo = "A1234KT", nomisAlerts = listOf(createAlertRequest(), createAlertRequest()))
+
+      assertThat(nomisAlerts[0].bookingId).isEqualTo(1234567)
+      assertThat(nomisAlerts[0].alertSequence).isEqualTo(3)
+      assertThat(nomisAlerts[1].bookingId).isEqualTo(1234567)
+      assertThat(nomisAlerts[1].alertSequence).isEqualTo(4)
+    }
+
+    private fun createAlertRequest(): CreateAlertRequest = CreateAlertRequest(
+      alertCode = "HPI",
+      date = LocalDate.now(),
+      isActive = true,
+      createUsername = "BOBBY.BEANS",
+    )
+  }
+
+  @Nested
   inner class GetAlertsForReconciliation {
     @Test
     internal fun `will pass oath2 token to service`() = runTest {

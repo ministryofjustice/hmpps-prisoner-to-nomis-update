@@ -36,6 +36,20 @@ class AlertsNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
 
+  fun stubResynchroniseAlerts(
+    offenderNo: String = "A1234AK",
+    alerts: List<CreateAlertResponse> = listOf(createAlertResponse()),
+  ) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/prisoners/$offenderNo/alerts/resynchronise")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CREATED.value())
+          .withBody(objectMapper.writeValueAsString(alerts)),
+      ),
+    )
+  }
+
   fun stubPutAlert(
     bookingId: Long = 12345678,
     alertSequence: Long = 3,

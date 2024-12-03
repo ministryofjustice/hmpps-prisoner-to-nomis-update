@@ -25,7 +25,10 @@ import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.math.min
 
-class AlertsDpsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
+class AlertsDpsApiExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
   companion object {
     @JvmField
     val alertsDpsApi = AlertsDpsApiMockServer()
@@ -123,6 +126,42 @@ class AlertsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
             .withBody(error),
+        ),
+    )
+  }
+
+  fun stubGetAllAlertsForPrisoner(offenderNo: String, count: Int = 1) {
+    stubFor(
+      get(urlPathEqualTo("/prisoners/$offenderNo/alerts"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              PageImpl(
+                (1..min(count, 1000)).map { dpsAlert() },
+                Pageable.ofSize(1000),
+                count.toLong(),
+              ),
+            )
+            .withStatus(200),
+        ),
+    )
+  }
+
+  fun stubGetAllAlertsForPrisoner(offenderNo: String, vararg alerts: Alert) {
+    stubFor(
+      get(urlPathEqualTo("/prisoners/$offenderNo/alerts"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              PageImpl(
+                alerts.toList(),
+                Pageable.ofSize(1000),
+                alerts.size.toLong(),
+              ),
+            )
+            .withStatus(200),
         ),
     )
   }

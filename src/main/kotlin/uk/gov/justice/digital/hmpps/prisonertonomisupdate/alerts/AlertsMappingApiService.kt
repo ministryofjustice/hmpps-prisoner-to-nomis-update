@@ -6,6 +6,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AlertMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PrisonerAlertMappingsDto
 
 @Service
 class AlertsMappingApiService(@Qualifier("mappingWebClient") private val webClient: WebClient) {
@@ -30,6 +31,19 @@ class AlertsMappingApiService(@Qualifier("mappingWebClient") private val webClie
       .uri(
         "/mapping/alerts/dps-alert-id/{alertId}",
         alertId,
+      )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
+  suspend fun replaceMappings(
+    offenderNo: String,
+    prisonerMapping: PrisonerAlertMappingsDto,
+  ) {
+    webClient.put()
+      .uri("/mapping/alerts/{offenderNo}/all", offenderNo)
+      .bodyValue(
+        prisonerMapping,
       )
       .retrieve()
       .awaitBodilessEntity()
