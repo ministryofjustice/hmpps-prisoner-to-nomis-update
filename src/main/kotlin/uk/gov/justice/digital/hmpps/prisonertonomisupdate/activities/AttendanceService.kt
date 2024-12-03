@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.AttendancePaidException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerMovedAllocationEndedException
@@ -113,8 +114,13 @@ class AttendanceService(
     }.onSuccess {
       telemetryClient.trackEvent("activity-attendance-delete-success", telemetryMap, null)
     }.onFailure { e ->
-      telemetryClient.trackEvent("activity-attendance-delete-failed", telemetryMap, null)
-      throw e
+      when (e) {
+        is WebClientResponseException.NotFound -> telemetryClient.trackEvent("activity-attendance-delete-ignored", telemetryMap, null)
+        else -> {
+          telemetryClient.trackEvent("activity-attendance-delete-failed", telemetryMap, null)
+          throw e
+        }
+      }
     }
   }
 }
