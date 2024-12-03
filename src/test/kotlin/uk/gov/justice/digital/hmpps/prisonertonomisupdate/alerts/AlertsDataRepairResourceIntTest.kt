@@ -97,6 +97,14 @@ class AlertsDataRepairResourceIntTest : IntegrationTestBase() {
       }
 
       @Test
+      fun `will clear mappings between the DPS and NOMIS alerts`() {
+        alertsMappingApiMockServer.verify(
+          putRequestedFor(urlPathEqualTo("/mapping/alerts/$offenderNo/all"))
+            .withRequestBodyJsonPath("mappings.size()", "0"),
+        )
+      }
+
+      @Test
       fun `will retrieve current alerts for the prisoner`() {
         alertsDpsApi.verify(getRequestedFor(urlPathEqualTo("/prisoners/$offenderNo/alerts")))
       }
