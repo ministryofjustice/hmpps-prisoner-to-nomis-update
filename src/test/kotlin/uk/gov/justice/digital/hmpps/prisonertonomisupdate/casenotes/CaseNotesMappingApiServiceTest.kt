@@ -52,7 +52,7 @@ class CaseNotesMappingApiServiceTest {
       apiService.getOrNullByDpsId(dpsCaseNoteId)
 
       casenotesMappingApiMockServer.verify(
-        getRequestedFor(urlPathEqualTo("/mapping/casenotes/dps-casenote-id/$dpsCaseNoteId")),
+        getRequestedFor(urlPathEqualTo("/mapping/casenotes/dps-casenote-id/$dpsCaseNoteId/all")),
       )
     }
 
@@ -69,7 +69,7 @@ class CaseNotesMappingApiServiceTest {
         ),
       )
 
-      val mapping = apiService.getOrNullByDpsId(dpsCaseNoteId)
+      val mapping = apiService.getOrNullByDpsId(dpsCaseNoteId)?.firstOrNull()
 
       assertThat(mapping?.nomisBookingId).isEqualTo(123456)
       assertThat(mapping?.nomisCaseNoteId).isEqualTo(1)

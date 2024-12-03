@@ -99,8 +99,7 @@ class LocationsReconciliationService(
         .map { dpsRecord ->
           val mismatch = MismatchLocation(
             dpsId = dpsRecord.id.toString(),
-            dpsLocation =
-            LocationReportDetail(
+            dpsLocation = LocationReportDetail(
               dpsRecord.code,
               "${dpsRecord.prisonId}-${dpsRecord.pathHierarchy}",
               dpsRecord.residentialHousingType?.name,

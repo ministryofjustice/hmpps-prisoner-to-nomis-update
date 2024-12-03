@@ -87,7 +87,7 @@ class CaseNotesService(
 
     if (caseNoteEvent.wasAmendedInDPS() && caseNoteEvent.notDpsOnly()) {
       runCatching {
-        val mapping = mappingApiService.getOrNullByDpsId(dpsCaseNoteId)
+        val mapping = mappingApiService.getOrNullByDpsId(dpsCaseNoteId)?.firstOrNull() // TODO first() is temp until proper handling
           ?: throw IllegalStateException("Tried to amend an casenote that has no mapping")
 
         telemetryMap["nomisBookingId"] = mapping.nomisBookingId.toString()
@@ -117,7 +117,7 @@ class CaseNotesService(
     )
     if (caseNoteEvent.wasDeletedInDPS() && caseNoteEvent.notDpsOnly()) {
       runCatching {
-        mappingApiService.getOrNullByDpsId(dpsCaseNoteId)?.also { mapping ->
+        mappingApiService.getOrNullByDpsId(dpsCaseNoteId)?.firstOrNull()?.also { mapping ->
           telemetryMap["nomisBookingId"] = mapping.nomisBookingId.toString()
           telemetryMap["nomisCaseNoteId"] = mapping.nomisCaseNoteId.toString()
 
@@ -174,7 +174,6 @@ data class PersonReference(val identifiers: Set<Identifier> = setOf()) {
 
   companion object {
     private const val NOMS_NUMBER_TYPE = "NOMS"
-    fun withIdentifier(prisonNumber: String) = PersonReference(setOf(Identifier(NOMS_NUMBER_TYPE, prisonNumber)))
   }
 
   data class Identifier(val type: String, val value: String)

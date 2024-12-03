@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asMap
 
 @RestController
 class CaseNotesResource(
@@ -49,14 +48,9 @@ class CaseNotesResource(
       runCatching { caseNotesReconciliationService.generateReconciliationReport(prisonersCount, activeOnly) }
         .onSuccess {
           log.info("Casenotes reconciliation report completed with ${it.size} mismatches")
-          val map = if (it.isEmpty()) {
-            emptyMap()
-          } else {
-            it.asMap()
-          }
           telemetryClient.trackEvent(
             "casenotes-reports-reconciliation-report",
-            mapOf("mismatch-count" to it.size.toString(), "success" to "true") + map,
+            mapOf("mismatch-count" to it.size.toString(), "success" to "true"),
           )
         }
         .onFailure {

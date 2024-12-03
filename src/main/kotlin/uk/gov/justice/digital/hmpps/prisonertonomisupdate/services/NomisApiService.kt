@@ -274,7 +274,7 @@ class NomisApiService(
       }
       .retrieve()
       .bodyToMono(typeReference<RestResponsePage<PrisonerIds>>())
-      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/active")))
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/active", "page", pageNumber)))
       .awaitSingle()
 
   suspend fun getAllPrisonersPaged(
@@ -290,6 +290,7 @@ class NomisApiService(
       }
       .retrieve()
       .bodyToMono(typeReference<RestResponsePage<PrisonerId>>())
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all", "page", pageNumber)))
       .awaitSingle()
 
   suspend fun getAllPrisoners(
@@ -305,7 +306,7 @@ class NomisApiService(
       }
       .retrieve()
       .bodyToMono(PrisonerNosWithLast::class.java)
-      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all-from-id")))
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all-from-id", "offenderId", fromId)))
       .awaitSingle()
 
   suspend fun updatePrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest) =
@@ -653,7 +654,7 @@ class NomisApiService(
       }
       .retrieve()
       .bodyToMono(typeReference<RestResponsePage<LocationIdResponse>>())
-      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/locations/ids")))
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/locations/ids", "page", pageNumber)))
       .awaitSingle()
 
   suspend fun getLocationDetails(id: Long): LocationResponse =

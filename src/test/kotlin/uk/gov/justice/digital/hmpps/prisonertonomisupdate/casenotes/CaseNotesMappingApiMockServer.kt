@@ -24,7 +24,6 @@ class CaseNotesMappingApiMockServer(private val objectMapper: ObjectMapper) {
     dpsCaseNoteId: String = UUID.randomUUID().toString(),
     mapping: CaseNoteMappingDto = CaseNoteMappingDto(
       offenderNo = "A1234AA",
-      // TODO
       nomisBookingId = 123456,
       nomisCaseNoteId = 1,
       dpsCaseNoteId = UUID.randomUUID().toString(),
@@ -32,11 +31,11 @@ class CaseNotesMappingApiMockServer(private val objectMapper: ObjectMapper) {
     ),
   ) {
     mappingServer.stubFor(
-      get(urlEqualTo("/mapping/casenotes/dps-casenote-id/$dpsCaseNoteId")).willReturn(
+      get(urlEqualTo("/mapping/casenotes/dps-casenote-id/$dpsCaseNoteId/all")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(objectMapper.writeValueAsString(mapping)),
+          .withBody(objectMapper.writeValueAsString(listOf(mapping))),
       ),
     )
   }

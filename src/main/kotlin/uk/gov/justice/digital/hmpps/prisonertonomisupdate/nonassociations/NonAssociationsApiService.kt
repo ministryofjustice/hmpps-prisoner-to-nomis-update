@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.model.LegacyNonAssociation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.model.NonAssociation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RestResponsePage
@@ -33,7 +34,7 @@ class NonAssociationsApiService(
       .bodyValue(listOf(offenderNo1, offenderNo2))
       .retrieve()
       .bodyToMono(typeReference<List<NonAssociation>>())
-      .retryWhen(backoffSpec)
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "non-associations-api", "path", "/non-associations/between")))
       .awaitSingle()
 
   suspend fun getAllNonAssociations(
@@ -51,6 +52,6 @@ class NonAssociationsApiService(
       }
       .retrieve()
       .bodyToMono(typeReference<RestResponsePage<NonAssociation>>())
-      .retryWhen(backoffSpec)
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "non-associations-api", "path", "/non-associations")))
       .awaitSingle()
 }

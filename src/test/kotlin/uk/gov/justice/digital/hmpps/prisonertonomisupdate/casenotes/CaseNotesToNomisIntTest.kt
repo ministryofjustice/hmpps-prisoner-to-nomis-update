@@ -292,7 +292,6 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
               dpsCaseNoteId = DPS_CASE_NOTE_ID,
               nomisBookingId = NOMIS_BOOKING_ID,
               offenderNo = "A1234AA",
-              // TODO
               nomisCaseNoteId = NOMIS_CASE_NOTE_ID,
               mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
             ),
@@ -458,7 +457,7 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will call the mapping service to get the NOMIS caseNote id`() {
-          caseNotesMappingApi.verify(getRequestedFor(urlMatching("/mapping/casenotes/dps-casenote-id/$DPS_CASE_NOTE_ID")))
+          caseNotesMappingApi.verify(getRequestedFor(urlMatching("/mapping/casenotes/dps-casenote-id/$DPS_CASE_NOTE_ID/all")))
         }
 
         @Test
@@ -653,7 +652,7 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will call the mapping service to get the NOMIS caseNote id`() {
-          caseNotesMappingApi.verify(getRequestedFor(urlMatching("/mapping/casenotes/dps-casenote-id/$DPS_CASE_NOTE_ID")))
+          caseNotesMappingApi.verify(getRequestedFor(urlMatching("/mapping/casenotes/dps-casenote-id/$DPS_CASE_NOTE_ID/all")))
         }
 
         @Test
