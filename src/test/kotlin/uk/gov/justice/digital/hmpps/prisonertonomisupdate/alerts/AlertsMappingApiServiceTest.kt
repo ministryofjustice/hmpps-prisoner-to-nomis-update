@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -19,6 +20,8 @@ import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AlertMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AlertMappingIdDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PrisonerAlertMappingsDto
 import java.util.UUID
 
 @SpringAPIServiceTest
@@ -165,6 +168,60 @@ class AlertsMappingApiServiceTest {
 
       alertsMappingApiMockServer.verify(
         deleteRequestedFor(urlPathEqualTo("/mapping/alerts/dps-alert-id/$dpsAlertId")),
+      )
+    }
+  }
+
+  @Nested
+  inner class ReplaceMappings {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      alertsMappingApiMockServer.stubReplaceMappings("A1234KT")
+
+      apiService.replaceMappings(
+        offenderNo = "A1234KT",
+        PrisonerAlertMappingsDto(
+          mappingType = PrisonerAlertMappingsDto.MappingType.NOMIS_CREATED,
+          mappings = listOf(
+            AlertMappingIdDto(
+              nomisBookingId = 123456,
+              nomisAlertSequence = 1,
+              dpsAlertId = UUID.randomUUID().toString(),
+            ),
+          ),
+        ),
+      )
+
+      alertsMappingApiMockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass ids to service`() = runTest {
+      val dpsAlertId = "a04f7a8d-61aa-400c-9395-f4dc62f36ab0"
+      alertsMappingApiMockServer.stubReplaceMappings("A1234KT")
+
+      apiService.replaceMappings(
+        offenderNo = "A1234KT",
+        PrisonerAlertMappingsDto(
+          mappingType = PrisonerAlertMappingsDto.MappingType.DPS_CREATED,
+          mappings = listOf(
+            AlertMappingIdDto(
+              nomisBookingId = 123456,
+              nomisAlertSequence = 1,
+              dpsAlertId = dpsAlertId,
+            ),
+          ),
+        ),
+      )
+
+      alertsMappingApiMockServer.verify(
+        putRequestedFor(anyUrl())
+          .withRequestBody(matchingJsonPath("mappings[0].nomisBookingId", equalTo("123456")))
+          .withRequestBody(matchingJsonPath("mappings[0].nomisAlertSequence", equalTo("1")))
+          .withRequestBody(matchingJsonPath("mappings[0].dpsAlertId", equalTo(dpsAlertId)))
+          .withRequestBody(matchingJsonPath("mappingType", equalTo("DPS_CREATED"))),
       )
     }
   }

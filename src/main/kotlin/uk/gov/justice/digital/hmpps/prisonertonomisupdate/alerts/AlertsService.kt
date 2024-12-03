@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AlertMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AlertMappingIdDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PrisonerAlertMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
@@ -135,6 +137,14 @@ class AlertsService(
     } else {
       telemetryClient.trackEvent("alert-deleted-ignored", telemetryMap)
     }
+  }
+
+  suspend fun resynchronisePrisonerAlerts(offenderNo: String) {
+    val dpsAlerts = dpsApiService.getAllAlertsForPrisoner(offenderNo)
+    val nomisAlerts = nomisApiService.resynchroniseAlerts(offenderNo, dpsAlerts.map { it.toNomisCreateRequest() })
+    val mappings = nomisAlerts.zip(dpsAlerts).map { (nomisAlert, dpsAlert) -> AlertMappingIdDto(dpsAlert.alertUuid.toString(), nomisAlert.bookingId, nomisAlert.alertSequence) }
+    mappingApiService.replaceMappings(offenderNo, PrisonerAlertMappingsDto(mappingType = PrisonerAlertMappingsDto.MappingType.DPS_CREATED, mappings = mappings))
+    telemetryClient.trackEvent("alert-resynchronise-success", mapOf("offenderNo" to offenderNo, "alertsCount" to mappings.size.toString(), "alerts" to mappings.joinToString(",") { it.nomisAlertSequence.toString() }))
   }
 
   private suspend fun tryToDeletedMapping(dpsAlertId: String) = kotlin.runCatching {
