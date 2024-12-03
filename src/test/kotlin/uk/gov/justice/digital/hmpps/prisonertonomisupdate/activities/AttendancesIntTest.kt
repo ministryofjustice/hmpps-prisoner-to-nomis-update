@@ -356,6 +356,28 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
       )
     }
 
+    @Test
+    fun `will ignore a not found`() {
+      MappingExtension.mappingServer.stubGetScheduleInstanceMapping(SCHEDULE_INSTANCE_ID, buildGetScheduleMappingResponse())
+      NomisApiExtension.nomisApi.stubDeleteAttendanceWithError(NOMIS_CRS_SCH_ID, NOMIS_BOOKING_ID, 404)
+
+      awsSnsClient.publishAttendanceDeleted()
+
+      verify(telemetryClient).trackEvent(
+        eq("activity-attendance-delete-ignored"),
+        check {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "dpsScheduledInstanceId" to SCHEDULE_INSTANCE_ID.toString(),
+              "bookingId" to NOMIS_BOOKING_ID.toString(),
+              "nomisCourseScheduleId" to NOMIS_CRS_SCH_ID.toString(),
+            ),
+          )
+        },
+        isNull(),
+      )
+    }
+
     private fun SnsAsyncClient.publishAttendanceDeleted() = publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(attendanceDeletedMessagePayload("activities.prisoner.attendance-deleted", SCHEDULE_INSTANCE_ID, NOMIS_BOOKING_ID))
