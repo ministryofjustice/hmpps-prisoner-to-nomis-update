@@ -9,23 +9,27 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.CONTACT_ADDRESS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.CONTACT_ADDRESS_PHONE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.CONTACT_EMAIL
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.CONTACT_IDENTITY
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.CONTACT_PERSON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.CONTACT_PHONE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactAddressPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactEmail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncPrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmailMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonIdentifierMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
@@ -49,6 +53,7 @@ class ContactPersonService(
       CONTACT_EMAIL("contact-email"),
       CONTACT_PHONE("contact-phone"),
       CONTACT_ADDRESS_PHONE("contact-address-phone"),
+      CONTACT_IDENTITY("contact-identity"),
       ;
 
       companion object {
@@ -296,6 +301,47 @@ class ContactPersonService(
     }
   }
 
+  suspend fun contactIdentityCreated(event: ContactIdentityCreatedEvent) {
+    val entityName = CONTACT_IDENTITY.entityName
+    val dpsContactIdentityId = event.additionalInformation.contactIdentityId
+    val telemetryMap = mutableMapOf(
+      "dpsContactIdentityId" to dpsContactIdentityId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      synchronise {
+        name = entityName
+        telemetryClient = this@ContactPersonService.telemetryClient
+        retryQueueService = contactPersonRetryQueueService
+        eventTelemetry = telemetryMap
+
+        checkMappingDoesNotExist {
+          mappingApiService.getByDpsContactIdentityIdOrNull(dpsContactIdentityId)
+        }
+        transform {
+          val dpsIdentity = dpsApiService.getContactIdentity(dpsContactIdentityId).also {
+            telemetryMap["dpsContactId"] = it.contactId.toString()
+            telemetryMap["nomisPersonId"] = it.contactId.toString()
+          }
+          nomisApiService.createPersonIdentifier(dpsIdentity.contactId, dpsIdentity.toNomisCreateRequest()).also {
+            telemetryMap["nomisSequenceNumber"] = it.sequence.toString()
+          }.let {
+            PersonIdentifierMappingDto(
+              dpsId = dpsContactIdentityId.toString(),
+              // nomis person Id is same as DPS contact id
+              nomisPersonId = dpsIdentity.contactId,
+              nomisSequenceNumber = it.sequence,
+              mappingType = PersonIdentifierMappingDto.MappingType.DPS_CREATED,
+            )
+          }
+        }
+        saveMapping { mappingApiService.createIdentifierMapping(it) }
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
+    }
+  }
+
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (MappingTypes.fromEntityName(baseMapping.entityName)) {
@@ -305,6 +351,7 @@ class ContactPersonService(
       CONTACT_EMAIL -> createContactEmailMapping(message.fromJson())
       CONTACT_PHONE -> createContactPhoneMapping(message.fromJson())
       CONTACT_ADDRESS_PHONE -> createContactAddressPhoneMapping(message.fromJson())
+      CONTACT_IDENTITY -> createContactIdentifierMapping(message.fromJson())
     }
   }
 
@@ -354,6 +401,15 @@ class ContactPersonService(
       )
     }
   }
+  suspend fun createContactIdentifierMapping(message: CreateMappingRetryMessage<PersonIdentifierMappingDto>) {
+    mappingApiService.createIdentifierMapping(message.mapping).also {
+      telemetryClient.trackEvent(
+        "contact-identity-create-success",
+        message.telemetryAttributes,
+        null,
+      )
+    }
+  }
 
   suspend fun createContactAddressPhoneMapping(message: CreateMappingRetryMessage<PersonPhoneMappingDto>) {
     mappingApiService.createPhoneMapping(message.mapping).also {
@@ -367,8 +423,6 @@ class ContactPersonService(
 
   private inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
-
-  fun contactIdentityCreated(event: ContactIdentityCreatedEvent): Nothing = TODO()
 }
 
 private fun SyncContact.toNomisCreateRequest(): CreatePersonRequest = CreatePersonRequest(
@@ -428,6 +482,13 @@ private fun SyncContactAddressPhone.toNomisCreateRequest(): CreatePersonPhoneReq
   number = this.phoneNumber,
   extension = this.extNumber,
   typeCode = this.phoneType,
+)
+
+private fun SyncContactIdentity.toNomisCreateRequest(): CreatePersonIdentifierRequest = CreatePersonIdentifierRequest(
+  // TODO - check with DPS - this should be non-nullable
+  identifier = this.identityValue!!,
+  issuedAuthority = this.issuingAuthority,
+  typeCode = this.identityType,
 )
 
 private fun SourcedContactPersonEvent.didOriginateInDPS() = this.additionalInformation.source == "DPS"
