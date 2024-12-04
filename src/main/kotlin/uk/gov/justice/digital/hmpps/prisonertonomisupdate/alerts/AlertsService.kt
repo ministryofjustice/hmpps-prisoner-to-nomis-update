@@ -140,6 +140,8 @@ class AlertsService(
   }
 
   suspend fun resynchronisePrisonerAlerts(offenderNo: String) {
+    // clear al mappings so now deletes are processed by the migration service
+    mappingApiService.replaceMappings(offenderNo, PrisonerAlertMappingsDto(mappingType = PrisonerAlertMappingsDto.MappingType.DPS_CREATED, mappings = emptyList()))
     val dpsAlerts = dpsApiService.getAllAlertsForPrisoner(offenderNo)
     val nomisAlerts = nomisApiService.resynchroniseAlerts(offenderNo, dpsAlerts.map { it.toNomisCreateRequest() })
     val mappings = nomisAlerts.zip(dpsAlerts).map { (nomisAlert, dpsAlert) -> AlertMappingIdDto(dpsAlert.alertUuid.toString(), nomisAlert.bookingId, nomisAlert.alertSequence) }

@@ -2192,9 +2192,9 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubCourtChargeUpdate(offenderChargeId: Long, offenderNo: String, courtCaseId: Long) {
+  fun stubCourtChargeUpdate(offenderChargeId: Long, courtAppearanceId: Long, offenderNo: String, courtCaseId: Long) {
     stubFor(
-      put("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/charges/$offenderChargeId").willReturn(
+      put("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/court-appearances/$courtAppearanceId/charges/$offenderChargeId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(200),

@@ -7,20 +7,26 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.CONTACT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.CONTACT_ADDRESS
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.CONTACT_ADDRESS_PHONE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.CONTACT_EMAIL
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.CONTACT_PERSON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.CONTACT_PHONE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactAddressPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactEmail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncPrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmailMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
@@ -41,6 +47,8 @@ class ContactPersonService(
       CONTACT("contact"),
       CONTACT_ADDRESS("contact-address"),
       CONTACT_EMAIL("contact-email"),
+      CONTACT_PHONE("contact-phone"),
+      CONTACT_ADDRESS_PHONE("contact-address-phone"),
       ;
 
       companion object {
@@ -199,9 +207,94 @@ class ContactPersonService(
       telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
     }
   }
+  suspend fun contactPhoneCreated(event: ContactPhoneCreatedEvent) {
+    val entityName = CONTACT_PHONE.entityName
+    val dpsContactPhoneId = event.additionalInformation.contactPhoneId
+    val telemetryMap = mutableMapOf(
+      "dpsContactPhoneId" to dpsContactPhoneId.toString(),
+    )
 
-  suspend fun contactPhoneCreated(event: ContactPhoneCreatedEvent): Unit = TODO()
-  suspend fun contactAddressPhoneCreated(event: ContactAddressPhoneCreatedEvent): Unit = TODO()
+    if (event.didOriginateInDPS()) {
+      synchronise {
+        name = entityName
+        telemetryClient = this@ContactPersonService.telemetryClient
+        retryQueueService = contactPersonRetryQueueService
+        eventTelemetry = telemetryMap
+
+        checkMappingDoesNotExist {
+          mappingApiService.getByDpsContactPhoneIdOrNull(dpsContactPhoneId)
+        }
+        transform {
+          val dpsPhone = dpsApiService.getContactPhone(dpsContactPhoneId).also {
+            telemetryMap["dpsContactId"] = it.contactId.toString()
+            telemetryMap["nomisPersonId"] = it.contactId.toString()
+          }
+          nomisApiService.createPersonPhone(dpsPhone.contactId, dpsPhone.toNomisCreateRequest()).also {
+            telemetryMap["nomisPhoneId"] = it.phoneId.toString()
+          }.let {
+            PersonPhoneMappingDto(
+              dpsId = dpsContactPhoneId.toString(),
+              nomisId = it.phoneId,
+              dpsPhoneType = PersonPhoneMappingDto.DpsPhoneType.PERSON,
+              mappingType = PersonPhoneMappingDto.MappingType.DPS_CREATED,
+            )
+          }
+        }
+        saveMapping { mappingApiService.createPhoneMapping(it) }
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
+    }
+  }
+
+  suspend fun contactAddressPhoneCreated(event: ContactAddressPhoneCreatedEvent) {
+    val entityName = CONTACT_ADDRESS_PHONE.entityName
+    val dpsContactAddressPhoneId = event.additionalInformation.contactAddressPhoneId
+    val dpsContactAddressId = event.additionalInformation.contactAddressId
+    val telemetryMap = mutableMapOf(
+      "dpsContactAddressPhoneId" to dpsContactAddressPhoneId.toString(),
+      "dpsContactAddressId" to dpsContactAddressId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      synchronise {
+        name = entityName
+        telemetryClient = this@ContactPersonService.telemetryClient
+        retryQueueService = contactPersonRetryQueueService
+        eventTelemetry = telemetryMap
+
+        checkMappingDoesNotExist {
+          mappingApiService.getByDpsContactAddressPhoneIdOrNull(dpsContactAddressPhoneId)
+        }
+        transform {
+          val dpsPhone = dpsApiService.getContactAddressPhone(dpsContactAddressPhoneId).also {
+            telemetryMap["dpsContactId"] = it.contactId.toString()
+            telemetryMap["nomisPersonId"] = it.contactId.toString()
+          }
+          val nomisAddressId = mappingApiService.getByDpsContactAddressId(dpsContactAddressId).nomisId.also {
+            telemetryMap["nomisAddressId"] = it.toString()
+          }
+          nomisApiService.createPersonAddressPhone(
+            personId = dpsPhone.contactId,
+            addressId = nomisAddressId,
+            request = dpsPhone.toNomisCreateRequest(),
+          ).also {
+            telemetryMap["nomisPhoneId"] = it.phoneId.toString()
+          }.let {
+            PersonPhoneMappingDto(
+              dpsId = dpsContactAddressPhoneId.toString(),
+              nomisId = it.phoneId,
+              dpsPhoneType = PersonPhoneMappingDto.DpsPhoneType.ADDRESS,
+              mappingType = PersonPhoneMappingDto.MappingType.DPS_CREATED,
+            )
+          }
+        }
+        saveMapping { mappingApiService.createPhoneMapping(it) }
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
+    }
+  }
 
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
@@ -210,6 +303,8 @@ class ContactPersonService(
       CONTACT -> createPersonContactMapping(message.fromJson())
       CONTACT_ADDRESS -> createContactAddressMapping(message.fromJson())
       CONTACT_EMAIL -> createContactEmailMapping(message.fromJson())
+      CONTACT_PHONE -> createContactPhoneMapping(message.fromJson())
+      CONTACT_ADDRESS_PHONE -> createContactAddressPhoneMapping(message.fromJson())
     }
   }
 
@@ -245,6 +340,25 @@ class ContactPersonService(
     mappingApiService.createEmailMapping(message.mapping).also {
       telemetryClient.trackEvent(
         "contact-email-create-success",
+        message.telemetryAttributes,
+        null,
+      )
+    }
+  }
+  suspend fun createContactPhoneMapping(message: CreateMappingRetryMessage<PersonPhoneMappingDto>) {
+    mappingApiService.createPhoneMapping(message.mapping).also {
+      telemetryClient.trackEvent(
+        "contact-phone-create-success",
+        message.telemetryAttributes,
+        null,
+      )
+    }
+  }
+
+  suspend fun createContactAddressPhoneMapping(message: CreateMappingRetryMessage<PersonPhoneMappingDto>) {
+    mappingApiService.createPhoneMapping(message.mapping).also {
+      telemetryClient.trackEvent(
+        "contact-address-phone-create-success",
         message.telemetryAttributes,
         null,
       )
@@ -300,6 +414,18 @@ private fun SyncContactAddress.toNomisCreateRequest(): CreatePersonAddressReques
 
 private fun SyncContactEmail.toNomisCreateRequest(): CreatePersonEmailRequest = CreatePersonEmailRequest(
   email = this.emailAddress,
+)
+
+private fun SyncContactPhone.toNomisCreateRequest(): CreatePersonPhoneRequest = CreatePersonPhoneRequest(
+  number = this.phoneNumber,
+  extension = this.extNumber,
+  typeCode = this.phoneType,
+)
+
+private fun SyncContactAddressPhone.toNomisCreateRequest(): CreatePersonPhoneRequest = CreatePersonPhoneRequest(
+  number = this.phoneNumber,
+  extension = this.extNumber,
+  typeCode = this.phoneType,
 )
 
 private fun SourcedContactPersonEvent.didOriginateInDPS() = this.additionalInformation.source == "DPS"

@@ -1054,6 +1054,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           eq("charge-updated-ignored"),
           org.mockito.kotlin.check {
             Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
           },
@@ -1072,13 +1073,19 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           caseID = COURT_CASE_ID_FOR_CREATION,
         )
         NomisApiExtension.nomisApi.stubCourtChargeUpdate(
-          NOMIS_COURT_CHARGE_ID,
-          OFFENDER_NO,
-          NOMIS_COURT_CASE_ID_FOR_CREATION,
+          offenderChargeId = NOMIS_COURT_CHARGE_ID,
+          offenderNo = OFFENDER_NO,
+          courtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+          courtAppearanceId = NOMIS_COURT_APPEARANCE_ID,
         )
         MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(
           id = COURT_CASE_ID_FOR_CREATION,
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+
+        MappingExtension.mappingServer.stubGetCourtAppearanceMappingGivenDpsId(
+          id = DPS_COURT_APPEARANCE_ID,
+          nomisCourtAppearanceId = NOMIS_COURT_APPEARANCE_ID,
         )
 
         MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(
@@ -1116,7 +1123,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to update the Charge`() {
         waitForAnyProcessingToComplete()
         NomisApiExtension.nomisApi.verify(
-          WireMock.putRequestedFor(WireMock.anyUrl())
+          WireMock.putRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/court-appearances/$NOMIS_COURT_APPEARANCE_ID/charges/$NOMIS_COURT_CHARGE_ID"))
             .withRequestBody(
               WireMock.matchingJsonPath(
                 "offenceCode",
@@ -1151,6 +1158,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(COURT_CASE_ID_FOR_CREATION)
+        MappingExtension.mappingServer.stubGetCourtAppearanceMappingGivenDpsId(DPS_COURT_APPEARANCE_ID)
         MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsIdWithError(
           DPS_COURT_CHARGE_ID,
           404,
@@ -1351,6 +1359,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           courtChargeMessagePayload(
             courtChargeId = DPS_COURT_CHARGE_ID,
             courtCaseId = COURT_CASE_ID_FOR_CREATION,
+            courtAppearanceId = DPS_COURT_APPEARANCE_ID,
             offenderNo = OFFENDER_NO,
             eventType = eventType,
             source = source,
@@ -1400,11 +1409,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
   fun courtChargeMessagePayload(
     courtCaseId: String,
     courtChargeId: String,
+    courtAppearanceId: String? = null,
     offenderNo: String,
     eventType: String,
     source: String = "DPS",
   ) =
-    """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+    """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", ${courtAppearanceId?.let { """"courtAppearanceId":"$it","""} ?: ""} "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun nomisCourtCaseCreateResponse(): String {
     return """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION }"""
