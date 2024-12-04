@@ -23,12 +23,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactAddressPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactEmail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.dpsContactPersonServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonContactResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonIdentifierResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
@@ -37,6 +39,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Du
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmailMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonIdentifierMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
@@ -1484,6 +1487,239 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
               isNull(),
             )
             nomisApi.verify(1, postRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/address/$nomisAddressId/phone")))
+          }
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("contacts-api.contact-identity.created")
+  inner class ContactIdentityCreated {
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a Contact Identity create")
+    inner class WhenNomisCreated {
+
+      @BeforeEach
+      fun setUp() {
+        publishCreateContactIdentityDomainEvent(contactIdentityId = "12345", source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contact-identity-create-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Contact Identity create")
+    inner class WhenDpsCreated {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val dpsContactIdentityId = 1234567L
+        private val nomisSequenceNumber = 4L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactIdentityIdOrNull(dpsContactIdentityId = dpsContactIdentityId, null)
+          dpsApi.stubGetContactIdentity(
+            contactIdentityId = dpsContactIdentityId,
+            contactIdentity().copy(
+              contactIdentityId = dpsContactIdentityId,
+              contactId = nomisPersonIdAndDpsContactId,
+              identityValue = "SMIT63636DL",
+              identityType = "DL",
+              issuingAuthority = "DVLA",
+            ),
+          )
+          nomisApi.stubCreatePersonIdentifier(personId = nomisPersonIdAndDpsContactId, createPersonIdentifierResponse().copy(sequence = nomisSequenceNumber))
+          mappingApi.stubCreateIdentifierMapping()
+          publishCreateContactIdentityDomainEvent(contactIdentityId = dpsContactIdentityId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the create`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-identity-create-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the identity created`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-identity-create-success"),
+            check {
+              assertThat(it).containsEntry("dpsContactIdentityId", dpsContactIdentityId.toString())
+              assertThat(it).containsEntry("nomisSequenceNumber", nomisSequenceNumber.toString())
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call back to DPS to get identity details`() {
+          dpsApi.verify(getRequestedFor(urlEqualTo("/sync/contact-identity/$dpsContactIdentityId")))
+        }
+
+        @Test
+        fun `will create the identifier in NOMIS`() {
+          nomisApi.verify(postRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/identifier")))
+        }
+
+        @Test
+        fun `the created identifier will contain details of the DPS contact identity`() {
+          nomisApi.verify(
+            postRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("identifier", "SMIT63636DL")
+              .withRequestBodyJsonPath("typeCode", "DL")
+              .withRequestBodyJsonPath("issuedAuthority", "DVLA"),
+          )
+        }
+
+        @Test
+        fun `will create a mapping between the NOMIS and DPS ids`() {
+          mappingApi.verify(
+            postRequestedFor(urlEqualTo("/mapping/contact-person/identifier"))
+              .withRequestBodyJsonPath("dpsId", "$dpsContactIdentityId")
+              .withRequestBodyJsonPath("nomisSequenceNumber", nomisSequenceNumber)
+              .withRequestBodyJsonPath("nomisPersonId", nomisPersonIdAndDpsContactId)
+              .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when mapping service fails once")
+      inner class MappingFailure {
+        private val dpsContactIdentityId = 1234567L
+        private val nomisSequenceNumber = 4L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactIdentityIdOrNull(dpsContactIdentityId = dpsContactIdentityId, null)
+          dpsApi.stubGetContactIdentity(
+            contactIdentityId = dpsContactIdentityId,
+            contactIdentity().copy(
+              contactIdentityId = dpsContactIdentityId,
+              contactId = nomisPersonIdAndDpsContactId,
+            ),
+          )
+          nomisApi.stubCreatePersonIdentifier(personId = nomisPersonIdAndDpsContactId, createPersonIdentifierResponse().copy(sequence = nomisSequenceNumber))
+          mappingApi.stubCreateIdentifierMappingFollowedBySuccess()
+          publishCreateContactIdentityDomainEvent(contactIdentityId = dpsContactIdentityId.toString())
+        }
+
+        @Test
+        fun `will send telemetry for initial failure`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("contact-identity-mapping-create-failed"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will eventually send telemetry for success`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("contact-identity-create-success"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will create the identity in NOMIS once`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("contact-identity-create-success"),
+              any(),
+              isNull(),
+            )
+            nomisApi.verify(1, postRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/identifier")))
+          }
+        }
+      }
+
+      @Nested
+      @DisplayName("when mapping service detects a duplicate mapping")
+      inner class DuplicateMappingFailure {
+        private val dpsContactIdentityId = 1234567L
+        private val nomisSequenceNumber = 4L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactIdentityIdOrNull(dpsContactIdentityId = dpsContactIdentityId, null)
+          dpsApi.stubGetContactIdentity(
+            contactIdentityId = dpsContactIdentityId,
+            contactIdentity().copy(
+              contactIdentityId = dpsContactIdentityId,
+              contactId = nomisPersonIdAndDpsContactId,
+            ),
+          )
+          nomisApi.stubCreatePersonIdentifier(nomisPersonIdAndDpsContactId, createPersonIdentifierResponse().copy(sequence = nomisSequenceNumber))
+          mappingApi.stubCreateIdentifierMapping(
+            error = DuplicateMappingErrorResponse(
+              moreInfo = DuplicateErrorContentObject(
+                duplicate = PersonIdentifierMappingDto(
+                  dpsId = dpsContactIdentityId.toString(),
+                  nomisPersonId = nomisPersonIdAndDpsContactId,
+                  nomisSequenceNumber = 5,
+                  mappingType = PersonIdentifierMappingDto.MappingType.DPS_CREATED,
+                ),
+                existing = PersonIdentifierMappingDto(
+                  dpsId = dpsContactIdentityId.toString(),
+                  nomisPersonId = nomisPersonIdAndDpsContactId,
+                  nomisSequenceNumber = nomisSequenceNumber,
+                  mappingType = PersonIdentifierMappingDto.MappingType.DPS_CREATED,
+                ),
+              ),
+              errorCode = 1409,
+              status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+              userMessage = "Duplicate mapping",
+            ),
+          )
+          publishCreateContactIdentityDomainEvent(contactIdentityId = dpsContactIdentityId.toString())
+        }
+
+        @Test
+        fun `will send telemetry for duplicate`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("to-nomis-synch-contact-identity-duplicate"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will create the identity in NOMIS once`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("to-nomis-synch-contact-identity-duplicate"),
+              any(),
+              isNull(),
+            )
+            nomisApi.verify(1, postRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/identifier")))
           }
         }
       }
