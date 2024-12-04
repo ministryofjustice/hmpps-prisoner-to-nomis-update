@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-12-03.5567.918d307"
+    "version": "2024-12-04.5576.44b0b2d"
   },
   "servers": [
     {
@@ -2818,6 +2818,68 @@
         "responses": {
           "201": {
             "description": "Mappings created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/contact-person/identifier": {
+      "post": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Creates person identifier mappings for synchronisation",
+        "description": "Creates person identifier mappings for synchronisation between NOMIS ids and dps ids. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "createPersonIdentifierMapping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonIdentifierMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping created",
             "content": {
               "application/json": {
                 "schema": {
@@ -8419,6 +8481,152 @@
         }
       }
     },
+    "/mapping/contact-person/identifier/nomis-person-id/{nomisPersonId}/nomis-sequence-number/{nomisSequenceNumber}": {
+      "get": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Get person identifier mapping by nomis person id and sequence",
+        "description": "Retrieves the person identifier mapping by NOMIS person id and NOMIS sequence number. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "getPersonIdentifierMappingByNomisIds",
+        "parameters": [
+          {
+            "name": "nomisPersonId",
+            "in": "path",
+            "description": "NOMIS person id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "NOMIS person id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "nomisSequenceNumber",
+            "in": "path",
+            "description": "NOMIS identifier sequence",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "NOMIS identifier sequence",
+              "format": "int64",
+              "example": 4
+            },
+            "example": 4
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Person identifier mapping data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonIdentifierMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access this endpoint is forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/contact-person/identifier/dps-contact-identifier-id/{dpsContactIdentifierId}": {
+      "get": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Get contact identifier mapping by dps contact identifier Id",
+        "description": "Retrieves the person identifier mapping by DPS Contact Identifier Id. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "getPersonIdentifierMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsContactIdentifierId",
+            "in": "path",
+            "description": "DPS contact identifier id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS contact identifier id",
+              "example": "12345"
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Person Identifier mapping data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonIdentifierMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access this endpoint is forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/contact-person/email/nomis-internet-address-id/{nomisInternetAddressId}": {
       "get": {
         "tags": [
@@ -13540,6 +13748,47 @@
         },
         "description": "NOMIS to DPS simple mapping IDs"
       },
+      "PersonIdentifierMappingDto": {
+        "required": [
+          "dpsId",
+          "mappingType",
+          "nomisPersonId",
+          "nomisSequenceNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsId": {
+            "type": "string",
+            "description": "DPS id"
+          },
+          "nomisPersonId": {
+            "type": "integer",
+            "description": "NOMIS id",
+            "format": "int64"
+          },
+          "nomisSequenceNumber": {
+            "type": "integer",
+            "description": "NOMIS sequence",
+            "format": "int64"
+          },
+          "label": {
+            "type": "string"
+          },
+          "mappingType": {
+            "type": "string",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED",
+              "NOMIS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          }
+        }
+      },
       "PersonEmailMappingDto": {
         "required": [
           "dpsId",
@@ -14121,13 +14370,13 @@
       "PageCourtCaseMappingDto": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -14207,13 +14456,13 @@
       "PagePersonMappingDto": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -14285,13 +14534,13 @@
       "PagePrisonerAlertMappingsSummaryDto": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"
@@ -14356,13 +14605,13 @@
       "PageAlertMappingDto": {
         "type": "object",
         "properties": {
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
           "totalElements": {
             "type": "integer",
             "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           },
           "first": {
             "type": "boolean"

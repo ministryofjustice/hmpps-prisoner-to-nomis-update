@@ -38,6 +38,7 @@ class ContactPersonDomainEventListener(
       "contacts-api.contact-email.created" -> contactPersonService.contactEmailCreated(message.fromJson())
       "contacts-api.contact-phone.created" -> contactPersonService.contactPhoneCreated(message.fromJson())
       "contacts-api.contact-address-phone.created" -> contactPersonService.contactAddressPhoneCreated(message.fromJson())
+      "contacts-api.contact-identity.created" -> contactPersonService.contactIdentityCreated(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
@@ -104,6 +105,16 @@ data class ContactAddressPhoneCreatedEvent(
 data class ContactAddressPhoneAdditionalData(
   val contactAddressPhoneId: Long,
   val contactAddressId: Long,
+  override val source: String = "DPS",
+) : SourcedAdditionalData
+
+data class ContactIdentityCreatedEvent(
+  override val additionalInformation: ContactIdentityAdditionalData,
+  val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent
+
+data class ContactIdentityAdditionalData(
+  val contactIdentityId: Long,
   override val source: String = "DPS",
 ) : SourcedAdditionalData
 

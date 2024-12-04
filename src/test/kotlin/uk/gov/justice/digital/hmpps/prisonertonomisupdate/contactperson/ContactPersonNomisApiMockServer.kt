@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonContactResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonIdentifierRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonIdentifierResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
@@ -72,6 +74,15 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
     fun createPersonPhoneRequest(): CreatePersonPhoneRequest = CreatePersonPhoneRequest(
       number = "07973 555 5555",
       typeCode = "MOB",
+    )
+    fun createPersonIdentifierResponse(): CreatePersonIdentifierResponse = CreatePersonIdentifierResponse(
+      sequence = 4,
+    )
+
+    fun createPersonIdentifierRequest(): CreatePersonIdentifierRequest = CreatePersonIdentifierRequest(
+      identifier = "SMNI772727DL",
+      typeCode = "DL",
+      issuedAuthority = "DVLA",
     )
   }
 
@@ -150,6 +161,20 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
   ) {
     nomisApi.stubFor(
       post(urlEqualTo("/persons/$personId/address/$addressId/phone")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubCreatePersonIdentifier(
+    personId: Long = 123456,
+    response: CreatePersonIdentifierResponse = createPersonIdentifierResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/persons/$personId/identifier")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())

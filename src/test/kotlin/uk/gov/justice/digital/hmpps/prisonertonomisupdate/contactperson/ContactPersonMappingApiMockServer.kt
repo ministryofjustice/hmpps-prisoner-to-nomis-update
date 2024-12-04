@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Er
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmailMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonIdentifierMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
@@ -432,6 +433,83 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
       post("/mapping/contact-person/phone")
         .inScenario("Retry Mapping Phone Scenario")
         .whenScenarioStateIs("Cause Mapping Phone Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetByDpsContactIdentityIdOrNull(
+    dpsContactIdentityId: Long = 123456,
+    mapping: PersonIdentifierMappingDto? = PersonIdentifierMappingDto(
+      nomisPersonId = 654321,
+      nomisSequenceNumber = 4,
+      dpsId = dpsContactIdentityId.toString(),
+      mappingType = PersonIdentifierMappingDto.MappingType.MIGRATED,
+    ),
+  ) {
+    mapping?.apply {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/contact-person/identifier/dps-contact-identifier-id/$dpsContactIdentityId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(objectMapper.writeValueAsString(mapping)),
+        ),
+      )
+    } ?: run {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/contact-person/identifier/dps-contact-identifier-id/$dpsContactIdentityId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.NOT_FOUND.value())
+            .withBody(objectMapper.writeValueAsString(ErrorResponse(status = 404))),
+        ),
+      )
+    }
+  }
+
+  fun stubCreateIdentifierMapping() {
+    mappingServer.stubFor(
+      post("/mapping/contact-person/identifier").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCreateIdentifierMapping(error: DuplicateMappingErrorResponse) {
+    mappingServer.stubFor(
+      post("/mapping/contact-person/identifier").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(409)
+          .withBody(objectMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubCreateIdentifierMappingFollowedBySuccess(status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      post("/mapping/contact-person/identifier")
+        .inScenario("Retry Mapping Identifier Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(objectMapper.writeValueAsString(error)),
+        ).willSetStateTo("Cause Mapping Identifier Success"),
+    )
+
+    mappingServer.stubFor(
+      post("/mapping/contact-person/identifier")
+        .inScenario("Retry Mapping Identifier Scenario")
+        .whenScenarioStateIs("Cause Mapping Identifier Success")
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")

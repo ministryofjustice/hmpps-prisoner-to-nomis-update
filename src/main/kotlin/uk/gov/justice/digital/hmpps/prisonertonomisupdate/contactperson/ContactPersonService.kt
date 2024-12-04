@@ -367,6 +367,8 @@ class ContactPersonService(
 
   private inline fun <reified T> String.fromJson(): T =
     objectMapper.readValue(this)
+
+  fun contactIdentityCreated(event: ContactIdentityCreatedEvent): Nothing = TODO()
 }
 
 private fun SyncContact.toNomisCreateRequest(): CreatePersonRequest = CreatePersonRequest(
