@@ -688,9 +688,9 @@ class NomisApiService(
       .retrieve()
       .awaitBody()
 
-  suspend fun updateCourtCharge(chargeId: Long, offenderNo: String, nomisCourtCaseId: Long, request: OffenderChargeRequest) =
+  suspend fun updateCourtCharge(chargeId: Long, offenderNo: String, nomisCourtCaseId: Long, nomisCourtAppearanceId: Long, request: OffenderChargeRequest) =
     webClient.put()
-      .uri("/prisoners/{offenderNo}/sentencing/court-cases/{courtCaseId}/charges/{chargeId}", offenderNo, nomisCourtCaseId, chargeId)
+      .uri("/prisoners/{offenderNo}/sentencing/court-cases/{courtCaseId}/court-appearances/{courtEventId}/charges/{chargeId}", offenderNo, nomisCourtCaseId, nomisCourtAppearanceId, chargeId)
       .bodyValue(request)
       .retrieve()
       .awaitBodilessEntity()
