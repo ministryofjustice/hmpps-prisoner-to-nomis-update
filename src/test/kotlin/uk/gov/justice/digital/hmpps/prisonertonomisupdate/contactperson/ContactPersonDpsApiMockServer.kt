@@ -13,12 +13,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactAddressPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactEmail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactAddressPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactEmail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncPrisonerContact
 import java.time.LocalDateTime
@@ -93,6 +95,16 @@ class ContactPersonDpsApiExtension :
       contactId = 12345,
       phoneNumber = "07973 555 5555",
       phoneType = "MOB",
+      createdBy = "JANE.SAM",
+      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+    )
+
+    fun contactIdentity() = SyncContactIdentity(
+      contactIdentityId = 1234567,
+      contactId = 12345,
+      identityValue = "SMIT5654DL",
+      identityType = "DL",
+      issuingAuthority = "DVLA",
       createdBy = "JANE.SAM",
       createdTime = LocalDateTime.parse("2024-01-01T12:13"),
     )
@@ -188,6 +200,18 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetContactAddressPhone(contactAddressPhoneId: Long, response: SyncContactAddressPhone = contactAddressPhone()) {
     stubFor(
       get("/sync/contact-address-phone/$contactAddressPhoneId")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  fun stubGetContactIdentity(contactIdentityId: Long, response: SyncContactIdentity = contactIdentity()) {
+    stubFor(
+      get("/sync/contact-identity/$contactIdentityId")
         .willReturn(
           aResponse()
             .withStatus(200)

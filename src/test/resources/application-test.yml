@@ -236,7 +236,8 @@ hmpps.sqs:
           "contacts-api.contact-address.created",
           "contacts-api.contact-email.created",
           "contacts-api.contact-phone.created",
-          "contacts-api.contact-address-phone.created"
+          "contacts-api.contact-address-phone.created",
+          "contacts-api.contact-identity.created"
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120

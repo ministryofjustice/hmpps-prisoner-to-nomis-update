@@ -173,4 +173,30 @@ class ContactPersonDpsApiServiceTest {
       )
     }
   }
+
+  @Nested
+  inner class GetContactIdentity {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsContactPersonServer.stubGetContactIdentity(contactIdentityId = 1234567)
+
+      apiService.getContactIdentity(contactIdentityId = 1234567)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get sync endpoint`() = runTest {
+      dpsContactPersonServer.stubGetContactIdentity(contactIdentityId = 1234567)
+
+      apiService.getContactIdentity(contactIdentityId = 1234567)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/contact-identity/1234567")),
+      )
+    }
+  }
 }

@@ -10,6 +10,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonContactResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonIdentifierRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonIdentifierResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
@@ -66,6 +68,15 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
       "/persons/{personId}/address/{addressId}/phone",
       personId,
       addressId,
+    )
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun createPersonIdentifier(personId: Long, request: CreatePersonIdentifierRequest): CreatePersonIdentifierResponse = webClient.post()
+    .uri(
+      "/persons/{personId}/identifier",
+      personId,
     )
     .bodyValue(request)
     .retrieve()

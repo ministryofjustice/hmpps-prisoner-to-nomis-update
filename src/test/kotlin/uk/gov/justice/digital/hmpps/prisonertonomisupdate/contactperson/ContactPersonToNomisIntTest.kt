@@ -1519,10 +1519,16 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
       publishDomainEvent(eventType = this, payload = contactPhoneMessagePayload(eventType = this, contactPhoneId = contactPhoneId, source = source))
     }
   }
-
   private fun publishCreateContactAddressPhoneDomainEvent(contactAddressPhoneId: String, contactAddressId: String, source: String = "DPS") {
     with("contacts-api.contact-address-phone.created") {
       publishDomainEvent(eventType = this, payload = contactAddressPhoneMessagePayload(eventType = this, contactAddressPhoneId = contactAddressPhoneId, contactAddressId = contactAddressId, source = source))
+    }
+  }
+
+  @Suppress("unused")
+  private fun publishCreateContactIdentityDomainEvent(contactIdentityId: String, source: String = "DPS") {
+    with("contacts-api.contact-identity.created") {
+      publishDomainEvent(eventType = this, payload = contactIdentityMessagePayload(eventType = this, contactIdentityId = contactIdentityId, source = source))
     }
   }
 
@@ -1686,6 +1692,31 @@ fun contactAddressPhoneMessagePayload(
       "additionalInformation": {
         "contactAddressPhoneId": "$contactAddressPhoneId",
         "contactAddressId": "$contactAddressId",
+        "source": "$source"
+      },
+      "personReference": {
+        "identifiers": [
+          {
+            "type": "DPS_CONTACT_ID",
+            "value": "$contactId"
+          }
+        ]
+      }
+    }
+    """
+
+fun contactIdentityMessagePayload(
+  eventType: String,
+  contactIdentityId: String,
+  source: String = "DPS",
+  contactId: String = "87654",
+) =
+  //language=JSON
+  """
+    {
+      "eventType":"$eventType", 
+      "additionalInformation": {
+        "contactIdentityId": "$contactIdentityId",
         "source": "$source"
       },
       "personReference": {

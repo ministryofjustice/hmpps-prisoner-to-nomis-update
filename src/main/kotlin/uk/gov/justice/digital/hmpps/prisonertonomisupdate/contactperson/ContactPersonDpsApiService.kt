@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.Sy
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactAddressPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactEmail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncPrisonerContact
 
@@ -40,6 +41,11 @@ class ContactPersonDpsApiService(@Qualifier("contactPersonApiWebClient") private
 
   suspend fun getContactAddressPhone(contactAddressPhoneId: Long): SyncContactAddressPhone = webClient.get()
     .uri("/sync/contact-address-phone/{contactAddressPhoneId}", contactAddressPhoneId)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun getContactIdentity(contactIdentityId: Long): SyncContactIdentity = webClient.get()
+    .uri("/sync/contact-identity/{contactIdentityId}", contactIdentityId)
     .retrieve()
     .awaitBody()
 }

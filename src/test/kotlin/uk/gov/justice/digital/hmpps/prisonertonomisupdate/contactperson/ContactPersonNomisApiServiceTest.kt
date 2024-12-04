@@ -16,6 +16,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonContactResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonIdentifierRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonIdentifierResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonRequest
@@ -232,6 +234,40 @@ class ContactPersonNomisApiServiceTest {
       val response = apiService.createPersonAddressPhone(personId = 1234567, addressId = 67890, request = createPersonPhoneRequest())
 
       assertThat(response.phoneId).isEqualTo(123456)
+    }
+  }
+
+  @Nested
+  inner class CreatePersonIdentifier {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubCreatePersonIdentifier(personId = 1234567)
+
+      apiService.createPersonIdentifier(personId = 1234567, request = createPersonIdentifierRequest())
+
+      mockServer.verify(
+        postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call create endpoint`() = runTest {
+      mockServer.stubCreatePersonIdentifier(personId = 1234567)
+
+      apiService.createPersonIdentifier(personId = 1234567, request = createPersonIdentifierRequest())
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/persons/1234567/identifier")),
+      )
+    }
+
+    @Test
+    fun `will return identifier id `() = runTest {
+      mockServer.stubCreatePersonIdentifier(personId = 1234567, response = createPersonIdentifierResponse().copy(sequence = 4))
+
+      val response = apiService.createPersonIdentifier(personId = 1234567, request = createPersonIdentifierRequest())
+
+      assertThat(response.sequence).isEqualTo(4)
     }
   }
 }
