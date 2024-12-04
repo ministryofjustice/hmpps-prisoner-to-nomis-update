@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import java.time.format.DateTimeFormatter
 import java.util.Objects
-import kotlin.String
 
 @Service
 class CaseNotesReconciliationService(
@@ -25,6 +24,7 @@ class CaseNotesReconciliationService(
   private val caseNotesDpsApiService: CaseNotesDpsApiService,
   private val caseNotesNomisApiService: CaseNotesNomisApiService,
   private val nomisApiService: NomisApiService,
+  private val caseNotesMappingApiService: CaseNotesMappingApiService,
   @Value("\${reports.casenotes.reconciliation.page-size}")
   private val pageSize: Long = 20,
 ) {
@@ -100,50 +100,63 @@ class CaseNotesReconciliationService(
     val offenderNo = prisonerId.offenderNo
 
     return runCatching {
+      val mappings = caseNotesMappingApiService.getByPrisoner(offenderNo).mappings
+
+      val dpsDistinctIds = mappings.map { it.dpsCaseNoteId }.distinct()
+
       val dpsCaseNotes = caseNotesDpsApiService.getCaseNotesForPrisoner(offenderNo)
-        .map { it.transformFromDps() }
-        .toSortedSet(fieldsComparator)
+        .associate { it.caseNoteId to it.transformFromDps() }
 
-      val nomisCaseNotes = caseNotesNomisApiService.getCaseNotesForPrisoner(offenderNo)
-        .caseNotes
-        .map { it.transformFromNomis() }
-        .toSortedSet(fieldsComparator)
+      val originals = caseNotesNomisApiService.getCaseNotesForPrisoner(offenderNo).caseNotes
 
-      val pairedCaseNotes = dpsCaseNotes zip nomisCaseNotes
-      return if (dpsCaseNotes.size != nomisCaseNotes.size || pairedCaseNotes.any { (d, n) -> d != n }) {
-        val missingFromNomis = dpsCaseNotes - nomisCaseNotes
-        val missingFromDps = nomisCaseNotes - dpsCaseNotes
-        if (!missingFromDps.isEmpty() || !missingFromNomis.isEmpty()) {
-          log.info("missingFromNomis = $missingFromNomis")
-          log.info("missingFromDps   = $missingFromDps")
-          telemetryClient.trackEvent(
-            "casenotes-reports-reconciliation-mismatch",
-            mapOf(
-              "offenderNo" to offenderNo,
-              "missingFromDps" to (missingFromDps.joinToString()),
-              "missingFromNomis" to (missingFromNomis.joinToString()),
-            ),
-          )
-          MismatchCaseNote(offenderNo, missingFromDps, missingFromNomis)
-        } else {
-          val diffs = pairedCaseNotes.filter { (a, b) -> a != b }
-          val dpsDiffs = diffs.map { it.first }
-          val diffsNomis = diffs.map { it.second }
-          log.info("diffs are dps = $dpsDiffs")
-          log.info("        nomis = $diffsNomis")
-          // log.info("CaseNotes Mismatch found: prisoner $offenderNo, dps total = ${dpsCaseNotes.size}, nomis total = ${nomisCaseNotes.size}, missingFromNomis = ${missingFromNomis.size}, missingFromDps = ${missingFromDps.size}")
-          telemetryClient.trackEvent(
-            "casenotes-reports-reconciliation-mismatch",
-            mapOf(
-              "offenderNo" to offenderNo,
-              "diffs-dps" to (dpsDiffs.joinToString()),
-              "diffs-nomis" to (diffsNomis.joinToString()),
-            ),
-          )
-          MismatchCaseNote(offenderNo = offenderNo, missingFromDps = missingFromDps, missingFromNomis = missingFromNomis)
+      val nomisCaseNotes = originals
+        .associate { it.caseNoteId to it.transformFromNomis() }
+
+      val message = "mappings.size = ${mappings.size}, dpsDistinctIds.size = ${dpsDistinctIds.size}, nomisCaseNotes.size = ${nomisCaseNotes.size}, dpsCaseNotes.size = ${dpsCaseNotes.size}"
+      val mismatchCaseNote = MismatchCaseNote(offenderNo, emptySet(), emptySet())
+
+      if (mappings.size != nomisCaseNotes.size) {
+        log.info("prisoner $offenderNo : $message")
+        telemetryClient.trackEvent(
+          "casenotes-reports-reconciliation-mismatch-size",
+          mapOf("offenderNo" to offenderNo, "message" to message),
+        )
+        mismatchCaseNote.notes += message
+        return mismatchCaseNote
+      }
+
+      if (dpsDistinctIds.size != dpsCaseNotes.size) {
+        log.info("prisoner $offenderNo : $message")
+        telemetryClient.trackEvent(
+          "casenotes-reports-reconciliation-mismatch-size",
+          mapOf("offenderNo" to offenderNo, "message" to message),
+        )
+        mismatchCaseNote.notes += message
+        return mismatchCaseNote
+      }
+
+      mappings.forEach {
+        val dpsCaseNote = dpsCaseNotes[it.dpsCaseNoteId]
+        val nomisCaseNote = nomisCaseNotes[it.nomisCaseNoteId]
+        if (dpsCaseNote != nomisCaseNote) {
+          "dpsCaseNote = $dpsCaseNote, nomisCaseNote = $nomisCaseNote"
+            .also {
+              log.info("prisoner $offenderNo : $it")
+              mismatchCaseNote.notes += it
+            }
         }
-      } else {
+      }
+      return if (mismatchCaseNote.notes.isEmpty()) {
         null
+      } else {
+        var i = 0
+        telemetryClient.trackEvent(
+          "casenotes-reports-reconciliation-mismatch",
+          mapOf(
+            "offenderNo" to offenderNo,
+          ) + mismatchCaseNote.notes.associate { (++i).toString() to it },
+        )
+        mismatchCaseNote
       }
     }.onFailure {
       log.error("Unable to match casenotes for prisoner $offenderNo", it)
@@ -194,6 +207,7 @@ data class MismatchCaseNote(
   val offenderNo: String,
   val missingFromDps: Set<CommonCaseNoteFields>,
   val missingFromNomis: Set<CommonCaseNoteFields>,
+  var notes: List<String> = mutableListOf(),
 )
 
 data class CommonCaseNoteFields(
