@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-12-02.10107.be88fa3"
+    "version": "2024-12-03.10130.954c84f"
   },
   "servers": [
     {
@@ -647,13 +647,13 @@
         }
       }
     },
-    "/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/charges/{chargeId}": {
+    "/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/court-appearances/{courtEventId}/charges/{chargeId}": {
       "put": {
         "tags": [
           "sentencing-resource"
         ],
         "summary": "Updates Charge",
-        "description": "Required role NOMIS_SENTENCING Updates an offender charge for the offender and given Court Case (latest booking)",
+        "description": "Required role NOMIS_SENTENCING Updates a Court Event Charge for the offender and given Appearance and Court Case (latest booking)",
         "operationId": "updateCharge",
         "parameters": [
           {
@@ -689,6 +689,19 @@
             "schema": {
               "type": "integer",
               "description": "Charge Id",
+              "format": "int64",
+              "example": 34565
+            },
+            "example": 34565
+          },
+          {
+            "name": "courtEventId",
+            "in": "path",
+            "description": "Court event Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Court event Id",
               "format": "int64",
               "example": 34565
             },
@@ -8563,6 +8576,85 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/OffenderChargeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offender not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/sentencing/court-event-charges/{offenderChargeId}/last-modified": {
+      "get": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "get the last modified court event charge",
+        "description": "Requires role NOMIS_SENTENCING. Retrieves the last modified court event charge associated with this offender charge. Intended to prevent the need for COURT_EVENT_CHARGE_UPDATED events",
+        "operationId": "getLastModifiedCourtEventCharge",
+        "parameters": [
+          {
+            "name": "offenderChargeId",
+            "in": "path",
+            "description": "Offender Charge id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Offender Charge id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender No",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender No",
+              "example": "12345"
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the court appearance details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtEventChargeResponse"
                 }
               }
             }
@@ -19466,6 +19558,69 @@
         },
         "description": "Offender Charge"
       },
+      "CourtEventChargeResponse": {
+        "required": [
+          "eventId",
+          "mostSeriousFlag",
+          "offenderCharge"
+        ],
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offenderCharge": {
+            "$ref": "#/components/schemas/OffenderChargeResponse"
+          },
+          "offencesCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offenceDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "offenceEndDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "plea": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "propertyValue": {
+            "type": "number"
+          },
+          "totalPropertyValue": {
+            "type": "number"
+          },
+          "cjitCode1": {
+            "type": "string"
+          },
+          "cjitCode2": {
+            "type": "string"
+          },
+          "cjitCode3": {
+            "type": "string"
+          },
+          "resultCode1": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "resultCode2": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "resultCode1Indicator": {
+            "type": "string"
+          },
+          "resultCode2Indicator": {
+            "type": "string"
+          },
+          "mostSeriousFlag": {
+            "type": "boolean"
+          }
+        },
+        "description": "Court Event Charge"
+      },
       "CaseIdentifierResponse": {
         "required": [
           "createDateTime",
@@ -19611,69 +19766,6 @@
           }
         },
         "description": "Court Case"
-      },
-      "CourtEventChargeResponse": {
-        "required": [
-          "eventId",
-          "mostSeriousFlag",
-          "offenderCharge"
-        ],
-        "type": "object",
-        "properties": {
-          "eventId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "offenderCharge": {
-            "$ref": "#/components/schemas/OffenderChargeResponse"
-          },
-          "offencesCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "offenceDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "offenceEndDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "plea": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "propertyValue": {
-            "type": "number"
-          },
-          "totalPropertyValue": {
-            "type": "number"
-          },
-          "cjitCode1": {
-            "type": "string"
-          },
-          "cjitCode2": {
-            "type": "string"
-          },
-          "cjitCode3": {
-            "type": "string"
-          },
-          "resultCode1": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "resultCode2": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "resultCode1Indicator": {
-            "type": "string"
-          },
-          "resultCode2Indicator": {
-            "type": "string"
-          },
-          "mostSeriousFlag": {
-            "type": "boolean"
-          }
-        },
-        "description": "Court Event Charge"
       },
       "CourtEventResponse": {
         "required": [
