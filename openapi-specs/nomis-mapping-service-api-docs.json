@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-12-02.5560.9954850"
+    "version": "2024-12-03.5567.918d307"
   },
   "servers": [
     {
@@ -3073,7 +3073,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AllPrisonerAlertMappingsDto"
+                  "$ref": "#/components/schemas/AllPrisonerCaseNoteMappingsDto"
                 }
               }
             }
@@ -3188,13 +3188,11 @@
             "application/json": {
               "schema": {
                 "type": "array",
-                "description": "NOMIS booking id",
-                "example": 2,
+                "description": "NOMIS case note ids",
                 "items": {
                   "type": "integer",
-                  "description": "NOMIS booking id",
-                  "format": "int64",
-                  "example": 2
+                  "description": "NOMIS case note ids",
+                  "format": "int64"
                 }
               }
             }
@@ -3207,7 +3205,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CaseNoteMappingDto"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CaseNoteMappingDto"
+                  }
                 }
               }
             }
@@ -9008,7 +9009,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CaseNoteMappingDto"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CaseNoteMappingDto"
+                  }
                 }
               }
             }
@@ -14245,6 +14249,22 @@
             "type": "boolean"
           }
         }
+      },
+      "AllPrisonerCaseNoteMappingsDto": {
+        "required": [
+          "mappings"
+        ],
+        "type": "object",
+        "properties": {
+          "mappings": {
+            "type": "array",
+            "description": "Mappings",
+            "items": {
+              "$ref": "#/components/schemas/CaseNoteMappingDto"
+            }
+          }
+        },
+        "description": "All mappings for a prisoner created either via migration or synchronisation"
       },
       "AllPrisonerAlertMappingsDto": {
         "required": [

@@ -13,6 +13,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNote
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AllPrisonerCaseNoteMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CaseNoteMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CaseNoteMappingDto.MappingType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseNoteAmendment
@@ -21,7 +22,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerCaseNotesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 import java.time.LocalDateTime.parse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNoteAmendment as DpsCaseNoteAmendment
@@ -51,7 +51,7 @@ class CaseNotesReconciliationServiceTest {
         additionalNoteText = amendmentText,
         authorUserName = "AMUSER",
         authorName = "notused",
-        creationDateTime = LocalDateTime.parse("2024-01-01T01:02:03"),
+        creationDateTime = parse("2024-01-01T01:02:03"),
       ),
     ),
   ) =
