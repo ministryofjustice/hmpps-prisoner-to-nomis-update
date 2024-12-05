@@ -136,7 +136,7 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
       NomisApiExtension.nomisApi.verify(
         putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/allocation"))
           .withRequestBody(matchingJsonPath("suspended", equalTo("true")))
-          .withRequestBody(matchingJsonPath("suspendedComment", equalTo("Suspended in DPS by SUSPEND_USER at 2023-01-13 18:49:04 for reason HOSPITAL")))
+          .withRequestBody(matchingJsonPath("suspendedComment", equalTo("SUSPENDED in DPS by SUSPEND_USER at 2023-01-13 18:49:04 for reason HOSPITAL")))
           .withRequestBody(matchingJsonPath("programStatusCode", equalTo("ALLOC"))),
       )
     }
@@ -173,8 +173,7 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
   }
 }
 
-fun buildApiAllocationDtoJsonResponse(id: Long = ALLOCATION_ID): String {
-  return """
+fun buildApiAllocationDtoJsonResponse(id: Long = ALLOCATION_ID): String = """
   {
     "id": $id,
     "prisonerNumber": "A1234AA",
@@ -196,11 +195,9 @@ fun buildApiAllocationDtoJsonResponse(id: Long = ALLOCATION_ID): String {
     "status": "ACTIVE",
     "exclusions": []
   }
-  """.trimIndent()
-}
+""".trimIndent()
 
-fun buildApiAllocationDtoWithMissingPayBand(id: Long = ALLOCATION_ID): String {
-  return """
+fun buildApiAllocationDtoWithMissingPayBand(id: Long = ALLOCATION_ID): String = """
   {
     "id": $id,
     "prisonerNumber": "A1234AA",
@@ -214,11 +211,9 @@ fun buildApiAllocationDtoWithMissingPayBand(id: Long = ALLOCATION_ID): String {
     "status": "ACTIVE",
     "exclusions": []
   }
-  """.trimIndent()
-}
+""".trimIndent()
 
-fun buildApiAllocationDeallocatedJsonResponse(id: Long = ALLOCATION_ID): String {
-  return """
+fun buildApiAllocationDeallocatedJsonResponse(id: Long = ALLOCATION_ID): String = """
   {
     "id": $id,
     "prisonerNumber": "A1234AA",
@@ -247,11 +242,9 @@ fun buildApiAllocationDeallocatedJsonResponse(id: Long = ALLOCATION_ID): String 
     "status": "ENDED",
     "exclusions": []
   }
-  """.trimIndent()
-}
+""".trimIndent()
 
-fun buildApiAllocationSuspendedJsonResponse(id: Long = ALLOCATION_ID): String {
-  return """
+fun buildApiAllocationSuspendedJsonResponse(id: Long = ALLOCATION_ID): String = """
   {
     "id": $id,
     "prisonerNumber": "A1234AA",
@@ -276,11 +269,9 @@ fun buildApiAllocationSuspendedJsonResponse(id: Long = ALLOCATION_ID): String {
     "status": "SUSPENDED",
     "exclusions": []
   }
-  """.trimIndent()
-}
+""".trimIndent()
 
-fun buildApiAllocationWithExclusionsJsonResponse(id: Long = ALLOCATION_ID): String {
-  return """
+fun buildApiAllocationWithExclusionsJsonResponse(id: Long = ALLOCATION_ID): String = """
   {
     "id": $id,
     "prisonerNumber": "A1234AA",
@@ -347,5 +338,4 @@ fun buildApiAllocationWithExclusionsJsonResponse(id: Long = ALLOCATION_ID): Stri
       }
     ]
   }
-  """.trimIndent()
-}
+""".trimIndent()
