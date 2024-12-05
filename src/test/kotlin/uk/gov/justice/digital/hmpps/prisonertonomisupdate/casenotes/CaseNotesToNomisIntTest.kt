@@ -740,8 +740,8 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
             check {
               assertThat(it).containsEntry("dpsCaseNoteId", DPS_CASE_NOTE_ID)
               assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
-              assertThat(it).containsEntry("nomisCaseNoteId", "$NOMIS_CASE_NOTE_ID")
-              assertThat(it).containsEntry("nomisBookingId", "$NOMIS_BOOKING_ID")
+              assertThat(it).containsEntry("nomisCaseNoteId-1", "$NOMIS_CASE_NOTE_ID")
+              assertThat(it).containsEntry("nomisBookingId-1", "$NOMIS_BOOKING_ID")
             },
             isNull(),
           )
@@ -755,6 +755,70 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will delete the caseNote in NOMIS`() {
           caseNotesNomisApi.verify(deleteRequestedFor(urlEqualTo("/casenotes/$NOMIS_CASE_NOTE_ID")))
+        }
+
+        @Test
+        fun `will delete the caseNote mapping`() {
+          caseNotesMappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/casenotes/dps-casenote-id/$DPS_CASE_NOTE_ID")))
+        }
+      }
+
+      @Nested
+      @DisplayName("when there are merged duplicates")
+      inner class WhenMerges {
+        @BeforeEach
+        fun setUp() {
+          caseNotesMappingApi.stubGetByDpsId(
+            DPS_CASE_NOTE_ID,
+            listOf(
+              CaseNoteMappingDto(
+                dpsCaseNoteId = DPS_CASE_NOTE_ID,
+                nomisBookingId = NOMIS_BOOKING_ID,
+                offenderNo = "A1234AA",
+                nomisCaseNoteId = NOMIS_CASE_NOTE_ID,
+                mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
+              ),
+              CaseNoteMappingDto(
+                dpsCaseNoteId = DPS_CASE_NOTE_ID,
+                nomisBookingId = NOMIS_BOOKING_ID,
+                offenderNo = "A1234AA",
+                nomisCaseNoteId = NOMIS_CASE_NOTE_ID2,
+                mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
+              ),
+            ),
+          )
+          caseNotesNomisApi.stubDeleteCaseNote(caseNoteId = NOMIS_CASE_NOTE_ID)
+          caseNotesNomisApi.stubDeleteCaseNote(caseNoteId = NOMIS_CASE_NOTE_ID2)
+          caseNotesMappingApi.stubDeleteByDpsId(DPS_CASE_NOTE_ID)
+          publishDeleteCaseNoteDomainEvent(caseNoteUuid = DPS_CASE_NOTE_ID, offenderNo = OFFENDER_NO)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry containing key facts about the deleted caseNote`() {
+          verify(telemetryClient).trackEvent(
+            eq("casenotes-deleted-success"),
+            check {
+              assertThat(it).containsEntry("dpsCaseNoteId", DPS_CASE_NOTE_ID)
+              assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
+              assertThat(it).containsEntry("nomisCaseNoteId-1", "$NOMIS_CASE_NOTE_ID")
+              assertThat(it).containsEntry("nomisBookingId-1", "$NOMIS_BOOKING_ID")
+              assertThat(it).containsEntry("nomisCaseNoteId-2", "$NOMIS_CASE_NOTE_ID2")
+              assertThat(it).containsEntry("nomisBookingId-2", "$NOMIS_BOOKING_ID")
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call the mapping service to get the NOMIS caseNote id`() {
+          caseNotesMappingApi.verify(getRequestedFor(urlMatching("/mapping/casenotes/dps-casenote-id/$DPS_CASE_NOTE_ID/all")))
+        }
+
+        @Test
+        fun `will delete the caseNote in NOMIS`() {
+          caseNotesNomisApi.verify(deleteRequestedFor(urlEqualTo("/casenotes/$NOMIS_CASE_NOTE_ID")))
+          caseNotesNomisApi.verify(deleteRequestedFor(urlEqualTo("/casenotes/$NOMIS_CASE_NOTE_ID2")))
         }
 
         @Test

@@ -92,11 +92,9 @@ class CaseNotesService(
 
         val dpsCaseNote = dpsApiService.getCaseNote(offenderNo, dpsCaseNoteId)
         val updateCaseNoteRequest = dpsCaseNote.toNomisUpdateRequest()
-        var i = 1
-        for (dto in mappings) {
-          telemetryMap["nomisBookingId-$i"] = dto.nomisBookingId.toString()
-          telemetryMap["nomisCaseNoteId-$i"] = dto.nomisCaseNoteId.toString()
-          i++
+        mappings.forEachIndexed { i, dto ->
+          telemetryMap["nomisBookingId-${i + 1}"] = dto.nomisBookingId.toString()
+          telemetryMap["nomisCaseNoteId-${i + 1}"] = dto.nomisCaseNoteId.toString()
           nomisApiService.updateCaseNote(dto.nomisCaseNoteId, updateCaseNoteRequest)
         }
         telemetryClient.trackEvent("casenotes-amend-success", telemetryMap)
@@ -118,14 +116,16 @@ class CaseNotesService(
     )
     if (caseNoteEvent.wasDeletedInDPS() && caseNoteEvent.notDpsOnly()) {
       runCatching {
-        mappingApiService.getOrNullByDpsId(dpsCaseNoteId)?.firstOrNull()?.also { mapping ->
-          telemetryMap["nomisBookingId"] = mapping.nomisBookingId.toString()
-          telemetryMap["nomisCaseNoteId"] = mapping.nomisCaseNoteId.toString()
-
-          nomisApiService.deleteCaseNote(caseNoteId = mapping.nomisCaseNoteId)
-          tryToDeleteMapping(dpsCaseNoteId)
-          telemetryClient.trackEvent("casenotes-deleted-success", telemetryMap)
-        } ?: also {
+        mappingApiService.getOrNullByDpsId(dpsCaseNoteId)
+          ?.forEachIndexed { i, dto ->
+            telemetryMap["nomisBookingId-${i + 1}"] = dto.nomisBookingId.toString()
+            telemetryMap["nomisCaseNoteId-${i + 1}"] = dto.nomisCaseNoteId.toString()
+            nomisApiService.deleteCaseNote(dto.nomisCaseNoteId)
+          }
+          ?.also { mapping ->
+            tryToDeleteMapping(dpsCaseNoteId)
+            telemetryClient.trackEvent("casenotes-deleted-success", telemetryMap)
+          } ?: also {
           telemetryClient.trackEvent("casenotes-deleted-skipped", telemetryMap)
         }
       }.onFailure { e ->
