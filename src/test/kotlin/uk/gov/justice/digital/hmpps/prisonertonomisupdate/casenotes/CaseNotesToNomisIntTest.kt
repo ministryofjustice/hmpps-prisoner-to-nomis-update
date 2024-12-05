@@ -288,12 +288,14 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           caseNotesMappingApi.stubGetByDpsId(
             dpsCaseNoteId = DPS_CASE_NOTE_ID,
-            CaseNoteMappingDto(
-              dpsCaseNoteId = DPS_CASE_NOTE_ID,
-              nomisBookingId = NOMIS_BOOKING_ID,
-              offenderNo = "A1234AA",
-              nomisCaseNoteId = NOMIS_CASE_NOTE_ID,
-              mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
+            listOf(
+              CaseNoteMappingDto(
+                dpsCaseNoteId = DPS_CASE_NOTE_ID,
+                nomisBookingId = NOMIS_BOOKING_ID,
+                offenderNo = "A1234AA",
+                nomisCaseNoteId = NOMIS_CASE_NOTE_ID,
+                mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
+              ),
             ),
           )
           publishCreateCaseNoteDomainEvent(offenderNo = OFFENDER_NO, caseNoteUuid = DPS_CASE_NOTE_ID)
@@ -402,13 +404,14 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           caseNotesMappingApi.stubGetByDpsId(
             DPS_CASE_NOTE_ID,
-            CaseNoteMappingDto(
-              dpsCaseNoteId = DPS_CASE_NOTE_ID,
-              nomisBookingId = NOMIS_BOOKING_ID,
-              offenderNo = "A1234AA",
-              // TODO
-              nomisCaseNoteId = NOMIS_CASE_NOTE_ID2,
-              mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
+            listOf(
+              CaseNoteMappingDto(
+                dpsCaseNoteId = DPS_CASE_NOTE_ID,
+                nomisBookingId = NOMIS_BOOKING_ID,
+                offenderNo = "A1234AA",
+                nomisCaseNoteId = NOMIS_CASE_NOTE_ID2,
+                mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
+              ),
             ),
           )
           caseNotesDpsApi.stubGetCaseNote(
@@ -448,8 +451,8 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
             check {
               assertThat(it).containsEntry("dpsCaseNoteId", DPS_CASE_NOTE_ID)
               assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
-              assertThat(it).containsEntry("nomisCaseNoteId", "$NOMIS_CASE_NOTE_ID2")
-              assertThat(it).containsEntry("nomisBookingId", "$NOMIS_BOOKING_ID")
+              assertThat(it).containsEntry("nomisCaseNoteId-1", "$NOMIS_CASE_NOTE_ID2")
+              assertThat(it).containsEntry("nomisBookingId-1", "$NOMIS_BOOKING_ID")
             },
             isNull(),
           )
@@ -483,6 +486,97 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Nested
+      @DisplayName("when there is a merge duplicate")
+      inner class WhenMerge {
+        @BeforeEach
+        fun setUp() {
+          caseNotesMappingApi.stubGetByDpsId(
+            DPS_CASE_NOTE_ID,
+            listOf(
+              CaseNoteMappingDto(
+                dpsCaseNoteId = DPS_CASE_NOTE_ID,
+                nomisBookingId = NOMIS_BOOKING_ID,
+                offenderNo = "A1234AA",
+                nomisCaseNoteId = NOMIS_CASE_NOTE_ID,
+                mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
+              ),
+              CaseNoteMappingDto(
+                dpsCaseNoteId = DPS_CASE_NOTE_ID,
+                nomisBookingId = NOMIS_BOOKING_ID,
+                offenderNo = "A1234AA",
+                nomisCaseNoteId = NOMIS_CASE_NOTE_ID2,
+                mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
+              ),
+            ),
+          )
+          caseNotesDpsApi.stubGetCaseNote(
+            caseNote = dpsCaseNote().copy(
+              caseNoteId = DPS_CASE_NOTE_ID,
+              offenderIdentifier = OFFENDER_NO,
+              type = "HPI",
+              amendments = listOf(
+                CaseNoteAmendment(
+                  additionalNoteText = "amendment",
+                  authorUserId = "54321",
+                  creationDateTime = LocalDateTime.parse("2024-05-06T07:08:09"),
+                  authorName = "ME SMITH",
+                  authorUserName = "ME",
+                ),
+              ),
+            ),
+          )
+          caseNotesNomisApi.stubPutCaseNote(caseNoteId = NOMIS_CASE_NOTE_ID)
+          caseNotesNomisApi.stubPutCaseNote(caseNoteId = NOMIS_CASE_NOTE_ID2)
+          publishUpdateCaseNoteDomainEvent(caseNoteUuid = DPS_CASE_NOTE_ID, offenderNo = OFFENDER_NO)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event containing key facts about the updated caseNote`() {
+          verify(telemetryClient).trackEvent(
+            eq("casenotes-amend-success"),
+            check {
+              assertThat(it).containsEntry("dpsCaseNoteId", DPS_CASE_NOTE_ID)
+              assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
+              assertThat(it).containsEntry("nomisCaseNoteId-1", "$NOMIS_CASE_NOTE_ID")
+              assertThat(it).containsEntry("nomisBookingId-1", "$NOMIS_BOOKING_ID")
+              assertThat(it).containsEntry("nomisCaseNoteId-2", "$NOMIS_CASE_NOTE_ID2")
+              assertThat(it).containsEntry("nomisBookingId-2", "$NOMIS_BOOKING_ID")
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call the mapping service to get the NOMIS caseNote id`() {
+          caseNotesMappingApi.verify(getRequestedFor(urlMatching("/mapping/casenotes/dps-casenote-id/$DPS_CASE_NOTE_ID/all")))
+        }
+
+        @Test
+        fun `will call back to DPS to get caseNote details`() {
+          caseNotesDpsApi.verify(getRequestedFor(urlMatching("/case-notes/$OFFENDER_NO/$DPS_CASE_NOTE_ID")))
+        }
+
+        @Test
+        fun `will update the caseNotes in NOMIS with details of the DPS caseNote`() {
+          caseNotesNomisApi.verify(
+            putRequestedFor(urlEqualTo("/casenotes/$NOMIS_CASE_NOTE_ID"))
+              .withRequestBodyJsonPath("text", "contents of case note")
+              .withRequestBodyJsonPath("amendments[0].text", "amendment")
+              .withRequestBodyJsonPath("amendments[0].authorUsername", "ME")
+              .withRequestBodyJsonPath("amendments[0].createdDateTime", "2024-05-06T07:08:09"),
+          )
+          caseNotesNomisApi.verify(
+            putRequestedFor(urlEqualTo("/casenotes/$NOMIS_CASE_NOTE_ID2"))
+              .withRequestBodyJsonPath("text", "contents of case note")
+              .withRequestBodyJsonPath("amendments[0].text", "amendment")
+              .withRequestBodyJsonPath("amendments[0].authorUsername", "ME")
+              .withRequestBodyJsonPath("amendments[0].createdDateTime", "2024-05-06T07:08:09"),
+          )
+        }
+      }
+
+      @Nested
       inner class Exceptions {
         @Nested
         @DisplayName("when DPS fails")
@@ -491,12 +585,14 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
           fun setUp() {
             caseNotesMappingApi.stubGetByDpsId(
               DPS_CASE_NOTE_ID,
-              CaseNoteMappingDto(
-                dpsCaseNoteId = DPS_CASE_NOTE_ID,
-                nomisBookingId = NOMIS_BOOKING_ID,
-                offenderNo = "A1234AA",
-                nomisCaseNoteId = NOMIS_CASE_NOTE_ID2,
-                mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
+              listOf(
+                CaseNoteMappingDto(
+                  dpsCaseNoteId = DPS_CASE_NOTE_ID,
+                  nomisBookingId = NOMIS_BOOKING_ID,
+                  offenderNo = "A1234AA",
+                  nomisCaseNoteId = NOMIS_CASE_NOTE_ID2,
+                  mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
+                ),
               ),
             )
             caseNotesDpsApi.stubGetCaseNote(
@@ -612,13 +708,14 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           caseNotesMappingApi.stubGetByDpsId(
             DPS_CASE_NOTE_ID,
-            CaseNoteMappingDto(
-              dpsCaseNoteId = DPS_CASE_NOTE_ID,
-              nomisBookingId = NOMIS_BOOKING_ID,
-              offenderNo = "A1234AA",
-              // TODO
-              nomisCaseNoteId = NOMIS_CASE_NOTE_ID,
-              mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
+            listOf(
+              CaseNoteMappingDto(
+                dpsCaseNoteId = DPS_CASE_NOTE_ID,
+                nomisBookingId = NOMIS_BOOKING_ID,
+                offenderNo = "A1234AA",
+                nomisCaseNoteId = NOMIS_CASE_NOTE_ID,
+                mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
+              ),
             ),
           )
           caseNotesNomisApi.stubDeleteCaseNote(caseNoteId = NOMIS_CASE_NOTE_ID)
@@ -673,13 +770,14 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           caseNotesMappingApi.stubGetByDpsId(
             DPS_CASE_NOTE_ID,
-            CaseNoteMappingDto(
-              dpsCaseNoteId = DPS_CASE_NOTE_ID,
-              nomisBookingId = NOMIS_BOOKING_ID,
-              offenderNo = "A1234AA",
-              // TODO
-              nomisCaseNoteId = NOMIS_CASE_NOTE_ID,
-              mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
+            listOf(
+              CaseNoteMappingDto(
+                dpsCaseNoteId = DPS_CASE_NOTE_ID,
+                nomisBookingId = NOMIS_BOOKING_ID,
+                offenderNo = "A1234AA",
+                nomisCaseNoteId = NOMIS_CASE_NOTE_ID,
+                mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
+              ),
             ),
           )
           caseNotesNomisApi.stubDeleteCaseNote(caseNoteId = NOMIS_CASE_NOTE_ID)
@@ -717,9 +815,8 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
     caseNoteUuid: String = UUID.randomUUID().toString(),
     source: CaseNoteSource = CaseNoteSource.DPS,
     syncToNomis: Boolean = true,
-    legacyId: Long = 3L,
   ) {
-    publishCaseNoteDomainEvent("person.case-note.created", offenderNo, caseNoteUuid, NOMIS_CASE_NOTE_ID2, source, syncToNomis, legacyId)
+    publishCaseNoteDomainEvent("person.case-note.created", offenderNo, caseNoteUuid, NOMIS_CASE_NOTE_ID2, source, syncToNomis)
   }
 
   private fun publishUpdateCaseNoteDomainEvent(
@@ -727,9 +824,8 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
     caseNoteUuid: String = UUID.randomUUID().toString(),
     source: CaseNoteSource = CaseNoteSource.DPS,
     syncToNomis: Boolean = true,
-    legacyId: Long = 3L,
   ) {
-    publishCaseNoteDomainEvent("person.case-note.updated", offenderNo, caseNoteUuid, NOMIS_CASE_NOTE_ID2, source, syncToNomis, legacyId)
+    publishCaseNoteDomainEvent("person.case-note.updated", offenderNo, caseNoteUuid, NOMIS_CASE_NOTE_ID2, source, syncToNomis)
   }
 
   private fun publishDeleteCaseNoteDomainEvent(
@@ -737,9 +833,8 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
     caseNoteUuid: String = UUID.randomUUID().toString(),
     source: CaseNoteSource = CaseNoteSource.DPS,
     syncToNomis: Boolean = true,
-    legacyId: Long = 3L,
   ) {
-    publishCaseNoteDomainEvent("person.case-note.deleted", offenderNo, caseNoteUuid, NOMIS_CASE_NOTE_ID2, source, syncToNomis, legacyId)
+    publishCaseNoteDomainEvent("person.case-note.deleted", offenderNo, caseNoteUuid, NOMIS_CASE_NOTE_ID2, source, syncToNomis)
   }
 
   private fun publishCaseNoteDomainEvent(
@@ -749,7 +844,6 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
     nomisCaseNoteId: Long,
     source: CaseNoteSource,
     syncToNomis: Boolean,
-    legacyId: Long,
   ) {
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -761,7 +855,6 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
             nomisCaseNoteId = nomisCaseNoteId,
             source = source,
             syncToNomis = syncToNomis,
-            legacyId = legacyId,
           ),
         )
         .messageAttributes(
@@ -780,7 +873,6 @@ fun caseNoteMessagePayload(
   nomisCaseNoteId: Long,
   source: CaseNoteSource,
   syncToNomis: Boolean,
-  legacyId: Long,
 ) =
   //language=JSON
   """

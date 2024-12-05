@@ -87,17 +87,18 @@ class CaseNotesService(
 
     if (caseNoteEvent.wasAmendedInDPS() && caseNoteEvent.notDpsOnly()) {
       runCatching {
-        val mapping = mappingApiService.getOrNullByDpsId(dpsCaseNoteId)?.firstOrNull() // TODO first() is temp until proper handling
+        val mappings = mappingApiService.getOrNullByDpsId(dpsCaseNoteId)
           ?: throw IllegalStateException("Tried to amend an casenote that has no mapping")
 
-        telemetryMap["nomisBookingId"] = mapping.nomisBookingId.toString()
-        telemetryMap["nomisCaseNoteId"] = mapping.nomisCaseNoteId.toString()
-
         val dpsCaseNote = dpsApiService.getCaseNote(offenderNo, dpsCaseNoteId)
-        nomisApiService.updateCaseNote(
-          caseNoteId = mapping.nomisCaseNoteId,
-          dpsCaseNote.toNomisUpdateRequest(),
-        )
+        val updateCaseNoteRequest = dpsCaseNote.toNomisUpdateRequest()
+        var i = 1
+        for (dto in mappings) {
+          telemetryMap["nomisBookingId-$i"] = dto.nomisBookingId.toString()
+          telemetryMap["nomisCaseNoteId-$i"] = dto.nomisCaseNoteId.toString()
+          i++
+          nomisApiService.updateCaseNote(dto.nomisCaseNoteId, updateCaseNoteRequest)
+        }
         telemetryClient.trackEvent("casenotes-amend-success", telemetryMap)
       }.onFailure { e ->
         telemetryClient.trackEvent("casenotes-amend-failed", telemetryMap)

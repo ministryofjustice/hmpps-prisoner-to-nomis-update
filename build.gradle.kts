@@ -114,7 +114,6 @@ val buildDirectory: Directory = layout.buildDirectory.get()
 
 tasks.register("buildActivityApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
-  skipValidateSpec.set(true) // TODO - turn this back on when the spec is valid again!
   inputSpec.set("openapi-specs/activities-api-docs.json")
   // remoteInputSpec.set("https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs")
   outputDir.set("$buildDirectory/generated/activities")
@@ -126,7 +125,7 @@ tasks.register("buildActivityApiModel", GenerateTask::class) {
 
 tasks.register("buildAdjudicationApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
-  skipValidateSpec.set(true)
+  skipValidateSpec.set(true) // TODO - turn validation back on when the spec is valid again!
   inputSpec.set("openapi-specs/adjudications-api-docs.json")
   outputDir.set("$buildDirectory/generated/adjudications")
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model")
@@ -184,7 +183,6 @@ tasks.register("buildMappingServiceApiModel", GenerateTask::class) {
 
 tasks.register("buildSentencingAdjustmentsApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
-  skipValidateSpec.set(true)
   inputSpec.set("openapi-specs/sentencing-adjustments-api-docs.json")
   outputDir.set("$buildDirectory/generated/sentencingadjustments")
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.model")
@@ -195,7 +193,6 @@ tasks.register("buildSentencingAdjustmentsApiModel", GenerateTask::class) {
 
 tasks.register("buildCourtSentencingApiModel", GenerateTask::class) {
   generatorName.set("kotlin")
-  skipValidateSpec.set(true)
   inputSpec.set("openapi-specs/court-sentencing-api-docs.json")
   outputDir.set("$buildDirectory/generated/courtsentencing")
   modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model")
