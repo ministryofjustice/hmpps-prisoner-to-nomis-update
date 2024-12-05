@@ -60,12 +60,14 @@ class CaseNotesMappingApiServiceTest {
     fun `will return dpsCaseNoteId when mapping exists`() = runTest {
       casenotesMappingApiMockServer.stubGetByDpsId(
         dpsCaseNoteId = dpsCaseNoteId,
-        mapping = CaseNoteMappingDto(
-          dpsCaseNoteId = dpsCaseNoteId,
-          nomisBookingId = 123456,
-          offenderNo = "A1234AA",
-          nomisCaseNoteId = 1,
-          mappingType = CaseNoteMappingDto.MappingType.MIGRATED,
+        mappings = listOf(
+          CaseNoteMappingDto(
+            dpsCaseNoteId = dpsCaseNoteId,
+            nomisBookingId = 123456,
+            offenderNo = "A1234AA",
+            nomisCaseNoteId = 1,
+            mappingType = CaseNoteMappingDto.MappingType.MIGRATED,
+          ),
         ),
       )
 

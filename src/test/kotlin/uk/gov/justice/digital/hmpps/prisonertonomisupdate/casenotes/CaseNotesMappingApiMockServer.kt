@@ -22,12 +22,14 @@ import java.util.UUID
 class CaseNotesMappingApiMockServer(private val objectMapper: ObjectMapper) {
   fun stubGetByDpsId(
     dpsCaseNoteId: String = UUID.randomUUID().toString(),
-    mapping: CaseNoteMappingDto = CaseNoteMappingDto(
-      offenderNo = "A1234AA",
-      nomisBookingId = 123456,
-      nomisCaseNoteId = 1,
-      dpsCaseNoteId = UUID.randomUUID().toString(),
-      mappingType = CaseNoteMappingDto.MappingType.MIGRATED,
+    mappings: List<CaseNoteMappingDto> = listOf(
+      CaseNoteMappingDto(
+        offenderNo = "A1234AA",
+        nomisBookingId = 123456,
+        nomisCaseNoteId = 1,
+        dpsCaseNoteId = dpsCaseNoteId,
+        mappingType = CaseNoteMappingDto.MappingType.MIGRATED,
+      ),
     ),
   ) {
     mappingServer.stubFor(
@@ -35,7 +37,7 @@ class CaseNotesMappingApiMockServer(private val objectMapper: ObjectMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(objectMapper.writeValueAsString(listOf(mapping))),
+          .withBody(objectMapper.writeValueAsString(mappings)),
       ),
     )
   }
@@ -93,7 +95,6 @@ class CaseNotesMappingApiMockServer(private val objectMapper: ObjectMapper) {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(201),
-
         ).willSetStateTo(Scenario.STARTED),
     )
   }
