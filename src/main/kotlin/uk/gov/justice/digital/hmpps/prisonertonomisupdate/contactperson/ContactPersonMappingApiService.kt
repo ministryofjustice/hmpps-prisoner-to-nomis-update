@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactRestrictionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmailMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonIdentifierMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
@@ -37,6 +38,14 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
     )
     .retrieve()
     .awaitBodyOrNullForNotFound()
+
+  suspend fun getByDpsPrisonerContactId(dpsPrisonerContactId: Long): PersonContactMappingDto = webClient.get()
+    .uri(
+      "/mapping/contact-person/contact/dps-prisoner-contact-id/{dpsPrisonerContactId}",
+      dpsPrisonerContactId,
+    )
+    .retrieve()
+    .awaitBody()
 
   suspend fun createContactMapping(mappings: PersonContactMappingDto) =
     webClient.post()
@@ -85,6 +94,14 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
+  suspend fun getByDpsPrisonerContactRestrictionIdOrNull(dpsPrisonerContactRestrictionId: Long): PersonContactRestrictionMappingDto? = webClient.get()
+    .uri(
+      "/mapping/contact-person/contact-restriction/dps-prisoner-contact-restriction-id/{dpsPrisonerContactRestrictionId}",
+      dpsPrisonerContactRestrictionId,
+    )
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
   suspend fun createAddressMapping(mappings: PersonAddressMappingDto) =
     webClient.post()
       .uri("/mapping/contact-person/address")
@@ -117,6 +134,13 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
   suspend fun createIdentifierMapping(mappings: PersonIdentifierMappingDto) =
     webClient.post()
       .uri("/mapping/contact-person/identifier")
+      .bodyValue(mappings)
+      .retrieve()
+      .awaitBodilessEntityOrThrowOnConflict()
+
+  suspend fun createContactRestrictionMapping(mappings: PersonContactRestrictionMappingDto) =
+    webClient.post()
+      .uri("/mapping/contact-person/contact-restriction")
       .bodyValue(mappings)
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()

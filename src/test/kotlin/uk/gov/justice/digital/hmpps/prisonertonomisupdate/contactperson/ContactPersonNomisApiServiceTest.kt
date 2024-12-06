@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createContactPersonRestrictionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createContactPersonRestrictionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonContactRequest
@@ -268,6 +270,74 @@ class ContactPersonNomisApiServiceTest {
       val response = apiService.createPersonIdentifier(personId = 1234567, request = createPersonIdentifierRequest())
 
       assertThat(response.sequence).isEqualTo(4)
+    }
+  }
+
+  @Nested
+  inner class CreatePersonRestriction {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubCreatePersonRestriction(personId = 1234567)
+
+      apiService.createPersonRestriction(personId = 1234567, request = createContactPersonRestrictionRequest())
+
+      mockServer.verify(
+        postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call create endpoint`() = runTest {
+      mockServer.stubCreatePersonRestriction(personId = 1234567)
+
+      apiService.createPersonRestriction(personId = 1234567, request = createContactPersonRestrictionRequest())
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/persons/1234567/restriction")),
+      )
+    }
+
+    @Test
+    fun `will return restriction id `() = runTest {
+      mockServer.stubCreatePersonRestriction(personId = 1234567, response = createContactPersonRestrictionResponse().copy(id = 123456))
+
+      val response = apiService.createPersonRestriction(personId = 1234567, request = createContactPersonRestrictionRequest())
+
+      assertThat(response.id).isEqualTo(123456)
+    }
+  }
+
+  @Nested
+  inner class CreateContactRestriction {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubCreateContactRestriction(personId = 1234567, contactId = 67890)
+
+      apiService.createContactRestriction(personId = 1234567, contactId = 67890, request = createContactPersonRestrictionRequest())
+
+      mockServer.verify(
+        postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call create endpoint`() = runTest {
+      mockServer.stubCreateContactRestriction(personId = 1234567, contactId = 67890)
+
+      apiService.createContactRestriction(personId = 1234567, contactId = 67890, request = createContactPersonRestrictionRequest())
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/persons/1234567/contact/67890/restriction")),
+      )
+    }
+
+    @Test
+    fun `will return restriction id `() = runTest {
+      mockServer.stubCreateContactRestriction(personId = 1234567, contactId = 67890, response = createContactPersonRestrictionResponse().copy(id = 123456))
+
+      val response = apiService.createContactRestriction(personId = 1234567, contactId = 67890, request = createContactPersonRestrictionRequest())
+
+      assertThat(response.id).isEqualTo(123456)
     }
   }
 }

@@ -15,14 +15,19 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactPhone
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.prisonerContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.prisonerContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactAddressPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactPhone
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncPrisonerContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncPrisonerContactRestriction
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class ContactPersonDpsApiExtension :
@@ -105,6 +110,30 @@ class ContactPersonDpsApiExtension :
       identityValue = "SMIT5654DL",
       identityType = "DL",
       issuingAuthority = "DVLA",
+      createdBy = "JANE.SAM",
+      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+    )
+
+    fun contactRestriction() = SyncContactRestriction(
+      contactRestrictionId = 1234567,
+      contactId = 12345,
+      restrictionType = "BAN",
+      startDate = LocalDate.parse("2020-01-01"),
+      expiryDate = LocalDate.parse("2025-01-01"),
+      comments = "Banned for life",
+      createdBy = "JANE.SAM",
+      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+    )
+
+    fun prisonerContactRestriction() = SyncPrisonerContactRestriction(
+      prisonerContactRestrictionId = 1234567,
+      prisonerContactId = 65432,
+      prisonerNumber = "A1234KT",
+      contactId = 12345,
+      restrictionType = "BAN",
+      startDate = LocalDate.parse("2020-01-01"),
+      expiryDate = LocalDate.parse("2025-01-01"),
+      comments = "Banned for life",
       createdBy = "JANE.SAM",
       createdTime = LocalDateTime.parse("2024-01-01T12:13"),
     )
@@ -212,6 +241,29 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetContactIdentity(contactIdentityId: Long, response: SyncContactIdentity = contactIdentity()) {
     stubFor(
       get("/sync/contact-identity/$contactIdentityId")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+  fun stubGetContactRestriction(contactRestrictionId: Long, response: SyncContactRestriction = contactRestriction()) {
+    stubFor(
+      get("/sync/contact-restriction/$contactRestrictionId")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  fun stubGetPrisonerContactRestriction(contactPrisonerRestrictionId: Long, response: SyncPrisonerContactRestriction = prisonerContactRestriction()) {
+    stubFor(
+      get("/sync/prisoner-contact-restriction/$contactPrisonerRestrictionId")
         .willReturn(
           aResponse()
             .withStatus(200)

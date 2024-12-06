@@ -10,7 +10,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.Sy
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactPhone
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncPrisonerContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncPrisonerContactRestriction
 
 @Service
 class ContactPersonDpsApiService(@Qualifier("contactPersonApiWebClient") private val webClient: WebClient) {
@@ -46,6 +48,16 @@ class ContactPersonDpsApiService(@Qualifier("contactPersonApiWebClient") private
 
   suspend fun getContactIdentity(contactIdentityId: Long): SyncContactIdentity = webClient.get()
     .uri("/sync/contact-identity/{contactIdentityId}", contactIdentityId)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun getContactRestriction(contactRestrictionId: Long): SyncContactRestriction = webClient.get()
+    .uri("/sync/contact-restriction/{contactRestrictionId}", contactRestrictionId)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun getPrisonerContactRestriction(prisonerContactRestrictionId: Long): SyncPrisonerContactRestriction = webClient.get()
+    .uri("/sync/prisoner-contact-restriction/{prisonerContactRestrictionId}", prisonerContactRestrictionId)
     .retrieve()
     .awaitBody()
 }
