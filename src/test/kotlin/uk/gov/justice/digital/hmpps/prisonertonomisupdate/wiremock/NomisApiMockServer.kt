@@ -2213,6 +2213,26 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubCourtCaseDelete(offenderNo: String, nomisCourtCaseId: Long) {
+    stubFor(
+      delete("/prisoners/$offenderNo/sentencing/court-cases/$nomisCourtCaseId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
+
+  fun stubCourtAppearanceDelete(offenderNo: String, nomisCourtCaseId: Long, nomisEventId: Long) {
+    stubFor(
+      delete("/prisoners/$offenderNo/sentencing/court-cases/$nomisCourtCaseId/court-appearances/$nomisEventId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
+
   fun stubCaseReferenceRefresh(offenderNo: String, courtCaseId: Long) {
     stubFor(
       post("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/case-identifiers").willReturn(

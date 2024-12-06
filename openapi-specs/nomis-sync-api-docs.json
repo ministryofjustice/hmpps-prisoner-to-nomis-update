@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-12-05.10170.2c319e9"
+    "version": "2024-12-06.10180.32f68c5"
   },
   "servers": [
     {
@@ -636,6 +636,88 @@
           },
           "404": {
             "description": "Court appearance does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "Updates Court Appearance",
+        "description": "Required role NOMIS_SENTENCING Deletes s Court Appearance for the offender.",
+        "operationId": "deleteCourtAppearance",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender no",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender no",
+              "example": "AB1234A"
+            },
+            "example": "AB1234A"
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "description": "Case Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Case Id",
+              "format": "int64",
+              "example": 34565
+            },
+            "example": 34565
+          },
+          {
+            "name": "eventId",
+            "in": "path",
+            "description": "Case appearance Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Case appearance Id",
+              "format": "int64",
+              "example": 34565
+            },
+            "example": 34565
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourtAppearanceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Court Appearance deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
             "content": {
               "application/json": {
                 "schema": {
@@ -9126,6 +9208,66 @@
           },
           "404": {
             "description": "Offender not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "delete a court case",
+        "description": "Requires role NOMIS_SENTENCING. Deletes a court case by id",
+        "operationId": "deleteCourtCase",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Court case id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Court case id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender No",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender No",
+              "example": "AB2134"
+            },
+            "example": "AB2134"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "court case deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
             "content": {
               "application/json": {
                 "schema": {

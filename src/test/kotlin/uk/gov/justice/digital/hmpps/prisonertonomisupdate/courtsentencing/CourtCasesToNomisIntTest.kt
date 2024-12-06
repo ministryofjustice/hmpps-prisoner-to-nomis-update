@@ -222,7 +222,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         NomisApiExtension.nomisApi.verify(
           0,
-          WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/offenderNo/$OFFENDER_NO/sentencing/court-cases")),
+          WireMock.postRequestedFor(WireMock.anyUrl()),
         )
       }
     }
@@ -295,6 +295,83 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           )
         }
       }
+    }
+  }
+
+  @Nested
+  inner class DeleteCourtCase {
+    @Nested
+    inner class WhenCourtCaseHasBeenDeletedInDPS {
+      @BeforeEach
+      fun setUp() {
+        NomisApiExtension.nomisApi.stubCourtCaseDelete(
+          offenderNo = OFFENDER_NO,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+
+        )
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(id = COURT_CASE_ID_FOR_CREATION, nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION)
+        MappingExtension.mappingServer.stubDeleteCourtCase(id = COURT_CASE_ID_FOR_CREATION)
+        publishDeleteCourtCaseDomainEvent()
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForHearingProcessingToBeComplete()
+
+        verify(telemetryClient).trackEvent(
+          org.mockito.kotlin.eq("court-case-deleted-success"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to delete the court case`() {
+        waitForHearingProcessingToBeComplete()
+        NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION")))
+      }
+
+      @Test
+      fun `will call the mapping service to delete the mapping`() {
+        waitForHearingProcessingToBeComplete()
+        MappingExtension.mappingServer.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/mapping/court-sentencing/court-cases/dps-court-case-id/$COURT_CASE_ID_FOR_CREATION")))
+      }
+    }
+
+    @Nested
+    inner class WhenNoMappingExistsForCase {
+
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
+        publishDeleteCourtCaseDomainEvent()
+      }
+
+      @Test
+      fun `will not attempt to delete a court case in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(1)).trackEvent(
+            org.mockito.kotlin.eq("court-case-deleted-skipped"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            },
+            isNull(),
+          )
+        }
+
+        NomisApiExtension.nomisApi.verify(
+          0,
+          WireMock.deleteRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+
+    private fun waitForHearingProcessingToBeComplete() {
+      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
     }
   }
 
@@ -452,7 +529,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         NomisApiExtension.nomisApi.verify(
           0,
-          WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/offenderNo/$OFFENDER_NO/sentencing/court-appearances")),
+          WireMock.postRequestedFor(WireMock.anyUrl()),
         )
       }
     }
@@ -816,9 +893,87 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         NomisApiExtension.nomisApi.verify(
           0,
-          WireMock.putRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$COURT_CASE_ID_FOR_CREATION/court-appearances/$NOMIS_COURT_APPEARANCE_ID")),
+          WireMock.putRequestedFor(WireMock.anyUrl()),
         )
       }
+    }
+  }
+
+  @Nested
+  inner class DeleteCourtAppearance {
+    @Nested
+    inner class WhenCourtAppearanceHasBeenDeletedInDPS {
+      @BeforeEach
+      fun setUp() {
+        NomisApiExtension.nomisApi.stubCourtAppearanceDelete(
+          offenderNo = OFFENDER_NO,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+          nomisEventId = NOMIS_COURT_APPEARANCE_ID,
+        )
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(id = COURT_CASE_ID_FOR_CREATION, nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION)
+        MappingExtension.mappingServer.stubGetCourtAppearanceMappingGivenDpsId(id = DPS_COURT_APPEARANCE_ID, nomisCourtAppearanceId = NOMIS_COURT_APPEARANCE_ID)
+        MappingExtension.mappingServer.stubDeleteCourtAppearance(id = DPS_COURT_APPEARANCE_ID)
+        publishDeleteCourtAppearanceDomainEvent()
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForHearingProcessingToBeComplete()
+
+        verify(telemetryClient).trackEvent(
+          org.mockito.kotlin.eq("court-appearance-deleted-success"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            Assertions.assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to delete the court appearance`() {
+        waitForHearingProcessingToBeComplete()
+        NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/court-appearances/$NOMIS_COURT_APPEARANCE_ID")))
+      }
+
+      @Test
+      fun `will call the mapping service to delete the mapping`() {
+        waitForHearingProcessingToBeComplete()
+        MappingExtension.mappingServer.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/mapping/court-sentencing/court-appearances/dps-court-appearance-id/$DPS_COURT_APPEARANCE_ID")))
+      }
+    }
+
+    @Nested
+    inner class WhenNoMappingExistsForAppearance {
+
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetCourtAppearanceMappingGivenDpsIdWithError(DPS_COURT_APPEARANCE_ID, 404)
+        publishDeleteCourtAppearanceDomainEvent()
+      }
+
+      @Test
+      fun `will not attempt to delete a court appearance in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(1)).trackEvent(
+            org.mockito.kotlin.eq("court-appearance-deleted-skipped"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            },
+            isNull(),
+          )
+        }
+
+        NomisApiExtension.nomisApi.verify(
+          0,
+          WireMock.deleteRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+
+    private fun waitForHearingProcessingToBeComplete() {
+      await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
     }
   }
 
@@ -958,7 +1113,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         NomisApiExtension.nomisApi.verify(
           0,
-          WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/offenderNo/$OFFENDER_NO/sentencing/court-charges")),
+          WireMock.postRequestedFor(WireMock.anyUrl()),
         )
       }
     }
@@ -1172,7 +1327,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         NomisApiExtension.nomisApi.verify(
           0,
-          WireMock.putRequestedFor(WireMock.urlEqualTo("/prisoners/offenderNo/$OFFENDER_NO/sentencing/court-charges/$NOMIS_COURT_CHARGE_ID")),
+          WireMock.putRequestedFor(WireMock.anyUrl()),
         )
       }
     }
@@ -1258,7 +1413,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         NomisApiExtension.nomisApi.verify(
           0,
-          WireMock.putRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$COURT_CASE_ID_FOR_CREATION/case-identifiers")),
+          WireMock.putRequestedFor(WireMock.anyUrl()),
         )
       }
     }
@@ -1271,6 +1426,49 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         .message(
           courtCaseMessagePayload(
             courtCaseId = COURT_CASE_ID_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            eventType = eventType,
+            source = source,
+          ),
+        )
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishDeleteCourtCaseDomainEvent(source: String = "DPS") {
+    val eventType = "court-case.deleted"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(
+          courtCaseMessagePayload(
+            courtCaseId = COURT_CASE_ID_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            eventType = eventType,
+            source = source,
+          ),
+        )
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishDeleteCourtAppearanceDomainEvent(source: String = "DPS") {
+    val eventType = "court-appearance.deleted"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(
+          courtAppearanceMessagePayload(
+            courtCaseId = COURT_CASE_ID_FOR_CREATION,
+            courtAppearanceId = DPS_COURT_APPEARANCE_ID,
             offenderNo = OFFENDER_NO,
             eventType = eventType,
             source = source,
