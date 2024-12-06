@@ -979,4 +979,67 @@ class ContactPersonMappingApiServiceTest {
       assertThat(error.moreInfo.duplicate["nomisId"]).isEqualTo(nomisId)
     }
   }
+
+  @Nested
+  inner class CreatePersonRestrictionMapping {
+    @Test
+    internal fun `will pass oath2 token to create person restriction mapping endpoint`() = runTest {
+      mockServer.stubCreatePersonRestrictionMapping()
+
+      apiService.createPersonRestrictionMapping(
+        PersonRestrictionMappingDto(
+          mappingType = PersonRestrictionMappingDto.MappingType.DPS_CREATED,
+          nomisId = 1234567,
+          dpsId = "1234567",
+        ),
+      )
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/mapping/contact-person/person-restriction"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will throw error when 409 conflict`() = runTest {
+      val nomisId = 2234567890
+      val dpsId = "2234567890"
+      val existingNomisId = 3234567890
+
+      mockServer.stubCreatePersonRestrictionMapping(
+        error = DuplicateMappingErrorResponse(
+          moreInfo = DuplicateErrorContentObject(
+            duplicate = PersonRestrictionMappingDto(
+              dpsId = dpsId,
+              nomisId = nomisId,
+              mappingType = PersonRestrictionMappingDto.MappingType.DPS_CREATED,
+            ),
+            existing = PersonRestrictionMappingDto(
+              dpsId = dpsId,
+              nomisId = existingNomisId,
+              mappingType = PersonRestrictionMappingDto.MappingType.DPS_CREATED,
+            ),
+          ),
+          errorCode = 1409,
+          status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+          userMessage = "Duplicate mapping",
+        ),
+      )
+
+      val error = assertThrows<DuplicateMappingException> {
+        apiService.createPersonRestrictionMapping(
+          PersonRestrictionMappingDto(
+            mappingType = PersonRestrictionMappingDto.MappingType.NOMIS_CREATED,
+            nomisId = nomisId,
+            dpsId = dpsId,
+          ),
+        )
+      }.error
+
+      assertThat(error.moreInfo.existing!!["dpsId"]).isEqualTo(dpsId)
+      assertThat(error.moreInfo.existing!!["nomisId"]).isEqualTo(existingNomisId)
+      assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
+      assertThat(error.moreInfo.duplicate["nomisId"]).isEqualTo(nomisId)
+    }
+  }
 }

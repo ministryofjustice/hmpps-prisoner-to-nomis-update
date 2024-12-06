@@ -12,20 +12,26 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.CONTACT_IDENTITY
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.CONTACT_PERSON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.CONTACT_PHONE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.CONTACT_RESTRICTION
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonService.Companion.MappingTypes.PRISONER_CONTACT_RESTRICTION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactAddressPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactPhone
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncPrisonerContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.model.SyncPrisonerContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactRestrictionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmailMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonIdentifierMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonEmailRequest
@@ -35,6 +41,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+import java.time.LocalDate
 
 @Service
 class ContactPersonService(
@@ -54,6 +61,8 @@ class ContactPersonService(
       CONTACT_PHONE("contact-phone"),
       CONTACT_ADDRESS_PHONE("contact-address-phone"),
       CONTACT_IDENTITY("contact-identity"),
+      PRISONER_CONTACT_RESTRICTION("prisoner-contact-restriction"),
+      CONTACT_RESTRICTION("contact-restriction"),
       ;
 
       companion object {
@@ -342,6 +351,57 @@ class ContactPersonService(
     }
   }
 
+  suspend fun prisonerContactRestrictionCreated(event: PrisonerContactRestrictionCreatedEvent) {
+    val entityName = PRISONER_CONTACT_RESTRICTION.entityName
+    val dpsPrisonerContactRestrictionId = event.additionalInformation.prisonerContactRestrictionId
+    val telemetryMap = mutableMapOf(
+      "dpsPrisonerContactRestrictionId" to dpsPrisonerContactRestrictionId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      synchronise {
+        name = entityName
+        telemetryClient = this@ContactPersonService.telemetryClient
+        retryQueueService = contactPersonRetryQueueService
+        eventTelemetry = telemetryMap
+
+        checkMappingDoesNotExist {
+          mappingApiService.getByDpsPrisonerContactRestrictionIdOrNull(dpsPrisonerContactRestrictionId)
+        }
+        transform {
+          val dpsPrisonerContactRestriction = dpsApiService.getPrisonerContactRestriction(dpsPrisonerContactRestrictionId).also {
+            telemetryMap["offenderNo"] = it.prisonerNumber
+            telemetryMap["dpsContactId"] = it.contactId.toString()
+            telemetryMap["nomisPersonId"] = it.contactId.toString()
+            telemetryMap["dpsPrisonerContactId"] = it.prisonerContactId.toString()
+          }
+          val nomisContactId = mappingApiService.getByDpsPrisonerContactId(dpsPrisonerContactRestriction.prisonerContactId).nomisId.also {
+            telemetryMap["nomisContactId"] = it.toString()
+          }
+          nomisApiService.createContactRestriction(
+            personId = dpsPrisonerContactRestriction.contactId,
+            contactId = nomisContactId,
+            dpsPrisonerContactRestriction.toNomisCreateRequest(),
+          ).also {
+            telemetryMap["nomisContactRestrictionId"] = it.id.toString()
+          }.let {
+            PersonContactRestrictionMappingDto(
+              dpsId = dpsPrisonerContactRestrictionId.toString(),
+              nomisId = it.id,
+              mappingType = PersonContactRestrictionMappingDto.MappingType.DPS_CREATED,
+            )
+          }
+        }
+        saveMapping { mappingApiService.createContactRestrictionMapping(it) }
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
+    }
+  }
+
+  // unlikely to get an event in dev right now given there is no UI for this
+  suspend fun contactRestrictionCreated(event: ContactRestrictionCreatedEvent): Unit = TODO()
+
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (MappingTypes.fromEntityName(baseMapping.entityName)) {
@@ -352,6 +412,8 @@ class ContactPersonService(
       CONTACT_PHONE -> createContactPhoneMapping(message.fromJson())
       CONTACT_ADDRESS_PHONE -> createContactAddressPhoneMapping(message.fromJson())
       CONTACT_IDENTITY -> createContactIdentifierMapping(message.fromJson())
+      PRISONER_CONTACT_RESTRICTION -> createContactRestrictionMapping(message.fromJson())
+      CONTACT_RESTRICTION -> createPersonRestrictionMapping(message.fromJson())
     }
   }
 
@@ -415,6 +477,26 @@ class ContactPersonService(
     mappingApiService.createPhoneMapping(message.mapping).also {
       telemetryClient.trackEvent(
         "contact-address-phone-create-success",
+        message.telemetryAttributes,
+        null,
+      )
+    }
+  }
+
+  suspend fun createContactRestrictionMapping(message: CreateMappingRetryMessage<PersonContactRestrictionMappingDto>) {
+    mappingApiService.createContactRestrictionMapping(message.mapping).also {
+      telemetryClient.trackEvent(
+        "prisoner-contact-restriction-create-success",
+        message.telemetryAttributes,
+        null,
+      )
+    }
+  }
+
+  suspend fun createPersonRestrictionMapping(message: CreateMappingRetryMessage<PersonRestrictionMappingDto>) {
+    mappingApiService.createPersonRestrictionMapping(message.mapping).also {
+      telemetryClient.trackEvent(
+        "contact-person-restriction-create-success",
         message.telemetryAttributes,
         null,
       )
@@ -489,6 +571,25 @@ private fun SyncContactIdentity.toNomisCreateRequest(): CreatePersonIdentifierRe
   identifier = this.identityValue!!,
   issuedAuthority = this.issuingAuthority,
   typeCode = this.identityType,
+)
+
+private fun SyncPrisonerContactRestriction.toNomisCreateRequest(): CreateContactPersonRestrictionRequest = CreateContactPersonRestrictionRequest(
+  // TODO - check with DPS - this should be non-nullable
+  typeCode = this.restrictionType!!,
+  effectiveDate = this.startDate ?: LocalDate.now(),
+  expiryDate = this.expiryDate,
+  comment = this.comments,
+  // TODO - check with DPS - this should be non-nullable
+  enteredStaffUsername = this.createdBy!!,
+)
+
+@Suppress("unused")
+private fun SyncContactRestriction.toNomisCreateRequest(): CreateContactPersonRestrictionRequest = CreateContactPersonRestrictionRequest(
+  typeCode = this.restrictionType,
+  effectiveDate = this.startDate ?: LocalDate.now(),
+  expiryDate = this.expiryDate,
+  comment = this.comments,
+  enteredStaffUsername = this.createdBy,
 )
 
 private fun SourcedContactPersonEvent.didOriginateInDPS() = this.additionalInformation.source == "DPS"

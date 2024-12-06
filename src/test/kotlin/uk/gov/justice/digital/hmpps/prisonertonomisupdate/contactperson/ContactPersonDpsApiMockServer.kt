@@ -261,9 +261,9 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetPrisonerContactRestriction(contactPrisonerRestrictionId: Long, response: SyncPrisonerContactRestriction = prisonerContactRestriction()) {
+  fun stubGetPrisonerContactRestriction(prisonerContactRestrictionId: Long, response: SyncPrisonerContactRestriction = prisonerContactRestriction()) {
     stubFor(
-      get("/sync/prisoner-contact-restriction/$contactPrisonerRestrictionId")
+      get("/sync/prisoner-contact-restriction/$prisonerContactRestrictionId")
         .willReturn(
           aResponse()
             .withStatus(200)
