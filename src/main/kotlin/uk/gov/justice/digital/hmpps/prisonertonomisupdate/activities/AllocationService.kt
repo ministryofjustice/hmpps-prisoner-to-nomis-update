@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Alloc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.AUTO_SUSPENDED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.ENDED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.SUSPENDED
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.SUSPENDED_WITH_PAY
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Slot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationExclusion
@@ -80,11 +81,11 @@ class AllocationService(
       null
     }
 
-  private fun isSuspended(status: Allocation.Status) = status in listOf(SUSPENDED, AUTO_SUSPENDED)
+  private fun isSuspended(status: Allocation.Status) = status in listOf(SUSPENDED, AUTO_SUSPENDED, SUSPENDED_WITH_PAY)
 
   private fun getSuspendedComment(status: Allocation.Status, by: String?, time: LocalDateTime?, reason: String?) =
     if (isSuspended(status)) {
-      "Suspended in DPS by $by at ${time?.format(humanTimeFormat)} for reason $reason"
+      "$status in DPS by $by at ${time?.format(humanTimeFormat)} for reason $reason"
     } else {
       null
     }
