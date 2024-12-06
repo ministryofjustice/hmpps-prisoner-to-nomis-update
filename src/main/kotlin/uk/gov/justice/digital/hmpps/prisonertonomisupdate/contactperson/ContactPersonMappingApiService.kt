@@ -144,4 +144,26 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
       .bodyValue(mappings)
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()
+
+  suspend fun createPersonRestrictionMapping(mappings: PersonRestrictionMappingDto) =
+    webClient.post()
+      .uri("/mapping/contact-person/person-restriction")
+      .bodyValue(mappings)
+      .retrieve()
+      .awaitBodilessEntityOrThrowOnConflict()
+}
+
+// TODO replace with real DTO
+data class PersonRestrictionMappingDto(
+  val dpsId: String,
+  val nomisId: Long,
+  val mappingType: MappingType,
+  val label: String? = null,
+  val whenCreated: String? = null,
+) {
+  enum class MappingType(val value: String) {
+    MIGRATED("MIGRATED"),
+    DPS_CREATED("DPS_CREATED"),
+    NOMIS_CREATED("NOMIS_CREATED"),
+  }
 }

@@ -230,7 +230,7 @@ class ContactPersonDpsApiServiceTest {
   inner class GetPrisonerContactRestriction {
     @Test
     internal fun `will pass oath2 token to endpoint`() = runTest {
-      dpsContactPersonServer.stubGetPrisonerContactRestriction(contactPrisonerRestrictionId = 1234567)
+      dpsContactPersonServer.stubGetPrisonerContactRestriction(prisonerContactRestrictionId = 1234567)
 
       apiService.getPrisonerContactRestriction(prisonerContactRestrictionId = 1234567)
 
@@ -242,7 +242,7 @@ class ContactPersonDpsApiServiceTest {
 
     @Test
     fun `will call the get sync endpoint`() = runTest {
-      dpsContactPersonServer.stubGetPrisonerContactRestriction(contactPrisonerRestrictionId = 1234567)
+      dpsContactPersonServer.stubGetPrisonerContactRestriction(prisonerContactRestrictionId = 1234567)
 
       apiService.getPrisonerContactRestriction(prisonerContactRestrictionId = 1234567)
 
