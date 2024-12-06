@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-12-04.5576.44b0b2d"
+    "version": "2024-12-05.5594.f3e2365"
   },
   "servers": [
     {
@@ -2934,6 +2934,68 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/PersonEmailMappingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Mapping created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unit"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden for this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/contact-person/contact-restriction": {
+      "post": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Creates person contact restriction mappings for synchronisation",
+        "description": "Creates person contact restriction mappings for synchronisation between NOMIS ids and dps ids. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "createPersonContactRestrictionMapping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonContactRestrictionMappingDto"
               }
             }
           },
@@ -8893,6 +8955,139 @@
         }
       }
     },
+    "/mapping/contact-person/contact-restriction/nomis-contact-restriction-id/{nomisContactRestrictionId}": {
+      "get": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Get person contact restriction mapping by nomis contact Id",
+        "description": "Retrieves the person contact restriction mapping by NOMIS ContactRestriction Id. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "getPersonContactRestrictionMappingByNomisId",
+        "parameters": [
+          {
+            "name": "nomisContactRestrictionId",
+            "in": "path",
+            "description": "NOMIS contact restriction id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "NOMIS contact restriction id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Person contactRestriction mapping data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonContactRestrictionMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access this endpoint is forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/contact-person/contact-restriction/dps-prisoner-contact-restriction-id/{dpsPrisonerContactRestrictionId}": {
+      "get": {
+        "tags": [
+          "contact-person-mapping-resource"
+        ],
+        "summary": "Get person contact restriction mapping by dps prisoner contact restriction Id",
+        "description": "Retrieves the person contact restriction mapping by DPS prisoner contact restriction Id. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "getPersonContactRestrictionMappingByDpsId",
+        "parameters": [
+          {
+            "name": "dpsPrisonerContactRestrictionId",
+            "in": "path",
+            "description": "DPS prisoner contact restriction id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DPS prisoner contact restriction id",
+              "example": "12345"
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Person Contact Restriction mapping data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonContactRestrictionMappingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access this endpoint is forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Id does not exist in mapping table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/contact-person/address/nomis-address-id/{nomisAddressId}": {
       "get": {
         "tags": [
@@ -13824,6 +14019,41 @@
           }
         }
       },
+      "PersonContactRestrictionMappingDto": {
+        "required": [
+          "dpsId",
+          "mappingType",
+          "nomisId"
+        ],
+        "type": "object",
+        "properties": {
+          "dpsId": {
+            "type": "string",
+            "description": "DPS id"
+          },
+          "nomisId": {
+            "type": "integer",
+            "description": "NOMIS id",
+            "format": "int64"
+          },
+          "label": {
+            "type": "string"
+          },
+          "mappingType": {
+            "type": "string",
+            "enum": [
+              "MIGRATED",
+              "DPS_CREATED",
+              "NOMIS_CREATED"
+            ]
+          },
+          "whenCreated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "example": "2021-07-05T10:35:17"
+          }
+        }
+      },
       "PersonContactMappingDto": {
         "required": [
           "dpsId",
@@ -14370,13 +14600,13 @@
       "PageCourtCaseMappingDto": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -14456,13 +14686,13 @@
       "PagePersonMappingDto": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -14534,13 +14764,13 @@
       "PagePrisonerAlertMappingsSummaryDto": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -14605,13 +14835,13 @@
       "PageAlertMappingDto": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"

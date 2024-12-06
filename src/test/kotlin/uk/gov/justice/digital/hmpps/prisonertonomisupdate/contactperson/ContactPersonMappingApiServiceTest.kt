@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Du
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactRestrictionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmailMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonIdentifierMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
@@ -195,6 +196,47 @@ class ContactPersonMappingApiServiceTest {
       )
 
       assertThat(apiService.getByDpsPrisonerContactIdOrNull(dpsPrisonerContactId = 1234567))
+    }
+  }
+
+  @Nested
+  inner class GetByDpsPrisonerContactId {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetByDpsPrisonerContactId(dpsPrisonerContactId = 1234567)
+
+      apiService.getByDpsPrisonerContactId(dpsPrisonerContactId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass DPS id to service`() = runTest {
+      mockServer.stubGetByDpsPrisonerContactId(dpsPrisonerContactId = 1234567)
+
+      apiService.getByDpsPrisonerContactId(dpsPrisonerContactId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/contact-person/contact/dps-prisoner-contact-id/1234567")),
+      )
+    }
+
+    @Test
+    fun `will return dpsId`() = runTest {
+      mockServer.stubGetByDpsPrisonerContactId(
+        dpsPrisonerContactId = 1234567,
+        mapping = PersonContactMappingDto(
+          dpsId = "1234567",
+          nomisId = 1234567,
+          mappingType = PersonContactMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      val mapping = apiService.getByDpsPrisonerContactId(dpsPrisonerContactId = 1234567)
+
+      assertThat(mapping.nomisId).isEqualTo(1234567)
     }
   }
 
@@ -821,6 +863,120 @@ class ContactPersonMappingApiServiceTest {
       )
 
       assertThat(apiService.getByDpsContactIdentityIdOrNull(dpsContactIdentityId = 1234567))
+    }
+  }
+
+  @Nested
+  inner class GetByDpsPrisonerContactRestrictionIdOrNull {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetByDpsPrisonerContactRestrictionIdOrNull(dpsPrisonerContactRestrictionId = 1234567)
+
+      apiService.getByDpsPrisonerContactRestrictionIdOrNull(dpsPrisonerContactRestrictionId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass DPS id to service`() = runTest {
+      mockServer.stubGetByDpsPrisonerContactRestrictionIdOrNull()
+
+      apiService.getByDpsPrisonerContactRestrictionIdOrNull(dpsPrisonerContactRestrictionId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/contact-person/contact-restriction/dps-prisoner-contact-restriction-id/1234567")),
+      )
+    }
+
+    @Test
+    fun `will return dpsId when mapping exists`() = runTest {
+      mockServer.stubGetByDpsPrisonerContactRestrictionIdOrNull(
+        dpsPrisonerContactRestrictionId = 1234567,
+        mapping = PersonContactRestrictionMappingDto(
+          dpsId = "1234567",
+          nomisId = 6543232,
+          mappingType = PersonContactRestrictionMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      val mapping = apiService.getByDpsPrisonerContactRestrictionIdOrNull(dpsPrisonerContactRestrictionId = 1234567)
+
+      assertThat(mapping?.nomisId).isEqualTo(6543232)
+    }
+
+    @Test
+    fun `will return null if mapping does not exist`() = runTest {
+      mockServer.stubGetByDpsPrisonerContactRestrictionIdOrNull(
+        dpsPrisonerContactRestrictionId = 1234567,
+        mapping = null,
+      )
+
+      assertThat(apiService.getByDpsPrisonerContactRestrictionIdOrNull(dpsPrisonerContactRestrictionId = 1234567))
+    }
+  }
+
+  @Nested
+  inner class CreateContactRestrictionMapping {
+    @Test
+    internal fun `will pass oath2 token to create contact restriction mapping endpoint`() = runTest {
+      mockServer.stubCreateContactRestrictionMapping()
+
+      apiService.createContactRestrictionMapping(
+        PersonContactRestrictionMappingDto(
+          mappingType = PersonContactRestrictionMappingDto.MappingType.DPS_CREATED,
+          nomisId = 1234567,
+          dpsId = "1234567",
+        ),
+      )
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/mapping/contact-person/contact-restriction"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will throw error when 409 conflict`() = runTest {
+      val nomisId = 2234567890
+      val dpsId = "2234567890"
+      val existingNomisId = 3234567890
+
+      mockServer.stubCreateContactRestrictionMapping(
+        error = DuplicateMappingErrorResponse(
+          moreInfo = DuplicateErrorContentObject(
+            duplicate = PersonContactRestrictionMappingDto(
+              dpsId = dpsId,
+              nomisId = nomisId,
+              mappingType = PersonContactRestrictionMappingDto.MappingType.DPS_CREATED,
+            ),
+            existing = PersonContactRestrictionMappingDto(
+              dpsId = dpsId,
+              nomisId = existingNomisId,
+              mappingType = PersonContactRestrictionMappingDto.MappingType.DPS_CREATED,
+            ),
+          ),
+          errorCode = 1409,
+          status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+          userMessage = "Duplicate mapping",
+        ),
+      )
+
+      val error = assertThrows<DuplicateMappingException> {
+        apiService.createContactRestrictionMapping(
+          PersonContactRestrictionMappingDto(
+            mappingType = PersonContactRestrictionMappingDto.MappingType.NOMIS_CREATED,
+            nomisId = nomisId,
+            dpsId = dpsId,
+          ),
+        )
+      }.error
+
+      assertThat(error.moreInfo.existing!!["dpsId"]).isEqualTo(dpsId)
+      assertThat(error.moreInfo.existing!!["nomisId"]).isEqualTo(existingNomisId)
+      assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
+      assertThat(error.moreInfo.duplicate["nomisId"]).isEqualTo(nomisId)
     }
   }
 }

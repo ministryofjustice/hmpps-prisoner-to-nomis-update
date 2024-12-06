@@ -199,4 +199,56 @@ class ContactPersonDpsApiServiceTest {
       )
     }
   }
+
+  @Nested
+  inner class GetContactRestriction {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsContactPersonServer.stubGetContactRestriction(contactRestrictionId = 1234567)
+
+      apiService.getContactRestriction(contactRestrictionId = 1234567)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get sync endpoint`() = runTest {
+      dpsContactPersonServer.stubGetContactRestriction(contactRestrictionId = 1234567)
+
+      apiService.getContactRestriction(contactRestrictionId = 1234567)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/contact-restriction/1234567")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetPrisonerContactRestriction {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsContactPersonServer.stubGetPrisonerContactRestriction(contactPrisonerRestrictionId = 1234567)
+
+      apiService.getPrisonerContactRestriction(prisonerContactRestrictionId = 1234567)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get sync endpoint`() = runTest {
+      dpsContactPersonServer.stubGetPrisonerContactRestriction(contactPrisonerRestrictionId = 1234567)
+
+      apiService.getPrisonerContactRestriction(prisonerContactRestrictionId = 1234567)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/prisoner-contact-restriction/1234567")),
+      )
+    }
+  }
 }

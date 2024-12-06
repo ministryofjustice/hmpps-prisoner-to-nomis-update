@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateContactPersonRestrictionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateContactPersonRestrictionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonContactRequest
@@ -76,6 +78,25 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
   suspend fun createPersonIdentifier(personId: Long, request: CreatePersonIdentifierRequest): CreatePersonIdentifierResponse = webClient.post()
     .uri(
       "/persons/{personId}/identifier",
+      personId,
+    )
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun createContactRestriction(personId: Long, contactId: Long, request: CreateContactPersonRestrictionRequest): CreateContactPersonRestrictionResponse = webClient.post()
+    .uri(
+      "/persons/{personId}/contact/{contactId}/restriction",
+      personId,
+      contactId,
+    )
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun createPersonRestriction(personId: Long, request: CreateContactPersonRestrictionRequest): CreateContactPersonRestrictionResponse = webClient.post()
+    .uri(
+      "/persons/{personId}/restriction",
       personId,
     )
     .bodyValue(request)

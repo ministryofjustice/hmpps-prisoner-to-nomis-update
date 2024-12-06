@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Du
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactRestrictionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmailMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonIdentifierMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
@@ -127,6 +128,15 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
       )
     }
   }
+
+  fun stubGetByDpsPrisonerContactId(
+    dpsPrisonerContactId: Long = 123456,
+    mapping: PersonContactMappingDto? = PersonContactMappingDto(
+      nomisId = dpsPrisonerContactId,
+      dpsId = dpsPrisonerContactId.toString(),
+      mappingType = PersonContactMappingDto.MappingType.MIGRATED,
+    ),
+  ) = stubGetByDpsPrisonerContactIdOrNull(dpsPrisonerContactId, mapping)
 
   fun stubCreateContactMapping() {
     mappingServer.stubFor(
@@ -510,6 +520,82 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
       post("/mapping/contact-person/identifier")
         .inScenario("Retry Mapping Identifier Scenario")
         .whenScenarioStateIs("Cause Mapping Identifier Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetByDpsPrisonerContactRestrictionIdOrNull(
+    dpsPrisonerContactRestrictionId: Long = 123456,
+    mapping: PersonContactRestrictionMappingDto? = PersonContactRestrictionMappingDto(
+      nomisId = 654321,
+      dpsId = dpsPrisonerContactRestrictionId.toString(),
+      mappingType = PersonContactRestrictionMappingDto.MappingType.MIGRATED,
+    ),
+  ) {
+    mapping?.apply {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/contact-person/contact-restriction/dps-prisoner-contact-restriction-id/$dpsPrisonerContactRestrictionId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(objectMapper.writeValueAsString(mapping)),
+        ),
+      )
+    } ?: run {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/contact-person/contact-restriction/dps-prisoner-contact-restriction-id/$dpsPrisonerContactRestrictionId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.NOT_FOUND.value())
+            .withBody(objectMapper.writeValueAsString(ErrorResponse(status = 404))),
+        ),
+      )
+    }
+  }
+
+  fun stubCreateContactRestrictionMapping() {
+    mappingServer.stubFor(
+      post("/mapping/contact-person/contact-restriction").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCreateContactRestrictionMapping(error: DuplicateMappingErrorResponse) {
+    mappingServer.stubFor(
+      post("/mapping/contact-person/contact-restriction").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(409)
+          .withBody(objectMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubCreateContactRestrictionMappingFollowedBySuccess(status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      post("/mapping/contact-person/contact-restriction")
+        .inScenario("Retry Mapping Contact Restriction Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(objectMapper.writeValueAsString(error)),
+        ).willSetStateTo("Cause Mapping Contact Restriction Success"),
+    )
+
+    mappingServer.stubFor(
+      post("/mapping/contact-person/contact-restriction")
+        .inScenario("Retry Mapping Contact Restriction Scenario")
+        .whenScenarioStateIs("Cause Mapping Contact Restriction Success")
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")

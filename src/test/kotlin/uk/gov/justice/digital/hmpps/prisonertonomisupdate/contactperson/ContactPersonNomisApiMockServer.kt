@@ -7,6 +7,8 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateContactPersonRestrictionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateContactPersonRestrictionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonContactRequest
@@ -20,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import java.time.LocalDate
 
 @Component
 class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
@@ -83,6 +86,18 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
       identifier = "SMNI772727DL",
       typeCode = "DL",
       issuedAuthority = "DVLA",
+    )
+
+    fun createContactPersonRestrictionResponse(): CreateContactPersonRestrictionResponse = CreateContactPersonRestrictionResponse(
+      id = 12345,
+    )
+
+    fun createContactPersonRestrictionRequest(): CreateContactPersonRestrictionRequest = CreateContactPersonRestrictionRequest(
+      comment = "Banned for life",
+      typeCode = "BAN",
+      enteredStaffUsername = "j.much",
+      effectiveDate = LocalDate.parse("2020-01-01"),
+      expiryDate = LocalDate.parse("2026-01-01"),
     )
   }
 
@@ -175,6 +190,34 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
   ) {
     nomisApi.stubFor(
       post(urlEqualTo("/persons/$personId/identifier")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubCreatePersonRestriction(
+    personId: Long = 123456,
+    response: CreateContactPersonRestrictionResponse = createContactPersonRestrictionResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/persons/$personId/restriction")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+  fun stubCreateContactRestriction(
+    personId: Long = 123456,
+    contactId: Long = 678990,
+    response: CreateContactPersonRestrictionResponse = createContactPersonRestrictionResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/persons/$personId/contact/$contactId/restriction")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
