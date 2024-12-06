@@ -675,6 +675,18 @@ class NomisApiService(
       .retrieve()
       .awaitBody()
 
+  suspend fun deleteCourtCase(offenderNo: String, nomisCourtCaseId: Long) =
+    webClient.delete()
+      .uri("/prisoners/{offenderNo}/sentencing/court-cases/{nomisCourtCaseId}", offenderNo, nomisCourtCaseId)
+      .retrieve()
+      .awaitBodilessEntity()
+
+  suspend fun deleteCourtAppearance(offenderNo: String, nomisCourtCaseId: Long, nomisEventId: Long) =
+    webClient.delete()
+      .uri("/prisoners/{offenderNo}/sentencing/court-cases/{nomisCourtCaseId}/court-appearances/{nomisEventId}", offenderNo, nomisCourtCaseId, nomisEventId)
+      .retrieve()
+      .awaitBodilessEntity()
+
   suspend fun createCourtAppearance(offenderNo: String, nomisCourtCaseId: Long, request: CourtAppearanceRequest): CreateCourtAppearanceResponse =
     webClient.post()
       .uri("/prisoners/{offenderNo}/sentencing/court-cases/{courtCaseId}/court-appearances", offenderNo, nomisCourtCaseId)

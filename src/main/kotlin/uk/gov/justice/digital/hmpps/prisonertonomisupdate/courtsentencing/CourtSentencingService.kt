@@ -166,6 +166,83 @@ class CourtSentencingService(
     }
   }
 
+  suspend fun deleteCourtCase(caseEvent: CourtCaseCreatedEvent) {
+    val dpsCaseId = caseEvent.additionalInformation.courtCaseId
+    val offenderNo = caseEvent.personReference.identifiers.first { it.type == "NOMS" }.value
+    val telemetryMap = mutableMapOf(
+      "dpsCourtCaseId" to dpsCaseId,
+      "offenderNo" to offenderNo,
+    )
+    if (isDpsCreated(caseEvent.additionalInformation.source)) {
+      runCatching {
+        courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCaseId)?.also { mapping ->
+          telemetryMap["nomisCourtCaseId"] = mapping.nomisCourtCaseId.toString()
+          nomisApiService.deleteCourtCase(offenderNo = offenderNo, nomisCourtCaseId = mapping.nomisCourtCaseId)
+          tryToDeleteMapping(dpsCaseId)
+          telemetryClient.trackEvent("court-case-deleted-success", telemetryMap)
+        } ?: also {
+          telemetryClient.trackEvent("court-case-deleted-skipped", telemetryMap)
+        }
+      }.onFailure { e ->
+        telemetryClient.trackEvent("court-case-deleted-failed", telemetryMap)
+        throw e
+      }
+    } else {
+      telemetryClient.trackEvent("court-case-deleted-ignored", telemetryMap)
+    }
+  }
+
+  suspend fun deleteCourtAppearance(createdEvent: CourtAppearanceCreatedEvent) {
+    val dpsAppearanceId = createdEvent.additionalInformation.courtAppearanceId
+    val dpsCaseId = createdEvent.additionalInformation.courtCaseId
+    val offenderNo = createdEvent.personReference.identifiers.first { it.type == "NOMS" }.value
+    val telemetryMap = mutableMapOf(
+      "dpsCourtCaseId" to dpsCaseId,
+      "dpsCourtAppearanceId" to dpsAppearanceId,
+      "offenderNo" to offenderNo,
+    )
+    if (isDpsCreated(createdEvent.additionalInformation.source)) {
+      runCatching {
+        courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCaseId)?.also { mapping ->
+          telemetryMap["nomisCourtCaseId"] = mapping.nomisCourtCaseId.toString()
+          courtCaseMappingService.getMappingGivenCourtAppearanceIdOrNull(dpsAppearanceId)?.also { appearanceMapping ->
+            telemetryMap["nomisCourtAppearanceId"] = appearanceMapping.nomisCourtAppearanceId.toString()
+            nomisApiService.deleteCourtAppearance(
+              offenderNo = offenderNo,
+              nomisCourtCaseId = mapping.nomisCourtCaseId,
+              nomisEventId = appearanceMapping.nomisCourtAppearanceId,
+            )
+            tryToDeleteCourtAppearanceMapping(dpsAppearanceId)
+            telemetryClient.trackEvent("court-appearance-deleted-success", telemetryMap)
+          } ?: also {
+            telemetryClient.trackEvent("court-appearance-deleted-skipped", telemetryMap)
+          }
+        } ?: also {
+          telemetryClient.trackEvent("court-appearance-deleted-skipped", telemetryMap)
+        }
+      }.onFailure { e ->
+        telemetryClient.trackEvent("court-appearance-deleted-failed", telemetryMap)
+        throw e
+      }
+    } else {
+      telemetryClient.trackEvent("court-appearance-deleted-ignored", telemetryMap)
+    }
+  }
+
+  private suspend fun tryToDeleteMapping(dpsCaseId: String) = kotlin.runCatching {
+    courtCaseMappingService.deleteByDpsId(dpsCaseId)
+  }.onFailure { e ->
+    telemetryClient.trackEvent("court-case-mapping-deleted-failed", mapOf("dpsCourtCaseId" to dpsCaseId))
+    log.warn("Unable to delete mapping for Court Case $dpsCaseId. Please delete manually", e)
+  }
+
+  private suspend fun tryToDeleteCourtAppearanceMapping(dpsAppearanceId: String) = kotlin.runCatching {
+    courtCaseMappingService.deleteCourtAppearanceMappingByDpsId(dpsAppearanceId)
+  }.onFailure { e ->
+    telemetryClient.trackEvent("court-appearance-mapping-deleted-failed", mapOf("dpsCourtAppearanceId" to dpsAppearanceId))
+    log.warn("Unable to delete mapping for Court Appearance $dpsAppearanceId. Please delete manually", e)
+  }
+
   suspend fun createCharge(createEvent: CourtChargeCreatedEvent) {
     val chargeId = createEvent.additionalInformation.courtChargeId
     val source = createEvent.additionalInformation.source
@@ -188,10 +265,11 @@ class CourtSentencingService(
         }
 
         transform {
-          val courtCaseMapping = courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = courtCaseId)
-            ?: throw ParentEntityNotFoundRetry(
-              "Attempt to create a charge on a dps court case without a nomis Court Case mapping. Dps court case id: $courtCaseId not found for DPS charge $chargeId\"",
-            )
+          val courtCaseMapping =
+            courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = courtCaseId)
+              ?: throw ParentEntityNotFoundRetry(
+                "Attempt to create a charge on a dps court case without a nomis Court Case mapping. Dps court case id: $courtCaseId not found for DPS charge $chargeId\"",
+              )
 
           val charge = courtSentencingApiService.getCourtCharge(chargeId)
 
@@ -406,23 +484,24 @@ class CourtSentencingService(
       "offenderNo" to offenderNo,
     )
 
-    courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = dpsCourtCaseId)?.let { courtCaseMapping ->
-      telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
-      courtSentencingApiService.getCourtCase(dpsCourtCaseId).let { dpsCourtCase ->
-        val caseIdentifiers = dpsCourtCase.getNomisCaseIdentifiers()
-        nomisApiService.refreshCaseReferences(
-          offenderNo = offenderNo,
-          nomisCourtCaseId = courtCaseMapping.nomisCourtCaseId,
-          request = CaseIdentifierRequest(caseIdentifiers = caseIdentifiers),
-        )
-        telemetryMap["caseReferences"] = caseIdentifiers.toString()
-        telemetryClient.trackEvent(
-          "case-references-refreshed-success",
-          telemetryMap,
-          null,
-        )
-      }
-    } ?: let {
+    courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = dpsCourtCaseId)
+      ?.let { courtCaseMapping ->
+        telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
+        courtSentencingApiService.getCourtCase(dpsCourtCaseId).let { dpsCourtCase ->
+          val caseIdentifiers = dpsCourtCase.getNomisCaseIdentifiers()
+          nomisApiService.refreshCaseReferences(
+            offenderNo = offenderNo,
+            nomisCourtCaseId = courtCaseMapping.nomisCourtCaseId,
+            request = CaseIdentifierRequest(caseIdentifiers = caseIdentifiers),
+          )
+          telemetryMap["caseReferences"] = caseIdentifiers.toString()
+          telemetryClient.trackEvent(
+            "case-references-refreshed-success",
+            telemetryMap,
+            null,
+          )
+        }
+      } ?: let {
       telemetryClient.trackEvent(
         "case-references-refreshed-failure",
         telemetryMap,

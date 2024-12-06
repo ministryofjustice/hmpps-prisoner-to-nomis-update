@@ -163,8 +163,10 @@ hmpps.sqs:
       subscribeFilter: >-
         { "eventType":[
         "court-case.inserted",
+        "court-case.deleted",
         "legacy.court-case-references.updated",
         "court-appearance.inserted",
+        "court-appearance.deleted",
         "charge.inserted",
         "charge.updated",
         "court-appearance.updated"]}

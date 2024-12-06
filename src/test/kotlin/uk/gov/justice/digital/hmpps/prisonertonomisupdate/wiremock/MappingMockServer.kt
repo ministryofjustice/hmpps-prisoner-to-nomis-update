@@ -1303,6 +1303,26 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubDeleteCourtCase(id: String) {
+    stubFor(
+      delete("/mapping/court-sentencing/court-cases/dps-court-case-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
+
+  fun stubDeleteCourtAppearance(id: String) {
+    stubFor(
+      delete("/mapping/court-sentencing/court-appearances/dps-court-appearance-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
+
   fun stubCreateCourtCaseWithError(status: Int = 500) {
     stubFor(
       post("/mapping/court-sentencing/court-cases").willReturn(

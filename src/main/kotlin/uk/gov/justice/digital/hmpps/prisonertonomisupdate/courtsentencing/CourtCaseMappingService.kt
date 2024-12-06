@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
@@ -23,6 +24,26 @@ class CourtCaseMappingService(
       .bodyValue(request)
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()
+  }
+
+  suspend fun deleteByDpsId(dpsCaseId: String) {
+    webClient.delete()
+      .uri(
+        "/mapping/court-sentencing/court-cases/dps-court-case-id/{dpsCourtCaseId}",
+        dpsCaseId,
+      )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
+  suspend fun deleteCourtAppearanceMappingByDpsId(dpsAppearanceId: String) {
+    webClient.delete()
+      .uri(
+        "/mapping/court-sentencing/court-appearances/dps-court-appearance-id/{dpsCourtAppearanceId}",
+        dpsAppearanceId,
+      )
+      .retrieve()
+      .awaitBodilessEntity()
   }
 
   suspend fun createAppearanceMapping(request: CourtAppearanceMappingDto) {

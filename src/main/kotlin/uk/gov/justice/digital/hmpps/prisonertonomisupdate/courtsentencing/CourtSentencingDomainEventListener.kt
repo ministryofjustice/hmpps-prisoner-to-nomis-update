@@ -36,6 +36,10 @@ class CourtSentencingDomainEventListener(
         courtSentencingService.createCourtCase(message.fromJson())
       "court-appearance.inserted" ->
         courtSentencingService.createCourtAppearance(message.fromJson())
+      "court-case.deleted" ->
+        courtSentencingService.deleteCourtCase(message.fromJson())
+      "court-appearance.deleted" ->
+        courtSentencingService.deleteCourtAppearance(message.fromJson())
       "court-appearance.updated" ->
         courtSentencingService.updateCourtAppearance(message.fromJson())
       "legacy.court-case-references.updated" ->
