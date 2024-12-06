@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonIdentifierMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonRestrictionMappingDto
 
 @Service
 class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClient: WebClient) {
@@ -102,6 +103,14 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
+  suspend fun getByDpsContactRestrictionIdOrNull(dpsContactRestrictionId: Long): PersonRestrictionMappingDto? = webClient.get()
+    .uri(
+      "/mapping/contact-person/person-restriction/dps-contact-restriction-id/{dpsContactRestrictionId}",
+      dpsContactRestrictionId,
+    )
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
   suspend fun createAddressMapping(mappings: PersonAddressMappingDto) =
     webClient.post()
       .uri("/mapping/contact-person/address")
@@ -151,19 +160,4 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
       .bodyValue(mappings)
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()
-}
-
-// TODO replace with real DTO
-data class PersonRestrictionMappingDto(
-  val dpsId: String,
-  val nomisId: Long,
-  val mappingType: MappingType,
-  val label: String? = null,
-  val whenCreated: String? = null,
-) {
-  enum class MappingType(val value: String) {
-    MIGRATED("MIGRATED"),
-    DPS_CREATED("DPS_CREATED"),
-    NOMIS_CREATED("NOMIS_CREATED"),
-  }
 }

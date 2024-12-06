@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonIdentifierMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonRestrictionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 
 @Component
@@ -603,6 +604,35 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
 
         ).willSetStateTo(Scenario.STARTED),
     )
+  }
+
+  fun stubGetByDpsContactRestrictionIdOrNull(
+    dpsContactRestrictionId: Long = 123456,
+    mapping: PersonRestrictionMappingDto? = PersonRestrictionMappingDto(
+      nomisId = 654321,
+      dpsId = dpsContactRestrictionId.toString(),
+      mappingType = PersonRestrictionMappingDto.MappingType.MIGRATED,
+    ),
+  ) {
+    mapping?.apply {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/contact-person/person-restriction/dps-contact-restriction-id/$dpsContactRestrictionId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(objectMapper.writeValueAsString(mapping)),
+        ),
+      )
+    } ?: run {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/contact-person/person-restriction/dps-contact-restriction-id/$dpsContactRestrictionId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.NOT_FOUND.value())
+            .withBody(objectMapper.writeValueAsString(ErrorResponse(status = 404))),
+        ),
+      )
+    }
   }
 
   fun stubCreatePersonRestrictionMapping() {

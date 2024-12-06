@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonRestrictionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonContactRequest
@@ -399,8 +400,44 @@ class ContactPersonService(
     }
   }
 
-  // unlikely to get an event in dev right now given there is no UI for this
-  suspend fun contactRestrictionCreated(event: ContactRestrictionCreatedEvent): Unit = TODO()
+  suspend fun contactRestrictionCreated(event: ContactRestrictionCreatedEvent) {
+    val entityName = CONTACT_RESTRICTION.entityName
+    val dpsContactRestrictionId = event.additionalInformation.contactRestrictionId
+    val telemetryMap = mutableMapOf(
+      "dpsContactRestrictionId" to dpsContactRestrictionId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      synchronise {
+        name = entityName
+        telemetryClient = this@ContactPersonService.telemetryClient
+        retryQueueService = contactPersonRetryQueueService
+        eventTelemetry = telemetryMap
+
+        checkMappingDoesNotExist {
+          mappingApiService.getByDpsContactRestrictionIdOrNull(dpsContactRestrictionId)
+        }
+        transform {
+          val dpsContactRestriction = dpsApiService.getContactRestriction(dpsContactRestrictionId).also {
+            telemetryMap["dpsContactId"] = it.contactId.toString()
+            telemetryMap["nomisPersonId"] = it.contactId.toString()
+          }
+          nomisApiService.createPersonRestriction(dpsContactRestriction.contactId, dpsContactRestriction.toNomisCreateRequest()).also {
+            telemetryMap["nomisPersonRestrictionId"] = it.id.toString()
+          }.let {
+            PersonRestrictionMappingDto(
+              dpsId = dpsContactRestrictionId.toString(),
+              nomisId = it.id,
+              mappingType = PersonRestrictionMappingDto.MappingType.DPS_CREATED,
+            )
+          }
+        }
+        saveMapping { mappingApiService.createPersonRestrictionMapping(it) }
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
+    }
+  }
 
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
@@ -496,7 +533,7 @@ class ContactPersonService(
   suspend fun createPersonRestrictionMapping(message: CreateMappingRetryMessage<PersonRestrictionMappingDto>) {
     mappingApiService.createPersonRestrictionMapping(message.mapping).also {
       telemetryClient.trackEvent(
-        "contact-person-restriction-create-success",
+        "contact-restriction-create-success",
         message.telemetryAttributes,
         null,
       )
@@ -583,7 +620,6 @@ private fun SyncPrisonerContactRestriction.toNomisCreateRequest(): CreateContact
   enteredStaffUsername = this.createdBy!!,
 )
 
-@Suppress("unused")
 private fun SyncContactRestriction.toNomisCreateRequest(): CreateContactPersonRestrictionRequest = CreateContactPersonRestrictionRequest(
   typeCode = this.restrictionType,
   effectiveDate = this.startDate ?: LocalDate.now(),
