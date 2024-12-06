@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactPhone
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.contactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.dpsContactPersonServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonDpsApiExtension.Companion.prisonerContactRestriction
@@ -45,6 +46,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonRestrictionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import java.time.LocalDate
 
@@ -1748,6 +1750,240 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
               isNull(),
             )
             nomisApi.verify(1, postRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/contact/$nomisContactId/restriction")))
+          }
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("contacts-api.contact-restriction.created")
+  inner class ContactRestrictionCreated {
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a Contact Restriction create")
+    inner class WhenNomisCreated {
+
+      @BeforeEach
+      fun setUp() {
+        publishCreateContactRestrictionDomainEvent(contactRestrictionId = "12345", source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contact-restriction-create-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Contact Restriction create")
+    inner class WhenDpsCreated {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val dpsContactRestrictionId = 1234567L
+        private val nomisRestrictionId = 7654321L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactRestrictionIdOrNull(dpsContactRestrictionId = dpsContactRestrictionId, null)
+          dpsApi.stubGetContactRestriction(
+            contactRestrictionId = dpsContactRestrictionId,
+            contactRestriction().copy(
+              contactRestrictionId = dpsContactRestrictionId,
+              contactId = nomisPersonIdAndDpsContactId,
+              restrictionType = "BAN",
+              comments = "Banned for life",
+              startDate = LocalDate.parse("2020-01-01"),
+              expiryDate = LocalDate.parse("2026-01-01"),
+              createdBy = "T.SWIFT",
+            ),
+          )
+          nomisApi.stubCreatePersonRestriction(personId = nomisPersonIdAndDpsContactId, createContactPersonRestrictionResponse().copy(id = nomisRestrictionId))
+          mappingApi.stubCreatePersonRestrictionMapping()
+          publishCreateContactRestrictionDomainEvent(contactRestrictionId = dpsContactRestrictionId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the create`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-restriction-create-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the contact created`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-restriction-create-success"),
+            check {
+              assertThat(it).containsEntry("dpsContactRestrictionId", dpsContactRestrictionId.toString())
+              assertThat(it).containsEntry("nomisPersonRestrictionId", nomisRestrictionId.toString())
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call back to DPS to get restriction details`() {
+          dpsApi.verify(getRequestedFor(urlEqualTo("/sync/contact-restriction/$dpsContactRestrictionId")))
+        }
+
+        @Test
+        fun `will create the restriction in NOMIS`() {
+          nomisApi.verify(postRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/restriction")))
+        }
+
+        @Test
+        fun `the created restriction will contain details of the DPS contact restriction`() {
+          nomisApi.verify(
+            postRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("typeCode", "BAN")
+              .withRequestBodyJsonPath("comment", "Banned for life")
+              .withRequestBodyJsonPath("enteredStaffUsername", "T.SWIFT")
+              .withRequestBodyJsonPath("effectiveDate", "2020-01-01")
+              .withRequestBodyJsonPath("expiryDate", "2026-01-01"),
+          )
+        }
+
+        @Test
+        fun `will create a mapping between the NOMIS and DPS ids`() {
+          mappingApi.verify(
+            postRequestedFor(urlEqualTo("/mapping/contact-person/person-restriction"))
+              .withRequestBodyJsonPath("dpsId", "$dpsContactRestrictionId")
+              .withRequestBodyJsonPath("nomisId", nomisRestrictionId)
+              .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when mapping service fails once")
+      inner class MappingFailure {
+        private val dpsContactRestrictionId = 1234567L
+        private val nomisRestrictionId = 7654321L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactRestrictionIdOrNull(dpsContactRestrictionId = dpsContactRestrictionId, null)
+          dpsApi.stubGetContactRestriction(
+            contactRestrictionId = dpsContactRestrictionId,
+            contactRestriction().copy(
+              contactRestrictionId = dpsContactRestrictionId,
+              contactId = nomisPersonIdAndDpsContactId,
+            ),
+          )
+          nomisApi.stubCreatePersonRestriction(personId = nomisPersonIdAndDpsContactId, createContactPersonRestrictionResponse().copy(id = nomisRestrictionId))
+          mappingApi.stubCreatePersonRestrictionMappingFollowedBySuccess()
+          publishCreateContactRestrictionDomainEvent(contactRestrictionId = dpsContactRestrictionId.toString())
+        }
+
+        @Test
+        fun `will send telemetry for initial failure`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("contact-restriction-mapping-create-failed"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will eventually send telemetry for success`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("contact-restriction-create-success"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will create the restriction in NOMIS once`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("contact-restriction-create-success"),
+              any(),
+              isNull(),
+            )
+            nomisApi.verify(1, postRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/restriction")))
+          }
+        }
+      }
+
+      @Nested
+      @DisplayName("when mapping service detects a duplicate mapping")
+      inner class DuplicateMappingFailure {
+        private val dpsContactRestrictionId = 1234567L
+        private val nomisRestrictionId = 7654321L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactRestrictionIdOrNull(dpsContactRestrictionId = dpsContactRestrictionId, null)
+          dpsApi.stubGetContactRestriction(
+            contactRestrictionId = dpsContactRestrictionId,
+            contactRestriction().copy(
+              contactRestrictionId = dpsContactRestrictionId,
+              contactId = nomisPersonIdAndDpsContactId,
+            ),
+          )
+          nomisApi.stubCreatePersonRestriction(nomisPersonIdAndDpsContactId, createContactPersonRestrictionResponse().copy(id = nomisRestrictionId))
+          mappingApi.stubCreatePersonRestrictionMapping(
+            error = DuplicateMappingErrorResponse(
+              moreInfo = DuplicateErrorContentObject(
+                duplicate = PersonRestrictionMappingDto(
+                  dpsId = dpsContactRestrictionId.toString(),
+                  nomisId = 999999,
+                  mappingType = PersonRestrictionMappingDto.MappingType.DPS_CREATED,
+                ),
+                existing = PersonRestrictionMappingDto(
+                  dpsId = dpsContactRestrictionId.toString(),
+                  nomisId = nomisRestrictionId,
+                  mappingType = PersonRestrictionMappingDto.MappingType.DPS_CREATED,
+                ),
+              ),
+              errorCode = 1409,
+              status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+              userMessage = "Duplicate mapping",
+            ),
+          )
+          publishCreateContactRestrictionDomainEvent(contactRestrictionId = dpsContactRestrictionId.toString())
+        }
+
+        @Test
+        fun `will send telemetry for duplicate`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("to-nomis-synch-contact-restriction-duplicate"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will create the restriction in NOMIS once`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("to-nomis-synch-contact-restriction-duplicate"),
+              any(),
+              isNull(),
+            )
+            nomisApi.verify(1, postRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/restriction")))
           }
         }
       }

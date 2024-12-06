@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonRestrictionMappingDto
 
 @SpringAPIServiceTest
 @Import(ContactPersonMappingApiService::class, ContactPersonMappingApiMockServer::class)
@@ -914,6 +915,57 @@ class ContactPersonMappingApiServiceTest {
       )
 
       assertThat(apiService.getByDpsPrisonerContactRestrictionIdOrNull(dpsPrisonerContactRestrictionId = 1234567))
+    }
+  }
+
+  @Nested
+  inner class GetByDpsContactRestrictionIdOrNull {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetByDpsContactRestrictionIdOrNull(dpsContactRestrictionId = 1234567)
+
+      apiService.getByDpsContactRestrictionIdOrNull(dpsContactRestrictionId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass DPS id to service`() = runTest {
+      mockServer.stubGetByDpsContactRestrictionIdOrNull()
+
+      apiService.getByDpsContactRestrictionIdOrNull(dpsContactRestrictionId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/contact-person/person-restriction/dps-contact-restriction-id/1234567")),
+      )
+    }
+
+    @Test
+    fun `will return dpsId when mapping exists`() = runTest {
+      mockServer.stubGetByDpsContactRestrictionIdOrNull(
+        dpsContactRestrictionId = 1234567,
+        mapping = PersonRestrictionMappingDto(
+          dpsId = "1234567",
+          nomisId = 6543232,
+          mappingType = PersonRestrictionMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      val mapping = apiService.getByDpsContactRestrictionIdOrNull(dpsContactRestrictionId = 1234567)
+
+      assertThat(mapping?.nomisId).isEqualTo(6543232)
+    }
+
+    @Test
+    fun `will return null if mapping does not exist`() = runTest {
+      mockServer.stubGetByDpsContactRestrictionIdOrNull(
+        dpsContactRestrictionId = 1234567,
+        mapping = null,
+      )
+
+      assertThat(apiService.getByDpsContactRestrictionIdOrNull(dpsContactRestrictionId = 1234567))
     }
   }
 
