@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
@@ -400,6 +401,44 @@ class ContactPersonService(
     }
   }
 
+  suspend fun prisonerContactRestrictionUpdated(event: PrisonerContactRestrictionUpdatedEvent) {
+    val entityName = PRISONER_CONTACT_RESTRICTION.entityName
+    val dpsPrisonerContactRestrictionId = event.additionalInformation.prisonerContactRestrictionId
+    val telemetryMap = mutableMapOf(
+      "dpsPrisonerContactRestrictionId" to dpsPrisonerContactRestrictionId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      try {
+        val nomisContactRestrictionId = mappingApiService.getByDpsPrisonerContactRestrictionId(dpsPrisonerContactRestrictionId).nomisId.also {
+          telemetryMap["nomisContactRestrictionId"] = it.toString()
+        }
+        val dpsPrisonerContactRestriction = dpsApiService.getPrisonerContactRestriction(dpsPrisonerContactRestrictionId).also {
+          telemetryMap["offenderNo"] = it.prisonerNumber
+          telemetryMap["dpsContactId"] = it.contactId.toString()
+          telemetryMap["nomisPersonId"] = it.contactId.toString()
+          telemetryMap["dpsPrisonerContactId"] = it.prisonerContactId.toString()
+        }
+        val nomisContactId = mappingApiService.getByDpsPrisonerContactId(dpsPrisonerContactRestriction.prisonerContactId).nomisId.also {
+          telemetryMap["nomisContactId"] = it.toString()
+        }
+        nomisApiService.updateContactRestriction(
+          personId = dpsPrisonerContactRestriction.contactId,
+          contactId = nomisContactId,
+          contactRestrictionId = nomisContactRestrictionId,
+          dpsPrisonerContactRestriction.toNomisUpdateRequest(),
+        )
+        telemetryClient.trackEvent("$entityName-update-success", telemetryMap)
+      } catch (e: Exception) {
+        telemetryMap["error"] = e.message.toString()
+        telemetryClient.trackEvent("$entityName-update-failed", telemetryMap)
+        throw e
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
+    }
+  }
+
   suspend fun contactRestrictionCreated(event: ContactRestrictionCreatedEvent) {
     val entityName = CONTACT_RESTRICTION.entityName
     val dpsContactRestrictionId = event.additionalInformation.contactRestrictionId
@@ -436,6 +475,33 @@ class ContactPersonService(
       }
     } else {
       telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
+    }
+  }
+  suspend fun contactRestrictionUpdated(event: ContactRestrictionUpdatedEvent) {
+    val entityName = CONTACT_RESTRICTION.entityName
+    val dpsContactRestrictionId = event.additionalInformation.contactRestrictionId
+    val telemetryMap = mutableMapOf(
+      "dpsContactRestrictionId" to dpsContactRestrictionId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      try {
+        val nomisPersonRestrictionId = mappingApiService.getByDpsContactRestrictionId(dpsContactRestrictionId).nomisId.also {
+          telemetryMap["nomisPersonRestrictionId"] = it.toString()
+        }
+        val dpsContactRestriction = dpsApiService.getContactRestriction(dpsContactRestrictionId).also {
+          telemetryMap["dpsContactId"] = it.contactId.toString()
+          telemetryMap["nomisPersonId"] = it.contactId.toString()
+        }
+        nomisApiService.updatePersonRestriction(dpsContactRestriction.contactId, personRestrictionId = nomisPersonRestrictionId, dpsContactRestriction.toNomisUpdateRequest())
+        telemetryClient.trackEvent("$entityName-update-success", telemetryMap)
+      } catch (e: Exception) {
+        telemetryMap["error"] = e.message.toString()
+        telemetryClient.trackEvent("$entityName-update-failed", telemetryMap)
+        throw e
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
     }
   }
 
@@ -619,6 +685,15 @@ private fun SyncPrisonerContactRestriction.toNomisCreateRequest(): CreateContact
   // TODO - check with DPS - this should be non-nullable
   enteredStaffUsername = this.createdBy!!,
 )
+private fun SyncPrisonerContactRestriction.toNomisUpdateRequest(): UpdateContactPersonRestrictionRequest = UpdateContactPersonRestrictionRequest(
+  // TODO - check with DPS - this should be non-nullable
+  typeCode = this.restrictionType!!,
+  effectiveDate = this.startDate ?: LocalDate.now(),
+  expiryDate = this.expiryDate,
+  comment = this.comments,
+  // TODO - check with DPS - this should be non-nullable
+  enteredStaffUsername = this.updatedBy!!,
+)
 
 private fun SyncContactRestriction.toNomisCreateRequest(): CreateContactPersonRestrictionRequest = CreateContactPersonRestrictionRequest(
   typeCode = this.restrictionType,
@@ -626,6 +701,13 @@ private fun SyncContactRestriction.toNomisCreateRequest(): CreateContactPersonRe
   expiryDate = this.expiryDate,
   comment = this.comments,
   enteredStaffUsername = this.createdBy,
+)
+private fun SyncContactRestriction.toNomisUpdateRequest(): UpdateContactPersonRestrictionRequest = UpdateContactPersonRestrictionRequest(
+  typeCode = this.restrictionType,
+  effectiveDate = this.startDate ?: LocalDate.now(),
+  expiryDate = this.expiryDate,
+  comment = this.comments,
+  enteredStaffUsername = this.updatedBy!!,
 )
 
 private fun SourcedContactPersonEvent.didOriginateInDPS() = this.additionalInformation.source == "DPS"

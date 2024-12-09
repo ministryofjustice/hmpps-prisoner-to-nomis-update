@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateContactPersonRestrictionResponse
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateContactPersonRestrictionRequest
 
 @Service
 class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
@@ -94,6 +96,17 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
     .retrieve()
     .awaitBody()
 
+  suspend fun updateContactRestriction(personId: Long, contactId: Long, contactRestrictionId: Long, request: UpdateContactPersonRestrictionRequest) = webClient.put()
+    .uri(
+      "/persons/{personId}/contact/{contactId}/restriction/{contactRestrictionId}",
+      personId,
+      contactId,
+      contactRestrictionId,
+    )
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
+
   suspend fun createPersonRestriction(personId: Long, request: CreateContactPersonRestrictionRequest): CreateContactPersonRestrictionResponse = webClient.post()
     .uri(
       "/persons/{personId}/restriction",
@@ -102,4 +115,14 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
     .bodyValue(request)
     .retrieve()
     .awaitBody()
+
+  suspend fun updatePersonRestriction(personId: Long, personRestrictionId: Long, request: UpdateContactPersonRestrictionRequest) = webClient.put()
+    .uri(
+      "/persons/{personId}/restriction/{personRestrictionId}",
+      personId,
+      personRestrictionId,
+    )
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
 }
