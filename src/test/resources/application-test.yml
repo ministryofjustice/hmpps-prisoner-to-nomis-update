@@ -241,7 +241,9 @@ hmpps.sqs:
           "contacts-api.contact-address-phone.created",
           "contacts-api.contact-identity.created",
           "contacts-api.prisoner-contact-restriction.created",
-          "contacts-api.contact-restriction.created"
+          "contacts-api.contact-restriction.created",
+          "contacts-api.prisoner-contact-restriction.updated",
+          "contacts-api.contact-restriction.updated"
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120

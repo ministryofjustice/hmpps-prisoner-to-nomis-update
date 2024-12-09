@@ -919,6 +919,47 @@ class ContactPersonMappingApiServiceTest {
   }
 
   @Nested
+  inner class GetByDpsPrisonerContactRestrictionId {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetByDpsPrisonerContactRestrictionId(dpsPrisonerContactRestrictionId = 1234567)
+
+      apiService.getByDpsPrisonerContactRestrictionId(dpsPrisonerContactRestrictionId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass DPS id to service`() = runTest {
+      mockServer.stubGetByDpsPrisonerContactRestrictionId(dpsPrisonerContactRestrictionId = 1234567)
+
+      apiService.getByDpsPrisonerContactRestrictionId(dpsPrisonerContactRestrictionId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/contact-person/contact-restriction/dps-prisoner-contact-restriction-id/1234567")),
+      )
+    }
+
+    @Test
+    fun `will return dpsId`() = runTest {
+      mockServer.stubGetByDpsPrisonerContactRestrictionId(
+        dpsPrisonerContactRestrictionId = 1234567,
+        mapping = PersonContactRestrictionMappingDto(
+          dpsId = "1234567",
+          nomisId = 6543232,
+          mappingType = PersonContactRestrictionMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      val mapping = apiService.getByDpsPrisonerContactRestrictionId(dpsPrisonerContactRestrictionId = 1234567)
+
+      assertThat(mapping.nomisId).isEqualTo(6543232)
+    }
+  }
+
+  @Nested
   inner class GetByDpsContactRestrictionIdOrNull {
     @Test
     internal fun `will pass oath2 token to service`() = runTest {
@@ -966,6 +1007,47 @@ class ContactPersonMappingApiServiceTest {
       )
 
       assertThat(apiService.getByDpsContactRestrictionIdOrNull(dpsContactRestrictionId = 1234567))
+    }
+  }
+
+  @Nested
+  inner class GetByDpsContactRestrictionId {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetByDpsContactRestrictionId(dpsContactRestrictionId = 1234567)
+
+      apiService.getByDpsContactRestrictionId(dpsContactRestrictionId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass DPS id to service`() = runTest {
+      mockServer.stubGetByDpsContactRestrictionId(dpsContactRestrictionId = 1234567)
+
+      apiService.getByDpsContactRestrictionId(dpsContactRestrictionId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/contact-person/person-restriction/dps-contact-restriction-id/1234567")),
+      )
+    }
+
+    @Test
+    fun `will return dpsId`() = runTest {
+      mockServer.stubGetByDpsContactRestrictionId(
+        dpsContactRestrictionId = 1234567,
+        mapping = PersonRestrictionMappingDto(
+          dpsId = "1234567",
+          nomisId = 6543232,
+          mappingType = PersonRestrictionMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      val mapping = apiService.getByDpsContactRestrictionId(dpsContactRestrictionId = 1234567)
+
+      assertThat(mapping.nomisId).isEqualTo(6543232)
     }
   }
 

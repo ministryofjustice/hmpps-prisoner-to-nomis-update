@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 
 @SpringAPIServiceTest
@@ -308,6 +310,33 @@ class ContactPersonNomisApiServiceTest {
   }
 
   @Nested
+  inner class UpdatePersonRestriction {
+    private val personRestrictionId = 838383L
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubUpdatePersonRestriction(personId = 1234567, personRestrictionId = personRestrictionId)
+
+      apiService.updatePersonRestriction(personId = 1234567, personRestrictionId = personRestrictionId, request = updateContactPersonRestrictionRequest())
+
+      mockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call update endpoint`() = runTest {
+      mockServer.stubUpdatePersonRestriction(personId = 1234567, personRestrictionId = personRestrictionId)
+
+      apiService.updatePersonRestriction(personId = 1234567, personRestrictionId = personRestrictionId, request = updateContactPersonRestrictionRequest())
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/persons/1234567/restriction/838383")),
+      )
+    }
+  }
+
+  @Nested
   inner class CreateContactRestriction {
     @Test
     fun `will pass oath2 token to service`() = runTest {
@@ -338,6 +367,33 @@ class ContactPersonNomisApiServiceTest {
       val response = apiService.createContactRestriction(personId = 1234567, contactId = 67890, request = createContactPersonRestrictionRequest())
 
       assertThat(response.id).isEqualTo(123456)
+    }
+  }
+
+  @Nested
+  inner class UpdateContactRestriction {
+    private val contactRestrictionId = 838383L
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubUpdateContactRestriction(personId = 1234567, contactId = 67890, contactRestrictionId = contactRestrictionId)
+
+      apiService.updateContactRestriction(personId = 1234567, contactId = 67890, contactRestrictionId = contactRestrictionId, request = updateContactPersonRestrictionRequest())
+
+      mockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call update endpoint`() = runTest {
+      mockServer.stubUpdateContactRestriction(personId = 1234567, contactId = 67890, contactRestrictionId = contactRestrictionId)
+
+      apiService.updateContactRestriction(personId = 1234567, contactId = 67890, contactRestrictionId = contactRestrictionId, request = updateContactPersonRestrictionRequest())
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/persons/1234567/contact/67890/restriction/838383")),
+      )
     }
   }
 }

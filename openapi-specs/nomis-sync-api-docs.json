@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-12-06.10180.32f68c5"
+    "version": "2024-12-09.10198.3070895"
   },
   "servers": [
     {
@@ -1587,6 +1587,205 @@
           },
           "403": {
             "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ALERTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons/{personId}/restriction/{personRestrictionId}": {
+      "put": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Updates a global person restriction",
+        "description": "Updates a person restriction; the restriction is estate wide. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "updatePersonRestriction",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "personRestrictionId",
+            "in": "path",
+            "description": "Person restrictions Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person restrictions Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateContactPersonRestrictionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "The request contains bad data for example restriction type does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Restriction or Person does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons/{personId}/contact/{contactId}/restriction/{contactRestrictionId}": {
+      "put": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Updates a person contact restriction for a specific relationship",
+        "description": "Updates a person contact restriction; the restriction is for a specific relationship between a prisoner and a person. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "updatePersonContactRestriction",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "contactId",
+            "in": "path",
+            "description": "Contact Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Contact Id",
+              "format": "int64",
+              "example": 67899
+            },
+            "example": 67899
+          },
+          {
+            "name": "contactRestrictionId",
+            "in": "path",
+            "description": "Restriction Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Restriction Id",
+              "format": "int64",
+              "example": 38383
+            },
+            "example": 38383
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateContactPersonRestrictionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "The request contains bad data for example restriction type does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Person or contact or restriction does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -14882,6 +15081,39 @@
         },
         "description": "A request to update an alert in NOMIS"
       },
+      "UpdateContactPersonRestrictionRequest": {
+        "required": [
+          "effectiveDate",
+          "enteredStaffUsername",
+          "typeCode"
+        ],
+        "type": "object",
+        "properties": {
+          "typeCode": {
+            "type": "string",
+            "description": "Restriction type"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Free format comment text"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "description": "Date restriction became active",
+            "format": "date"
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "Date restriction is no longer active",
+            "format": "date"
+          },
+          "enteredStaffUsername": {
+            "type": "string",
+            "description": "Username Staff member who updated the restriction"
+          }
+        },
+        "description": "Request to update a contact restriction in NOMIS for either global or against a specific relationship"
+      },
       "UpdateNonAssociationRequest": {
         "required": [
           "effectiveDate",
@@ -19501,12 +19733,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -20012,12 +20244,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -21837,12 +22069,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -21904,12 +22136,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -22929,12 +23161,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -23082,12 +23314,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -23337,12 +23569,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -23635,12 +23867,18 @@
           "createDateTime",
           "createdBy",
           "offender",
-          "role"
+          "role",
+          "sequence"
         ],
         "type": "object",
         "properties": {
           "offender": {
             "$ref": "#/components/schemas/Offender"
+          },
+          "sequence": {
+            "type": "integer",
+            "description": "The sequence number of the offender party for this incident",
+            "format": "int32"
           },
           "role": {
             "$ref": "#/components/schemas/CodeDescription"
@@ -23726,6 +23964,7 @@
           "createDateTime",
           "createdBy",
           "date",
+          "sequence",
           "staff"
         ],
         "type": "object",
@@ -23733,6 +23972,11 @@
           "comment": {
             "type": "string",
             "description": "The update required to the incident report"
+          },
+          "sequence": {
+            "type": "integer",
+            "description": "The sequence number of the requirement for this incident",
+            "format": "int32"
           },
           "date": {
             "type": "string",
@@ -23832,12 +24076,18 @@
           "createDateTime",
           "createdBy",
           "role",
+          "sequence",
           "staff"
         ],
         "type": "object",
         "properties": {
           "staff": {
             "$ref": "#/components/schemas/Staff"
+          },
+          "sequence": {
+            "type": "integer",
+            "description": "The sequence number of the staff party for this incident",
+            "format": "int32"
           },
           "role": {
             "$ref": "#/components/schemas/CodeDescription"
@@ -23917,12 +24167,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -24037,12 +24287,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -24273,12 +24523,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -24333,12 +24583,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -24652,12 +24902,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -24992,12 +25242,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -25057,12 +25307,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -25128,12 +25378,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -25454,12 +25704,12 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"

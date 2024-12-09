@@ -103,6 +103,14 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
+  suspend fun getByDpsPrisonerContactRestrictionId(dpsPrisonerContactRestrictionId: Long): PersonContactRestrictionMappingDto = webClient.get()
+    .uri(
+      "/mapping/contact-person/contact-restriction/dps-prisoner-contact-restriction-id/{dpsPrisonerContactRestrictionId}",
+      dpsPrisonerContactRestrictionId,
+    )
+    .retrieve()
+    .awaitBody()
+
   suspend fun getByDpsContactRestrictionIdOrNull(dpsContactRestrictionId: Long): PersonRestrictionMappingDto? = webClient.get()
     .uri(
       "/mapping/contact-person/person-restriction/dps-contact-restriction-id/{dpsContactRestrictionId}",
@@ -110,6 +118,14 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
     )
     .retrieve()
     .awaitBodyOrNullForNotFound()
+
+  suspend fun getByDpsContactRestrictionId(dpsContactRestrictionId: Long): PersonRestrictionMappingDto = webClient.get()
+    .uri(
+      "/mapping/contact-person/person-restriction/dps-contact-restriction-id/{dpsContactRestrictionId}",
+      dpsContactRestrictionId,
+    )
+    .retrieve()
+    .awaitBody()
 
   suspend fun createAddressMapping(mappings: PersonAddressMappingDto) =
     webClient.post()

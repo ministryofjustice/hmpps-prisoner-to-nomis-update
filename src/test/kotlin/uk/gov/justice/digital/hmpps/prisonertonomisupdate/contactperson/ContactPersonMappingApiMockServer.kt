@@ -559,6 +559,15 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
     }
   }
 
+  fun stubGetByDpsPrisonerContactRestrictionId(
+    dpsPrisonerContactRestrictionId: Long = 123456,
+    mapping: PersonContactRestrictionMappingDto = PersonContactRestrictionMappingDto(
+      nomisId = 654321,
+      dpsId = dpsPrisonerContactRestrictionId.toString(),
+      mappingType = PersonContactRestrictionMappingDto.MappingType.MIGRATED,
+    ),
+  ) = stubGetByDpsPrisonerContactRestrictionIdOrNull(dpsPrisonerContactRestrictionId, mapping)
+
   fun stubCreateContactRestrictionMapping() {
     mappingServer.stubFor(
       post("/mapping/contact-person/contact-restriction").willReturn(
@@ -634,6 +643,14 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
       )
     }
   }
+  fun stubGetByDpsContactRestrictionId(
+    dpsContactRestrictionId: Long = 123456,
+    mapping: PersonRestrictionMappingDto = PersonRestrictionMappingDto(
+      nomisId = 654321,
+      dpsId = dpsContactRestrictionId.toString(),
+      mappingType = PersonRestrictionMappingDto.MappingType.MIGRATED,
+    ),
+  ) = stubGetByDpsContactRestrictionIdOrNull(dpsContactRestrictionId, mapping)
 
   fun stubCreatePersonRestrictionMapping() {
     mappingServer.stubFor(

@@ -40,7 +40,9 @@ class ContactPersonDomainEventListener(
       "contacts-api.contact-address-phone.created" -> contactPersonService.contactAddressPhoneCreated(message.fromJson())
       "contacts-api.contact-identity.created" -> contactPersonService.contactIdentityCreated(message.fromJson())
       "contacts-api.contact-restriction.created" -> contactPersonService.contactRestrictionCreated(message.fromJson())
+      "contacts-api.contact-restriction.updated" -> contactPersonService.contactRestrictionUpdated(message.fromJson())
       "contacts-api.prisoner-contact-restriction.created" -> contactPersonService.prisonerContactRestrictionCreated(message.fromJson())
+      "contacts-api.prisoner-contact-restriction.updated" -> contactPersonService.prisonerContactRestrictionUpdated(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
@@ -125,12 +127,22 @@ data class PrisonerContactRestrictionCreatedEvent(
   val personReference: ContactIdentifiers,
 ) : SourcedContactPersonEvent
 
+data class PrisonerContactRestrictionUpdatedEvent(
+  override val additionalInformation: PrisonerContactRestrictionAdditionalData,
+  val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent
+
 data class PrisonerContactRestrictionAdditionalData(
   val prisonerContactRestrictionId: Long,
   override val source: String = "DPS",
 ) : SourcedAdditionalData
 
 data class ContactRestrictionCreatedEvent(
+  override val additionalInformation: ContactRestrictionAdditionalData,
+  val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent
+
+data class ContactRestrictionUpdatedEvent(
   override val additionalInformation: ContactRestrictionAdditionalData,
   val personReference: ContactIdentifiers,
 ) : SourcedContactPersonEvent
