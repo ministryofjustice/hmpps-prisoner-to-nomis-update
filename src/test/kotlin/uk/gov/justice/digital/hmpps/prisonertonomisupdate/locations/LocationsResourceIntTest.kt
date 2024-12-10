@@ -106,7 +106,7 @@ class LocationsResourceIntTest : IntegrationTestBase() {
     "locationType" : "LAND",
     "prisonId" : "MDI",
     "locationCode" : "001",
-    "description" : "MDI-A-1",
+    "description" : "MDI-A-1-001",
     "capacity" : 2,
     "operationalCapacity" : 2,
     "cnaCapacity" : 1,
@@ -236,17 +236,17 @@ class LocationsResourceIntTest : IntegrationTestBase() {
           assertThat(it).containsEntry("mismatch-count", "6")
           assertThat(it).containsEntry(
             "10,${generateUUID(10)}",
-            "nomis=LocationReportDetail(code=001, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)," +
+            "nomis=LocationReportDetail(code=001, key=MDI-A-1-001, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)," +
               " dps=LocationReportDetail(code=OTHER, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
           )
           assertThat(it).containsEntry(
             "20,${generateUUID(20)}",
-            "nomis=LocationReportDetail(code=001, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)," +
+            "nomis=LocationReportDetail(code=001, key=MDI-A-1-001, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)," +
               " dps=LocationReportDetail(code=OTHER, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
           )
           assertThat(it).containsEntry(
             "30,${generateUUID(30)}",
-            "nomis=LocationReportDetail(code=001, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)," +
+            "nomis=LocationReportDetail(code=001, key=MDI-A-1-001, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)," +
               " dps=LocationReportDetail(code=OTHER, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
           )
           assertThat(it).containsEntry(
@@ -281,7 +281,7 @@ class LocationsResourceIntTest : IntegrationTestBase() {
         assertThat(this).containsEntry("nomisId", "10")
         assertThat(this).containsEntry(
           "nomis",
-          "LocationReportDetail(code=001, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)",
+          "LocationReportDetail(code=001, key=MDI-A-1-001, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)",
         )
         assertThat(this).containsEntry(
           "dps",
@@ -292,7 +292,7 @@ class LocationsResourceIntTest : IntegrationTestBase() {
         assertThat(this).containsEntry("nomisId", "20")
         assertThat(this).containsEntry(
           "nomis",
-          "LocationReportDetail(code=001, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)",
+          "LocationReportDetail(code=001, key=MDI-A-1-001, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)",
         )
         assertThat(this).containsEntry(
           "dps",
@@ -303,7 +303,7 @@ class LocationsResourceIntTest : IntegrationTestBase() {
         assertThat(this).containsEntry("nomisId", "30")
         assertThat(this).containsEntry(
           "nomis",
-          "LocationReportDetail(code=001, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)",
+          "LocationReportDetail(code=001, key=MDI-A-1-001, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)",
         )
         assertThat(this).containsEntry(
           "dps",
@@ -358,12 +358,12 @@ class LocationsResourceIntTest : IntegrationTestBase() {
           assertThat(it).containsEntry("mismatch-count", "5")
           assertThat(it).containsEntry(
             "10,${generateUUID(10)}",
-            "nomis=LocationReportDetail(code=001, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)," +
+            "nomis=LocationReportDetail(code=001, key=MDI-A-1-001, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)," +
               " dps=LocationReportDetail(code=OTHER, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
           )
           assertThat(it).containsEntry(
             "30,${generateUUID(30)}",
-            "nomis=LocationReportDetail(code=001, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)," +
+            "nomis=LocationReportDetail(code=001, key=MDI-A-1-001, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)," +
               " dps=LocationReportDetail(code=OTHER, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
           )
         },
@@ -403,12 +403,12 @@ class LocationsResourceIntTest : IntegrationTestBase() {
           assertThat(it).containsEntry("mismatch-count", "5")
           assertThat(it).containsEntry(
             "10,${generateUUID(10)}",
-            "nomis=LocationReportDetail(code=001, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)," +
+            "nomis=LocationReportDetail(code=001, key=MDI-A-1-001, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)," +
               " dps=LocationReportDetail(code=OTHER, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
           )
           assertThat(it).containsEntry(
             "20,${generateUUID(20)}",
-            "nomis=LocationReportDetail(code=001, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)," +
+            "nomis=LocationReportDetail(code=001, key=MDI-A-1-001, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=0, usages=null, history=0)," +
               " dps=LocationReportDetail(code=OTHER, key=MDI-A-1, housingType=null, localName=Landing A, comment=null, operationalCapacity=2, maxCapacity=2, certified=true, cnaCapacity=1, active=true, attributes=null, usages=null, history=null)",
           )
         },

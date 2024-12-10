@@ -244,18 +244,22 @@ class LocationsReconciliationService(
     if (nomis.locationCode != dps.code) return "Location code mismatch"
     if (nomis.prisonId != dps.prisonId) return "Prison id mismatch"
     if (nomis.listSequence != dps.orderWithinParentLocation) return "order mismatch nomis=${nomis.listSequence} dps=${dps.orderWithinParentLocation}"
-    // if (nomis.description != dps.key) return "Location key mismatch"
+    if (nomis.description != dps.key && nomis.locationType != "BOX" && nomis.locationType != "POSI") return "Location key mismatch: ${nomis.description} != ${dps.key}"
     // IN DPS can be inactive if parent is inactive:  if (nomis.active != dps.active) return "Location active mismatch"
     if ((nomis.unitType == null) != (dps.residentialHousingType == null)) return "Housing type mismatch"
     if (nomis.userDescription != dps.localName) return "Local Name mismatch"
     if (nomis.comment != dps.comments) return "Comment mismatch"
     if (dps.residentialHousingType != null && dps.locationType == LegacyLocation.LocationType.CELL) {
       if (dps.residentialHousingType != LegacyLocation.ResidentialHousingType.HOLDING_CELL) {
-        if (nomis.operationalCapacity != null && nomis.operationalCapacity > 0 && nomis.operationalCapacity != dps.capacity?.workingCapacity) return "Cell operational capacity mismatch"
-        if (nomis.capacity != null && nomis.capacity > 0 && nomis.capacity != dps.capacity?.maxCapacity) return "Cell max capacity mismatch"
-        if (nomis.cnaCapacity != null && nomis.cnaCapacity > 0) {
+        val oc = nomis.operationalCapacity // satisfy the finickety compiler
+        val c = nomis.capacity
+        val cc = nomis.cnaCapacity
+
+        if (oc != null && oc > 0 && oc != dps.capacity?.workingCapacity) return "Cell operational capacity mismatch"
+        if (c != null && c > 0 && c != dps.capacity?.maxCapacity) return "Cell max capacity mismatch"
+        if (cc != null && cc > 0) {
           if ((nomis.certified == true) != (dps.certification?.certified == true)) return "Cell certification mismatch"
-          if (nomis.cnaCapacity != dps.certification?.capacityOfCertifiedCell) return "Cell CNA capacity mismatch"
+          if (cc != dps.certification?.capacityOfCertifiedCell) return "Cell CNA capacity mismatch"
         }
       }
       if (expectedDpsAttributesSize(nomis.profiles) != (dps.attributes?.size ?: 0)) return "Cell attributes mismatch"
