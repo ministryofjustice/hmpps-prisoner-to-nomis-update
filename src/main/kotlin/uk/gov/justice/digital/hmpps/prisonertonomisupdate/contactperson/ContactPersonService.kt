@@ -106,6 +106,31 @@ class ContactPersonService(
       telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
     }
   }
+  suspend fun contactDeleted(event: ContactDeletedEvent) {
+    val entityName = CONTACT_PERSON.entityName
+
+    val dpsContactId = event.additionalInformation.contactId
+    val telemetryMap = mutableMapOf(
+      "dpsContactId" to dpsContactId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      mappingApiService.getByDpsContactIdOrNull(dpsContactId)?.also {
+        telemetryMap["nomisPersonId"] = it.nomisId.toString()
+        nomisApiService.deletePerson(it.nomisId)
+        mappingApiService.deleteByDpsContactId(dpsContactId)
+        telemetryClient.trackEvent(
+          "$entityName-delete-success",
+          telemetryMap,
+          null,
+        )
+      } ?: kotlin.run {
+        telemetryClient.trackEvent("$entityName-delete-skipped", telemetryMap)
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-delete-ignored", telemetryMap)
+    }
+  }
 
   suspend fun prisonerContactCreated(event: PrisonerContactCreatedEvent) {
     val entityName = CONTACT.entityName

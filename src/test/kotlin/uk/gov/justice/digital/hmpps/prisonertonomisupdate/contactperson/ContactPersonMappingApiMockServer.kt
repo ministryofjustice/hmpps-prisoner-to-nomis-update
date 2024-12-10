@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -98,6 +99,16 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
             .withStatus(201),
 
         ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubDeleteByDpsContactId(dpsContactId: Long) {
+    mappingServer.stubFor(
+      delete("/mapping/contact-person/person/dps-contact-id/$dpsContactId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
     )
   }
 

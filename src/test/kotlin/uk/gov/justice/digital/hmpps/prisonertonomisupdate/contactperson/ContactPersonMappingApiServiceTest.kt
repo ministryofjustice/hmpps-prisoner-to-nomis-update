@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
@@ -146,6 +147,23 @@ class ContactPersonMappingApiServiceTest {
       assertThat(error.moreInfo.existing!!["nomisId"]).isEqualTo(existingNomisId)
       assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
       assertThat(error.moreInfo.duplicate["nomisId"]).isEqualTo(nomisId)
+    }
+  }
+
+  @Nested
+  inner class DeleteByDpsContactId {
+    private val dpsContactId = 1234567L
+
+    @Test
+    internal fun `will pass oath2 token to delete person mapping endpoint`() = runTest {
+      mockServer.stubDeleteByDpsContactId(dpsContactId = dpsContactId)
+
+      apiService.deleteByDpsContactId(dpsContactId)
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/mapping/contact-person/person/dps-contact-id/$dpsContactId"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
     }
   }
 

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -289,6 +290,110 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
             )
             nomisApi.verify(1, postRequestedFor(urlEqualTo("/persons")))
           }
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("contacts-api.contact.deleted")
+  inner class ContactDeleted {
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a Contact delete")
+    inner class WhenNomisDeleted {
+
+      @BeforeEach
+      fun setUp() {
+        publishDeleteContactDomainEvent(contactId = "12345", source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contactperson-delete-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Contact delete")
+    inner class WhenDpsDeleted {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactIdOrNull(dpsContactId = nomisPersonIdAndDpsContactId, PersonMappingDto(dpsId = nomisPersonIdAndDpsContactId.toString(), nomisId = nomisPersonIdAndDpsContactId, mappingType = DPS_CREATED))
+          nomisApi.stubDeletePerson(personId = nomisPersonIdAndDpsContactId)
+          mappingApi.stubDeleteByDpsContactId(nomisPersonIdAndDpsContactId)
+          publishDeleteContactDomainEvent(contactId = nomisPersonIdAndDpsContactId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the contact deleted`() {
+          verify(telemetryClient).trackEvent(
+            eq("contactperson-delete-success"),
+            check {
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will delete the person in NOMIS`() {
+          nomisApi.verify(deleteRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId")))
+        }
+
+        @Test
+        fun `will delete a mapping between the NOMIS and DPS ids`() {
+          mappingApi.verify(
+            deleteRequestedFor(urlEqualTo("/mapping/contact-person/person/dps-contact-id/$nomisPersonIdAndDpsContactId")),
+          )
+        }
+      }
+
+      @Nested
+      inner class WhenMappingDoesNotExist {
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactIdOrNull(dpsContactId = nomisPersonIdAndDpsContactId, null)
+          publishDeleteContactDomainEvent(contactId = nomisPersonIdAndDpsContactId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the contact deleted`() {
+          verify(telemetryClient).trackEvent(
+            eq("contactperson-delete-skipped"),
+            check {
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will not delete the person in NOMIS`() {
+          nomisApi.verify(0, deleteRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId")))
+        }
+
+        @Test
+        fun `will not delete a mapping between the NOMIS and DPS ids`() {
+          mappingApi.verify(
+            0,
+            deleteRequestedFor(urlEqualTo("/mapping/contact-person/person/dps-contact-id/$nomisPersonIdAndDpsContactId")),
+          )
         }
       }
     }
@@ -2454,6 +2559,12 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
 
   private fun publishCreateContactDomainEvent(contactId: String, source: String = "DPS") {
     with("contacts-api.contact.created") {
+      publishDomainEvent(eventType = this, payload = contactMessagePayload(eventType = this, contactId = contactId, source = source))
+    }
+  }
+
+  private fun publishDeleteContactDomainEvent(contactId: String, source: String = "DPS") {
+    with("contacts-api.contact.deleted") {
       publishDomainEvent(eventType = this, payload = contactMessagePayload(eventType = this, contactId = contactId, source = source))
     }
   }

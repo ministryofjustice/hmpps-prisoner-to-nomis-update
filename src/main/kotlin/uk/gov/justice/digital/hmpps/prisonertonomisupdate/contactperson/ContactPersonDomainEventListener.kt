@@ -33,6 +33,7 @@ class ContactPersonDomainEventListener(
   ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
       "contacts-api.contact.created" -> contactPersonService.contactCreated(message.fromJson())
+      "contacts-api.contact.deleted" -> contactPersonService.contactDeleted(message.fromJson())
       "contacts-api.prisoner-contact.created" -> contactPersonService.prisonerContactCreated(message.fromJson())
       "contacts-api.contact-address.created" -> contactPersonService.contactAddressCreated(message.fromJson())
       "contacts-api.contact-email.created" -> contactPersonService.contactEmailCreated(message.fromJson())
@@ -52,6 +53,11 @@ interface SourcedContactPersonEvent {
   val additionalInformation: SourcedAdditionalData
 }
 data class ContactCreatedEvent(
+  override val additionalInformation: ContactAdditionalData,
+  val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent
+
+data class ContactDeletedEvent(
   override val additionalInformation: ContactAdditionalData,
   val personReference: ContactIdentifiers,
 ) : SourcedContactPersonEvent
