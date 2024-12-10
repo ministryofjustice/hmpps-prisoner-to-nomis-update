@@ -31,6 +31,16 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
     .retrieve()
     .awaitBody()
 
+  suspend fun deletePerson(personId: Long) {
+    webClient.delete()
+      .uri(
+        "/persons/{personId}",
+        personId,
+      )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
   suspend fun createPersonContact(personId: Long, request: CreatePersonContactRequest): CreatePersonContactResponse = webClient.post()
     .uri(
       "/persons/{personId}/contact",
@@ -96,16 +106,18 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
     .retrieve()
     .awaitBody()
 
-  suspend fun updateContactRestriction(personId: Long, contactId: Long, contactRestrictionId: Long, request: UpdateContactPersonRestrictionRequest) = webClient.put()
-    .uri(
-      "/persons/{personId}/contact/{contactId}/restriction/{contactRestrictionId}",
-      personId,
-      contactId,
-      contactRestrictionId,
-    )
-    .bodyValue(request)
-    .retrieve()
-    .awaitBodilessEntity()
+  suspend fun updateContactRestriction(personId: Long, contactId: Long, contactRestrictionId: Long, request: UpdateContactPersonRestrictionRequest) {
+    webClient.put()
+      .uri(
+        "/persons/{personId}/contact/{contactId}/restriction/{contactRestrictionId}",
+        personId,
+        contactId,
+        contactRestrictionId,
+      )
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 
   suspend fun createPersonRestriction(personId: Long, request: CreateContactPersonRestrictionRequest): CreateContactPersonRestrictionResponse = webClient.post()
     .uri(
@@ -116,13 +128,15 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
     .retrieve()
     .awaitBody()
 
-  suspend fun updatePersonRestriction(personId: Long, personRestrictionId: Long, request: UpdateContactPersonRestrictionRequest) = webClient.put()
-    .uri(
-      "/persons/{personId}/restriction/{personRestrictionId}",
-      personId,
-      personRestrictionId,
-    )
-    .bodyValue(request)
-    .retrieve()
-    .awaitBodilessEntity()
+  suspend fun updatePersonRestriction(personId: Long, personRestrictionId: Long, request: UpdateContactPersonRestrictionRequest) {
+    webClient.put()
+      .uri(
+        "/persons/{personId}/restriction/{personRestrictionId}",
+        personId,
+        personRestrictionId,
+      )
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 }
