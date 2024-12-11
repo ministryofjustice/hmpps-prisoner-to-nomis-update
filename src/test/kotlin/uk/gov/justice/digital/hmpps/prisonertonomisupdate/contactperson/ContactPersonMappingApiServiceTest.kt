@@ -102,7 +102,7 @@ class ContactPersonMappingApiServiceTest {
 
     @Test
     internal fun `will pass DPS id to service`() = runTest {
-      mockServer.stubGetByDpsContactId()
+      mockServer.stubGetByDpsContactId(dpsContactId = 1234567)
 
       apiService.getByDpsContactId(dpsContactId = 1234567)
 
