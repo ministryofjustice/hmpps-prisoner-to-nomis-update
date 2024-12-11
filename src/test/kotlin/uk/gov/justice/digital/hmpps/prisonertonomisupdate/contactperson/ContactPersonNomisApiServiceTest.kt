@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updateContactPersonRestrictionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 
 @SpringAPIServiceTest
@@ -95,6 +96,33 @@ class ContactPersonNomisApiServiceTest {
 
       mockServer.verify(
         deleteRequestedFor(urlPathEqualTo("/persons/$personId")),
+      )
+    }
+  }
+
+  @Nested
+  inner class UpdatePerson {
+    private val personId = 17171L
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubUpdatePerson(personId)
+
+      apiService.updatePerson(personId, updatePersonRequest())
+
+      mockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call update endpoint`() = runTest {
+      mockServer.stubUpdatePerson(personId)
+
+      apiService.updatePerson(personId, updatePersonRequest())
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/persons/$personId")),
       )
     }
   }

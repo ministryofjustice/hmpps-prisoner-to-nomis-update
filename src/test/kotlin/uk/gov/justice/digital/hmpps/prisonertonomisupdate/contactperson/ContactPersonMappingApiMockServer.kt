@@ -54,6 +54,14 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
       )
     }
   }
+  fun stubGetByDpsContactId(
+    dpsContactId: Long = 123456,
+    mapping: PersonMappingDto = PersonMappingDto(
+      nomisId = dpsContactId,
+      dpsId = dpsContactId.toString(),
+      mappingType = PersonMappingDto.MappingType.MIGRATED,
+    ),
+  ) = stubGetByDpsContactIdOrNull(dpsContactId, mapping)
 
   fun stubCreatePersonMapping() {
     mappingServer.stubFor(

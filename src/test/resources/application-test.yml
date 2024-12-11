@@ -235,6 +235,7 @@ hmpps.sqs:
         { "eventType":[
           "contacts-api.contact.created",
           "contacts-api.contact.deleted",
+          "contacts-api.contact.updated",
           "contacts-api.prisoner-contact.created",
           "contacts-api.contact-address.created",
           "contacts-api.contact-email.created",
