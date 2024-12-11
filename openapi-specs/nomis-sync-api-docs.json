@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-12-10.10208.23ef05d"
+    "version": "2024-12-11.10215.65af0f8"
   },
   "servers": [
     {
@@ -1587,6 +1587,179 @@
           },
           "403": {
             "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_ALERTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons/{personId}": {
+      "get": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Get a person by person Id",
+        "description": "Retrieves a person and related contacts. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "getPerson",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Person Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactPerson"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Person does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Updates a person",
+        "description": "Updates core person data but leaves any associated data e.g contact relationships, addresses. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "updatePerson",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Person Updated"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Deletes a person",
+        "description": "Deletes a person and any associated data e.g contact relationships, addresses. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "deletePerson",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Person Deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
             "content": {
               "application/json": {
                 "schema": {
@@ -10560,121 +10733,6 @@
         }
       }
     },
-    "/persons/{personId}": {
-      "get": {
-        "tags": [
-          "contact-person-resource"
-        ],
-        "summary": "Get a person by person Id",
-        "description": "Retrieves a person and related contacts. Requires ROLE_NOMIS_CONTACTPERSONS",
-        "operationId": "getPerson",
-        "parameters": [
-          {
-            "name": "personId",
-            "in": "path",
-            "description": "Person Id",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "description": "Person Id",
-              "format": "int64",
-              "example": 12345
-            },
-            "example": 12345
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Person Information Returned",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContactPerson"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Person does not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "contact-person-resource"
-        ],
-        "summary": "Deletes a person",
-        "description": "Deletes a person and any associated data e.g contact relationships, addresses. Requires ROLE_NOMIS_CONTACTPERSONS",
-        "operationId": "deletePerson",
-        "parameters": [
-          {
-            "name": "personId",
-            "in": "path",
-            "description": "Person Id",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "description": "Person Id",
-              "format": "int64",
-              "example": 12345
-            },
-            "example": 12345
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Person Deleted"
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/persons/ids": {
       "get": {
         "tags": [
@@ -15128,6 +15186,70 @@
           }
         },
         "description": "A request to update an alert in NOMIS"
+      },
+      "UpdatePersonRequest": {
+        "required": [
+          "firstName",
+          "interpreterRequired",
+          "lastName"
+        ],
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "description": "First name of the person",
+            "example": "Ashantee"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Surname name of the person",
+            "example": "Addo"
+          },
+          "middleName": {
+            "type": "string",
+            "description": "Middle name of the person",
+            "example": "Ashwin"
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "description": "Date of birth of the person",
+            "format": "date"
+          },
+          "genderCode": {
+            "type": "string",
+            "description": "Gender code of the person",
+            "example": "F"
+          },
+          "titleCode": {
+            "type": "string",
+            "description": "Title code of the person",
+            "example": "DR"
+          },
+          "languageCode": {
+            "type": "string",
+            "description": "Language code of the person",
+            "example": "FRE-FRA"
+          },
+          "interpreterRequired": {
+            "type": "boolean",
+            "description": "True if the person requires an interpreter"
+          },
+          "domesticStatusCode": {
+            "type": "string",
+            "description": "Domestic status code aka marital status of the person",
+            "example": "S"
+          },
+          "isStaff": {
+            "type": "boolean",
+            "description": "True if a staff member"
+          },
+          "deceasedDate": {
+            "type": "string",
+            "description": "Date the person dies",
+            "format": "date"
+          }
+        },
+        "description": "Request to update an person (aka DPS contact) in NOMIS"
       },
       "UpdateContactPersonRestrictionRequest": {
         "required": [

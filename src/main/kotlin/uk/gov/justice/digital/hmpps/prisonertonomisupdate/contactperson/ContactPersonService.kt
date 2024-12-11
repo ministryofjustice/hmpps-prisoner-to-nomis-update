@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateContactPersonRestrictionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
@@ -129,6 +130,30 @@ class ContactPersonService(
       }
     } else {
       telemetryClient.trackEvent("$entityName-delete-ignored", telemetryMap)
+    }
+  }
+  suspend fun contactUpdated(event: ContactUpdatedEvent) {
+    val entityName = CONTACT_PERSON.entityName
+
+    val dpsContactId = event.additionalInformation.contactId
+    val telemetryMap = mutableMapOf(
+      "dpsContactId" to dpsContactId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      // not entirely necessary since both ids are the same, but ensures the person has been created
+      val nomisPersonId = mappingApiService.getByDpsContactId(dpsContactId).nomisId.also {
+        telemetryMap["nomisPersonId"] = it.toString()
+      }
+      val dpsContact = dpsApiService.getContact(dpsContactId)
+      nomisApiService.updatePerson(nomisPersonId, dpsContact.toNomisUpdateRequest())
+      telemetryClient.trackEvent(
+        "$entityName-update-success",
+        telemetryMap,
+        null,
+      )
+    } else {
+      telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
     }
   }
 
@@ -647,6 +672,19 @@ private fun SyncContact.toNomisCreateRequest(): CreatePersonRequest = CreatePers
   domesticStatusCode = this.domesticStatus,
   titleCode = this.title,
   isStaff = this.isStaff,
+)
+private fun SyncContact.toNomisUpdateRequest(): UpdatePersonRequest = UpdatePersonRequest(
+  firstName = this.firstName,
+  lastName = this.lastName,
+  middleName = this.middleName,
+  dateOfBirth = this.dateOfBirth,
+  interpreterRequired = this.interpreterRequired ?: false,
+  genderCode = this.gender,
+  languageCode = this.languageCode,
+  domesticStatusCode = this.domesticStatus,
+  titleCode = this.title,
+  isStaff = this.isStaff,
+  deceasedDate = this.deceasedDate,
 )
 
 private fun SyncPrisonerContact.toNomisCreateRequest(): CreatePersonContactRequest = CreatePersonContactRequest(

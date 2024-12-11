@@ -400,6 +400,96 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  @DisplayName("contacts-api.contact.updated")
+  inner class ContactUpdated {
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a Contact update")
+    inner class WhenNomisUpdated {
+
+      @BeforeEach
+      fun setUp() {
+        publishUpdateContactDomainEvent(contactId = "12345", source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contactperson-update-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Contact update")
+    inner class WhenDpsUpdated {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactId(dpsContactId = nomisPersonIdAndDpsContactId, PersonMappingDto(dpsId = nomisPersonIdAndDpsContactId.toString(), nomisId = nomisPersonIdAndDpsContactId, mappingType = DPS_CREATED))
+          dpsApi.stubGetContact(
+            nomisPersonIdAndDpsContactId,
+            contact().copy(
+              id = nomisPersonIdAndDpsContactId,
+              firstName = "John",
+              lastName = "Smith",
+              middleName = "Steve",
+              dateOfBirth = LocalDate.parse("1965-07-19"),
+              interpreterRequired = true,
+              gender = "M",
+              domesticStatus = "S",
+              title = "MR",
+              isStaff = true,
+              languageCode = "EN",
+              deceasedDate = LocalDate.parse("2024-08-19"),
+            ),
+          )
+          nomisApi.stubUpdatePerson(personId = nomisPersonIdAndDpsContactId)
+          publishUpdateContactDomainEvent(contactId = nomisPersonIdAndDpsContactId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the contact updated`() {
+          verify(telemetryClient).trackEvent(
+            eq("contactperson-update-success"),
+            check {
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will update the person in NOMIS`() {
+          nomisApi.verify(
+            putRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId"))
+              .withRequestBodyJsonPath("firstName", "John")
+              .withRequestBodyJsonPath("lastName", "Smith")
+              .withRequestBodyJsonPath("middleName", "Steve")
+              .withRequestBodyJsonPath("dateOfBirth", "1965-07-19")
+              .withRequestBodyJsonPath("genderCode", "M")
+              .withRequestBodyJsonPath("titleCode", "MR")
+              .withRequestBodyJsonPath("languageCode", "EN")
+              .withRequestBodyJsonPath("interpreterRequired", true)
+              .withRequestBodyJsonPath("domesticStatusCode", "S")
+              .withRequestBodyJsonPath("deceasedDate", "2024-08-19")
+              .withRequestBodyJsonPath("isStaff", true),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
   @DisplayName("contacts-api.prisoner-contact.created")
   inner class PrisonerContactCreated {
 
@@ -2559,6 +2649,12 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
 
   private fun publishCreateContactDomainEvent(contactId: String, source: String = "DPS") {
     with("contacts-api.contact.created") {
+      publishDomainEvent(eventType = this, payload = contactMessagePayload(eventType = this, contactId = contactId, source = source))
+    }
+  }
+
+  private fun publishUpdateContactDomainEvent(contactId: String, source: String = "DPS") {
+    with("contacts-api.contact.updated") {
       publishDomainEvent(eventType = this, payload = contactMessagePayload(eventType = this, contactId = contactId, source = source))
     }
   }

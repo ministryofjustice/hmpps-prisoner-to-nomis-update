@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateContactPersonRestrictionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonRequest
 
 @Service
 class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
@@ -37,6 +38,17 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
         "/persons/{personId}",
         personId,
       )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
+  suspend fun updatePerson(personId: Long, request: UpdatePersonRequest) {
+    webClient.put()
+      .uri(
+        "/persons/{personId}",
+        personId,
+      )
+      .bodyValue(request)
       .retrieve()
       .awaitBodilessEntity()
   }

@@ -26,6 +26,14 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
+  suspend fun getByDpsContactId(dpsContactId: Long): PersonMappingDto = webClient.get()
+    .uri(
+      "/mapping/contact-person/person/dps-contact-id/{dpsContactId}",
+      dpsContactId,
+    )
+    .retrieve()
+    .awaitBody()
+
   suspend fun createPersonMapping(mappings: PersonMappingDto) =
     webClient.post()
       .uri("/mapping/contact-person/person")

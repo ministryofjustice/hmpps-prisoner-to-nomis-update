@@ -61,7 +61,7 @@ class ContactPersonMappingApiServiceTest {
     }
 
     @Test
-    fun `will return dpsId when mapping exists`() = runTest {
+    fun `will return nomisId when mapping exists`() = runTest {
       mockServer.stubGetByDpsContactIdOrNull(
         dpsContactId = 1234567,
         mapping = PersonMappingDto(
@@ -84,6 +84,47 @@ class ContactPersonMappingApiServiceTest {
       )
 
       assertThat(apiService.getByDpsContactIdOrNull(dpsContactId = 1234567))
+    }
+  }
+
+  @Nested
+  inner class GetByDpsContactId {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetByDpsContactId(dpsContactId = 1234567)
+
+      apiService.getByDpsContactId(dpsContactId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass DPS id to service`() = runTest {
+      mockServer.stubGetByDpsContactId(dpsContactId = 1234567)
+
+      apiService.getByDpsContactId(dpsContactId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/contact-person/person/dps-contact-id/1234567")),
+      )
+    }
+
+    @Test
+    fun `will return nomisId `() = runTest {
+      mockServer.stubGetByDpsContactId(
+        dpsContactId = 1234567,
+        mapping = PersonMappingDto(
+          dpsId = "1234567",
+          nomisId = 1234567,
+          mappingType = PersonMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      val mapping = apiService.getByDpsContactId(dpsContactId = 1234567)
+
+      assertThat(mapping.nomisId).isEqualTo(1234567)
     }
   }
 
