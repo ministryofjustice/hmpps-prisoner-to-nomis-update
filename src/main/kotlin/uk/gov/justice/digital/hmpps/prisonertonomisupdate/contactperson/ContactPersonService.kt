@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateContactPersonRestrictionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
@@ -196,6 +197,38 @@ class ContactPersonService(
       telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
     }
   }
+
+  suspend fun prisonerContactUpdated(event: PrisonerContactUpdatedEvent) {
+    val entityName = CONTACT.entityName
+
+    val dpsPrisonerContactId = event.additionalInformation.prisonerContactId
+    val telemetryMap = mutableMapOf(
+      "dpsPrisonerContactId" to dpsPrisonerContactId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      val nomisContactId = mappingApiService.getByDpsPrisonerContactId(dpsPrisonerContactId).nomisId.also {
+        telemetryMap["nomisContactId"] = it.toString()
+      }
+      val dpsPrisonerContact = dpsApiService.getPrisonerContact(dpsPrisonerContactId).also {
+        telemetryMap["nomisPersonId"] = it.contactId.toString()
+        telemetryMap["dpsContactId"] = it.contactId.toString()
+      }
+      nomisApiService.updatePersonContact(
+        personId = dpsPrisonerContact.contactId,
+        contactId = nomisContactId,
+        dpsPrisonerContact.toNomisUpdateRequest(),
+      )
+      telemetryClient.trackEvent(
+        "$entityName-update-success",
+        telemetryMap,
+        null,
+      )
+    } else {
+      telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
+    }
+  }
+
   suspend fun contactAddressCreated(event: ContactAddressCreatedEvent) {
     val entityName = CONTACT_ADDRESS.entityName
     val dpsContactAddressId = event.additionalInformation.contactAddressId
@@ -689,6 +722,16 @@ private fun SyncContact.toNomisUpdateRequest(): UpdatePersonRequest = UpdatePers
 
 private fun SyncPrisonerContact.toNomisCreateRequest(): CreatePersonContactRequest = CreatePersonContactRequest(
   offenderNo = this.prisonerNumber,
+  contactTypeCode = this.contactType,
+  relationshipTypeCode = this.relationshipType,
+  active = this.active,
+  approvedVisitor = this.approvedVisitor,
+  emergencyContact = this.emergencyContact,
+  nextOfKin = this.nextOfKin,
+  comment = this.comments,
+  expiryDate = this.expiryDate,
+)
+private fun SyncPrisonerContact.toNomisUpdateRequest(): UpdatePersonContactRequest = UpdatePersonContactRequest(
   contactTypeCode = this.contactType,
   relationshipTypeCode = this.relationshipType,
   active = this.active,

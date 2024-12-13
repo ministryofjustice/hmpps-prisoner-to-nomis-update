@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateContactPersonRestrictionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
@@ -53,6 +54,17 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
 
     fun createPersonContactRequest(): CreatePersonContactRequest = CreatePersonContactRequest(
       offenderNo = "A1234KT",
+      contactTypeCode = "S",
+      relationshipTypeCode = "BRO",
+      active = true,
+      expiryDate = null,
+      approvedVisitor = false,
+      nextOfKin = false,
+      emergencyContact = false,
+      comment = "Best friends",
+    )
+
+    fun updatePersonContactRequest(): UpdatePersonContactRequest = UpdatePersonContactRequest(
       contactTypeCode = "S",
       relationshipTypeCode = "BRO",
       active = true,
@@ -165,6 +177,19 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
           .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubUpdatePersonContact(
+    personId: Long = 123456,
+    contactId: Long = 7373737,
+  ) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/persons/$personId/contact/$contactId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
       ),
     )
   }

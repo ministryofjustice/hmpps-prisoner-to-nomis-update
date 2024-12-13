@@ -733,6 +733,96 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  @DisplayName("contacts-api.prisoner-contact.updated")
+  inner class PrisonerContactUpdated {
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a Contact update")
+    inner class WhenNomisUpdated {
+
+      @BeforeEach
+      fun setUp() {
+        publishUpdatePrisonerContactDomainEvent(prisonerContactId = "12345", source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contact-update-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Prisoner Contact update")
+    inner class WhenDpsUpdated {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val nomisPersonIdAndDpsContactId = 54321L
+        private val nomisContactId = 974592L
+        private val dpsPrisonerContactId = 2751731L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsPrisonerContactId(dpsPrisonerContactId = dpsPrisonerContactId, PersonContactMappingDto(dpsId = dpsPrisonerContactId.toString(), nomisId = nomisContactId, mappingType = PersonContactMappingDto.MappingType.DPS_CREATED))
+          dpsApi.stubGetPrisonerContact(
+            dpsPrisonerContactId,
+            prisonerContact().copy(
+              id = dpsPrisonerContactId,
+              contactId = nomisPersonIdAndDpsContactId,
+              prisonerNumber = "A1234KT",
+              contactType = "S",
+              relationshipType = "BRO",
+              nextOfKin = true,
+              emergencyContact = true,
+              comments = "Big brother",
+              active = true,
+              approvedVisitor = true,
+              expiryDate = LocalDate.parse("2020-01-01"),
+            ),
+          )
+          nomisApi.stubUpdatePersonContact(personId = nomisPersonIdAndDpsContactId, contactId = nomisContactId)
+          publishUpdatePrisonerContactDomainEvent(prisonerContactId = dpsPrisonerContactId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the contact updated`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-update-success"),
+            check {
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("dpsPrisonerContactId", dpsPrisonerContactId.toString())
+              assertThat(it).containsEntry("nomisContactId", nomisContactId.toString())
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will update the person contact in NOMIS`() {
+          nomisApi.verify(
+            putRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/contact/$nomisContactId"))
+              .withRequestBodyJsonPath("contactTypeCode", "S")
+              .withRequestBodyJsonPath("relationshipTypeCode", "BRO")
+              .withRequestBodyJsonPath("active", true)
+              .withRequestBodyJsonPath("expiryDate", "2020-01-01")
+              .withRequestBodyJsonPath("approvedVisitor", true)
+              .withRequestBodyJsonPath("nextOfKin", true)
+              .withRequestBodyJsonPath("emergencyContact", true)
+              .withRequestBodyJsonPath("comment", "Big brother"),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
   @DisplayName("contacts-api.contact-address.created")
   inner class ContactAddressCreated {
 
@@ -2667,6 +2757,11 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
 
   private fun publishCreatePrisonerContactDomainEvent(prisonerContactId: String, source: String = "DPS") {
     with("contacts-api.prisoner-contact.created") {
+      publishDomainEvent(eventType = this, payload = prisonerContactMessagePayload(eventType = this, prisonerContactId = prisonerContactId, source = source))
+    }
+  }
+  private fun publishUpdatePrisonerContactDomainEvent(prisonerContactId: String, source: String = "DPS") {
+    with("contacts-api.prisoner-contact.updated") {
       publishDomainEvent(eventType = this, payload = prisonerContactMessagePayload(eventType = this, prisonerContactId = prisonerContactId, source = source))
     }
   }
