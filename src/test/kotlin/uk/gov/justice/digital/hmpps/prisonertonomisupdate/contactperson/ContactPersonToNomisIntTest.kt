@@ -1077,6 +1077,111 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  @DisplayName("contacts-api.contact-address.updated")
+  inner class ContactAddressUpdated {
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a address update")
+    inner class WhenNomisUpdated {
+
+      @BeforeEach
+      fun setUp() {
+        publishUpdateContactAddressDomainEvent(contactAddressId = "12345", source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contact-address-update-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a address update")
+    inner class WhenDpsUpdated {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val nomisPersonIdAndDpsContactId = 54321L
+        private val nomisAddressId = 974592L
+        private val dpsContactAddressId = 2751731L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactAddressId(dpsContactAddressId = dpsContactAddressId, PersonAddressMappingDto(dpsId = dpsContactAddressId.toString(), nomisId = nomisAddressId, mappingType = PersonAddressMappingDto.MappingType.DPS_CREATED))
+          dpsApi.stubGetContactAddress(
+            contactAddressId = dpsContactAddressId,
+            contactAddress().copy(
+              contactAddressId = dpsContactAddressId,
+              contactId = nomisPersonIdAndDpsContactId,
+              addressType = "HOME",
+              flat = "1A",
+              property = "Brown Court",
+              street = "Brown Street",
+              area = "Brownshire",
+              cityCode = "25343",
+              countyCode = "S.YORKSHIRE",
+              countryCode = "ENG",
+              postcode = "LD5 7BW",
+              mailFlag = true,
+              noFixedAddress = false,
+              primaryAddress = true,
+              verified = true,
+              comments = "Big house",
+              startDate = LocalDate.parse("2020-01-01"),
+              endDate = LocalDate.parse("2026-01-01"),
+            ),
+          )
+          nomisApi.stubUpdatePersonAddress(personId = nomisPersonIdAndDpsContactId, addressId = nomisAddressId)
+          publishUpdateContactAddressDomainEvent(contactAddressId = dpsContactAddressId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the contact updated`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-address-update-success"),
+            check {
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("dpsContactAddressId", dpsContactAddressId.toString())
+              assertThat(it).containsEntry("nomisAddressId", nomisAddressId.toString())
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will update the person address in NOMIS`() {
+          nomisApi.verify(
+            putRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/address/$nomisAddressId"))
+              .withRequestBodyJsonPath("typeCode", "HOME")
+              .withRequestBodyJsonPath("flat", "1A")
+              .withRequestBodyJsonPath("premise", "Brown Court")
+              .withRequestBodyJsonPath("street", "Brown Street")
+              .withRequestBodyJsonPath("locality", "Brownshire")
+              .withRequestBodyJsonPath("postcode", "LD5 7BW")
+              .withRequestBodyJsonPath("cityCode", "25343")
+              .withRequestBodyJsonPath("countyCode", "S.YORKSHIRE")
+              .withRequestBodyJsonPath("countryCode", "ENG")
+              .withRequestBodyJsonPath("noFixedAddress", false)
+              .withRequestBodyJsonPath("primaryAddress", true)
+              .withRequestBodyJsonPath("mailAddress", true)
+              .withRequestBodyJsonPath("validatedPAF", true)
+              .withRequestBodyJsonPath("comment", "Big house")
+              .withRequestBodyJsonPath("startDate", "2020-01-01")
+              .withRequestBodyJsonPath("endDate", "2026-01-01"),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
   @DisplayName("contacts-api.contact-email.created")
   inner class ContactEmailCreated {
 
@@ -2791,6 +2896,11 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
 
   private fun publishCreateContactAddressDomainEvent(contactAddressId: String, source: String = "DPS") {
     with("contacts-api.contact-address.created") {
+      publishDomainEvent(eventType = this, payload = contactAddressMessagePayload(eventType = this, contactAddressId = contactAddressId, source = source))
+    }
+  }
+  private fun publishUpdateContactAddressDomainEvent(contactAddressId: String, source: String = "DPS") {
+    with("contacts-api.contact-address.updated") {
       publishDomainEvent(eventType = this, payload = contactAddressMessagePayload(eventType = this, contactAddressId = contactAddressId, source = source))
     }
   }
