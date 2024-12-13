@@ -36,6 +36,7 @@ class ContactPersonDomainEventListener(
       "contacts-api.contact.deleted" -> contactPersonService.contactDeleted(message.fromJson())
       "contacts-api.contact.updated" -> contactPersonService.contactUpdated(message.fromJson())
       "contacts-api.prisoner-contact.created" -> contactPersonService.prisonerContactCreated(message.fromJson())
+      "contacts-api.prisoner-contact.updated" -> contactPersonService.prisonerContactUpdated(message.fromJson())
       "contacts-api.contact-address.created" -> contactPersonService.contactAddressCreated(message.fromJson())
       "contacts-api.contact-email.created" -> contactPersonService.contactEmailCreated(message.fromJson())
       "contacts-api.contact-phone.created" -> contactPersonService.contactPhoneCreated(message.fromJson())
@@ -74,6 +75,11 @@ data class ContactAdditionalData(
 ) : SourcedAdditionalData
 
 data class PrisonerContactCreatedEvent(
+  override val additionalInformation: PrisonerContactAdditionalData,
+  val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent
+
+data class PrisonerContactUpdatedEvent(
   override val additionalInformation: PrisonerContactAdditionalData,
   val personReference: ContactIdentifiers,
 ) : SourcedContactPersonEvent
