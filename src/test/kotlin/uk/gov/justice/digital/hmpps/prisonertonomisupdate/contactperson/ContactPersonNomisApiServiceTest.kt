@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.createPersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updateContactPersonRestrictionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -221,6 +222,31 @@ class ContactPersonNomisApiServiceTest {
       val response = apiService.createPersonAddress(personId = 1234567, request = createPersonAddressRequest())
 
       assertThat(response.personAddressId).isEqualTo(123456)
+    }
+  }
+
+  @Nested
+  inner class UpdatePersonAddress {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubUpdatePersonAddress(personId = 1234567, addressId = 654321)
+
+      apiService.updatePersonAddress(personId = 1234567, addressId = 654321, request = updatePersonAddressRequest())
+
+      mockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call update endpoint`() = runTest {
+      mockServer.stubUpdatePersonAddress(personId = 1234567, addressId = 654321)
+
+      apiService.updatePersonAddress(personId = 1234567, addressId = 654321, request = updatePersonAddressRequest())
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/persons/1234567/address/654321")),
+      )
     }
   }
 

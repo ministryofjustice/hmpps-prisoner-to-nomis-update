@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateContactPersonRestrictionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
@@ -265,6 +266,37 @@ class ContactPersonService(
       }
     } else {
       telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
+    }
+  }
+
+  suspend fun contactAddressUpdated(event: ContactAddressUpdateEvent) {
+    val entityName = CONTACT_ADDRESS.entityName
+
+    val dpsContactAddressId = event.additionalInformation.contactAddressId
+    val telemetryMap = mutableMapOf(
+      "dpsContactAddressId" to dpsContactAddressId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      val nomisAddressId = mappingApiService.getByDpsContactAddressId(dpsContactAddressId).nomisId.also {
+        telemetryMap["nomisAddressId"] = it.toString()
+      }
+      val dpsContactAddress = dpsApiService.getContactAddress(dpsContactAddressId).also {
+        telemetryMap["nomisPersonId"] = it.contactId.toString()
+        telemetryMap["dpsContactId"] = it.contactId.toString()
+      }
+      nomisApiService.updatePersonAddress(
+        personId = dpsContactAddress.contactId,
+        addressId = nomisAddressId,
+        dpsContactAddress.toNomisUpdateRequest(),
+      )
+      telemetryClient.trackEvent(
+        "$entityName-update-success",
+        telemetryMap,
+        null,
+      )
+    } else {
+      telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
     }
   }
 
@@ -757,6 +789,24 @@ private fun SyncContactAddress.toNomisCreateRequest(): CreatePersonAddressReques
   startDate = this.startDate,
   endDate = this.endDate,
   comment = this.comments,
+)
+private fun SyncContactAddress.toNomisUpdateRequest(): UpdatePersonAddressRequest = UpdatePersonAddressRequest(
+  typeCode = this.addressType,
+  flat = this.flat,
+  premise = this.property,
+  locality = this.area,
+  postcode = this.postcode,
+  street = this.street,
+  cityCode = this.cityCode,
+  countyCode = this.countyCode,
+  countryCode = this.countryCode,
+  noFixedAddress = this.noFixedAddress,
+  primaryAddress = this.primaryAddress,
+  mailAddress = this.mailFlag,
+  startDate = this.startDate,
+  endDate = this.endDate,
+  comment = this.comments,
+  validatedPAF = this.verified,
 )
 
 private fun SyncContactEmail.toNomisCreateRequest(): CreatePersonEmailRequest = CreatePersonEmailRequest(
