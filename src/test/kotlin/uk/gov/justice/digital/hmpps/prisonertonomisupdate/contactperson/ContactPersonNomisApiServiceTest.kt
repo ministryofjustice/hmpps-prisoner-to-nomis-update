@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonContactRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 
@@ -319,6 +320,31 @@ class ContactPersonNomisApiServiceTest {
   }
 
   @Nested
+  inner class UpdatePersonPhone {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubUpdatePersonPhone(personId = 1234567, phoneId = 65543)
+
+      apiService.updatePersonPhone(personId = 1234567, phoneId = 65543, updatePersonPhoneRequest())
+
+      mockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call update endpoint`() = runTest {
+      mockServer.stubUpdatePersonPhone(personId = 1234567, phoneId = 65543)
+
+      apiService.updatePersonPhone(personId = 1234567, phoneId = 65543, updatePersonPhoneRequest())
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/persons/1234567/phone/65543")),
+      )
+    }
+  }
+
+  @Nested
   inner class CreatePersonAddressPhone {
     @Test
     fun `will pass oath2 token to service`() = runTest {
@@ -349,6 +375,31 @@ class ContactPersonNomisApiServiceTest {
       val response = apiService.createPersonAddressPhone(personId = 1234567, addressId = 67890, request = createPersonPhoneRequest())
 
       assertThat(response.phoneId).isEqualTo(123456)
+    }
+  }
+
+  @Nested
+  inner class UpdatePersonAddressPhone {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubUpdatePersonAddressPhone(personId = 1234567, addressId = 67890, phoneId = 8755)
+
+      apiService.updatePersonAddressPhone(personId = 1234567, addressId = 67890, phoneId = 8755, request = updatePersonPhoneRequest())
+
+      mockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call update endpoint`() = runTest {
+      mockServer.stubUpdatePersonAddressPhone(personId = 1234567, addressId = 67890, phoneId = 8755)
+
+      apiService.updatePersonAddressPhone(personId = 1234567, addressId = 67890, phoneId = 8755, request = updatePersonPhoneRequest())
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/persons/1234567/address/67890/phone/8755")),
+      )
     }
   }
 

@@ -41,7 +41,9 @@ class ContactPersonDomainEventListener(
       "contacts-api.contact-address.updated" -> contactPersonService.contactAddressUpdated(message.fromJson())
       "contacts-api.contact-email.created" -> contactPersonService.contactEmailCreated(message.fromJson())
       "contacts-api.contact-phone.created" -> contactPersonService.contactPhoneCreated(message.fromJson())
+      "contacts-api.contact-phone.updated" -> contactPersonService.contactPhoneUpdated(message.fromJson())
       "contacts-api.contact-address-phone.created" -> contactPersonService.contactAddressPhoneCreated(message.fromJson())
+      "contacts-api.contact-address-phone.updated" -> contactPersonService.contactAddressPhoneUpdated(message.fromJson())
       "contacts-api.contact-identity.created" -> contactPersonService.contactIdentityCreated(message.fromJson())
       "contacts-api.contact-restriction.created" -> contactPersonService.contactRestrictionCreated(message.fromJson())
       "contacts-api.contact-restriction.updated" -> contactPersonService.contactRestrictionUpdated(message.fromJson())
@@ -120,12 +122,22 @@ data class ContactPhoneCreatedEvent(
   val personReference: ContactIdentifiers,
 ) : SourcedContactPersonEvent
 
+data class ContactPhoneUpdatedEvent(
+  override val additionalInformation: ContactPhoneAdditionalData,
+  val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent
+
 data class ContactPhoneAdditionalData(
   val contactPhoneId: Long,
   override val source: String = "DPS",
 ) : SourcedAdditionalData
 
 data class ContactAddressPhoneCreatedEvent(
+  override val additionalInformation: ContactAddressPhoneAdditionalData,
+  val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent
+
+data class ContactAddressPhoneUpdatedEvent(
   override val additionalInformation: ContactAddressPhoneAdditionalData,
   val personReference: ContactIdentifiers,
 ) : SourcedContactPersonEvent

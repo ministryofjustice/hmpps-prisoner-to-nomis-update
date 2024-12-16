@@ -394,6 +394,15 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
       )
     }
   }
+  fun stubGetByDpsContactPhoneId(
+    dpsContactPhoneId: Long = 123456,
+    mapping: PersonPhoneMappingDto = PersonPhoneMappingDto(
+      nomisId = 654321,
+      dpsId = dpsContactPhoneId.toString(),
+      dpsPhoneType = PersonPhoneMappingDto.DpsPhoneType.PERSON,
+      mappingType = PersonPhoneMappingDto.MappingType.MIGRATED,
+    ),
+  ) = stubGetByDpsContactPhoneIdOrNull(dpsContactPhoneId, mapping)
 
   fun stubGetByDpsContactAddressPhoneIdOrNull(
     dpsContactAddressPhoneId: Long = 123456,
@@ -424,6 +433,15 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
       )
     }
   }
+  fun stubGetByDpsContactAddressPhoneId(
+    dpsContactAddressPhoneId: Long = 123456,
+    mapping: PersonPhoneMappingDto = PersonPhoneMappingDto(
+      nomisId = 654321,
+      dpsId = dpsContactAddressPhoneId.toString(),
+      dpsPhoneType = PersonPhoneMappingDto.DpsPhoneType.ADDRESS,
+      mappingType = PersonPhoneMappingDto.MappingType.MIGRATED,
+    ),
+  ) = stubGetByDpsContactAddressPhoneIdOrNull(dpsContactAddressPhoneId, mapping)
 
   fun stubCreatePhoneMapping() {
     mappingServer.stubFor(

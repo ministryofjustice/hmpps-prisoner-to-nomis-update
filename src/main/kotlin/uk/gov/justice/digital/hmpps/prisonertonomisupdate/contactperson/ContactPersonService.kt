@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonContactRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
@@ -377,6 +378,32 @@ class ContactPersonService(
       telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
     }
   }
+  suspend fun contactPhoneUpdated(event: ContactPhoneUpdatedEvent) {
+    val entityName = CONTACT_PHONE.entityName
+    val dpsContactPhoneId = event.additionalInformation.contactPhoneId
+    val telemetryMap = mutableMapOf(
+      "dpsContactPhoneId" to dpsContactPhoneId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      val nomisPhoneId = mappingApiService.getByDpsContactPhoneId(dpsContactPhoneId).nomisId.also {
+        telemetryMap["nomisPhoneId"] = it.toString()
+      }
+      val dpsContactPhone = dpsApiService.getContactPhone(dpsContactPhoneId).also {
+        telemetryMap["nomisPersonId"] = it.contactId.toString()
+        telemetryMap["dpsContactId"] = it.contactId.toString()
+        telemetryMap["dpsContactPhoneId"] = it.contactPhoneId.toString()
+      }
+      nomisApiService.updatePersonPhone(
+        personId = dpsContactPhone.contactId,
+        phoneId = nomisPhoneId,
+        dpsContactPhone.toNomisUpdateRequest(),
+      )
+      telemetryClient.trackEvent("$entityName-update-success", telemetryMap)
+    } else {
+      telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
+    }
+  }
 
   suspend fun contactAddressPhoneCreated(event: ContactAddressPhoneCreatedEvent) {
     val entityName = CONTACT_ADDRESS_PHONE.entityName
@@ -424,6 +451,40 @@ class ContactPersonService(
       }
     } else {
       telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
+    }
+  }
+  suspend fun contactAddressPhoneUpdated(event: ContactAddressPhoneUpdatedEvent) {
+    val entityName = CONTACT_ADDRESS_PHONE.entityName
+    val dpsContactAddressPhoneId = event.additionalInformation.contactAddressPhoneId
+    val dpsContactAddressId = event.additionalInformation.contactAddressId
+    val telemetryMap = mutableMapOf(
+      "dpsContactAddressPhoneId" to dpsContactAddressPhoneId.toString(),
+      "dpsContactAddressId" to dpsContactAddressId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      val nomisPhoneId = mappingApiService.getByDpsContactAddressPhoneId(dpsContactAddressPhoneId).nomisId.also {
+        telemetryMap["nomisPhoneId"] = it.toString()
+      }
+      val dpsContactPhone = dpsApiService.getContactAddressPhone(dpsContactAddressPhoneId).also {
+        telemetryMap["nomisPersonId"] = it.contactId.toString()
+        telemetryMap["dpsContactId"] = it.contactId.toString()
+        telemetryMap["dpsContactAddressPhoneId"] = it.contactAddressPhoneId.toString()
+      }
+
+      val nomisAddressId = mappingApiService.getByDpsContactAddressId(dpsContactAddressId).nomisId.also {
+        telemetryMap["nomisAddressId"] = it.toString()
+      }
+      nomisApiService.updatePersonAddressPhone(
+        personId = dpsContactPhone.contactId,
+        phoneId = nomisPhoneId,
+        addressId = nomisAddressId,
+        request = dpsContactPhone.toNomisUpdateRequest(),
+      )
+
+      telemetryClient.trackEvent("$entityName-update-success", telemetryMap)
+    } else {
+      telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
     }
   }
 
@@ -818,8 +879,19 @@ private fun SyncContactPhone.toNomisCreateRequest(): CreatePersonPhoneRequest = 
   extension = this.extNumber,
   typeCode = this.phoneType,
 )
+private fun SyncContactPhone.toNomisUpdateRequest(): UpdatePersonPhoneRequest = UpdatePersonPhoneRequest(
+  number = this.phoneNumber,
+  extension = this.extNumber,
+  typeCode = this.phoneType,
+)
 
 private fun SyncContactAddressPhone.toNomisCreateRequest(): CreatePersonPhoneRequest = CreatePersonPhoneRequest(
+  number = this.phoneNumber,
+  extension = this.extNumber,
+  typeCode = this.phoneType,
+)
+
+private fun SyncContactAddressPhone.toNomisUpdateRequest(): UpdatePersonPhoneRequest = UpdatePersonPhoneRequest(
   number = this.phoneNumber,
   extension = this.extNumber,
   typeCode = this.phoneType,
