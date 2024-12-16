@@ -173,6 +173,14 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
+  suspend fun getByDpsContactEmailId(dpsContactEmailId: Long): PersonEmailMappingDto = webClient.get()
+    .uri(
+      "/mapping/contact-person/email/dps-contact-email-id/{dpsContactEmailId}",
+      dpsContactEmailId,
+    )
+    .retrieve()
+    .awaitBody()
+
   suspend fun createEmailMapping(mappings: PersonEmailMappingDto) =
     webClient.post()
       .uri("/mapping/contact-person/email")

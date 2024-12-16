@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonContactRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
@@ -337,6 +338,26 @@ class ContactPersonService(
       }
     } else {
       telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
+    }
+  }
+  suspend fun contactEmailUpdated(event: ContactEmailUpdatedEvent) {
+    val entityName = CONTACT_EMAIL.entityName
+    val dpsContactEmailId = event.additionalInformation.contactEmailId
+    val telemetryMap = mutableMapOf(
+      "dpsContactEmailId" to dpsContactEmailId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      val nomisEmailId = mappingApiService.getByDpsContactEmailId(dpsContactEmailId).nomisId
+      val dpsContactEmail = dpsApiService.getContactEmail(dpsContactEmailId).also {
+        telemetryMap["nomisPersonId"] = it.contactId.toString()
+        telemetryMap["dpsContactId"] = it.contactId.toString()
+        telemetryMap["dpsContactEmailId"] = it.contactEmailId.toString()
+      }
+      nomisApiService.updatePersonEmail(dpsContactEmail.contactId, nomisEmailId, dpsContactEmail.toNomisUpdateRequest())
+      telemetryClient.trackEvent("$entityName-update-success", telemetryMap)
+    } else {
+      telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
     }
   }
   suspend fun contactPhoneCreated(event: ContactPhoneCreatedEvent) {
@@ -871,6 +892,9 @@ private fun SyncContactAddress.toNomisUpdateRequest(): UpdatePersonAddressReques
 )
 
 private fun SyncContactEmail.toNomisCreateRequest(): CreatePersonEmailRequest = CreatePersonEmailRequest(
+  email = this.emailAddress,
+)
+private fun SyncContactEmail.toNomisUpdateRequest(): UpdatePersonEmailRequest = UpdatePersonEmailRequest(
   email = this.emailAddress,
 )
 

@@ -317,6 +317,14 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
       )
     }
   }
+  fun stubGetByDpsContactEmailId(
+    dpsContactEmailId: Long = 123456,
+    mapping: PersonEmailMappingDto = PersonEmailMappingDto(
+      nomisId = 654321,
+      dpsId = dpsContactEmailId.toString(),
+      mappingType = PersonEmailMappingDto.MappingType.MIGRATED,
+    ),
+  ) = stubGetByDpsContactEmailIdOrNull(dpsContactEmailId, mapping)
 
   fun stubCreateEmailMapping() {
     mappingServer.stubFor(

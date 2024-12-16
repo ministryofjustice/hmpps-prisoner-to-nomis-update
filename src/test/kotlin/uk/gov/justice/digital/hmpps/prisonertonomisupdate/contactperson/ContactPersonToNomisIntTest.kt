@@ -1408,6 +1408,107 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  @DisplayName("contacts-api.contact-email.updated")
+  inner class ContactEmailUpdated {
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a Contact Email update")
+    inner class WhenNomisUpdated {
+
+      @BeforeEach
+      fun setUp() {
+        publishUpdateContactEmailDomainEvent(contactEmailId = "12345", source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contact-email-update-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Contact Email update")
+    inner class WhenDpsUpdated {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val dpsContactEmailId = 1234567L
+        private val nomisEmailId = 7654321L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactEmailId(
+            dpsContactEmailId = dpsContactEmailId,
+            PersonEmailMappingDto(
+              dpsId = dpsContactEmailId.toString(),
+              nomisId = nomisEmailId,
+              mappingType = PersonEmailMappingDto.MappingType.DPS_CREATED,
+            ),
+          )
+          dpsApi.stubGetContactEmail(
+            contactEmailId = dpsContactEmailId,
+            contactEmail().copy(
+              contactEmailId = dpsContactEmailId,
+              contactId = nomisPersonIdAndDpsContactId,
+              emailAddress = "test@test.com",
+            ),
+          )
+          nomisApi.stubUpdatePersonEmail(personId = nomisPersonIdAndDpsContactId, emailId = nomisEmailId)
+          publishUpdateContactEmailDomainEvent(contactEmailId = dpsContactEmailId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the update`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-email-update-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the email updated`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-email-update-success"),
+            check {
+              assertThat(it).containsEntry("dpsContactEmailId", dpsContactEmailId.toString())
+              assertThat(it).containsEntry("nomisInternetAddressId", nomisEmailId.toString())
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call back to DPS to get email details`() {
+          dpsApi.verify(getRequestedFor(urlEqualTo("/sync/contact-email/$dpsContactEmailId")))
+        }
+
+        @Test
+        fun `will update the email in NOMIS`() {
+          nomisApi.verify(putRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/email/$nomisEmailId")))
+        }
+
+        @Test
+        fun `the updated email will contain details of the DPS contact email`() {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("email", "test@test.com"),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
   @DisplayName("contacts-api.contact-phone.created")
   inner class ContactPhoneCreated {
 
@@ -3123,6 +3224,11 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
 
   private fun publishCreateContactEmailDomainEvent(contactEmailId: String, source: String = "DPS") {
     with("contacts-api.contact-email.created") {
+      publishDomainEvent(eventType = this, payload = contactEmailMessagePayload(eventType = this, contactEmailId = contactEmailId, source = source))
+    }
+  }
+  private fun publishUpdateContactEmailDomainEvent(contactEmailId: String, source: String = "DPS") {
+    with("contacts-api.contact-email.updated") {
       publishDomainEvent(eventType = this, payload = contactEmailMessagePayload(eventType = this, contactEmailId = contactEmailId, source = source))
     }
   }

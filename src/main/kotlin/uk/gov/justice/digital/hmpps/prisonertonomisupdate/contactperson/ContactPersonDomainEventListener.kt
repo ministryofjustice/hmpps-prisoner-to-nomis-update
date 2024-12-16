@@ -40,6 +40,7 @@ class ContactPersonDomainEventListener(
       "contacts-api.contact-address.created" -> contactPersonService.contactAddressCreated(message.fromJson())
       "contacts-api.contact-address.updated" -> contactPersonService.contactAddressUpdated(message.fromJson())
       "contacts-api.contact-email.created" -> contactPersonService.contactEmailCreated(message.fromJson())
+      "contacts-api.contact-email.updated" -> contactPersonService.contactEmailUpdated(message.fromJson())
       "contacts-api.contact-phone.created" -> contactPersonService.contactPhoneCreated(message.fromJson())
       "contacts-api.contact-phone.updated" -> contactPersonService.contactPhoneUpdated(message.fromJson())
       "contacts-api.contact-address-phone.created" -> contactPersonService.contactAddressPhoneCreated(message.fromJson())
@@ -108,6 +109,11 @@ data class ContactAddressAdditionalData(
 ) : SourcedAdditionalData
 
 data class ContactEmailCreatedEvent(
+  override val additionalInformation: ContactEmailAdditionalData,
+  val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent
+
+data class ContactEmailUpdatedEvent(
   override val additionalInformation: ContactEmailAdditionalData,
   val personReference: ContactIdentifiers,
 ) : SourcedContactPersonEvent
