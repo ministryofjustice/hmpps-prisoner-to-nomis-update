@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonContactRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
@@ -103,6 +104,10 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
 
     fun createPersonPhoneRequest(): CreatePersonPhoneRequest = CreatePersonPhoneRequest(
+      number = "07973 555 5555",
+      typeCode = "MOB",
+    )
+    fun updatePersonPhoneRequest(): UpdatePersonPhoneRequest = UpdatePersonPhoneRequest(
       number = "07973 555 5555",
       typeCode = "MOB",
     )
@@ -255,6 +260,18 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
       ),
     )
   }
+  fun stubUpdatePersonPhone(
+    personId: Long = 123456,
+    phoneId: Long = 73737,
+  ) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/persons/$personId/phone/$phoneId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
 
   fun stubCreatePersonAddressPhone(
     personId: Long = 123456,
@@ -267,6 +284,19 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
           .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+  fun stubUpdatePersonAddressPhone(
+    personId: Long = 123456,
+    addressId: Long = 78990,
+    phoneId: Long = 73737,
+  ) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/persons/$personId/address/$addressId/phone/$phoneId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
       ),
     )
   }

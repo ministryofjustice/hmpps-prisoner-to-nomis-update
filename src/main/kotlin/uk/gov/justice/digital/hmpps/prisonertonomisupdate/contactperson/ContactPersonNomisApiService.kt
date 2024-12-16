@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonContactRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonRequest
 
 @Service
@@ -114,6 +115,17 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
     .bodyValue(request)
     .retrieve()
     .awaitBody()
+  suspend fun updatePersonPhone(personId: Long, phoneId: Long, request: UpdatePersonPhoneRequest) {
+    webClient.put()
+      .uri(
+        "/persons/{personId}/phone/{phoneId}",
+        personId,
+        phoneId,
+      )
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 
   suspend fun createPersonAddressPhone(personId: Long, addressId: Long, request: CreatePersonPhoneRequest): CreatePersonPhoneResponse = webClient.post()
     .uri(
@@ -124,6 +136,18 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
     .bodyValue(request)
     .retrieve()
     .awaitBody()
+  suspend fun updatePersonAddressPhone(personId: Long, addressId: Long, phoneId: Long, request: UpdatePersonPhoneRequest) {
+    webClient.put()
+      .uri(
+        "/persons/{personId}/address/{addressId}/phone/{phoneId}",
+        personId,
+        addressId,
+        phoneId,
+      )
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 
   suspend fun createPersonIdentifier(personId: Long, request: CreatePersonIdentifierRequest): CreatePersonIdentifierResponse = webClient.post()
     .uri(

@@ -1641,6 +1641,112 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  @DisplayName("contacts-api.contact-phone.updated")
+  inner class ContactPhoneUpdated {
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a Contact Phone update")
+    inner class WhenNomisUpdated {
+
+      @BeforeEach
+      fun setUp() {
+        publishUpdateContactPhoneDomainEvent(contactPhoneId = "12345", source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contact-phone-update-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Contact Phone update")
+    inner class WhenDpsUpdated {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val dpsContactPhoneId = 1234567L
+        private val nomisPhoneId = 7654321L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactPhoneId(
+            dpsContactPhoneId = dpsContactPhoneId,
+            PersonPhoneMappingDto(
+              dpsId = dpsContactPhoneId.toString(),
+              nomisId = nomisPhoneId,
+              dpsPhoneType = PersonPhoneMappingDto.DpsPhoneType.PERSON,
+              mappingType = PersonPhoneMappingDto.MappingType.MIGRATED,
+            ),
+          )
+          dpsApi.stubGetContactPhone(
+            contactPhoneId = dpsContactPhoneId,
+            contactPhone().copy(
+              contactPhoneId = dpsContactPhoneId,
+              contactId = nomisPersonIdAndDpsContactId,
+              phoneNumber = "07973 555 5555",
+              phoneType = "MOB",
+              extNumber = "x555",
+            ),
+          )
+          nomisApi.stubUpdatePersonPhone(personId = nomisPersonIdAndDpsContactId, phoneId = nomisPhoneId)
+          publishUpdateContactPhoneDomainEvent(contactPhoneId = dpsContactPhoneId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the update`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-phone-update-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the phone updated`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-phone-update-success"),
+            check {
+              assertThat(it).containsEntry("dpsContactPhoneId", dpsContactPhoneId.toString())
+              assertThat(it).containsEntry("nomisPhoneId", nomisPhoneId.toString())
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call back to DPS to get phone details`() {
+          dpsApi.verify(getRequestedFor(urlEqualTo("/sync/contact-phone/$dpsContactPhoneId")))
+        }
+
+        @Test
+        fun `will update the phone in NOMIS`() {
+          nomisApi.verify(putRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/phone/$nomisPhoneId")))
+        }
+
+        @Test
+        fun `the updated phone will contain details of the DPS contact phone`() {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("number", "07973 555 5555")
+              .withRequestBodyJsonPath("typeCode", "MOB")
+              .withRequestBodyJsonPath("extension", "x555"),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
   @DisplayName("contacts-api.contact-address-phone.created")
   inner class ContactAddressPhoneCreated {
 
@@ -1884,6 +1990,116 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
             )
             nomisApi.verify(1, postRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/address/$nomisAddressId/phone")))
           }
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("contacts-api.contact-address-phone.updated")
+  inner class ContactAddressPhoneUpdated {
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a Contact Phone update")
+    inner class WhenNomisUpdated {
+
+      @BeforeEach
+      fun setUp() {
+        publishUpdateContactAddressPhoneDomainEvent(contactAddressPhoneId = "12345", contactAddressId = "65432", source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contact-address-phone-update-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Contact Phone update")
+    inner class WhenDpsUpdated {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val dpsContactAddressPhoneId = 1234567L
+        private val dpsContactAddressId = 9836373L
+        private val nomisPhoneId = 7654321L
+        private val nomisAddressId = 947384L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactAddressPhoneId(
+            dpsContactAddressPhoneId = dpsContactAddressPhoneId,
+            PersonPhoneMappingDto(
+              dpsId = dpsContactAddressPhoneId.toString(),
+              nomisId = nomisPhoneId,
+              dpsPhoneType = PersonPhoneMappingDto.DpsPhoneType.ADDRESS,
+              mappingType = PersonPhoneMappingDto.MappingType.MIGRATED,
+            ),
+          )
+          mappingApi.stubGetByDpsContactAddressId(dpsContactAddressId = dpsContactAddressId, PersonAddressMappingDto(dpsId = dpsContactAddressId.toString(), nomisId = nomisAddressId, PersonAddressMappingDto.MappingType.DPS_CREATED))
+          dpsApi.stubGetContactAddressPhone(
+            contactAddressPhoneId = dpsContactAddressPhoneId,
+            contactAddressPhone().copy(
+              contactPhoneId = dpsContactAddressPhoneId,
+              contactId = nomisPersonIdAndDpsContactId,
+              contactAddressId = dpsContactAddressId,
+              phoneNumber = "07973 555 5555",
+              phoneType = "MOB",
+              extNumber = "x555",
+            ),
+          )
+          nomisApi.stubUpdatePersonAddressPhone(personId = nomisPersonIdAndDpsContactId, addressId = nomisAddressId, phoneId = nomisPhoneId)
+          publishUpdateContactAddressPhoneDomainEvent(contactAddressPhoneId = dpsContactAddressPhoneId.toString(), contactAddressId = dpsContactAddressId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the update`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-address-phone-update-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the phone updated`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-address-phone-update-success"),
+            check {
+              assertThat(it).containsEntry("dpsContactAddressPhoneId", dpsContactAddressPhoneId.toString())
+              assertThat(it).containsEntry("nomisPhoneId", nomisPhoneId.toString())
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call back to DPS to get phone details`() {
+          dpsApi.verify(getRequestedFor(urlEqualTo("/sync/contact-address-phone/$dpsContactAddressPhoneId")))
+        }
+
+        @Test
+        fun `will update the phone in NOMIS`() {
+          nomisApi.verify(putRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/address/$nomisAddressId/phone/$nomisPhoneId")))
+        }
+
+        @Test
+        fun `the updated phone will contain details of the DPS contact phone`() {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("number", "07973 555 5555")
+              .withRequestBodyJsonPath("typeCode", "MOB")
+              .withRequestBodyJsonPath("extension", "x555"),
+          )
         }
       }
     }
@@ -2916,8 +3132,18 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
       publishDomainEvent(eventType = this, payload = contactPhoneMessagePayload(eventType = this, contactPhoneId = contactPhoneId, source = source))
     }
   }
+  private fun publishUpdateContactPhoneDomainEvent(contactPhoneId: String, source: String = "DPS") {
+    with("contacts-api.contact-phone.updated") {
+      publishDomainEvent(eventType = this, payload = contactPhoneMessagePayload(eventType = this, contactPhoneId = contactPhoneId, source = source))
+    }
+  }
   private fun publishCreateContactAddressPhoneDomainEvent(contactAddressPhoneId: String, contactAddressId: String, source: String = "DPS") {
     with("contacts-api.contact-address-phone.created") {
+      publishDomainEvent(eventType = this, payload = contactAddressPhoneMessagePayload(eventType = this, contactAddressPhoneId = contactAddressPhoneId, contactAddressId = contactAddressId, source = source))
+    }
+  }
+  private fun publishUpdateContactAddressPhoneDomainEvent(contactAddressPhoneId: String, contactAddressId: String, source: String = "DPS") {
+    with("contacts-api.contact-address-phone.updated") {
       publishDomainEvent(eventType = this, payload = contactAddressPhoneMessagePayload(eventType = this, contactAddressPhoneId = contactAddressPhoneId, contactAddressId = contactAddressId, source = source))
     }
   }

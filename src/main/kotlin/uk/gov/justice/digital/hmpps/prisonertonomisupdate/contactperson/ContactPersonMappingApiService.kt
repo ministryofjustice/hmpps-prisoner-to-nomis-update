@@ -95,6 +95,14 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
+  suspend fun getByDpsContactPhoneId(dpsContactPhoneId: Long): PersonPhoneMappingDto = webClient.get()
+    .uri(
+      "/mapping/contact-person/phone/dps-contact-phone-id/{dpsContactPhoneId}",
+      dpsContactPhoneId,
+    )
+    .retrieve()
+    .awaitBody()
+
   suspend fun getByDpsContactAddressPhoneIdOrNull(dpsContactAddressPhoneId: Long): PersonPhoneMappingDto? = webClient.get()
     .uri(
       "/mapping/contact-person/phone/dps-contact-address-phone-id/{dpsContactAddressPhoneId}",
@@ -102,6 +110,13 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
     )
     .retrieve()
     .awaitBodyOrNullForNotFound()
+  suspend fun getByDpsContactAddressPhoneId(dpsContactAddressPhoneId: Long): PersonPhoneMappingDto = webClient.get()
+    .uri(
+      "/mapping/contact-person/phone/dps-contact-address-phone-id/{dpsContactAddressPhoneId}",
+      dpsContactAddressPhoneId,
+    )
+    .retrieve()
+    .awaitBody()
 
   suspend fun getByDpsContactIdentityIdOrNull(dpsContactIdentityId: Long): PersonIdentifierMappingDto? = webClient.get()
     .uri(
