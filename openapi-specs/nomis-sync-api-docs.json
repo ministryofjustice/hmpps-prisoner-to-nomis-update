@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-12-16.10269.805d683"
+    "version": "2024-12-17.10281.9dfed0a"
   },
   "servers": [
     {
@@ -1946,6 +1946,99 @@
           },
           "404": {
             "description": "Person or phone does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons/{personId}/identifier/{sequence}": {
+      "put": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Updates a person identifier",
+        "description": "Updates a person identifier in NOMIS. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "udpdatePersonIdentifier",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "sequence",
+            "in": "path",
+            "description": "Identifier sequence",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Identifier sequence",
+              "format": "int64",
+              "example": 4
+            },
+            "example": 4
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonIdentifierRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "209": {
+            "description": "Person Identifier updated"
+          },
+          "400": {
+            "description": "Invalid request data, e.g type is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Person or identifier does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -15783,6 +15876,29 @@
             "type": "string",
             "description": "Phone type code",
             "example": "MOB"
+          }
+        }
+      },
+      "UpdatePersonIdentifierRequest": {
+        "required": [
+          "identifier",
+          "typeCode"
+        ],
+        "type": "object",
+        "properties": {
+          "typeCode": {
+            "type": "string",
+            "description": "The identifier type code"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "The identifier value",
+            "example": "NE121212T"
+          },
+          "issuedAuthority": {
+            "type": "string",
+            "description": "The issued authority",
+            "example": "Police"
           }
         }
       },

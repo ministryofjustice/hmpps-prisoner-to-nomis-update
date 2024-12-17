@@ -3159,6 +3159,112 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  @DisplayName("contacts-api.contact-identity.updated")
+  inner class ContactIdentityUpdated {
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a Contact Identity update")
+    inner class WhenNomisUpdated {
+
+      @BeforeEach
+      fun setUp() {
+        publishUpdateContactIdentityDomainEvent(contactIdentityId = "12345", source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contact-identity-update-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Contact Identity update")
+    inner class WhenDpsUpdated {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val dpsContactIdentityId = 1234567L
+        private val nomisSequenceNumber = 4L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactIdentityId(
+            dpsContactIdentityId = dpsContactIdentityId,
+            PersonIdentifierMappingDto(
+              dpsId = dpsContactIdentityId.toString(),
+              nomisPersonId = nomisPersonIdAndDpsContactId,
+              nomisSequenceNumber = nomisSequenceNumber,
+              mappingType = PersonIdentifierMappingDto.MappingType.MIGRATED,
+            ),
+          )
+          dpsApi.stubGetContactIdentity(
+            contactIdentityId = dpsContactIdentityId,
+            contactIdentity().copy(
+              contactIdentityId = dpsContactIdentityId,
+              contactId = nomisPersonIdAndDpsContactId,
+              identityValue = "SMIT63636DL",
+              identityType = "DL",
+              issuingAuthority = "DVLA",
+            ),
+          )
+          nomisApi.stubUpdatePersonIdentifier(personId = nomisPersonIdAndDpsContactId, sequence = nomisSequenceNumber)
+          publishUpdateContactIdentityDomainEvent(contactIdentityId = dpsContactIdentityId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the update`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-identity-update-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the identity updated`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-identity-update-success"),
+            check {
+              assertThat(it).containsEntry("dpsContactIdentityId", dpsContactIdentityId.toString())
+              assertThat(it).containsEntry("nomisSequenceNumber", nomisSequenceNumber.toString())
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call back to DPS to get identity details`() {
+          dpsApi.verify(getRequestedFor(urlEqualTo("/sync/contact-identity/$dpsContactIdentityId")))
+        }
+
+        @Test
+        fun `will update the identifier in NOMIS`() {
+          nomisApi.verify(putRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/identifier/$nomisSequenceNumber")))
+        }
+
+        @Test
+        fun `the updated identifier will contain details of the DPS contact identity`() {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("identifier", "SMIT63636DL")
+              .withRequestBodyJsonPath("typeCode", "DL")
+              .withRequestBodyJsonPath("issuedAuthority", "DVLA"),
+          )
+        }
+      }
+    }
+  }
+
   private fun publishCreateContactDomainEvent(contactId: String, source: String = "DPS") {
     with("contacts-api.contact.created") {
       publishDomainEvent(eventType = this, payload = contactMessagePayload(eventType = this, contactId = contactId, source = source))
@@ -3255,6 +3361,11 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
   }
   private fun publishCreateContactIdentityDomainEvent(contactIdentityId: String, source: String = "DPS") {
     with("contacts-api.contact-identity.created") {
+      publishDomainEvent(eventType = this, payload = contactIdentityMessagePayload(eventType = this, contactIdentityId = contactIdentityId, source = source))
+    }
+  }
+  private fun publishUpdateContactIdentityDomainEvent(contactIdentityId: String, source: String = "DPS") {
+    with("contacts-api.contact-identity.updated") {
       publishDomainEvent(eventType = this, payload = contactIdentityMessagePayload(eventType = this, contactIdentityId = contactIdentityId, source = source))
     }
   }
