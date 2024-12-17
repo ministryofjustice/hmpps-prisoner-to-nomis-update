@@ -348,11 +348,12 @@ class ContactPersonService(
     )
 
     if (event.didOriginateInDPS()) {
-      val nomisEmailId = mappingApiService.getByDpsContactEmailId(dpsContactEmailId).nomisId
+      val nomisEmailId = mappingApiService.getByDpsContactEmailId(dpsContactEmailId).nomisId.also {
+        telemetryMap["nomisInternetAddressId"] = it.toString()
+      }
       val dpsContactEmail = dpsApiService.getContactEmail(dpsContactEmailId).also {
         telemetryMap["nomisPersonId"] = it.contactId.toString()
         telemetryMap["dpsContactId"] = it.contactId.toString()
-        telemetryMap["dpsContactEmailId"] = it.contactEmailId.toString()
       }
       nomisApiService.updatePersonEmail(dpsContactEmail.contactId, nomisEmailId, dpsContactEmail.toNomisUpdateRequest())
       telemetryClient.trackEvent("$entityName-update-success", telemetryMap)
