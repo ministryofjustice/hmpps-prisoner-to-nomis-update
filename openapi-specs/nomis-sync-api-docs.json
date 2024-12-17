@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-12-16.10259.0da069c"
+    "version": "2024-12-16.10269.805d683"
   },
   "servers": [
     {
@@ -1946,6 +1946,89 @@
           },
           "404": {
             "description": "Person or phone does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons/{personId}/email/{emailAddressId}": {
+      "put": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Updates a person email",
+        "description": "Updates a person email in NOMIS. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "updatePersonEmail",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "emailAddressId",
+            "in": "path",
+            "description": "Email address Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Email address Id",
+              "format": "int64",
+              "example": 76554
+            },
+            "example": 76554
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonEmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Person Email ID aka InternetAddressId Update"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Person or email address does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -15700,6 +15783,19 @@
             "type": "string",
             "description": "Phone type code",
             "example": "MOB"
+          }
+        }
+      },
+      "UpdatePersonEmailRequest": {
+        "required": [
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address",
+            "example": "test@test.justice.gov.uk"
           }
         }
       },

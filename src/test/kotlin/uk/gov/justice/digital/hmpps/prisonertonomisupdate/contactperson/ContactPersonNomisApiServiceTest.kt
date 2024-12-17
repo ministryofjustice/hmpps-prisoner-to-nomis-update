@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonContactRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -282,6 +283,31 @@ class ContactPersonNomisApiServiceTest {
       val response = apiService.createPersonEmail(personId = 1234567, request = createPersonEmailRequest())
 
       assertThat(response.emailAddressId).isEqualTo(123456)
+    }
+  }
+
+  @Nested
+  inner class UpdatePersonEmail {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubUpdatePersonEmail(personId = 1234567, emailId = 7655)
+
+      apiService.updatePersonEmail(personId = 1234567, emailId = 7655, request = updatePersonEmailRequest())
+
+      mockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call update endpoint`() = runTest {
+      mockServer.stubUpdatePersonEmail(personId = 1234567, emailId = 7655)
+
+      apiService.updatePersonEmail(personId = 1234567, emailId = 7655, request = updatePersonEmailRequest())
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/persons/1234567/email/7655")),
+      )
     }
   }
 
