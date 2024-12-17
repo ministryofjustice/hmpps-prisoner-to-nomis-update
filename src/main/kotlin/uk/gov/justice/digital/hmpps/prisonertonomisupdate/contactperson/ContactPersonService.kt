@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Update
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
@@ -550,6 +551,27 @@ class ContactPersonService(
       telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
     }
   }
+  suspend fun contactIdentityUpdated(event: ContactIdentityUpdatedEvent) {
+    val entityName = CONTACT_IDENTITY.entityName
+    val dpsContactIdentityId = event.additionalInformation.contactIdentityId
+    val telemetryMap = mutableMapOf(
+      "dpsContactIdentityId" to dpsContactIdentityId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      val mapping = mappingApiService.getByDpsContactIdentityId(dpsContactIdentityId).also {
+        telemetryMap["nomisSequenceNumber"] = it.nomisSequenceNumber.toString()
+        telemetryMap["nomisPersonId"] = it.nomisPersonId.toString()
+      }
+      val dpsContactIdentity = dpsApiService.getContactIdentity(dpsContactIdentityId).also {
+        telemetryMap["dpsContactId"] = it.contactId.toString()
+      }
+      nomisApiService.updatePersonIdentifier(personId = mapping.nomisPersonId, sequence = mapping.nomisSequenceNumber, dpsContactIdentity.toNomisUpdateRequest())
+      telemetryClient.trackEvent("$entityName-update-success", telemetryMap)
+    } else {
+      telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
+    }
+  }
 
   suspend fun prisonerContactRestrictionCreated(event: PrisonerContactRestrictionCreatedEvent) {
     val entityName = PRISONER_CONTACT_RESTRICTION.entityName
@@ -923,6 +945,13 @@ private fun SyncContactAddressPhone.toNomisUpdateRequest(): UpdatePersonPhoneReq
 )
 
 private fun SyncContactIdentity.toNomisCreateRequest(): CreatePersonIdentifierRequest = CreatePersonIdentifierRequest(
+  // TODO - check with DPS - this should be non-nullable
+  identifier = this.identityValue!!,
+  issuedAuthority = this.issuingAuthority,
+  typeCode = this.identityType,
+)
+
+private fun SyncContactIdentity.toNomisUpdateRequest(): UpdatePersonIdentifierRequest = UpdatePersonIdentifierRequest(
   // TODO - check with DPS - this should be non-nullable
   identifier = this.identityValue!!,
   issuedAuthority = this.issuingAuthority,

@@ -126,6 +126,14 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
+  suspend fun getByDpsContactIdentityId(dpsContactIdentityId: Long): PersonIdentifierMappingDto = webClient.get()
+    .uri(
+      "/mapping/contact-person/identifier/dps-contact-identifier-id/{dpsContactIdentityId}",
+      dpsContactIdentityId,
+    )
+    .retrieve()
+    .awaitBody()
+
   suspend fun getByDpsPrisonerContactRestrictionIdOrNull(dpsPrisonerContactRestrictionId: Long): PersonContactRestrictionMappingDto? = webClient.get()
     .uri(
       "/mapping/contact-person/contact-restriction/dps-prisoner-contact-restriction-id/{dpsPrisonerContactRestrictionId}",

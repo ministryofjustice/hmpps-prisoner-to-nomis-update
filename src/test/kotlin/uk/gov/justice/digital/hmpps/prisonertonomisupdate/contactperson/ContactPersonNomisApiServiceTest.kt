@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactP
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson.ContactPersonNomisApiMockServer.Companion.updatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -460,6 +461,31 @@ class ContactPersonNomisApiServiceTest {
       val response = apiService.createPersonIdentifier(personId = 1234567, request = createPersonIdentifierRequest())
 
       assertThat(response.sequence).isEqualTo(4)
+    }
+  }
+
+  @Nested
+  inner class UpdatePersonIdentifier {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubUpdatePersonIdentifier(personId = 1234567, sequence = 4)
+
+      apiService.updatePersonIdentifier(personId = 1234567, sequence = 4, updatePersonIdentifierRequest())
+
+      mockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call update endpoint`() = runTest {
+      mockServer.stubUpdatePersonIdentifier(personId = 1234567, sequence = 4)
+
+      apiService.updatePersonIdentifier(personId = 1234567, sequence = 4, updatePersonIdentifierRequest())
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/persons/1234567/identifier/4")),
+      )
     }
   }
 
