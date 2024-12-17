@@ -109,6 +109,18 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
     .retrieve()
     .awaitBody()
 
+  suspend fun updatePersonEmail(personId: Long, emailId: Long, request: UpdatePersonEmailRequest) {
+    webClient.put()
+      .uri(
+        "/persons/{personId}/email/{emailId}",
+        personId,
+        emailId,
+      )
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
   suspend fun createPersonPhone(personId: Long, request: CreatePersonPhoneRequest): CreatePersonPhoneResponse = webClient.post()
     .uri(
       "/persons/{personId}/phone",
