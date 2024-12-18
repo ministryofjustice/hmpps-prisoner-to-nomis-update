@@ -580,6 +580,7 @@ class NomisApiService(
       }
       .retrieve()
       .bodyToMono(typeReference<RestResponsePage<NonAssociationIdResponse>>())
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/non-associations/ids", "page", pageNumber)))
       .awaitSingle()
 
   suspend fun getNonAssociationDetails(
@@ -594,7 +595,22 @@ class NomisApiService(
         offender2,
       )
       .retrieve()
-      .awaitBody()
+      .bodyToMono(typeReference<List<NonAssociationResponse>>())
+      .retryWhen(
+        backoffSpec.withRetryContext(
+          Context.of(
+            "api",
+            "nomis-prisoner-api",
+            "path",
+            "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/all",
+            "offender1",
+            offender1,
+            "offender2",
+            offender2,
+          ),
+        ),
+      )
+      .awaitSingle()
 
   // ///////////////////// LOCATIONS /////////////////////////
 
