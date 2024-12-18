@@ -244,7 +244,8 @@ class LocationsReconciliationService(
     if (nomis.locationCode != dps.code) return "Location code mismatch"
     if (nomis.prisonId != dps.prisonId) return "Prison id mismatch"
     if (nomis.listSequence != dps.orderWithinParentLocation) return "order mismatch nomis=${nomis.listSequence} dps=${dps.orderWithinParentLocation}"
-    if (nomis.description != dps.key && nomis.locationType != "BOX" && nomis.locationType != "POSI") return "Location key mismatch: ${nomis.description} != ${dps.key}"
+    // There are 100s of key mismatches not counting BOX and POSI, general position is that we dont care.
+    // if (nomis.description != dps.key && nomis.locationType != "BOX" && nomis.locationType != "POSI") return "Location key mismatch: ${nomis.description} != ${dps.key}"
     // IN DPS can be inactive if parent is inactive:  if (nomis.active != dps.active) return "Location active mismatch"
     if ((nomis.unitType == null) != (dps.residentialHousingType == null)) return "Housing type mismatch"
     if (nomis.userDescription != dps.localName) return "Local Name mismatch"
