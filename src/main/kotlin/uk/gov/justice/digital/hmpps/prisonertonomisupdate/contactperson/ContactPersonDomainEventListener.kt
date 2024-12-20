@@ -39,8 +39,10 @@ class ContactPersonDomainEventListener(
       "contacts-api.prisoner-contact.updated" -> contactPersonService.prisonerContactUpdated(message.fromJson())
       "contacts-api.contact-address.created" -> contactPersonService.contactAddressCreated(message.fromJson())
       "contacts-api.contact-address.updated" -> contactPersonService.contactAddressUpdated(message.fromJson())
+      "contacts-api.contact-address.deleted" -> contactPersonService.contactAddressDeleted(message.fromJson())
       "contacts-api.contact-email.created" -> contactPersonService.contactEmailCreated(message.fromJson())
       "contacts-api.contact-email.updated" -> contactPersonService.contactEmailUpdated(message.fromJson())
+      "contacts-api.contact-email.deleted" -> contactPersonService.contactEmailDeleted(message.fromJson())
       "contacts-api.contact-phone.created" -> contactPersonService.contactPhoneCreated(message.fromJson())
       "contacts-api.contact-phone.updated" -> contactPersonService.contactPhoneUpdated(message.fromJson())
       "contacts-api.contact-phone.deleted" -> contactPersonService.contactPhoneDeleted(message.fromJson())
@@ -49,6 +51,7 @@ class ContactPersonDomainEventListener(
       "contacts-api.contact-address-phone.deleted" -> contactPersonService.contactAddressPhoneDeleted(message.fromJson())
       "contacts-api.contact-identity.created" -> contactPersonService.contactIdentityCreated(message.fromJson())
       "contacts-api.contact-identity.updated" -> contactPersonService.contactIdentityUpdated(message.fromJson())
+      "contacts-api.contact-identity.deleted" -> contactPersonService.contactIdentityDeleted(message.fromJson())
       "contacts-api.contact-restriction.created" -> contactPersonService.contactRestrictionCreated(message.fromJson())
       "contacts-api.contact-restriction.updated" -> contactPersonService.contactRestrictionUpdated(message.fromJson())
       "contacts-api.prisoner-contact-restriction.created" -> contactPersonService.prisonerContactRestrictionCreated(message.fromJson())
@@ -113,6 +116,12 @@ data class ContactAddressUpdateEvent(
 ) : SourcedContactPersonEvent,
   ContactIdReferencedEvent
 
+data class ContactAddressDeletedEvent(
+  override val additionalInformation: ContactAddressAdditionalData,
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
+
 data class ContactAddressAdditionalData(
   val contactAddressId: Long,
   override val source: String = "DPS",
@@ -125,6 +134,12 @@ data class ContactEmailCreatedEvent(
   ContactIdReferencedEvent
 
 data class ContactEmailUpdatedEvent(
+  override val additionalInformation: ContactEmailAdditionalData,
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
+
+data class ContactEmailDeletedEvent(
   override val additionalInformation: ContactEmailAdditionalData,
   override val personReference: ContactIdentifiers,
 ) : SourcedContactPersonEvent,
@@ -189,6 +204,12 @@ data class ContactIdentityCreatedEvent(
   ContactIdReferencedEvent
 
 data class ContactIdentityUpdatedEvent(
+  override val additionalInformation: ContactIdentityAdditionalData,
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
+
+data class ContactIdentityDeletedEvent(
   override val additionalInformation: ContactIdentityAdditionalData,
   override val personReference: ContactIdentifiers,
 ) : SourcedContactPersonEvent,

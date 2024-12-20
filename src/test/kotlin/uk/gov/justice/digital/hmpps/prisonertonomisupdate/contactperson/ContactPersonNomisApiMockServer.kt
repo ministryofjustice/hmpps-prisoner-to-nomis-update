@@ -246,6 +246,19 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
 
+  fun stubDeletePersonAddress(
+    personId: Long = 123456,
+    addressId: Long = 123456,
+  ) {
+    nomisApi.stubFor(
+      delete(urlEqualTo("/persons/$personId/address/$addressId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
+
   fun stubCreatePersonEmail(
     personId: Long = 123456,
     response: CreatePersonEmailResponse = createPersonEmailResponse(),
@@ -266,6 +279,18 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
   ) {
     nomisApi.stubFor(
       put(urlEqualTo("/persons/$personId/email/$emailId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
+  fun stubDeletePersonEmail(
+    personId: Long = 123456,
+    emailId: Long = 765443,
+  ) {
+    nomisApi.stubFor(
+      delete(urlEqualTo("/persons/$personId/email/$emailId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value()),
@@ -371,6 +396,18 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
   ) {
     nomisApi.stubFor(
       put(urlEqualTo("/persons/$personId/identifier/$sequence")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
+  fun stubDeletePersonIdentifier(
+    personId: Long = 123456,
+    sequence: Long = 4,
+  ) {
+    nomisApi.stubFor(
+      delete(urlEqualTo("/persons/$personId/identifier/$sequence")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value()),

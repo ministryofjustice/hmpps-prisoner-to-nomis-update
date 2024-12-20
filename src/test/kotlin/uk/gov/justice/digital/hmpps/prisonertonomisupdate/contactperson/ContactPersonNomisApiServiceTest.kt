@@ -254,6 +254,31 @@ class ContactPersonNomisApiServiceTest {
   }
 
   @Nested
+  inner class DeletePersonAddress {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubDeletePersonAddress(personId = 1234567, addressId = 654321)
+
+      apiService.deletePersonAddress(personId = 1234567, addressId = 654321)
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call delete endpoint`() = runTest {
+      mockServer.stubDeletePersonAddress(personId = 1234567, addressId = 654321)
+
+      apiService.deletePersonAddress(personId = 1234567, addressId = 654321)
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/persons/1234567/address/654321")),
+      )
+    }
+  }
+
+  @Nested
   inner class CreatePersonEmail {
     @Test
     fun `will pass oath2 token to service`() = runTest {
@@ -308,6 +333,31 @@ class ContactPersonNomisApiServiceTest {
 
       mockServer.verify(
         putRequestedFor(urlPathEqualTo("/persons/1234567/email/7655")),
+      )
+    }
+  }
+
+  @Nested
+  inner class DeletePersonEmail {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubDeletePersonEmail(personId = 1234567, emailId = 7655)
+
+      apiService.deletePersonEmail(personId = 1234567, emailId = 7655)
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call delete endpoint`() = runTest {
+      mockServer.stubDeletePersonEmail(personId = 1234567, emailId = 7655)
+
+      apiService.deletePersonEmail(personId = 1234567, emailId = 7655)
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/persons/1234567/email/7655")),
       )
     }
   }
@@ -535,6 +585,31 @@ class ContactPersonNomisApiServiceTest {
 
       mockServer.verify(
         putRequestedFor(urlPathEqualTo("/persons/1234567/identifier/4")),
+      )
+    }
+  }
+
+  @Nested
+  inner class DeletePersonIdentifier {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubDeletePersonIdentifier(personId = 1234567, sequence = 4)
+
+      apiService.deletePersonIdentifier(personId = 1234567, sequence = 4)
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call delete endpoint`() = runTest {
+      mockServer.stubDeletePersonIdentifier(personId = 1234567, sequence = 4)
+
+      apiService.deletePersonIdentifier(personId = 1234567, sequence = 4)
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/persons/1234567/identifier/4")),
       )
     }
   }
