@@ -43,8 +43,10 @@ class ContactPersonDomainEventListener(
       "contacts-api.contact-email.updated" -> contactPersonService.contactEmailUpdated(message.fromJson())
       "contacts-api.contact-phone.created" -> contactPersonService.contactPhoneCreated(message.fromJson())
       "contacts-api.contact-phone.updated" -> contactPersonService.contactPhoneUpdated(message.fromJson())
+      "contacts-api.contact-phone.deleted" -> contactPersonService.contactPhoneDeleted(message.fromJson())
       "contacts-api.contact-address-phone.created" -> contactPersonService.contactAddressPhoneCreated(message.fromJson())
       "contacts-api.contact-address-phone.updated" -> contactPersonService.contactAddressPhoneUpdated(message.fromJson())
+      "contacts-api.contact-address-phone.deleted" -> contactPersonService.contactAddressPhoneDeleted(message.fromJson())
       "contacts-api.contact-identity.created" -> contactPersonService.contactIdentityCreated(message.fromJson())
       "contacts-api.contact-identity.updated" -> contactPersonService.contactIdentityUpdated(message.fromJson())
       "contacts-api.contact-restriction.created" -> contactPersonService.contactRestrictionCreated(message.fromJson())
@@ -61,18 +63,21 @@ interface SourcedContactPersonEvent {
 }
 data class ContactCreatedEvent(
   override val additionalInformation: ContactAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class ContactUpdatedEvent(
   override val additionalInformation: ContactAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class ContactDeletedEvent(
   override val additionalInformation: ContactAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class ContactAdditionalData(
   val contactId: Long,
@@ -81,13 +86,15 @@ data class ContactAdditionalData(
 
 data class PrisonerContactCreatedEvent(
   override val additionalInformation: PrisonerContactAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class PrisonerContactUpdatedEvent(
   override val additionalInformation: PrisonerContactAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class PrisonerContactAdditionalData(
   val prisonerContactId: Long,
@@ -96,13 +103,15 @@ data class PrisonerContactAdditionalData(
 
 data class ContactAddressCreatedEvent(
   override val additionalInformation: ContactAddressAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class ContactAddressUpdateEvent(
   override val additionalInformation: ContactAddressAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class ContactAddressAdditionalData(
   val contactAddressId: Long,
@@ -111,13 +120,15 @@ data class ContactAddressAdditionalData(
 
 data class ContactEmailCreatedEvent(
   override val additionalInformation: ContactEmailAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class ContactEmailUpdatedEvent(
   override val additionalInformation: ContactEmailAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class ContactEmailAdditionalData(
   val contactEmailId: Long,
@@ -126,13 +137,21 @@ data class ContactEmailAdditionalData(
 
 data class ContactPhoneCreatedEvent(
   override val additionalInformation: ContactPhoneAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class ContactPhoneUpdatedEvent(
   override val additionalInformation: ContactPhoneAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
+
+data class ContactPhoneDeletedEvent(
+  override val additionalInformation: ContactPhoneAdditionalData,
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class ContactPhoneAdditionalData(
   val contactPhoneId: Long,
@@ -141,13 +160,21 @@ data class ContactPhoneAdditionalData(
 
 data class ContactAddressPhoneCreatedEvent(
   override val additionalInformation: ContactAddressPhoneAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class ContactAddressPhoneUpdatedEvent(
   override val additionalInformation: ContactAddressPhoneAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
+
+data class ContactAddressPhoneDeletedEvent(
+  override val additionalInformation: ContactAddressPhoneAdditionalData,
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class ContactAddressPhoneAdditionalData(
   val contactAddressPhoneId: Long,
@@ -157,13 +184,15 @@ data class ContactAddressPhoneAdditionalData(
 
 data class ContactIdentityCreatedEvent(
   override val additionalInformation: ContactIdentityAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class ContactIdentityUpdatedEvent(
   override val additionalInformation: ContactIdentityAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class ContactIdentityAdditionalData(
   val contactIdentityId: Long,
@@ -172,13 +201,15 @@ data class ContactIdentityAdditionalData(
 
 data class PrisonerContactRestrictionCreatedEvent(
   override val additionalInformation: PrisonerContactRestrictionAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class PrisonerContactRestrictionUpdatedEvent(
   override val additionalInformation: PrisonerContactRestrictionAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class PrisonerContactRestrictionAdditionalData(
   val prisonerContactRestrictionId: Long,
@@ -187,13 +218,15 @@ data class PrisonerContactRestrictionAdditionalData(
 
 data class ContactRestrictionCreatedEvent(
   override val additionalInformation: ContactRestrictionAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class ContactRestrictionUpdatedEvent(
   override val additionalInformation: ContactRestrictionAdditionalData,
-  val personReference: ContactIdentifiers,
-) : SourcedContactPersonEvent
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class ContactRestrictionAdditionalData(
   val contactRestrictionId: Long,
@@ -206,3 +239,9 @@ data class ContactPersonReference(val type: String, val value: String)
 interface SourcedAdditionalData {
   val source: String
 }
+
+interface ContactIdReferencedEvent {
+  val personReference: ContactIdentifiers
+}
+
+fun ContactIdReferencedEvent.contactId() = personReference.identifiers.first { it.type == "DPS_CONTACT_ID" }.value.toLong()
