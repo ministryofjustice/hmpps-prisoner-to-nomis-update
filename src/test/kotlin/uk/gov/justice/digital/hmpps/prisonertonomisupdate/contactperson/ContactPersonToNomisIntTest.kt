@@ -1848,6 +1848,114 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  @DisplayName("contacts-api.contact-phone.deleted")
+  inner class ContactPhoneDeleted {
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a Contact Phone delete")
+    inner class WhenNomisDeleted {
+
+      @BeforeEach
+      fun setUp() {
+        publishDeleteContactPhoneDomainEvent(contactPhoneId = "12345", source = "NOMIS", contactId = "38383")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contact-phone-delete-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Contact Phone delete")
+    inner class WhenDpsDeleted {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val dpsContactPhoneId = 1234567L
+        private val nomisPhoneId = 7654321L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactPhoneIdOrNull(
+            dpsContactPhoneId = dpsContactPhoneId,
+            PersonPhoneMappingDto(
+              dpsId = dpsContactPhoneId.toString(),
+              nomisId = nomisPhoneId,
+              dpsPhoneType = PersonPhoneMappingDto.DpsPhoneType.PERSON,
+              mappingType = PersonPhoneMappingDto.MappingType.MIGRATED,
+            ),
+          )
+          nomisApi.stubDeletePersonPhone(personId = nomisPersonIdAndDpsContactId, phoneId = nomisPhoneId)
+          publishDeleteContactPhoneDomainEvent(contactPhoneId = dpsContactPhoneId.toString(), contactId = nomisPersonIdAndDpsContactId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the delete`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-phone-delete-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the phone deleted`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-phone-delete-success"),
+            check {
+              assertThat(it).containsEntry("dpsContactPhoneId", dpsContactPhoneId.toString())
+              assertThat(it).containsEntry("nomisPhoneId", nomisPhoneId.toString())
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will delete the phone in NOMIS`() {
+          nomisApi.verify(deleteRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/phone/$nomisPhoneId")))
+        }
+      }
+
+      @Nested
+      @DisplayName("Phone mapping already deleted")
+      inner class PhoneMappingMissing {
+        private val dpsContactPhoneId = 1234567L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactPhoneIdOrNull(dpsContactPhoneId = dpsContactPhoneId, null)
+          publishDeleteContactPhoneDomainEvent(contactPhoneId = dpsContactPhoneId.toString(), contactId = nomisPersonIdAndDpsContactId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the phone deleted`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-phone-delete-skipped"),
+            check {
+              assertThat(it).containsEntry("dpsContactPhoneId", dpsContactPhoneId.toString())
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
   @DisplayName("contacts-api.contact-address-phone.created")
   inner class ContactAddressPhoneCreated {
 
@@ -2200,6 +2308,158 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("number", "07973 555 5555")
               .withRequestBodyJsonPath("typeCode", "MOB")
               .withRequestBodyJsonPath("extension", "x555"),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("contacts-api.contact-address-phone.deleted")
+  inner class ContactAddressPhoneDeleted {
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a Contact Phone delete")
+    inner class WhenNomisDeleted {
+
+      @BeforeEach
+      fun setUp() {
+        publishDeleteContactAddressPhoneDomainEvent(contactAddressPhoneId = "12345", contactAddressId = "65432", contactId = "76556", source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contact-address-phone-delete-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Contact Phone delete")
+    inner class WhenDpsDeleted {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val dpsContactAddressPhoneId = 1234567L
+        private val dpsContactAddressId = 9836373L
+        private val nomisPhoneId = 7654321L
+        private val nomisAddressId = 947384L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactAddressPhoneIdOrNull(
+            dpsContactAddressPhoneId = dpsContactAddressPhoneId,
+            PersonPhoneMappingDto(
+              dpsId = dpsContactAddressPhoneId.toString(),
+              nomisId = nomisPhoneId,
+              dpsPhoneType = PersonPhoneMappingDto.DpsPhoneType.ADDRESS,
+              mappingType = PersonPhoneMappingDto.MappingType.MIGRATED,
+            ),
+          )
+          mappingApi.stubGetByDpsContactAddressIdOrNull(dpsContactAddressId = dpsContactAddressId, PersonAddressMappingDto(dpsId = dpsContactAddressId.toString(), nomisId = nomisAddressId, PersonAddressMappingDto.MappingType.DPS_CREATED))
+          nomisApi.stubDeletePersonAddressPhone(personId = nomisPersonIdAndDpsContactId, addressId = nomisAddressId, phoneId = nomisPhoneId)
+          publishDeleteContactAddressPhoneDomainEvent(contactAddressPhoneId = dpsContactAddressPhoneId.toString(), contactAddressId = dpsContactAddressId.toString(), contactId = nomisPersonIdAndDpsContactId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the delete`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-address-phone-delete-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the phone deleted`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-address-phone-delete-success"),
+            check {
+              assertThat(it).containsEntry("dpsContactAddressPhoneId", dpsContactAddressPhoneId.toString())
+              assertThat(it).containsEntry("nomisPhoneId", nomisPhoneId.toString())
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will delete the phone in NOMIS`() {
+          nomisApi.verify(deleteRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/address/$nomisAddressId/phone/$nomisPhoneId")))
+        }
+      }
+
+      @Nested
+      @DisplayName("when phone mapping already deleted")
+      inner class PhoneMappingMissing {
+        private val dpsContactAddressPhoneId = 1234567L
+        private val dpsContactAddressId = 9836373L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactAddressPhoneIdOrNull(dpsContactAddressPhoneId = dpsContactAddressPhoneId, null)
+          publishDeleteContactAddressPhoneDomainEvent(contactAddressPhoneId = dpsContactAddressPhoneId.toString(), contactAddressId = dpsContactAddressId.toString(), contactId = nomisPersonIdAndDpsContactId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `telemetry will show deleted skipped`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-address-phone-delete-skipped"),
+            check {
+              assertThat(it).containsEntry("dpsContactAddressPhoneId", dpsContactAddressPhoneId.toString())
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("reason", "Phone already deleted")
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when address mapping already deleted")
+      inner class AddressMappingMissing {
+        private val dpsContactAddressPhoneId = 1234567L
+        private val dpsContactAddressId = 9836373L
+        private val nomisPhoneId = 7654321L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactAddressPhoneIdOrNull(
+            dpsContactAddressPhoneId = dpsContactAddressPhoneId,
+            PersonPhoneMappingDto(
+              dpsId = dpsContactAddressPhoneId.toString(),
+              nomisId = nomisPhoneId,
+              dpsPhoneType = PersonPhoneMappingDto.DpsPhoneType.ADDRESS,
+              mappingType = PersonPhoneMappingDto.MappingType.MIGRATED,
+            ),
+          )
+          mappingApi.stubGetByDpsContactAddressIdOrNull(dpsContactAddressId = dpsContactAddressId, null)
+          publishDeleteContactAddressPhoneDomainEvent(contactAddressPhoneId = dpsContactAddressPhoneId.toString(), contactAddressId = dpsContactAddressId.toString(), contactId = nomisPersonIdAndDpsContactId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `telemetry will show deleted skipped`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-address-phone-delete-skipped"),
+            check {
+              assertThat(it).containsEntry("dpsContactAddressPhoneId", dpsContactAddressPhoneId.toString())
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("reason", "Address already deleted")
+            },
+            isNull(),
           )
         }
       }
@@ -3349,6 +3609,11 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
       publishDomainEvent(eventType = this, payload = contactPhoneMessagePayload(eventType = this, contactPhoneId = contactPhoneId, source = source))
     }
   }
+  private fun publishDeleteContactPhoneDomainEvent(contactPhoneId: String, contactId: String, source: String = "DPS") {
+    with("contacts-api.contact-phone.deleted") {
+      publishDomainEvent(eventType = this, payload = contactPhoneMessagePayload(eventType = this, contactPhoneId = contactPhoneId, contactId = contactId, source = source))
+    }
+  }
   private fun publishCreateContactAddressPhoneDomainEvent(contactAddressPhoneId: String, contactAddressId: String, source: String = "DPS") {
     with("contacts-api.contact-address-phone.created") {
       publishDomainEvent(eventType = this, payload = contactAddressPhoneMessagePayload(eventType = this, contactAddressPhoneId = contactAddressPhoneId, contactAddressId = contactAddressId, source = source))
@@ -3357,6 +3622,11 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
   private fun publishUpdateContactAddressPhoneDomainEvent(contactAddressPhoneId: String, contactAddressId: String, source: String = "DPS") {
     with("contacts-api.contact-address-phone.updated") {
       publishDomainEvent(eventType = this, payload = contactAddressPhoneMessagePayload(eventType = this, contactAddressPhoneId = contactAddressPhoneId, contactAddressId = contactAddressId, source = source))
+    }
+  }
+  private fun publishDeleteContactAddressPhoneDomainEvent(contactAddressPhoneId: String, contactAddressId: String, contactId: String, source: String = "DPS") {
+    with("contacts-api.contact-address-phone.deleted") {
+      publishDomainEvent(eventType = this, payload = contactAddressPhoneMessagePayload(eventType = this, contactAddressPhoneId = contactAddressPhoneId, contactAddressId = contactAddressId, contactId = contactId, source = source))
     }
   }
   private fun publishCreateContactIdentityDomainEvent(contactIdentityId: String, source: String = "DPS") {
