@@ -99,6 +99,16 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
       .retrieve()
       .awaitBodilessEntity()
   }
+  suspend fun deletePersonAddress(personId: Long, addressId: Long) {
+    webClient.delete()
+      .uri(
+        "/persons/{personId}/address/{addressId}",
+        personId,
+        addressId,
+      )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 
   suspend fun createPersonEmail(personId: Long, request: CreatePersonEmailRequest): CreatePersonEmailResponse = webClient.post()
     .uri(
@@ -117,6 +127,16 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
         emailId,
       )
       .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+  suspend fun deletePersonEmail(personId: Long, emailId: Long) {
+    webClient.delete()
+      .uri(
+        "/persons/{personId}/email/{emailId}",
+        personId,
+        emailId,
+      )
       .retrieve()
       .awaitBodilessEntity()
   }
@@ -202,6 +222,16 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
         sequence,
       )
       .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+  suspend fun deletePersonIdentifier(personId: Long, sequence: Long) {
+    webClient.delete()
+      .uri(
+        "/persons/{personId}/identifier/{sequence}",
+        personId,
+        sequence,
+      )
       .retrieve()
       .awaitBodilessEntity()
   }

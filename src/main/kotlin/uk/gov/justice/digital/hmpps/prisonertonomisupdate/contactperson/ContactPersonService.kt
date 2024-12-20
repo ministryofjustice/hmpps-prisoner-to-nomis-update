@@ -303,6 +303,33 @@ class ContactPersonService(
     }
   }
 
+  suspend fun contactAddressDeleted(event: ContactAddressDeletedEvent) {
+    val entityName = CONTACT_ADDRESS.entityName
+    val dpsContactAddressId = event.additionalInformation.contactAddressId
+    val dpsContactId = event.contactId()
+    val telemetryMap = mutableMapOf(
+      "dpsContactAddressId" to dpsContactAddressId.toString(),
+      "dpsContactId" to dpsContactId.toString(),
+      "nomisPersonId" to dpsContactId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      mappingApiService.getByDpsContactAddressIdOrNull(dpsContactAddressId)?.nomisId?.also {
+        telemetryMap["nomisAddressId"] = it.toString()
+        nomisApiService.deletePersonAddress(
+          personId = dpsContactId,
+          addressId = it,
+        )
+        // TODO - Delete mapping - though behaviour wise all will work since the "from nomis" service will delete anyway
+        telemetryClient.trackEvent("$entityName-delete-success", telemetryMap)
+      } ?: run {
+        telemetryClient.trackEvent("$entityName-delete-skipped", telemetryMap)
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-delete-ignored", telemetryMap)
+    }
+  }
+
   suspend fun contactEmailCreated(event: ContactEmailCreatedEvent) {
     val entityName = CONTACT_EMAIL.entityName
     val dpsContactEmailId = event.additionalInformation.contactEmailId
@@ -362,6 +389,34 @@ class ContactPersonService(
       telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
     }
   }
+
+  suspend fun contactEmailDeleted(event: ContactEmailDeletedEvent) {
+    val entityName = CONTACT_EMAIL.entityName
+    val dpsContactEmailId = event.additionalInformation.contactEmailId
+    val dpsContactId = event.contactId()
+    val telemetryMap = mutableMapOf(
+      "dpsContactEmailId" to dpsContactEmailId.toString(),
+      "dpsContactId" to dpsContactId.toString(),
+      "nomisPersonId" to dpsContactId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      mappingApiService.getByDpsContactEmailIdOrNull(dpsContactEmailId)?.nomisId?.also {
+        telemetryMap["nomisEmailId"] = it.toString()
+        nomisApiService.deletePersonEmail(
+          personId = dpsContactId,
+          emailId = it,
+        )
+        // TODO - Delete mapping - though behaviour wise all will work since the "from nomis" service will delete anyway
+        telemetryClient.trackEvent("$entityName-delete-success", telemetryMap)
+      } ?: run {
+        telemetryClient.trackEvent("$entityName-delete-skipped", telemetryMap)
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-delete-ignored", telemetryMap)
+    }
+  }
+
   suspend fun contactPhoneCreated(event: ContactPhoneCreatedEvent) {
     val entityName = CONTACT_PHONE.entityName
     val dpsContactPhoneId = event.additionalInformation.contactPhoneId
@@ -553,8 +608,7 @@ class ContactPersonService(
       mappingApiService.getByDpsContactAddressPhoneIdOrNull(dpsContactAddressPhoneId)?.nomisId?.also {
         val nomisPhoneId = it
         telemetryMap["nomisPhoneId"] = nomisPhoneId.toString()
-        mappingApiService.getByDpsContactAddressIdOrNull(dpsContactAddressId)?.nomisId?.also {
-          val nomisAddressId = it
+        mappingApiService.getByDpsContactAddressIdOrNull(dpsContactAddressId)?.nomisId?.also { nomisAddressId ->
           telemetryMap["nomisAddressId"] = nomisAddressId.toString()
           nomisApiService.deletePersonAddressPhone(
             personId = dpsContactId,
@@ -635,6 +689,34 @@ class ContactPersonService(
       telemetryClient.trackEvent("$entityName-update-success", telemetryMap)
     } else {
       telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
+    }
+  }
+
+  suspend fun contactIdentityDeleted(event: ContactIdentityDeletedEvent) {
+    val entityName = CONTACT_IDENTITY.entityName
+    val dpsContactIdentityId = event.additionalInformation.contactIdentityId
+    val dpsContactId = event.contactId()
+    val telemetryMap = mutableMapOf(
+      "dpsContactIdentityId" to dpsContactIdentityId.toString(),
+      "dpsContactId" to dpsContactId.toString(),
+      "nomisPersonId" to dpsContactId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      mappingApiService.getByDpsContactIdentityIdOrNull(dpsContactIdentityId)?.also {
+        telemetryMap["nomisSequenceNumber"] = it.nomisSequenceNumber.toString()
+        telemetryMap["nomisPersonId"] = it.nomisPersonId.toString()
+        nomisApiService.deletePersonIdentifier(
+          personId = it.nomisPersonId,
+          sequence = it.nomisSequenceNumber,
+        )
+        // TODO - Delete mapping - though behaviour wise all will work since the "from nomis" service will delete anyway
+        telemetryClient.trackEvent("$entityName-delete-success", telemetryMap)
+      } ?: run {
+        telemetryClient.trackEvent("$entityName-delete-skipped", telemetryMap)
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-delete-ignored", telemetryMap)
     }
   }
 
