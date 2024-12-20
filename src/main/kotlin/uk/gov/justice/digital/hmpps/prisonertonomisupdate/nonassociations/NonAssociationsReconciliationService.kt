@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.model.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 import java.time.LocalDate
 
 private const val NO_COMMENT_PROVIDED = "No comment provided"
@@ -106,7 +105,7 @@ class NonAssociationsReconciliationService(
   }
 
   internal suspend fun getNomisNonAssociationsForPage(page: Pair<Long, Long>) =
-    runCatching { doApiCallWithRetries { nomisApiService.getNonAssociations(page.first, page.second).content } }
+    runCatching { nomisApiService.getNonAssociations(page.first, page.second).content }
       .onFailure {
         telemetryClient.trackEvent(
           "non-associations-reports-reconciliation-mismatch-page-error",
@@ -118,7 +117,7 @@ class NonAssociationsReconciliationService(
       .also { log.info("Nomis Page requested: $page, with ${it.size} non-associations") }
 
   internal suspend fun getDpsNonAssociationsForPage(page: Pair<Long, Long>): List<NonAssociation> =
-    runCatching { doApiCallWithRetries { nonAssociationsApiService.getAllNonAssociations(page.first, page.second).content } }
+    runCatching { nonAssociationsApiService.getAllNonAssociations(page.first, page.second).content }
       .onFailure {
         telemetryClient.trackEvent(
           "non-associations-reports-reconciliation-mismatch-page-error",
@@ -135,8 +134,8 @@ class NonAssociationsReconciliationService(
     val today = LocalDate.now()
 
     val (nomisListUnsorted, dpsListUnsorted) = withContext(Dispatchers.Unconfined) {
-      async { doApiCallWithRetries { nomisApiService.getNonAssociationDetails(id.offenderNo1, id.offenderNo2) } } to
-        async { doApiCallWithRetries { nonAssociationsApiService.getNonAssociationsBetween(id.offenderNo1, id.offenderNo2) } }
+      async { nomisApiService.getNonAssociationDetails(id.offenderNo1, id.offenderNo2) } to
+        async { nonAssociationsApiService.getNonAssociationsBetween(id.offenderNo1, id.offenderNo2) }
     }.awaitBoth()
 
     val nomisListSortedBySequence = nomisListUnsorted.sortedBy { it.typeSequence }
@@ -276,8 +275,10 @@ class NonAssociationsReconciliationService(
       (nomis.comment == null && dps.comment != NO_COMMENT_PROVIDED) || (nomis.comment != null && nomis.comment != dps.comment)
   }
 
-  internal fun closedInNomis(nomis: NonAssociationResponse, today: LocalDate?) =
-    (nomis.expiryDate != null && !nomis.expiryDate.isAfter(today)) || nomis.effectiveDate.isAfter(today)
+  internal fun closedInNomis(nomis: NonAssociationResponse, today: LocalDate?): Boolean {
+    val expiryDate = nomis.expiryDate
+    return (expiryDate != null && !expiryDate.isAfter(today)) || nomis.effectiveDate.isAfter(today)
+  }
 
   private fun typeDoesNotMatch(
     nomisType: String,
