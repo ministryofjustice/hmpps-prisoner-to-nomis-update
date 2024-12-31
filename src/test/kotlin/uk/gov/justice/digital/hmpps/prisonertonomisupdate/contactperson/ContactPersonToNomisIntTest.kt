@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
@@ -1226,6 +1227,7 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
             ),
           )
           nomisApi.stubDeletePersonAddress(personId = nomisPersonIdAndDpsContactId, addressId = nomisAddressId)
+          mappingApi.stubDeleteByNomisAddressId(nomisAddressId = nomisAddressId)
           publishDeleteContactAddressDomainEvent(contactAddressId = dpsContactAddressId.toString(), contactId = nomisPersonIdAndDpsContactId.toString())
           waitForAnyProcessingToComplete()
         }
@@ -1256,6 +1258,11 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will delete the address in NOMIS`() {
           nomisApi.verify(deleteRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/address/$nomisAddressId")))
+        }
+
+        @Test
+        fun `will delete the address mapping`() {
+          mappingApi.verify(deleteRequestedFor(urlPathEqualTo("/mapping/contact-person/address/nomis-address-id/$nomisAddressId")))
         }
       }
 
@@ -1660,6 +1667,7 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
             ),
           )
           nomisApi.stubDeletePersonEmail(personId = nomisPersonIdAndDpsContactId, emailId = nomisEmailId)
+          mappingApi.stubDeleteByNomisEmailId(nomisInternetAddressId = nomisEmailId)
           publishDeleteContactEmailDomainEvent(contactEmailId = dpsContactEmailId.toString(), contactId = nomisPersonIdAndDpsContactId.toString())
           waitForAnyProcessingToComplete()
         }
@@ -1690,6 +1698,11 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will delete the email in NOMIS`() {
           nomisApi.verify(deleteRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/email/$nomisEmailId")))
+        }
+
+        @Test
+        fun `will delete the email mapping`() {
+          mappingApi.verify(deleteRequestedFor(urlPathEqualTo("/mapping/contact-person/email/nomis-internet-address-id/$nomisEmailId")))
         }
       }
 
@@ -2107,6 +2120,7 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
             ),
           )
           nomisApi.stubDeletePersonPhone(personId = nomisPersonIdAndDpsContactId, phoneId = nomisPhoneId)
+          mappingApi.stubDeleteByNomisPhoneId(nomisPhoneId = nomisPhoneId)
           publishDeleteContactPhoneDomainEvent(contactPhoneId = dpsContactPhoneId.toString(), contactId = nomisPersonIdAndDpsContactId.toString())
           waitForAnyProcessingToComplete()
         }
@@ -2137,6 +2151,11 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will delete the phone in NOMIS`() {
           nomisApi.verify(deleteRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/phone/$nomisPhoneId")))
+        }
+
+        @Test
+        fun `will delete the phone mapping`() {
+          mappingApi.verify(deleteRequestedFor(urlPathEqualTo("/mapping/contact-person/phone/nomis-phone-id/$nomisPhoneId")))
         }
       }
 
@@ -2577,6 +2596,7 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
           )
           mappingApi.stubGetByDpsContactAddressIdOrNull(dpsContactAddressId = dpsContactAddressId, PersonAddressMappingDto(dpsId = dpsContactAddressId.toString(), nomisId = nomisAddressId, PersonAddressMappingDto.MappingType.DPS_CREATED))
           nomisApi.stubDeletePersonAddressPhone(personId = nomisPersonIdAndDpsContactId, addressId = nomisAddressId, phoneId = nomisPhoneId)
+          mappingApi.stubDeleteByNomisPhoneId(nomisPhoneId = nomisPhoneId)
           publishDeleteContactAddressPhoneDomainEvent(contactAddressPhoneId = dpsContactAddressPhoneId.toString(), contactAddressId = dpsContactAddressId.toString(), contactId = nomisPersonIdAndDpsContactId.toString())
           waitForAnyProcessingToComplete()
         }
@@ -2607,6 +2627,11 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will delete the phone in NOMIS`() {
           nomisApi.verify(deleteRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/address/$nomisAddressId/phone/$nomisPhoneId")))
+        }
+
+        @Test
+        fun `will delete the phone mapping`() {
+          mappingApi.verify(deleteRequestedFor(urlPathEqualTo("/mapping/contact-person/phone/nomis-phone-id/$nomisPhoneId")))
         }
       }
 
@@ -3785,6 +3810,7 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
             ),
           )
           nomisApi.stubDeletePersonIdentifier(personId = nomisPersonIdAndDpsContactId, sequence = nomisSequenceNumber)
+          mappingApi.stubDeleteByNomisIdentifierIds(nomisPersonId = nomisPersonIdAndDpsContactId, nomisSequenceNumber = nomisSequenceNumber)
           publishDeleteContactIdentityDomainEvent(contactIdentityId = dpsContactIdentityId.toString(), contactId = nomisPersonIdAndDpsContactId.toString())
           waitForAnyProcessingToComplete()
         }
@@ -3815,6 +3841,11 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will delete the identity in NOMIS`() {
           nomisApi.verify(deleteRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/identifier/$nomisSequenceNumber")))
+        }
+
+        @Test
+        fun `will delete the identifier mapping`() {
+          mappingApi.verify(deleteRequestedFor(urlPathEqualTo("/mapping/contact-person/identifier/nomis-person-id/$nomisPersonIdAndDpsContactId/nomis-sequence-number/$nomisSequenceNumber")))
         }
       }
 

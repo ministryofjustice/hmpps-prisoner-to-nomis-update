@@ -242,6 +242,18 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
     ),
   ) = stubGetByDpsContactAddressIdOrNull(dpsContactAddressId, mapping)
 
+  fun stubDeleteByNomisAddressId(
+    nomisAddressId: Long = 123456,
+  ) {
+    mappingServer.stubFor(
+      delete(urlEqualTo("/mapping/contact-person/address/nomis-address-id/$nomisAddressId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
+
   fun stubCreateAddressMapping() {
     mappingServer.stubFor(
       post("/mapping/contact-person/address").willReturn(
@@ -325,6 +337,18 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
       mappingType = PersonEmailMappingDto.MappingType.MIGRATED,
     ),
   ) = stubGetByDpsContactEmailIdOrNull(dpsContactEmailId, mapping)
+
+  fun stubDeleteByNomisEmailId(
+    nomisInternetAddressId: Long = 123456,
+  ) {
+    mappingServer.stubFor(
+      delete(urlEqualTo("/mapping/contact-person/email/nomis-internet-address-id/$nomisInternetAddressId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
 
   fun stubCreateEmailMapping() {
     mappingServer.stubFor(
@@ -451,6 +475,18 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
     ),
   ) = stubGetByDpsContactAddressPhoneIdOrNull(dpsContactAddressPhoneId, mapping)
 
+  fun stubDeleteByNomisPhoneId(
+    nomisPhoneId: Long = 123456,
+  ) {
+    mappingServer.stubFor(
+      delete(urlEqualTo("/mapping/contact-person/phone/nomis-phone-id/$nomisPhoneId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
   fun stubCreatePhoneMapping() {
     mappingServer.stubFor(
       post("/mapping/contact-person/phone").willReturn(
@@ -537,6 +573,19 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
       mappingType = PersonIdentifierMappingDto.MappingType.MIGRATED,
     ),
   ) = stubGetByDpsContactIdentityIdOrNull(dpsContactIdentityId, mapping)
+
+  fun stubDeleteByNomisIdentifierIds(
+    nomisPersonId: Long = 123456,
+    nomisSequenceNumber: Long = 4,
+  ) {
+    mappingServer.stubFor(
+      delete(urlEqualTo("/mapping/contact-person/identifier/nomis-person-id/$nomisPersonId/nomis-sequence-number/$nomisSequenceNumber")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
 
   fun stubCreateIdentifierMapping() {
     mappingServer.stubFor(

@@ -320,7 +320,7 @@ class ContactPersonService(
           personId = dpsContactId,
           addressId = it,
         )
-        // TODO - Delete mapping - though behaviour wise all will work since the "from nomis" service will delete anyway
+        mappingApiService.deleteByNomisAddressId(nomisAddressId = it)
         telemetryClient.trackEvent("$entityName-delete-success", telemetryMap)
       } ?: run {
         telemetryClient.trackEvent("$entityName-delete-skipped", telemetryMap)
@@ -407,7 +407,7 @@ class ContactPersonService(
           personId = dpsContactId,
           emailId = it,
         )
-        // TODO - Delete mapping - though behaviour wise all will work since the "from nomis" service will delete anyway
+        mappingApiService.deleteByNomisEmailId(nomisInternetAddressId = it)
         telemetryClient.trackEvent("$entityName-delete-success", telemetryMap)
       } ?: run {
         telemetryClient.trackEvent("$entityName-delete-skipped", telemetryMap)
@@ -499,7 +499,7 @@ class ContactPersonService(
           personId = dpsContactId,
           phoneId = it,
         )
-        // TODO - Delete mapping - though behaviour wise all will work since the "from nomis" service will delete anyway
+        mappingApiService.deleteByNomisPhoneId(nomisPhoneId = it)
         telemetryClient.trackEvent("$entityName-delete-success", telemetryMap)
       } ?: run {
         telemetryClient.trackEvent("$entityName-delete-skipped", telemetryMap)
@@ -615,7 +615,7 @@ class ContactPersonService(
             addressId = nomisAddressId,
             phoneId = nomisPhoneId,
           )
-          // TODO - Delete mapping - though behaviour wise all will work since the "from nomis" service will delete anyway
+          mappingApiService.deleteByNomisPhoneId(nomisPhoneId = it)
           telemetryClient.trackEvent("$entityName-delete-success", telemetryMap)
         } ?: run {
           telemetryMap["reason"] = "Address already deleted"
@@ -657,7 +657,7 @@ class ContactPersonService(
           }.let {
             PersonIdentifierMappingDto(
               dpsId = dpsContactIdentityId.toString(),
-              // nomis person Id is same as DPS contact id
+              // nomis person ID is same as DPS contact id
               nomisPersonId = dpsIdentity.contactId,
               nomisSequenceNumber = it.sequence,
               mappingType = PersonIdentifierMappingDto.MappingType.DPS_CREATED,
@@ -710,7 +710,7 @@ class ContactPersonService(
           personId = it.nomisPersonId,
           sequence = it.nomisSequenceNumber,
         )
-        // TODO - Delete mapping - though behaviour wise all will work since the "from nomis" service will delete anyway
+        mappingApiService.deleteByNomisIdentifierIds(nomisPersonId = it.nomisPersonId, nomisSequenceNumber = it.nomisSequenceNumber)
         telemetryClient.trackEvent("$entityName-delete-success", telemetryMap)
       } ?: run {
         telemetryClient.trackEvent("$entityName-delete-skipped", telemetryMap)
@@ -1092,15 +1092,13 @@ private fun SyncContactAddressPhone.toNomisUpdateRequest(): UpdatePersonPhoneReq
 )
 
 private fun SyncContactIdentity.toNomisCreateRequest(): CreatePersonIdentifierRequest = CreatePersonIdentifierRequest(
-  // TODO - check with DPS - this should be non-nullable
-  identifier = this.identityValue!!,
+  identifier = this.identityValue,
   issuedAuthority = this.issuingAuthority,
   typeCode = this.identityType,
 )
 
 private fun SyncContactIdentity.toNomisUpdateRequest(): UpdatePersonIdentifierRequest = UpdatePersonIdentifierRequest(
-  // TODO - check with DPS - this should be non-nullable
-  identifier = this.identityValue!!,
+  identifier = this.identityValue,
   issuedAuthority = this.issuingAuthority,
   typeCode = this.identityType,
 )
