@@ -456,6 +456,31 @@ class ContactPersonMappingApiServiceTest {
   }
 
   @Nested
+  inner class DeleteByNomisAddressId {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubDeleteByNomisAddressId(nomisAddressId = 1234567)
+
+      apiService.deleteByNomisAddressId(nomisAddressId = 1234567)
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass NOMIS id to service`() = runTest {
+      mockServer.stubDeleteByNomisAddressId(nomisAddressId = 1234567)
+
+      apiService.deleteByNomisAddressId(nomisAddressId = 1234567)
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/mapping/contact-person/address/nomis-address-id/1234567")),
+      )
+    }
+  }
+
+  @Nested
   inner class CreateAddressMapping {
     @Test
     internal fun `will pass oath2 token to create mapping endpoint`() = runTest {
@@ -607,6 +632,31 @@ class ContactPersonMappingApiServiceTest {
       val mapping = apiService.getByDpsContactEmailId(dpsContactEmailId = 1234567)
 
       assertThat(mapping.nomisId).isEqualTo(1234567)
+    }
+  }
+
+  @Nested
+  inner class DeleteByNomisEmailId {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubDeleteByNomisEmailId(nomisInternetAddressId = 1234567)
+
+      apiService.deleteByNomisEmailId(nomisInternetAddressId = 1234567)
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass NOMIS id to service`() = runTest {
+      mockServer.stubDeleteByNomisEmailId(nomisInternetAddressId = 1234567)
+
+      apiService.deleteByNomisEmailId(nomisInternetAddressId = 1234567)
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/mapping/contact-person/email/nomis-internet-address-id/1234567")),
+      )
     }
   }
 
@@ -795,6 +845,31 @@ class ContactPersonMappingApiServiceTest {
       val mapping = apiService.getByDpsContactAddressPhoneId(dpsContactAddressPhoneId = 1234567)
 
       assertThat(mapping.nomisId).isEqualTo(1234567)
+    }
+  }
+
+  @Nested
+  inner class DeleteByNomisPhoneId {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubDeleteByNomisPhoneId(nomisPhoneId = 1234567)
+
+      apiService.deleteByNomisPhoneId(nomisPhoneId = 1234567)
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass NOMIS id to service`() = runTest {
+      mockServer.stubDeleteByNomisPhoneId(nomisPhoneId = 1234567)
+
+      apiService.deleteByNomisPhoneId(nomisPhoneId = 1234567)
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/mapping/contact-person/phone/nomis-phone-id/1234567")),
+      )
     }
   }
 
@@ -1091,6 +1166,31 @@ class ContactPersonMappingApiServiceTest {
 
       assertThat(mapping.nomisPersonId).isEqualTo(1234567)
       assertThat(mapping.nomisSequenceNumber).isEqualTo(4)
+    }
+  }
+
+  @Nested
+  inner class DeleteByNomisIdentifierId {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubDeleteByNomisIdentifierIds(nomisPersonId = 1234567, nomisSequenceNumber = 4)
+
+      apiService.deleteByNomisIdentifierIds(nomisPersonId = 1234567, nomisSequenceNumber = 4)
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass NOMIS ids to service`() = runTest {
+      mockServer.stubDeleteByNomisIdentifierIds(nomisPersonId = 1234567, nomisSequenceNumber = 4)
+
+      apiService.deleteByNomisIdentifierIds(nomisPersonId = 1234567, nomisSequenceNumber = 4)
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/mapping/contact-person/identifier/nomis-person-id/1234567/nomis-sequence-number/4")),
+      )
     }
   }
 

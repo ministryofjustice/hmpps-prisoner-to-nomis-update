@@ -87,6 +87,16 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
     .retrieve()
     .awaitBody()
 
+  suspend fun deleteByNomisAddressId(nomisAddressId: Long) {
+    webClient.delete()
+      .uri(
+        "/mapping/contact-person/address/nomis-address-id/{nomisAddressId}",
+        nomisAddressId,
+      )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
   suspend fun getByDpsContactPhoneIdOrNull(dpsContactPhoneId: Long): PersonPhoneMappingDto? = webClient.get()
     .uri(
       "/mapping/contact-person/phone/dps-contact-phone-id/{dpsContactPhoneId}",
@@ -118,6 +128,16 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
     .retrieve()
     .awaitBody()
 
+  suspend fun deleteByNomisPhoneId(nomisPhoneId: Long) {
+    webClient.delete()
+      .uri(
+        "/mapping/contact-person/phone/nomis-phone-id/{nomisPhoneId}",
+        nomisPhoneId,
+      )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
   suspend fun getByDpsContactIdentityIdOrNull(dpsContactIdentityId: Long): PersonIdentifierMappingDto? = webClient.get()
     .uri(
       "/mapping/contact-person/identifier/dps-contact-identifier-id/{dpsContactIdentityId}",
@@ -133,6 +153,17 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
     )
     .retrieve()
     .awaitBody()
+
+  suspend fun deleteByNomisIdentifierIds(nomisPersonId: Long, nomisSequenceNumber: Long) {
+    webClient.delete()
+      .uri(
+        "/mapping/contact-person/identifier/nomis-person-id/{nomisPersonId}/nomis-sequence-number/{nomisSequenceNumber}",
+        nomisPersonId,
+        nomisSequenceNumber,
+      )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 
   suspend fun getByDpsPrisonerContactRestrictionIdOrNull(dpsPrisonerContactRestrictionId: Long): PersonContactRestrictionMappingDto? = webClient.get()
     .uri(
@@ -188,6 +219,16 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
     )
     .retrieve()
     .awaitBody()
+
+  suspend fun deleteByNomisEmailId(nomisInternetAddressId: Long) {
+    webClient.delete()
+      .uri(
+        "/mapping/contact-person/email/nomis-internet-address-id/{nomisAddressId}",
+        nomisInternetAddressId,
+      )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 
   suspend fun createEmailMapping(mappings: PersonEmailMappingDto) =
     webClient.post()
