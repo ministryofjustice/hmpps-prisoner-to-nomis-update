@@ -309,7 +309,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
 
         )
-        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(id = COURT_CASE_ID_FOR_CREATION, nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION)
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
         MappingExtension.mappingServer.stubDeleteCourtCase(id = COURT_CASE_ID_FOR_CREATION)
         publishDeleteCourtCaseDomainEvent()
       }
@@ -471,7 +474,15 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to create the Court Appearance`() {
         waitForAnyProcessingToComplete()
-        NomisApiExtension.nomisApi.verify(WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/court-appearances")))
+        NomisApiExtension.nomisApi.verify(
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/court-appearances"))
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "eventDateTime",
+                WireMock.equalTo("2024-09-23T10:00"),
+              ),
+            ),
+        )
       }
 
       @Test
@@ -910,8 +921,14 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
           nomisEventId = NOMIS_COURT_APPEARANCE_ID,
         )
-        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(id = COURT_CASE_ID_FOR_CREATION, nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION)
-        MappingExtension.mappingServer.stubGetCourtAppearanceMappingGivenDpsId(id = DPS_COURT_APPEARANCE_ID, nomisCourtAppearanceId = NOMIS_COURT_APPEARANCE_ID)
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+        MappingExtension.mappingServer.stubGetCourtAppearanceMappingGivenDpsId(
+          id = DPS_COURT_APPEARANCE_ID,
+          nomisCourtAppearanceId = NOMIS_COURT_APPEARANCE_ID,
+        )
         MappingExtension.mappingServer.stubDeleteCourtAppearance(id = DPS_COURT_APPEARANCE_ID)
         publishDeleteCourtAppearanceDomainEvent()
       }
@@ -1612,7 +1629,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     eventType: String,
     source: String = "DPS",
   ) =
-    """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", ${courtAppearanceId?.let { """"courtAppearanceId":"$it","""} ?: ""} "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+    """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", ${courtAppearanceId?.let { """"courtAppearanceId":"$it",""" } ?: ""} "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun nomisCourtCaseCreateResponse(): String {
     return """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION }"""
