@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerCaseNotesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import java.time.LocalDateTime.now
 import java.time.LocalDateTime.parse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNoteAmendment as DpsCaseNoteAmendment
 
@@ -92,8 +91,8 @@ class CaseNotesReconciliationServiceTest {
           missingFromDps = emptySet(),
           missingFromNomis = emptySet(),
           notes = listOf(
-            "dpsCaseNote = {id=1 text-hash=-622354608, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}," +
-              " nomisCaseNote = {id=1 text-hash=-622354608, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}",
+            "dpsCaseNote = {id=1, text-hash=-622354608, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}," +
+              " nomisCaseNote = {id=1, text-hash=-622354608, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}",
           ),
         ),
       )
@@ -115,8 +114,8 @@ class CaseNotesReconciliationServiceTest {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "offenderNo" to OFFENDER_NO,
-              "1" to "dpsCaseNote = {id=1 text-hash=-622354608, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}," +
-                " nomisCaseNote = {id=1 text-hash=-622354608, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}",
+              "1" to "dpsCaseNote = {id=1, text-hash=-622354608, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}," +
+                " nomisCaseNote = {id=1, text-hash=-622354608, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}",
 
             ),
           )
@@ -244,7 +243,7 @@ class CaseNotesReconciliationServiceTest {
         )
 
       verify(telemetryClient).trackEvent(
-        "casenotes-reports-reconciliation-mismatch-size",
+        "casenotes-reports-reconciliation-mismatch-size-nomis",
         mapOf(
           "offenderNo" to "A3456GH",
           "message" to "mappings.size = 3, dpsDistinctIds.size = 1, nomisCaseNotes.size = 4, dpsCaseNotes.size = 1",
@@ -282,7 +281,7 @@ class CaseNotesReconciliationServiceTest {
         )
 
       verify(telemetryClient).trackEvent(
-        "casenotes-reports-reconciliation-mismatch-size",
+        "casenotes-reports-reconciliation-mismatch-size-dps",
         mapOf(
           "offenderNo" to "A3456GH",
           "message" to "mappings.size = 3, dpsDistinctIds.size = 1, nomisCaseNotes.size = 3, dpsCaseNotes.size = 2",
@@ -316,7 +315,7 @@ private fun templateDpsCaseNote(
   typeDescription = "notused",
   subTypeDescription = "notused",
   source = "notused",
-  creationDateTime = now(),
+  creationDateTime = parse("2024-02-02T01:02:03"),
   occurrenceDateTime = parse("2024-01-01T01:02:03"),
   authorName = "notused",
   authorUserId = "notused",
@@ -355,6 +354,7 @@ private fun templateNomisCaseNote(caseNoteId: Long = 1, bookingId: Long = 1, typ
     ),
   ),
   occurrenceDateTime = "2024-01-01T01:02:03",
+  creationDateTime = "2024-02-02T01:02:03",
   createdDatetime = "notused",
   createdUsername = "notused",
   sourceSystem = CaseNoteResponse.SourceSystem.NOMIS,
