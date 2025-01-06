@@ -31,18 +31,24 @@ class SentencingReconciliationService(
     val remandAdjustmentTypes = listOf("RSR", "RX")
   }
 
-  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<MismatchSentencingAdjustments> {
-    return activePrisonersCount.asPages(pageSize).flatMap { page ->
-      val activePrisoners = getActivePrisonersForPage(page)
+  suspend fun generateReconciliationReport(allPrisoners: Boolean, activePrisonersCount: Long): List<MismatchSentencingAdjustments> = activePrisonersCount.asPages(pageSize).flatMap { page ->
+    val activePrisoners = getActivePrisonersForPage(allPrisoners, page)
 
-      withContext(Dispatchers.Unconfined) {
-        activePrisoners.map { async { checkBookingAdjustmentsMatch(it) } }
-      }.awaitAll().filterNotNull()
-    }
+    withContext(Dispatchers.Unconfined) {
+      activePrisoners.map { async { checkBookingAdjustmentsMatch(it) } }
+    }.awaitAll().filterNotNull()
   }
 
-  private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) =
-    runCatching { doApiCallWithRetries { nomisApiService.getActivePrisoners(page.first, page.second) }.content }
+  // TODO - feature switch getActivePrisoners get all prisoners
+  private suspend fun getActivePrisonersForPage(@Suppress("UNUSED_PARAMETER") allPrisoners: Boolean, page: Pair<Long, Long>) =
+    runCatching {
+      doApiCallWithRetries {
+        nomisApiService.getActivePrisoners(
+          pageNumber = page.first,
+          pageSize = page.second,
+        )
+      }.content
+    }
       .onFailure {
         telemetryClient.trackEvent(
           "sentencing-reports-reconciliation-mismatch-page-error",
@@ -65,16 +71,16 @@ class SentencingReconciliationService(
         }
     }.awaitBoth()
 
-    val nomisCounts: AdjustmentCounts = nomisAdjustments.let {
+    val nomisCounts: AdjustmentCounts = nomisAdjustments.let { adjustment ->
       AdjustmentCounts(
-        lawfullyAtLarge = it.keyDateAdjustments.count { it.adjustmentType.code == "LAL" },
-        unlawfullyAtLarge = it.keyDateAdjustments.count { it.adjustmentType.code == "UAL" },
-        restorationOfAdditionalDaysAwarded = it.keyDateAdjustments.count { it.adjustmentType.code == "RADA" },
-        additionalDaysAwarded = it.keyDateAdjustments.count { it.adjustmentType.code == "ADA" },
-        specialRemission = it.keyDateAdjustments.count { it.adjustmentType.code == "SREM" },
+        lawfullyAtLarge = adjustment.keyDateAdjustments.count { it.adjustmentType.code == "LAL" },
+        unlawfullyAtLarge = adjustment.keyDateAdjustments.count { it.adjustmentType.code == "UAL" },
+        restorationOfAdditionalDaysAwarded = adjustment.keyDateAdjustments.count { it.adjustmentType.code == "RADA" },
+        additionalDaysAwarded = adjustment.keyDateAdjustments.count { it.adjustmentType.code == "ADA" },
+        specialRemission = adjustment.keyDateAdjustments.count { it.adjustmentType.code == "SREM" },
       )
-    }.let {
-      it.copy(
+    }.let { counts ->
+      counts.copy(
         remand = nomisAdjustments.sentenceAdjustments.count { it.adjustmentType.code in remandAdjustmentTypes },
         unusedDeductions = nomisAdjustments.sentenceAdjustments.count { it.adjustmentType.code == "UR" },
         taggedBail = nomisAdjustments.sentenceAdjustments.count { it.adjustmentType.code in taggedBailAdjustmentTypes },

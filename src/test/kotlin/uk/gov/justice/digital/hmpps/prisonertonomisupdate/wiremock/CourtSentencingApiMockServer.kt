@@ -99,6 +99,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       prisonerId = offenderNo,
       courtCode = "DDOC",
       appearanceDate = LocalDate.parse("2024-09-23"),
+      appearanceTime = "10:00",
       charges = listOf(
         LegacyCharge(
           lifetimeUuid = UUID.fromString(courtCharge1Id),
@@ -156,6 +157,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       prisonerId = offenderNo,
       courtCode = "DDOC",
       appearanceDate = LocalDate.parse("2024-09-23"),
+      appearanceTime = "10:00:00",
       charges = listOf(
         LegacyCharge(
           lifetimeUuid = UUID.fromString(courtCharge1Id),

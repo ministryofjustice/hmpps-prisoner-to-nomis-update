@@ -14,6 +14,7 @@ import org.springframework.core.ParameterizedTypeReference
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
@@ -145,26 +146,26 @@ class NomisApiService(
       .retrieve()
       .awaitBody()
 
-  suspend fun updateAppointment(nomisEventId: Long, request: UpdateAppointmentRequest) =
+  suspend fun updateAppointment(nomisEventId: Long, request: UpdateAppointmentRequest): ResponseEntity<Void> =
     webClient.put()
       .uri("/appointments/{nomisEventId}", nomisEventId)
       .bodyValue(request)
       .retrieve()
       .awaitBodilessEntity()
 
-  suspend fun cancelAppointment(nomisEventId: Long) =
+  suspend fun cancelAppointment(nomisEventId: Long): ResponseEntity<Void> =
     webClient.put()
       .uri("/appointments/{nomisEventId}/cancel", nomisEventId)
       .retrieve()
       .awaitBodilessEntity()
 
-  suspend fun uncancelAppointment(nomisEventId: Long) =
+  suspend fun uncancelAppointment(nomisEventId: Long): ResponseEntity<Void> =
     webClient.put()
       .uri("/appointments/{nomisEventId}/uncancel", nomisEventId)
       .retrieve()
       .awaitBodilessEntity()
 
-  suspend fun deleteAppointment(nomisEventId: Long) =
+  suspend fun deleteAppointment(nomisEventId: Long): ResponseEntity<Void> =
     webClient.delete()
       .uri("/appointments/{nomisEventId}", nomisEventId)
       .retrieve()
@@ -247,14 +248,14 @@ class NomisApiService(
       .awaitBodilessEntity()
   }
 
-  suspend fun createGlobalIncentiveLevel(incentiveLevel: ReferenceCode) =
+  suspend fun createGlobalIncentiveLevel(incentiveLevel: ReferenceCode): ResponseEntity<Void> =
     webClient.post()
       .uri("/incentives/reference-codes")
       .bodyValue(incentiveLevel)
       .retrieve()
       .awaitBodilessEntity()
 
-  suspend fun globalIncentiveLevelReorder(levels: List<String>) =
+  suspend fun globalIncentiveLevelReorder(levels: List<String>): ResponseEntity<Void> =
     webClient.post()
       .uri("/incentives/reference-codes/reorder")
       .bodyValue(ReorderRequest(levels))
@@ -309,14 +310,14 @@ class NomisApiService(
       .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all-from-id", "offenderId", fromId)))
       .awaitSingle()
 
-  suspend fun updatePrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest) =
+  suspend fun updatePrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest): ResponseEntity<Void> =
     webClient.put()
       .uri("/incentives/prison/{prison}/code/{levelCode}", prison, prisonIncentive.levelCode)
       .bodyValue(prisonIncentive)
       .retrieve()
       .awaitBodilessEntity()
 
-  suspend fun createPrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest) =
+  suspend fun createPrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest): ResponseEntity<Void> =
     webClient.post()
       .uri("/incentives/prison/{prison}", prison)
       .bodyValue(prisonIncentive)
@@ -392,7 +393,7 @@ class NomisApiService(
     hearingId: Long,
     chargeSequence: Int,
     request: CreateHearingResultRequest,
-  ) = webClient.post()
+  ): ResponseEntity<Void> = webClient.post()
     .uri(
       "/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}/charge/{chargeSequence}/result",
       adjudicationNumber,
@@ -472,7 +473,7 @@ class NomisApiService(
   suspend fun quashAdjudicationAwards(
     adjudicationNumber: Long,
     chargeSequence: Int,
-  ) = webClient.put()
+  ): ResponseEntity<Void> = webClient.put()
     .uri(
       "/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/quash",
       adjudicationNumber,
@@ -499,7 +500,7 @@ class NomisApiService(
     adjudicationNumber: Long,
     chargeSequence: Int,
     request: CreateHearingResultRequest,
-  ) = webClient.post()
+  ): ResponseEntity<Void> = webClient.post()
     .uri(
       "/adjudications/adjudication-number/{adjudicationNumber}/charge/{chargeSequence}/result",
       adjudicationNumber,
@@ -621,27 +622,27 @@ class NomisApiService(
       .retrieve()
       .awaitBody()
 
-  suspend fun updateLocation(locationId: Long, request: UpdateLocationRequest) =
+  suspend fun updateLocation(locationId: Long, request: UpdateLocationRequest): ResponseEntity<Void> =
     webClient.put()
       .uri("/locations/{id}", locationId)
       .bodyValue(request)
       .retrieve()
       .awaitBodilessEntity()
 
-  suspend fun deactivateLocation(locationId: Long, request: DeactivateRequest) =
+  suspend fun deactivateLocation(locationId: Long, request: DeactivateRequest): ResponseEntity<Void> =
     webClient.put()
       .uri("/locations/{id}/deactivate", locationId)
       .bodyValue(request)
       .retrieve()
       .awaitBodilessEntity()
 
-  suspend fun reactivateLocation(locationId: Long) =
+  suspend fun reactivateLocation(locationId: Long): ResponseEntity<Void> =
     webClient.put()
       .uri("/locations/{id}/reactivate", locationId)
       .retrieve()
       .awaitBodilessEntity()
 
-  suspend fun updateLocationCapacity(locationId: Long, request: UpdateCapacityRequest, ignoreOperationalCapacity: Boolean) =
+  suspend fun updateLocationCapacity(locationId: Long, request: UpdateCapacityRequest, ignoreOperationalCapacity: Boolean): ResponseEntity<Void> =
     webClient.put()
       .uri {
         it.path("/locations/{id}/capacity")
@@ -652,7 +653,7 @@ class NomisApiService(
       .retrieve()
       .awaitBodilessEntity()
 
-  suspend fun updateLocationCertification(locationId: Long, request: UpdateCertificationRequest) =
+  suspend fun updateLocationCertification(locationId: Long, request: UpdateCertificationRequest): ResponseEntity<Void> =
     webClient.put()
       .uri("/locations/{id}/certification", locationId)
       .bodyValue(request)
@@ -691,13 +692,13 @@ class NomisApiService(
       .retrieve()
       .awaitBody()
 
-  suspend fun deleteCourtCase(offenderNo: String, nomisCourtCaseId: Long) =
+  suspend fun deleteCourtCase(offenderNo: String, nomisCourtCaseId: Long): ResponseEntity<Void> =
     webClient.delete()
       .uri("/prisoners/{offenderNo}/sentencing/court-cases/{nomisCourtCaseId}", offenderNo, nomisCourtCaseId)
       .retrieve()
       .awaitBodilessEntity()
 
-  suspend fun deleteCourtAppearance(offenderNo: String, nomisCourtCaseId: Long, nomisEventId: Long) =
+  suspend fun deleteCourtAppearance(offenderNo: String, nomisCourtCaseId: Long, nomisEventId: Long): ResponseEntity<Void> =
     webClient.delete()
       .uri("/prisoners/{offenderNo}/sentencing/court-cases/{nomisCourtCaseId}/court-appearances/{nomisEventId}", offenderNo, nomisCourtCaseId, nomisEventId)
       .retrieve()
@@ -717,7 +718,7 @@ class NomisApiService(
       .retrieve()
       .awaitBody()
 
-  suspend fun updateCourtCharge(chargeId: Long, offenderNo: String, nomisCourtCaseId: Long, nomisCourtAppearanceId: Long, request: OffenderChargeRequest) =
+  suspend fun updateCourtCharge(chargeId: Long, offenderNo: String, nomisCourtCaseId: Long, nomisCourtAppearanceId: Long, request: OffenderChargeRequest): ResponseEntity<Void> =
     webClient.put()
       .uri("/prisoners/{offenderNo}/sentencing/court-cases/{courtCaseId}/court-appearances/{courtEventId}/charges/{chargeId}", offenderNo, nomisCourtCaseId, nomisCourtAppearanceId, chargeId)
       .bodyValue(request)
@@ -731,7 +732,7 @@ class NomisApiService(
       .retrieve()
       .awaitBody()
 
-  suspend fun refreshCaseReferences(offenderNo: String, nomisCourtCaseId: Long, request: CaseIdentifierRequest) =
+  suspend fun refreshCaseReferences(offenderNo: String, nomisCourtCaseId: Long, request: CaseIdentifierRequest): ResponseEntity<Void> =
     webClient.post()
       .uri("/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/case-identifiers", offenderNo, nomisCourtCaseId)
       .bodyValue(request)
