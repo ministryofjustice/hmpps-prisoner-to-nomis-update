@@ -487,7 +487,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
     private fun stubBookingCounts(prisonId: String, date: LocalDate, vararg bookingCounts: BookingDetailsStub) {
       bookingCounts
         .filterNot { it.nomisCount == null }
-        .map { """{ "bookingId": ${it.bookingId}, "count": ${it.nomisCount} }""" }
+        .map { """{ "bookingId": ${it.bookingId}, "count": ${it.nomisCount}, "totalPay": 0 }""" }
         .takeIf { it.isNotEmpty() }
         ?.run {
           nomisApi.stubAttendanceReconciliation(
