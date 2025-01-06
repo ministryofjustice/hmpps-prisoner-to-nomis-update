@@ -45,7 +45,7 @@ class CaseNotesReconciliationService(
     } else {
       val results = mutableListOf<MismatchCaseNote>()
       var last: Long = 0
-      var size: Int = 0
+      var size = 0
       var pageNumber = 0
       var pageErrors = 0
       do {
@@ -107,9 +107,7 @@ class CaseNotesReconciliationService(
       val dpsCaseNotes = caseNotesDpsApiService.getCaseNotesForPrisoner(offenderNo)
         .associate { it.caseNoteId to it.transformFromDps() }
 
-      val originals = caseNotesNomisApiService.getCaseNotesForPrisoner(offenderNo).caseNotes
-
-      val nomisCaseNotes = originals
+      val nomisCaseNotes = caseNotesNomisApiService.getCaseNotesForPrisoner(offenderNo).caseNotes
         .associate { it.caseNoteId to it.transformFromNomis() }
 
       val message = "mappings.size = ${mappings.size}, dpsDistinctIds.size = ${dpsDistinctIds.size}, nomisCaseNotes.size = ${nomisCaseNotes.size}, dpsCaseNotes.size = ${dpsCaseNotes.size}"
@@ -118,7 +116,7 @@ class CaseNotesReconciliationService(
       if (mappings.size != nomisCaseNotes.size) {
         log.info("prisoner $offenderNo : $message")
         telemetryClient.trackEvent(
-          "casenotes-reports-reconciliation-mismatch-size",
+          "casenotes-reports-reconciliation-mismatch-size-nomis",
           mapOf("offenderNo" to offenderNo, "message" to message),
         )
         mismatchCaseNote.notes += message
@@ -128,7 +126,7 @@ class CaseNotesReconciliationService(
       if (dpsDistinctIds.size != dpsCaseNotes.size) {
         log.info("prisoner $offenderNo : $message")
         telemetryClient.trackEvent(
-          "casenotes-reports-reconciliation-mismatch-size",
+          "casenotes-reports-reconciliation-mismatch-size-dps",
           mapOf("offenderNo" to offenderNo, "message" to message),
         )
         mismatchCaseNote.notes += message
@@ -175,6 +173,7 @@ class CaseNotesReconciliationService(
     type,
     subType,
     occurrenceDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
+    creationDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
     authorUsername,
     amendments.map { a ->
       CommonAmendmentFields(
@@ -191,6 +190,7 @@ class CaseNotesReconciliationService(
     caseNoteType.code,
     caseNoteSubType.code,
     occurrenceDateTime,
+    creationDateTime,
     authorUsername,
     amendments.map { a ->
       CommonAmendmentFields(
@@ -215,6 +215,7 @@ data class CommonCaseNoteFields(
   val type: String,
   val subType: String,
   val occurrenceDateTime: String?,
+  val creationDateTime: String?,
   val authorUsername: String,
   val amendments: Set<CommonAmendmentFields>,
   val legacyId: Long,
@@ -226,6 +227,7 @@ data class CommonCaseNoteFields(
       equalTypes(other) &&
       subType == other.subType &&
       occurrenceDateTime == other.occurrenceDateTime &&
+      creationDateTime == other.creationDateTime &&
       equalUsers(other) && // OMS_OWNER vs XTAG
       equalAmendments(this, other)
   }
@@ -243,7 +245,7 @@ data class CommonCaseNoteFields(
   override fun hashCode(): Int = javaClass.hashCode()
 
   override fun toString(): String {
-    return "{id=$legacyId text-hash=${Objects.hashCode(text)}, type=$type, subType=$subType, occurrenceDateTime=$occurrenceDateTime, authorUsername=$authorUsername, amendments=$amendments}"
+    return "{id=$legacyId, text-hash=${Objects.hashCode(text)}, type=$type, subType=$subType, occurrenceDateTime=$occurrenceDateTime, creationDateTime=$creationDateTime, authorUsername=$authorUsername, amendments=$amendments}"
   }
 }
 
@@ -256,10 +258,6 @@ data class CommonAmendmentFields(
     return "{text-hash=${Objects.hashCode(text)}, occurrenceDateTime=$occurrenceDateTime, authorUsername=$authorUsername}"
   }
 }
-
-private val fieldsComparator = compareBy(
-  CommonCaseNoteFields::legacyId,
-)
 
 private val amendmentComparator = compareBy(
   CommonAmendmentFields::occurrenceDateTime,
