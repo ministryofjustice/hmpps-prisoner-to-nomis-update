@@ -12,8 +12,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.KeyDateAdjustmentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
@@ -39,7 +39,7 @@ import java.util.UUID
   RetryApiService::class,
 )
 internal class SentencingReconciliationServiceTest {
-  @MockBean
+  @MockitoBean
   lateinit var telemetryClient: TelemetryClient
 
   @Autowired
@@ -493,7 +493,7 @@ internal class SentencingReconciliationServiceTest {
 
     @Test
     fun `will call DPS for each offenderNo`() = runTest {
-      service.generateReconciliationReport(4)
+      service.generateReconciliationReport(allPrisoners = false, 4)
       sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments?person=A0001TZ")))
       sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments?person=A0002TZ")))
       sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments?person=A0003TZ")))
@@ -502,7 +502,7 @@ internal class SentencingReconciliationServiceTest {
 
     @Test
     fun `will call NOMIS for each bookingId`() = runTest {
-      service.generateReconciliationReport(4)
+      service.generateReconciliationReport(allPrisoners = false, 4)
       nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/1/sentencing-adjustments")))
       nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/2/sentencing-adjustments")))
       nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/3/sentencing-adjustments")))
@@ -511,7 +511,7 @@ internal class SentencingReconciliationServiceTest {
 
     @Test
     fun `will return list of only the mismatches`() = runTest {
-      val mismatches = service.generateReconciliationReport(4)
+      val mismatches = service.generateReconciliationReport(allPrisoners = false, 4)
 
       assertThat(mismatches).hasSize(2)
       assertThat(mismatches[0].prisonerId.offenderNo).isEqualTo("A0001TZ")

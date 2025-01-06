@@ -63,7 +63,7 @@ class SentencingResourceIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isAccepted
 
-      verify(telemetryClient).trackEvent(eq("sentencing-reports-reconciliation-requested"), check { assertThat(it).containsEntry("active-prisoners", "34") }, isNull())
+      verify(telemetryClient).trackEvent(eq("sentencing-reports-reconciliation-requested"), check { assertThat(it).containsEntry("prisoner-count", "34") }, isNull())
 
       awaitReportFinished()
     }
