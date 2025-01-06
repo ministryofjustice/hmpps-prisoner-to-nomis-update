@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-12-17.10281.9dfed0a"
+    "version": "2025-01-06.10398.6eba9dd"
   },
   "servers": [
     {
@@ -650,7 +650,7 @@
         "tags": [
           "sentencing-resource"
         ],
-        "summary": "Updates Court Appearance",
+        "summary": "Deletes Court Appearance",
         "description": "Required role NOMIS_SENTENCING Deletes s Court Appearance for the offender.",
         "operationId": "deleteCourtAppearance",
         "parameters": [
@@ -1643,7 +1643,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -1711,7 +1711,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -1759,7 +1759,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -1842,7 +1842,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -1860,6 +1860,80 @@
                 }
               }
             }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Deletes a global person restriction",
+        "description": "Deletes a person restriction; the restriction is estate wide. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "deletePersonRestriction",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "personRestrictionId",
+            "in": "path",
+            "description": "Person restrictions Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person restrictions Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Restrictions exists but not for this person",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
           }
         }
       }
@@ -1935,7 +2009,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -1955,6 +2029,77 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Deleted a person global phone",
+        "description": "Deletes a person global phone in NOMIS. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "deletePersonPhone",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "phoneId",
+            "in": "path",
+            "description": "Phone Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Phone Id",
+              "format": "int64",
+              "example": 35355
+            },
+            "example": 35355
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Person Phone ID Deleted"
+          },
+          "400": {
+            "description": "Phone exists but not for this person",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/persons/{personId}/identifier/{sequence}": {
@@ -1964,7 +2109,7 @@
         ],
         "summary": "Updates a person identifier",
         "description": "Updates a person identifier in NOMIS. Requires ROLE_NOMIS_CONTACTPERSONS",
-        "operationId": "udpdatePersonIdentifier",
+        "operationId": "updatePersonIdentifier",
         "parameters": [
           {
             "name": "personId",
@@ -2028,7 +2173,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -2039,6 +2184,77 @@
           },
           "404": {
             "description": "Person or identifier does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Deletes a person identifier",
+        "description": "Deletes a person identifier in NOMIS. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "deletePersonIdentifier",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "sequence",
+            "in": "path",
+            "description": "Identifier sequence",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Identifier sequence",
+              "format": "int64",
+              "example": 4
+            },
+            "example": 4
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Person Identifier deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Person does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -2111,7 +2327,88 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Person or email address does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Deletes a person email",
+        "description": "Deletes a person email in NOMIS. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "deletePersonEmail",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "emailAddressId",
+            "in": "path",
+            "description": "Email address Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Email address Id",
+              "format": "int64",
+              "example": 76554
+            },
+            "example": 76554
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Person Email ID aka InternetAddressId Delete"
+          },
+          "400": {
+            "description": "The email exist but not for this person",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -2204,7 +2501,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -2225,6 +2522,77 @@
           },
           "409": {
             "description": "Contact with the specified relationship and type already exists for this prisoner's latest booking",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Deletes a person contact",
+        "description": "Deletes a person contact; the relationship between a prisoner and a person. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "deletePersonContact",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "contactId",
+            "in": "path",
+            "description": "Contact Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Contact Id",
+              "format": "int64",
+              "example": 75675
+            },
+            "example": 75675
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Person Contact Updated, returned if in contact does not exist"
+          },
+          "400": {
+            "description": "Contact does belong to person",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -2320,7 +2688,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -2331,6 +2699,90 @@
           },
           "404": {
             "description": "Person or contact or restriction does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Deletes a person contact restriction for a specific relationship",
+        "description": "Deletes a person contact restriction; the restriction is for a specific relationship between a prisoner and a person. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "deletePersonContactRestriction",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "contactId",
+            "in": "path",
+            "description": "Contact Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Contact Id",
+              "format": "int64",
+              "example": 67899
+            },
+            "example": 67899
+          },
+          {
+            "name": "contactRestrictionId",
+            "in": "path",
+            "description": "Restriction Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Restriction Id",
+              "format": "int64",
+              "example": 38383
+            },
+            "example": 38383
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "The personId, ContactId or restrictionId exist but on other relationships",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -2413,7 +2865,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -2431,6 +2883,80 @@
                 }
               }
             }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Deletes a person address",
+        "description": "Deletes a person address in NOMIS. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "deletePersonAddress",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "addressId",
+            "in": "path",
+            "description": "Address Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Address Id",
+              "format": "int64",
+              "example": 47474
+            },
+            "example": 47474
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Person Address Deleted"
+          },
+          "400": {
+            "description": "The address exist but not for this person",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
           }
         }
       }
@@ -2519,7 +3045,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -2530,6 +3056,90 @@
           },
           "404": {
             "description": "Person or address does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Deletes a person address phone",
+        "description": "Deletes a person phone associated with an address in NOMIS. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "deletedPersonAddressPhone",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Person Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "addressId",
+            "in": "path",
+            "description": "Address Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Address Id",
+              "format": "int64",
+              "example": 56789
+            },
+            "example": 56789
+          },
+          {
+            "name": "phoneId",
+            "in": "path",
+            "description": "Phone Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Phone Id",
+              "format": "int64",
+              "example": 585850
+            },
+            "example": 585850
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Person Phone ID Deletes"
+          },
+          "400": {
+            "description": "Phone exists but not for this address or address exists but not for this person",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -7407,7 +8017,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -7494,7 +8104,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -7581,7 +8191,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -7668,7 +8278,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -7745,7 +8355,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -7832,7 +8442,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -7942,7 +8552,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -8029,7 +8639,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -8129,7 +8739,7 @@
             }
           },
           "403": {
-            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSON",
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -10004,85 +10614,6 @@
         }
       }
     },
-    "/prisoners/{offenderNo}/sentencing/court-event-charges/{offenderChargeId}/last-modified": {
-      "get": {
-        "tags": [
-          "sentencing-resource"
-        ],
-        "summary": "get the last modified court event charge",
-        "description": "Requires role NOMIS_SENTENCING. Retrieves the last modified court event charge associated with this offender charge. Intended to prevent the need for COURT_EVENT_CHARGE_UPDATED events",
-        "operationId": "getLastModifiedCourtEventCharge",
-        "parameters": [
-          {
-            "name": "offenderChargeId",
-            "in": "path",
-            "description": "Offender Charge id",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "description": "Offender Charge id",
-              "format": "int64",
-              "example": 12345
-            },
-            "example": 12345
-          },
-          {
-            "name": "offenderNo",
-            "in": "path",
-            "description": "Offender No",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Offender No",
-              "example": "12345"
-            },
-            "example": 12345
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "the court appearance details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CourtEventChargeResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Offender not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/prisoners/{offenderNo}/sentencing/court-cases/{id}": {
       "get": {
         "tags": [
@@ -10290,6 +10821,98 @@
           },
           "404": {
             "description": "Offender not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/sentencing/court-appearances/{eventId}/charges/{chargeId}": {
+      "get": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "get the court event charge",
+        "description": "Requires role NOMIS_SENTENCING. Retrieves the court event charge ",
+        "operationId": "getCourtEventCharge",
+        "parameters": [
+          {
+            "name": "chargeId",
+            "in": "path",
+            "description": "Offender Charge id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Offender Charge id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "eventId",
+            "in": "path",
+            "description": "Event id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Event id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender No",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender No",
+              "example": "AB12345"
+            },
+            "example": "AB12345"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the court appearance details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtEventChargeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Court Appearance not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -13276,6 +13899,89 @@
           },
           "404": {
             "description": "Prisoner does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bookings/ids/latest-from-id": {
+      "get": {
+        "tags": [
+          "bookings-resource"
+        ],
+        "summary": "Gets the identifiers for all latest bookings.",
+        "description": "Gets the specified number of latest bookings starting after the given id number.\n      Clients can iterate through all bookings by calling this endpoint using the id from the last call (omit for first call).\n      Iteration ends when the returned prisonerIds list has size less than the requested page size.\n      Requires role SYNCHRONISATION_REPORTING.",
+        "operationId": "getAllLatestBookingsFromId",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "query",
+            "description": "If supplied get offenders starting after this id",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "If supplied get offenders starting after this id",
+              "format": "int64",
+              "example": 1555999,
+              "default": 0
+            },
+            "example": 1555999
+          },
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "description": "If supplied only return bookings that are still active",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "If supplied only return bookings that are still active",
+              "example": true,
+              "default": false
+            },
+            "example": true
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of bookings to get",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Number of bookings to get",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "list of prisoner ids containing bookingId and offenderNo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingIdsWithLast"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING not present",
             "content": {
               "application/json": {
                 "schema": {
@@ -20830,6 +21536,7 @@
           "adjustmentDays",
           "adjustmentType",
           "bookingId",
+          "bookingSequence",
           "hasBeenReleased",
           "hiddenFromUsers",
           "id",
@@ -20848,6 +21555,11 @@
             "type": "integer",
             "description": "The booking id",
             "format": "int64"
+          },
+          "bookingSequence": {
+            "type": "integer",
+            "description": "The booking sequence",
+            "format": "int32"
           },
           "hasBeenReleased": {
             "type": "boolean",
@@ -21312,69 +22024,6 @@
         },
         "description": "Offender Charge"
       },
-      "CourtEventChargeResponse": {
-        "required": [
-          "eventId",
-          "mostSeriousFlag",
-          "offenderCharge"
-        ],
-        "type": "object",
-        "properties": {
-          "eventId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "offenderCharge": {
-            "$ref": "#/components/schemas/OffenderChargeResponse"
-          },
-          "offencesCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "offenceDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "offenceEndDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "plea": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "propertyValue": {
-            "type": "number"
-          },
-          "totalPropertyValue": {
-            "type": "number"
-          },
-          "cjitCode1": {
-            "type": "string"
-          },
-          "cjitCode2": {
-            "type": "string"
-          },
-          "cjitCode3": {
-            "type": "string"
-          },
-          "resultCode1": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "resultCode2": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "resultCode1Indicator": {
-            "type": "string"
-          },
-          "resultCode2Indicator": {
-            "type": "string"
-          },
-          "mostSeriousFlag": {
-            "type": "boolean"
-          }
-        },
-        "description": "Court Event Charge"
-      },
       "CaseIdentifierResponse": {
         "required": [
           "createDateTime",
@@ -21520,6 +22169,69 @@
           }
         },
         "description": "Court Case"
+      },
+      "CourtEventChargeResponse": {
+        "required": [
+          "eventId",
+          "mostSeriousFlag",
+          "offenderCharge"
+        ],
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offenderCharge": {
+            "$ref": "#/components/schemas/OffenderChargeResponse"
+          },
+          "offencesCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offenceDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "offenceEndDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "plea": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "propertyValue": {
+            "type": "number"
+          },
+          "totalPropertyValue": {
+            "type": "number"
+          },
+          "cjitCode1": {
+            "type": "string"
+          },
+          "cjitCode2": {
+            "type": "string"
+          },
+          "cjitCode3": {
+            "type": "string"
+          },
+          "resultCode1": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "resultCode2": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "resultCode1Indicator": {
+            "type": "string"
+          },
+          "resultCode2Indicator": {
+            "type": "string"
+          },
+          "mostSeriousFlag": {
+            "type": "boolean"
+          }
+        },
+        "description": "Court Event Charge"
       },
       "CourtEventResponse": {
         "required": [
@@ -23378,6 +24090,7 @@
           "adjustmentDays",
           "adjustmentType",
           "bookingId",
+          "bookingSequence",
           "hasBeenReleased",
           "id",
           "offenderNo",
@@ -23394,6 +24107,11 @@
             "type": "integer",
             "description": "The booking id",
             "format": "int64"
+          },
+          "bookingSequence": {
+            "type": "integer",
+            "description": "The booking sequence",
+            "format": "int32"
           },
           "hasBeenReleased": {
             "type": "boolean",
@@ -25655,6 +26373,25 @@
         },
         "description": "Identifying marks"
       },
+      "BookingIdsWithLast": {
+        "required": [
+          "lastBookingId",
+          "prisonerIds"
+        ],
+        "type": "object",
+        "properties": {
+          "prisonerIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrisonerIds"
+            }
+          },
+          "lastBookingId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "AttendanceReconciliationResponse": {
         "required": [
           "bookings",
@@ -25679,16 +26416,17 @@
             "description": "All active bookings and their attendance count",
             "example": "[ { bookingId: 1234567, count: 2 } ]",
             "items": {
-              "$ref": "#/components/schemas/BookingCount"
+              "$ref": "#/components/schemas/BookingCountWithPay"
             }
           }
         },
         "description": "Attendance reconciliation check response"
       },
-      "BookingCount": {
+      "BookingCountWithPay": {
         "required": [
           "bookingId",
-          "count"
+          "count",
+          "totalPay"
         ],
         "type": "object",
         "properties": {
@@ -25703,9 +26441,14 @@
             "description": "The count for the offender booking",
             "format": "int64",
             "example": 2
+          },
+          "totalPay": {
+            "type": "number",
+            "description": "The total paid for all of the attendances",
+            "example": 2.3
           }
         },
-        "description": "A count for an offender booking",
+        "description": "A count and sum of pay for an offender booking",
         "example": "[ { bookingId: 1234567, count: 2 } ]"
       },
       "AppointmentResponse": {
@@ -26093,6 +26836,29 @@
           }
         },
         "description": "Allocation reconciliation check response"
+      },
+      "BookingCount": {
+        "required": [
+          "bookingId",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "The offender booking id",
+            "format": "int64",
+            "example": 1234567
+          },
+          "count": {
+            "type": "integer",
+            "description": "The count for the offender booking",
+            "format": "int64",
+            "example": 2
+          }
+        },
+        "description": "A count for an offender booking",
+        "example": "[ { bookingId: 1234567, count: 2 } ]"
       },
       "FindAllocationsMissingPayBandsResponse": {
         "required": [

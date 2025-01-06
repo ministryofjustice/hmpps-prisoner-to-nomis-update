@@ -92,6 +92,7 @@ class ActivitiesReconService(
   }
 
   private suspend fun compareBookingCounts(nomisResults: NomisAttendanceResponse, dpsResults: DpsAttendanceResponse): CompareBookingsDifferences {
+    // TODO SDIT-2165 Ignoring total pay for now until it's available from both NOMIS and DPS
     val nomis = nomisResults.bookings.sortedBy { it.bookingId }.map { BookingCounts(it.bookingId, it.count) }
     val dps = dpsResults.bookings.sortedBy { it.bookingId }.map { BookingCounts(it.bookingId, it.count) }
     return compareBookingCounts(nomis, dps)
