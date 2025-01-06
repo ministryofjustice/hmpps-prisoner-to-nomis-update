@@ -123,9 +123,12 @@ class CourtSentencingService(
 
         transform {
           val courtCaseMapping = courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = courtCaseId)
-            ?: throw ParentEntityNotFoundRetry(
-              "Attempt to create a court appearance on a dps court case without a nomis mapping. Dps court case id: $courtCaseId not found for DPS court appearance $courtAppearanceId",
-            )
+            ?: let {
+              telemetryMap["reason"] = "Parent entity not found"
+              throw ParentEntityNotFoundRetry(
+                "Attempt to create a court appearance on a dps court case without a nomis mapping. Dps court case id: $courtCaseId not found for DPS court appearance $courtAppearanceId",
+              )
+            }
 
           val courtAppearance = courtSentencingApiService.getCourtAppearance(courtAppearanceId)
 
@@ -133,9 +136,12 @@ class CourtSentencingService(
           courtAppearance.charges.forEach { charge ->
             courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(charge.lifetimeUuid.toString())?.let { mapping ->
               courtEventChargesToUpdate.add(Pair(charge, mapping.nomisCourtChargeId))
-            } ?: throw ParentEntityNotFoundRetry(
-              "Attempt to associate a charge without a nomis charge mapping. Dps charge id: ${charge.lifetimeUuid} not found for DPS court appearance $courtAppearanceId",
-            )
+            } ?: let {
+              telemetryMap["reason"] = "Parent entity not found"
+              throw ParentEntityNotFoundRetry(
+                "Attempt to associate a charge without a nomis charge mapping. Dps charge id: ${charge.lifetimeUuid} not found for DPS court appearance $courtAppearanceId",
+              )
+            }
           }
 
           val nomisCourtAppearanceResponse =
@@ -239,7 +245,10 @@ class CourtSentencingService(
   private suspend fun tryToDeleteCourtAppearanceMapping(dpsAppearanceId: String) = kotlin.runCatching {
     courtCaseMappingService.deleteCourtAppearanceMappingByDpsId(dpsAppearanceId)
   }.onFailure { e ->
-    telemetryClient.trackEvent("court-appearance-mapping-deleted-failed", mapOf("dpsCourtAppearanceId" to dpsAppearanceId))
+    telemetryClient.trackEvent(
+      "court-appearance-mapping-deleted-failed",
+      mapOf("dpsCourtAppearanceId" to dpsAppearanceId),
+    )
     log.warn("Unable to delete mapping for Court Appearance $dpsAppearanceId. Please delete manually", e)
   }
 
@@ -267,9 +276,12 @@ class CourtSentencingService(
         transform {
           val courtCaseMapping =
             courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = courtCaseId)
-              ?: throw ParentEntityNotFoundRetry(
-                "Attempt to create a charge on a dps court case without a nomis Court Case mapping. Dps court case id: $courtCaseId not found for DPS charge $chargeId\"",
-              )
+              ?: let {
+                telemetryMap["reason"] = "Parent entity not found"
+                throw ParentEntityNotFoundRetry(
+                  "Attempt to create a charge on a dps court case without a nomis Court Case mapping. Dps court case id: $courtCaseId not found for DPS charge $chargeId\"",
+                )
+              }
 
           val charge = courtSentencingApiService.getCourtCharge(chargeId)
 
@@ -386,9 +398,12 @@ class CourtSentencingService(
         dpsCourtAppearance.charges.forEach { charge ->
           courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(charge.lifetimeUuid.toString())?.let { mapping ->
             courtEventChargesToUpdate.add(Pair(charge, mapping.nomisCourtChargeId))
-          } ?: throw ParentEntityNotFoundRetry(
-            "Attempt to associate a charge without a nomis charge mapping. Dps charge id: ${charge.lifetimeUuid} not found for DPS court appearance $courtAppearanceId",
-          )
+          } ?: let {
+            telemetryMap["reason"] = "Parent entity not found"
+            throw ParentEntityNotFoundRetry(
+              "Attempt to associate a charge without a nomis charge mapping. Dps charge id: ${charge.lifetimeUuid} not found for DPS court appearance $courtAppearanceId",
+            )
+          }
         }
 
         val nomisResponse = nomisApiService.updateCourtAppearance(
@@ -502,6 +517,7 @@ class CourtSentencingService(
           )
         }
       } ?: let {
+      telemetryMap["reason"] = "Parent entity not found"
       telemetryClient.trackEvent(
         "case-references-refreshed-failure",
         telemetryMap,
@@ -567,10 +583,8 @@ class CourtSentencingService(
   )
 }
 
-// TODO wire up when new dto available
 fun LegacyCourtCase.toNomisCourtCase(): CreateCourtCaseRequest {
   return CreateCourtCaseRequest(
-    // latest appearance is always the only appearance during a Creat Case request
     // shared dto - will always be present,
     startDate = this.startDate!!,
     // shared dto - will always be present,
@@ -578,8 +592,11 @@ fun LegacyCourtCase.toNomisCourtCase(): CreateCourtCaseRequest {
     caseReference = this.caseReference,
     // new LEG_CASE_TYP on NOMIS - "Not Entered"
     legalCaseType = "NE",
-    // CASE_STS on NOMIS - no decision from DPS yet - defaulting to Active
-    status = "A",
+    status = if (this.active) {
+      "A"
+    } else {
+      "I"
+    },
   )
 }
 
@@ -587,10 +604,9 @@ fun LegacyCourtAppearance.toNomisCourtAppearance(
   courtEventChargesToUpdate: List<ExistingOffenderChargeRequest>,
 ): CourtAppearanceRequest {
   return CourtAppearanceRequest(
-    // Just date without time recorded against the DPS appearance
     eventDateTime = LocalDateTime.of(
       this.appearanceDate,
-      LocalTime.MIDNIGHT,
+      LocalTime.parse(this.appearanceTime),
     ).toString(),
     courtEventType = "CRT",
     courtId = this.courtCode,
