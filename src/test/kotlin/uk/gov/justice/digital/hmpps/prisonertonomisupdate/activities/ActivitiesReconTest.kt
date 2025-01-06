@@ -24,6 +24,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerDetails
+import java.math.BigDecimal
 import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AllocationReconciliationResponse as DpsAllocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceReconciliationResponse as DpsAttendanceResponse
@@ -31,6 +32,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Booki
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationReconciliationResponse as NomisAllocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AttendanceReconciliationResponse as NomisAttendanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.BookingCount as NomisBookingCount
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.BookingCountWithPay as NomisBookingCountWithPay
 
 class ActivitiesReconTest {
 
@@ -477,7 +479,8 @@ class ActivitiesReconTest {
       // stub the booking attendance counts for NOMIS
       bookingCounts
         .filterNot { it.nomisCount == null }
-        .map { NomisBookingCount(it.bookingId, it.nomisCount!!) }
+        // TODO SDIT-2165 Ignoring totalPay for now until it's available from both NOMIS and DPS
+        .map { NomisBookingCountWithPay(it.bookingId, it.nomisCount!!, BigDecimal.ZERO) }
         .also {
           whenever(nomisApiService.getAttendanceReconciliation(anyString(), any()))
             .thenReturn(NomisAttendanceResponse(prisonId, date, it))
