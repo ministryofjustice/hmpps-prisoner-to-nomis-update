@@ -3,6 +3,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.github.tomakehurst.wiremock.client.WireMock.absent
+import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -1271,6 +1272,35 @@ internal class NomisApiServiceTest {
       assertThrows<InternalServerError> {
         nomisApiService.createLocation(newLocation())
       }
+    }
+  }
+
+  @Nested
+  inner class GetAllLatestBookings {
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stuGetAllLatestBookings()
+
+      nomisApiService.getAllLatestBookings(activeOnly = true, lastBookingId = 0, pageSize = 10)
+
+      nomisApi.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will pass parameters to API`() = runTest {
+      nomisApi.stuGetAllLatestBookings()
+
+      nomisApiService.getAllLatestBookings(activeOnly = true, lastBookingId = 54321, pageSize = 1000)
+
+      nomisApi.verify(
+        getRequestedFor(urlPathEqualTo("/bookings/ids/latest-from-id"))
+          .withQueryParam("bookingId", equalTo("54321"))
+          .withQueryParam("activeOnly", equalTo("true"))
+          .withQueryParam("pageSize", equalTo("1000")),
+      )
     }
   }
 }

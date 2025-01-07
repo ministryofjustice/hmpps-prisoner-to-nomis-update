@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.ok
 import com.github.tomakehurst.wiremock.client.WireMock.okJson
@@ -21,6 +22,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerId
@@ -2240,6 +2242,60 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withStatus(200),
       ),
+    )
+  }
+
+  fun stuGetAllLatestBookings(
+    response: BookingIdsWithLast = BookingIdsWithLast(
+      lastBookingId = 0,
+      prisonerIds = emptyList(),
+    ),
+  ) {
+    stubFor(
+      get(
+        urlPathEqualTo("/bookings/ids/latest-from-id"),
+      )
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(response),
+        ),
+    )
+  }
+
+  fun stuGetAllLatestBookings(
+    bookingId: Long,
+    response: BookingIdsWithLast = BookingIdsWithLast(
+      lastBookingId = 0,
+      prisonerIds = emptyList(),
+    ),
+  ) {
+    stubFor(
+      get(
+        urlPathEqualTo("/bookings/ids/latest-from-id"),
+      ).withQueryParam("bookingId", equalTo("$bookingId"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(response),
+        ),
+    )
+  }
+  fun stuGetAllLatestBookings(
+    bookingId: Long,
+    errorStatus: HttpStatus,
+  ) {
+    stubFor(
+      get(
+        urlPathEqualTo("/bookings/ids/latest-from-id"),
+      ).withQueryParam("bookingId", equalTo("$bookingId"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(errorStatus.value()),
+        ),
     )
   }
 
