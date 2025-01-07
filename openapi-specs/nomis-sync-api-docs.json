@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2025-01-06.10398.6eba9dd"
+    "version": "2025-01-07.10408.49fabec"
   },
   "servers": [
     {
@@ -26416,17 +26416,16 @@
             "description": "All active bookings and their attendance count",
             "example": "[ { bookingId: 1234567, count: 2 } ]",
             "items": {
-              "$ref": "#/components/schemas/BookingCountWithPay"
+              "$ref": "#/components/schemas/BookingCount"
             }
           }
         },
         "description": "Attendance reconciliation check response"
       },
-      "BookingCountWithPay": {
+      "BookingCount": {
         "required": [
           "bookingId",
-          "count",
-          "totalPay"
+          "count"
         ],
         "type": "object",
         "properties": {
@@ -26441,14 +26440,9 @@
             "description": "The count for the offender booking",
             "format": "int64",
             "example": 2
-          },
-          "totalPay": {
-            "type": "number",
-            "description": "The total paid for all of the attendances",
-            "example": 2.3
           }
         },
-        "description": "A count and sum of pay for an offender booking",
+        "description": "A count for an offender booking",
         "example": "[ { bookingId: 1234567, count: 2 } ]"
       },
       "AppointmentResponse": {
@@ -26836,29 +26830,6 @@
           }
         },
         "description": "Allocation reconciliation check response"
-      },
-      "BookingCount": {
-        "required": [
-          "bookingId",
-          "count"
-        ],
-        "type": "object",
-        "properties": {
-          "bookingId": {
-            "type": "integer",
-            "description": "The offender booking id",
-            "format": "int64",
-            "example": 1234567
-          },
-          "count": {
-            "type": "integer",
-            "description": "The count for the offender booking",
-            "format": "int64",
-            "example": 2
-          }
-        },
-        "description": "A count for an offender booking",
-        "example": "[ { bookingId: 1234567, count: 2 } ]"
       },
       "FindAllocationsMissingPayBandsResponse": {
         "required": [
