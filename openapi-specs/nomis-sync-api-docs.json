@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2025-01-07.10408.49fabec"
+    "version": "2025-01-07.10430.afa40d1"
   },
   "servers": [
     {
@@ -19093,6 +19093,7 @@
           "caseNoteSubType",
           "caseNoteText",
           "caseNoteType",
+          "creationDateTime",
           "occurrenceDateTime"
         ],
         "type": "object",
@@ -19108,7 +19109,13 @@
           "occurrenceDateTime": {
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
             "type": "string",
-            "description": "Date case note occurred",
+            "description": "Date and time case note occurred",
+            "example": "2021-07-05T10:35:17"
+          },
+          "creationDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Date and time case note was created",
             "example": "2021-07-05T10:35:17"
           },
           "authorUsername": {
