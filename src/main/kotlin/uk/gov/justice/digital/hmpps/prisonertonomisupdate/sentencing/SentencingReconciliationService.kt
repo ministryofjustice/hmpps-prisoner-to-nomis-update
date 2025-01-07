@@ -10,10 +10,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.model.AdjustmentDto.AdjustmentType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 
@@ -31,35 +31,52 @@ class SentencingReconciliationService(
     val remandAdjustmentTypes = listOf("RSR", "RX")
   }
 
-  suspend fun generateReconciliationReport(allPrisoners: Boolean, activePrisonersCount: Long): List<MismatchSentencingAdjustments> = activePrisonersCount.asPages(pageSize).flatMap { page ->
-    val activePrisoners = getActivePrisonersForPage(allPrisoners, page)
+  suspend fun generateReconciliationReport(allPrisoners: Boolean): List<MismatchSentencingAdjustments> {
+    val mismatches: MutableList<MismatchSentencingAdjustments> = mutableListOf()
+    var lastBookingId = 0L
 
-    withContext(Dispatchers.Unconfined) {
-      activePrisoners.map { async { checkBookingAdjustmentsMatch(it) } }
-    }.awaitAll().filterNotNull()
+    do {
+      val page = getNextBookingsForPage(lastBookingId, allPrisoners)
+      page?.takeIf { it.prisonerIds.isNotEmpty() }?.also {
+        it.checkPageOfBookingAdjustmentsMatch().also { result ->
+          mismatches += result.mismatches
+          lastBookingId = result.lastBookingId
+        }
+      } ?: run {
+        // just skip this "page" by moving the bookingId pointer up
+        lastBookingId += pageSize.toInt()
+      }
+    } while (page.notLastPage())
+
+    return mismatches.toList()
   }
 
-  // TODO - feature switch getActivePrisoners get all prisoners
-  private suspend fun getActivePrisonersForPage(@Suppress("UNUSED_PARAMETER") allPrisoners: Boolean, page: Pair<Long, Long>) =
-    runCatching {
-      doApiCallWithRetries {
-        nomisApiService.getActivePrisoners(
-          pageNumber = page.first,
-          pageSize = page.second,
-        )
-      }.content
-    }
+  private suspend fun BookingIdsWithLast.checkPageOfBookingAdjustmentsMatch(): MismatchPageResult {
+    val prisonerIds = this.prisonerIds
+    val mismatches = withContext(Dispatchers.Unconfined) {
+      prisonerIds.map { async { checkBookingAdjustmentsMatch(it) } }
+    }.awaitAll().filterNotNull()
+    return MismatchPageResult(mismatches, prisonerIds.last().bookingId)
+  }
+
+  data class MismatchPageResult(val mismatches: List<MismatchSentencingAdjustments>, val lastBookingId: Long)
+
+  // Last page will be a non-null page with items less than page size
+  private fun BookingIdsWithLast?.notLastPage(): Boolean = this == null || this.prisonerIds.size == pageSize.toInt()
+
+  private suspend fun getNextBookingsForPage(lastBookingId: Long, allPrisoners: Boolean): BookingIdsWithLast? =
+    runCatching { nomisApiService.getAllLatestBookings(lastBookingId = lastBookingId, activeOnly = !allPrisoners, pageSize = pageSize.toInt()) }
       .onFailure {
         telemetryClient.trackEvent(
           "sentencing-reports-reconciliation-mismatch-page-error",
           mapOf(
-            "page" to page.first.toString(),
+            "booking" to lastBookingId.toString(),
           ),
         )
-        log.error("Unable to match entire page of prisoners: $page", it)
+        log.error("Unable to match entire page of bookings from booking: $lastBookingId", it)
       }
-      .getOrElse { emptyList() }
-      .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
+      .getOrNull()
+      .also { log.info("Page requested from booking: $lastBookingId, with $pageSize bookings") }
 
   suspend fun checkBookingAdjustmentsMatch(prisonerId: PrisonerIds): MismatchSentencingAdjustments? = runCatching {
     val (nomisAdjustments, dpsAdjustments) = withContext(Dispatchers.Unconfined) {
