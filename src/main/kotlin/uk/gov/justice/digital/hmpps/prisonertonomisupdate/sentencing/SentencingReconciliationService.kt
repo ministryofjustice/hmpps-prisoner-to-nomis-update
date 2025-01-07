@@ -36,17 +36,24 @@ class SentencingReconciliationService(
     var lastBookingId = 0L
 
     do {
-      val page = getNextBookingsForPage(lastBookingId, allPrisoners)
-      page?.takeIf { it.prisonerIds.isNotEmpty() }?.also {
-        it.checkPageOfBookingAdjustmentsMatch().also { result ->
-          mismatches += result.mismatches
-          lastBookingId = result.lastBookingId
+      val result = getNextBookingsForPage(lastBookingId, allPrisoners)
+
+      when (result) {
+        is SuccessPageResult -> {
+          if (result.value.prisonerIds.isNotEmpty()) {
+            result.value.checkPageOfBookingAdjustmentsMatch().also {
+              mismatches += it.mismatches
+              lastBookingId = it.lastBookingId
+            }
+          }
         }
-      } ?: run {
-        // just skip this "page" by moving the bookingId pointer up
-        lastBookingId += pageSize.toInt()
+
+        is ErrorPageResult -> {
+          // just skip this "page" by moving the bookingId pointer up
+          lastBookingId += pageSize.toInt()
+        }
       }
-    } while (page.notLastPage())
+    } while (result.notLastPage())
 
     return mismatches.toList()
   }
@@ -61,10 +68,7 @@ class SentencingReconciliationService(
 
   data class MismatchPageResult(val mismatches: List<MismatchSentencingAdjustments>, val lastBookingId: Long)
 
-  // Last page will be a non-null page with items less than page size
-  private fun BookingIdsWithLast?.notLastPage(): Boolean = this == null || this.prisonerIds.size == pageSize.toInt()
-
-  private suspend fun getNextBookingsForPage(lastBookingId: Long, allPrisoners: Boolean): BookingIdsWithLast? =
+  private suspend fun getNextBookingsForPage(lastBookingId: Long, allPrisoners: Boolean): PageResult =
     runCatching { nomisApiService.getAllLatestBookings(lastBookingId = lastBookingId, activeOnly = !allPrisoners, pageSize = pageSize.toInt()) }
       .onFailure {
         telemetryClient.trackEvent(
@@ -75,7 +79,8 @@ class SentencingReconciliationService(
         )
         log.error("Unable to match entire page of bookings from booking: $lastBookingId", it)
       }
-      .getOrNull()
+      .map { SuccessPageResult(it) }
+      .getOrElse { ErrorPageResult(it) }
       .also { log.info("Page requested from booking: $lastBookingId, with $pageSize bookings") }
 
   suspend fun checkBookingAdjustmentsMatch(prisonerId: PrisonerIds): MismatchSentencingAdjustments? = runCatching {
@@ -144,6 +149,16 @@ class SentencingReconciliationService(
       ),
     )
   }.getOrNull()
+
+  // Last page will be a non-null page with items less than page size
+  private fun PageResult.notLastPage(): Boolean = when (this) {
+    is SuccessPageResult -> this.value.prisonerIds.size == pageSize.toInt()
+    is ErrorPageResult -> true
+  }
+
+  sealed class PageResult
+  class SuccessPageResult(val value: BookingIdsWithLast) : PageResult()
+  class ErrorPageResult(val error: Throwable) : PageResult()
 }
 
 data class MismatchSentencingAdjustments(
