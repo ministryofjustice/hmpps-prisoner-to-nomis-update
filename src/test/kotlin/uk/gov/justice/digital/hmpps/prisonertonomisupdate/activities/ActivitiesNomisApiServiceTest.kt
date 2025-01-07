@@ -348,13 +348,11 @@ class ActivitiesNomisApiServiceTest {
         "bookings": [
           {
             "bookingId": 1234,
-            "count": 2,
-            "totalPay": 0
+            "count": 2
           },
           {
             "bookingId": 1235,
-            "count": 1,
-            "totalPay": 0
+            "count": 1
           }
         ]
       }
