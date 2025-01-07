@@ -17,8 +17,8 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentDetailsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentRoleDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentStatementDto
@@ -52,7 +52,7 @@ import java.time.LocalDate
   RetryApiService::class,
 )
 internal class AdjudicationsReconciliationServiceTest {
-  @MockBean
+  @MockitoBean
   lateinit var telemetryClient: TelemetryClient
 
   @Autowired

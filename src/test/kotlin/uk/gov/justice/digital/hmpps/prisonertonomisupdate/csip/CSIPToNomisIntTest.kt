@@ -297,7 +297,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
         }
 
         @Test
-        fun `the created csip will not contain details of the DPS csip signed off role if set to "OTHER"`() {
+        fun `the created csip will not contain details of the DPS csip signed off role if set to 'OTHER'`() {
           csipNomisApi.verify(
             putRequestedFor(anyUrl())
               .withRequestBodyJsonPath("decision.actions.nonAssociationsUpdated", true)

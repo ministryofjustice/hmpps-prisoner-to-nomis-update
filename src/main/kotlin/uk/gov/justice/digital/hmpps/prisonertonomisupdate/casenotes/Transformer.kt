@@ -11,6 +11,7 @@ fun CaseNote.toNomisCreateRequest(): CreateCaseNoteRequest =
     caseNoteType = this.type,
     caseNoteSubType = this.subType,
     occurrenceDateTime = this.occurrenceDateTime.toString(),
+    creationDateTime = this.creationDateTime.toString(),
     authorUsername = this.authorUsername,
     caseNoteText = this.text,
   )

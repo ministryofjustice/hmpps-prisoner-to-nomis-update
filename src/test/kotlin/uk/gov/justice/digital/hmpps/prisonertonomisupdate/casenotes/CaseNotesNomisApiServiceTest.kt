@@ -96,7 +96,8 @@ class CaseNotesNomisApiServiceTest {
     }
 
     private fun createCaseNoteRequest() = CreateCaseNoteRequest(
-      occurrenceDateTime = "2024-07-01",
+      occurrenceDateTime = "2024-07-01T01:02:03",
+      creationDateTime = "2024-07-02T01:02:03",
       caseNoteType = "Security",
       caseNoteSubType = "Security",
       authorUsername = "me",
