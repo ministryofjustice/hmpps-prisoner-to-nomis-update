@@ -25,6 +25,7 @@ import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
@@ -308,6 +309,24 @@ class NomisApiService(
       .retrieve()
       .bodyToMono(PrisonerNosWithLast::class.java)
       .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all-from-id", "offenderId", fromId)))
+      .awaitSingle()
+
+  suspend fun getAllLatestBookings(
+    activeOnly: Boolean,
+    lastBookingId: Long,
+    pageSize: Int,
+  ): BookingIdsWithLast =
+    webClient.get()
+      .uri {
+        it.path("/bookings/ids/latest-from-id")
+          .queryParam("activeOnly", activeOnly)
+          .queryParam("bookingId", lastBookingId)
+          .queryParam("pageSize", pageSize)
+          .build()
+      }
+      .retrieve()
+      .bodyToMono(BookingIdsWithLast::class.java)
+      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/bookings/ids/latest-from-id", "bookingId", lastBookingId)))
       .awaitSingle()
 
   suspend fun updatePrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest): ResponseEntity<Void> =

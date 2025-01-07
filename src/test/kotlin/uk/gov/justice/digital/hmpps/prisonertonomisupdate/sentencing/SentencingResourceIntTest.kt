@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
-import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -18,7 +19,10 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.BookingIdsWithLast
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.model.AdjustmentDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -39,11 +43,34 @@ class SentencingResourceIntTest : IntegrationTestBase() {
       OFFENDER_NO
 
       val numberOfActivePrisoners = 34L
-      nomisApi.stubGetActivePrisonersInitialCount(numberOfActivePrisoners)
-      nomisApi.stubGetActivePrisonersPage(numberOfActivePrisoners, 0)
-      nomisApi.stubGetActivePrisonersPage(numberOfActivePrisoners, 1)
-      nomisApi.stubGetActivePrisonersPage(numberOfActivePrisoners, 2)
-      nomisApi.stubGetActivePrisonersPage(numberOfActivePrisoners, 3, 4)
+      nomisApi.stuGetAllLatestBookings(
+        bookingId = 0,
+        response = BookingIdsWithLast(
+          lastBookingId = 10,
+          prisonerIds = (1L..10).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
+        ),
+      )
+      nomisApi.stuGetAllLatestBookings(
+        bookingId = 10,
+        response = BookingIdsWithLast(
+          lastBookingId = 20,
+          prisonerIds = (11L..20).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
+        ),
+      )
+      nomisApi.stuGetAllLatestBookings(
+        bookingId = 20,
+        response = BookingIdsWithLast(
+          lastBookingId = 30,
+          prisonerIds = (21L..30).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
+        ),
+      )
+      nomisApi.stuGetAllLatestBookings(
+        bookingId = 30,
+        response = BookingIdsWithLast(
+          lastBookingId = 34,
+          prisonerIds = (31L..34).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
+        ),
+      )
 
       // mock non-matching for first and last prisoners
       nomisApi.stubGetSentencingAdjustments(1, SentencingAdjustmentsResponse(emptyList(), emptyList()))
@@ -63,7 +90,7 @@ class SentencingResourceIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isAccepted
 
-      verify(telemetryClient).trackEvent(eq("sentencing-reports-reconciliation-requested"), check { assertThat(it).containsEntry("prisoner-count", "34") }, isNull())
+      verify(telemetryClient).trackEvent(eq("sentencing-reports-reconciliation-requested"), any(), isNull())
 
       awaitReportFinished()
     }
@@ -76,14 +103,11 @@ class SentencingResourceIntTest : IntegrationTestBase() {
 
       awaitReportFinished()
       nomisApi.verify(
-        WireMock.getRequestedFor(urlPathEqualTo("/prisoners/ids/active"))
-          .withQueryParam("size", WireMock.equalTo("1")),
-      )
-      nomisApi.verify(
         // 34 prisoners will be spread over 4 pages of 10 prisoners each
         4,
-        WireMock.getRequestedFor(urlPathEqualTo("/prisoners/ids/active"))
-          .withQueryParam("size", WireMock.equalTo("10")),
+        getRequestedFor(urlPathEqualTo("/bookings/ids/latest-from-id"))
+          .withQueryParam("activeOnly", equalTo("true"))
+          .withQueryParam("pageSize", equalTo("10")),
       )
     }
 
@@ -154,17 +178,11 @@ class SentencingResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `when initial prison count fails the whole report fails`() {
-      nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 0, responseCode = 500)
-
-      webTestClient.put().uri("/sentencing/reports/reconciliation")
-        .exchange()
-        .expectStatus().is5xxServerError
-    }
-
-    @Test
     fun `will attempt to complete a report even if whole pages of the checks fail`() {
-      nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 2, responseCode = 500)
+      nomisApi.stuGetAllLatestBookings(
+        bookingId = 10,
+        errorStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+      )
 
       webTestClient.put().uri("/sentencing/reports/reconciliation")
         .exchange()

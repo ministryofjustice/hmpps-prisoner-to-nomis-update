@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.KeyDateAdjustmentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentenceAdjustmentResponse
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension.Companion.sentencingAdjustmentsApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -427,8 +429,12 @@ internal class SentencingReconciliationServiceTest {
   inner class GenerateReconciliationReport {
     @BeforeEach
     fun setUp() {
-      nomisApi.stubGetActivePrisonersInitialCount(4)
-      nomisApi.stubGetActivePrisonersPage(4, 0, 4)
+      nomisApi.stuGetAllLatestBookings(
+        response = BookingIdsWithLast(
+          lastBookingId = 4,
+          prisonerIds = (1L..4).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
+        ),
+      )
       // different adjustments
       sentencingAdjustmentsApi.stubAdjustmentsGet(
         offenderNo = "A0001TZ",
@@ -493,7 +499,7 @@ internal class SentencingReconciliationServiceTest {
 
     @Test
     fun `will call DPS for each offenderNo`() = runTest {
-      service.generateReconciliationReport(allPrisoners = false, 4)
+      service.generateReconciliationReport(allPrisoners = false)
       sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments?person=A0001TZ")))
       sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments?person=A0002TZ")))
       sentencingAdjustmentsApi.verify(getRequestedFor(urlEqualTo("/adjustments?person=A0003TZ")))
@@ -502,7 +508,7 @@ internal class SentencingReconciliationServiceTest {
 
     @Test
     fun `will call NOMIS for each bookingId`() = runTest {
-      service.generateReconciliationReport(allPrisoners = false, 4)
+      service.generateReconciliationReport(allPrisoners = false)
       nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/1/sentencing-adjustments")))
       nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/2/sentencing-adjustments")))
       nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/3/sentencing-adjustments")))
@@ -511,7 +517,7 @@ internal class SentencingReconciliationServiceTest {
 
     @Test
     fun `will return list of only the mismatches`() = runTest {
-      val mismatches = service.generateReconciliationReport(allPrisoners = false, 4)
+      val mismatches = service.generateReconciliationReport(allPrisoners = false)
 
       assertThat(mismatches).hasSize(2)
       assertThat(mismatches[0].prisonerId.offenderNo).isEqualTo("A0001TZ")
