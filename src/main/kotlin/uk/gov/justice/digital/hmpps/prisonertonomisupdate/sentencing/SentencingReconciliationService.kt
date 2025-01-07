@@ -34,6 +34,7 @@ class SentencingReconciliationService(
   suspend fun generateReconciliationReport(allPrisoners: Boolean): List<MismatchSentencingAdjustments> {
     val mismatches: MutableList<MismatchSentencingAdjustments> = mutableListOf()
     var lastBookingId = 0L
+    var pageErrorCount = 0L
 
     do {
       val result = getNextBookingsForPage(lastBookingId, allPrisoners)
@@ -51,9 +52,10 @@ class SentencingReconciliationService(
         is ErrorPageResult -> {
           // just skip this "page" by moving the bookingId pointer up
           lastBookingId += pageSize.toInt()
+          pageErrorCount++
         }
       }
-    } while (result.notLastPage())
+    } while (result.notLastPage() && pageErrorCount.notManyPageErrors())
 
     return mismatches.toList()
   }
@@ -65,6 +67,8 @@ class SentencingReconciliationService(
     }.awaitAll().filterNotNull()
     return MismatchPageResult(mismatches, prisonerIds.last().bookingId)
   }
+
+  private fun Long.notManyPageErrors(): Boolean = this < 30
 
   data class MismatchPageResult(val mismatches: List<MismatchSentencingAdjustments>, val lastBookingId: Long)
 
