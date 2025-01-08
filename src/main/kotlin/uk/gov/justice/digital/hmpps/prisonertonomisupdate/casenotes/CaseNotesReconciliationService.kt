@@ -75,6 +75,10 @@ class CaseNotesReconciliationService(
             log.error("Unable to match entire page of prisoners: page $pageNumber, pageErrors $pageErrors", it)
           }.getOrNull()
       } while (size == pageSize.toInt() && pageErrors < 100)
+
+      if (pageErrors >= 100) {
+        throw RuntimeException("Aborted: Too many page errors, at page $pageNumber")
+      }
       return results
     }
   }
