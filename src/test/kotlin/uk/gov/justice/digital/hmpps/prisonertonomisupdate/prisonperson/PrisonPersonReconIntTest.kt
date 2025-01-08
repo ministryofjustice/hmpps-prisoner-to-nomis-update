@@ -420,7 +420,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
             stubGetActivePrisonersInitialCount(noActivePrisoners)
             stubGetActivePrisonersPage(noActivePrisoners, pageNumber = 0, pageSize = pageSize, numberOfElements = pageSize)
             // fail to retrieve page 1
-            stubGetActivePrisonersPageWithError(pageNumber = 1, pageSize = pageSize, responseCode = 502)
+            stubGetActivePrisonersPageWithError(pageNumber = 1, pageSize = pageSize, responseCode = 500)
             stubGetActivePrisonersPage(noActivePrisoners, pageNumber = 2, pageSize = pageSize, numberOfElements = 1)
           }
           forEachPrisoner { offenderNo ->
@@ -454,7 +454,7 @@ class PrisonPersonReconIntTest : IntegrationTestBase() {
               assertThat(it).containsEntry("page", "1")
               assertThat(it).containsEntry(
                 "error",
-                "502 Bad Gateway from GET http://localhost:8082/prisoners/ids/active",
+                "500 Internal Server Error from GET http://localhost:8082/prisoners/ids/active",
               )
             },
             isNull(),
