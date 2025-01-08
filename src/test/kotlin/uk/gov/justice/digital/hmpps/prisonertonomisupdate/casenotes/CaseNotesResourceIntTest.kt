@@ -116,6 +116,36 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `will output report failure telemetry after excessive errors`() = runTest {
+      nomisApi.stubGetAllPrisonersInitialCount(1, 1)
+      nomisApi.stubGetAllPrisonersPage1()
+      doThrow(RuntimeException("test")).whenever(caseNotesReconciliationService).checkMatch(any())
+
+      webTestClient.put().uri("/casenotes/reports/reconciliation?activeOnly=false")
+        .exchange()
+        .expectStatus().isAccepted
+
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("casenotes-reports-reconciliation-requested"),
+        check {
+          assertThat(it).containsEntry("casenotes-nomis-total", "1")
+        },
+        isNull(),
+      )
+
+      verify(telemetryClient).trackEvent(
+        eq("casenotes-reports-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("success", "false")
+          assertThat(it).containsEntry("error", "Aborted: Too many page errors, at page 1")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
     fun `active only`() {
       nomisApi.stubGetActivePrisonersInitialCount(8)
       nomisApi.stubGetActivePrisonersPage(8, 0, 5, 5)

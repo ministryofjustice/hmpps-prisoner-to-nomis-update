@@ -7,6 +7,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.netty.http.client.PrematureCloseException
 import reactor.util.retry.Retry
 import reactor.util.retry.RetryBackoffSpec
@@ -36,7 +37,8 @@ class RetryApiService(
       e is ConnectTimeoutException || e.cause is ConnectTimeoutException ||
       e is SocketException || e.cause is SocketException ||
       e is PrematureCloseException || e.cause is PrematureCloseException || // server closed the connection
-      e is Errors.NativeIoException || e.cause is Errors.NativeIoException // Connection reset by peer
+      e is Errors.NativeIoException || e.cause is Errors.NativeIoException || // Connection reset by peer
+      e is WebClientResponseException.BadGateway // 502 is also a transient error worth retrying
 
   private fun logRetrySignal(retrySignal: Retry.RetrySignal) {
     val failure = retrySignal.failure()

@@ -1,11 +1,11 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "app.fullname" . }}-report-casenotes-active
+  name: {{ include "app.fullname" . }}-report-casenotes-full
   labels:
     {{- include "app.labels" . | nindent 4 }}
 spec:
-  schedule: "30 18 * * SUN,MON,TUE,WED,THU"
+  schedule: "30 18 * * FRI"
   suspend: false
   concurrencyPolicy: Forbid
   failedJobsHistoryLimit: 5
@@ -23,7 +23,7 @@ spec:
               args:
                 - /bin/sh
                 - -c
-                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/casenotes/reports/reconciliation?activeOnly=true
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/casenotes/reports/reconciliation?activeOnly=false
               securityContext:
                 capabilities:
                   drop:
