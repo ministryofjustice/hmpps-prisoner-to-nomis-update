@@ -26,7 +26,7 @@ generic-service:
     API_BASE_URL_CASENOTES: https://offender-case-notes.service.justice.gov.uk
     API_BASE_URL_PRISONPERSON: https://prison-person-api.prison.service.justice.gov.uk
     API_BASE_URL_CONTACT_PERSON: https://contacts-api.hmpps.service.justice.gov.uk
-    REPORTS_SENTENCING_RECONCILIATION_ALL_PRISONERS: false
+    REPORTS_SENTENCING_RECONCILIATION_ALL_PRISONERS: true
     FEATURE_EVENT_COURT_CASE_INSERTED: false
     FEATURE_EVENT_COURT_CASE_DELETED: false
     FEATURE_EVENT_COURT_APPEARANCE_INSERTED: false
