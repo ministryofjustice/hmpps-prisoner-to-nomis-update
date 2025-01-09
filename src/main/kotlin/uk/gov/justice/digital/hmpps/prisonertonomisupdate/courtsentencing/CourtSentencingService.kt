@@ -617,7 +617,10 @@ fun LegacyCourtAppearance.toNomisCourtAppearance(
           next.appearanceDate,
           LocalTime.parse(it),
         ).toString()
-      } ?: next.appearanceDate.toString()
+      } ?: LocalDateTime.of(
+        next.appearanceDate,
+        LocalTime.MIDNIGHT,
+      ).toString()
     },
     courtEventChargesToUpdate = courtEventChargesToUpdate,
     courtEventChargesToCreate = emptyList(),
