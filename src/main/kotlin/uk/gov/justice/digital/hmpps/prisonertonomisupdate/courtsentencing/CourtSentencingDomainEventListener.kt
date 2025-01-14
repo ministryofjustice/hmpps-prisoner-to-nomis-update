@@ -40,6 +40,7 @@ class CourtSentencingDomainEventListener(
         courtSentencingService.deleteCourtCase(message.fromJson())
       "court-appearance.deleted" ->
         courtSentencingService.deleteCourtAppearance(message.fromJson())
+      // includes removing or adding any charges that are associated with the appearance
       "court-appearance.updated" ->
         courtSentencingService.updateCourtAppearance(message.fromJson())
       "legacy.court-case-references.updated" ->
