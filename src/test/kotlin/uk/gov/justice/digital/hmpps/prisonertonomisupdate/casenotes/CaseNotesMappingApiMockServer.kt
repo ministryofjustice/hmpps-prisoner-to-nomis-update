@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.okJson
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
@@ -13,6 +14,7 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AllPrisonerCaseNoteMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CaseNoteMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
@@ -45,6 +47,25 @@ class CaseNotesMappingApiMockServer(private val objectMapper: ObjectMapper) {
   fun stubGetByDpsId(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
     mappingServer.stubFor(
       get(WireMock.urlPathMatching("/mapping/casenotes/dps-casenote-id/.*")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(objectMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubGetByPrisoner(offenderNo: String, mappings: AllPrisonerCaseNoteMappingsDto = AllPrisonerCaseNoteMappingsDto(listOf())) {
+    mappingServer.stubFor(
+      get(WireMock.urlEqualTo("/mapping/casenotes/$offenderNo/all")).willReturn(
+        okJson(objectMapper.writeValueAsString(mappings)),
+      ),
+    )
+  }
+
+  fun stubGetByPrisoner(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      get(WireMock.urlPathMatching("/mapping/casenotes/.*/all")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())

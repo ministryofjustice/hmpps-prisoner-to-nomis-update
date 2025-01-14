@@ -226,7 +226,7 @@ data class CommonCaseNoteFields(
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
-    other as CommonCaseNoteFields
+    if (other !is CommonCaseNoteFields) return false
     return text == other.text &&
       equalTypes(other) &&
       subType == other.subType &&
