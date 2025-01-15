@@ -4,6 +4,14 @@ generic-service:
 
   replicaCount: 4
 
+  resources:
+    requests:
+      cpu: 10m
+      memory: 640Mi
+    limits:
+      cpu: 2000m
+      memory: 2048Mi
+
   image:
     repository: quay.io/hmpps/hmpps-prisoner-to-nomis-update
     tag: app_version # override at deployment time
@@ -75,7 +83,6 @@ generic-service:
 
   # Environment variables to load into the deployment
   env:
-    JAVA_OPTS: "-Xmx512m"
     SERVER_PORT: "8080"
     SPRING_PROFILES_ACTIVE: "logstash"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
