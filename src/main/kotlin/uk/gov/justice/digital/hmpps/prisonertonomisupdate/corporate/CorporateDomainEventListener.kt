@@ -28,7 +28,7 @@ class CorporateDomainEventListener(
   }
 
   @Suppress("LoggingSimilarMessage")
-  @SqsListener("contactperson", factory = "hmppsQueueContainerFactoryProxy")
+  @SqsListener("corporate", factory = "hmppsQueueContainerFactoryProxy")
   fun onMessage(
     rawMessage: String,
   ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
