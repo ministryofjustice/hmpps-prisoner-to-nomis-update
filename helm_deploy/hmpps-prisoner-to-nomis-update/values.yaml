@@ -186,6 +186,10 @@ generic-service:
       HMPPS_SQS_QUEUES_CONTACTPERSON_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-contactperson-dlq:
       HMPPS_SQS_QUEUES_CONTACTPERSON_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-corporate:
+      HMPPS_SQS_QUEUES_CORPORATE_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-corporate-dlq:
+      HMPPS_SQS_QUEUES_CORPORATE_DLQ_NAME: "sqs_queue_name"
 
   allowlist:
     groups:

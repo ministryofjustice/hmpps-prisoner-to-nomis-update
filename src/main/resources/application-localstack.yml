@@ -165,6 +165,34 @@ hmpps.sqs:
         { "eventType":[
           "TBD"
         ]}
+    corporate:
+      queueName: hmpps_prisoner_to_nomis_corporate_queue
+      dlqName: hmpps_prisoner_to_nomis_corporate_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "contacts-api.organisation.created",
+          "contacts-api.organisation.updated",
+          "contacts-api.organisation.deleted",
+          "contacts-api.organisation-type.created",
+          "contacts-api.organisation-type.updated",
+          "contacts-api.organisation-type.deleted",
+          "contacts-api.organisation-address.created",
+          "contacts-api.organisation-address.updated",
+          "contacts-api.organisation-address.deleted",
+          "contacts-api.organisation-email.created",
+          "contacts-api.organisation-email.updated",
+          "contacts-api.organisation-email.deleted",
+          "contacts-api.organisation-web-address.created",
+          "contacts-api.organisation-web-address.updated",
+          "contacts-api.organisation-web-address.deleted",
+          "contacts-api.organisation-phone.created",
+          "contacts-api.organisation-phone.updated",
+          "contacts-api.organisation-phone.deleted",
+          "contacts-api.organisation-address-phone.created",
+          "contacts-api.organisation-address-phone.updated",
+          "contacts-api.organisation-address-phone.deleted"
+        ]}
 
   topics:
     domainevents:
