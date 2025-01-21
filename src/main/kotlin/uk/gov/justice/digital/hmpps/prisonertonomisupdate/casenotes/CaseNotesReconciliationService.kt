@@ -172,17 +172,19 @@ class CaseNotesReconciliationService(
     }.getOrNull()
   }
 
+  private val truncatedToSecondsFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+
   private fun CaseNote.transformFromDps() = CommonCaseNoteFields(
     text,
     type,
     subType,
-    occurrenceDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
-    creationDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
+    occurrenceDateTime.format(truncatedToSecondsFormatter),
+    creationDateTime.format(truncatedToSecondsFormatter),
     authorUsername,
     amendments.map { a ->
       CommonAmendmentFields(
         text = a.additionalNoteText,
-        occurrenceDateTime = a.creationDateTime?.format(DateTimeFormatter.ISO_DATE_TIME),
+        occurrenceDateTime = a.creationDateTime?.format(truncatedToSecondsFormatter),
         authorUsername = a.authorUserName,
       )
     }.toSortedSet(amendmentComparator),
