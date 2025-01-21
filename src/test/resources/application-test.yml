@@ -260,6 +260,36 @@ hmpps.sqs:
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
+    corporate:
+      queueName: "corporate-${random.uuid}"
+      dlqName: "corporate-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "contacts-api.organisation.created",
+          "contacts-api.organisation.updated",
+          "contacts-api.organisation.deleted",
+          "contacts-api.organisation-type.created",
+          "contacts-api.organisation-type.updated",
+          "contacts-api.organisation-type.deleted",
+          "contacts-api.organisation-address.created",
+          "contacts-api.organisation-address.updated",
+          "contacts-api.organisation-address.deleted",
+          "contacts-api.organisation-email.created",
+          "contacts-api.organisation-email.updated",
+          "contacts-api.organisation-email.deleted",
+          "contacts-api.organisation-web-address.created",
+          "contacts-api.organisation-web-address.updated",
+          "contacts-api.organisation-web-address.deleted",
+          "contacts-api.organisation-phone.created",
+          "contacts-api.organisation-phone.updated",
+          "contacts-api.organisation-phone.deleted",
+          "contacts-api.organisation-address-phone.created",
+          "contacts-api.organisation-address-phone.updated",
+          "contacts-api.organisation-address-phone.deleted"
+        ]}
+      dlqMaxReceiveCount: 3
+      visibilityTimeout: 120
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}
