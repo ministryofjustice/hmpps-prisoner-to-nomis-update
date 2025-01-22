@@ -181,6 +181,7 @@ class CaseNotesReconciliationService(
     occurrenceDateTime.format(truncatedToSecondsFormatter),
     creationDateTime.format(truncatedToSecondsFormatter),
     authorUsername,
+    null,
     amendments.map { a ->
       CommonAmendmentFields(
         text = a.additionalNoteText,
@@ -197,7 +198,8 @@ class CaseNotesReconciliationService(
     caseNoteSubType.code,
     occurrenceDateTime,
     creationDateTime,
-    authorUsername,
+    null,
+    authorUsernames,
     amendments.map { a ->
       CommonAmendmentFields(
         text = a.text,
@@ -222,7 +224,8 @@ data class CommonCaseNoteFields(
   val subType: String,
   val occurrenceDateTime: String?,
   val creationDateTime: String?,
-  val authorUsername: String,
+  val dpsUsername: String?,
+  val nomisUsernames: List<String>?,
   val amendments: Set<CommonAmendmentFields>,
   val legacyId: Long,
 ) {
@@ -241,9 +244,9 @@ data class CommonCaseNoteFields(
   private fun equalTypes(nomis: CommonCaseNoteFields): Boolean = (type == nomis.type || (type == "APP" && nomis.type == "CNOTE" && subType == "OUTCOME"))
 
   private fun equalUsers(other: CommonCaseNoteFields): Boolean {
-    val equal = authorUsername == other.authorUsername || authorUsername == "OMS_OWNER"
+    val equal = other.nomisUsernames?.contains(dpsUsername) == true || dpsUsername == "OMS_OWNER"
     if (!equal) {
-      CaseNotesReconciliationService.log.info("authorUsername not equal: $authorUsername != $(other.authorUsername}")
+      CaseNotesReconciliationService.log.info("authorUsername not equal: $dpsUsername !in ${other.nomisUsernames}")
     }
     return equal
   }
@@ -251,7 +254,7 @@ data class CommonCaseNoteFields(
   override fun hashCode(): Int = javaClass.hashCode()
 
   override fun toString(): String {
-    return "{id=$legacyId, text-hash=${Objects.hashCode(text)}, type=$type, subType=$subType, occurrenceDateTime=$occurrenceDateTime, creationDateTime=$creationDateTime, authorUsername=$authorUsername, amendments=$amendments}"
+    return "{id=$legacyId, text-hash=${Objects.hashCode(text)}, type=$type, subType=$subType, occurrenceDateTime=$occurrenceDateTime, creationDateTime=$creationDateTime, authorUsername=${dpsUsername ?: nomisUsernames}, amendments=$amendments}"
   }
 }
 
