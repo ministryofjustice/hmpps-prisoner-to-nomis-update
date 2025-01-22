@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2025-01-07.10430.afa40d1"
+    "version": "2025-01-21.10901.15506b7"
   },
   "servers": [
     {
@@ -11407,7 +11407,7 @@
           "prisoners-resource"
         ],
         "summary": "Gets the identifier for all prisoners.",
-        "description": "Requires role SYNCHRONISATION_REPORTING, NOMIS_ALERTS or NOMIS_PRISON_PERSON.",
+        "description": "Requires role SYNCHRONISATION_REPORTING, NOMIS_ALERTS, NOMIS_PRISON_PERSON or NOMIS_CORE_PERSON.",
         "operationId": "getAllPrisoners",
         "parameters": [
           {
@@ -12204,6 +12204,74 @@
           },
           "403": {
             "description": "Forbidden to access this endpoint when role NOMIS_NON_ASSOCIATIONS not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/non-associations/booking/{bookingId}": {
+      "get": {
+        "tags": [
+          "non-association-resource"
+        ],
+        "summary": "Get non-associations by booking ID",
+        "description": "Get non-associations for the given booking ID. Requires role NOMIS_NON_ASSOCIATIONS",
+        "operationId": "getByBookingId",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "Booking ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of non-associations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NonAssociationIdResponse"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No non-associations found for the given booking ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires role NOMIS_NON_ASSOCIATIONS",
             "content": {
               "application/json": {
                 "schema": {
@@ -13843,6 +13911,213 @@
         }
       }
     },
+    "/corporates/{corporateId}": {
+      "get": {
+        "tags": [
+          "corporate-resource"
+        ],
+        "summary": "Get a corporate by corporateId Id",
+        "description": "Retrieves a corporate and details. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "getCorporateById",
+        "parameters": [
+          {
+            "name": "corporateId",
+            "in": "path",
+            "description": "Corporate Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Corporate Id",
+              "format": "int64",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Corporate Information Returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorporateOrganisation"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Corporate does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/corporates/ids": {
+      "get": {
+        "tags": [
+          "corporate-resource"
+        ],
+        "summary": "Get all Ids",
+        "description": "Retrieves all corporate Ids - typically for a migration. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "getCorporateIds",
+        "parameters": [
+          {
+            "name": "pageRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "description": "Filter results by corporate that were created on or after the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "description": "Filter results by corporate that were created on or before the given date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2021-11-03"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page of corporate Ids",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageCorporateOrganisationIdResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/core-person/{prisonNumber}": {
+      "get": {
+        "tags": [
+          "core-person-resource"
+        ],
+        "summary": "Get an offender by prison number",
+        "description": "Retrieves an offender. Requires ROLE_NOMIS_CORE_PERSON",
+        "operationId": "getOffender",
+        "parameters": [
+          {
+            "name": "prisonNumber",
+            "in": "path",
+            "description": "Prison number aka noms id / offender id display",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Prison number aka noms id / offender id display",
+              "example": "A1234BC"
+            },
+            "example": "A1234BC"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Core person information returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorePerson"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CORE_PERSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offender does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/bookings/{bookingId}/identifying-marks": {
       "get": {
         "tags": [
@@ -14493,7 +14768,7 @@
           {
             "name": "excludeProgramCode",
             "in": "query",
-            "description": "Exclude program codes",
+            "description": "TODO: remove this parameter after removing from clients",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/excludeProgramCode"
@@ -14643,7 +14918,7 @@
           {
             "name": "excludeProgramCode",
             "in": "query",
-            "description": "Exclude program codes",
+            "description": "TODO: remove this parameter after removing from clients",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/excludeProgramCode"
@@ -14737,7 +15012,7 @@
           {
             "name": "excludeProgramCode",
             "in": "query",
-            "description": "Exclude program codes",
+            "description": "TODO: remove this parameter after removing from clients",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/excludeProgramCode"
@@ -15285,7 +15560,7 @@
           {
             "name": "excludeProgramCode",
             "in": "query",
-            "description": "Exclude program codes",
+            "description": "TODO: remove this parameter after removing from clients",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/excludeProgramCode"
@@ -15371,7 +15646,7 @@
           {
             "name": "excludeProgramCode",
             "in": "query",
-            "description": "Exclude program codes",
+            "description": "TODO: remove this parameter after removing from clients",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/excludeProgramCode"
@@ -15465,7 +15740,7 @@
           {
             "name": "excludeProgramCode",
             "in": "query",
-            "description": "Exclude program codes",
+            "description": "TODO: remove this parameter after removing from clients",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/excludeProgramCode"
@@ -15799,8 +16074,7 @@
           },
           "active": {
             "type": "boolean",
-            "description": "Flag to indicate if the adjustment is being applied",
-            "default": true
+            "description": "Flag to indicate if the adjustment is being applied"
           },
           "sentenceSequence": {
             "minimum": 0,
@@ -17103,8 +17377,7 @@
           },
           "active": {
             "type": "boolean",
-            "description": "Flag to indicate if the adjustment is being applied",
-            "default": true
+            "description": "Flag to indicate if the adjustment is being applied"
           }
         },
         "description": "Key date adjustment update request"
@@ -21347,13 +21620,13 @@
       "PageVisitIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -21864,13 +22137,13 @@
       "PageQuestionnaireIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -21961,6 +22234,30 @@
         },
         "description": "Offence"
       },
+      "OffenceResultCodeResponse": {
+        "required": [
+          "chargeStatus",
+          "code",
+          "description",
+          "dispositionCode"
+        ],
+        "type": "object",
+        "properties": {
+          "chargeStatus": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "dispositionCode": {
+            "type": "string"
+          }
+        },
+        "description": "Offence Result Code"
+      },
       "OffenderChargeResponse": {
         "required": [
           "id",
@@ -22010,16 +22307,10 @@
             "$ref": "#/components/schemas/CodeDescription"
           },
           "resultCode1": {
-            "$ref": "#/components/schemas/CodeDescription"
+            "$ref": "#/components/schemas/OffenceResultCodeResponse"
           },
           "resultCode2": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "resultCode1Indicator": {
-            "type": "string"
-          },
-          "resultCode2Indicator": {
-            "type": "string"
+            "$ref": "#/components/schemas/OffenceResultCodeResponse"
           },
           "mostSeriousFlag": {
             "type": "boolean"
@@ -22223,16 +22514,10 @@
             "type": "string"
           },
           "resultCode1": {
-            "$ref": "#/components/schemas/CodeDescription"
+            "$ref": "#/components/schemas/OffenceResultCodeResponse"
           },
           "resultCode2": {
-            "$ref": "#/components/schemas/CodeDescription"
-          },
-          "resultCode1Indicator": {
-            "type": "string"
-          },
-          "resultCode2Indicator": {
-            "type": "string"
+            "$ref": "#/components/schemas/OffenceResultCodeResponse"
           },
           "mostSeriousFlag": {
             "type": "boolean"
@@ -22287,7 +22572,7 @@
             "type": "string"
           },
           "outcomeReasonCode": {
-            "$ref": "#/components/schemas/CodeDescription"
+            "$ref": "#/components/schemas/OffenceResultCodeResponse"
           },
           "commentText": {
             "type": "string"
@@ -23593,6 +23878,14 @@
             "type": "string",
             "description": "Author last name"
           },
+          "authorUsernames": {
+            "type": "array",
+            "description": "List of all usernames for authorStaffId",
+            "items": {
+              "type": "string",
+              "description": "List of all usernames for authorStaffId"
+            }
+          },
           "prisonId": {
             "type": "string",
             "description": "Prison id"
@@ -23690,13 +23983,13 @@
       "PagePrisonerIds": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -23757,13 +24050,13 @@
       "PagePrisonerId": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -24788,13 +25081,13 @@
       "PagePersonIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -24941,13 +25234,13 @@
       "PageNonAssociationIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -25196,13 +25489,13 @@
       "PageLocationIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -25795,13 +26088,13 @@
       "PageIncidentIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -25915,13 +26208,13 @@
       "PageIncentiveIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -26151,13 +26444,13 @@
       "PageCSIPIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -26211,13 +26504,13 @@
       "PageCourtCaseIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -26253,6 +26546,962 @@
             "type": "boolean"
           }
         }
+      },
+      "CorporateAddress": {
+        "required": [
+          "audit",
+          "id",
+          "isServices",
+          "mailAddress",
+          "phoneNumbers",
+          "primaryAddress",
+          "validatedPAF"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique NOMIS Id of number",
+            "format": "int64"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "flat": {
+            "type": "string",
+            "description": "Flat name or number",
+            "example": "Apartment 3"
+          },
+          "premise": {
+            "type": "string",
+            "description": "Premise",
+            "example": "22"
+          },
+          "street": {
+            "type": "string",
+            "description": "Street",
+            "example": "West Street"
+          },
+          "locality": {
+            "type": "string",
+            "description": "Locality",
+            "example": "Keighley"
+          },
+          "postcode": {
+            "type": "string",
+            "description": "Post code",
+            "example": "MK15 2ST"
+          },
+          "city": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "county": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "country": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "description": "List of phone numbers for the address",
+            "items": {
+              "$ref": "#/components/schemas/CorporatePhoneNumber"
+            }
+          },
+          "validatedPAF": {
+            "type": "boolean",
+            "description": "true if address validated by Post Office Address file??"
+          },
+          "noFixedAddress": {
+            "type": "boolean",
+            "description": "true if address not fixed. for example homeless"
+          },
+          "primaryAddress": {
+            "type": "boolean",
+            "description": "true if this is the corporate's primary address"
+          },
+          "mailAddress": {
+            "type": "boolean",
+            "description": "true if this is used for mail"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Free format comment about the address"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Date address was valid from",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Date address was valid to",
+            "format": "date"
+          },
+          "isServices": {
+            "type": "boolean",
+            "description": "True if this is a service organisation"
+          },
+          "businessHours": {
+            "type": "string",
+            "description": "Business hours"
+          },
+          "contactPersonName": {
+            "type": "string",
+            "description": "Contact person"
+          },
+          "audit": {
+            "$ref": "#/components/schemas/NomisAudit"
+          }
+        },
+        "description": "The data held in NOMIS about an address"
+      },
+      "CorporateInternetAddress": {
+        "required": [
+          "audit",
+          "id",
+          "internetAddress",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique NOMIS Id of internet address",
+            "format": "int64"
+          },
+          "internetAddress": {
+            "type": "string",
+            "description": "The internet address",
+            "example": "john.smith@internet.co.uk"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of address"
+          },
+          "audit": {
+            "$ref": "#/components/schemas/NomisAudit"
+          }
+        },
+        "description": "The data held in NOMIS about a internet address"
+      },
+      "CorporateOrganisation": {
+        "required": [
+          "active",
+          "addresses",
+          "audit",
+          "id",
+          "internetAddresses",
+          "name",
+          "phoneNumbers",
+          "types"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique NOMIS Id of corporate",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "description": "The corporate name",
+            "example": "Boots"
+          },
+          "caseload": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "comment": {
+            "type": "string",
+            "description": "User comment"
+          },
+          "programmeNumber": {
+            "type": "string",
+            "description": "Programme number"
+          },
+          "vatNumber": {
+            "type": "string",
+            "description": "VAT number"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Is active"
+          },
+          "expiryDate": {
+            "type": "string",
+            "description": "Date made inactive",
+            "format": "date"
+          },
+          "types": {
+            "type": "array",
+            "description": "List of types this organisation is associated with, for instance ACCOM - Accommodation Provider",
+            "items": {
+              "$ref": "#/components/schemas/CorporateOrganisationType"
+            }
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "description": "List of phone numbers for the corporate",
+            "items": {
+              "$ref": "#/components/schemas/CorporatePhoneNumber"
+            }
+          },
+          "addresses": {
+            "type": "array",
+            "description": "List of addresses for the corporate",
+            "items": {
+              "$ref": "#/components/schemas/CorporateAddress"
+            }
+          },
+          "internetAddresses": {
+            "type": "array",
+            "description": "List of internet addresses for the corporate",
+            "items": {
+              "$ref": "#/components/schemas/CorporateInternetAddress"
+            }
+          },
+          "audit": {
+            "$ref": "#/components/schemas/NomisAudit"
+          }
+        },
+        "description": "The data held in NOMIS about a corporate entity"
+      },
+      "CorporateOrganisationType": {
+        "required": [
+          "audit",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "audit": {
+            "$ref": "#/components/schemas/NomisAudit"
+          }
+        },
+        "description": "The data held in NOMIS about a corporate entity"
+      },
+      "CorporatePhoneNumber": {
+        "required": [
+          "audit",
+          "id",
+          "number",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique NOMIS Id of number",
+            "format": "int64"
+          },
+          "number": {
+            "type": "string",
+            "description": "The number"
+          },
+          "extension": {
+            "type": "string",
+            "description": "Extension"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "audit": {
+            "$ref": "#/components/schemas/NomisAudit"
+          }
+        },
+        "description": "The data held in NOMIS about a phone number"
+      },
+      "CorporateOrganisationIdResponse": {
+        "required": [
+          "corporateId"
+        ],
+        "type": "object",
+        "properties": {
+          "corporateId": {
+            "type": "integer",
+            "description": "The corporate Id",
+            "format": "int64"
+          }
+        }
+      },
+      "PageCorporateOrganisationIdResponse": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CorporateOrganisationIdResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CoreOffender": {
+        "required": [
+          "firstName",
+          "identifiers",
+          "lastName",
+          "offenderId",
+          "workingName"
+        ],
+        "type": "object",
+        "properties": {
+          "offenderId": {
+            "type": "integer",
+            "description": "The offender id",
+            "format": "int64"
+          },
+          "title": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "First name of this offender record"
+          },
+          "middleName1": {
+            "type": "string",
+            "description": "Middle name of this offender record"
+          },
+          "middleName2": {
+            "type": "string",
+            "description": "Second middle name of this offender record"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Surname name of this offender record"
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "description": "Date of birth of this offender record",
+            "format": "date"
+          },
+          "birthPlace": {
+            "type": "string",
+            "description": "Birth place of this offender record"
+          },
+          "birthCountry": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "ethnicity": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "sex": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "nameType": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "workingName": {
+            "type": "boolean",
+            "description": "The offender record associated with the current booking"
+          },
+          "identifiers": {
+            "type": "array",
+            "description": "List of identifiers for the offender",
+            "items": {
+              "$ref": "#/components/schemas/Identifier"
+            }
+          }
+        },
+        "description": "The data held in NOMIS for an offender."
+      },
+      "CorePerson": {
+        "required": [
+          "activeFlag",
+          "addresses",
+          "beliefs",
+          "disabilities",
+          "emailAddresses",
+          "interestsToImmigration",
+          "nationalities",
+          "nationalityDetails",
+          "offenders",
+          "phoneNumbers",
+          "prisonNumber",
+          "sentenceStartDates",
+          "sexualOrientations"
+        ],
+        "type": "object",
+        "properties": {
+          "prisonNumber": {
+            "type": "string",
+            "description": "The prison number"
+          },
+          "inOutStatus": {
+            "type": "string",
+            "description": "In/Out Status",
+            "example": "IN, OUT, TRN"
+          },
+          "activeFlag": {
+            "type": "boolean",
+            "description": "Indicates that the person is currently in prison"
+          },
+          "offenders": {
+            "type": "array",
+            "description": "List of offender records for the person",
+            "items": {
+              "$ref": "#/components/schemas/CoreOffender"
+            }
+          },
+          "sentenceStartDates": {
+            "type": "array",
+            "description": "List of distinct sentence start dates",
+            "items": {
+              "type": "string",
+              "description": "List of distinct sentence start dates",
+              "format": "date"
+            }
+          },
+          "addresses": {
+            "type": "array",
+            "description": "List of addresses for the person",
+            "items": {
+              "$ref": "#/components/schemas/OffenderAddress"
+            }
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "description": "List of phone numbers for the person",
+            "items": {
+              "$ref": "#/components/schemas/OffenderPhoneNumber"
+            }
+          },
+          "emailAddresses": {
+            "type": "array",
+            "description": "List of email addresses for the person",
+            "items": {
+              "$ref": "#/components/schemas/OffenderEmailAddress"
+            }
+          },
+          "nationalities": {
+            "type": "array",
+            "description": "List of nationalities for the person",
+            "items": {
+              "$ref": "#/components/schemas/OffenderNationality"
+            }
+          },
+          "nationalityDetails": {
+            "type": "array",
+            "description": "List of nationality details for the person",
+            "items": {
+              "$ref": "#/components/schemas/OffenderNationalityDetails"
+            }
+          },
+          "sexualOrientations": {
+            "type": "array",
+            "description": "List of sexual orientations for the person",
+            "items": {
+              "$ref": "#/components/schemas/OffenderSexualOrientation"
+            }
+          },
+          "disabilities": {
+            "type": "array",
+            "description": "List of disabilities for the person",
+            "items": {
+              "$ref": "#/components/schemas/OffenderDisability"
+            }
+          },
+          "interestsToImmigration": {
+            "type": "array",
+            "description": "List of disabilities for the person",
+            "items": {
+              "$ref": "#/components/schemas/OffenderInterestToImmigration"
+            }
+          },
+          "beliefs": {
+            "type": "array",
+            "description": "Current belief and history of all beliefs for the person",
+            "items": {
+              "$ref": "#/components/schemas/OffenderBelief"
+            }
+          }
+        },
+        "description": "The data held in NOMIS for an offender"
+      },
+      "Identifier": {
+        "required": [
+          "identifier",
+          "sequence",
+          "type",
+          "verified"
+        ],
+        "type": "object",
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "description": "Unique NOMIS sequence for this identifier for this person",
+            "format": "int64"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "The identifier value",
+            "example": "NE121212T"
+          },
+          "issuedAuthority": {
+            "type": "string",
+            "description": "The issued authority",
+            "example": "Police"
+          },
+          "issuedDate": {
+            "type": "string",
+            "description": "The issued date",
+            "format": "date"
+          },
+          "verified": {
+            "type": "boolean",
+            "description": "Verified"
+          }
+        },
+        "description": "The data held in NOMIS for an offender's identifiers"
+      },
+      "OffenderAddress": {
+        "required": [
+          "addressId",
+          "mailAddress",
+          "phoneNumbers",
+          "primaryAddress",
+          "usages",
+          "validatedPAF"
+        ],
+        "type": "object",
+        "properties": {
+          "addressId": {
+            "type": "integer",
+            "description": "Unique NOMIS Id of number",
+            "format": "int64"
+          },
+          "flat": {
+            "type": "string",
+            "description": "Flat name or number",
+            "example": "Apartment 3"
+          },
+          "premise": {
+            "type": "string",
+            "description": "Premise",
+            "example": "22"
+          },
+          "street": {
+            "type": "string",
+            "description": "Street",
+            "example": "West Street"
+          },
+          "locality": {
+            "type": "string",
+            "description": "Locality",
+            "example": "Keighley"
+          },
+          "postcode": {
+            "type": "string",
+            "description": "Post code",
+            "example": "MK15 2ST"
+          },
+          "city": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "county": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "country": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "description": "List of phone numbers for the address",
+            "items": {
+              "$ref": "#/components/schemas/OffenderPhoneNumber"
+            }
+          },
+          "validatedPAF": {
+            "type": "boolean",
+            "description": "true if address validated by Post Office Address file??"
+          },
+          "noFixedAddress": {
+            "type": "boolean",
+            "description": "true if address not fixed. for example homeless"
+          },
+          "primaryAddress": {
+            "type": "boolean",
+            "description": "true if this is the person's primary address"
+          },
+          "mailAddress": {
+            "type": "boolean",
+            "description": "true if this is used for mail"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Free format comment about the address"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Date address was valid from",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Date address was valid to",
+            "format": "date"
+          },
+          "usages": {
+            "type": "array",
+            "description": "Usages for the address, also known as types",
+            "items": {
+              "$ref": "#/components/schemas/OffenderAddressUsage"
+            }
+          }
+        },
+        "description": "The data held in NOMIS about a address number"
+      },
+      "OffenderAddressUsage": {
+        "required": [
+          "active",
+          "addressId",
+          "usage"
+        ],
+        "type": "object",
+        "properties": {
+          "addressId": {
+            "type": "integer",
+            "description": "Offender belief id",
+            "format": "int64",
+            "example": 1123456
+          },
+          "usage": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the address usage is active"
+          }
+        },
+        "description": "Offender address usage"
+      },
+      "OffenderBelief": {
+        "required": [
+          "audit",
+          "belief",
+          "beliefId",
+          "startDate",
+          "verified"
+        ],
+        "type": "object",
+        "properties": {
+          "beliefId": {
+            "type": "integer",
+            "description": "Offender belief id",
+            "format": "int64",
+            "example": 1123456
+          },
+          "belief": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Date the belief started",
+            "format": "date",
+            "example": "2024-01-01"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Date the belief ended",
+            "format": "date",
+            "example": "2024-12-12"
+          },
+          "changeReason": {
+            "type": "boolean",
+            "description": "Was a reason given for change of belief?"
+          },
+          "comments": {
+            "type": "string",
+            "description": "Comments describing reason for change of belief"
+          },
+          "verified": {
+            "type": "boolean",
+            "description": "Verified flag"
+          },
+          "audit": {
+            "$ref": "#/components/schemas/NomisAudit"
+          }
+        },
+        "description": "Offender beliefs"
+      },
+      "OffenderDisability": {
+        "required": [
+          "bookingId",
+          "disability",
+          "latestBooking",
+          "startDateTime"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "The booking's unique identifier",
+            "format": "int64",
+            "example": 1234567
+          },
+          "disability": {
+            "type": "boolean",
+            "description": "The value of the profile info"
+          },
+          "startDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The start date of the booking",
+            "example": "2021-07-05T10:35:17"
+          },
+          "endDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The end date of the booking, or null if the booking is still active",
+            "example": "2021-07-05T10:35:17"
+          },
+          "latestBooking": {
+            "type": "boolean",
+            "description": "Whether this is the latest booking or not. Note that latest does not imply active.",
+            "example": true
+          }
+        },
+        "description": "Disability details held against a booking"
+      },
+      "OffenderEmailAddress": {
+        "required": [
+          "email",
+          "emailAddressId"
+        ],
+        "type": "object",
+        "properties": {
+          "emailAddressId": {
+            "type": "integer",
+            "description": "Unique NOMIS Id of email address",
+            "format": "int64"
+          },
+          "email": {
+            "type": "string",
+            "description": "The email address",
+            "example": "john.smith@internet.co.uk"
+          }
+        },
+        "description": "The data held in NOMIS about a email address"
+      },
+      "OffenderInterestToImmigration": {
+        "required": [
+          "bookingId",
+          "interestToImmigration",
+          "latestBooking",
+          "startDateTime"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "The booking's unique identifier",
+            "format": "int64",
+            "example": 1234567
+          },
+          "interestToImmigration": {
+            "type": "boolean",
+            "description": "The value of the profile info"
+          },
+          "startDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The start date of the booking",
+            "example": "2021-07-05T10:35:17"
+          },
+          "endDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The end date of the booking, or null if the booking is still active",
+            "example": "2021-07-05T10:35:17"
+          },
+          "latestBooking": {
+            "type": "boolean",
+            "description": "Whether this is the latest booking or not. Note that latest does not imply active.",
+            "example": true
+          }
+        },
+        "description": "Interest to immigration details held against a booking"
+      },
+      "OffenderNationality": {
+        "required": [
+          "bookingId",
+          "latestBooking",
+          "nationality",
+          "startDateTime"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "The booking's unique identifier",
+            "format": "int64",
+            "example": 1234567
+          },
+          "nationality": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "startDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The start date of the booking",
+            "example": "2021-07-05T10:35:17"
+          },
+          "endDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The end date of the booking, or null if the booking is still active",
+            "example": "2021-07-05T10:35:17"
+          },
+          "latestBooking": {
+            "type": "boolean",
+            "description": "Whether this is the latest booking or not. Note that latest does not imply active.",
+            "example": true
+          }
+        },
+        "description": "Nationality details held against a booking"
+      },
+      "OffenderNationalityDetails": {
+        "required": [
+          "bookingId",
+          "details",
+          "latestBooking",
+          "startDateTime"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "The booking's unique identifier",
+            "format": "int64",
+            "example": 1234567
+          },
+          "details": {
+            "type": "string",
+            "description": "Details on the nationality"
+          },
+          "startDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The start date of the booking",
+            "example": "2021-07-05T10:35:17"
+          },
+          "endDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The end date of the booking, or null if the booking is still active",
+            "example": "2021-07-05T10:35:17"
+          },
+          "latestBooking": {
+            "type": "boolean",
+            "description": "Whether this is the latest booking or not. Note that latest does not imply active.",
+            "example": true
+          }
+        },
+        "description": "Further nationality details held against a booking"
+      },
+      "OffenderPhoneNumber": {
+        "required": [
+          "number",
+          "phoneId",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "phoneId": {
+            "type": "integer",
+            "description": "Unique NOMIS Id of number",
+            "format": "int64"
+          },
+          "number": {
+            "type": "string",
+            "description": "The number"
+          },
+          "extension": {
+            "type": "string",
+            "description": "Extension"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CodeDescription"
+          }
+        },
+        "description": "The data held in NOMIS about a phone number"
+      },
+      "OffenderSexualOrientation": {
+        "required": [
+          "bookingId",
+          "latestBooking",
+          "sexualOrientation",
+          "startDateTime"
+        ],
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "description": "The booking's unique identifier",
+            "format": "int64",
+            "example": 1234567
+          },
+          "sexualOrientation": {
+            "$ref": "#/components/schemas/CodeDescription"
+          },
+          "startDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The start date of the booking",
+            "example": "2021-07-05T10:35:17"
+          },
+          "endDateTime": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "The end date of the booking, or null if the booking is still active",
+            "example": "2021-07-05T10:35:17"
+          },
+          "latestBooking": {
+            "type": "boolean",
+            "description": "Whether this is the latest booking or not. Note that latest does not imply active.",
+            "example": true
+          }
+        },
+        "description": "Sexual orientation details held against a booking"
       },
       "BookingIdentifyingMarksResponse": {
         "required": [
@@ -26549,13 +27798,13 @@
       "PageAppointmentIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -26623,6 +27872,7 @@
       },
       "GetAllocationResponse": {
         "required": [
+          "activityStartDate",
           "bookingId",
           "courseActivityId",
           "exclusions",
@@ -26706,6 +27956,12 @@
             "items": {
               "$ref": "#/components/schemas/ScheduleRulesResponse"
             }
+          },
+          "activityStartDate": {
+            "type": "string",
+            "description": "The start date of the activity",
+            "format": "date",
+            "example": "2023-03-12"
           }
         },
         "description": "Allocation to an activity"
@@ -26782,10 +28038,10 @@
       },
       "excludeProgramCode": {
         "type": "array",
-        "description": "Exclude program codes",
+        "description": "TODO: remove this parameter after removing from clients",
         "items": {
           "type": "string",
-          "description": "Exclude program codes"
+          "description": "TODO: remove this parameter after removing from clients"
         }
       },
       "FindSuspendedAllocationsResponse": {
@@ -26889,13 +28145,13 @@
       "PageFindActiveAllocationIdsResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -26954,13 +28210,13 @@
       "PageAdjustmentIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -27025,13 +28281,13 @@
       "PageAdjudicationChargeIdResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"
@@ -27351,13 +28607,13 @@
       "PageFindActiveActivityIdsResponse": {
         "type": "object",
         "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
           },
           "first": {
             "type": "boolean"

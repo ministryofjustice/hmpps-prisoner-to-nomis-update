@@ -39,7 +39,9 @@ class CaseNotesReconciliationServiceTest {
   fun nomisPrisoner(
     type: String = "CODE",
     subType: String = "SUBCODE",
-  ) = PrisonerCaseNotesResponse(listOf(templateNomisCaseNote(1, 1, type, subType)))
+    authorUsername: String = "USER",
+    authorUsernames: List<String>? = listOf("USER"),
+  ) = PrisonerCaseNotesResponse(listOf(templateNomisCaseNote(1, 1, type, subType, authorUsername, authorUsernames)))
 
   fun dpsPrisoner(
     type: String = "CODE",
@@ -92,7 +94,7 @@ class CaseNotesReconciliationServiceTest {
           missingFromNomis = emptySet(),
           notes = listOf(
             "dpsCaseNote = {id=1, text-hash=-622354608, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}," +
-              " nomisCaseNote = {id=1, text-hash=-622354608, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}",
+              " nomisCaseNote = {id=1, text-hash=-622354608, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=[USER], amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}",
           ),
         ),
       )
@@ -115,8 +117,7 @@ class CaseNotesReconciliationServiceTest {
             mapOf(
               "offenderNo" to OFFENDER_NO,
               "1" to "dpsCaseNote = {id=1, text-hash=-622354608, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}," +
-                " nomisCaseNote = {id=1, text-hash=-622354608, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}",
-
+                " nomisCaseNote = {id=1, text-hash=-622354608, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=[USER], amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}",
             ),
           )
         },
@@ -151,6 +152,18 @@ class CaseNotesReconciliationServiceTest {
       )
       whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
         dpsPrisoner(type = "APP", subType = "OUTCOME"),
+      )
+
+      assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNull()
+    }
+
+    @Test
+    fun `authorUsernames in Nomis list matches`() = runTest {
+      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
+        nomisPrisoner(authorUsername = "OTHER1", authorUsernames = listOf("OTHER1", "USER", "OTHER2")),
+      )
+      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
+        dpsPrisoner(),
       )
 
       assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNull()
@@ -336,13 +349,21 @@ private fun templateMapping(nomisId: Long, dpsId: String, prisonerNo: String, bo
     mappingType = MappingType.NOMIS_CREATED,
   )
 
-private fun templateNomisCaseNote(caseNoteId: Long = 1, bookingId: Long = 1, type: String = "CODE", subType: String = "SUBCODE"): CaseNoteResponse = CaseNoteResponse(
+private fun templateNomisCaseNote(
+  caseNoteId: Long = 1,
+  bookingId: Long = 1,
+  type: String = "CODE",
+  subType: String = "SUBCODE",
+  authorUsername: String = "USER",
+  authorUsernames: List<String>? = listOf("USER"),
+): CaseNoteResponse = CaseNoteResponse(
   caseNoteId = caseNoteId,
   bookingId = bookingId,
   caseNoteType = CodeDescription(type, "desc"),
   caseNoteSubType = CodeDescription(subType, "desc"),
   authorStaffId = 101L,
-  authorUsername = "USER",
+  authorUsername = authorUsername,
+  authorUsernames = authorUsernames,
   authorLastName = "SMITH",
   caseNoteText = "the actual text",
   amendments = listOf(
