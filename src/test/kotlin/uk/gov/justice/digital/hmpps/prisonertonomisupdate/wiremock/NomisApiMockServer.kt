@@ -23,12 +23,18 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.BookingIdsWithLast
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseIdentifierResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtCaseResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtEventResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class NomisApiExtension :
   BeforeAllCallback,
@@ -2242,6 +2248,48 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withStatus(200),
       ),
+    )
+  }
+
+  fun stubGetCourtCase(
+    caseId: Long,
+    bookingId: Long = 2,
+    offenderNo: String = "G4803UT",
+    courtId: String = "BATHMC",
+    caseInfoNumber: String? = "caseRef1",
+    caseIndentifiers: List<CaseIdentifierResponse> = emptyList(),
+    courtEvents: List<CourtEventResponse> = emptyList(),
+    combinedCaseId: Long? = null,
+    caseStatus: CodeDescription = CodeDescription("A", "Active"),
+    beginDate: LocalDate = LocalDate.now(),
+    response: CourtCaseResponse = CourtCaseResponse(
+      bookingId = bookingId,
+      id = caseId,
+      offenderNo = offenderNo,
+      caseSequence = 22,
+      caseStatus = caseStatus,
+      legalCaseType = CodeDescription("A", "Adult"),
+      courtId = "MDI",
+      courtEvents = courtEvents,
+      offenderCharges = emptyList(),
+      createdDateTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+      createdByUsername = "Q1251T",
+      lidsCaseNumber = 1,
+      primaryCaseInfoNumber = "caseRef1",
+      caseInfoNumbers = caseIndentifiers,
+      combinedCaseId = combinedCaseId,
+      beginDate = beginDate,
+    ),
+  ) {
+    stubFor(
+      get(
+        urlPathEqualTo("/court-cases/$caseId"),
+      )
+        .willReturn(
+          aResponse().withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(objectMapper().writeValueAsString(response)),
+        ),
     )
   }
 

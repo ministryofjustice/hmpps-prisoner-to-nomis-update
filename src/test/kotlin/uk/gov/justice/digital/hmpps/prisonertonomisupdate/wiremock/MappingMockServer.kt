@@ -1417,6 +1417,28 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetCourtCaseMappingGivenNomisId(id: Long, dpsCourtCaseId: String = "54321") {
+    stubFor(
+      get("/mapping/court-sentencing/court-cases/nomis-court-case-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            // language=json
+            """ 
+              {
+                "dpsCourtCaseId": "$dpsCourtCaseId",
+                "nomisCourtCaseId": "$id",
+                "mappingType": "${CourtCaseMapping.MappingType.DPS_CREATED}",
+                "whenCreated": "2021-07-05T10:35:17"
+              }
+            
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
   fun stubGetCaseMappingGivenDpsIdWithError(id: String, status: Int = 500) {
     stubFor(
       get("/mapping/court-sentencing/court-cases/dps-court-case-id/$id").willReturn(
