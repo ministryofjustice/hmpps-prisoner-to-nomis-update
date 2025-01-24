@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtEventChargeResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtEventResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.OffenceResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.OffenceResultCodeResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.OffenderChargeResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.CourtSentencingApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
@@ -230,7 +231,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
             courtEvents = listOf(
               nomisAppearanceResponse(
                 eventDateTime = LocalDateTime.of(2024, 1, 1, 10, 10, 0),
-                outcome = CodeDescription(code = OUTCOME_2, description = "Outcome text"),
+                outcome = OffenceResultCodeResponse(code = OUTCOME_2, description = "Outcome text", dispositionCode = "F", chargeStatus = "A"),
                 charges = listOf(
                   nomisChargeResponse(),
                   nomisChargeResponse(offenceCode = OFFENCE_CODE_2),
@@ -395,7 +396,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
   fun nomisAppearanceResponse(
     id: Long = NOMIS_COURT_APPEARANCE_ID,
-    outcome: CodeDescription = CodeDescription(code = OUTCOME_1, description = "Outcome text"),
+    outcome: OffenceResultCodeResponse = OffenceResultCodeResponse(code = OUTCOME_1, description = "Outcome text", dispositionCode = "F", chargeStatus = "A"),
     eventDateTime: LocalDateTime = LocalDateTime.of(2024, 1, 1, 10, 10, 0),
     nextEventDateTime: String = LocalDateTime.of(2024, 2, 1, 10, 10, 0).toString(),
     charges: List<CourtEventChargeResponse> = emptyList(),
@@ -433,18 +434,12 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
         mostSeriousFlag = false,
         offenceDate = offenceStartDate,
         offenceEndDate = offenceStartDate.plusDays(1),
-        resultCode1 = CodeDescription(
-          code = "OUTCOME_1",
-          description = "Detention and Training Order",
-        ),
+        resultCode1 = OffenceResultCodeResponse(code = OUTCOME_1, description = "Outcome text", dispositionCode = "F", chargeStatus = "A"),
       ),
       offenceDate = offenceStartDate,
       offenceEndDate = offenceStartDate.plusDays(1),
       mostSeriousFlag = false,
-      resultCode1 = CodeDescription(
-        code = OUTCOME_1,
-        description = "Outcome text",
-      ),
+      resultCode1 = OffenceResultCodeResponse(code = OUTCOME_1, description = "Outcome text", dispositionCode = "F", chargeStatus = "A"),
     )
 
   fun dpsChargeResponse(offenceCode: String = OFFENCE_CODE_1, offenceStartDate: LocalDate = LocalDate.of(2023, 1, 1)) = Charge(
