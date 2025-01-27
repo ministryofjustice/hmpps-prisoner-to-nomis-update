@@ -31,6 +31,11 @@ class CourtSentencingReconciliationService(
       MismatchCaseResponse(mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId))
     }
 
+  suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchCaseResponse> =
+    nomisApiService.getCourtCasesByOffender(offenderNo).map {
+      manualCheckCaseNomis(nomisCaseId = it.id)
+    }
+
   suspend fun checkCase(dpsCaseId: String, nomisCaseId: Long): MismatchCase? =
     runCatching {
       val nomisResponse = doApiCallWithRetries { nomisApiService.getCourtCaseForMigration(nomisCaseId) }

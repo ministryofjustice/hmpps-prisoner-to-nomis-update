@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.NextCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtEventChargeResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtEventResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.OffenceResponse
@@ -27,7 +28,9 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 private const val NOMIS_COURT_CASE_ID = 7L
+private const val NOMIS_COURT_CASE_2_ID = 8L
 private const val DPS_COURT_CASE_ID = "4321"
+private const val DPS_COURT_CASE_2_ID = "4321"
 private const val DPS_COURT_APPEARANCE_ID = "9c591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_COURT_APPEARANCE_2_ID = "1c591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val NOMIS_COURT_APPEARANCE_ID = 3L
@@ -365,6 +368,207 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @DisplayName("GET /prisoners/{offenderNo}/court-sentencing/court-cases/reconciliation")
+  @Nested
+  inner class ManualCaseReconciliationByOffenderId {
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.get().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-cases/reconciliation")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.get().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-cases/reconciliation")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.get().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-cases/reconciliation")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetCourtCaseMappingGivenNomisId(
+          id = NOMIS_COURT_CASE_ID,
+          dpsCourtCaseId = DPS_COURT_CASE_ID,
+        )
+
+        mappingServer.stubGetCourtCaseMappingGivenNomisId(
+          id = NOMIS_COURT_CASE_2_ID,
+          dpsCourtCaseId = DPS_COURT_CASE_2_ID,
+        )
+
+        nomisApi.stubGetCourtCasesByOffenderNo(
+          offenderNo = OFFENDER_NO,
+          response = listOf(
+            nomisCaseResponse(
+              id = NOMIS_COURT_CASE_ID,
+              beginDate = LocalDate.parse("2024-01-01"),
+            ),
+            nomisCaseResponse(
+              id = NOMIS_COURT_CASE_2_ID,
+              beginDate = LocalDate.parse("2024-01-01"),
+            ),
+          ),
+        )
+
+        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCaseForReconciliation(
+          DPS_COURT_CASE_ID,
+          dpsCourtCaseResponse(
+            active = true,
+            appearances = listOf(
+              dpsAppearanceResponse(
+                appearanceDate = LocalDate.parse("2024-01-01"),
+                charges = listOf(
+                  dpsChargeResponse(offenceCode = OFFENCE_CODE_2),
+                  dpsChargeResponse(),
+                ),
+              ),
+              dpsAppearanceResponse(
+                appearanceDate = LocalDate.parse("2024-02-01"),
+                charges = listOf(
+                  dpsChargeResponse(),
+                ),
+              ),
+            ),
+          ),
+        )
+        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCaseForReconciliation(
+          DPS_COURT_CASE_ID,
+          dpsCourtCaseResponse(
+            active = true,
+            appearances = listOf(
+              dpsAppearanceResponse(
+                appearanceDate = LocalDate.parse("2024-01-01"),
+                charges = listOf(
+                  dpsChargeResponse(offenceCode = OFFENCE_CODE_2),
+                  dpsChargeResponse(),
+                ),
+              ),
+              dpsAppearanceResponse(
+                appearanceDate = LocalDate.parse("2024-02-01"),
+                charges = listOf(
+                  dpsChargeResponse(),
+                ),
+              ),
+            ),
+          ),
+        )
+      }
+
+      @Nested
+      inner class MismatchFound {
+        @Test
+        fun `will return a mismatch when appearance outcome is different`() {
+          nomisApi.stubGetCourtCase(
+            caseId = NOMIS_COURT_CASE_ID,
+            beginDate = LocalDate.parse("2024-01-01"),
+            courtEvents = listOf(
+              nomisAppearanceResponse(
+                eventDateTime = LocalDateTime.of(2024, 1, 1, 10, 10, 0),
+                outcome = OffenceResultCodeResponse(code = OUTCOME_2, description = "Outcome text", dispositionCode = "F", chargeStatus = "A"),
+                charges = listOf(
+                  nomisChargeResponse(),
+                  nomisChargeResponse(offenceCode = OFFENCE_CODE_2),
+                ),
+              ),
+              nomisAppearanceResponse(
+                eventDateTime = LocalDateTime.of(2024, 2, 1, 10, 10, 0),
+                charges = listOf(
+                  nomisChargeResponse(),
+                ),
+              ),
+            ),
+          )
+
+          // second case is not a mismatch
+          nomisApi.stubGetCourtCase(
+            caseId = NOMIS_COURT_CASE_2_ID,
+            beginDate = LocalDate.parse("2024-01-01"),
+            courtEvents = listOf(
+              nomisAppearanceResponse(
+                eventDateTime = LocalDateTime.of(2024, 1, 1, 10, 10, 0),
+                charges = listOf(
+                  nomisChargeResponse(),
+                  nomisChargeResponse(offenceCode = OFFENCE_CODE_2),
+                ),
+              ),
+              nomisAppearanceResponse(
+                eventDateTime = LocalDateTime.of(2024, 2, 1, 10, 10, 0),
+                charges = listOf(
+                  nomisChargeResponse(),
+                ),
+              ),
+            ),
+          )
+
+          webTestClient.get().uri("prisoners/$OFFENDER_NO/court-sentencing/court-cases/reconciliation")
+            .headers(setAuthorisation(roles = listOf("NOMIS_SENTENCING")))
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            // for the purposes of DPS - status of case is either active or inactive. Other values exist in nomis
+            .jsonPath("$[0].mismatch.differences.size()").isEqualTo(1)
+            // outcome on first appearance is different
+            .jsonPath("$[0]mismatch.differences[0].dps").isEqualTo(4001)
+            .jsonPath("$[0].mismatch.differences[0].nomis").isEqualTo(3001)
+            .jsonPath("$[0].mismatch.nomisCase.id").isEqualTo(NOMIS_COURT_CASE_ID.toString())
+            .jsonPath("$[0].mismatch.dpsCase.id").isEqualTo(DPS_COURT_CASE_ID)
+        }
+      }
+
+      @Nested
+      inner class MismatchNotFound {
+        @Test
+        fun `will return a response to indicate no mismatch`() {
+          nomisApi.stubGetCourtCase(
+            caseId = NOMIS_COURT_CASE_ID,
+            caseStatus = CodeDescription("A", "Active"),
+            beginDate = LocalDate.parse("2024-01-01"),
+            courtEvents = listOf(
+              nomisAppearanceResponse(
+                eventDateTime = LocalDateTime.of(2024, 1, 1, 10, 10, 0),
+                charges = listOf(
+                  nomisChargeResponse(),
+                  nomisChargeResponse(offenceCode = OFFENCE_CODE_2),
+
+                ),
+              ),
+              nomisAppearanceResponse(
+                eventDateTime = LocalDateTime.of(2024, 2, 1, 10, 10, 0),
+                charges = listOf(
+                  nomisChargeResponse(),
+                ),
+              ),
+            ),
+          )
+
+          webTestClient.get().uri("/court-sentencing/court-cases/nomis-case-id/$NOMIS_COURT_CASE_ID/reconciliation")
+            .headers(setAuthorisation(roles = listOf("NOMIS_SENTENCING")))
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("mismatch").doesNotExist()
+        }
+      }
+    }
+  }
+
   fun dpsCourtCaseResponse(active: Boolean, appearances: List<CourtAppearance> = emptyList()) = CourtCase(
     courtCaseUuid = DPS_COURT_CASE_ID,
     prisonerId = OFFENDER_NO,
@@ -392,6 +596,27 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       courtCode = PRISON_MDI,
       appearanceType = AppearanceType(UUID.randomUUID(), "Court Appearance", displayOrder = 1),
     ),
+  )
+
+  fun nomisCaseResponse(
+    id: Long = NOMIS_COURT_CASE_ID,
+    beginDate: LocalDate = LocalDate.of(2024, 1, 1),
+    events: List<CourtEventResponse> = emptyList(),
+  ) = CourtCaseResponse(
+    id = id,
+    offenderNo = OFFENDER_NO,
+    courtEvents = events,
+    courtId = PRISON_LEI,
+    createdDateTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+    createdByUsername = "Q1251T",
+    caseStatus = CodeDescription("A", "Active"),
+    legalCaseType = CodeDescription("CRT", "Court Appearance"),
+    beginDate = beginDate,
+    bookingId = 1,
+    lidsCaseNumber = 1,
+    offenderCharges = emptyList(),
+    caseSequence = 1,
+    caseInfoNumbers = emptyList(),
   )
 
   fun nomisAppearanceResponse(

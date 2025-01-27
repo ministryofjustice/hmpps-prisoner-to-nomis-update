@@ -764,6 +764,11 @@ class NomisApiService(
     .retrieve()
     .awaitBody()
 
+  suspend fun getCourtCasesByOffender(offenderNo: String): List<CourtCaseResponse> = webClient.get()
+    .uri("/prisoners/{offenderNo}/sentencing/court-cases", offenderNo)
+    .retrieve()
+    .awaitBody()
+
   suspend fun mergesSinceDate(offenderNo: String, fromDate: LocalDate): List<MergeDetail> =
     webClient.get()
       .uri("/prisoners/{offenderNo}/merges?fromDate={fromDate}", offenderNo, fromDate)

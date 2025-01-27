@@ -2293,6 +2293,22 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetCourtCasesByOffenderNo(
+    offenderNo: String = "G4803UT",
+    response: List<CourtCaseResponse> = emptyList(),
+  ) {
+    stubFor(
+      get(
+        urlPathEqualTo("/prisoners/$offenderNo/sentencing/court-cases"),
+      )
+        .willReturn(
+          aResponse().withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(objectMapper().writeValueAsString(response)),
+        ),
+    )
+  }
+
   fun stuGetAllLatestBookings(
     response: BookingIdsWithLast = BookingIdsWithLast(
       lastBookingId = 0,
