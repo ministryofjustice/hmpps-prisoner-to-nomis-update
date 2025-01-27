@@ -973,8 +973,7 @@ class ContactPersonService(
     }
   }
 
-  private inline fun <reified T> String.fromJson(): T =
-    objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
 
 private fun SyncContact.toNomisCreateRequest(): CreatePersonRequest = CreatePersonRequest(

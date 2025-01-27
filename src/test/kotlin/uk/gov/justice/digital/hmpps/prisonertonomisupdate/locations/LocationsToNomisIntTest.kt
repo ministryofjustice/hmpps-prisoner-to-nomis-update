@@ -758,6 +758,5 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun locationMessagePayload(id: String, eventType: String) =
-    """{"eventType":"$eventType", "additionalInformation": {"id":"$id", "key":"MDI-A-1-001"}, "version": "1.0", "description": "description", "occurredAt": "2024-04-02T10:58:01.531693442+01:00"}"""
+  private fun locationMessagePayload(id: String, eventType: String) = """{"eventType":"$eventType", "additionalInformation": {"id":"$id", "key":"MDI-A-1-001"}, "version": "1.0", "description": "description", "occurredAt": "2024-04-02T10:58:01.531693442+01:00"}"""
 }

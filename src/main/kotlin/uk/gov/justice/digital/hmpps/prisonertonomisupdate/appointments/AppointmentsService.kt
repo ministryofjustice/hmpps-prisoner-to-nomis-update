@@ -218,8 +218,7 @@ class AppointmentsService(
   }
 
   override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
-  private inline fun <reified T> String.fromJson(): T =
-    objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)

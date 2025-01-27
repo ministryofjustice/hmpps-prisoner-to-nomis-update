@@ -22,24 +22,21 @@ class AppointmentMappingService(
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
-  suspend fun getMappingGivenAppointmentInstanceIdOrNull(id: Long): AppointmentMappingDto? =
-    webClient.get()
-      .uri("/mapping/appointments/appointment-instance-id/{id}", id)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getMappingGivenAppointmentInstanceIdOrNull(id: Long): AppointmentMappingDto? = webClient.get()
+    .uri("/mapping/appointments/appointment-instance-id/{id}", id)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
-  suspend fun getMappingGivenAppointmentInstanceId(id: Long): AppointmentMappingDto =
-    webClient.get()
-      .uri("/mapping/appointments/appointment-instance-id/{id}", id)
-      .retrieve()
-      .bodyToMono(AppointmentMappingDto::class.java)
-      .awaitSingle()
+  suspend fun getMappingGivenAppointmentInstanceId(id: Long): AppointmentMappingDto = webClient.get()
+    .uri("/mapping/appointments/appointment-instance-id/{id}", id)
+    .retrieve()
+    .bodyToMono(AppointmentMappingDto::class.java)
+    .awaitSingle()
 
-  suspend fun getAllMappings(): List<AppointmentMappingDto> =
-    webClient.get()
-      .uri("/mapping/appointments")
-      .retrieve()
-      .awaitBody()
+  suspend fun getAllMappings(): List<AppointmentMappingDto> = webClient.get()
+    .uri("/mapping/appointments")
+    .retrieve()
+    .awaitBody()
 
   suspend fun deleteMapping(appointmentInstanceId: Long) {
     webClient.delete()

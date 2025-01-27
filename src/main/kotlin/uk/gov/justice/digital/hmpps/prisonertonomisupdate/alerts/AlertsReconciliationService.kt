@@ -36,19 +36,18 @@ class AlertsReconciliationService(
     }.awaitAll().filterNotNull()
   }
 
-  private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) =
-    runCatching { nomisApiService.getActivePrisoners(page.first, page.second).content }
-      .onFailure {
-        telemetryClient.trackEvent(
-          "alerts-reports-reconciliation-mismatch-page-error",
-          mapOf(
-            "page" to page.first.toString(),
-          ),
-        )
-        log.error("Unable to match entire page of prisoners: $page", it)
-      }
-      .getOrElse { emptyList() }
-      .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
+  private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) = runCatching { nomisApiService.getActivePrisoners(page.first, page.second).content }
+    .onFailure {
+      telemetryClient.trackEvent(
+        "alerts-reports-reconciliation-mismatch-page-error",
+        mapOf(
+          "page" to page.first.toString(),
+        ),
+      )
+      log.error("Unable to match entire page of prisoners: $page", it)
+    }
+    .getOrElse { emptyList() }
+    .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
   suspend fun checkActiveAlertsMatch(prisonerId: PrisonerIds): MismatchAlerts? = runCatching {
     val nomisAlerts = doApiCallWithRetries { nomisAlertsApiService.getAlertsForReconciliation(prisonerId.offenderNo) }.latestBookingAlerts

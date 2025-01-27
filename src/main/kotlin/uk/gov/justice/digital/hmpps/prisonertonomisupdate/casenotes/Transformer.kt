@@ -6,24 +6,22 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Update
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCaseNoteRequest
 import java.time.format.DateTimeFormatter.ISO_DATE_TIME
 
-fun CaseNote.toNomisCreateRequest(): CreateCaseNoteRequest =
-  CreateCaseNoteRequest(
-    caseNoteType = this.type,
-    caseNoteSubType = this.subType,
-    occurrenceDateTime = this.occurrenceDateTime.toString(),
-    creationDateTime = this.creationDateTime.toString(),
-    authorUsername = this.authorUsername,
-    caseNoteText = this.text,
-  )
+fun CaseNote.toNomisCreateRequest(): CreateCaseNoteRequest = CreateCaseNoteRequest(
+  caseNoteType = this.type,
+  caseNoteSubType = this.subType,
+  occurrenceDateTime = this.occurrenceDateTime.toString(),
+  creationDateTime = this.creationDateTime.toString(),
+  authorUsername = this.authorUsername,
+  caseNoteText = this.text,
+)
 
-fun CaseNote.toNomisUpdateRequest(): UpdateCaseNoteRequest =
-  UpdateCaseNoteRequest(
-    text = this.text,
-    amendments = this.amendments.map {
-      UpdateAmendment(
-        text = it.additionalNoteText,
-        authorUsername = it.authorUserName,
-        createdDateTime = it.creationDateTime?.format(ISO_DATE_TIME) ?: "",
-      )
-    },
-  )
+fun CaseNote.toNomisUpdateRequest(): UpdateCaseNoteRequest = UpdateCaseNoteRequest(
+  text = this.text,
+  amendments = this.amendments.map {
+    UpdateAmendment(
+      text = it.additionalNoteText,
+      authorUsername = it.authorUserName,
+      createdDateTime = it.creationDateTime?.format(ISO_DATE_TIME) ?: "",
+    )
+  },
+)

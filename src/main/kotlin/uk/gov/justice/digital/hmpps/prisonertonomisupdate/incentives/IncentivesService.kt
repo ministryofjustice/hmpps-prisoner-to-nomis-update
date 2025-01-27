@@ -91,8 +91,7 @@ class IncentivesService(
     val additionalInformation: AdditionalInformation,
   )
 
-  private inline fun <reified T> String.fromJson(): T =
-    objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
 
 fun IepDetail.toNomisIncentive(): CreateIncentiveDto = CreateIncentiveDto(

@@ -646,26 +646,25 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     offenderChargeId: Long = NOMIS_COURT_CHARGE_ID,
     offenceCode: String = OFFENCE_CODE_1,
     offenceStartDate: LocalDate = LocalDate.of(2023, 1, 1),
-  ) =
-    CourtEventChargeResponse(
-      eventId = eventId,
-      offenderCharge = OffenderChargeResponse(
-        id = offenderChargeId,
-        offence = OffenceResponse(
-          offenceCode = offenceCode,
-          statuteCode = "RR84",
-          description = "Offence text",
-        ),
-        mostSeriousFlag = false,
-        offenceDate = offenceStartDate,
-        offenceEndDate = offenceStartDate.plusDays(1),
-        resultCode1 = OffenceResultCodeResponse(code = OUTCOME_1, description = "Outcome text", dispositionCode = "F", chargeStatus = "A"),
+  ) = CourtEventChargeResponse(
+    eventId = eventId,
+    offenderCharge = OffenderChargeResponse(
+      id = offenderChargeId,
+      offence = OffenceResponse(
+        offenceCode = offenceCode,
+        statuteCode = "RR84",
+        description = "Offence text",
       ),
+      mostSeriousFlag = false,
       offenceDate = offenceStartDate,
       offenceEndDate = offenceStartDate.plusDays(1),
-      mostSeriousFlag = false,
       resultCode1 = OffenceResultCodeResponse(code = OUTCOME_1, description = "Outcome text", dispositionCode = "F", chargeStatus = "A"),
-    )
+    ),
+    offenceDate = offenceStartDate,
+    offenceEndDate = offenceStartDate.plusDays(1),
+    mostSeriousFlag = false,
+    resultCode1 = OffenceResultCodeResponse(code = OUTCOME_1, description = "Outcome text", dispositionCode = "F", chargeStatus = "A"),
+  )
 
   fun dpsChargeResponse(offenceCode: String = OFFENCE_CODE_1, offenceStartDate: LocalDate = LocalDate.of(2023, 1, 1)) = Charge(
     lifetimeUuid = UUID.fromString(DPS_COURT_CHARGE_ID),

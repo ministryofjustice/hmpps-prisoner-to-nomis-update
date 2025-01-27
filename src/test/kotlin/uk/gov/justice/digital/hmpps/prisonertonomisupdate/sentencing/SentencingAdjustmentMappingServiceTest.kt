@@ -216,10 +216,9 @@ internal class SentencingAdjustmentMappingServiceTest {
     nomisAdjustmentId: Long = 456L,
     nomisAdjustmentCategory: String = "SENTENCE",
     adjustmentId: String = "1234",
-  ) =
-    SentencingAdjustmentMappingDto(
-      nomisAdjustmentId = nomisAdjustmentId,
-      nomisAdjustmentCategory = nomisAdjustmentCategory,
-      adjustmentId = adjustmentId,
-    )
+  ) = SentencingAdjustmentMappingDto(
+    nomisAdjustmentId = nomisAdjustmentId,
+    nomisAdjustmentCategory = nomisAdjustmentCategory,
+    adjustmentId = adjustmentId,
+  )
 }

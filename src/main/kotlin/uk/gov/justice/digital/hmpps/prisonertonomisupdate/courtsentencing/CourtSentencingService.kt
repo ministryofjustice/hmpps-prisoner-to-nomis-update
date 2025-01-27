@@ -97,8 +97,7 @@ class CourtSentencingService(
     }
   }
 
-  private fun isDpsCreated(source: String) =
-    source != CreatingSystem.NOMIS.name
+  private fun isDpsCreated(source: String) = source != CreatingSystem.NOMIS.name
 
   suspend fun createCourtAppearance(createEvent: CourtAppearanceCreatedEvent) {
     val courtCaseId = createEvent.additionalInformation.courtCaseId
@@ -451,32 +450,29 @@ class CourtSentencingService(
     }
   }
 
-  suspend fun createRetry(message: CreateMappingRetryMessage<CourtCaseAllMappingDto>) =
-    courtCaseMappingService.createMapping(message.mapping).also {
-      telemetryClient.trackEvent(
-        "court-case-create-mapping-retry-success",
-        message.telemetryAttributes,
-        null,
-      )
-    }
+  suspend fun createRetry(message: CreateMappingRetryMessage<CourtCaseAllMappingDto>) = courtCaseMappingService.createMapping(message.mapping).also {
+    telemetryClient.trackEvent(
+      "court-case-create-mapping-retry-success",
+      message.telemetryAttributes,
+      null,
+    )
+  }
 
-  suspend fun createAppearanceRetry(message: CreateMappingRetryMessage<CourtAppearanceMappingDto>) =
-    courtCaseMappingService.createAppearanceMapping(message.mapping).also {
-      telemetryClient.trackEvent(
-        "court-appearance-create-mapping-retry-success",
-        message.telemetryAttributes,
-        null,
-      )
-    }
+  suspend fun createAppearanceRetry(message: CreateMappingRetryMessage<CourtAppearanceMappingDto>) = courtCaseMappingService.createAppearanceMapping(message.mapping).also {
+    telemetryClient.trackEvent(
+      "court-appearance-create-mapping-retry-success",
+      message.telemetryAttributes,
+      null,
+    )
+  }
 
-  suspend fun createChargeRetry(message: CreateMappingRetryMessage<CourtChargeMappingDto>) =
-    courtCaseMappingService.createChargeMapping(message.mapping).also {
-      telemetryClient.trackEvent(
-        "charge-create-mapping-retry-success",
-        message.telemetryAttributes,
-        null,
-      )
-    }
+  suspend fun createChargeRetry(message: CreateMappingRetryMessage<CourtChargeMappingDto>) = courtCaseMappingService.createChargeMapping(message.mapping).also {
+    telemetryClient.trackEvent(
+      "charge-create-mapping-retry-success",
+      message.telemetryAttributes,
+      null,
+    )
+  }
 
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
@@ -488,8 +484,7 @@ class CourtSentencingService(
     }
   }
 
-  private inline fun <reified T> String.fromJson(): T =
-    objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 
   suspend fun refreshCaseReferences(createEvent: CaseReferencesUpdatedEvent) {
     val dpsCourtCaseId = createEvent.additionalInformation.courtCaseId
@@ -583,50 +578,46 @@ class CourtSentencingService(
   )
 }
 
-fun LegacyCourtCase.toNomisCourtCase(): CreateCourtCaseRequest {
-  return CreateCourtCaseRequest(
-    // shared dto - will always be present,
-    startDate = this.startDate!!,
-    // shared dto - will always be present,
-    courtId = this.courtId!!,
-    caseReference = this.caseReference,
-    // new LEG_CASE_TYP on NOMIS - "Not Entered"
-    legalCaseType = "NE",
-    status = if (this.active) {
-      "A"
-    } else {
-      "I"
-    },
-  )
-}
+fun LegacyCourtCase.toNomisCourtCase(): CreateCourtCaseRequest = CreateCourtCaseRequest(
+  // shared dto - will always be present,
+  startDate = this.startDate!!,
+  // shared dto - will always be present,
+  courtId = this.courtId!!,
+  caseReference = this.caseReference,
+  // new LEG_CASE_TYP on NOMIS - "Not Entered"
+  legalCaseType = "NE",
+  status = if (this.active) {
+    "A"
+  } else {
+    "I"
+  },
+)
 
 fun LegacyCourtAppearance.toNomisCourtAppearance(
   courtEventChargesToUpdate: List<ExistingOffenderChargeRequest>,
-): CourtAppearanceRequest {
-  return CourtAppearanceRequest(
-    eventDateTime = LocalDateTime.of(
-      this.appearanceDate,
-      LocalTime.parse(this.appearanceTime),
-    ).toString(),
-    courtEventType = "CRT",
-    courtId = this.courtCode,
-    outcomeReasonCode = this.nomisOutcomeCode,
-    nextEventDateTime = this.nextCourtAppearance?.let { next ->
-      next.appearanceTime?.let {
-        LocalDateTime.of(
-          next.appearanceDate,
-          LocalTime.parse(it),
-        ).toString()
-      } ?: LocalDateTime.of(
+): CourtAppearanceRequest = CourtAppearanceRequest(
+  eventDateTime = LocalDateTime.of(
+    this.appearanceDate,
+    LocalTime.parse(this.appearanceTime),
+  ).toString(),
+  courtEventType = "CRT",
+  courtId = this.courtCode,
+  outcomeReasonCode = this.nomisOutcomeCode,
+  nextEventDateTime = this.nextCourtAppearance?.let { next ->
+    next.appearanceTime?.let {
+      LocalDateTime.of(
         next.appearanceDate,
-        LocalTime.MIDNIGHT,
+        LocalTime.parse(it),
       ).toString()
-    },
-    courtEventChargesToUpdate = courtEventChargesToUpdate,
-    courtEventChargesToCreate = emptyList(),
-    nextCourtId = this.nextCourtAppearance?.courtId,
-  )
-}
+    } ?: LocalDateTime.of(
+      next.appearanceDate,
+      LocalTime.MIDNIGHT,
+    ).toString()
+  },
+  courtEventChargesToUpdate = courtEventChargesToUpdate,
+  courtEventChargesToCreate = emptyList(),
+  nextCourtId = this.nextCourtAppearance?.courtId,
+)
 
 fun LegacyCharge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeRequest(
   offenceCode = this.offenceCode,
@@ -635,14 +626,12 @@ fun LegacyCharge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeReq
   resultCode1 = this.nomisOutcomeCode,
 )
 
-fun LegacyCharge.toExistingNomisCourtCharge(nomisId: Long): ExistingOffenderChargeRequest =
-  ExistingOffenderChargeRequest(
-    offenderChargeId = nomisId,
-    offenceCode = this.offenceCode,
-    offenceDate = this.offenceStartDate,
-    offenceEndDate = this.offenceEndDate,
-    resultCode1 = this.nomisOutcomeCode,
-  )
+fun LegacyCharge.toExistingNomisCourtCharge(nomisId: Long): ExistingOffenderChargeRequest = ExistingOffenderChargeRequest(
+  offenderChargeId = nomisId,
+  offenceCode = this.offenceCode,
+  offenceDate = this.offenceStartDate,
+  offenceEndDate = this.offenceEndDate,
+  resultCode1 = this.nomisOutcomeCode,
+)
 
-private fun CourtChargeBatchUpdateMappingDto.hasAnyMappingsToUpdate(): Boolean =
-  this.courtChargesToCreate.isNotEmpty() || this.courtChargesToDelete.isNotEmpty()
+private fun CourtChargeBatchUpdateMappingDto.hasAnyMappingsToUpdate(): Boolean = this.courtChargesToCreate.isNotEmpty() || this.courtChargesToDelete.isNotEmpty()

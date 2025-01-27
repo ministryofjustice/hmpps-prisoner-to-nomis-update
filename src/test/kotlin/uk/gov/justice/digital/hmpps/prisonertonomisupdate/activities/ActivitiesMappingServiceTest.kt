@@ -207,6 +207,5 @@ internal class ActivitiesMappingServiceTest {
     }
   }
 
-  private fun newMapping() =
-    ActivityMappingDto(nomisCourseActivityId = 456L, activityScheduleId = 1234L, activityId = 2345L, mappingType = "A_TYPE")
+  private fun newMapping() = ActivityMappingDto(nomisCourseActivityId = 456L, activityScheduleId = 1234L, activityId = 2345L, mappingType = "A_TYPE")
 }

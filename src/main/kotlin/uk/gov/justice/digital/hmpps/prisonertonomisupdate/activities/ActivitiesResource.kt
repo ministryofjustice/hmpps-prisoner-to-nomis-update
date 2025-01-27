@@ -153,8 +153,7 @@ class ActivitiesResource(
 
   @PostMapping("/attendances/reports/reconciliation")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  suspend fun attendanceReconciliation(@Schema(description = "Date") @RequestParam date: LocalDate) =
-    activitiesReconService.attendanceReconciliationReport(date)
+  suspend fun attendanceReconciliation(@Schema(description = "Date") @RequestParam date: LocalDate) = activitiesReconService.attendanceReconciliationReport(date)
 
   /*
    * There is a problem in preprod where the activity mappings are refreshed from prod later than NOMIS is refreshed.

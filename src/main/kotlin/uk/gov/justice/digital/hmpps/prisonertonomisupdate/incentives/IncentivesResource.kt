@@ -46,6 +46,4 @@ class IncentivesResource(
   }
 }
 
-private fun List<MismatchIncentiveLevel>.asMap(): Map<String, String> {
-  return this.associate { it.prisonerId.offenderNo to ("${it.nomisIncentiveLevel}:${it.dpsIncentiveLevel}") }
-}
+private fun List<MismatchIncentiveLevel>.asMap(): Map<String, String> = this.associate { it.prisonerId.offenderNo to ("${it.nomisIncentiveLevel}:${it.dpsIncentiveLevel}") }

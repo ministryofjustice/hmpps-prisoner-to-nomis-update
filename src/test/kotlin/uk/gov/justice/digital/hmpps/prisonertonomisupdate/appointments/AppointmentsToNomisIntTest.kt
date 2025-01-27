@@ -907,6 +907,5 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  fun appointmentMessagePayload(eventType: String, appointmentInstanceId: Long) =
-    """{"eventType":"$eventType", "additionalInformation": { "appointmentInstanceId": $appointmentInstanceId }, "version": "1.0", "description": "description", "occurredAt": "2023-02-05T11:23:56.031Z"}"""
+  fun appointmentMessagePayload(eventType: String, appointmentInstanceId: Long) = """{"eventType":"$eventType", "additionalInformation": { "appointmentInstanceId": $appointmentInstanceId }, "version": "1.0", "description": "description", "occurredAt": "2023-02-05T11:23:56.031Z"}"""
 }

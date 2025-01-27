@@ -71,49 +71,44 @@ class ActivitiesService(
     activitySchedule: ActivitySchedule,
     existingMappings: ActivityMappingDto? = null,
     mappingType: String = "ACTIVITY_CREATED",
-  ): ActivityMappingDto =
-    nomisResponse.courseSchedules.map { nomisSchedule ->
-      ActivityScheduleMappingDto(
-        scheduledInstanceId = nomisSchedule.findScheduledInstanceId(activitySchedule.instances, existingMappings),
-        nomisCourseScheduleId = nomisSchedule.courseScheduleId,
+  ): ActivityMappingDto = nomisResponse.courseSchedules.map { nomisSchedule ->
+    ActivityScheduleMappingDto(
+      scheduledInstanceId = nomisSchedule.findScheduledInstanceId(activitySchedule.instances, existingMappings),
+      nomisCourseScheduleId = nomisSchedule.courseScheduleId,
+      mappingType = mappingType,
+    )
+  }
+    .let {
+      ActivityMappingDto(
+        nomisCourseActivityId = nomisResponse.courseActivityId,
+        activityScheduleId = activitySchedule.id,
+        activityId = activitySchedule.activity.id,
         mappingType = mappingType,
+        scheduledInstanceMappings = it,
       )
     }
-      .let {
-        ActivityMappingDto(
-          nomisCourseActivityId = nomisResponse.courseActivityId,
-          activityScheduleId = activitySchedule.id,
-          activityId = activitySchedule.activity.id,
-          mappingType = mappingType,
-          scheduledInstanceMappings = it,
-        )
-      }
 
   private fun CreateScheduledInstanceResponse.findScheduledInstanceId(
     activityScheduledInstances: List<ScheduledInstance>,
     existingMappings: ActivityMappingDto?,
-  ) =
-    existingMappings.findScheduledInstanceId(courseScheduleId)
-      ?: let { activityScheduledInstances.findScheduledInstanceId(this) }
-      ?: throw IllegalStateException("Unable to find an Activities scheduled instance for the Nomis course schedule - this should not happen: ${this.courseScheduleId}")
+  ) = existingMappings.findScheduledInstanceId(courseScheduleId)
+    ?: let { activityScheduledInstances.findScheduledInstanceId(this) }
+    ?: throw IllegalStateException("Unable to find an Activities scheduled instance for the Nomis course schedule - this should not happen: ${this.courseScheduleId}")
 
-  private fun ActivityMappingDto?.findScheduledInstanceId(nomisCourseScheduleId: Long) =
-    this?.scheduledInstanceMappings
-      ?.find { nomisCourseScheduleId == it.nomisCourseScheduleId }
-      ?.scheduledInstanceId
+  private fun ActivityMappingDto?.findScheduledInstanceId(nomisCourseScheduleId: Long) = this?.scheduledInstanceMappings
+    ?.find { nomisCourseScheduleId == it.nomisCourseScheduleId }
+    ?.scheduledInstanceId
 
-  private fun List<ScheduledInstance>.findScheduledInstanceId(nomisCourseSchedule: CreateScheduledInstanceResponse) =
-    find { instance ->
-      instance.date == nomisCourseSchedule.date &&
-        instance.startTime.toLocalTime() == nomisCourseSchedule.startTime.toLocalTime() &&
-        instance.endTime.toLocalTime() == nomisCourseSchedule.endTime.toLocalTime()
-    }?.id
+  private fun List<ScheduledInstance>.findScheduledInstanceId(nomisCourseSchedule: CreateScheduledInstanceResponse) = find { instance ->
+    instance.date == nomisCourseSchedule.date &&
+      instance.startTime.toLocalTime() == nomisCourseSchedule.startTime.toLocalTime() &&
+      instance.endTime.toLocalTime() == nomisCourseSchedule.endTime.toLocalTime()
+  }?.id
 
   private fun String.toLocalTime() = LocalTime.parse(this)
-  private suspend fun createTransformedActivity(activitySchedule: ActivitySchedule) =
-    activitiesApiService.getActivity(activitySchedule.activity.id).let {
-      activitiesNomisApiService.createActivity(toCreateActivityRequest(activitySchedule, it))
-    }
+  private suspend fun createTransformedActivity(activitySchedule: ActivitySchedule) = activitiesApiService.getActivity(activitySchedule.activity.id).let {
+    activitiesNomisApiService.createActivity(toCreateActivityRequest(activitySchedule, it))
+  }
 
   suspend fun updateActivityEvent(event: ScheduleDomainEvent) {
     updateActivity(event.additionalInformation.activityScheduleId)
@@ -146,21 +141,20 @@ class ActivitiesService(
     }
   }
 
-  private fun ActivitySchedule.toUpdateActivityRequest(pay: List<ActivityPay>, categoryCode: String, outsideWork: Boolean, mappings: ActivityMappingDto) =
-    UpdateActivityRequest(
-      startDate = startDate,
-      capacity = capacity,
-      payRates = pay.toPayRateRequests(),
-      description = toNomisActivityDescription(description),
-      payPerSession = toUpdatePayPerSession(),
-      scheduleRules = slots.toScheduleRuleRequests(),
-      schedules = instances.toCourseScheduleRequests(mappings.scheduledInstanceMappings),
-      excludeBankHolidays = !runsOnBankHoliday,
-      outsideWork = outsideWork,
-      endDate = endDate,
-      internalLocationId = internalLocation?.id?.toLong(),
-      programCode = categoryCode,
-    )
+  private fun ActivitySchedule.toUpdateActivityRequest(pay: List<ActivityPay>, categoryCode: String, outsideWork: Boolean, mappings: ActivityMappingDto) = UpdateActivityRequest(
+    startDate = startDate,
+    capacity = capacity,
+    payRates = pay.toPayRateRequests(),
+    description = toNomisActivityDescription(description),
+    payPerSession = toUpdatePayPerSession(),
+    scheduleRules = slots.toScheduleRuleRequests(),
+    schedules = instances.toCourseScheduleRequests(mappings.scheduledInstanceMappings),
+    excludeBankHolidays = !runsOnBankHoliday,
+    outsideWork = outsideWork,
+    endDate = endDate,
+    internalLocationId = internalLocation?.id?.toLong(),
+    programCode = categoryCode,
+  )
 
   private fun toCreateActivityRequest(schedule: ActivitySchedule, activity: Activity): CreateActivityRequest = CreateActivityRequest(
     code = schedule.id.toString(),
@@ -180,33 +174,30 @@ class ActivitiesService(
     outsideWork = activity.outsideWork,
   )
 
-  private fun toNomisActivityDescription(activityDescription: String): String =
-    activityDescription.substring(0, min(40, activityDescription.length))
+  private fun toNomisActivityDescription(activityDescription: String): String = activityDescription.substring(0, min(40, activityDescription.length))
 
-  private fun List<ActivityScheduleSlot>.toScheduleRuleRequests(): List<ScheduleRuleRequest> =
-    map { slot ->
-      ScheduleRuleRequest(
-        startTime = slot.startTime,
-        endTime = slot.endTime,
-        monday = slot.mondayFlag,
-        tuesday = slot.tuesdayFlag,
-        wednesday = slot.wednesdayFlag,
-        thursday = slot.thursdayFlag,
-        friday = slot.fridayFlag,
-        saturday = slot.saturdayFlag,
-        sunday = slot.sundayFlag,
-      )
-    }
+  private fun List<ActivityScheduleSlot>.toScheduleRuleRequests(): List<ScheduleRuleRequest> = map { slot ->
+    ScheduleRuleRequest(
+      startTime = slot.startTime,
+      endTime = slot.endTime,
+      monday = slot.mondayFlag,
+      tuesday = slot.tuesdayFlag,
+      wednesday = slot.wednesdayFlag,
+      thursday = slot.thursdayFlag,
+      friday = slot.fridayFlag,
+      saturday = slot.saturdayFlag,
+      sunday = slot.sundayFlag,
+    )
+  }
 
-  private fun List<ActivityPay>.toPayRateRequests(): List<PayRateRequest> =
-    map { p ->
-      PayRateRequest(
-        incentiveLevel = p.incentiveNomisCode,
-        payBand = p.prisonPayBand.nomisPayBand.toString(),
-        rate = BigDecimal(p.rate!!).movePointLeft(2),
-        startDate = p.startDate,
-      )
-    }
+  private fun List<ActivityPay>.toPayRateRequests(): List<PayRateRequest> = map { p ->
+    PayRateRequest(
+      incentiveLevel = p.incentiveNomisCode,
+      payBand = p.prisonPayBand.nomisPayBand.toString(),
+      rate = BigDecimal(p.rate!!).movePointLeft(2),
+      startDate = p.startDate,
+    )
+  }
 
   suspend fun createRetry(message: CreateMappingRetryMessage<ActivityMappingDto>) {
     mappingService.createMapping(message.mapping)
@@ -247,8 +238,7 @@ class ActivitiesService(
   }
 
   override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
-  private inline fun <reified T> String.fromJson(): T =
-    objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -266,10 +256,8 @@ data class ScheduleAdditionalInformation(
   val activityScheduleId: Long,
 )
 
-fun ActivitySchedule.toCreatePayPerSession(): CreateActivityRequest.PayPerSession =
-  CreateActivityRequest.PayPerSession.entries
-    .first { it.value == this.activity.payPerSession.value }
+fun ActivitySchedule.toCreatePayPerSession(): CreateActivityRequest.PayPerSession = CreateActivityRequest.PayPerSession.entries
+  .first { it.value == this.activity.payPerSession.value }
 
-fun ActivitySchedule.toUpdatePayPerSession(): UpdateActivityRequest.PayPerSession =
-  UpdateActivityRequest.PayPerSession.entries
-    .first { it.value == this.activity.payPerSession.value }
+fun ActivitySchedule.toUpdatePayPerSession(): UpdateActivityRequest.PayPerSession = UpdateActivityRequest.PayPerSession.entries
+  .first { it.value == this.activity.payPerSession.value }

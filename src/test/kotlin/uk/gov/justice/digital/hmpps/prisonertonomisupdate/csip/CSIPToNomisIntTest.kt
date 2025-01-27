@@ -1070,8 +1070,7 @@ fun csipMessagePayload(
   eventType: String,
   offenderNo: String,
   recordUuid: String,
-) =
-  //language=JSON
+) = //language=JSON
   """
     {
       "eventType": "$eventType",

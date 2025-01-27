@@ -30,29 +30,25 @@ class ActivitiesMappingService(
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
-  suspend fun getMappingsOrNull(activityScheduleId: Long): ActivityMappingDto? =
-    webClient.get()
-      .uri("/mapping/activities/activity-schedule-id/{activityScheduleId}", activityScheduleId)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getMappingsOrNull(activityScheduleId: Long): ActivityMappingDto? = webClient.get()
+    .uri("/mapping/activities/activity-schedule-id/{activityScheduleId}", activityScheduleId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
-  suspend fun getMappings(activityScheduleId: Long): ActivityMappingDto =
-    webClient.get()
-      .uri("/mapping/activities/activity-schedule-id/{activityScheduleId}", activityScheduleId)
-      .retrieve()
-      .awaitBody()
+  suspend fun getMappings(activityScheduleId: Long): ActivityMappingDto = webClient.get()
+    .uri("/mapping/activities/activity-schedule-id/{activityScheduleId}", activityScheduleId)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getScheduledInstanceMappingOrNull(scheduledInstanceId: Long): ActivityScheduleMappingDto? =
-    webClient.get()
-      .uri("/mapping/activities/schedules/scheduled-instance-id/{scheduledInstanceId}", scheduledInstanceId)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getScheduledInstanceMappingOrNull(scheduledInstanceId: Long): ActivityScheduleMappingDto? = webClient.get()
+    .uri("/mapping/activities/schedules/scheduled-instance-id/{scheduledInstanceId}", scheduledInstanceId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
-  suspend fun getAllMappings(): List<ActivityMappingDto> =
-    webClient.get()
-      .uri("/mapping/activities")
-      .retrieve()
-      .awaitBody()
+  suspend fun getAllMappings(): List<ActivityMappingDto> = webClient.get()
+    .uri("/mapping/activities")
+    .retrieve()
+    .awaitBody()
 
   suspend fun deleteMapping(activityScheduleId: Long) {
     webClient.delete()

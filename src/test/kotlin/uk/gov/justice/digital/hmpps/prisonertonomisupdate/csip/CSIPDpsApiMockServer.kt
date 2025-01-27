@@ -29,7 +29,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Er
 import java.time.LocalDate
 import java.util.UUID
 
-class CSIPDpsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
+class CSIPDpsApiExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
   companion object {
     @JvmField
     val csipDpsApi = CSIPDpsApiMockServer()
@@ -110,146 +113,144 @@ class CSIPDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 }
 
-fun dpsCsipRecordMinimal() =
-  CsipRecord(
-    recordUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6a00"),
-    prisonNumber = "A1234KT",
-    prisonCodeWhenRecorded = "ASI",
-    status = ReferenceData(code = "CSIP_OPEN"),
-    referral = Referral(
-      incidentDate = LocalDate.parse("2024-08-09"),
-      incidentType = ReferenceData(code = "INT"),
-      incidentLocation = ReferenceData(code = "LIB"),
-      referredBy = "JIM_ADM",
-      referralDate = LocalDate.parse("2024-10-01"),
-      refererArea = ReferenceData(code = "EDU"),
-      isSaferCustodyTeamInformed = Referral.IsSaferCustodyTeamInformed.NO,
-      contributoryFactors = listOf(),
-    ),
-  )
+fun dpsCsipRecordMinimal() = CsipRecord(
+  recordUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6a00"),
+  prisonNumber = "A1234KT",
+  prisonCodeWhenRecorded = "ASI",
+  status = ReferenceData(code = "CSIP_OPEN"),
+  referral = Referral(
+    incidentDate = LocalDate.parse("2024-08-09"),
+    incidentType = ReferenceData(code = "INT"),
+    incidentLocation = ReferenceData(code = "LIB"),
+    referredBy = "JIM_ADM",
+    referralDate = LocalDate.parse("2024-10-01"),
+    refererArea = ReferenceData(code = "EDU"),
+    isSaferCustodyTeamInformed = Referral.IsSaferCustodyTeamInformed.NO,
+    contributoryFactors = listOf(),
+  ),
+)
 
 fun dpsCsipRecord(
   incidentType: String = "INT",
   scsOutcomeCode: String = "CUR",
   reviewOutcome: Set<Review.Actions> = setOf(Review.Actions.REMAIN_ON_CSIP, Review.Actions.CLOSE_CSIP),
   decisionSignedOffRole: String = "CUSTMAN",
-) =
-  CsipRecord(
-    recordUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6a00"),
-    prisonNumber = "A1234KT",
-    status = ReferenceData(code = "CSIP_OPEN"),
-    referral = Referral(
-      incidentDate = LocalDate.parse("2024-06-12"),
-      incidentType = ReferenceData(code = incidentType),
-      incidentLocation = ReferenceData(code = "LIB"),
-      referredBy = "JIM_ADM",
-      referralDate = LocalDate.parse("2024-10-01"),
-      refererArea = ReferenceData(code = "EDU"),
-      isSaferCustodyTeamInformed = Referral.IsSaferCustodyTeamInformed.NO,
+) = CsipRecord(
+  recordUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6a00"),
+  prisonNumber = "A1234KT",
+  status = ReferenceData(code = "CSIP_OPEN"),
+  referral = Referral(
+    incidentDate = LocalDate.parse("2024-06-12"),
+    incidentType = ReferenceData(code = incidentType),
+    incidentLocation = ReferenceData(code = "LIB"),
+    referredBy = "JIM_ADM",
+    referralDate = LocalDate.parse("2024-10-01"),
+    refererArea = ReferenceData(code = "EDU"),
+    isSaferCustodyTeamInformed = Referral.IsSaferCustodyTeamInformed.NO,
 
-      incidentTime = "10:32:12",
-      isProactiveReferral = true,
-      isStaffAssaulted = true,
-      assaultedStaffName = "Fred Jones",
-      incidentInvolvement = ReferenceData(code = "PER"),
-      descriptionOfConcern = "There was a worry about the offender",
-      knownReasons = "known reasons details go in here",
-      otherInformation = "other information goes in here",
-      isReferralComplete = true,
-      referralCompletedDate = LocalDate.parse("2024-04-04"),
-      referralCompletedBy = "JIM_ADM",
-      referralCompletedByDisplayName = "",
-      saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(
-        outcome = ReferenceData(scsOutcomeCode),
-        reasonForDecision = "There is a reason for the decision - it goes here",
-        date = LocalDate.parse("2024-04-08"),
-        recordedBy = "FRED_ADM",
-        recordedByDisplayName = "Fred Admin",
-      ),
+    incidentTime = "10:32:12",
+    isProactiveReferral = true,
+    isStaffAssaulted = true,
+    assaultedStaffName = "Fred Jones",
+    incidentInvolvement = ReferenceData(code = "PER"),
+    descriptionOfConcern = "There was a worry about the offender",
+    knownReasons = "known reasons details go in here",
+    otherInformation = "other information goes in here",
+    isReferralComplete = true,
+    referralCompletedDate = LocalDate.parse("2024-04-04"),
+    referralCompletedBy = "JIM_ADM",
+    referralCompletedByDisplayName = "",
+    saferCustodyScreeningOutcome = SaferCustodyScreeningOutcome(
+      outcome = ReferenceData(scsOutcomeCode),
+      reasonForDecision = "There is a reason for the decision - it goes here",
+      date = LocalDate.parse("2024-04-08"),
+      recordedBy = "FRED_ADM",
+      recordedByDisplayName = "Fred Admin",
+    ),
 
-      investigation = Investigation(
-        interviews = listOf(
-          Interview(
-            interviewUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6222"),
-            interviewee = "Bill Black",
-            interviewDate = LocalDate.parse("2024-06-06"),
-            intervieweeRole = ReferenceData("WITNESS"),
-            interviewText = "Saw a pipe in his hand",
-          ),
+    investigation = Investigation(
+      interviews = listOf(
+        Interview(
+          interviewUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6222"),
+          interviewee = "Bill Black",
+          interviewDate = LocalDate.parse("2024-06-06"),
+          intervieweeRole = ReferenceData("WITNESS"),
+          interviewText = "Saw a pipe in his hand",
         ),
-        staffInvolved = "some people",
-        evidenceSecured = "A piece of pipe",
-        occurrenceReason = "bad behaviour",
-        personsUsualBehaviour = "Good person",
-        personsTrigger = "missed meal",
-        protectiveFactors = "ensure taken to canteen",
       ),
-      decisionAndActions =
-      DecisionAndActions(
-        outcome = ReferenceData("OPE"),
-        actions = setOf(
-          DecisionAndActions.Actions.NON_ASSOCIATIONS_UPDATED,
-          DecisionAndActions.Actions.OBSERVATION_BOOK,
-          DecisionAndActions.Actions.SERVICE_REFERRAL,
-        ),
-        conclusion = "Offender needs help",
-        signedOffByRole = ReferenceData(decisionSignedOffRole),
-        date = LocalDate.parse("2024-04-08"),
-        recordedBy = "FRED_ADM",
-        recordedByDisplayName = "Fred Admin",
-        nextSteps = null,
-        actionOther = "Some other info here",
+      staffInvolved = "some people",
+      evidenceSecured = "A piece of pipe",
+      occurrenceReason = "bad behaviour",
+      personsUsualBehaviour = "Good person",
+      personsTrigger = "missed meal",
+      protectiveFactors = "ensure taken to canteen",
+    ),
+    decisionAndActions =
+    DecisionAndActions(
+      outcome = ReferenceData("OPE"),
+      actions = setOf(
+        DecisionAndActions.Actions.NON_ASSOCIATIONS_UPDATED,
+        DecisionAndActions.Actions.OBSERVATION_BOOK,
+        DecisionAndActions.Actions.SERVICE_REFERRAL,
       ),
+      conclusion = "Offender needs help",
+      signedOffByRole = ReferenceData(decisionSignedOffRole),
+      date = LocalDate.parse("2024-04-08"),
+      recordedBy = "FRED_ADM",
+      recordedByDisplayName = "Fred Admin",
+      nextSteps = null,
+      actionOther = "Some other info here",
+    ),
 
-      contributoryFactors = listOf(
-        ContributoryFactor(
-          factorUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6111"),
-          factorType = ReferenceData("BUL"),
-          comment = "Offender causes trouble",
-        ),
+    contributoryFactors = listOf(
+      ContributoryFactor(
+        factorUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6111"),
+        factorType = ReferenceData("BUL"),
+        comment = "Offender causes trouble",
       ),
     ),
-    logCode = "ASI-001",
-    prisonCodeWhenRecorded = "MDI",
+  ),
+  logCode = "ASI-001",
+  prisonCodeWhenRecorded = "MDI",
 
-    plan = Plan(
-      caseManager = "C Jones",
-      reasonForPlan = "helper",
-      firstCaseReviewDate = LocalDate.parse("2024-04-15"),
-      identifiedNeeds = listOf(
-        IdentifiedNeed(
-          identifiedNeedUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6333"),
-          identifiedNeed = "they need help",
-          responsiblePerson = "Jason",
-          intervention = "dd",
-          progression = "there was some improvement",
-          targetDate = LocalDate.parse("2024-08-20"),
-          closedDate = LocalDate.parse("2024-04-17"),
-          createdDate = LocalDate.parse("2024-04-16"),
-        ),
+  plan = Plan(
+    caseManager = "C Jones",
+    reasonForPlan = "helper",
+    firstCaseReviewDate = LocalDate.parse("2024-04-15"),
+    identifiedNeeds = listOf(
+      IdentifiedNeed(
+        identifiedNeedUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6333"),
+        identifiedNeed = "they need help",
+        responsiblePerson = "Jason",
+        intervention = "dd",
+        progression = "there was some improvement",
+        targetDate = LocalDate.parse("2024-08-20"),
+        closedDate = LocalDate.parse("2024-04-17"),
+        createdDate = LocalDate.parse("2024-04-16"),
       ),
-      reviews = listOf(
-        Review(
-          reviewUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6444"),
-          reviewSequence = 1,
-          reviewDate = LocalDate.parse("2024-04-01"),
-          nextReviewDate = null,
-          csipClosedDate = LocalDate.parse("2024-04-16"),
-          summary = null,
-          recordedBy = "JSMITH",
-          recordedByDisplayName = "JOHN SMITH",
+    ),
+    reviews = listOf(
+      Review(
+        reviewUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6444"),
+        reviewSequence = 1,
+        reviewDate = LocalDate.parse("2024-04-01"),
+        nextReviewDate = null,
+        csipClosedDate = LocalDate.parse("2024-04-16"),
+        summary = null,
+        recordedBy = "JSMITH",
+        recordedByDisplayName = "JOHN SMITH",
 
-          actions = reviewOutcome,
-          attendees = listOf(
-            Attendee(
-              attendeeUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6555"),
-              name = "sam jones",
-              role = "person",
-              isAttended = true,
-              contribution = "talked about things",
-            ),
+        actions = reviewOutcome,
+        attendees = listOf(
+          Attendee(
+            attendeeUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6555"),
+            name = "sam jones",
+            role = "person",
+            isAttended = true,
+            contribution = "talked about things",
           ),
         ),
       ),
     ),
-  )
+  ),
+)

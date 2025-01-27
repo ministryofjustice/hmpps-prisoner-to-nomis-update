@@ -23,27 +23,24 @@ class VisitsMappingService(
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
-  suspend fun getMappingGivenNomisIdOrNull(nomisId: Long): VisitMappingDto? =
-    webClient.get()
-      .uri("/mapping/visits/nomisId/{nomisId}", nomisId)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getMappingGivenNomisIdOrNull(nomisId: Long): VisitMappingDto? = webClient.get()
+    .uri("/mapping/visits/nomisId/{nomisId}", nomisId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
-  suspend fun getMappingGivenVsipIdOrNull(vsipId: String): VisitMappingDto? =
-    webClient.get()
-      .uri("/mapping/visits/vsipId/{vsipId}", vsipId)
-      .retrieve()
-      .bodyToMono(VisitMappingDto::class.java)
-      .onErrorResume(WebClientResponseException.NotFound::class.java) {
-        Mono.empty()
-      }
-      .awaitSingleOrNull()
+  suspend fun getMappingGivenVsipIdOrNull(vsipId: String): VisitMappingDto? = webClient.get()
+    .uri("/mapping/visits/vsipId/{vsipId}", vsipId)
+    .retrieve()
+    .bodyToMono(VisitMappingDto::class.java)
+    .onErrorResume(WebClientResponseException.NotFound::class.java) {
+      Mono.empty()
+    }
+    .awaitSingleOrNull()
 
-  suspend fun getMappingGivenVsipId(vsipId: String): VisitMappingDto =
-    webClient.get()
-      .uri("/mapping/visits/vsipId/{vsipId}", vsipId)
-      .retrieve()
-      .awaitBody()
+  suspend fun getMappingGivenVsipId(vsipId: String): VisitMappingDto = webClient.get()
+    .uri("/mapping/visits/vsipId/{vsipId}", vsipId)
+    .retrieve()
+    .awaitBody()
 }
 
 data class VisitMappingDto(

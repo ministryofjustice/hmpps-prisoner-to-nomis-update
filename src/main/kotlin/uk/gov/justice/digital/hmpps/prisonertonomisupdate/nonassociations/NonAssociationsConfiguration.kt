@@ -23,13 +23,12 @@ class NonAssociationsConfiguration(
   fun nonAssociationsApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(baseUrl, healthTimeout)
 
   @Bean
-  fun nonAssociationsApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.reactiveAuthorisedWebClient(
-      authorizedClientManager = authorizedClientManager,
-      registrationId = "non-associations-api",
-      url = baseUrl,
-      timeout = timeout,
-    )
+  fun nonAssociationsApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.reactiveAuthorisedWebClient(
+    authorizedClientManager = authorizedClientManager,
+    registrationId = "non-associations-api",
+    url = baseUrl,
+    timeout = timeout,
+  )
 
   @Component("nonAssociationsApi")
   class NonAssociationsApiHealth(@Qualifier("nonAssociationsApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)

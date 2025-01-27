@@ -83,22 +83,21 @@ class CaseNotesReconciliationService(
     }
   }
 
-  internal suspend fun getAllPrisonersForPage(page: Pair<Long, Long>) =
-    runCatching {
-      nomisApiService.getActivePrisoners(page.first, page.second)
-        .content.map { PrisonerId(it.offenderNo) }
+  internal suspend fun getAllPrisonersForPage(page: Pair<Long, Long>) = runCatching {
+    nomisApiService.getActivePrisoners(page.first, page.second)
+      .content.map { PrisonerId(it.offenderNo) }
+  }
+    .onFailure {
+      telemetryClient.trackEvent(
+        "casenotes-reports-reconciliation-mismatch-page-error",
+        mapOf(
+          "page" to page.first.toString(),
+        ),
+      )
+      log.error("Unable to match entire page of prisoners: $page", it)
     }
-      .onFailure {
-        telemetryClient.trackEvent(
-          "casenotes-reports-reconciliation-mismatch-page-error",
-          mapOf(
-            "page" to page.first.toString(),
-          ),
-        )
-        log.error("Unable to match entire page of prisoners: $page", it)
-      }
-      .getOrElse { emptyList() }
-      .also { log.info("Page requested: $page, with ${it.size} prisoners") }
+    .getOrElse { emptyList() }
+    .also { log.info("Page requested: $page, with ${it.size} prisoners") }
 
   suspend fun checkMatch(prisonerId: PrisonerId): MismatchCaseNote? {
     val offenderNo = prisonerId.offenderNo
@@ -237,7 +236,8 @@ data class CommonCaseNoteFields(
       subType == other.subType &&
       occurrenceDateTime == other.occurrenceDateTime &&
       creationDateTime == other.creationDateTime &&
-      equalUsers(other) && // OMS_OWNER vs XTAG
+      equalUsers(other) &&
+      // OMS_OWNER vs XTAG
       equalAmendments(this, other)
   }
 
@@ -253,9 +253,7 @@ data class CommonCaseNoteFields(
 
   override fun hashCode(): Int = javaClass.hashCode()
 
-  override fun toString(): String {
-    return "{id=$legacyId, text-hash=${Objects.hashCode(text)}, type=$type, subType=$subType, occurrenceDateTime=$occurrenceDateTime, creationDateTime=$creationDateTime, authorUsername=${dpsUsername ?: nomisUsernames}, amendments=$amendments}"
-  }
+  override fun toString(): String = "{id=$legacyId, text-hash=${Objects.hashCode(text)}, type=$type, subType=$subType, occurrenceDateTime=$occurrenceDateTime, creationDateTime=$creationDateTime, authorUsername=${dpsUsername ?: nomisUsernames}, amendments=$amendments}"
 }
 
 data class CommonAmendmentFields(
@@ -263,9 +261,7 @@ data class CommonAmendmentFields(
   val occurrenceDateTime: String?,
   val authorUsername: String,
 ) {
-  override fun toString(): String {
-    return "{text-hash=${Objects.hashCode(text)}, occurrenceDateTime=$occurrenceDateTime, authorUsername=$authorUsername}"
-  }
+  override fun toString(): String = "{text-hash=${Objects.hashCode(text)}, occurrenceDateTime=$occurrenceDateTime, authorUsername=$authorUsername}"
 }
 
 private val amendmentComparator = compareBy(

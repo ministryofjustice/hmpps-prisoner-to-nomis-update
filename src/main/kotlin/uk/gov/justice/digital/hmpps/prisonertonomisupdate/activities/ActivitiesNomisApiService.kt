@@ -24,19 +24,17 @@ import java.time.LocalDate
 @Service
 class ActivitiesNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
 
-  suspend fun createActivity(request: CreateActivityRequest): CreateActivityResponse =
-    webClient.post()
-      .uri("/activities")
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  suspend fun createActivity(request: CreateActivityRequest): CreateActivityResponse = webClient.post()
+    .uri("/activities")
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun updateActivity(courseActivityId: Long, request: UpdateActivityRequest): CreateActivityResponse =
-    webClient.put()
-      .uri("/activities/{courseActivityId}", courseActivityId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  suspend fun updateActivity(courseActivityId: Long, request: UpdateActivityRequest): CreateActivityResponse = webClient.put()
+    .uri("/activities/{courseActivityId}", courseActivityId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
   suspend fun deleteActivity(courseActivityId: Long) {
     webClient.delete()
@@ -48,33 +46,30 @@ class ActivitiesNomisApiService(@Qualifier("nomisApiWebClient") private val webC
   suspend fun updateScheduledInstance(
     courseActivityId: Long,
     request: CourseScheduleRequest,
-  ): UpdateCourseScheduleResponse =
-    webClient.put()
-      .uri("/activities/{courseActivityId}/schedule", courseActivityId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  ): UpdateCourseScheduleResponse = webClient.put()
+    .uri("/activities/{courseActivityId}/schedule", courseActivityId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
   suspend fun upsertAllocation(
     courseActivityId: Long,
     request: UpsertAllocationRequest,
-  ): UpsertAllocationResponse =
-    webClient.put()
-      .uri("/activities/{courseActivityId}/allocation", courseActivityId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  ): UpsertAllocationResponse = webClient.put()
+    .uri("/activities/{courseActivityId}/allocation", courseActivityId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
   suspend fun upsertAttendance(
     courseScheduleId: Long,
     bookingId: Long,
     request: UpsertAttendanceRequest,
-  ): UpsertAttendanceResponse =
-    webClient.put()
-      .uri("/schedules/{courseScheduleId}/booking/{bookingId}/attendance", courseScheduleId, bookingId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBodyOrUpsertAttendanceError()
+  ): UpsertAttendanceResponse = webClient.put()
+    .uri("/schedules/{courseScheduleId}/booking/{bookingId}/attendance", courseScheduleId, bookingId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodyOrUpsertAttendanceError()
 
   suspend fun deleteAttendance(courseScheduleId: Long, bookingId: Long) {
     webClient.delete()
@@ -83,38 +78,33 @@ class ActivitiesNomisApiService(@Qualifier("nomisApiWebClient") private val webC
       .awaitBodilessEntity()
   }
 
-  suspend fun getAllocationReconciliation(prisonId: String): AllocationReconciliationResponse =
-    webClient.get()
-      .uri("/allocations/reconciliation/{prisonId}", prisonId)
-      .retrieve()
-      .awaitBody()
+  suspend fun getAllocationReconciliation(prisonId: String): AllocationReconciliationResponse = webClient.get()
+    .uri("/allocations/reconciliation/{prisonId}", prisonId)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getAttendanceReconciliation(prisonId: String, date: LocalDate): AttendanceReconciliationResponse =
-    webClient.get()
-      .uri {
-        it.path("/attendances/reconciliation/{prisonId}")
-          .queryParam("date", date)
-          .build(prisonId)
-      }
-      .retrieve()
-      .awaitBody()
+  suspend fun getAttendanceReconciliation(prisonId: String, date: LocalDate): AttendanceReconciliationResponse = webClient.get()
+    .uri {
+      it.path("/attendances/reconciliation/{prisonId}")
+        .queryParam("date", date)
+        .build(prisonId)
+    }
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getServicePrisons(serviceCode: String): List<PrisonDetails> =
-    webClient.get()
-      .uri("/service-prisons/{serviceCode}", serviceCode)
-      .retrieve()
-      .awaitBody()
+  suspend fun getServicePrisons(serviceCode: String): List<PrisonDetails> = webClient.get()
+    .uri("/service-prisons/{serviceCode}", serviceCode)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getPrisonerDetails(bookingIds: List<Long>): List<PrisonerDetails> =
-    webClient.post()
-      .uri("/prisoners/bookings")
-      .bodyValue(bookingIds)
-      .retrieve()
-      .awaitBody()
+  suspend fun getPrisonerDetails(bookingIds: List<Long>): List<PrisonerDetails> = webClient.post()
+    .uri("/prisoners/bookings")
+    .bodyValue(bookingIds)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getMaxCourseScheduleId(): Long =
-    webClient.get()
-      .uri("/schedules/max-id")
-      .retrieve()
-      .awaitBody()
+  suspend fun getMaxCourseScheduleId(): Long = webClient.get()
+    .uri("/schedules/max-id")
+    .retrieve()
+    .awaitBody()
 }

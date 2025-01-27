@@ -67,14 +67,13 @@ class AlertsService(
     }
   }
 
-  suspend fun createMapping(message: CreateMappingRetryMessage<AlertMappingDto>) =
-    mappingApiService.createMapping(message.mapping).also {
-      telemetryClient.trackEvent(
-        "alert-create-success",
-        message.telemetryAttributes,
-        null,
-      )
-    }
+  suspend fun createMapping(message: CreateMappingRetryMessage<AlertMappingDto>) = mappingApiService.createMapping(message.mapping).also {
+    telemetryClient.trackEvent(
+      "alert-create-success",
+      message.telemetryAttributes,
+      null,
+    )
+  }
 
   override suspend fun retryCreateMapping(message: String) = createMapping(message.fromJson())
 
@@ -156,8 +155,7 @@ class AlertsService(
     log.warn("Unable to delete mapping for alert $dpsAlertId. Please delete manually", e)
   }
 
-  private inline fun <reified T> String.fromJson(): T =
-    objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
 
 data class AlertEvent(

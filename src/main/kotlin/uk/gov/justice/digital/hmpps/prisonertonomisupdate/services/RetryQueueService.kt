@@ -41,8 +41,7 @@ open class RetryQueueService(
     )
   }
 
-  private inline fun <reified T> T.toJson(): String =
-    objectMapper.writeValueAsString(this)
+  private inline fun <reified T> T.toJson(): String = objectMapper.writeValueAsString(this)
 }
 
 data class CreateMappingRetryMessage<T>(

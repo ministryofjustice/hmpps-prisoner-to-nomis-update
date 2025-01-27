@@ -21,85 +21,81 @@ class CourtSentencingReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun manualCheckCaseDps(dpsCaseId: String): MismatchCaseResponse =
-    mappingService.getMappingGivenCourtCaseId(dpsCourtCaseId = dpsCaseId).let {
-      MismatchCaseResponse(mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId))
-    }
+  suspend fun manualCheckCaseDps(dpsCaseId: String): MismatchCaseResponse = mappingService.getMappingGivenCourtCaseId(dpsCourtCaseId = dpsCaseId).let {
+    MismatchCaseResponse(mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId))
+  }
 
-  suspend fun manualCheckCaseNomis(nomisCaseId: Long): MismatchCaseResponse =
-    mappingService.getMappingGivenNomisCourtCaseId(nomisCourtCaseId = nomisCaseId).let {
-      MismatchCaseResponse(mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId))
-    }
+  suspend fun manualCheckCaseNomis(nomisCaseId: Long): MismatchCaseResponse = mappingService.getMappingGivenNomisCourtCaseId(nomisCourtCaseId = nomisCaseId).let {
+    MismatchCaseResponse(mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId))
+  }
 
-  suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchCaseResponse> =
-    nomisApiService.getCourtCasesByOffender(offenderNo).map {
-      manualCheckCaseNomis(nomisCaseId = it.id)
-    }
+  suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchCaseResponse> = nomisApiService.getCourtCasesByOffender(offenderNo).map {
+    manualCheckCaseNomis(nomisCaseId = it.id)
+  }
 
-  suspend fun checkCase(dpsCaseId: String, nomisCaseId: Long): MismatchCase? =
-    runCatching {
-      val nomisResponse = doApiCallWithRetries { nomisApiService.getCourtCaseForMigration(nomisCaseId) }
-      val dpsResponse = doApiCallWithRetries { dpsApiService.getCourtCaseForReconciliation(dpsCaseId) }
+  suspend fun checkCase(dpsCaseId: String, nomisCaseId: Long): MismatchCase? = runCatching {
+    val nomisResponse = doApiCallWithRetries { nomisApiService.getCourtCaseForMigration(nomisCaseId) }
+    val dpsResponse = doApiCallWithRetries { dpsApiService.getCourtCaseForReconciliation(dpsCaseId) }
 
-      val dpsFields = CaseFields(
-        active = dpsResponse.status.name == CourtCase.Status.ACTIVE.name,
-        id = dpsCaseId,
-        appearances = dpsResponse.appearances.map {
-          AppearanceFields(
-            date = it.appearanceDate,
-            court = it.courtCode,
-            outcome = it.outcome?.nomisCode,
-            nextAppearanceDate = it.nextCourtAppearance?.appearanceDate,
-            id = it.lifetimeUuid.toString(),
-            charges = it.charges.map {
-              ChargeFields(
-                offenceCode = it.offenceCode,
-                offenceDate = it.offenceStartDate,
-                offenceEndDate = it.offenceEndDate,
-                outcome = it.outcome?.nomisCode,
-                id = it.lifetimeUuid.toString(),
-              )
-            },
-          )
-        },
-      )
-      val nomisFields = CaseFields(
-        active = nomisResponse.caseStatus.code == "A",
-        id = nomisResponse.id.toString(),
-        appearances = nomisResponse.courtEvents.map {
-          AppearanceFields(
-            date = LocalDateTime.parse(it.eventDateTime).toLocalDate(),
-            court = it.courtId,
-            outcome = it.outcomeReasonCode?.code,
-            nextAppearanceDate = it.nextEventDateTime?.let { LocalDateTime.parse(it).toLocalDate() },
-            id = it.id.toString(),
-            charges = it.courtEventCharges.map {
-              ChargeFields(
-                offenceCode = it.offenderCharge.offence.offenceCode,
-                offenceDate = it.offenceDate,
-                offenceEndDate = it.offenceEndDate,
-                outcome = it.resultCode1?.code,
-                id = it.offenderCharge.id.toString(),
-              )
-            },
-          )
-        },
-      )
-
-      val differenceList = compareObjects(dpsFields, nomisFields)
-      if (differenceList.isNotEmpty()) {
-        log.info("Differences: $differenceList")
-        return MismatchCase(
-          nomisCase = nomisFields,
-          dpsCase = dpsFields,
-          differences = differenceList,
+    val dpsFields = CaseFields(
+      active = dpsResponse.status.name == CourtCase.Status.ACTIVE.name,
+      id = dpsCaseId,
+      appearances = dpsResponse.appearances.map {
+        AppearanceFields(
+          date = it.appearanceDate,
+          court = it.courtCode,
+          outcome = it.outcome?.nomisCode,
+          nextAppearanceDate = it.nextCourtAppearance?.appearanceDate,
+          id = it.lifetimeUuid.toString(),
+          charges = it.charges.map {
+            ChargeFields(
+              offenceCode = it.offenceCode,
+              offenceDate = it.offenceStartDate,
+              offenceEndDate = it.offenceEndDate,
+              outcome = it.outcome?.nomisCode,
+              id = it.lifetimeUuid.toString(),
+            )
+          },
         )
-      } else {
-        return null
-      }
-    }.onFailure {
-      log.error("Unable to match case with ids: dps:$dpsCaseId and nomis:$nomisCaseId", it)
-    }.getOrNull()
+      },
+    )
+    val nomisFields = CaseFields(
+      active = nomisResponse.caseStatus.code == "A",
+      id = nomisResponse.id.toString(),
+      appearances = nomisResponse.courtEvents.map {
+        AppearanceFields(
+          date = LocalDateTime.parse(it.eventDateTime).toLocalDate(),
+          court = it.courtId,
+          outcome = it.outcomeReasonCode?.code,
+          nextAppearanceDate = it.nextEventDateTime?.let { LocalDateTime.parse(it).toLocalDate() },
+          id = it.id.toString(),
+          charges = it.courtEventCharges.map {
+            ChargeFields(
+              offenceCode = it.offenderCharge.offence.offenceCode,
+              offenceDate = it.offenceDate,
+              offenceEndDate = it.offenceEndDate,
+              outcome = it.resultCode1?.code,
+              id = it.offenderCharge.id.toString(),
+            )
+          },
+        )
+      },
+    )
+
+    val differenceList = compareObjects(dpsFields, nomisFields)
+    if (differenceList.isNotEmpty()) {
+      log.info("Differences: $differenceList")
+      return MismatchCase(
+        nomisCase = nomisFields,
+        dpsCase = dpsFields,
+        differences = differenceList,
+      )
+    } else {
+      return null
+    }
+  }.onFailure {
+    log.error("Unable to match case with ids: dps:$dpsCaseId and nomis:$nomisCaseId", it)
+  }.getOrNull()
 
   fun compareObjects(dpsObj: Any?, nomisObj: Any?, parentProperty: String = "case"): List<Difference> {
     if (dpsObj == null && nomisObj == null) return emptyList()
@@ -148,13 +144,11 @@ class CourtSentencingReconciliationService(
           )
         }
 
-        fun sortCharges(charges: List<ChargeFields>): List<ChargeFields> {
-          return charges.sortedWith(
-            compareBy<ChargeFields> { it.offenceCode }
-              .thenBy { it.offenceDate }
-              .thenBy { it.outcome },
-          )
-        }
+        fun sortCharges(charges: List<ChargeFields>): List<ChargeFields> = charges.sortedWith(
+          compareBy<ChargeFields> { it.offenceCode }
+            .thenBy { it.offenceDate }
+            .thenBy { it.outcome },
+        )
         differences.addAll(compareLists(sortCharges(dpsObj.charges), sortCharges(nomisObj.charges), "$parentProperty.charges"))
       }
 

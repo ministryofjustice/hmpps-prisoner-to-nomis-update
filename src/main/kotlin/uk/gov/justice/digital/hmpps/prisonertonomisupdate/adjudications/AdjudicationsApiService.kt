@@ -9,18 +9,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Re
 @Service
 class AdjudicationsApiService(private val adjudicationsApiWebClient: WebClient) {
 
-  suspend fun getCharge(chargeNumber: String, prisonId: String): ReportedAdjudicationResponse {
-    return adjudicationsApiWebClient.get()
-      .uri("/reported-adjudications/{chargeNumber}/v2", chargeNumber)
-      .header("Active-Caseload", prisonId)
-      .retrieve()
-      .awaitBody()
-  }
+  suspend fun getCharge(chargeNumber: String, prisonId: String): ReportedAdjudicationResponse = adjudicationsApiWebClient.get()
+    .uri("/reported-adjudications/{chargeNumber}/v2", chargeNumber)
+    .header("Active-Caseload", prisonId)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getAdjudicationsByBookingId(bookingId: Long): List<ReportedAdjudicationDto> {
-    return adjudicationsApiWebClient.get()
-      .uri("/reported-adjudications/all-by-booking/{bookingId}", bookingId)
-      .retrieve()
-      .awaitBody<List<ReportedAdjudicationDto>>()
-  }
+  suspend fun getAdjudicationsByBookingId(bookingId: Long): List<ReportedAdjudicationDto> = adjudicationsApiWebClient.get()
+    .uri("/reported-adjudications/all-by-booking/{bookingId}", bookingId)
+    .retrieve()
+    .awaitBody<List<ReportedAdjudicationDto>>()
 }

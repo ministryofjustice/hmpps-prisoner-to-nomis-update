@@ -121,6 +121,5 @@ internal class AppointmentsMappingServiceTest {
     }
   }
 
-  private fun newMapping() =
-    AppointmentMappingDto(nomisEventId = 456L, appointmentInstanceId = 1234L)
+  private fun newMapping() = AppointmentMappingDto(nomisEventId = 456L, appointmentInstanceId = 1234L)
 }

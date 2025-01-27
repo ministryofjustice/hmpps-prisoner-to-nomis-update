@@ -67,17 +67,16 @@ class AttendanceService(
     }
   }
 
-  private fun AttendanceSync.toTelemetry(): Map<String, String> =
-    mapOf(
-      "dpsAttendanceId" to attendanceId.toString(),
-      "dpsActivityScheduleId" to activityScheduleId.toString(),
-      "dpsScheduleInstanceId" to scheduledInstanceId.toString(),
-      "sessionDate" to sessionDate.toString(),
-      "sessionStartTime" to sessionStartTime,
-      "sessionEndTime" to sessionEndTime,
-      "offenderNo" to prisonerNumber,
-      "bookingId" to bookingId.toString(),
-    )
+  private fun AttendanceSync.toTelemetry(): Map<String, String> = mapOf(
+    "dpsAttendanceId" to attendanceId.toString(),
+    "dpsActivityScheduleId" to activityScheduleId.toString(),
+    "dpsScheduleInstanceId" to scheduledInstanceId.toString(),
+    "sessionDate" to sessionDate.toString(),
+    "sessionStartTime" to sessionStartTime,
+    "sessionEndTime" to sessionEndTime,
+    "offenderNo" to prisonerNumber,
+    "bookingId" to bookingId.toString(),
+  )
 
   private suspend fun AttendanceSync.toUpsertAttendanceRequest(): UpsertAttendanceRequest {
     val eventOutcome = toEventOutcome()

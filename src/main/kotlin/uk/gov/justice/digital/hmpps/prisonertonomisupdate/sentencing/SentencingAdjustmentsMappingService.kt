@@ -21,23 +21,20 @@ class SentencingAdjustmentsMappingService(
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
-  suspend fun getMappingGivenAdjustmentIdOrNull(adjustmentId: String): SentencingAdjustmentMappingDto? =
-    webClient.get()
-      .uri("/mapping/sentencing/adjustments/adjustment-id/{adjustmentId}", adjustmentId)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getMappingGivenAdjustmentIdOrNull(adjustmentId: String): SentencingAdjustmentMappingDto? = webClient.get()
+    .uri("/mapping/sentencing/adjustments/adjustment-id/{adjustmentId}", adjustmentId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
-  suspend fun getMappingGivenAdjustmentId(adjustmentId: String): SentencingAdjustmentMappingDto =
-    webClient.get()
-      .uri("/mapping/sentencing/adjustments/adjustment-id/{adjustmentId}", adjustmentId)
-      .retrieve()
-      .awaitBody()
+  suspend fun getMappingGivenAdjustmentId(adjustmentId: String): SentencingAdjustmentMappingDto = webClient.get()
+    .uri("/mapping/sentencing/adjustments/adjustment-id/{adjustmentId}", adjustmentId)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun deleteMappingGivenAdjustmentId(adjustmentId: String): Unit =
-    webClient.delete()
-      .uri("/mapping/sentencing/adjustments/adjustment-id/{adjustmentId}", adjustmentId)
-      .retrieve()
-      .awaitBody()
+  suspend fun deleteMappingGivenAdjustmentId(adjustmentId: String): Unit = webClient.delete()
+    .uri("/mapping/sentencing/adjustments/adjustment-id/{adjustmentId}", adjustmentId)
+    .retrieve()
+    .awaitBody()
 }
 
 data class SentencingAdjustmentMappingDto(

@@ -10,14 +10,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CS
 
 @Service
 class CSIPMappingApiService(@Qualifier("mappingWebClient") private val webClient: WebClient) {
-  suspend fun getOrNullByDpsId(dpsCsipReportId: String): CSIPFullMappingDto? =
-    webClient.get()
-      .uri(
-        "/mapping/csip/dps-csip-id/{dpsCsipReportId}/all",
-        dpsCsipReportId,
-      )
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getOrNullByDpsId(dpsCsipReportId: String): CSIPFullMappingDto? = webClient.get()
+    .uri(
+      "/mapping/csip/dps-csip-id/{dpsCsipReportId}/all",
+      dpsCsipReportId,
+    )
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
   suspend fun deleteByDpsId(dpsCsipReportId: String) {
     webClient.delete()

@@ -129,29 +129,27 @@ class LocationsReconciliationService(
     }
   }
 
-  internal suspend fun getNomisLocationsForPage(page: Pair<Long, Long>) =
-    runCatching { nomisApiService.getLocations(page.first, page.second).content }
-      .onFailure {
-        telemetryClient.trackEvent(
-          "locations-reports-reconciliation-mismatch-page-error",
-          mapOf("page" to page.first.toString()),
-        )
-        log.error("Unable to match entire Nomis page of prisoners: $page", it)
-      }
-      .getOrElse { emptyList() }
-      .also { log.info("Nomis Page requested: $page, with ${it.size} locations") }
+  internal suspend fun getNomisLocationsForPage(page: Pair<Long, Long>) = runCatching { nomisApiService.getLocations(page.first, page.second).content }
+    .onFailure {
+      telemetryClient.trackEvent(
+        "locations-reports-reconciliation-mismatch-page-error",
+        mapOf("page" to page.first.toString()),
+      )
+      log.error("Unable to match entire Nomis page of prisoners: $page", it)
+    }
+    .getOrElse { emptyList() }
+    .also { log.info("Nomis Page requested: $page, with ${it.size} locations") }
 
-  internal suspend fun getDpsLocationsForPage(page: Pair<Long, Long>): List<LegacyLocation> =
-    runCatching { locationsApiService.getLocations(page.first, page.second).content }
-      .onFailure {
-        telemetryClient.trackEvent(
-          "locations-reports-reconciliation-mismatch-page-error",
-          mapOf("page" to page.first.toString()),
-        )
-        log.error("Unable to match entire DPS page of prisoners: $page", it)
-      }
-      .getOrElse { emptyList() }
-      .also { log.info("DPS Page requested: $page, with ${it.size} locations") }
+  internal suspend fun getDpsLocationsForPage(page: Pair<Long, Long>): List<LegacyLocation> = runCatching { locationsApiService.getLocations(page.first, page.second).content }
+    .onFailure {
+      telemetryClient.trackEvent(
+        "locations-reports-reconciliation-mismatch-page-error",
+        mapOf("page" to page.first.toString()),
+      )
+      log.error("Unable to match entire DPS page of prisoners: $page", it)
+    }
+    .getOrElse { emptyList() }
+    .also { log.info("DPS Page requested: $page, with ${it.size} locations") }
 
   internal suspend fun checkMatch(mapping: LocationMappingDto): MismatchLocation? = runCatching {
     // log.debug("Checking location: {}", mapping)
@@ -362,35 +360,33 @@ class LocationsReconciliationService(
 
   private fun expectedDpsHistorySize(amendments: List<AmendmentResponse>?) = filterAmendmentResponses(amendments)?.size ?: 0
 
-  private fun filterAmendmentResponses(amendments: List<AmendmentResponse>?) =
-    amendments
-      ?.filter { it.oldValue != it.newValue }
-      // user_desc not recorded in Nomis history
-      ?.filterNot { it.columnName == "DESCRIPTION" }
-      // eliminate duplicate entries with timestamps within same second (about 120)
-      ?.toSet()
+  private fun filterAmendmentResponses(amendments: List<AmendmentResponse>?) = amendments
+    ?.filter { it.oldValue != it.newValue }
+    // user_desc not recorded in Nomis history
+    ?.filterNot { it.columnName == "DESCRIPTION" }
+    // eliminate duplicate entries with timestamps within same second (about 120)
+    ?.toSet()
 
-  private fun toHistoryAttribute(columnName: String?): String =
-    when (columnName) {
-      "Unit Type" -> "RESIDENTIAL_HOUSING_TYPE"
-      "Active" -> "ACTIVE"
-      "Living Unit Id" -> "CODE"
-      "Comments" -> "COMMENTS"
-      "Accommodation Type" -> "LOCATION_TYPE"
-      "Certified" -> "CERTIFIED"
-      "Description" -> "DESCRIPTION"
-      "Baseline CNA" -> "CERTIFIED_CAPACITY"
-      "Operational Capacity" -> "OPERATIONAL_CAPACITY"
-      "Deactivate Reason" -> "DEACTIVATED_REASON"
-      "Proposed Reactivate Date" -> "PROPOSED_REACTIVATION_DATE"
-      "Sequence" -> "ORDER_WITHIN_PARENT_LOCATION"
-      "Deactivate Date" -> "DEACTIVATED_DATE"
-      "Maximum Capacity" -> "CAPACITY"
-      null -> "ATTRIBUTES"
-      else -> throw IllegalArgumentException("Unknown history attribute column name $columnName")
-    }.let {
-      LocationAttribute.valueOf(it).description
-    }
+  private fun toHistoryAttribute(columnName: String?): String = when (columnName) {
+    "Unit Type" -> "RESIDENTIAL_HOUSING_TYPE"
+    "Active" -> "ACTIVE"
+    "Living Unit Id" -> "CODE"
+    "Comments" -> "COMMENTS"
+    "Accommodation Type" -> "LOCATION_TYPE"
+    "Certified" -> "CERTIFIED"
+    "Description" -> "DESCRIPTION"
+    "Baseline CNA" -> "CERTIFIED_CAPACITY"
+    "Operational Capacity" -> "OPERATIONAL_CAPACITY"
+    "Deactivate Reason" -> "DEACTIVATED_REASON"
+    "Proposed Reactivate Date" -> "PROPOSED_REACTIVATION_DATE"
+    "Sequence" -> "ORDER_WITHIN_PARENT_LOCATION"
+    "Deactivate Date" -> "DEACTIVATED_DATE"
+    "Maximum Capacity" -> "CAPACITY"
+    null -> "ATTRIBUTES"
+    else -> throw IllegalArgumentException("Unknown history attribute column name $columnName")
+  }.let {
+    LocationAttribute.valueOf(it).description
+  }
 }
 
 // Copied from locations api

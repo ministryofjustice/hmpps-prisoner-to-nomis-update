@@ -19,7 +19,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Er
 import java.time.LocalDateTime
 import java.util.UUID
 
-class CaseNotesDpsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
+class CaseNotesDpsApiExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
   companion object {
     @JvmField
     val caseNotesDpsApi = CaseNotesDpsApiMockServer()

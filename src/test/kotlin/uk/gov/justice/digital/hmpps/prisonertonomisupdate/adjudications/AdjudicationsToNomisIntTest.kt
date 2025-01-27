@@ -605,6 +605,5 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  fun adjudicationMessagePayload(chargeNumber: String, prisonId: String, prisonerNumber: String, eventType: String) =
-    """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId", "prisonerNumber": "$prisonerNumber"}}"""
+  fun adjudicationMessagePayload(chargeNumber: String, prisonId: String, prisonerNumber: String, eventType: String) = """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId", "prisonerNumber": "$prisonerNumber"}}"""
 }

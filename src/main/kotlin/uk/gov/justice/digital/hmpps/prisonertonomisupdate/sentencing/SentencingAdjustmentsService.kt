@@ -61,33 +61,30 @@ class SentencingAdjustmentsService(
     }
   }
 
-  private fun isDpsCreated(additionalInformation: AdditionalInformation) =
-    isDpsCreated(additionalInformation.source)
+  private fun isDpsCreated(additionalInformation: AdditionalInformation) = isDpsCreated(additionalInformation.source)
 
-  private fun isDpsCreated(source: String) =
-    source != CreatingSystem.NOMIS.name
+  private fun isDpsCreated(source: String) = source != CreatingSystem.NOMIS.name
 
-  private suspend fun createTransformedAdjustment(adjustment: LegacyAdjustment) =
-    CreateSentencingAdjustmentRequest(
-      adjustmentTypeCode = adjustment.adjustmentType.value,
-      adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
-      adjustmentFromDate = adjustment.adjustmentFromDate,
-      adjustmentDays = adjustment.adjustmentDays.toLong(),
-      comment = adjustment.comment,
-    ).run {
-      if (adjustment.sentenceSequence == null) {
-        nomisApiService.createKeyDateAdjustment(
-          adjustment.bookingId,
-          this,
-        )
-      } else {
-        nomisApiService.createSentenceAdjustment(
-          adjustment.bookingId,
-          adjustment.sentenceSequence!!.toLong(),
-          this,
-        )
-      }
+  private suspend fun createTransformedAdjustment(adjustment: LegacyAdjustment) = CreateSentencingAdjustmentRequest(
+    adjustmentTypeCode = adjustment.adjustmentType.value,
+    adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
+    adjustmentFromDate = adjustment.adjustmentFromDate,
+    adjustmentDays = adjustment.adjustmentDays.toLong(),
+    comment = adjustment.comment,
+  ).run {
+    if (adjustment.sentenceSequence == null) {
+      nomisApiService.createKeyDateAdjustment(
+        adjustment.bookingId,
+        this,
+      )
+    } else {
+      nomisApiService.createSentenceAdjustment(
+        adjustment.bookingId,
+        adjustment.sentenceSequence!!.toLong(),
+        this,
+      )
     }
+  }
 
   suspend fun repairAdjustment(offenderNo: String, adjustmentId: String, forceStatus: Boolean) = updateAdjustment(
     offenderNo = offenderNo,

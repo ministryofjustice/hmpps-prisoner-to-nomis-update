@@ -2384,5 +2384,4 @@ private const val CREATE_INCENTIVE_RESPONSE = """
     }
     """
 
-fun generateOffenderNo(prefix: String = "A", sequence: Long = 1, suffix: String = "TZ") =
-  "$prefix${sequence.toString().padStart(4, '0')}$suffix"
+fun generateOffenderNo(prefix: String = "A", sequence: Long = 1, suffix: String = "TZ") = "$prefix${sequence.toString().padStart(4, '0')}$suffix"

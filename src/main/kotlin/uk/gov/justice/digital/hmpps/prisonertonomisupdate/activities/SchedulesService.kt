@@ -49,31 +49,28 @@ class SchedulesService(
     }
   }
 
-  suspend fun deleteUnknownMappings() =
-    activitiesNomisApiService.getMaxCourseScheduleId().apply {
-      mappingService.deleteMappingsGreaterThan(this)
-    }
+  suspend fun deleteUnknownMappings() = activitiesNomisApiService.getMaxCourseScheduleId().apply {
+    mappingService.deleteMappingsGreaterThan(this)
+  }
 }
 
-fun List<ScheduledInstance>.toCourseScheduleRequests(mappings: List<ActivityScheduleMappingDto>? = null) =
-  map {
-    CourseScheduleRequest(
-      id = mappings?.find { mapping -> mapping.scheduledInstanceId == it.id }?.nomisCourseScheduleId,
-      date = it.date,
-      startTime = it.startTime,
-      endTime = it.endTime,
-      cancelled = it.cancelled,
-    )
-  }
-
-fun ActivityScheduleInstance.toCourseScheduleRequest(nomisCourseScheduleId: Long) =
+fun List<ScheduledInstance>.toCourseScheduleRequests(mappings: List<ActivityScheduleMappingDto>? = null) = map {
   CourseScheduleRequest(
-    id = nomisCourseScheduleId,
-    date = date,
-    startTime = startTime,
-    endTime = endTime,
-    cancelled = cancelled,
+    id = mappings?.find { mapping -> mapping.scheduledInstanceId == it.id }?.nomisCourseScheduleId,
+    date = it.date,
+    startTime = it.startTime,
+    endTime = it.endTime,
+    cancelled = it.cancelled,
   )
+}
+
+fun ActivityScheduleInstance.toCourseScheduleRequest(nomisCourseScheduleId: Long) = CourseScheduleRequest(
+  id = nomisCourseScheduleId,
+  date = date,
+  startTime = startTime,
+  endTime = endTime,
+  cancelled = cancelled,
+)
 
 data class ScheduledInstanceDomainEvent(
   val eventType: String,

@@ -178,20 +178,19 @@ class AllocationServiceTest {
         )
     }
 
-    private fun aSlot(timeSlot: Slot.TimeSlot, daysOfWeek: Set<Slot.DaysOfWeek>) =
-      Slot(
-        weekNumber = 1,
-        timeSlot = timeSlot,
-        // we don't use these fields so don't need to set them up
-        monday = false,
-        tuesday = false,
-        wednesday = false,
-        thursday = true,
-        friday = false,
-        saturday = false,
-        sunday = true,
-        daysOfWeek = daysOfWeek,
-      )
+    private fun aSlot(timeSlot: Slot.TimeSlot, daysOfWeek: Set<Slot.DaysOfWeek>) = Slot(
+      weekNumber = 1,
+      timeSlot = timeSlot,
+      // we don't use these fields so don't need to set them up
+      monday = false,
+      tuesday = false,
+      wednesday = false,
+      thursday = true,
+      friday = false,
+      saturday = false,
+      sunday = true,
+      daysOfWeek = daysOfWeek,
+    )
   }
 }
 

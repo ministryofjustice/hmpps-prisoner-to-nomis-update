@@ -11,31 +11,23 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 @Service
 class CourtSentencingApiService(private val courtSentencingApiWebClient: WebClient) {
 
-  suspend fun getCourtCase(id: String): LegacyCourtCase {
-    return courtSentencingApiWebClient.get()
-      .uri("/legacy/court-case/{id}", id)
-      .retrieve()
-      .awaitBody()
-  }
+  suspend fun getCourtCase(id: String): LegacyCourtCase = courtSentencingApiWebClient.get()
+    .uri("/legacy/court-case/{id}", id)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getCourtCaseForReconciliation(id: String): CourtCase {
-    return courtSentencingApiWebClient.get()
-      .uri("/court-case/{id}", id)
-      .retrieve()
-      .awaitBody()
-  }
+  suspend fun getCourtCaseForReconciliation(id: String): CourtCase = courtSentencingApiWebClient.get()
+    .uri("/court-case/{id}", id)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getCourtAppearance(id: String): LegacyCourtAppearance {
-    return courtSentencingApiWebClient.get()
-      .uri("/legacy/court-appearance/{id}", id)
-      .retrieve()
-      .awaitBody()
-  }
+  suspend fun getCourtAppearance(id: String): LegacyCourtAppearance = courtSentencingApiWebClient.get()
+    .uri("/legacy/court-appearance/{id}", id)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getCourtCharge(id: String): LegacyCharge {
-    return courtSentencingApiWebClient.get()
-      .uri("/legacy/charge/{id}", id)
-      .retrieve()
-      .awaitBody()
-  }
+  suspend fun getCourtCharge(id: String): LegacyCharge = courtSentencingApiWebClient.get()
+    .uri("/legacy/charge/{id}", id)
+    .retrieve()
+    .awaitBody()
 }

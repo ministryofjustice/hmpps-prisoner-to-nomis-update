@@ -40,19 +40,18 @@ class CSIPReconciliationService(
     }.awaitAll().filterNotNull()
   }
 
-  private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) =
-    runCatching { nomisApiService.getActivePrisoners(page.first, page.second).content }
-      .onFailure {
-        telemetryClient.trackEvent(
-          "csip-reports-reconciliation-mismatch-page-error",
-          mapOf(
-            "page" to page.first.toString(),
-          ),
-        )
-        log.error("Unable to match entire page of prisoners: $page", it)
-      }
-      .getOrElse { emptyList() }
-      .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
+  private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) = runCatching { nomisApiService.getActivePrisoners(page.first, page.second).content }
+    .onFailure {
+      telemetryClient.trackEvent(
+        "csip-reports-reconciliation-mismatch-page-error",
+        mapOf(
+          "page" to page.first.toString(),
+        ),
+      )
+      log.error("Unable to match entire page of prisoners: $page", it)
+    }
+    .getOrElse { emptyList() }
+    .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
   suspend fun checkCSIPsMatch(prisonerId: PrisonerIds): MismatchCSIPs? = runCatching {
     val nomisCSIPList = doApiCallWithRetries { nomisCSIPApiService.getCSIPsForReconciliation(prisonerId.offenderNo) }.offenderCSIPs
@@ -100,35 +99,33 @@ class CSIPReconciliationService(
   }.getOrNull()
 }
 
-fun CSIPResponse.toCSIPSummary() =
-  CSIPReportSummary(
-    incidentTypeCode = type.code,
-    incidentDate = incidentDate,
-    incidentTime = incidentTime,
-    attendeeCount = reviews.flatMap { it.attendees }.size,
-    factorCount = reportDetails.factors.size,
-    interviewCount = investigation.interviews?.size ?: 0,
-    planCount = plans.size,
-    reviewCount = reviews.size,
-    scsOutcomeCode = saferCustodyScreening.outcome?.code,
-    decisionOutcomeCode = decision.decisionOutcome?.code,
-    csipClosedFlag = reviews.any { it.closeCSIP },
-  )
+fun CSIPResponse.toCSIPSummary() = CSIPReportSummary(
+  incidentTypeCode = type.code,
+  incidentDate = incidentDate,
+  incidentTime = incidentTime,
+  attendeeCount = reviews.flatMap { it.attendees }.size,
+  factorCount = reportDetails.factors.size,
+  interviewCount = investigation.interviews?.size ?: 0,
+  planCount = plans.size,
+  reviewCount = reviews.size,
+  scsOutcomeCode = saferCustodyScreening.outcome?.code,
+  decisionOutcomeCode = decision.decisionOutcome?.code,
+  csipClosedFlag = reviews.any { it.closeCSIP },
+)
 
-fun CsipRecord.toCSIPSummary() =
-  CSIPReportSummary(
-    incidentTypeCode = referral.incidentType.code,
-    incidentDate = referral.incidentDate,
-    incidentTime = referral.incidentTime,
-    attendeeCount = plan?.reviews?.flatMap { it.attendees }?.size ?: 0,
-    factorCount = referral.contributoryFactors.size,
-    interviewCount = referral.investigation?.interviews?.size ?: 0,
-    planCount = plan?.identifiedNeeds?.size ?: 0,
-    reviewCount = plan?.reviews?.size ?: 0,
-    scsOutcomeCode = referral.saferCustodyScreeningOutcome?.outcome?.code,
-    decisionOutcomeCode = referral.decisionAndActions?.outcome?.code,
-    csipClosedFlag = plan?.reviews?.any { it.actions.contains(Review.Actions.CLOSE_CSIP) } ?: false,
-  )
+fun CsipRecord.toCSIPSummary() = CSIPReportSummary(
+  incidentTypeCode = referral.incidentType.code,
+  incidentDate = referral.incidentDate,
+  incidentTime = referral.incidentTime,
+  attendeeCount = plan?.reviews?.flatMap { it.attendees }?.size ?: 0,
+  factorCount = referral.contributoryFactors.size,
+  interviewCount = referral.investigation?.interviews?.size ?: 0,
+  planCount = plan?.identifiedNeeds?.size ?: 0,
+  reviewCount = plan?.reviews?.size ?: 0,
+  scsOutcomeCode = referral.saferCustodyScreeningOutcome?.outcome?.code,
+  decisionOutcomeCode = referral.decisionAndActions?.outcome?.code,
+  csipClosedFlag = plan?.reviews?.any { it.actions.contains(Review.Actions.CLOSE_CSIP) } ?: false,
+)
 
 data class CSIPReportSummary(
   val incidentTypeCode: String,

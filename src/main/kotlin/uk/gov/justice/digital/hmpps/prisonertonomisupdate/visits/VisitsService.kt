@@ -166,15 +166,13 @@ class VisitsService(
     }
   }
 
-  private fun getNomisOutcomeOrDefault(vsipVisit: VisitDto): String =
-    vsipVisit.outcomeStatus?.runCatching {
-      VsipOutcomeStatus.valueOf(this)
-    }?.getOrNull()?.let {
-      vsipToNomisOutcomeMap[it]?.name
-    } ?: NomisCancellationOutcome.ADMIN.name
+  private fun getNomisOutcomeOrDefault(vsipVisit: VisitDto): String = vsipVisit.outcomeStatus?.runCatching {
+    VsipOutcomeStatus.valueOf(this)
+  }?.getOrNull()?.let {
+    vsipToNomisOutcomeMap[it]?.name
+  } ?: NomisCancellationOutcome.ADMIN.name
 
-  private inline fun <reified T> String.fromJson(): T =
-    objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
 
 data class VisitBookedEvent(

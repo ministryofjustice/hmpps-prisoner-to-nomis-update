@@ -15,7 +15,10 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.model.AdjustmentDto
 
-class SentencingAdjustmentsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
+class SentencingAdjustmentsApiExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
   companion object {
     @JvmField
     val sentencingAdjustmentsApi = SentencingAdjustmentsApiMockServer()

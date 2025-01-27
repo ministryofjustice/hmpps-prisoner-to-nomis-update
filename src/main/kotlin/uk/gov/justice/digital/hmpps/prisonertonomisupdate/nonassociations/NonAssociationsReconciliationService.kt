@@ -50,12 +50,10 @@ class NonAssociationsReconciliationService(
     return results + listOf(checkForMissingDpsRecords(allNomisIds))
   }
 
-  private fun correctNomsIdOrder(id: NonAssociationIdResponse): NonAssociationIdResponse {
-    return if (id.offenderNo1 < id.offenderNo2) {
-      id
-    } else {
-      NonAssociationIdResponse(id.offenderNo2, id.offenderNo1)
-    }
+  private fun correctNomsIdOrder(id: NonAssociationIdResponse): NonAssociationIdResponse = if (id.offenderNo1 < id.offenderNo2) {
+    id
+  } else {
+    NonAssociationIdResponse(id.offenderNo2, id.offenderNo1)
   }
 
   internal suspend fun checkForMissingDpsRecords(allNomisIds: Set<NonAssociationIdResponse>): List<MismatchNonAssociation> {
@@ -104,29 +102,27 @@ class NonAssociationsReconciliationService(
     }
   }
 
-  internal suspend fun getNomisNonAssociationsForPage(page: Pair<Long, Long>) =
-    runCatching { nomisApiService.getNonAssociations(page.first, page.second).content }
-      .onFailure {
-        telemetryClient.trackEvent(
-          "non-associations-reports-reconciliation-mismatch-page-error",
-          mapOf("page" to page.first.toString()),
-        )
-        log.error("Unable to match entire Nomis page of prisoners: $page", it)
-      }
-      .getOrElse { emptyList() }
-      .also { log.info("Nomis Page requested: $page, with ${it.size} non-associations") }
+  internal suspend fun getNomisNonAssociationsForPage(page: Pair<Long, Long>) = runCatching { nomisApiService.getNonAssociations(page.first, page.second).content }
+    .onFailure {
+      telemetryClient.trackEvent(
+        "non-associations-reports-reconciliation-mismatch-page-error",
+        mapOf("page" to page.first.toString()),
+      )
+      log.error("Unable to match entire Nomis page of prisoners: $page", it)
+    }
+    .getOrElse { emptyList() }
+    .also { log.info("Nomis Page requested: $page, with ${it.size} non-associations") }
 
-  internal suspend fun getDpsNonAssociationsForPage(page: Pair<Long, Long>): List<NonAssociation> =
-    runCatching { nonAssociationsApiService.getAllNonAssociations(page.first, page.second).content }
-      .onFailure {
-        telemetryClient.trackEvent(
-          "non-associations-reports-reconciliation-mismatch-page-error",
-          mapOf("page" to page.first.toString()),
-        )
-        log.error("Unable to match entire DPS page of prisoners: $page", it)
-      }
-      .getOrElse { emptyList() }
-      .also { log.info("DPS Page requested: $page, with ${it.size} non-associations") }
+  internal suspend fun getDpsNonAssociationsForPage(page: Pair<Long, Long>): List<NonAssociation> = runCatching { nonAssociationsApiService.getAllNonAssociations(page.first, page.second).content }
+    .onFailure {
+      telemetryClient.trackEvent(
+        "non-associations-reports-reconciliation-mismatch-page-error",
+        mapOf("page" to page.first.toString()),
+      )
+      log.error("Unable to match entire DPS page of prisoners: $page", it)
+    }
+    .getOrElse { emptyList() }
+    .also { log.info("DPS Page requested: $page, with ${it.size} non-associations") }
 
   internal suspend fun checkMatch(id: NonAssociationIdResponse): List<MismatchNonAssociation> = runCatching {
     // log.debug("Checking NA: ${id.offenderNo1}, ${id.offenderNo2}")
@@ -272,7 +268,8 @@ class NonAssociationsReconciliationService(
       (!nomis.effectiveDate.isAfter(today) && nomis.effectiveDate.toString() != dps.whenCreated.take(10)) ||
       (closedInNomis(nomis, today) xor dps.isClosed) ||
       // reasonDoesNotMatch(nomis.reason, nomis.recipReason, dps.firstPrisonerRole, dps.secondPrisonerRole, dps.reason) ||
-      (nomis.comment == null && dps.comment != NO_COMMENT_PROVIDED) || (nomis.comment != null && nomis.comment != dps.comment)
+      (nomis.comment == null && dps.comment != NO_COMMENT_PROVIDED) ||
+      (nomis.comment != null && nomis.comment != dps.comment)
   }
 
   internal fun closedInNomis(nomis: NonAssociationResponse, today: LocalDate?): Boolean {

@@ -46,6 +46,4 @@ class AlertsResource(
   }
 }
 
-private fun List<MismatchAlerts>.asMap(): Map<String, String> {
-  return this.associate { it.offenderNo to ("missing-dps=${it.missingFromDps.size}:missing-nomis=${it.missingFromNomis.size}") }
-}
+private fun List<MismatchAlerts>.asMap(): Map<String, String> = this.associate { it.offenderNo to ("missing-dps=${it.missingFromDps.size}:missing-nomis=${it.missingFromNomis.size}") }

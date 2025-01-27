@@ -429,15 +429,14 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       assertThat(awsSqsActivityDlqClient.countAllMessagesOnQueue(activityDlqUrl).get()).isEqualTo(0)
     }
 
-    private fun amendActivityEvent(): PublishRequest? =
-      PublishRequest.builder().topicArn(topicArn)
-        .message(activityMessagePayload("activities.activity-schedule.amended", ACTIVITY_SCHEDULE_ID))
-        .messageAttributes(
-          mapOf(
-            "eventType" to MessageAttributeValue.builder().dataType("String")
-              .stringValue("activities.activity-schedule.amended").build(),
-          ),
-        ).build()
+    private fun amendActivityEvent(): PublishRequest? = PublishRequest.builder().topicArn(topicArn)
+      .message(activityMessagePayload("activities.activity-schedule.amended", ACTIVITY_SCHEDULE_ID))
+      .messageAttributes(
+        mapOf(
+          "eventType" to MessageAttributeValue.builder().dataType("String")
+            .stringValue("activities.activity-schedule.amended").build(),
+        ),
+      ).build()
   }
 }
 
@@ -719,8 +718,7 @@ fun buildGetMappingResponse(
   nomisActivityId: Long = NOMIS_CRS_ACTY_ID,
   activityScheduleId: Long = ACTIVITY_SCHEDULE_ID,
   activityId: Long = ACTIVITY_ID,
-) =
-  """{
+) = """{
           "nomisCourseActivityId": $nomisActivityId,
           "activityScheduleId": $activityScheduleId,
           "activityId": $activityId,
@@ -731,7 +729,7 @@ fun buildGetMappingResponse(
             "mappingType": "ACTIVITY_CREATED"
           }]
         }
-  """.trimIndent()
+""".trimIndent()
 
 fun buildNomisActivityResponse() = """{
                "courseActivityId": $NOMIS_CRS_ACTY_ID, 

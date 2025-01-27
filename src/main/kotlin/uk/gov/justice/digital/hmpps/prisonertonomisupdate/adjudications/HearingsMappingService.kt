@@ -21,21 +21,18 @@ class HearingsMappingService(
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
-  suspend fun getMappingGivenDpsHearingIdOrNull(dpsHearingId: String): AdjudicationHearingMappingDto? =
-    webClient.get()
-      .uri("/mapping/hearings/dps/{dpsHearingId}", dpsHearingId)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getMappingGivenDpsHearingIdOrNull(dpsHearingId: String): AdjudicationHearingMappingDto? = webClient.get()
+    .uri("/mapping/hearings/dps/{dpsHearingId}", dpsHearingId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
-  suspend fun getMappingGivenDpsHearingId(dpsHearingId: String): AdjudicationHearingMappingDto =
-    webClient.get()
-      .uri("/mapping/hearings/dps/{dpsHearingId}", dpsHearingId)
-      .retrieve()
-      .awaitBody()
+  suspend fun getMappingGivenDpsHearingId(dpsHearingId: String): AdjudicationHearingMappingDto = webClient.get()
+    .uri("/mapping/hearings/dps/{dpsHearingId}", dpsHearingId)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun deleteMappingGivenDpsHearingId(dpsHearingId: String): Unit =
-    webClient.delete()
-      .uri("/mapping/hearings/dps/{dpsHearingId}", dpsHearingId)
-      .retrieve()
-      .awaitBody()
+  suspend fun deleteMappingGivenDpsHearingId(dpsHearingId: String): Unit = webClient.delete()
+    .uri("/mapping/hearings/dps/{dpsHearingId}", dpsHearingId)
+    .retrieve()
+    .awaitBody()
 }

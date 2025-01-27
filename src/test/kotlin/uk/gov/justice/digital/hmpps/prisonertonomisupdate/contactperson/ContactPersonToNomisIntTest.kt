@@ -4029,8 +4029,7 @@ fun contactMessagePayload(
   eventType: String,
   contactId: String,
   source: String,
-) =
-  //language=JSON
+) = //language=JSON
   """
     {
       "eventType":"$eventType", 
@@ -4055,8 +4054,7 @@ fun prisonerContactMessagePayload(
   source: String = "DPS",
   contactId: String = "87654",
   offenderNo: String = "",
-) =
-  //language=JSON
+) = //language=JSON
   """
     {
       "eventType":"$eventType", 
@@ -4085,8 +4083,7 @@ fun prisonerContactRestrictionMessagePayload(
   source: String = "DPS",
   contactId: String = "87654",
   offenderNo: String = "",
-) =
-  //language=JSON
+) = //language=JSON
   """
     {
       "eventType":"$eventType", 
@@ -4114,8 +4111,7 @@ fun contactRestrictionMessagePayload(
   contactRestrictionId: String,
   source: String = "DPS",
   contactId: String = "87654",
-) =
-  //language=JSON
+) = //language=JSON
   """
     {
       "eventType":"$eventType", 
@@ -4139,8 +4135,7 @@ fun contactAddressMessagePayload(
   contactAddressId: String,
   source: String = "DPS",
   contactId: String = "87654",
-) =
-  //language=JSON
+) = //language=JSON
   """
     {
       "eventType":"$eventType", 
@@ -4164,8 +4159,7 @@ fun contactEmailMessagePayload(
   contactEmailId: String,
   source: String = "DPS",
   contactId: String = "87654",
-) =
-  //language=JSON
+) = //language=JSON
   """
     {
       "eventType":"$eventType", 
@@ -4189,8 +4183,7 @@ fun contactPhoneMessagePayload(
   contactPhoneId: String,
   source: String = "DPS",
   contactId: String = "87654",
-) =
-  //language=JSON
+) = //language=JSON
   """
     {
       "eventType":"$eventType", 
@@ -4215,8 +4208,7 @@ fun contactAddressPhoneMessagePayload(
   contactAddressId: String,
   source: String = "DPS",
   contactId: String = "87654",
-) =
-  //language=JSON
+) = //language=JSON
   """
     {
       "eventType":"$eventType", 
@@ -4241,8 +4233,7 @@ fun contactIdentityMessagePayload(
   contactIdentityId: String,
   source: String = "DPS",
   contactId: String = "87654",
-) =
-  //language=JSON
+) = //language=JSON
   """
     {
       "eventType":"$eventType", 

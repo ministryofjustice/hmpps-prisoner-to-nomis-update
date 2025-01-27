@@ -40,19 +40,18 @@ class ActivitiesReconService(
     prisons.forEach { reportScope.launch { allocationsReconciliationReport(it.prisonId) } }
   }
 
-  suspend fun allocationsReconciliationReport(prisonId: String) =
-    try {
-      coroutineScope {
-        val nomisBookingCounts = async { activitiesNomisApiService.getAllocationReconciliation(prisonId) }
-        val dpsBookingCounts = async { activitiesApiService.getAllocationReconciliation(prisonId) }
-        val compareResults = compareBookingCounts(nomisBookingCounts.await(), dpsBookingCounts.await())
+  suspend fun allocationsReconciliationReport(prisonId: String) = try {
+    coroutineScope {
+      val nomisBookingCounts = async { activitiesNomisApiService.getAllocationReconciliation(prisonId) }
+      val dpsBookingCounts = async { activitiesApiService.getAllocationReconciliation(prisonId) }
+      val compareResults = compareBookingCounts(nomisBookingCounts.await(), dpsBookingCounts.await())
 
-        publishTelemetry("allocation", prisonId, compareResults)
-      }
-    } catch (e: Exception) {
-      log.error("Allocation reconciliation report failed for prison $prisonId", e)
-      telemetryClient.trackEvent("activity-allocation-reconciliation-report-error", mapOf("prison" to prisonId))
+      publishTelemetry("allocation", prisonId, compareResults)
     }
+  } catch (e: Exception) {
+    log.error("Allocation reconciliation report failed for prison $prisonId", e)
+    telemetryClient.trackEvent("activity-allocation-reconciliation-report-error", mapOf("prison" to prisonId))
+  }
 
   suspend fun attendanceReconciliationReport(date: LocalDate) {
     val prisons = try {
@@ -71,19 +70,18 @@ class ActivitiesReconService(
     prisons.forEach { reportScope.launch { attendancesReconciliationReport(it.prisonId, date) } }
   }
 
-  suspend fun attendancesReconciliationReport(prisonId: String, date: LocalDate) =
-    try {
-      coroutineScope {
-        val nomisBookingCounts = async { activitiesNomisApiService.getAttendanceReconciliation(prisonId, date) }
-        val dpsBookingCounts = async { activitiesApiService.getAttendanceReconciliation(prisonId, date) }
-        val differences = compareBookingCounts(nomisBookingCounts.await(), dpsBookingCounts.await())
+  suspend fun attendancesReconciliationReport(prisonId: String, date: LocalDate) = try {
+    coroutineScope {
+      val nomisBookingCounts = async { activitiesNomisApiService.getAttendanceReconciliation(prisonId, date) }
+      val dpsBookingCounts = async { activitiesApiService.getAttendanceReconciliation(prisonId, date) }
+      val differences = compareBookingCounts(nomisBookingCounts.await(), dpsBookingCounts.await())
 
-        publishTelemetry("attendance", prisonId, differences, date)
-      }
-    } catch (e: Exception) {
-      log.error("Attendance reconciliation report failed for prison $prisonId", e)
-      telemetryClient.trackEvent("activity-attendance-reconciliation-report-error", mapOf("prison" to prisonId, "date" to "$date"))
+      publishTelemetry("attendance", prisonId, differences, date)
     }
+  } catch (e: Exception) {
+    log.error("Attendance reconciliation report failed for prison $prisonId", e)
+    telemetryClient.trackEvent("activity-attendance-reconciliation-report-error", mapOf("prison" to prisonId, "date" to "$date"))
+  }
 
   private suspend fun compareBookingCounts(nomisResults: NomisAllocationResponse, dpsResults: DpsAllocationResponse): CompareBookingsDifferences {
     val nomis = nomisResults.bookings.sortedBy { it.bookingId }.map { BookingCounts(it.bookingId, it.count) }

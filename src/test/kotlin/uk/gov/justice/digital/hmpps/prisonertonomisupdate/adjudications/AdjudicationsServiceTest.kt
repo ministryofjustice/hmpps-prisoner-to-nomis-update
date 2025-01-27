@@ -104,34 +104,48 @@ internal class AdjudicationsServiceTest {
     )
   }
 
-  private fun getReportedAdjudicationResponse(oicHearingType: HearingDto.OicHearingType = HearingDto.OicHearingType.GOV_ADULT) =
-    ReportedAdjudicationResponse(
-      ReportedAdjudicationDto(
-        chargeNumber = DPS_CHARGE_NUMBER,
-        prisonerNumber = PRISONER_NUMBER,
-        gender = ReportedAdjudicationDto.Gender.MALE,
-        incidentDetails = IncidentDetailsDto(
-          locationId = 2,
-          dateTimeOfDiscovery = "2023-09-26T08:15:00",
-          dateTimeOfIncident = "2023-09-26T08:15:00",
-          handoverDeadline = "2023-09-26T08:15:00",
+  private fun getReportedAdjudicationResponse(oicHearingType: HearingDto.OicHearingType = HearingDto.OicHearingType.GOV_ADULT) = ReportedAdjudicationResponse(
+    ReportedAdjudicationDto(
+      chargeNumber = DPS_CHARGE_NUMBER,
+      prisonerNumber = PRISONER_NUMBER,
+      gender = ReportedAdjudicationDto.Gender.MALE,
+      incidentDetails = IncidentDetailsDto(
+        locationId = 2,
+        dateTimeOfDiscovery = "2023-09-26T08:15:00",
+        dateTimeOfIncident = "2023-09-26T08:15:00",
+        handoverDeadline = "2023-09-26T08:15:00",
+      ),
+      isYouthOffender = false,
+      incidentRole = IncidentRoleDto(),
+      offenceDetails = OffenceDto(
+        offenceCode = 7003,
+        offenceRule = OffenceRuleDto(paragraphDescription = "7", paragraphNumber = "8"),
+        protectedCharacteristics = emptyList(),
+      ),
+      incidentStatement = IncidentStatementDto(statement = "s"),
+      createdByUserId = "me",
+      createdDateTime = "2023-09-26T08:15:00",
+      status = ReportedAdjudicationDto.Status.CHARGE_PROVED,
+      damages = emptyList(),
+      evidence = emptyList(),
+      witnesses = emptyList(),
+      hearings = listOf(
+        HearingDto(
+          id = DPS_HEARING_ID.toLong(),
+          locationId = 123,
+          dateTimeOfHearing = "",
+          oicHearingType = oicHearingType,
+          agencyId = "MDI",
+          outcome = HearingOutcomeDto(
+            adjudicator = "an adjudicator",
+            code = HearingOutcomeDto.Code.COMPLETE,
+            plea = HearingOutcomeDto.Plea.GUILTY,
+          ),
         ),
-        isYouthOffender = false,
-        incidentRole = IncidentRoleDto(),
-        offenceDetails = OffenceDto(
-          offenceCode = 7003,
-          offenceRule = OffenceRuleDto(paragraphDescription = "7", paragraphNumber = "8"),
-          protectedCharacteristics = emptyList(),
-        ),
-        incidentStatement = IncidentStatementDto(statement = "s"),
-        createdByUserId = "me",
-        createdDateTime = "2023-09-26T08:15:00",
-        status = ReportedAdjudicationDto.Status.CHARGE_PROVED,
-        damages = emptyList(),
-        evidence = emptyList(),
-        witnesses = emptyList(),
-        hearings = listOf(
-          HearingDto(
+      ),
+      outcomes = listOf(
+        OutcomeHistoryDto(
+          hearing = HearingDto(
             id = DPS_HEARING_ID.toLong(),
             locationId = 123,
             dateTimeOfHearing = "",
@@ -143,31 +157,16 @@ internal class AdjudicationsServiceTest {
               plea = HearingOutcomeDto.Plea.GUILTY,
             ),
           ),
+          outcome = CombinedOutcomeDto(outcome = OutcomeDto(code = OutcomeDto.Code.CHARGE_PROVED, canRemove = true)),
         ),
-        outcomes = listOf(
-          OutcomeHistoryDto(
-            hearing = HearingDto(
-              id = DPS_HEARING_ID.toLong(),
-              locationId = 123,
-              dateTimeOfHearing = "",
-              oicHearingType = oicHearingType,
-              agencyId = "MDI",
-              outcome = HearingOutcomeDto(
-                adjudicator = "an adjudicator",
-                code = HearingOutcomeDto.Code.COMPLETE,
-                plea = HearingOutcomeDto.Plea.GUILTY,
-              ),
-            ),
-            outcome = CombinedOutcomeDto(outcome = OutcomeDto(code = OutcomeDto.Code.CHARGE_PROVED, canRemove = true)),
-          ),
-        ),
-        disIssueHistory = emptyList(),
-        punishments = emptyList(),
-        punishmentComments = emptyList(),
-        outcomeEnteredInNomis = false,
-        originatingAgencyId = "MDI",
-        linkedChargeNumbers = emptyList(),
-        canActionFromHistory = false,
       ),
-    )
+      disIssueHistory = emptyList(),
+      punishments = emptyList(),
+      punishmentComments = emptyList(),
+      outcomeEnteredInNomis = false,
+      originatingAgencyId = "MDI",
+      linkedChargeNumbers = emptyList(),
+      canActionFromHistory = false,
+    ),
+  )
 }

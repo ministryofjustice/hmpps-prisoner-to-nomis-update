@@ -124,6 +124,5 @@ internal class IncentivesMappingServiceTest {
     }
   }
 
-  private fun newMapping() =
-    IncentiveMappingDto(nomisBookingId = 456L, nomisIncentiveSequence = 3, incentiveId = 1234L, mappingType = "A_TYPE")
+  private fun newMapping() = IncentiveMappingDto(nomisBookingId = 456L, nomisIncentiveSequence = 3, incentiveId = 1234L, mappingType = "A_TYPE")
 }

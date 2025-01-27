@@ -502,8 +502,7 @@ class AlertsReferenceDataToNomisIntTest : SqsIntegrationTestBase() {
 fun alertReferenceDataMessagePayload(
   eventType: String,
   alertCode: String,
-) =
-  //language=JSON
+) = //language=JSON
   """
     {
       "eventType":"$eventType", 

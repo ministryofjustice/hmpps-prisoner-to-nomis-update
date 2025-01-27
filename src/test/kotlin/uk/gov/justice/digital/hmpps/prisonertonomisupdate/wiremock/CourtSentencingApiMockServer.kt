@@ -34,7 +34,10 @@ const val COURT_CHARGE_4_OFFENCE_DATE = "2024-01-14"
 const val COURT_CHARGE_1_OFFENCE_END_DATE = "2024-01-11"
 const val COURT_CHARGE_2_OFFENCE_END_DATE = "2024-01-12"
 
-class CourtSentencingApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
+class CourtSentencingApiExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
   companion object {
     @JvmField
     val courtSentencingApi = CourtSentencingApiMockServer()

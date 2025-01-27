@@ -72,20 +72,19 @@ class SentencingReconciliationService(
 
   data class MismatchPageResult(val mismatches: List<MismatchSentencingAdjustments>, val lastBookingId: Long)
 
-  private suspend fun getNextBookingsForPage(lastBookingId: Long, allPrisoners: Boolean): PageResult =
-    runCatching { nomisApiService.getAllLatestBookings(lastBookingId = lastBookingId, activeOnly = !allPrisoners, pageSize = pageSize.toInt()) }
-      .onFailure {
-        telemetryClient.trackEvent(
-          "sentencing-reports-reconciliation-mismatch-page-error",
-          mapOf(
-            "booking" to lastBookingId.toString(),
-          ),
-        )
-        log.error("Unable to match entire page of bookings from booking: $lastBookingId", it)
-      }
-      .map { SuccessPageResult(it) }
-      .getOrElse { ErrorPageResult(it) }
-      .also { log.info("Page requested from booking: $lastBookingId, with $pageSize bookings") }
+  private suspend fun getNextBookingsForPage(lastBookingId: Long, allPrisoners: Boolean): PageResult = runCatching { nomisApiService.getAllLatestBookings(lastBookingId = lastBookingId, activeOnly = !allPrisoners, pageSize = pageSize.toInt()) }
+    .onFailure {
+      telemetryClient.trackEvent(
+        "sentencing-reports-reconciliation-mismatch-page-error",
+        mapOf(
+          "booking" to lastBookingId.toString(),
+        ),
+      )
+      log.error("Unable to match entire page of bookings from booking: $lastBookingId", it)
+    }
+    .map { SuccessPageResult(it) }
+    .getOrElse { ErrorPageResult(it) }
+    .also { log.info("Page requested from booking: $lastBookingId, with $pageSize bookings") }
 
   suspend fun checkBookingAdjustmentsMatch(prisonerId: PrisonerIds): MismatchSentencingAdjustments? = runCatching {
     val (nomisAdjustments, dpsAdjustments) = withContext(Dispatchers.Unconfined) {

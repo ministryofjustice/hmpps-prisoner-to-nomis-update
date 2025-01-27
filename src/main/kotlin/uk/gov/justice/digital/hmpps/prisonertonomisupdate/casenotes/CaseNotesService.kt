@@ -66,14 +66,13 @@ class CaseNotesService(
     }
   }
 
-  suspend fun createMapping(message: CreateMappingRetryMessage<CaseNoteMappingDto>) =
-    mappingApiService.createMapping(message.mapping).also {
-      telemetryClient.trackEvent(
-        "casenotes-create-success",
-        message.telemetryAttributes,
-        null,
-      )
-    }
+  suspend fun createMapping(message: CreateMappingRetryMessage<CaseNoteMappingDto>) = mappingApiService.createMapping(message.mapping).also {
+    telemetryClient.trackEvent(
+      "casenotes-create-success",
+      message.telemetryAttributes,
+      null,
+    )
+  }
 
   override suspend fun retryCreateMapping(message: String) = createMapping(message.fromJson())
 
@@ -144,8 +143,7 @@ class CaseNotesService(
     log.warn("Unable to delete mapping for casenote $dpsCaseNoteId. Please delete manually", e)
   }
 
-  private inline fun <reified T> String.fromJson(): T =
-    objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
 
 data class CaseNoteEvent(

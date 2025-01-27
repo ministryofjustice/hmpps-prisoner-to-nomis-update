@@ -293,6 +293,5 @@ class ReferralOutcomesToNomisIntTest : SqsIntegrationTestBase() {
     prisonerNumber: String,
     eventType: String,
     status: String = "REFER_POLICE",
-  ) =
-    """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId", "prisonerNumber": "$prisonerNumber", "status": "$status"}}"""
+  ) = """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId", "prisonerNumber": "$prisonerNumber", "status": "$status"}}"""
 }

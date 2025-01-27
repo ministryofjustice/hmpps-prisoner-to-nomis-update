@@ -148,25 +148,24 @@ internal class AppointmentsServiceTest {
     appointmentsService.createAppointment(appointment)
   }
 
-  private fun newAppointmentInstance(customName: String?, extraInformation: String?, endTime: String?): AppointmentInstance =
-    AppointmentInstance(
-      id = APPOINTMENT_INSTANCE_ID,
-      appointmentSeriesId = 123,
-      appointmentId = 1234,
-      appointmentAttendeeId = APPOINTMENT_INSTANCE_ID,
-      appointmentType = AppointmentInstance.AppointmentType.INDIVIDUAL,
-      bookingId = 12345,
-      internalLocationId = 34567,
-      appointmentDate = LocalDate.parse("2023-03-14"),
-      startTime = "10:15",
-      endTime = endTime,
-      categoryCode = "DUFF",
-      prisonCode = "SKI",
-      inCell = false,
-      prisonerNumber = "A1234BC",
-      createdTime = LocalDateTime.parse("2021-03-14T10:15:00"),
-      createdBy = "user1",
-      customName = customName,
-      extraInformation = extraInformation,
-    )
+  private fun newAppointmentInstance(customName: String?, extraInformation: String?, endTime: String?): AppointmentInstance = AppointmentInstance(
+    id = APPOINTMENT_INSTANCE_ID,
+    appointmentSeriesId = 123,
+    appointmentId = 1234,
+    appointmentAttendeeId = APPOINTMENT_INSTANCE_ID,
+    appointmentType = AppointmentInstance.AppointmentType.INDIVIDUAL,
+    bookingId = 12345,
+    internalLocationId = 34567,
+    appointmentDate = LocalDate.parse("2023-03-14"),
+    startTime = "10:15",
+    endTime = endTime,
+    categoryCode = "DUFF",
+    prisonCode = "SKI",
+    inCell = false,
+    prisonerNumber = "A1234BC",
+    createdTime = LocalDateTime.parse("2021-03-14T10:15:00"),
+    createdBy = "user1",
+    customName = customName,
+    extraInformation = extraInformation,
+  )
 }

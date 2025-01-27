@@ -57,52 +57,46 @@ class AllocationService(
     }
   }
 
-  private fun toUpsertAllocationRequest(allocation: Allocation) =
-    UpsertAllocationRequest(
-      bookingId = allocation.bookingId,
-      payBandCode = allocation.prisonPayBand?.nomisPayBand?.toString(),
-      startDate = allocation.startDate,
-      endDate = allocation.endDate,
-      endReason = getEndReason(allocation.status),
-      endComment = getEndComment(allocation.status, allocation.deallocatedBy, allocation.deallocatedTime, allocation.deallocatedReason?.description),
-      suspended = isSuspended(allocation.status),
-      suspendedComment = getSuspendedComment(allocation.status, allocation.suspendedBy, allocation.suspendedTime, allocation.suspendedReason),
-      programStatusCode = getProgramStatus(allocation.status),
-      exclusions = toAllocationExclusions(allocation.exclusions),
-    )
+  private fun toUpsertAllocationRequest(allocation: Allocation) = UpsertAllocationRequest(
+    bookingId = allocation.bookingId,
+    payBandCode = allocation.prisonPayBand?.nomisPayBand?.toString(),
+    startDate = allocation.startDate,
+    endDate = allocation.endDate,
+    endReason = getEndReason(allocation.status),
+    endComment = getEndComment(allocation.status, allocation.deallocatedBy, allocation.deallocatedTime, allocation.deallocatedReason?.description),
+    suspended = isSuspended(allocation.status),
+    suspendedComment = getSuspendedComment(allocation.status, allocation.suspendedBy, allocation.suspendedTime, allocation.suspendedReason),
+    programStatusCode = getProgramStatus(allocation.status),
+    exclusions = toAllocationExclusions(allocation.exclusions),
+  )
 
-  private fun getEndReason(status: Allocation.Status) =
-    if (status == ENDED) "OTH" else null
+  private fun getEndReason(status: Allocation.Status) = if (status == ENDED) "OTH" else null
 
-  private fun getEndComment(status: Allocation.Status, by: String?, time: LocalDateTime?, reason: String?) =
-    if (status == ENDED) {
-      "Deallocated in DPS by $by at ${time?.format(humanTimeFormat)} for reason $reason"
-    } else {
-      null
-    }
+  private fun getEndComment(status: Allocation.Status, by: String?, time: LocalDateTime?, reason: String?) = if (status == ENDED) {
+    "Deallocated in DPS by $by at ${time?.format(humanTimeFormat)} for reason $reason"
+  } else {
+    null
+  }
 
   private fun isSuspended(status: Allocation.Status) = status in listOf(SUSPENDED, AUTO_SUSPENDED, SUSPENDED_WITH_PAY)
 
-  private fun getSuspendedComment(status: Allocation.Status, by: String?, time: LocalDateTime?, reason: String?) =
-    if (isSuspended(status)) {
-      "$status in DPS by $by at ${time?.format(humanTimeFormat)} for reason $reason"
-    } else {
-      null
-    }
+  private fun getSuspendedComment(status: Allocation.Status, by: String?, time: LocalDateTime?, reason: String?) = if (isSuspended(status)) {
+    "$status in DPS by $by at ${time?.format(humanTimeFormat)} for reason $reason"
+  } else {
+    null
+  }
 
-  private fun getProgramStatus(status: Allocation.Status) =
-    when (status) {
-      ENDED -> "END"
-      else -> "ALLOC"
-    }
+  private fun getProgramStatus(status: Allocation.Status) = when (status) {
+    ENDED -> "END"
+    else -> "ALLOC"
+  }
 
   /*
    * Convert DPS exclusion slots to NOMIS exclusions.
    */
-  fun toAllocationExclusions(exclusions: List<Slot>): List<AllocationExclusion> =
-    exclusions
-      .flatMap { dpsSlot -> dpsSlot.daysOfWeek.map { day -> AllocationExclusion(day.toNomis(), dpsSlot.timeSlot.toNomis()) } }
-      .consolidateFullDays()
+  fun toAllocationExclusions(exclusions: List<Slot>): List<AllocationExclusion> = exclusions
+    .flatMap { dpsSlot -> dpsSlot.daysOfWeek.map { day -> AllocationExclusion(day.toNomis(), dpsSlot.timeSlot.toNomis()) } }
+    .consolidateFullDays()
 
   private fun Slot.DaysOfWeek.toNomis() = AllocationExclusion.Day.entries.first { value.startsWith(it.value) }
   private fun Slot.TimeSlot.toNomis() = AllocationExclusion.Slot.entries.first { this.value == it.value }
@@ -110,16 +104,15 @@ class AllocationService(
   /*
    * In NOMIS a full day is represented by a null slot rather than a record for each slot.
    */
-  private fun List<AllocationExclusion>.consolidateFullDays() =
-    groupBy { exclusion -> exclusion.day }
-      .mapValues { dayExclusions -> dayExclusions.value.map { exclusion -> exclusion.slot } }
-      .flatMap { (day, slots) ->
-        if (slots.isAllDay()) {
-          listOf(AllocationExclusion(day, null))
-        } else {
-          slots.map { slot -> AllocationExclusion(day, slot) }
-        }
+  private fun List<AllocationExclusion>.consolidateFullDays() = groupBy { exclusion -> exclusion.day }
+    .mapValues { dayExclusions -> dayExclusions.value.map { exclusion -> exclusion.slot } }
+    .flatMap { (day, slots) ->
+      if (slots.isAllDay()) {
+        listOf(AllocationExclusion(day, null))
+      } else {
+        slots.map { slot -> AllocationExclusion(day, slot) }
       }
+    }
 
   private fun List<AllocationExclusion.Slot?>.isAllDay() = containsAll(AllocationExclusion.Slot.entries)
 }

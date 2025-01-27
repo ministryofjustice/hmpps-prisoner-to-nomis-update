@@ -937,8 +937,7 @@ fun caseNoteMessagePayload(
   nomisCaseNoteId: Long,
   source: CaseNoteSource,
   syncToNomis: Boolean,
-) =
-  //language=JSON
+) = //language=JSON
   """
     {
       "eventType":"$eventType", 

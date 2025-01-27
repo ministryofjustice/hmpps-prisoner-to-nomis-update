@@ -687,8 +687,7 @@ fun alertMessagePayload(
   alertUuid: String,
   source: AlertSource,
   alertCode: String,
-) =
-  //language=JSON
+) = //language=JSON
   """
     {
       "eventType":"$eventType", 

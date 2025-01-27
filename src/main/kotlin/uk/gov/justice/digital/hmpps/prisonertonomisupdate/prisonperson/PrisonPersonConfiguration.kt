@@ -23,13 +23,12 @@ class PrisonPersonConfiguration(
   fun prisonPersonApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(prisonPersonUrl, healthTimeout)
 
   @Bean
-  fun prisonPersonApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.reactiveAuthorisedWebClient(
-      authorizedClientManager = authorizedClientManager,
-      registrationId = "prison-person-api",
-      url = prisonPersonUrl,
-      timeout = timeout,
-    )
+  fun prisonPersonApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.reactiveAuthorisedWebClient(
+    authorizedClientManager = authorizedClientManager,
+    registrationId = "prison-person-api",
+    url = prisonPersonUrl,
+    timeout = timeout,
+  )
 
   @Component("prisonPersonApi")
   class PrisonPersonApiHealth(@Qualifier("prisonPersonApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)

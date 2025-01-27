@@ -35,18 +35,16 @@ class LocationsMappingService(
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
-  suspend fun getMappingGivenDpsIdOrNull(id: String): LocationMappingDto? =
-    webClient.get()
-      .uri("/mapping/locations/dps/{id}", id)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getMappingGivenDpsIdOrNull(id: String): LocationMappingDto? = webClient.get()
+    .uri("/mapping/locations/dps/{id}", id)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
-  suspend fun getMappingGivenDpsId(id: String): LocationMappingDto =
-    webClient.get()
-      .uri("/mapping/locations/dps/{id}", id)
-      .retrieve()
-      .bodyToMono(LocationMappingDto::class.java)
-      .awaitSingle()
+  suspend fun getMappingGivenDpsId(id: String): LocationMappingDto = webClient.get()
+    .uri("/mapping/locations/dps/{id}", id)
+    .retrieve()
+    .bodyToMono(LocationMappingDto::class.java)
+    .awaitSingle()
 
   suspend fun getMappingGivenNomisIdOrNull(id: Long): LocationMappingDto? {
     lateinit var url: URI
@@ -63,18 +61,16 @@ class LocationsMappingService(
       .awaitSingleOrNull()
   }
 
-  suspend fun getMappingGivenNomisId(id: Long): LocationMappingDto =
-    webClient.get()
-      .uri("/mapping/locations/nomis/{id}", id)
-      .retrieve()
-      .bodyToMono(LocationMappingDto::class.java)
-      .awaitSingle()
+  suspend fun getMappingGivenNomisId(id: Long): LocationMappingDto = webClient.get()
+    .uri("/mapping/locations/nomis/{id}", id)
+    .retrieve()
+    .bodyToMono(LocationMappingDto::class.java)
+    .awaitSingle()
 
-  suspend fun getAllMappings(): List<LocationMappingDto> =
-    webClient.get()
-      .uri("/mapping/locations")
-      .retrieve()
-      .awaitBody()
+  suspend fun getAllMappings(): List<LocationMappingDto> = webClient.get()
+    .uri("/mapping/locations")
+    .retrieve()
+    .awaitBody()
 
   suspend fun deleteMapping(dpsId: String) {
     webClient.delete()
