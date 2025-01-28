@@ -12,12 +12,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Upsert
 @Service
 class CSIPNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
 
-  suspend fun upsertCsipReport(nomisCSIPReport: UpsertCSIPRequest): UpsertCSIPResponse =
-    webClient.put()
-      .uri("/csip")
-      .bodyValue(nomisCSIPReport)
-      .retrieve()
-      .awaitBody()
+  suspend fun upsertCsipReport(nomisCSIPReport: UpsertCSIPRequest): UpsertCSIPResponse = webClient.put()
+    .uri("/csip")
+    .bodyValue(nomisCSIPReport)
+    .retrieve()
+    .awaitBody()
 
   suspend fun deleteCsipReport(csipReportId: Long) {
     webClient.delete()
@@ -26,8 +25,7 @@ class CSIPNomisApiService(@Qualifier("nomisApiWebClient") private val webClient:
       .awaitBodilessEntity()
   }
 
-  suspend fun getCSIPsForReconciliation(offenderNo: String): PrisonerCSIPsResponse =
-    webClient.get().uri("/prisoners/{offenderNo}/csip/reconciliation", offenderNo)
-      .retrieve()
-      .awaitBody()
+  suspend fun getCSIPsForReconciliation(offenderNo: String): PrisonerCSIPsResponse = webClient.get().uri("/prisoners/{offenderNo}/csip/reconciliation", offenderNo)
+    .retrieve()
+    .awaitBody()
 }

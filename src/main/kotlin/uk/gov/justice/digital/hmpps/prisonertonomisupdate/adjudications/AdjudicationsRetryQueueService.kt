@@ -11,10 +11,9 @@ class AdjudicationsRetryQueueService(
   hmppsQueueService: HmppsQueueService,
   telemetryClient: TelemetryClient,
   objectMapper: ObjectMapper,
-) :
-  RetryQueueService(
-    queueId = "adjudication",
-    hmppsQueueService = hmppsQueueService,
-    telemetryClient = telemetryClient,
-    objectMapper = objectMapper,
-  )
+) : RetryQueueService(
+  queueId = "adjudication",
+  hmppsQueueService = hmppsQueueService,
+  telemetryClient = telemetryClient,
+  objectMapper = objectMapper,
+)

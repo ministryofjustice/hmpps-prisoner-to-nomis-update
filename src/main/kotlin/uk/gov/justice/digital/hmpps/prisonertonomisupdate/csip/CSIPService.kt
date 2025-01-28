@@ -60,28 +60,26 @@ class CSIPService(
     }
   }
 
-  fun UpsertCSIPResponse.createNewMappingDto(dpsCsipReportId: String) =
-    CSIPFullMappingDto(
-      dpsCSIPReportId = dpsCsipReportId,
-      nomisCSIPReportId = nomisCSIPReportId,
-      mappingType = CSIPFullMappingDto.MappingType.DPS_CREATED,
-      attendeeMappings = filterMappingsByType(dpsCsipReportId, CSIPComponent.Component.ATTENDEE),
-      factorMappings = filterMappingsByType(dpsCsipReportId, CSIPComponent.Component.FACTOR),
-      interviewMappings = filterMappingsByType(dpsCsipReportId, CSIPComponent.Component.INTERVIEW),
-      planMappings = filterMappingsByType(dpsCsipReportId, CSIPComponent.Component.PLAN),
-      reviewMappings = filterMappingsByType(dpsCsipReportId, CSIPComponent.Component.REVIEW),
-    )
+  fun UpsertCSIPResponse.createNewMappingDto(dpsCsipReportId: String) = CSIPFullMappingDto(
+    dpsCSIPReportId = dpsCsipReportId,
+    nomisCSIPReportId = nomisCSIPReportId,
+    mappingType = CSIPFullMappingDto.MappingType.DPS_CREATED,
+    attendeeMappings = filterMappingsByType(dpsCsipReportId, CSIPComponent.Component.ATTENDEE),
+    factorMappings = filterMappingsByType(dpsCsipReportId, CSIPComponent.Component.FACTOR),
+    interviewMappings = filterMappingsByType(dpsCsipReportId, CSIPComponent.Component.INTERVIEW),
+    planMappings = filterMappingsByType(dpsCsipReportId, CSIPComponent.Component.PLAN),
+    reviewMappings = filterMappingsByType(dpsCsipReportId, CSIPComponent.Component.REVIEW),
+  )
 
-  fun UpsertCSIPResponse.filterMappingsByType(dpsCSIPReportId: String, childType: CSIPComponent.Component) =
-    components.filter { it.component == childType }
-      .map {
-        CSIPChildMappingDto(
-          dpsCSIPReportId = dpsCSIPReportId,
-          nomisId = it.nomisId,
-          dpsId = it.dpsId,
-          mappingType = CSIPChildMappingDto.MappingType.DPS_CREATED,
-        )
-      }
+  fun UpsertCSIPResponse.filterMappingsByType(dpsCSIPReportId: String, childType: CSIPComponent.Component) = components.filter { it.component == childType }
+    .map {
+      CSIPChildMappingDto(
+        dpsCSIPReportId = dpsCSIPReportId,
+        nomisId = it.nomisId,
+        dpsId = it.dpsId,
+        mappingType = CSIPChildMappingDto.MappingType.DPS_CREATED,
+      )
+    }
 
   suspend fun updateCSIPReport(csipEvent: CSIPEvent) {
     val dpsCsipReportId = csipEvent.additionalInformation.recordUuid
@@ -128,23 +126,21 @@ class CSIPService(
     }
   }
 
-  suspend fun createMappingRetry(message: CreateMappingRetryMessage<CSIPFullMappingDto>) =
-    mappingApiService.createMapping(message.mapping).also {
-      telemetryClient.trackEvent(
-        "csip-create-mapping-retry-success",
-        message.telemetryAttributes,
-        null,
-      )
-    }
+  suspend fun createMappingRetry(message: CreateMappingRetryMessage<CSIPFullMappingDto>) = mappingApiService.createMapping(message.mapping).also {
+    telemetryClient.trackEvent(
+      "csip-create-mapping-retry-success",
+      message.telemetryAttributes,
+      null,
+    )
+  }
 
-  suspend fun createChildMappingsRetry(message: CreateMappingRetryMessage<CSIPFullMappingDto>) =
-    mappingApiService.createChildMappings(message.mapping).also {
-      telemetryClient.trackEvent(
-        "csip-children-create-mapping-retry-success",
-        message.telemetryAttributes,
-        null,
-      )
-    }
+  suspend fun createChildMappingsRetry(message: CreateMappingRetryMessage<CSIPFullMappingDto>) = mappingApiService.createChildMappings(message.mapping).also {
+    telemetryClient.trackEvent(
+      "csip-children-create-mapping-retry-success",
+      message.telemetryAttributes,
+      null,
+    )
+  }
 
   enum class EntityType(val displayName: String) {
     CSIP("csip"),
@@ -191,8 +187,7 @@ class CSIPService(
     log.warn("Unable to delete mapping for csip $dpsCsipId. Please delete manually", e)
   }
 
-  private inline fun <reified T> String.fromJson(): T =
-    objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
 
 data class CSIPEvent(

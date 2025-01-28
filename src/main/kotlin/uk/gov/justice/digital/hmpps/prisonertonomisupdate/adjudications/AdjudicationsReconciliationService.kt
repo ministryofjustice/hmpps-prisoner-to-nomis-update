@@ -34,29 +34,26 @@ class AdjudicationsReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<MismatchAdjudicationAdaPunishments> {
-    return activePrisonersCount.asPages(pageSize).flatMap { page ->
-      val activePrisoners = getActivePrisonersForPage(page)
+  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<MismatchAdjudicationAdaPunishments> = activePrisonersCount.asPages(pageSize).flatMap { page ->
+    val activePrisoners = getActivePrisonersForPage(page)
 
-      withContext(Dispatchers.Unconfined) {
-        activePrisoners.map { async { checkADAPunishmentsMatch(it) } }
-      }.awaitAll().filterNotNull()
-    }
+    withContext(Dispatchers.Unconfined) {
+      activePrisoners.map { async { checkADAPunishmentsMatch(it) } }
+    }.awaitAll().filterNotNull()
   }
 
-  private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) =
-    runCatching { nomisApiService.getActivePrisoners(page.first, page.second).content }
-      .onFailure {
-        telemetryClient.trackEvent(
-          "adjudication-reports-reconciliation-mismatch-page-error",
-          mapOf(
-            "page" to page.first.toString(),
-          ),
-        )
-        log.error("Unable to match entire page of prisoners: $page", it)
-      }
-      .getOrElse { emptyList() }
-      .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
+  private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) = runCatching { nomisApiService.getActivePrisoners(page.first, page.second).content }
+    .onFailure {
+      telemetryClient.trackEvent(
+        "adjudication-reports-reconciliation-mismatch-page-error",
+        mapOf(
+          "page" to page.first.toString(),
+        ),
+      )
+      log.error("Unable to match entire page of prisoners: $page", it)
+    }
+    .getOrElse { emptyList() }
+    .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
   suspend fun checkADAPunishmentsMatch(prisonerId: PrisonerIds): MismatchAdjudicationAdaPunishments? = runCatching {
     val nomisSummary = doApiCallWithRetries { nomisApiService.getAdaAwardsSummary(prisonerId.bookingId) }
@@ -140,9 +137,7 @@ private fun List<ReportedAdjudicationDto>.toAdaSummary(): AdaSummary {
   return AdaSummary(count = adaPunishments.size, days = adaPunishments.sumOf { it.schedule.days })
 }
 
-private fun AdjudicationADAAwardSummaryResponse.toAdaSummary(): AdaSummary {
-  return AdaSummary(count = this.adaSummaries.size, days = this.adaSummaries.sumOf { it.days })
-}
+private fun AdjudicationADAAwardSummaryResponse.toAdaSummary(): AdaSummary = AdaSummary(count = this.adaSummaries.size, days = this.adaSummaries.sumOf { it.days })
 
 data class MismatchAdjudicationAdaPunishments(
   val prisonerId: PrisonerIds,

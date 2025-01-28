@@ -70,45 +70,38 @@ class CourtCaseMappingService(
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
-  suspend fun getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId: String): CourtCaseMappingDto? =
-    webClient.get()
-      .uri("/mapping/court-sentencing/court-cases/dps-court-case-id/{dpsCourtCaseId}", dpsCourtCaseId)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId: String): CourtCaseMappingDto? = webClient.get()
+    .uri("/mapping/court-sentencing/court-cases/dps-court-case-id/{dpsCourtCaseId}", dpsCourtCaseId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
-  suspend fun getMappingGivenCourtCaseId(dpsCourtCaseId: String): CourtCaseMappingDto =
-    webClient.get()
-      .uri("/mapping/court-sentencing/court-cases/dps-court-case-id/{dpsCourtCaseId}", dpsCourtCaseId)
-      .retrieve()
-      .awaitBody()
+  suspend fun getMappingGivenCourtCaseId(dpsCourtCaseId: String): CourtCaseMappingDto = webClient.get()
+    .uri("/mapping/court-sentencing/court-cases/dps-court-case-id/{dpsCourtCaseId}", dpsCourtCaseId)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getMappingGivenNomisCourtCaseId(nomisCourtCaseId: Long): CourtCaseMappingDto =
-    webClient.get()
-      .uri("/mapping/court-sentencing/court-cases/nomis-court-case-id/{nomisCourtCaseId}", nomisCourtCaseId)
-      .retrieve()
-      .awaitBody()
+  suspend fun getMappingGivenNomisCourtCaseId(nomisCourtCaseId: Long): CourtCaseMappingDto = webClient.get()
+    .uri("/mapping/court-sentencing/court-cases/nomis-court-case-id/{nomisCourtCaseId}", nomisCourtCaseId)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getMappingGivenCourtAppearanceIdOrNull(dpsCourtAppearanceId: String): CourtAppearanceMappingDto? =
-    webClient.get()
-      .uri("/mapping/court-sentencing/court-appearances/dps-court-appearance-id/{dpsCourtAppearanceId}", dpsCourtAppearanceId)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getMappingGivenCourtAppearanceIdOrNull(dpsCourtAppearanceId: String): CourtAppearanceMappingDto? = webClient.get()
+    .uri("/mapping/court-sentencing/court-appearances/dps-court-appearance-id/{dpsCourtAppearanceId}", dpsCourtAppearanceId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
-  suspend fun getMappingGivenCourtAppearanceId(dpsCourtAppearanceId: String): CourtAppearanceMappingDto =
-    webClient.get()
-      .uri("/mapping/court-sentencing/court-appearances/dps-court-appearance-id/{dpsCourtAppearanceId}", dpsCourtAppearanceId)
-      .retrieve()
-      .awaitBody()
+  suspend fun getMappingGivenCourtAppearanceId(dpsCourtAppearanceId: String): CourtAppearanceMappingDto = webClient.get()
+    .uri("/mapping/court-sentencing/court-appearances/dps-court-appearance-id/{dpsCourtAppearanceId}", dpsCourtAppearanceId)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getMappingGivenCourtChargeIdOrNull(dpsCourtChargeId: String): CourtChargeMappingDto? =
-    webClient.get()
-      .uri("/mapping/court-sentencing/court-charges/dps-court-charge-id/{dpsCourtChargeId}", dpsCourtChargeId)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getMappingGivenCourtChargeIdOrNull(dpsCourtChargeId: String): CourtChargeMappingDto? = webClient.get()
+    .uri("/mapping/court-sentencing/court-charges/dps-court-charge-id/{dpsCourtChargeId}", dpsCourtChargeId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
-  suspend fun getMappingGivenCourtChargeId(dpsCourtChargeId: String): CourtChargeMappingDto =
-    webClient.get()
-      .uri("/mapping/court-sentencing/court-charges/dps-court-charge-id/{dpsCourtChargeId}", dpsCourtChargeId)
-      .retrieve()
-      .awaitBody()
+  suspend fun getMappingGivenCourtChargeId(dpsCourtChargeId: String): CourtChargeMappingDto = webClient.get()
+    .uri("/mapping/court-sentencing/court-charges/dps-court-charge-id/{dpsCourtChargeId}", dpsCourtChargeId)
+    .retrieve()
+    .awaitBody()
 }

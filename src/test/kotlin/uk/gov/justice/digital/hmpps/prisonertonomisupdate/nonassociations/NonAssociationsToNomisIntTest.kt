@@ -541,8 +541,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  fun nonAssociationMessagePayload(nonAssociationId: Long, eventType: String) =
-    """{"eventType":"$eventType", "additionalInformation": {"id":"$nonAssociationId"}, "version": "1.0", "description": "description", "occurredAt": "2023-09-01T17:09:56.199944267+01:00"}"""
+  fun nonAssociationMessagePayload(nonAssociationId: Long, eventType: String) = """{"eventType":"$eventType", "additionalInformation": {"id":"$nonAssociationId"}, "version": "1.0", "description": "description", "occurredAt": "2023-09-01T17:09:56.199944267+01:00"}"""
 
   private fun publishMergeEvent(old: String, new: String) {
     awsSnsClient.publish(
@@ -554,8 +553,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun mergeEventPayload(old: String, new: String) =
-    """{
+  private fun mergeEventPayload(old: String, new: String) = """{
       "eventType":"prison-offender-events.prisoner.merged",
       "version":1,
       "description":"A prisoner has been merged from $old to $new",

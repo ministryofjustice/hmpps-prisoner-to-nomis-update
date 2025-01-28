@@ -27,23 +27,21 @@ class PrisonPersonReconService(
   private val telemetryClient: TelemetryClient,
 ) {
 
-  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<String> =
-    activePrisonersCount
-      .asPages(pageSize)
-      .flatMap { page ->
-        val activePrisoners = getActivePrisonersForPage(page)
+  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<String> = activePrisonersCount
+    .asPages(pageSize)
+    .flatMap { page ->
+      val activePrisoners = getActivePrisonersForPage(page)
 
-        withContext(Dispatchers.Unconfined) {
-          activePrisoners.map { async { checkPrisoner(it.offenderNo) } }
-        }.awaitAll().filterNotNull()
-      }
+      withContext(Dispatchers.Unconfined) {
+        activePrisoners.map { async { checkPrisoner(it.offenderNo) } }
+      }.awaitAll().filterNotNull()
+    }
 
-  private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) =
-    runCatching { nomisApi.getActivePrisoners(page.first, page.second).content }
-      .onFailure {
-        telemetryClient.trackEvent("prison-person-reconciliation-page-error", mapOf("page" to page.first.toString(), "error" to (it.message ?: "unknown error")))
-      }
-      .getOrElse { emptyList() }
+  private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) = runCatching { nomisApi.getActivePrisoners(page.first, page.second).content }
+    .onFailure {
+      telemetryClient.trackEvent("prison-person-reconciliation-page-error", mapOf("page" to page.first.toString(), "error" to (it.message ?: "unknown error")))
+    }
+    .getOrElse { emptyList() }
 
   suspend fun checkPrisoner(offenderNo: String): String? = runCatching {
     val (nomisPrisoner, dpsPrisoner) = withContext(Dispatchers.Unconfined) {

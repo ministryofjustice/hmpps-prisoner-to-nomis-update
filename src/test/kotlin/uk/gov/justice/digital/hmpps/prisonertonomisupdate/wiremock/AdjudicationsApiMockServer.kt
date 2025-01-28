@@ -28,7 +28,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Re
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedEvidenceDto
 
-class AdjudicationsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
+class AdjudicationsApiExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
   companion object {
     @JvmField
     val adjudicationsApiServer = AdjudicationsApiMockServer()

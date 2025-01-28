@@ -57,13 +57,12 @@ internal class ActivitiesServiceTest {
   @Nested
   inner class CreateActivity {
 
-    private fun aDomainEvent() =
-      ScheduleDomainEvent(
-        eventType = "dummy",
-        additionalInformation = ScheduleAdditionalInformation(ACTIVITY_SCHEDULE_ID),
-        version = "1.0",
-        description = "description",
-      )
+    private fun aDomainEvent() = ScheduleDomainEvent(
+      eventType = "dummy",
+      additionalInformation = ScheduleAdditionalInformation(ACTIVITY_SCHEDULE_ID),
+      version = "1.0",
+      description = "description",
+    )
 
     @Test
     fun `should log an activity created event`() = runTest {
@@ -162,13 +161,12 @@ internal class ActivitiesServiceTest {
   @Nested
   inner class UpdateActivitySchedule {
 
-    private fun aDomainEvent() =
-      ScheduleDomainEvent(
-        eventType = "activities.activity-schedule.amended",
-        additionalInformation = ScheduleAdditionalInformation(ACTIVITY_SCHEDULE_ID),
-        version = "1.0",
-        description = "description",
-      )
+    private fun aDomainEvent() = ScheduleDomainEvent(
+      eventType = "activities.activity-schedule.amended",
+      additionalInformation = ScheduleAdditionalInformation(ACTIVITY_SCHEDULE_ID),
+      version = "1.0",
+      description = "description",
+    )
 
     @Test
     fun `should throw and raise telemetry if cannot load Activity Schedule`() = runTest {

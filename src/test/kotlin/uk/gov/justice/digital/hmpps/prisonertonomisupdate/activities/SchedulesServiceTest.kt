@@ -39,13 +39,12 @@ class SchedulesServiceTest {
   @Nested
   inner class AmendScheduledInstance {
 
-    private fun aDomainEvent() =
-      ScheduledInstanceDomainEvent(
-        eventType = "activities.scheduled-instance.amended",
-        additionalInformation = ScheduledInstanceAdditionalInformation(ACTIVITY_SCHEDULE_ID, SCHEDULE_INSTANCE_ID),
-        version = "1.0",
-        description = "description",
-      )
+    private fun aDomainEvent() = ScheduledInstanceDomainEvent(
+      eventType = "activities.scheduled-instance.amended",
+      additionalInformation = ScheduledInstanceAdditionalInformation(ACTIVITY_SCHEDULE_ID, SCHEDULE_INSTANCE_ID),
+      version = "1.0",
+      description = "description",
+    )
 
     @Test
     fun `should throw and raise telemetry if cannot load Activity Schedule`() = runTest {

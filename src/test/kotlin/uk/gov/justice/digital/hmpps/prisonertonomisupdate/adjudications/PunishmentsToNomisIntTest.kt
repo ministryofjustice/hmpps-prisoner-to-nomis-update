@@ -1817,7 +1817,6 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
     prisonerNumber: String,
     eventType: String,
     status: String = "CHARGE_PROVED",
-  ) =
-    // language=json
+  ) = // language=json
     """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId", "prisonerNumber": "$prisonerNumber", "status": "$status"}}"""
 }

@@ -5,7 +5,5 @@ import org.springframework.stereotype.Component
 
 @Component
 class EventFeatureSwitch(private val environment: Environment) {
-  fun isEnabled(eventType: String): Boolean {
-    return environment.getProperty("feature.event.$eventType", Boolean::class.java, true)
-  }
+  fun isEnabled(eventType: String): Boolean = environment.getProperty("feature.event.$eventType", Boolean::class.java, true)
 }

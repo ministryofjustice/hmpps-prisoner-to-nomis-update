@@ -30,20 +30,19 @@ class PhysicalAttributesSyncService(
     }
   }
 
-  suspend fun updatePhysicalAttributes(offenderNo: String, fields: List<String>? = null) =
-    runCatching {
-      dpsApi.getPhysicalAttributes(offenderNo)
-        ?.also { updateNomis(offenderNo, it, fields) }
-        ?: throw ProfileDetailsSyncException("No physical attributes found for offenderNo: $offenderNo")
-    }.onFailure { e ->
-      publishTelemetry(
-        type = "physical-attributes-update-error",
-        offenderNo = offenderNo,
-        fields = fields,
-        reason = (e.message ?: "Unknown error"),
-      )
-      throw e
-    }
+  suspend fun updatePhysicalAttributes(offenderNo: String, fields: List<String>? = null) = runCatching {
+    dpsApi.getPhysicalAttributes(offenderNo)
+      ?.also { updateNomis(offenderNo, it, fields) }
+      ?: throw ProfileDetailsSyncException("No physical attributes found for offenderNo: $offenderNo")
+  }.onFailure { e ->
+    publishTelemetry(
+      type = "physical-attributes-update-error",
+      offenderNo = offenderNo,
+      fields = fields,
+      reason = (e.message ?: "Unknown error"),
+    )
+    throw e
+  }
 
   suspend fun readmissionSwitchBookingEvent(event: PrisonerReceivedEvent) {
     // We should be able to filter for this reason in the Topic subscription filter, but this is just in case
@@ -106,25 +105,23 @@ class PhysicalAttributesSyncService(
     )
   }
 
-  private fun String.toNomisProfileType() =
-    when (this) {
-      "LEFT_EYE_COLOUR" -> "L_EYE_C"
-      "RIGHT_EYE_COLOUR" -> "R_EYE_C"
-      "SHOE_SIZE" -> "SHOESIZE"
-      else -> this
-    }
+  private fun String.toNomisProfileType() = when (this) {
+    "LEFT_EYE_COLOUR" -> "L_EYE_C"
+    "RIGHT_EYE_COLOUR" -> "R_EYE_C"
+    "SHOE_SIZE" -> "SHOESIZE"
+    else -> this
+  }
 
-  private fun PhysicalAttributesSyncDto.valueOf(field: String) =
-    when (field) {
-      "BUILD" -> build
-      "FACE" -> face
-      "FACIAL_HAIR" -> facialHair
-      "HAIR" -> hair
-      "LEFT_EYE_COLOUR" -> leftEyeColour
-      "RIGHT_EYE_COLOUR" -> rightEyeColour
-      "SHOE_SIZE" -> shoeSize
-      else -> throw ProfileDetailsSyncException("Unknown field: $field")
-    }
+  private fun PhysicalAttributesSyncDto.valueOf(field: String) = when (field) {
+    "BUILD" -> build
+    "FACE" -> face
+    "FACIAL_HAIR" -> facialHair
+    "HAIR" -> hair
+    "LEFT_EYE_COLOUR" -> leftEyeColour
+    "RIGHT_EYE_COLOUR" -> rightEyeColour
+    "SHOE_SIZE" -> shoeSize
+    else -> throw ProfileDetailsSyncException("Unknown field: $field")
+  }
 
   companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)

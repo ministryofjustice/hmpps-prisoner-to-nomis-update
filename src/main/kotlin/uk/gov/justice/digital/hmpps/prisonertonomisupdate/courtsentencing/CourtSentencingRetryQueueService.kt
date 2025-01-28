@@ -11,10 +11,9 @@ class CourtSentencingRetryQueueService(
   hmppsQueueService: HmppsQueueService,
   telemetryClient: TelemetryClient,
   objectMapper: ObjectMapper,
-) :
-  RetryQueueService(
-    queueId = "courtsentencing",
-    hmppsQueueService = hmppsQueueService,
-    telemetryClient = telemetryClient,
-    objectMapper = objectMapper,
-  )
+) : RetryQueueService(
+  queueId = "courtsentencing",
+  hmppsQueueService = hmppsQueueService,
+  telemetryClient = telemetryClient,
+  objectMapper = objectMapper,
+)

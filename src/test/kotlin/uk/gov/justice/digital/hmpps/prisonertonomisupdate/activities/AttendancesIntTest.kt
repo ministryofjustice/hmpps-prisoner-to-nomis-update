@@ -411,10 +411,9 @@ fun buildGetAttendanceSyncResponse(sessionDate: LocalDate = LocalDate.now().plus
 fun buildGetScheduleMappingResponse(
   nomisCourseScheduleId: Long = NOMIS_CRS_SCH_ID,
   scheduledInstanceId: Long = ACTIVITY_SCHEDULE_ID,
-) =
-  """{
+) = """{
           "nomisCourseScheduleId": $nomisCourseScheduleId,
           "scheduledInstanceId": $scheduledInstanceId,
           "mappingType": "ACTIVITY_CREATED"
         }
-  """.trimIndent()
+""".trimIndent()

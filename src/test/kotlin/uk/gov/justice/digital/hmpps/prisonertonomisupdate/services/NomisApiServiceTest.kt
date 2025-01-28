@@ -1367,13 +1367,12 @@ fun updateActivity() = UpdateActivityRequest(
   outsideWork = true,
 )
 
-fun updateScheduledInstance() =
-  CourseScheduleRequest(
-    date = LocalDate.parse("2023-02-10"),
-    startTime = "08:00",
-    endTime = "11:00",
-    cancelled = true,
-  )
+fun updateScheduledInstance() = CourseScheduleRequest(
+  date = LocalDate.parse("2023-02-10"),
+  startTime = "08:00",
+  endTime = "11:00",
+  cancelled = true,
+)
 
 fun upsertAllocation() = UpsertAllocationRequest(
   bookingId = 456L,

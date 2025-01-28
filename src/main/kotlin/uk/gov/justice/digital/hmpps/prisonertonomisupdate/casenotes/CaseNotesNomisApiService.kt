@@ -25,23 +25,21 @@ class CaseNotesNomisApiService(
 ) {
   private val backoffSpec = retryApiService.getBackoffSpec(maxRetryAttempts, backoffMillis)
 
-  suspend fun getCaseNote(caseNoteId: Long): CaseNoteResponse =
-    webClient.get().uri(
-      "/casenotes/{caseNoteId}",
-      caseNoteId,
-    )
-      .retrieve()
-      .awaitBody()
+  suspend fun getCaseNote(caseNoteId: Long): CaseNoteResponse = webClient.get().uri(
+    "/casenotes/{caseNoteId}",
+    caseNoteId,
+  )
+    .retrieve()
+    .awaitBody()
 
-  suspend fun createCaseNote(offenderNo: String, nomisCaseNote: CreateCaseNoteRequest): CreateCaseNoteResponse =
-    webClient.post()
-      .uri(
-        "/prisoners/{offenderNo}/casenotes",
-        offenderNo,
-      )
-      .bodyValue(nomisCaseNote)
-      .retrieve()
-      .awaitBody()
+  suspend fun createCaseNote(offenderNo: String, nomisCaseNote: CreateCaseNoteRequest): CreateCaseNoteResponse = webClient.post()
+    .uri(
+      "/prisoners/{offenderNo}/casenotes",
+      offenderNo,
+    )
+    .bodyValue(nomisCaseNote)
+    .retrieve()
+    .awaitBody()
 
   suspend fun updateCaseNote(caseNoteId: Long, nomisCaseNote: UpdateCaseNoteRequest) {
     webClient.put().uri(

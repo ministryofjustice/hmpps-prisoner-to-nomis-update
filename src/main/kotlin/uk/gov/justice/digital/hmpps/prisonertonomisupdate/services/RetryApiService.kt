@@ -23,21 +23,26 @@ class RetryApiService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun getBackoffSpec(maxRetryAttempts: Long?, backoffMillis: Long?): RetryBackoffSpec =
-    Retry.backoff(
-      maxRetryAttempts ?: this.maxRetryAttempts,
-      Duration.ofMillis(backoffMillis ?: this.backoffMillis),
-    )
-      .filter { isTimeoutException(it) }
-      .doBeforeRetry { logRetrySignal(it) }
+  fun getBackoffSpec(maxRetryAttempts: Long?, backoffMillis: Long?): RetryBackoffSpec = Retry.backoff(
+    maxRetryAttempts ?: this.maxRetryAttempts,
+    Duration.ofMillis(backoffMillis ?: this.backoffMillis),
+  )
+    .filter { isTimeoutException(it) }
+    .doBeforeRetry { logRetrySignal(it) }
 
-  private fun isTimeoutException(e: Throwable): Boolean =
-    // Timeouts etc are wrapped in a WebClientRequestException
-    e is ReadTimeoutException || e.cause is ReadTimeoutException ||
-      e is ConnectTimeoutException || e.cause is ConnectTimeoutException ||
-      e is SocketException || e.cause is SocketException ||
-      e is PrematureCloseException || e.cause is PrematureCloseException || // server closed the connection
-      e is Errors.NativeIoException || e.cause is Errors.NativeIoException || // Connection reset by peer
+  private fun isTimeoutException(e: Throwable): Boolean = // Timeouts etc are wrapped in a WebClientRequestException
+    e is ReadTimeoutException ||
+      e.cause is ReadTimeoutException ||
+      e is ConnectTimeoutException ||
+      e.cause is ConnectTimeoutException ||
+      e is SocketException ||
+      e.cause is SocketException ||
+      e is PrematureCloseException ||
+      e.cause is PrematureCloseException ||
+      // server closed the connection
+      e is Errors.NativeIoException ||
+      e.cause is Errors.NativeIoException ||
+      // Connection reset by peer
       e is WebClientResponseException.BadGateway // 502 is also a transient error worth retrying
 
   private fun logRetrySignal(retrySignal: Retry.RetrySignal) {

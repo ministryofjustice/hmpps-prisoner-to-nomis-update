@@ -381,6 +381,5 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  fun hearingMessagePayload(hearingId: String, chargeNumber: String, prisonId: String, prisonerNumber: String, eventType: String) =
-    """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId", "hearingId": "$hearingId", "prisonerNumber": "$prisonerNumber"}}"""
+  fun hearingMessagePayload(hearingId: String, chargeNumber: String, prisonId: String, prisonerNumber: String, eventType: String) = """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId", "hearingId": "$hearingId", "prisonerNumber": "$prisonerNumber"}}"""
 }

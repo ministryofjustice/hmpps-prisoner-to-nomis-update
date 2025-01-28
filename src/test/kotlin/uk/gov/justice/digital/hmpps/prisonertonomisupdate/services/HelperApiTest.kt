@@ -36,11 +36,7 @@ class HelperApiTest {
 }
 
 class DummyApi {
-  fun api(): String {
-    return "Success"
-  }
+  fun api(): String = "Success"
 
-  fun apiFails(): String {
-    throw RuntimeException("API call failed")
-  }
+  fun apiFails(): String = throw RuntimeException("API call failed")
 }

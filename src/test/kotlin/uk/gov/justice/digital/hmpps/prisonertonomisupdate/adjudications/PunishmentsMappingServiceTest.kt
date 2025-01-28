@@ -209,16 +209,15 @@ internal class PunishmentsMappingServiceTest {
     dpsPunishmentId: String = "1234",
     nomisBookingId: Long = 456L,
     nomisSanctionSequence: Int = 1,
-  ) =
-    AdjudicationPunishmentBatchMappingDto(
-      punishments = listOf(
-        AdjudicationPunishmentMappingDto(
-          dpsPunishmentId = dpsPunishmentId,
-          nomisBookingId = nomisBookingId,
-          nomisSanctionSequence = nomisSanctionSequence,
-        ),
+  ) = AdjudicationPunishmentBatchMappingDto(
+    punishments = listOf(
+      AdjudicationPunishmentMappingDto(
+        dpsPunishmentId = dpsPunishmentId,
+        nomisBookingId = nomisBookingId,
+        nomisSanctionSequence = nomisSanctionSequence,
       ),
-    )
+    ),
+  )
 
   private fun updateMapping(
     dpsPunishmentId: String = "1234",
@@ -226,20 +225,19 @@ internal class PunishmentsMappingServiceTest {
     nomisSanctionSequence: Int = 1,
     removeNomisBookingId: Long = 556L,
     removeNomisSanctionSequence: Int = 2,
-  ) =
-    AdjudicationPunishmentBatchUpdateMappingDto(
-      punishmentsToCreate = listOf(
-        AdjudicationPunishmentMappingDto(
-          dpsPunishmentId = dpsPunishmentId,
-          nomisBookingId = nomisBookingId,
-          nomisSanctionSequence = nomisSanctionSequence,
-        ),
+  ) = AdjudicationPunishmentBatchUpdateMappingDto(
+    punishmentsToCreate = listOf(
+      AdjudicationPunishmentMappingDto(
+        dpsPunishmentId = dpsPunishmentId,
+        nomisBookingId = nomisBookingId,
+        nomisSanctionSequence = nomisSanctionSequence,
       ),
-      punishmentsToDelete = listOf(
-        AdjudicationPunishmentNomisIdDto(
-          nomisBookingId = removeNomisBookingId,
-          nomisSanctionSequence = removeNomisSanctionSequence,
-        ),
+    ),
+    punishmentsToDelete = listOf(
+      AdjudicationPunishmentNomisIdDto(
+        nomisBookingId = removeNomisBookingId,
+        nomisSanctionSequence = removeNomisSanctionSequence,
       ),
-    )
+    ),
+  )
 }

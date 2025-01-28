@@ -49,12 +49,10 @@ class CSIPResource(
   }
 }
 
-fun List<MismatchCSIPs>.asMap(): Map<String, String> {
-  return this.associate {
-    it.offenderNo to
-      (
-        "total-dps=${it.dpsCSIPCount}:total-nomis=${it.nomisCSIPCount}; " +
-          "missing-dps=${it.missingFromDps.size}:missing-nomis=${it.missingFromNomis.size}"
-        )
-  }
+fun List<MismatchCSIPs>.asMap(): Map<String, String> = this.associate {
+  it.offenderNo to
+    (
+      "total-dps=${it.dpsCSIPCount}:total-nomis=${it.nomisCSIPCount}; " +
+        "missing-dps=${it.missingFromDps.size}:missing-nomis=${it.missingFromNomis.size}"
+      )
 }

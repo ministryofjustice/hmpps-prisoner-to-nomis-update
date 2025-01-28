@@ -11,10 +11,9 @@ class CaseNotesRetryQueueService(
   hmppsQueueService: HmppsQueueService,
   telemetryClient: TelemetryClient,
   objectMapper: ObjectMapper,
-) :
-  RetryQueueService(
-    queueId = "casenotes",
-    hmppsQueueService = hmppsQueueService,
-    telemetryClient = telemetryClient,
-    objectMapper = objectMapper,
-  )
+) : RetryQueueService(
+  queueId = "casenotes",
+  hmppsQueueService = hmppsQueueService,
+  telemetryClient = telemetryClient,
+  objectMapper = objectMapper,
+)

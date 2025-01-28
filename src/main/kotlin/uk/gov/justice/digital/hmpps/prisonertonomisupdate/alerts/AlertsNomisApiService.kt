@@ -54,13 +54,12 @@ class AlertsNomisApiService(@Qualifier("nomisApiWebClient") private val webClien
     .retrieve()
     .awaitBody()
 
-  suspend fun getAlertsForReconciliation(offenderNo: String): PrisonerAlertsResponse =
-    webClient.get().uri(
-      "/prisoners/{offenderNo}/alerts/reconciliation",
-      offenderNo,
-    )
-      .retrieve()
-      .awaitBody()
+  suspend fun getAlertsForReconciliation(offenderNo: String): PrisonerAlertsResponse = webClient.get().uri(
+    "/prisoners/{offenderNo}/alerts/reconciliation",
+    offenderNo,
+  )
+    .retrieve()
+    .awaitBody()
 
   suspend fun createAlertCode(alertCode: CreateAlertCode) {
     webClient.post()

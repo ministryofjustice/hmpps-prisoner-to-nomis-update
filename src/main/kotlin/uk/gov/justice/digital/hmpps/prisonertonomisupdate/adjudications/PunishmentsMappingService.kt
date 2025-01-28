@@ -30,9 +30,8 @@ class PunishmentsMappingService(
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
-  suspend fun getMapping(dpsPunishmentId: String): AdjudicationPunishmentMappingDto? =
-    webClient.get()
-      .uri("/mapping/punishments/{dpsPunishmentId}", dpsPunishmentId)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getMapping(dpsPunishmentId: String): AdjudicationPunishmentMappingDto? = webClient.get()
+    .uri("/mapping/punishments/{dpsPunishmentId}", dpsPunishmentId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 }

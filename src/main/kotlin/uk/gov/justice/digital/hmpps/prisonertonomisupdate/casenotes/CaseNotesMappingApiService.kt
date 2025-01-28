@@ -21,22 +21,20 @@ class CaseNotesMappingApiService(
 ) {
   private val backoffSpec = retryApiService.getBackoffSpec(maxRetryAttempts, backoffMillis)
 
-  suspend fun getOrNullByDpsId(caseNoteId: String): List<CaseNoteMappingDto>? =
-    webClient.get()
-      .uri(
-        "/mapping/casenotes/dps-casenote-id/{casenoteId}/all",
-        caseNoteId,
-      )
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getOrNullByDpsId(caseNoteId: String): List<CaseNoteMappingDto>? = webClient.get()
+    .uri(
+      "/mapping/casenotes/dps-casenote-id/{casenoteId}/all",
+      caseNoteId,
+    )
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
-  suspend fun getByPrisoner(offenderNo: String): AllPrisonerCaseNoteMappingsDto =
-    webClient.get()
-      .uri("/mapping/casenotes/{offenderNo}/all", offenderNo)
-      .retrieve()
-      .bodyToMono(AllPrisonerCaseNoteMappingsDto::class.java)
-      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "case-notes-mapping-api", "path", "/mapping/casenotes/{offenderNo}/all", "offenderNo", offenderNo)))
-      .awaitSingle()
+  suspend fun getByPrisoner(offenderNo: String): AllPrisonerCaseNoteMappingsDto = webClient.get()
+    .uri("/mapping/casenotes/{offenderNo}/all", offenderNo)
+    .retrieve()
+    .bodyToMono(AllPrisonerCaseNoteMappingsDto::class.java)
+    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "case-notes-mapping-api", "path", "/mapping/casenotes/{offenderNo}/all", "offenderNo", offenderNo)))
+    .awaitSingle()
 
   suspend fun createMapping(caseNoteMappingDto: CaseNoteMappingDto) {
     webClient.post()

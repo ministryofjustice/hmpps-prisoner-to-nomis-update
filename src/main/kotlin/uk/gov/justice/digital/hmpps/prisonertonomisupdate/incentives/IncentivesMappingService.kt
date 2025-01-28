@@ -20,11 +20,10 @@ class IncentivesMappingService(
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
-  suspend fun getMappingGivenIncentiveIdOrNull(incentiveId: Long): IncentiveMappingDto? =
-    webClient.get()
-      .uri("/mapping/incentives/incentive-id/{incentiveId}", incentiveId)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getMappingGivenIncentiveIdOrNull(incentiveId: Long): IncentiveMappingDto? = webClient.get()
+    .uri("/mapping/incentives/incentive-id/{incentiveId}", incentiveId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 }
 
 data class IncentiveMappingDto(

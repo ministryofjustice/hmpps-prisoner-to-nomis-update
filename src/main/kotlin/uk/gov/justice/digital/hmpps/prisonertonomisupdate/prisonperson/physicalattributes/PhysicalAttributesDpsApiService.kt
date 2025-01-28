@@ -8,10 +8,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.model.Phy
 
 @Service
 class PhysicalAttributesDpsApiService(@Qualifier("prisonPersonApiWebClient") private val webClient: WebClient) {
-  suspend fun getPhysicalAttributes(prisonerNumber: String): PhysicalAttributesSyncDto? =
-    webClient
-      .get()
-      .uri("/sync/prisoners/{prisonerNumber}/physical-attributes", prisonerNumber)
-      .retrieve()
-      .awaitBodyOrNullForNotFound<PhysicalAttributesSyncDto>()
+  suspend fun getPhysicalAttributes(prisonerNumber: String): PhysicalAttributesSyncDto? = webClient
+    .get()
+    .uri("/sync/prisoners/{prisonerNumber}/physical-attributes", prisonerNumber)
+    .retrieve()
+    .awaitBodyOrNullForNotFound<PhysicalAttributesSyncDto>()
 }

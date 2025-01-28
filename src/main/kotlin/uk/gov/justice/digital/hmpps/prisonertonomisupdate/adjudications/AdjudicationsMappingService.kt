@@ -21,21 +21,18 @@ class AdjudicationsMappingService(
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
-  suspend fun getMappingGivenChargeNumberOrNull(chargeNumber: String): AdjudicationMappingDto? =
-    webClient.get()
-      .uri("/mapping/adjudications/charge-number/{chargeNumber}", chargeNumber)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getMappingGivenChargeNumberOrNull(chargeNumber: String): AdjudicationMappingDto? = webClient.get()
+    .uri("/mapping/adjudications/charge-number/{chargeNumber}", chargeNumber)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
-  suspend fun getMappingGivenChargeNumber(chargeNumber: String): AdjudicationMappingDto =
-    webClient.get()
-      .uri("/mapping/adjudications/charge-number/{chargeNumber}", chargeNumber)
-      .retrieve()
-      .awaitBody()
+  suspend fun getMappingGivenChargeNumber(chargeNumber: String): AdjudicationMappingDto = webClient.get()
+    .uri("/mapping/adjudications/charge-number/{chargeNumber}", chargeNumber)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun deleteMappingGivenChargeNumber(chargeNumber: String): Unit =
-    webClient.delete()
-      .uri("/mapping/adjudications/charge-number/{chargeNumber}", chargeNumber)
-      .retrieve()
-      .awaitBody()
+  suspend fun deleteMappingGivenChargeNumber(chargeNumber: String): Unit = webClient.delete()
+    .uri("/mapping/adjudications/charge-number/{chargeNumber}", chargeNumber)
+    .retrieve()
+    .awaitBody()
 }

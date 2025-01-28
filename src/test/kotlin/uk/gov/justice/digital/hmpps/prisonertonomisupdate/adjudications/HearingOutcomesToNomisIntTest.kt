@@ -959,6 +959,5 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
     prisonerNumber: String,
     eventType: String,
     status: String = "REFER_POLICE",
-  ) =
-    """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId", "hearingId": "$hearingId", "prisonerNumber": "$prisonerNumber", "status": "$status"}}"""
+  ) = """{"eventType":"$eventType", "additionalInformation": {"chargeNumber":"$chargeNumber", "prisonId": "$prisonId", "hearingId": "$hearingId", "prisonerNumber": "$prisonerNumber", "status": "$status"}}"""
 }

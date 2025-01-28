@@ -8,9 +8,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Prison
 
 @Service
 class PrisonPersonNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
-  suspend fun getReconciliation(offenderNo: String): PrisonPersonReconciliationResponse? =
-    webClient.get()
-      .uri("/prisoners/{offenderNo}/prison-person/reconciliation", offenderNo)
-      .retrieve()
-      .awaitBodyOrNullForNotFound<PrisonPersonReconciliationResponse>()
+  suspend fun getReconciliation(offenderNo: String): PrisonPersonReconciliationResponse? = webClient.get()
+    .uri("/prisoners/{offenderNo}/prison-person/reconciliation", offenderNo)
+    .retrieve()
+    .awaitBodyOrNullForNotFound<PrisonPersonReconciliationResponse>()
 }

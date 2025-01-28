@@ -9,10 +9,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Upsert
 
 @Service
 class PhysicalAttributesNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
-  suspend fun upsertPhysicalAttributes(offenderNo: String, height: Int?, weight: Int?): UpsertPhysicalAttributesResponse =
-    webClient.put()
-      .uri("/prisoners/{offenderNo}/physical-attributes", offenderNo)
-      .bodyValue(UpsertPhysicalAttributesRequest(height, weight))
-      .retrieve()
-      .awaitBody()
+  suspend fun upsertPhysicalAttributes(offenderNo: String, height: Int?, weight: Int?): UpsertPhysicalAttributesResponse = webClient.put()
+    .uri("/prisoners/{offenderNo}/physical-attributes", offenderNo)
+    .bodyValue(UpsertPhysicalAttributesRequest(height, weight))
+    .retrieve()
+    .awaitBody()
 }

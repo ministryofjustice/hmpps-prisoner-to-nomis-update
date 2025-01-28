@@ -60,15 +60,14 @@ class SchedulesIntTest : SqsIntegrationTestBase() {
       }
     }
 
-    private fun amendScheduledInstanceEvent(): PublishRequest? =
-      PublishRequest.builder().topicArn(topicArn)
-        .message(scheduledInstanceMessagePayload("activities.scheduled-instance.amended", SCHEDULE_INSTANCE_ID))
-        .messageAttributes(
-          mapOf(
-            "eventType" to MessageAttributeValue.builder().dataType("String")
-              .stringValue("activities.scheduled-instance.amended").build(),
-          ),
-        ).build()
+    private fun amendScheduledInstanceEvent(): PublishRequest? = PublishRequest.builder().topicArn(topicArn)
+      .message(scheduledInstanceMessagePayload("activities.scheduled-instance.amended", SCHEDULE_INSTANCE_ID))
+      .messageAttributes(
+        mapOf(
+          "eventType" to MessageAttributeValue.builder().dataType("String")
+            .stringValue("activities.scheduled-instance.amended").build(),
+        ),
+      ).build()
   }
 }
 

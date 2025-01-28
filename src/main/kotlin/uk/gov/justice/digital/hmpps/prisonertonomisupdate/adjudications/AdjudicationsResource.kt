@@ -46,6 +46,4 @@ class AdjudicationsResource(
   }
 }
 
-private fun List<MismatchAdjudicationAdaPunishments>.asMap(): Map<String, String> {
-  return this.associate { it.prisonerId.offenderNo to ("${it.nomisAda.count}:${it.dpsAdas.count},${it.nomisAda.days}:${it.dpsAdas.days}") }
-}
+private fun List<MismatchAdjudicationAdaPunishments>.asMap(): Map<String, String> = this.associate { it.prisonerId.offenderNo to ("${it.nomisAda.count}:${it.dpsAdas.count},${it.nomisAda.days}:${it.dpsAdas.days}") }

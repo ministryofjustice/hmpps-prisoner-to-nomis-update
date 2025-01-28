@@ -23,13 +23,12 @@ class SentencingConfiguration(
   fun sentenceAdjustmentsApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(sentenceAdjustmentsUrl, healthTimeout)
 
   @Bean
-  fun sentenceAdjustmentsApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.reactiveAuthorisedWebClient(
-      authorizedClientManager = authorizedClientManager,
-      registrationId = "sentence-adjustments-api",
-      url = sentenceAdjustmentsUrl,
-      timeout = timeout,
-    )
+  fun sentenceAdjustmentsApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.reactiveAuthorisedWebClient(
+    authorizedClientManager = authorizedClientManager,
+    registrationId = "sentence-adjustments-api",
+    url = sentenceAdjustmentsUrl,
+    timeout = timeout,
+  )
 
   @Component("sentenceAdjustmentsApi")
   class SentenceAdjustmentsApiHealth(@Qualifier("sentenceAdjustmentsApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)

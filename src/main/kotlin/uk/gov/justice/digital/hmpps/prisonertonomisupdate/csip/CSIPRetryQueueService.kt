@@ -11,10 +11,9 @@ class CSIPRetryQueueService(
   hmppsQueueService: HmppsQueueService,
   telemetryClient: TelemetryClient,
   objectMapper: ObjectMapper,
-) :
-  RetryQueueService(
-    queueId = "csip",
-    hmppsQueueService = hmppsQueueService,
-    telemetryClient = telemetryClient,
-    objectMapper = objectMapper,
-  )
+) : RetryQueueService(
+  queueId = "csip",
+  hmppsQueueService = hmppsQueueService,
+  telemetryClient = telemetryClient,
+  objectMapper = objectMapper,
+)

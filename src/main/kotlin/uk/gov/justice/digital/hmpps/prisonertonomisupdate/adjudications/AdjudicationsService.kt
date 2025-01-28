@@ -613,28 +613,26 @@ class AdjudicationsService(
     }
   }
 
-  suspend fun updatePunishments(prisonId: String, offenderNo: String, chargeNumber: String) =
-    updatePunishments(
-      PunishmentEvent(
-        PunishmentsAdditionalInformation(
-          chargeNumber = chargeNumber,
-          prisonId = prisonId,
-          prisonerNumber = offenderNo,
-        ),
+  suspend fun updatePunishments(prisonId: String, offenderNo: String, chargeNumber: String) = updatePunishments(
+    PunishmentEvent(
+      PunishmentsAdditionalInformation(
+        chargeNumber = chargeNumber,
+        prisonId = prisonId,
+        prisonerNumber = offenderNo,
       ),
-    )
+    ),
+  )
 
-  suspend fun upsertOutcome(prisonId: String, offenderNo: String, chargeNumber: String, hearingId: String) =
-    upsertOutcome(
-      OutcomeEvent(
-        OutcomeAdditionalInformation(
-          chargeNumber = chargeNumber,
-          prisonId = prisonId,
-          hearingId = hearingId,
-          prisonerNumber = offenderNo,
-        ),
+  suspend fun upsertOutcome(prisonId: String, offenderNo: String, chargeNumber: String, hearingId: String) = upsertOutcome(
+    OutcomeEvent(
+      OutcomeAdditionalInformation(
+        chargeNumber = chargeNumber,
+        prisonId = prisonId,
+        hearingId = hearingId,
+        prisonerNumber = offenderNo,
       ),
-    )
+    ),
+  )
 
   suspend fun updatePunishments(punishmentEvent: PunishmentEvent) {
     val eventInfo = punishmentEvent.additionalInformation
@@ -956,8 +954,7 @@ class AdjudicationsService(
     }
   }
 
-  private inline fun <reified T> String.fromJson(): T =
-    objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 
   private suspend fun PunishmentDto.toNomisAward() = HearingResultAwardRequest(
     sanctionType = this.type.toNomisSanctionType(),
@@ -973,30 +970,26 @@ class AdjudicationsService(
   )
 }
 
-private fun AdjudicationPunishmentBatchUpdateMappingDto.hasAnyMappingsToUpdate(): Boolean =
-  this.punishmentsToCreate.isNotEmpty() || this.punishmentsToDelete.isNotEmpty()
+private fun AdjudicationPunishmentBatchUpdateMappingDto.hasAnyMappingsToUpdate(): Boolean = this.punishmentsToCreate.isNotEmpty() || this.punishmentsToDelete.isNotEmpty()
 
-private fun OutcomeEvent.toHearingEvent(): HearingEvent =
-  HearingEvent(
-    HearingAdditionalInformation(
-      chargeNumber = this.additionalInformation.chargeNumber,
-      prisonerNumber = this.additionalInformation.prisonerNumber,
-      prisonId = this.additionalInformation.prisonId,
-      hearingId = this.additionalInformation.hearingId!!,
-    ),
-  )
+private fun OutcomeEvent.toHearingEvent(): HearingEvent = HearingEvent(
+  HearingAdditionalInformation(
+    chargeNumber = this.additionalInformation.chargeNumber,
+    prisonerNumber = this.additionalInformation.prisonerNumber,
+    prisonId = this.additionalInformation.prisonId,
+    hearingId = this.additionalInformation.hearingId!!,
+  ),
+)
 
-private fun OutcomeEvent.toReferralEvent(): ReferralEvent =
-  ReferralEvent(
-    ReferralAdditionalInformation(
-      chargeNumber = this.additionalInformation.chargeNumber,
-      prisonerNumber = this.additionalInformation.prisonerNumber,
-      prisonId = this.additionalInformation.prisonId,
-    ),
-  )
+private fun OutcomeEvent.toReferralEvent(): ReferralEvent = ReferralEvent(
+  ReferralAdditionalInformation(
+    chargeNumber = this.additionalInformation.chargeNumber,
+    prisonerNumber = this.additionalInformation.prisonerNumber,
+    prisonId = this.additionalInformation.prisonId,
+  ),
+)
 
-private fun PunishmentDto.toComment(): String =
-  // copy of existing logic from prison-api
+private fun PunishmentDto.toComment(): String = // copy of existing logic from prison-api
   when (this.type) {
     Type.PRIVILEGE ->
       when (this.privilegeType) {
@@ -1022,21 +1015,20 @@ private fun PunishmentDto.toNomisSanctionStatus(): SanctionStatus {
   }
 }
 
-private fun Type.toNomisSanctionType(): HearingResultAwardRequest.SanctionType =
-  when (this) {
-    Type.PRIVILEGE -> FORFEIT
-    Type.EARNINGS -> HearingResultAwardRequest.SanctionType.STOP_PCT
-    Type.CONFINEMENT -> HearingResultAwardRequest.SanctionType.CC
-    Type.REMOVAL_ACTIVITY -> HearingResultAwardRequest.SanctionType.REMACT
-    Type.EXCLUSION_WORK -> HearingResultAwardRequest.SanctionType.EXTRA_WORK // yes, this mapping is correct
-    Type.EXTRA_WORK -> HearingResultAwardRequest.SanctionType.EXTW
-    Type.REMOVAL_WING -> HearingResultAwardRequest.SanctionType.REMWIN
-    Type.ADDITIONAL_DAYS -> HearingResultAwardRequest.SanctionType.ADA
-    Type.PROSPECTIVE_DAYS -> HearingResultAwardRequest.SanctionType.ADA
-    Type.CAUTION -> HearingResultAwardRequest.SanctionType.CAUTION
-    Type.DAMAGES_OWED -> HearingResultAwardRequest.SanctionType.OTHER
-    Type.PAYBACK -> HearingResultAwardRequest.SanctionType.PP
-  }
+private fun Type.toNomisSanctionType(): HearingResultAwardRequest.SanctionType = when (this) {
+  Type.PRIVILEGE -> FORFEIT
+  Type.EARNINGS -> HearingResultAwardRequest.SanctionType.STOP_PCT
+  Type.CONFINEMENT -> HearingResultAwardRequest.SanctionType.CC
+  Type.REMOVAL_ACTIVITY -> HearingResultAwardRequest.SanctionType.REMACT
+  Type.EXCLUSION_WORK -> HearingResultAwardRequest.SanctionType.EXTRA_WORK // yes, this mapping is correct
+  Type.EXTRA_WORK -> HearingResultAwardRequest.SanctionType.EXTW
+  Type.REMOVAL_WING -> HearingResultAwardRequest.SanctionType.REMWIN
+  Type.ADDITIONAL_DAYS -> HearingResultAwardRequest.SanctionType.ADA
+  Type.PROSPECTIVE_DAYS -> HearingResultAwardRequest.SanctionType.ADA
+  Type.CAUTION -> HearingResultAwardRequest.SanctionType.CAUTION
+  Type.DAMAGES_OWED -> HearingResultAwardRequest.SanctionType.OTHER
+  Type.PAYBACK -> HearingResultAwardRequest.SanctionType.PP
+}
 
 private fun HearingDto.toNomisUpdateHearing(): UpdateHearingRequest = UpdateHearingRequest(
   hearingType = this.oicHearingType.name,
@@ -1123,11 +1115,10 @@ private fun toNomisPleaCode(plea: HearingOutcomeDto.Plea) = when (plea) {
   HearingOutcomeDto.Plea.NOT_ASKED -> "NOT_ASKED"
 }
 
-private fun getAdjudicatorUsernameForInternalHearingOnly(hearingType: String, adjudicator: String) =
-  when (hearingType) {
-    HearingDto.OicHearingType.INAD_ADULT.name, HearingDto.OicHearingType.INAD_YOI.name -> null
-    else -> adjudicator.takeIf { it.isNotBlank() }
-  }
+private fun getAdjudicatorUsernameForInternalHearingOnly(hearingType: String, adjudicator: String) = when (hearingType) {
+  HearingDto.OicHearingType.INAD_ADULT.name, HearingDto.OicHearingType.INAD_YOI.name -> null
+  else -> adjudicator.takeIf { it.isNotBlank() }
+}
 
 private fun HearingAdditionalInformation.toTelemetryMap(): MutableMap<String, String> = mutableMapOf(
   "chargeNumber" to this.chargeNumber,
@@ -1175,8 +1166,7 @@ internal fun ReportedAdjudicationResponse.toNomisAdjudication() = CreateAdjudica
   evidence = reportedAdjudication.evidence.map { it.toNomisCreateEvidence() },
 )
 
-private fun ReportedAdjudicationResponse.isVictimAlsoTheSuspect() =
-  reportedAdjudication.offenceDetails.victimPrisonersNumber == reportedAdjudication.prisonerNumber
+private fun ReportedAdjudicationResponse.isVictimAlsoTheSuspect() = reportedAdjudication.offenceDetails.victimPrisonersNumber == reportedAdjudication.prisonerNumber
 
 private fun ReportedAdjudicationDto.getOffenceCode() = if (this.didInciteOtherPrisoner()) {
   this.offenceDetails.offenceRule.withOthersNomisCode!!
@@ -1311,5 +1301,4 @@ data class PunishmentEvent(
   val additionalInformation: PunishmentsAdditionalInformation,
 )
 
-class AdjudicationOutcomeInWrongState(val outcome: OutcomeDto.Code?) :
-  IllegalStateException("Adjudication is in the wrong state. Outcome is $outcome")
+class AdjudicationOutcomeInWrongState(val outcome: OutcomeDto.Code?) : IllegalStateException("Adjudication is in the wrong state. Outcome is $outcome")

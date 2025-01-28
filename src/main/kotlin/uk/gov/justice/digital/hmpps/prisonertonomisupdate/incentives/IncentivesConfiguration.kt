@@ -23,13 +23,12 @@ class IncentivesConfiguration(
   fun incentivesApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(baseUrl, healthTimeout)
 
   @Bean
-  fun incentivesApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.reactiveAuthorisedWebClient(
-      authorizedClientManager = authorizedClientManager,
-      registrationId = "incentives-api",
-      url = baseUrl,
-      timeout = timeout,
-    )
+  fun incentivesApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.reactiveAuthorisedWebClient(
+    authorizedClientManager = authorizedClientManager,
+    registrationId = "incentives-api",
+    url = baseUrl,
+    timeout = timeout,
+  )
 
   @Component("incentivesApi")
   class IncentivesApiHealth(@Qualifier("incentivesApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)

@@ -15,7 +15,10 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 
-class LocationsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
+class LocationsApiExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
   companion object {
     @JvmField
     val locationsApi = LocationsApiMockServer()

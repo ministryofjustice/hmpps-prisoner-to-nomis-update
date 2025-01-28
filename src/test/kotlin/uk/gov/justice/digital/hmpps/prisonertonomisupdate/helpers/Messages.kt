@@ -11,8 +11,7 @@ fun prisonVisitMessagePayload(
   visitId: String = "12",
   prisonerId: String = "AB12345",
   occurredAt: String = "2021-03-05T11:23:56.031Z",
-) =
-  """{"eventType":"$eventType", "prisonerId": "$prisonerId", "occurredAt": "$occurredAt", "additionalInformation": {"reference": "$visitId","visitType": "STANDARD_SOCIAL"}}"""
+) = """{"eventType":"$eventType", "prisonerId": "$prisonerId", "occurredAt": "$occurredAt", "additionalInformation": {"reference": "$visitId","visitType": "STANDARD_SOCIAL"}}"""
 
 fun prisonVisitCreatedMessage(
   visitId: String = "12",
@@ -39,17 +38,13 @@ fun retryVisitsCreateMappingMessage() = """
       }
 """.trimIndent()
 
-fun incentiveMessagePayload(incentiveId: Long) =
-  """{"eventType":"incentives.iep-review.inserted", "additionalInformation": {"id":"$incentiveId"}}"""
+fun incentiveMessagePayload(incentiveId: Long) = """{"eventType":"incentives.iep-review.inserted", "additionalInformation": {"id":"$incentiveId"}}"""
 
-fun incentiveLevelChangedMessagePayload(incentiveLevel: String) =
-  """{"eventType":"incentives.level.changed", "additionalInformation": {"incentiveLevel":"$incentiveLevel"}}"""
+fun incentiveLevelChangedMessagePayload(incentiveLevel: String) = """{"eventType":"incentives.level.changed", "additionalInformation": {"incentiveLevel":"$incentiveLevel"}}"""
 
-fun incentiveLevelsReorderedMessagePayload() =
-  """{"eventType":"incentives.levels.reordered", "additionalInformation": {}}"""
+fun incentiveLevelsReorderedMessagePayload() = """{"eventType":"incentives.levels.reordered", "additionalInformation": {}}"""
 
-fun incentivePrisonLevelChangedMessagePayload(prisonId: String, incentiveLevel: String) =
-  """{"eventType":"incentives.prison-level.changed", "additionalInformation": {"incentiveLevel":"$incentiveLevel", "prisonId":"$prisonId"}}"""
+fun incentivePrisonLevelChangedMessagePayload(prisonId: String, incentiveLevel: String) = """{"eventType":"incentives.prison-level.changed", "additionalInformation": {"incentiveLevel":"$incentiveLevel", "prisonId":"$prisonId"}}"""
 
 fun incentiveCreatedMessage(incentiveId: Long) = """
       {
@@ -72,11 +67,9 @@ fun incentiveRetryMessage() = """
       }
 """.trimIndent()
 
-fun activityMessagePayload(eventType: String, scheduleId: Long) =
-  """{"eventType":"$eventType", "additionalInformation": { "activityScheduleId": "$scheduleId" }, "version": "1.0", "description": "description", "occurredAt": "2021-03-05T11:23:56.031Z"}"""
+fun activityMessagePayload(eventType: String, scheduleId: Long) = """{"eventType":"$eventType", "additionalInformation": { "activityScheduleId": "$scheduleId" }, "version": "1.0", "description": "description", "occurredAt": "2021-03-05T11:23:56.031Z"}"""
 
-fun scheduledInstanceMessagePayload(eventType: String, scheduledInstanceId: Long) =
-  """{"eventType":"$eventType", "additionalInformation": { "scheduledInstanceId": "$scheduledInstanceId" }, "version": "1.0", "description": "description", "occurredAt": "2021-03-05T11:23:56.031Z"}"""
+fun scheduledInstanceMessagePayload(eventType: String, scheduledInstanceId: Long) = """{"eventType":"$eventType", "additionalInformation": { "scheduledInstanceId": "$scheduledInstanceId" }, "version": "1.0", "description": "description", "occurredAt": "2021-03-05T11:23:56.031Z"}"""
 
 fun activityCreatedMessage(identifier: Long) = """
       {
@@ -99,34 +92,31 @@ fun activityRetryMessage() = """
       }
 """.trimIndent()
 
-fun allocationMessagePayload(eventType: String, scheduleId: Long, allocationId: Long) =
-  """{"eventType":"$eventType",
+fun allocationMessagePayload(eventType: String, scheduleId: Long, allocationId: Long) = """{"eventType":"$eventType",
     "version": "1.0", "description": "description", "occurredAt": "2021-03-05T11:23:56.031Z",
     "additionalInformation": {
         "scheduleId"  : "$scheduleId",
         "allocationId": "$allocationId"
       }
     }
-  """.trimMargin()
+""".trimMargin()
 
-fun attendanceMessagePayload(eventType: String, attendanceId: Long) =
-  """{"eventType":"$eventType",
+fun attendanceMessagePayload(eventType: String, attendanceId: Long) = """{"eventType":"$eventType",
     "version": "1.0", "description": "description", "occurredAt": "2021-03-05T11:23:56.031Z",
     "additionalInformation": {
         "attendanceId"  : "$attendanceId"
       }
     }
-  """.trimMargin()
+""".trimMargin()
 
-fun attendanceDeletedMessagePayload(eventType: String, scheduledInstanceId: Long, bookingId: Long) =
-  """{"eventType":"$eventType",
+fun attendanceDeletedMessagePayload(eventType: String, scheduledInstanceId: Long, bookingId: Long) = """{"eventType":"$eventType",
     "version": "1.0", "description": "description", "occurredAt": "2021-03-05T11:23:56.031Z",
     "additionalInformation": {
         "scheduledInstanceId"  : "$scheduledInstanceId",
         "bookingId"  : "$bookingId"
       }
     }
-  """.trimMargin()
+""".trimMargin()
 
 fun objectMapper(): ObjectMapper = ObjectMapper()
   .setSerializationInclusion(JsonInclude.Include.NON_NULL)

@@ -120,9 +120,8 @@ suspend fun <MAPPING_DTO> createMapping(
     }
 }
 
-private fun DuplicateErrorContent.asTelemetry(): Map<String, String> =
-  this.duplicate.entries.associate { it.asPrefixTelemetry("duplicate") } +
-    (this.existing?.entries?.associate { it.asPrefixTelemetry("existing") } ?: emptyMap())
+private fun DuplicateErrorContent.asTelemetry(): Map<String, String> = this.duplicate.entries.associate { it.asPrefixTelemetry("duplicate") } +
+  (this.existing?.entries?.associate { it.asPrefixTelemetry("existing") } ?: emptyMap())
 
 private fun Map.Entry<String, *>.asPrefixTelemetry(prefix: String) = "$prefix${key.replaceFirstChar { it.titlecase() }}" to value.toString()
 
@@ -132,16 +131,13 @@ suspend fun <MAPPING_DTO> synchronise(init: SynchroniseBuilder<MAPPING_DTO>.() -
   return builder.also { it.process() }
 }
 
-fun Any.asMap(): Map<String, String> {
-  return this::class.memberProperties
-    .filter { it.getter.call(this) != null }
-    .associate { it.name to it.getter.call(this).toString() }
-}
+fun Any.asMap(): Map<String, String> = this::class.memberProperties
+  .filter { it.getter.call(this) != null }
+  .associate { it.name to it.getter.call(this).toString() }
 
 suspend fun <A, B> Pair<Deferred<A>, Deferred<B>>.awaitBoth(): Pair<A, B> = this.first.await() to this.second.await()
 
-fun Long.asPages(pageSize: Long): Array<Pair<Long, Long>> =
-  (0..(this / pageSize)).map { it to pageSize }.toTypedArray()
+fun Long.asPages(pageSize: Long): Array<Pair<Long, Long>> = (0..(this / pageSize)).map { it to pageSize }.toTypedArray()
 
 enum class CreatingSystem {
   NOMIS,

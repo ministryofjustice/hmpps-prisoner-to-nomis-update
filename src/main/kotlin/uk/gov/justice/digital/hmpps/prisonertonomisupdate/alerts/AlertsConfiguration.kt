@@ -23,13 +23,12 @@ class AlertsConfiguration(
   fun alertsApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(alertsUrl, healthTimeout)
 
   @Bean
-  fun alertsApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.reactiveAuthorisedWebClient(
-      authorizedClientManager = authorizedClientManager,
-      registrationId = "alerts-api",
-      url = alertsUrl,
-      timeout = timeout,
-    )
+  fun alertsApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.reactiveAuthorisedWebClient(
+    authorizedClientManager = authorizedClientManager,
+    registrationId = "alerts-api",
+    url = alertsUrl,
+    timeout = timeout,
+  )
 
   @Component("alertsApi")
   class SentenceAdjustmentsApiHealth(@Qualifier("alertsApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)

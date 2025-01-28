@@ -11,10 +11,9 @@ class LocationsRetryQueueService(
   hmppsQueueService: HmppsQueueService,
   telemetryClient: TelemetryClient,
   objectMapper: ObjectMapper,
-) :
-  RetryQueueService(
-    queueId = "location",
-    hmppsQueueService = hmppsQueueService,
-    telemetryClient = telemetryClient,
-    objectMapper = objectMapper,
-  )
+) : RetryQueueService(
+  queueId = "location",
+  hmppsQueueService = hmppsQueueService,
+  telemetryClient = telemetryClient,
+  objectMapper = objectMapper,
+)

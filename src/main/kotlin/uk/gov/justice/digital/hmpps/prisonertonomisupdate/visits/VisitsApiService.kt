@@ -9,12 +9,10 @@ import java.time.LocalDateTime
 @Service
 class VisitsApiService(@Qualifier("visitsApiWebClient") private val webClient: WebClient) {
 
-  suspend fun getVisit(visitId: String): VisitDto {
-    return webClient.get()
-      .uri("/visits/{visitId}", visitId)
-      .retrieve()
-      .awaitBody()
-  }
+  suspend fun getVisit(visitId: String): VisitDto = webClient.get()
+    .uri("/visits/{visitId}", visitId)
+    .retrieve()
+    .awaitBody()
 }
 
 data class VisitDto(

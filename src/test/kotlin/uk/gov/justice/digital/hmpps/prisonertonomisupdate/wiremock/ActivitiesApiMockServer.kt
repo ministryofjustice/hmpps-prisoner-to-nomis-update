@@ -11,7 +11,10 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import java.time.LocalDate
 
-class ActivitiesApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
+class ActivitiesApiExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
   companion object {
     @JvmField
     val activitiesApi = ActivitiesApiMockServer()
@@ -46,31 +49,29 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  private fun stubGet(url: String, response: String) =
-    stubFor(
-      get(url).willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(response)
-          .withStatus(200),
-      ),
-    )
+  private fun stubGet(url: String, response: String) = stubFor(
+    get(url).willReturn(
+      aResponse()
+        .withHeader("Content-Type", "application/json")
+        .withBody(response)
+        .withStatus(200),
+    ),
+  )
 
-  private fun stubGetWithError(url: String, status: Int = 500) =
-    stubFor(
-      get(url).willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(
-            """
+  private fun stubGetWithError(url: String, status: Int = 500) = stubFor(
+    get(url).willReturn(
+      aResponse()
+        .withHeader("Content-Type", "application/json")
+        .withBody(
+          """
               {
                 "error": "some error"
               }
-            """.trimIndent(),
-          )
-          .withStatus(status),
-      ),
-    )
+          """.trimIndent(),
+        )
+        .withStatus(status),
+    ),
+  )
 
   fun stubGetSchedule(id: Long, response: String) {
     stubGet("/schedules/$id", response)
@@ -114,15 +115,13 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun getCountFor(url: String) = this.findAll(getRequestedFor(urlEqualTo(url))).count()
 
-  fun stubAllocationReconciliation(prisonId: String, response: String) =
-    stubGet("/synchronisation/reconciliation/allocations/$prisonId", response)
+  fun stubAllocationReconciliation(prisonId: String, response: String) = stubGet("/synchronisation/reconciliation/allocations/$prisonId", response)
 
   fun stubAllocationReconciliationWithError(prisonId: String, status: Int = 500) {
     stubGetWithError("/synchronisation/reconciliation/allocations/$prisonId", status)
   }
 
-  fun stubAttendanceReconciliation(prisonId: String, date: LocalDate, response: String) =
-    stubGet("/synchronisation/reconciliation/attendances/$prisonId?date=$date", response)
+  fun stubAttendanceReconciliation(prisonId: String, date: LocalDate, response: String) = stubGet("/synchronisation/reconciliation/attendances/$prisonId?date=$date", response)
 
   fun stubAttendanceReconciliationWithError(prisonId: String, date: LocalDate, status: Int = 500) {
     stubGetWithError("/synchronisation/reconciliation/attendances/$prisonId?date=$date", status)

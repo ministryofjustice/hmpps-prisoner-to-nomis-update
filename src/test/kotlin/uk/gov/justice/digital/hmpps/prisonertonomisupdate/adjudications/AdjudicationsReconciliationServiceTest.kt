@@ -625,8 +625,7 @@ internal fun aDPSAdjudication(chargeNumber: String = "4000001", prisonerNumber: 
   canActionFromHistory = false,
 )
 
-internal fun adaPunishment(days: Int, startDate: LocalDate = LocalDate.now(), type: PunishmentDto.Type = ADDITIONAL_DAYS) =
-  PunishmentDto(type = type, schedule = PunishmentScheduleDto(days = days, startDate = startDate, measurement = PunishmentScheduleDto.Measurement.DAYS), canRemove = true, canEdit = false, rehabilitativeActivities = emptyList())
+internal fun adaPunishment(days: Int, startDate: LocalDate = LocalDate.now(), type: PunishmentDto.Type = ADDITIONAL_DAYS) = PunishmentDto(type = type, schedule = PunishmentScheduleDto(days = days, startDate = startDate, measurement = PunishmentScheduleDto.Measurement.DAYS), canRemove = true, canEdit = false, rehabilitativeActivities = emptyList())
 
 internal fun nomisSummary(days: Int, effectiveDate: LocalDate = LocalDate.now(), adjudicationNumber: Long = 4000001): ADASummary = ADASummary(
   adjudicationNumber = adjudicationNumber,

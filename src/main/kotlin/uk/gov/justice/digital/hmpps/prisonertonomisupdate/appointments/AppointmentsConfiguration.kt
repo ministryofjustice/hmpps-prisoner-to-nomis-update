@@ -23,13 +23,12 @@ class AppointmentsConfiguration(
   fun appointmentsApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(baseUrl, healthTimeout)
 
   @Bean
-  fun appointmentsApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.reactiveAuthorisedWebClient(
-      authorizedClientManager = authorizedClientManager,
-      registrationId = "appointments-api",
-      url = baseUrl,
-      timeout = timeout,
-    )
+  fun appointmentsApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.reactiveAuthorisedWebClient(
+    authorizedClientManager = authorizedClientManager,
+    registrationId = "appointments-api",
+    url = baseUrl,
+    timeout = timeout,
+  )
 
   @Component("appointmentsApi")
   class AppointmentsApiHealth(@Qualifier("appointmentsApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)

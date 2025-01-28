@@ -167,8 +167,7 @@ class NonAssociationsService(
     comment = instance.comments,
   )
 
-  private fun isDpsCreated(additionalInformation: NonAssociationAdditionalInformation) =
-    additionalInformation.source != CreatingSystem.NOMIS.name
+  private fun isDpsCreated(additionalInformation: NonAssociationAdditionalInformation) = additionalInformation.source != CreatingSystem.NOMIS.name
 
   suspend fun createRetry(message: CreateMappingRetryMessage<NonAssociationMappingDto>) {
     mappingService.createMapping(message.mapping)

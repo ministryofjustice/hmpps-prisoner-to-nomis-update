@@ -23,13 +23,12 @@ class CourtSentencingConfiguration(
   fun courtSentencingApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(courtSentencingUrl, healthTimeout)
 
   @Bean
-  fun courtSentencingApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.reactiveAuthorisedWebClient(
-      authorizedClientManager = authorizedClientManager,
-      registrationId = "court-sentencing-api",
-      url = courtSentencingUrl,
-      timeout = timeout,
-    )
+  fun courtSentencingApiWebClient(authorizedClientManager: ReactiveOAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.reactiveAuthorisedWebClient(
+    authorizedClientManager = authorizedClientManager,
+    registrationId = "court-sentencing-api",
+    url = courtSentencingUrl,
+    timeout = timeout,
+  )
 
   @Component("courtSentencingApi")
   class CourtSentencingApiHealth(@Qualifier("courtSentencingApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)

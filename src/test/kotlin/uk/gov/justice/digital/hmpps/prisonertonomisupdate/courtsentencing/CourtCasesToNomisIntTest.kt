@@ -1609,8 +1609,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  fun courtCaseMessagePayload(courtCaseId: String, offenderNo: String, eventType: String, source: String = "DPS") =
-    """{"eventType":"$eventType", "additionalInformation": {"courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+  fun courtCaseMessagePayload(courtCaseId: String, offenderNo: String, eventType: String, source: String = "DPS") = """{"eventType":"$eventType", "additionalInformation": {"courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun courtAppearanceMessagePayload(
     courtCaseId: String,
@@ -1618,8 +1617,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     offenderNo: String,
     eventType: String,
     source: String = "DPS",
-  ) =
-    """{"eventType":"$eventType", "additionalInformation": {"courtAppearanceId":"$courtAppearanceId", "courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+  ) = """{"eventType":"$eventType", "additionalInformation": {"courtAppearanceId":"$courtAppearanceId", "courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun courtChargeMessagePayload(
     courtCaseId: String,
@@ -1628,33 +1626,24 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     offenderNo: String,
     eventType: String,
     source: String = "DPS",
-  ) =
-    """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", ${courtAppearanceId?.let { """"courtAppearanceId":"$it",""" } ?: ""} "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+  ) = """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", ${courtAppearanceId?.let { """"courtAppearanceId":"$it",""" } ?: ""} "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
-  fun nomisCourtCaseCreateResponse(): String {
-    return """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION }"""
-  }
+  fun nomisCourtCaseCreateResponse(): String = """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION }"""
 
-  fun nomisCourtAppearanceCreateResponse(): String {
-    return """{ "id": $NOMIS_COURT_APPEARANCE_ID, 
+  fun nomisCourtAppearanceCreateResponse(): String = """{ "id": $NOMIS_COURT_APPEARANCE_ID, 
       |"courtEventChargesIds": [] }
-    """.trimMargin()
-  }
+  """.trimMargin()
 
-  fun nomisCourtAppearanceUpdateResponseWithTwoDeletedCharges(): String {
-    return """{ "id": $NOMIS_COURT_APPEARANCE_ID, 
+  fun nomisCourtAppearanceUpdateResponseWithTwoDeletedCharges(): String = """{ "id": $NOMIS_COURT_APPEARANCE_ID, 
       |"createdCourtEventChargesIds": [],
       |"deletedOffenderChargesIds": [
       |{"offenderChargeId": $NOMIS_COURT_CHARGE_5_ID },
       |{"offenderChargeId": $NOMIS_COURT_CHARGE_6_ID }
       |]
       | }
-    """.trimMargin()
-  }
+  """.trimMargin()
 
-  fun nomisCourtChargeCreateResponse(): String {
-    return """{ "offenderChargeId": $NOMIS_COURT_CHARGE_ID }"""
-  }
+  fun nomisCourtChargeCreateResponse(): String = """{ "offenderChargeId": $NOMIS_COURT_CHARGE_ID }"""
 
   fun legacyCourtCaseResponse() = LegacyCourtCase(
     courtCaseUuid = COURT_CASE_ID_FOR_CREATION,
@@ -1671,6 +1660,5 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ),
   )
 
-  fun caseReferencePayload(courtCaseId: String, offenderNo: String, eventType: String, source: String = "DPS") =
-    """{"eventType":"$eventType", "additionalInformation": {"courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+  fun caseReferencePayload(courtCaseId: String, offenderNo: String, eventType: String, source: String = "DPS") = """{"eventType":"$eventType", "additionalInformation": {"courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 }

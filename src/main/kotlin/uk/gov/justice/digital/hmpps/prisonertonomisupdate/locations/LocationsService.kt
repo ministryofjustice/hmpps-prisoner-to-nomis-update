@@ -376,8 +376,7 @@ class LocationsService(
     force = true,
   )
 
-  private fun isDpsCreated(additionalInformation: LocationAdditionalInformation) =
-    additionalInformation.source != CreatingSystem.NOMIS.name
+  private fun isDpsCreated(additionalInformation: LocationAdditionalInformation) = additionalInformation.source != CreatingSystem.NOMIS.name
 
   suspend fun createRetry(message: CreateMappingRetryMessage<LocationMappingDto>) {
     mappingService.createMapping(message.mapping)

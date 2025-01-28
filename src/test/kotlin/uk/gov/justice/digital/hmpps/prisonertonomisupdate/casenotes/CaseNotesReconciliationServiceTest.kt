@@ -55,10 +55,9 @@ class CaseNotesReconciliationServiceTest {
         creationDateTime = parse("2024-01-01T01:02:03.456"),
       ),
     ),
-  ) =
-    listOf(
-      templateDpsCaseNote(DPS_CASE_NOTE_ID, OFFENDER_NO, type, subType, amendmentText, amendments),
-    )
+  ) = listOf(
+    templateDpsCaseNote(DPS_CASE_NOTE_ID, OFFENDER_NO, type, subType, amendmentText, amendments),
+  )
 
   private val caseNotesReconciliationService =
     CaseNotesReconciliationService(telemetryClient, caseNotesApiService, caseNotesNomisApiService, nomisApiService, caseNotesMappingApiService, 10)
@@ -340,14 +339,13 @@ private fun templateDpsCaseNote(
   legacyId = 1L,
 )
 
-private fun templateMapping(nomisId: Long, dpsId: String, prisonerNo: String, bookingId: Long = 1) =
-  CaseNoteMappingDto(
-    dpsCaseNoteId = dpsId,
-    nomisCaseNoteId = nomisId,
-    offenderNo = prisonerNo,
-    nomisBookingId = bookingId,
-    mappingType = MappingType.NOMIS_CREATED,
-  )
+private fun templateMapping(nomisId: Long, dpsId: String, prisonerNo: String, bookingId: Long = 1) = CaseNoteMappingDto(
+  dpsCaseNoteId = dpsId,
+  nomisCaseNoteId = nomisId,
+  offenderNo = prisonerNo,
+  nomisBookingId = bookingId,
+  mappingType = MappingType.NOMIS_CREATED,
+)
 
 private fun templateNomisCaseNote(
   caseNoteId: Long = 1,

@@ -89,17 +89,16 @@ class NomisApiService(
 
   // ////////// VISITS //////////////
 
-  suspend fun createVisit(request: CreateVisitDto): CreateVisitResponseDto =
-    webClient.post()
-      .uri("/prisoners/{offenderNo}/visits", request.offenderNo)
-      .bodyValue(request)
-      .retrieve()
-      .bodyToMono(CreateVisitResponseDto::class.java)
-      .onErrorResume(WebClientResponseException.Conflict::class.java) {
-        val errorResponse = it.getResponseBodyAs(ErrorResponse::class.java) as ErrorResponse
-        throw CreateVisitDuplicateResponse(nomisVisitId = errorResponse.moreInfo!!)
-      }
-      .awaitSingle()
+  suspend fun createVisit(request: CreateVisitDto): CreateVisitResponseDto = webClient.post()
+    .uri("/prisoners/{offenderNo}/visits", request.offenderNo)
+    .bodyValue(request)
+    .retrieve()
+    .bodyToMono(CreateVisitResponseDto::class.java)
+    .onErrorResume(WebClientResponseException.Conflict::class.java) {
+      val errorResponse = it.getResponseBodyAs(ErrorResponse::class.java) as ErrorResponse
+      throw CreateVisitDuplicateResponse(nomisVisitId = errorResponse.moreInfo!!)
+    }
+    .awaitSingle()
 
   data class CreateVisitDuplicateResponse(val nomisVisitId: String) : Exception("Duplicate visit")
 
@@ -126,52 +125,45 @@ class NomisApiService(
 
   // ////////// INCENTIVES //////////////
 
-  suspend fun createIncentive(bookingId: Long, request: CreateIncentiveDto): CreateIncentiveResponseDto =
-    webClient.post()
-      .uri("/prisoners/booking-id/{bookingId}/incentives", bookingId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  suspend fun createIncentive(bookingId: Long, request: CreateIncentiveDto): CreateIncentiveResponseDto = webClient.post()
+    .uri("/prisoners/booking-id/{bookingId}/incentives", bookingId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getCurrentIncentive(bookingId: Long): NomisIncentive? =
-    webClient.get()
-      .uri("/incentives/booking-id/{bookingId}/current", bookingId)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getCurrentIncentive(bookingId: Long): NomisIncentive? = webClient.get()
+    .uri("/incentives/booking-id/{bookingId}/current", bookingId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
   // //////////////////// APPOINTMENTS /////////////////////////
 
-  suspend fun createAppointment(request: CreateAppointmentRequest): CreateAppointmentResponse =
-    webClient.post()
-      .uri("/appointments")
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  suspend fun createAppointment(request: CreateAppointmentRequest): CreateAppointmentResponse = webClient.post()
+    .uri("/appointments")
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun updateAppointment(nomisEventId: Long, request: UpdateAppointmentRequest): ResponseEntity<Void> =
-    webClient.put()
-      .uri("/appointments/{nomisEventId}", nomisEventId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun updateAppointment(nomisEventId: Long, request: UpdateAppointmentRequest): ResponseEntity<Void> = webClient.put()
+    .uri("/appointments/{nomisEventId}", nomisEventId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
 
-  suspend fun cancelAppointment(nomisEventId: Long): ResponseEntity<Void> =
-    webClient.put()
-      .uri("/appointments/{nomisEventId}/cancel", nomisEventId)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun cancelAppointment(nomisEventId: Long): ResponseEntity<Void> = webClient.put()
+    .uri("/appointments/{nomisEventId}/cancel", nomisEventId)
+    .retrieve()
+    .awaitBodilessEntity()
 
-  suspend fun uncancelAppointment(nomisEventId: Long): ResponseEntity<Void> =
-    webClient.put()
-      .uri("/appointments/{nomisEventId}/uncancel", nomisEventId)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun uncancelAppointment(nomisEventId: Long): ResponseEntity<Void> = webClient.put()
+    .uri("/appointments/{nomisEventId}/uncancel", nomisEventId)
+    .retrieve()
+    .awaitBodilessEntity()
 
-  suspend fun deleteAppointment(nomisEventId: Long): ResponseEntity<Void> =
-    webClient.delete()
-      .uri("/appointments/{nomisEventId}", nomisEventId)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun deleteAppointment(nomisEventId: Long): ResponseEntity<Void> = webClient.delete()
+    .uri("/appointments/{nomisEventId}", nomisEventId)
+    .retrieve()
+    .awaitBodilessEntity()
 
   // //////////////////// SENTENCES ////////////////////////
 
@@ -179,68 +171,60 @@ class NomisApiService(
     bookingId: Long,
     sentenceSequence: Long,
     request: CreateSentencingAdjustmentRequest,
-  ): CreateSentencingAdjustmentResponse =
-    webClient.post()
-      .uri("/prisoners/booking-id/{bookingId}/sentences/{sentenceSequence}/adjustments", bookingId, sentenceSequence)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  ): CreateSentencingAdjustmentResponse = webClient.post()
+    .uri("/prisoners/booking-id/{bookingId}/sentences/{sentenceSequence}/adjustments", bookingId, sentenceSequence)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
   suspend fun updateSentenceAdjustment(
     adjustmentId: Long,
     request: UpdateSentencingAdjustmentRequest,
-  ): Unit =
-    webClient.put()
-      .uri("/sentence-adjustments/{adjustmentId}", adjustmentId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  ): Unit = webClient.put()
+    .uri("/sentence-adjustments/{adjustmentId}", adjustmentId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
   suspend fun createKeyDateAdjustment(
     bookingId: Long,
     request: CreateSentencingAdjustmentRequest,
-  ): CreateSentencingAdjustmentResponse =
-    webClient.post()
-      .uri("/prisoners/booking-id/{bookingId}/adjustments", bookingId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  ): CreateSentencingAdjustmentResponse = webClient.post()
+    .uri("/prisoners/booking-id/{bookingId}/adjustments", bookingId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
   suspend fun updateKeyDateAdjustment(
     adjustmentId: Long,
     request: UpdateSentencingAdjustmentRequest,
-  ): Unit =
-    webClient.put()
-      .uri("/key-date-adjustments/{adjustmentId}", adjustmentId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  ): Unit = webClient.put()
+    .uri("/key-date-adjustments/{adjustmentId}", adjustmentId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun deleteSentenceAdjustment(adjustmentId: Long): Unit =
-    webClient.delete()
-      .uri("/sentence-adjustments/{adjustmentId}", adjustmentId)
-      .retrieve()
-      .awaitBody()
+  suspend fun deleteSentenceAdjustment(adjustmentId: Long): Unit = webClient.delete()
+    .uri("/sentence-adjustments/{adjustmentId}", adjustmentId)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun deleteKeyDateAdjustment(adjustmentId: Long): Unit =
-    webClient.delete()
-      .uri("/key-date-adjustments/{adjustmentId}", adjustmentId)
-      .retrieve()
-      .awaitBody()
+  suspend fun deleteKeyDateAdjustment(adjustmentId: Long): Unit = webClient.delete()
+    .uri("/key-date-adjustments/{adjustmentId}", adjustmentId)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getAdjustments(bookingId: Long): SentencingAdjustmentsResponse =
-    webClient.get()
-      .uri("/prisoners/booking-id/{bookingId}/sentencing-adjustments", bookingId)
-      .retrieve()
-      .awaitBody()
+  suspend fun getAdjustments(bookingId: Long): SentencingAdjustmentsResponse = webClient.get()
+    .uri("/prisoners/booking-id/{bookingId}/sentencing-adjustments", bookingId)
+    .retrieve()
+    .awaitBody()
 
   // ////////// INCENTIVE LEVELS //////////////
 
-  suspend fun getGlobalIncentiveLevel(incentiveLevel: String): ReferenceCode? =
-    webClient.get()
-      .uri("/incentives/reference-codes/{incentiveLevel}", incentiveLevel)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getGlobalIncentiveLevel(incentiveLevel: String): ReferenceCode? = webClient.get()
+    .uri("/incentives/reference-codes/{incentiveLevel}", incentiveLevel)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
   suspend fun updateGlobalIncentiveLevel(incentiveLevel: ReferenceCode) {
     webClient.put()
@@ -250,152 +234,138 @@ class NomisApiService(
       .awaitBodilessEntity()
   }
 
-  suspend fun createGlobalIncentiveLevel(incentiveLevel: ReferenceCode): ResponseEntity<Void> =
-    webClient.post()
-      .uri("/incentives/reference-codes")
-      .bodyValue(incentiveLevel)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun createGlobalIncentiveLevel(incentiveLevel: ReferenceCode): ResponseEntity<Void> = webClient.post()
+    .uri("/incentives/reference-codes")
+    .bodyValue(incentiveLevel)
+    .retrieve()
+    .awaitBodilessEntity()
 
-  suspend fun globalIncentiveLevelReorder(levels: List<String>): ResponseEntity<Void> =
-    webClient.post()
-      .uri("/incentives/reference-codes/reorder")
-      .bodyValue(ReorderRequest(levels))
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun globalIncentiveLevelReorder(levels: List<String>): ResponseEntity<Void> = webClient.post()
+    .uri("/incentives/reference-codes/reorder")
+    .bodyValue(ReorderRequest(levels))
+    .retrieve()
+    .awaitBodilessEntity()
 
   suspend fun getActivePrisoners(
     pageNumber: Long,
     pageSize: Long,
-  ): Page<PrisonerIds> =
-    webClient.get()
-      .uri {
-        it.path("/prisoners/ids/active")
-          .queryParam("page", pageNumber)
-          .queryParam("size", pageSize)
-          .build()
-      }
-      .retrieve()
-      .bodyToMono(typeReference<RestResponsePage<PrisonerIds>>())
-      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/active", "page", pageNumber)))
-      .awaitSingle()
+  ): Page<PrisonerIds> = webClient.get()
+    .uri {
+      it.path("/prisoners/ids/active")
+        .queryParam("page", pageNumber)
+        .queryParam("size", pageSize)
+        .build()
+    }
+    .retrieve()
+    .bodyToMono(typeReference<RestResponsePage<PrisonerIds>>())
+    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/active", "page", pageNumber)))
+    .awaitSingle()
 
   suspend fun getAllPrisonersPaged(
     pageNumber: Long,
     pageSize: Long,
-  ): Page<PrisonerId> =
-    webClient.get()
-      .uri {
-        it.path("/prisoners/ids/all")
-          .queryParam("page", pageNumber)
-          .queryParam("size", pageSize)
-          .build()
-      }
-      .retrieve()
-      .bodyToMono(typeReference<RestResponsePage<PrisonerId>>())
-      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all", "page", pageNumber)))
-      .awaitSingle()
+  ): Page<PrisonerId> = webClient.get()
+    .uri {
+      it.path("/prisoners/ids/all")
+        .queryParam("page", pageNumber)
+        .queryParam("size", pageSize)
+        .build()
+    }
+    .retrieve()
+    .bodyToMono(typeReference<RestResponsePage<PrisonerId>>())
+    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all", "page", pageNumber)))
+    .awaitSingle()
 
   suspend fun getAllPrisoners(
     fromId: Long,
     pageSize: Int,
-  ): PrisonerNosWithLast =
-    webClient.get()
-      .uri {
-        it.path("/prisoners/ids/all-from-id")
-          .queryParam("offenderId", fromId)
-          .queryParam("pageSize", pageSize)
-          .build()
-      }
-      .retrieve()
-      .bodyToMono(PrisonerNosWithLast::class.java)
-      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all-from-id", "offenderId", fromId)))
-      .awaitSingle()
+  ): PrisonerNosWithLast = webClient.get()
+    .uri {
+      it.path("/prisoners/ids/all-from-id")
+        .queryParam("offenderId", fromId)
+        .queryParam("pageSize", pageSize)
+        .build()
+    }
+    .retrieve()
+    .bodyToMono(PrisonerNosWithLast::class.java)
+    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all-from-id", "offenderId", fromId)))
+    .awaitSingle()
 
   suspend fun getAllLatestBookings(
     activeOnly: Boolean,
     lastBookingId: Long,
     pageSize: Int,
-  ): BookingIdsWithLast =
-    webClient.get()
-      .uri {
-        it.path("/bookings/ids/latest-from-id")
-          .queryParam("activeOnly", activeOnly)
-          .queryParam("bookingId", lastBookingId)
-          .queryParam("pageSize", pageSize)
-          .build()
-      }
-      .retrieve()
-      .bodyToMono(BookingIdsWithLast::class.java)
-      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/bookings/ids/latest-from-id", "bookingId", lastBookingId)))
-      .awaitSingle()
+  ): BookingIdsWithLast = webClient.get()
+    .uri {
+      it.path("/bookings/ids/latest-from-id")
+        .queryParam("activeOnly", activeOnly)
+        .queryParam("bookingId", lastBookingId)
+        .queryParam("pageSize", pageSize)
+        .build()
+    }
+    .retrieve()
+    .bodyToMono(BookingIdsWithLast::class.java)
+    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/bookings/ids/latest-from-id", "bookingId", lastBookingId)))
+    .awaitSingle()
 
-  suspend fun updatePrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest): ResponseEntity<Void> =
-    webClient.put()
-      .uri("/incentives/prison/{prison}/code/{levelCode}", prison, prisonIncentive.levelCode)
-      .bodyValue(prisonIncentive)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun updatePrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest): ResponseEntity<Void> = webClient.put()
+    .uri("/incentives/prison/{prison}/code/{levelCode}", prison, prisonIncentive.levelCode)
+    .bodyValue(prisonIncentive)
+    .retrieve()
+    .awaitBodilessEntity()
 
-  suspend fun createPrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest): ResponseEntity<Void> =
-    webClient.post()
-      .uri("/incentives/prison/{prison}", prison)
-      .bodyValue(prisonIncentive)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun createPrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest): ResponseEntity<Void> = webClient.post()
+    .uri("/incentives/prison/{prison}", prison)
+    .bodyValue(prisonIncentive)
+    .retrieve()
+    .awaitBodilessEntity()
 
-  suspend fun getPrisonIncentiveLevel(prison: String, code: String): PrisonIncentiveLevel? =
-    webClient.get()
-      .uri("/incentives/prison/{prison}/code/{code}", prison, code)
-      .retrieve()
-      .awaitBodyOrNullForNotFound()
+  suspend fun getPrisonIncentiveLevel(prison: String, code: String): PrisonIncentiveLevel? = webClient.get()
+    .uri("/incentives/prison/{prison}/code/{code}", prison, code)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
   // ////////// ADJUDICATIONS //////////////
 
-  suspend fun createAdjudication(offenderNo: String, request: CreateAdjudicationRequest): AdjudicationResponse =
-    webClient.post()
-      .uri("/prisoners/{offenderNo}/adjudications", offenderNo)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  suspend fun createAdjudication(offenderNo: String, request: CreateAdjudicationRequest): AdjudicationResponse = webClient.post()
+    .uri("/prisoners/{offenderNo}/adjudications", offenderNo)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
   suspend fun updateAdjudicationRepairs(
     adjudicationNumber: Long,
     request: UpdateRepairsRequest,
-  ): UpdateRepairsResponse =
-    webClient.put()
-      .uri("/adjudications/adjudication-number/{adjudicationNumber}/repairs", adjudicationNumber)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  ): UpdateRepairsResponse = webClient.put()
+    .uri("/adjudications/adjudication-number/{adjudicationNumber}/repairs", adjudicationNumber)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
   suspend fun updateAdjudicationEvidence(
     adjudicationNumber: Long,
     request: UpdateEvidenceRequest,
-  ): UpdateEvidenceResponse =
-    webClient.put()
-      .uri("/adjudications/adjudication-number/{adjudicationNumber}/evidence", adjudicationNumber)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  ): UpdateEvidenceResponse = webClient.put()
+    .uri("/adjudications/adjudication-number/{adjudicationNumber}/evidence", adjudicationNumber)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun createHearing(adjudicationNumber: Long, request: CreateHearingRequest): CreateHearingResponse =
-    webClient.post()
-      .uri("/adjudications/adjudication-number/{adjudicationNumber}/hearings", adjudicationNumber)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  suspend fun createHearing(adjudicationNumber: Long, request: CreateHearingRequest): CreateHearingResponse = webClient.post()
+    .uri("/adjudications/adjudication-number/{adjudicationNumber}/hearings", adjudicationNumber)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun updateHearing(adjudicationNumber: Long, hearingId: Long, request: UpdateHearingRequest): Hearing =
-    webClient.put()
-      .uri(
-        "/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}",
-        adjudicationNumber,
-        hearingId,
-      )
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  suspend fun updateHearing(adjudicationNumber: Long, hearingId: Long, request: UpdateHearingRequest): Hearing = webClient.put()
+    .uri(
+      "/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}",
+      adjudicationNumber,
+      hearingId,
+    )
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
   suspend fun deleteHearing(adjudicationNumber: Long, hearingId: Long) {
     webClient.delete()
@@ -428,16 +398,15 @@ class NomisApiService(
     adjudicationNumber: Long,
     hearingId: Long,
     chargeSequence: Int,
-  ): DeleteHearingResultResponse =
-    webClient.delete()
-      .uri(
-        "/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}/charge/{chargeSequence}/result",
-        adjudicationNumber,
-        hearingId,
-        chargeSequence,
-      )
-      .retrieve()
-      .awaitBody()
+  ): DeleteHearingResultResponse = webClient.delete()
+    .uri(
+      "/adjudications/adjudication-number/{adjudicationNumber}/hearings/{hearingId}/charge/{chargeSequence}/result",
+      adjudicationNumber,
+      hearingId,
+      chargeSequence,
+    )
+    .retrieve()
+    .awaitBody()
 
   suspend fun deleteReferralResult(adjudicationNumber: Long, chargeSequence: Int) {
     webClient.delete()
@@ -530,20 +499,18 @@ class NomisApiService(
     .retrieve()
     .awaitBodilessEntity()
 
-  suspend fun getAdaAwardsSummary(bookingId: Long): AdjudicationADAAwardSummaryResponse =
-    webClient.get()
-      .uri("/prisoners/booking-id/{bookingId}/awards/ada/summary", bookingId)
-      .retrieve()
-      .awaitBody()
+  suspend fun getAdaAwardsSummary(bookingId: Long): AdjudicationADAAwardSummaryResponse = webClient.get()
+    .uri("/prisoners/booking-id/{bookingId}/awards/ada/summary", bookingId)
+    .retrieve()
+    .awaitBody()
 
   // ////////// NON-ASSOCIATIONS //////////////
 
-  suspend fun createNonAssociation(request: CreateNonAssociationRequest): CreateNonAssociationResponse =
-    webClient.post()
-      .uri("/non-associations")
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  suspend fun createNonAssociation(request: CreateNonAssociationRequest): CreateNonAssociationResponse = webClient.post()
+    .uri("/non-associations")
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
   suspend fun amendNonAssociation(
     offenderNo1: String,
@@ -590,174 +557,156 @@ class NomisApiService(
   suspend fun getNonAssociations(
     pageNumber: Long,
     pageSize: Long,
-  ): Page<NonAssociationIdResponse> =
-    webClient
-      .get()
-      .uri {
-        it.path("/non-associations/ids")
-          .queryParam("page", pageNumber)
-          .queryParam("size", pageSize)
-          .build()
-      }
-      .retrieve()
-      .bodyToMono(typeReference<RestResponsePage<NonAssociationIdResponse>>())
-      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/non-associations/ids", "page", pageNumber)))
-      .awaitSingle()
+  ): Page<NonAssociationIdResponse> = webClient
+    .get()
+    .uri {
+      it.path("/non-associations/ids")
+        .queryParam("page", pageNumber)
+        .queryParam("size", pageSize)
+        .build()
+    }
+    .retrieve()
+    .bodyToMono(typeReference<RestResponsePage<NonAssociationIdResponse>>())
+    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/non-associations/ids", "page", pageNumber)))
+    .awaitSingle()
 
   suspend fun getNonAssociationDetails(
     offender1: String,
     offender2: String,
-  ): List<NonAssociationResponse> =
-    webClient
-      .get()
-      .uri(
-        "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/all",
-        offender1,
-        offender2,
-      )
-      .retrieve()
-      .bodyToMono(typeReference<List<NonAssociationResponse>>())
-      .retryWhen(
-        backoffSpec.withRetryContext(
-          Context.of(
-            "api",
-            "nomis-prisoner-api",
-            "path",
-            "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/all",
-            "offender1",
-            offender1,
-            "offender2",
-            offender2,
-          ),
+  ): List<NonAssociationResponse> = webClient
+    .get()
+    .uri(
+      "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/all",
+      offender1,
+      offender2,
+    )
+    .retrieve()
+    .bodyToMono(typeReference<List<NonAssociationResponse>>())
+    .retryWhen(
+      backoffSpec.withRetryContext(
+        Context.of(
+          "api",
+          "nomis-prisoner-api",
+          "path",
+          "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/all",
+          "offender1",
+          offender1,
+          "offender2",
+          offender2,
         ),
-      )
-      .awaitSingle()
+      ),
+    )
+    .awaitSingle()
 
   // ///////////////////// LOCATIONS /////////////////////////
 
-  suspend fun createLocation(request: CreateLocationRequest): LocationIdResponse =
-    webClient.post()
-      .uri("/locations")
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  suspend fun createLocation(request: CreateLocationRequest): LocationIdResponse = webClient.post()
+    .uri("/locations")
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun updateLocation(locationId: Long, request: UpdateLocationRequest): ResponseEntity<Void> =
-    webClient.put()
-      .uri("/locations/{id}", locationId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun updateLocation(locationId: Long, request: UpdateLocationRequest): ResponseEntity<Void> = webClient.put()
+    .uri("/locations/{id}", locationId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
 
-  suspend fun deactivateLocation(locationId: Long, request: DeactivateRequest): ResponseEntity<Void> =
-    webClient.put()
-      .uri("/locations/{id}/deactivate", locationId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun deactivateLocation(locationId: Long, request: DeactivateRequest): ResponseEntity<Void> = webClient.put()
+    .uri("/locations/{id}/deactivate", locationId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
 
-  suspend fun reactivateLocation(locationId: Long): ResponseEntity<Void> =
-    webClient.put()
-      .uri("/locations/{id}/reactivate", locationId)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun reactivateLocation(locationId: Long): ResponseEntity<Void> = webClient.put()
+    .uri("/locations/{id}/reactivate", locationId)
+    .retrieve()
+    .awaitBodilessEntity()
 
-  suspend fun updateLocationCapacity(locationId: Long, request: UpdateCapacityRequest, ignoreOperationalCapacity: Boolean): ResponseEntity<Void> =
-    webClient.put()
-      .uri {
-        it.path("/locations/{id}/capacity")
-          .queryParam("ignoreOperationalCapacity", ignoreOperationalCapacity)
-          .build(locationId)
-      }
-      .bodyValue(request)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun updateLocationCapacity(locationId: Long, request: UpdateCapacityRequest, ignoreOperationalCapacity: Boolean): ResponseEntity<Void> = webClient.put()
+    .uri {
+      it.path("/locations/{id}/capacity")
+        .queryParam("ignoreOperationalCapacity", ignoreOperationalCapacity)
+        .build(locationId)
+    }
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
 
-  suspend fun updateLocationCertification(locationId: Long, request: UpdateCertificationRequest): ResponseEntity<Void> =
-    webClient.put()
-      .uri("/locations/{id}/certification", locationId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun updateLocationCertification(locationId: Long, request: UpdateCertificationRequest): ResponseEntity<Void> = webClient.put()
+    .uri("/locations/{id}/certification", locationId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
 
-  suspend fun getLocations(pageNumber: Long, pageSize: Long): PageImpl<LocationIdResponse> =
-    webClient
-      .get()
-      .uri {
-        it.path("/locations/ids")
-          .queryParam("page", pageNumber)
-          .queryParam("size", pageSize)
-          .build()
-      }
-      .retrieve()
-      .bodyToMono(typeReference<RestResponsePage<LocationIdResponse>>())
-      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/locations/ids", "page", pageNumber)))
-      .awaitSingle()
+  suspend fun getLocations(pageNumber: Long, pageSize: Long): PageImpl<LocationIdResponse> = webClient
+    .get()
+    .uri {
+      it.path("/locations/ids")
+        .queryParam("page", pageNumber)
+        .queryParam("size", pageSize)
+        .build()
+    }
+    .retrieve()
+    .bodyToMono(typeReference<RestResponsePage<LocationIdResponse>>())
+    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/locations/ids", "page", pageNumber)))
+    .awaitSingle()
 
-  suspend fun getLocationDetails(id: Long): LocationResponse =
-    webClient
-      .get()
-      .uri("/locations/{id}", id)
-      .retrieve()
-      .bodyToMono(LocationResponse::class.java)
-      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/locations/{id}")))
-      .awaitSingle()
+  suspend fun getLocationDetails(id: Long): LocationResponse = webClient
+    .get()
+    .uri("/locations/{id}", id)
+    .retrieve()
+    .bodyToMono(LocationResponse::class.java)
+    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/locations/{id}")))
+    .awaitSingle()
 
   // ///////////////////// COURT SENTENCING /////////////////////////
 
-  suspend fun createCourtCase(offenderNo: String, request: CreateCourtCaseRequest): CreateCourtCaseResponse =
-    webClient.post()
-      .uri("/prisoners/{offenderNo}/sentencing/court-cases", offenderNo)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  suspend fun createCourtCase(offenderNo: String, request: CreateCourtCaseRequest): CreateCourtCaseResponse = webClient.post()
+    .uri("/prisoners/{offenderNo}/sentencing/court-cases", offenderNo)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun deleteCourtCase(offenderNo: String, nomisCourtCaseId: Long): ResponseEntity<Void> =
-    webClient.delete()
-      .uri("/prisoners/{offenderNo}/sentencing/court-cases/{nomisCourtCaseId}", offenderNo, nomisCourtCaseId)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun deleteCourtCase(offenderNo: String, nomisCourtCaseId: Long): ResponseEntity<Void> = webClient.delete()
+    .uri("/prisoners/{offenderNo}/sentencing/court-cases/{nomisCourtCaseId}", offenderNo, nomisCourtCaseId)
+    .retrieve()
+    .awaitBodilessEntity()
 
-  suspend fun deleteCourtAppearance(offenderNo: String, nomisCourtCaseId: Long, nomisEventId: Long): ResponseEntity<Void> =
-    webClient.delete()
-      .uri("/prisoners/{offenderNo}/sentencing/court-cases/{nomisCourtCaseId}/court-appearances/{nomisEventId}", offenderNo, nomisCourtCaseId, nomisEventId)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun deleteCourtAppearance(offenderNo: String, nomisCourtCaseId: Long, nomisEventId: Long): ResponseEntity<Void> = webClient.delete()
+    .uri("/prisoners/{offenderNo}/sentencing/court-cases/{nomisCourtCaseId}/court-appearances/{nomisEventId}", offenderNo, nomisCourtCaseId, nomisEventId)
+    .retrieve()
+    .awaitBodilessEntity()
 
-  suspend fun createCourtAppearance(offenderNo: String, nomisCourtCaseId: Long, request: CourtAppearanceRequest): CreateCourtAppearanceResponse =
-    webClient.post()
-      .uri("/prisoners/{offenderNo}/sentencing/court-cases/{courtCaseId}/court-appearances", offenderNo, nomisCourtCaseId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  suspend fun createCourtAppearance(offenderNo: String, nomisCourtCaseId: Long, request: CourtAppearanceRequest): CreateCourtAppearanceResponse = webClient.post()
+    .uri("/prisoners/{offenderNo}/sentencing/court-cases/{courtCaseId}/court-appearances", offenderNo, nomisCourtCaseId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun createCourtCharge(offenderNo: String, nomisCourtCaseId: Long, request: OffenderChargeRequest): OffenderChargeIdResponse =
-    webClient.post()
-      .uri("/prisoners/{offenderNo}/sentencing/court-cases/{courtCaseId}/charges", offenderNo, nomisCourtCaseId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  suspend fun createCourtCharge(offenderNo: String, nomisCourtCaseId: Long, request: OffenderChargeRequest): OffenderChargeIdResponse = webClient.post()
+    .uri("/prisoners/{offenderNo}/sentencing/court-cases/{courtCaseId}/charges", offenderNo, nomisCourtCaseId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun updateCourtCharge(chargeId: Long, offenderNo: String, nomisCourtCaseId: Long, nomisCourtAppearanceId: Long, request: OffenderChargeRequest): ResponseEntity<Void> =
-    webClient.put()
-      .uri("/prisoners/{offenderNo}/sentencing/court-cases/{courtCaseId}/court-appearances/{courtEventId}/charges/{chargeId}", offenderNo, nomisCourtCaseId, nomisCourtAppearanceId, chargeId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun updateCourtCharge(chargeId: Long, offenderNo: String, nomisCourtCaseId: Long, nomisCourtAppearanceId: Long, request: OffenderChargeRequest): ResponseEntity<Void> = webClient.put()
+    .uri("/prisoners/{offenderNo}/sentencing/court-cases/{courtCaseId}/court-appearances/{courtEventId}/charges/{chargeId}", offenderNo, nomisCourtCaseId, nomisCourtAppearanceId, chargeId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
 
-  suspend fun updateCourtAppearance(offenderNo: String, nomisCourtCaseId: Long, nomisCourtAppearanceId: Long, request: CourtAppearanceRequest): UpdateCourtAppearanceResponse =
-    webClient.put()
-      .uri("/prisoners/{offenderNo}/sentencing/court-cases/{nomisCourtCaseId}/court-appearances/{nomisCourtAppearanceId}", offenderNo, nomisCourtCaseId, nomisCourtAppearanceId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBody()
+  suspend fun updateCourtAppearance(offenderNo: String, nomisCourtCaseId: Long, nomisCourtAppearanceId: Long, request: CourtAppearanceRequest): UpdateCourtAppearanceResponse = webClient.put()
+    .uri("/prisoners/{offenderNo}/sentencing/court-cases/{nomisCourtCaseId}/court-appearances/{nomisCourtAppearanceId}", offenderNo, nomisCourtCaseId, nomisCourtAppearanceId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun refreshCaseReferences(offenderNo: String, nomisCourtCaseId: Long, request: CaseIdentifierRequest): ResponseEntity<Void> =
-    webClient.post()
-      .uri("/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/case-identifiers", offenderNo, nomisCourtCaseId)
-      .bodyValue(request)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun refreshCaseReferences(offenderNo: String, nomisCourtCaseId: Long, request: CaseIdentifierRequest): ResponseEntity<Void> = webClient.post()
+    .uri("/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/case-identifiers", offenderNo, nomisCourtCaseId)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
 
   suspend fun getCourtCaseForMigration(courtCaseId: Long): CourtCaseResponse = webClient.get()
     .uri("/court-cases/{courtCaseId}", courtCaseId)
@@ -769,11 +718,10 @@ class NomisApiService(
     .retrieve()
     .awaitBody()
 
-  suspend fun mergesSinceDate(offenderNo: String, fromDate: LocalDate): List<MergeDetail> =
-    webClient.get()
-      .uri("/prisoners/{offenderNo}/merges?fromDate={fromDate}", offenderNo, fromDate)
-      .retrieve()
-      .awaitBody()
+  suspend fun mergesSinceDate(offenderNo: String, fromDate: LocalDate): List<MergeDetail> = webClient.get()
+    .uri("/prisoners/{offenderNo}/merges?fromDate={fromDate}", offenderNo, fromDate)
+    .retrieve()
+    .awaitBody()
 }
 
 data class CreateVisitDto(

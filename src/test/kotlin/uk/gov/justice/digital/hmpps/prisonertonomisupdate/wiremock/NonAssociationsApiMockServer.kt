@@ -14,7 +14,10 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 
-class NonAssociationsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
+class NonAssociationsApiExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
   companion object {
     @JvmField
     val nonAssociationsApiServer = NonAssociationsApiMockServer()

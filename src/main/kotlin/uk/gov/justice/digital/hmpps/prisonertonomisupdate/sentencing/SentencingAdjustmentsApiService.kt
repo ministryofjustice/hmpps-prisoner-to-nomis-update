@@ -15,18 +15,14 @@ class SentencingAdjustmentsApiService(private val sentenceAdjustmentsApiWebClien
     const val LEGACY_CONTENT_TYPE = "application/vnd.nomis-offence+json"
   }
 
-  suspend fun getAdjustment(adjustmentId: String): LegacyAdjustment {
-    return sentenceAdjustmentsApiWebClient.get()
-      .uri("/legacy/adjustments/{adjustmentId}", adjustmentId)
-      .header("Content-Type", LEGACY_CONTENT_TYPE)
-      .retrieve()
-      .awaitBody()
-  }
+  suspend fun getAdjustment(adjustmentId: String): LegacyAdjustment = sentenceAdjustmentsApiWebClient.get()
+    .uri("/legacy/adjustments/{adjustmentId}", adjustmentId)
+    .header("Content-Type", LEGACY_CONTENT_TYPE)
+    .retrieve()
+    .awaitBody()
 
-  suspend fun getAdjustments(offenderNo: String): List<AdjustmentDto>? {
-    return sentenceAdjustmentsApiWebClient.get()
-      .uri("/adjustments?person={offenderNo}", offenderNo)
-      .retrieve()
-      .awaitBodyOrNullForStatus(NOT_FOUND, UNPROCESSABLE_ENTITY)
-  }
+  suspend fun getAdjustments(offenderNo: String): List<AdjustmentDto>? = sentenceAdjustmentsApiWebClient.get()
+    .uri("/adjustments?person={offenderNo}", offenderNo)
+    .retrieve()
+    .awaitBodyOrNullForStatus(NOT_FOUND, UNPROCESSABLE_ENTITY)
 }

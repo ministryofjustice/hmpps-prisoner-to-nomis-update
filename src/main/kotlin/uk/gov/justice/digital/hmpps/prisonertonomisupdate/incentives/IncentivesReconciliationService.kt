@@ -27,29 +27,26 @@ class IncentivesReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<MismatchIncentiveLevel> {
-    return activePrisonersCount.asPages(pageSize).flatMap { page ->
-      val activePrisoners = getActivePrisonersForPage(page)
+  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<MismatchIncentiveLevel> = activePrisonersCount.asPages(pageSize).flatMap { page ->
+    val activePrisoners = getActivePrisonersForPage(page)
 
-      withContext(Dispatchers.Unconfined) {
-        activePrisoners.map { async { checkBookingIncentiveMatch(it) } }
-      }.awaitAll().filterNotNull()
-    }
+    withContext(Dispatchers.Unconfined) {
+      activePrisoners.map { async { checkBookingIncentiveMatch(it) } }
+    }.awaitAll().filterNotNull()
   }
 
-  private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) =
-    runCatching { nomisApiService.getActivePrisoners(page.first, page.second).content }
-      .onFailure {
-        telemetryClient.trackEvent(
-          "incentives-reports-reconciliation-mismatch-page-error",
-          mapOf(
-            "page" to page.first.toString(),
-          ),
-        )
-        log.error("Unable to match entire page of prisoners: $page", it)
-      }
-      .getOrElse { emptyList() }
-      .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
+  private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) = runCatching { nomisApiService.getActivePrisoners(page.first, page.second).content }
+    .onFailure {
+      telemetryClient.trackEvent(
+        "incentives-reports-reconciliation-mismatch-page-error",
+        mapOf(
+          "page" to page.first.toString(),
+        ),
+      )
+      log.error("Unable to match entire page of prisoners: $page", it)
+    }
+    .getOrElse { emptyList() }
+    .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
   private suspend fun checkBookingIncentiveMatch(prisonerId: PrisonerIds): MismatchIncentiveLevel? = runCatching {
     // log.debug("Checking booking: ${prisonerId.bookingId}")

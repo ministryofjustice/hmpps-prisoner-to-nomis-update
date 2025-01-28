@@ -283,23 +283,21 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
     }
   }
 
-  private fun physicalAttributesRequest(prisonerNumber: String = "A1234AA", source: String = "DPS", fields: String? = null) =
-    PublishRequest.builder().topicArn(topicArn)
-      .message(physicalAttributesMessage(prisonerNumber, source, fields))
-      .messageAttributes(
-        mapOf(
-          "eventType" to MessageAttributeValue.builder().dataType("String")
-            .stringValue("prison-person.physical-attributes.updated").build(),
-        ),
-      ).build()
+  private fun physicalAttributesRequest(prisonerNumber: String = "A1234AA", source: String = "DPS", fields: String? = null) = PublishRequest.builder().topicArn(topicArn)
+    .message(physicalAttributesMessage(prisonerNumber, source, fields))
+    .messageAttributes(
+      mapOf(
+        "eventType" to MessageAttributeValue.builder().dataType("String")
+          .stringValue("prison-person.physical-attributes.updated").build(),
+      ),
+    ).build()
 
-  private fun physicalAttributesMessage(prisonerNumber: String, source: String, fields: String?) =
-    (
-      fields
-        ?.let { ""","fields": $fields""" }
-        ?: ""
-      ).let { fieldsJson ->
-      """
+  private fun physicalAttributesMessage(prisonerNumber: String, source: String, fields: String?) = (
+    fields
+      ?.let { ""","fields": $fields""" }
+      ?: ""
+    ).let { fieldsJson ->
+    """
           {
             "eventType":"prison-person.physical-attributes.updated",
             "additionalInformation": {
@@ -312,8 +310,8 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
             "description":"The physical attributes of a prisoner have been updated.",
             "version":"1.0"
           }
-      """.trimIndent()
-    }
+    """.trimIndent()
+  }
 
   @Nested
   inner class UpdatePhysicalAttributesApi {
@@ -531,15 +529,14 @@ class PhysicalAttributesSyncIntTest : SqsIntegrationTestBase() {
       }
     }
 
-    private fun readmissionSwitchBookingRequest(prisonerNumber: String = "A1234AA") =
-      PublishRequest.builder().topicArn(topicArn)
-        .message(readmissionSwitchBookingMessage(prisonerNumber))
-        .messageAttributes(
-          mapOf(
-            "eventType" to MessageAttributeValue.builder().dataType("String")
-              .stringValue("prisoner-offender-search.prisoner.received").build(),
-          ),
-        ).build()
+    private fun readmissionSwitchBookingRequest(prisonerNumber: String = "A1234AA") = PublishRequest.builder().topicArn(topicArn)
+      .message(readmissionSwitchBookingMessage(prisonerNumber))
+      .messageAttributes(
+        mapOf(
+          "eventType" to MessageAttributeValue.builder().dataType("String")
+            .stringValue("prisoner-offender-search.prisoner.received").build(),
+        ),
+      ).build()
 
     private fun readmissionSwitchBookingMessage(prisonerNumber: String) =
       """
