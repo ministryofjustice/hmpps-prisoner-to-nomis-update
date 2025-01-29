@@ -25,10 +25,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_DATE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_END_DATE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_RESULT_CODE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_2_OFFENCE_CODE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_2_OFFENCE_DATE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_2_OFFENCE_END_DATE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_2_RESULT_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.CourtSentencingApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
@@ -39,7 +35,6 @@ private const val COURT_CASE_ID_FOR_CREATION = "12345"
 private const val NOMIS_COURT_CASE_ID_FOR_CREATION = 7L
 private const val DPS_COURT_APPEARANCE_ID = "9c591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val NOMIS_COURT_APPEARANCE_ID = 3L
-private const val NOMIS_NEXT_COURT_APPEARANCE_ID = 9L
 private const val NOMIS_COURT_CHARGE_ID = 11L
 private const val NOMIS_COURT_CHARGE_2_ID = 12L
 private const val NOMIS_COURT_CHARGE_3_ID = 13L
@@ -465,6 +460,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["mappingType"]).isEqualTo(CourtCaseMapping.MappingType.DPS_CREATED.toString())
             Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            Assertions.assertThat(it["courtEventCharges"]).isEqualTo("[$NOMIS_COURT_CHARGE_ID, $NOMIS_COURT_CHARGE_2_ID, $NOMIS_COURT_CHARGE_3_ID, $NOMIS_COURT_CHARGE_4_ID]")
             Assertions.assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
           },
           isNull(),
@@ -480,6 +476,33 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               WireMock.matchingJsonPath(
                 "eventDateTime",
                 WireMock.equalTo("2024-09-23T10:00"),
+              ),
+            )
+            .withRequestBody(WireMock.matchingJsonPath("courtEventCharges.size()", WireMock.equalTo("4")))
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventCharges[0]",
+                WireMock.equalTo(NOMIS_COURT_CHARGE_ID.toString()),
+              ),
+
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventCharges[1]",
+                WireMock.equalTo(NOMIS_COURT_CHARGE_2_ID.toString()),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventCharges[2]",
+                WireMock.equalTo(NOMIS_COURT_CHARGE_3_ID.toString()),
+              ),
+
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "courtEventCharges[3]",
+                WireMock.equalTo(NOMIS_COURT_CHARGE_4_ID.toString()),
               ),
             ),
         )
@@ -771,54 +794,18 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         NomisApiExtension.nomisApi.verify(
           WireMock.putRequestedFor(WireMock.anyUrl())
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToUpdate.size()", WireMock.equalTo("4")))
-            .withRequestBody(WireMock.matchingJsonPath("courtEventChargesToCreate.size()", WireMock.equalTo("0")))
+            .withRequestBody(WireMock.matchingJsonPath("courtEventCharges.size()", WireMock.equalTo("4")))
             .withRequestBody(
               WireMock.matchingJsonPath(
-                "courtEventChargesToUpdate[0].offenceCode",
-                WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_CODE"),
+                "courtEventCharges[0]",
+                WireMock.equalTo(NOMIS_COURT_CHARGE_ID.toString()),
               ),
+
             )
             .withRequestBody(
               WireMock.matchingJsonPath(
-                "courtEventChargesToUpdate[0].offenceEndDate",
-                WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_END_DATE"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtEventChargesToUpdate[0].offenceDate",
-                WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_DATE"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtEventChargesToUpdate[0].resultCode1",
-                WireMock.equalTo(COURT_CHARGE_1_RESULT_CODE),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtEventChargesToUpdate[1].offenceCode",
-                WireMock.equalTo("$COURT_CHARGE_2_OFFENCE_CODE"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtEventChargesToUpdate[1].offenceEndDate",
-                WireMock.equalTo("$COURT_CHARGE_2_OFFENCE_END_DATE"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtEventChargesToUpdate[1].offenceDate",
-                WireMock.equalTo("$COURT_CHARGE_2_OFFENCE_DATE"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "courtEventChargesToUpdate[1].resultCode1",
-                WireMock.equalTo(COURT_CHARGE_2_RESULT_CODE),
+                "courtEventCharges[1]",
+                WireMock.equalTo(NOMIS_COURT_CHARGE_2_ID.toString()),
               ),
             ),
         )
@@ -1299,19 +1286,19 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(
               WireMock.matchingJsonPath(
                 "offenceCode",
-                WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_CODE"),
+                WireMock.equalTo(COURT_CHARGE_1_OFFENCE_CODE),
               ),
             )
             .withRequestBody(
               WireMock.matchingJsonPath(
                 "offenceEndDate",
-                WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_END_DATE"),
+                WireMock.equalTo(COURT_CHARGE_1_OFFENCE_END_DATE),
               ),
             )
             .withRequestBody(
               WireMock.matchingJsonPath(
                 "offenceDate",
-                WireMock.equalTo("$COURT_CHARGE_1_OFFENCE_DATE"),
+                WireMock.equalTo(COURT_CHARGE_1_OFFENCE_DATE),
               ),
             )
             .withRequestBody(
@@ -1627,8 +1614,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     eventType: String,
     source: String = "DPS",
   ) = """{"eventType":"$eventType", "additionalInformation": {"courtChargeId":"$courtChargeId", "courtCaseId":"$courtCaseId", ${courtAppearanceId?.let { """"courtAppearanceId":"$it",""" } ?: ""} "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
-
-  fun nomisCourtCaseCreateResponse(): String = """{ "id": $NOMIS_COURT_CASE_ID_FOR_CREATION }"""
 
   fun nomisCourtAppearanceCreateResponse(): String = """{ "id": $NOMIS_COURT_APPEARANCE_ID, 
       |"courtEventChargesIds": [] }

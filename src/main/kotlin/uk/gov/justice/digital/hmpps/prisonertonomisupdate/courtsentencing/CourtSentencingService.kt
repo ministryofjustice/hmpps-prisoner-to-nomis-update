@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ExistingOffenderChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.OffenderChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
@@ -99,6 +98,7 @@ class CourtSentencingService(
 
   private fun isDpsCreated(source: String) = source != CreatingSystem.NOMIS.name
 
+  // also includes adding any charges that are associated with the appearance
   suspend fun createCourtAppearance(createEvent: CourtAppearanceCreatedEvent) {
     val courtCaseId = createEvent.additionalInformation.courtCaseId
     val source = createEvent.additionalInformation.source
@@ -131,10 +131,10 @@ class CourtSentencingService(
 
           val courtAppearance = courtSentencingApiService.getCourtAppearance(courtAppearanceId)
 
-          val courtEventChargesToUpdate: MutableList<Pair<LegacyCharge, Long>> = mutableListOf()
+          val courtEventChargesToUpdate: MutableList<Long> = mutableListOf()
           courtAppearance.charges.forEach { charge ->
             courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(charge.lifetimeUuid.toString())?.let { mapping ->
-              courtEventChargesToUpdate.add(Pair(charge, mapping.nomisCourtChargeId))
+              courtEventChargesToUpdate.add(mapping.nomisCourtChargeId)
             } ?: let {
               telemetryMap["reason"] = "Parent entity not found"
               throw ParentEntityNotFoundRetry(
@@ -148,7 +148,8 @@ class CourtSentencingService(
               offenderNo,
               courtCaseMapping.nomisCourtCaseId,
               courtAppearance.toNomisCourtAppearance(
-                courtEventChargesToUpdate = courtEventChargesToUpdate.map { it.first.toExistingNomisCourtCharge(it.second) },
+                courtEventCharges = courtEventChargesToUpdate.map { it }
+                  .also { telemetryMap["courtEventCharges"] = it.toString() },
               ),
             )
 
@@ -392,11 +393,11 @@ class CourtSentencingService(
 
         val dpsCourtAppearance = courtSentencingApiService.getCourtAppearance(courtAppearanceId)
 
-        val courtEventChargesToUpdate: MutableList<Pair<LegacyCharge, Long>> = mutableListOf()
+        val courtEventChargesToUpdate: MutableList<Long> = mutableListOf()
 
         dpsCourtAppearance.charges.forEach { charge ->
           courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(charge.lifetimeUuid.toString())?.let { mapping ->
-            courtEventChargesToUpdate.add(Pair(charge, mapping.nomisCourtChargeId))
+            courtEventChargesToUpdate.add(mapping.nomisCourtChargeId)
           } ?: let {
             telemetryMap["reason"] = "Parent entity not found"
             throw ParentEntityNotFoundRetry(
@@ -404,19 +405,17 @@ class CourtSentencingService(
             )
           }
         }
-
         val nomisResponse = nomisApiService.updateCourtAppearance(
           offenderNo = offenderNo,
           nomisCourtCaseId = courtCaseMapping.nomisCourtCaseId,
           nomisCourtAppearanceId = courtAppearanceMapping.nomisCourtAppearanceId,
           request = dpsCourtAppearance.toNomisCourtAppearance(
-            courtEventChargesToUpdate = courtEventChargesToUpdate.map { it.first.toExistingNomisCourtCharge(it.second) },
-          ),
+            courtEventCharges = courtEventChargesToUpdate.map { it },
+          ).also { telemetryMap["courtEventCharges"] = it.courtEventCharges.toString() },
         )
 
         CourtChargeBatchUpdateMappingDto(
           courtChargesToCreate = emptyList(),
-          // TODO confirm whether we need to delete charges here or whether we depend on the charge.deleted event
           courtChargesToDelete = nomisResponse.deletedOffenderChargesIds.map {
             CourtChargeNomisIdDto(
               nomisCourtChargeId = it.offenderChargeId,
@@ -594,7 +593,7 @@ fun LegacyCourtCase.toNomisCourtCase(): CreateCourtCaseRequest = CreateCourtCase
 )
 
 fun LegacyCourtAppearance.toNomisCourtAppearance(
-  courtEventChargesToUpdate: List<ExistingOffenderChargeRequest>,
+  courtEventCharges: List<Long>,
 ): CourtAppearanceRequest = CourtAppearanceRequest(
   eventDateTime = LocalDateTime.of(
     this.appearanceDate,
@@ -614,20 +613,11 @@ fun LegacyCourtAppearance.toNomisCourtAppearance(
       LocalTime.MIDNIGHT,
     ).toString()
   },
-  courtEventChargesToUpdate = courtEventChargesToUpdate,
-  courtEventChargesToCreate = emptyList(),
+  courtEventCharges = courtEventCharges,
   nextCourtId = this.nextCourtAppearance?.courtId,
 )
 
 fun LegacyCharge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeRequest(
-  offenceCode = this.offenceCode,
-  offenceDate = this.offenceStartDate,
-  offenceEndDate = this.offenceEndDate,
-  resultCode1 = this.nomisOutcomeCode,
-)
-
-fun LegacyCharge.toExistingNomisCourtCharge(nomisId: Long): ExistingOffenderChargeRequest = ExistingOffenderChargeRequest(
-  offenderChargeId = nomisId,
   offenceCode = this.offenceCode,
   offenceDate = this.offenceStartDate,
   offenceEndDate = this.offenceEndDate,
