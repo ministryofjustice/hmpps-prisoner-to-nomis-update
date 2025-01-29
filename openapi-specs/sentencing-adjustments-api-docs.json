@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2024-10-21.4000.408fe31"
+    "version": "2025-01-29.4645.a9a6553"
   },
   "servers": [
     {
@@ -16,6 +16,10 @@
     }
   ],
   "tags": [
+    {
+      "name": "ThingsToDoController",
+      "description": "Operations related to the things-to-do list for prisoners"
+    },
     {
       "name": "adjustment-controller",
       "description": "CRUD operations for adjustments."
@@ -483,6 +487,15 @@
             }
           },
           {
+            "name": "currentPeriodOfCustody",
+            "in": "query",
+            "description": "Only get the adjustments linked to the current period of custody. Defaults to true",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
             "name": "sentenceEnvelopeDate",
             "in": "query",
             "description": "The earliest sentence date to filter adjustments by. Defaults to earliest active sentence date",
@@ -785,6 +798,103 @@
         }
       }
     },
+    "/legacy/adjustments/{adjustmentId}/current-term": {
+      "patch": {
+        "tags": [
+          "legacy-controller"
+        ],
+        "summary": "Set the current term of an adjustment",
+        "description": "Temporary endpoint to migrate the current term value of an adjustment.",
+        "operationId": "setCurrentTerm",
+        "parameters": [
+          {
+            "name": "adjustmentId",
+            "in": "path",
+            "description": "The adjustment UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/vnd.nomis-offence+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LegacyAdjustment"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Adjustment updated"
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token"
+          },
+          "404": {
+            "description": "Adjustment not found"
+          }
+        }
+      }
+    },
+    "/things-to-do/prisoner/{prisonerId}": {
+      "get": {
+        "tags": [
+          "ThingsToDoController"
+        ],
+        "summary": "Retrieve things-to-do for a prisoner",
+        "description": "Provides a list of things-to-do for a specified prisoner based on their ID.",
+        "operationId": "getThingsToDo",
+        "parameters": [
+          {
+            "name": "prisonerId",
+            "in": "path",
+            "description": "Prisoner's ID (also known as nomsId)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "A1234AB"
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized - valid Oauth2 token required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThingsToDo"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - requires appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThingsToDo"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successfully returns the things-to-do list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThingsToDo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/queue-admin/get-dlq-messages/{dlqName}": {
       "get": {
         "tags": [
@@ -978,6 +1088,7 @@
           "adjustmentType",
           "bookingId",
           "bookingReleased",
+          "currentTerm",
           "offenderNo"
         ],
         "type": "object",
@@ -1009,7 +1120,8 @@
               "RST",
               "RX",
               "S240A",
-              "UR"
+              "UR",
+              "TCA"
             ]
           },
           "adjustmentDate": {
@@ -1042,6 +1154,10 @@
           "agencyId": {
             "type": "string",
             "description": "The ID of the agency the prisoner is located"
+          },
+          "currentTerm": {
+            "type": "boolean",
+            "description": "Is the adjustment part of the current term. (Most recent booking NOMIS)"
           }
         },
         "description": "An adjustment structured for synchronising with the NOMIS system"
@@ -1100,7 +1216,8 @@
               "ADDITIONAL_DAYS_AWARDED",
               "RESTORATION_OF_ADDITIONAL_DAYS_AWARDED",
               "SPECIAL_REMISSION",
-              "UNUSED_DEDUCTIONS"
+              "UNUSED_DEDUCTIONS",
+              "CUSTODY_ABROAD"
             ]
           },
           "toDate": {
@@ -1135,6 +1252,9 @@
           },
           "taggedBail": {
             "$ref": "#/components/schemas/TaggedBailDto"
+          },
+          "timeSpentInCustodyAbroad": {
+            "$ref": "#/components/schemas/TimeSpentInCustodyAbroadDto"
           },
           "sentenceSequence": {
             "type": "integer",
@@ -1262,18 +1382,34 @@
         "description": "The details of a Special Remission adjustment"
       },
       "TaggedBailDto": {
-        "required": [
-          "caseSequence"
-        ],
         "type": "object",
         "properties": {
           "caseSequence": {
             "type": "integer",
             "description": "The case sequence number this tagged-bail was associated with",
             "format": "int32"
+          },
+          "courtCaseUuid": {
+            "type": "string",
+            "description": "The dps court case id this tagged-bail was associated with",
+            "format": "uuid"
           }
         },
         "description": "The details of the tagged bail adjustment"
+      },
+      "TimeSpentInCustodyAbroadDto": {
+        "type": "object",
+        "properties": {
+          "documentationSource": {
+            "type": "string",
+            "description": "The source document for the time spent in custody abroad information",
+            "enum": [
+              "COURT_WARRANT",
+              "PPCS_LETTER"
+            ]
+          }
+        },
+        "description": "The details of the time spent in custody abroad adjustment"
       },
       "UnlawfullyAtLargeDto": {
         "type": "object",
@@ -1377,7 +1513,8 @@
               "LAL_FIRST_DATE_CANNOT_BE_FUTURE",
               "LAL_LAST_DATE_CANNOT_BE_FUTURE",
               "LAL_DATE_MUST_BE_AFTER_SENTENCE_DATE",
-              "SREM_TYPE_NOT_NULL"
+              "SREM_TYPE_NOT_NULL",
+              "TSICA_DOCUMENTATION_SOURCE_NOT_NULL"
             ]
           },
           "arguments": {
@@ -1455,6 +1592,70 @@
           }
         },
         "description": "The DTO representing the PADAs rejected"
+      },
+      "AdaIntercept": {
+        "required": [
+          "anyProspective",
+          "messageArguments",
+          "number",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "FIRST_TIME_WITH_NO_ADJUDICATION",
+              "FIRST_TIME",
+              "UPDATE",
+              "PADAS",
+              "PADA"
+            ]
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "anyProspective": {
+            "type": "boolean"
+          },
+          "messageArguments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "description": "Will be populated if there is a ADA_INTERCEPT in the thingsToDo",
+        "nullable": true
+      },
+      "ThingsToDo": {
+        "required": [
+          "prisonerId",
+          "thingsToDo"
+        ],
+        "type": "object",
+        "properties": {
+          "prisonerId": {
+            "type": "string"
+          },
+          "thingsToDo": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ADA_INTERCEPT"
+              ]
+            }
+          },
+          "adaIntercept": {
+            "$ref": "#/components/schemas/AdaIntercept"
+          }
+        }
       },
       "DlqMessage": {
         "required": [
@@ -1656,42 +1857,6 @@
           "earliestRecallDate": {
             "type": "string",
             "format": "date"
-          }
-        }
-      },
-      "AdaIntercept": {
-        "required": [
-          "anyProspective",
-          "messageArguments",
-          "number",
-          "type"
-        ],
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "enum": [
-              "NONE",
-              "FIRST_TIME",
-              "UPDATE",
-              "PADA"
-            ]
-          },
-          "number": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "anyProspective": {
-            "type": "boolean"
-          },
-          "messageArguments": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "message": {
-            "type": "string"
           }
         }
       },
