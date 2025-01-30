@@ -345,13 +345,16 @@ class CourtSentencingService(
 
         courtSentencingApiService.getCourtCharge(chargeId).let { dpsCharge ->
 
+          val nomisCourtCharge = dpsCharge.toNomisCourtCharge()
           nomisApiService.updateCourtCharge(
             offenderNo = offenderNo,
             nomisCourtCaseId = courtCaseMapping.nomisCourtCaseId,
             chargeId = chargeMapping.nomisCourtChargeId,
             nomisCourtAppearanceId = appearanceMapping.nomisCourtAppearanceId,
-            request = dpsCharge.toNomisCourtCharge(),
+            request = nomisCourtCharge,
           ).also {
+            nomisCourtCharge.resultCode1.let { telemetryMap["nomisOutcomeCode"] = it.toString() }
+            telemetryMap["nomisOffenceCode"] = nomisCourtCharge.offenceCode
             telemetryClient.trackEvent(
               "charge-updated-success",
               telemetryMap,
