@@ -78,7 +78,7 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun stubGetScheduleWithError(id: Long, status: Int = 500) {
-    stubGetWithError("/schedules/$id", status)
+    stubGetWithError("/schedules/$id?earliestSessionDate=${LocalDate.now()}", status)
   }
 
   fun stubGetActivity(id: Long, response: String) {
