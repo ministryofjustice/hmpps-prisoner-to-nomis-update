@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes
 
+import com.google.common.base.Utf8
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -30,6 +31,8 @@ class CaseNotesReconciliationService(
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
+    private val seeDpsReplacement = "... see DPS for full text"
+    private const val MAX_CASENOTE_LENGTH_BYTES: Int = 4000
   }
 
   suspend fun generateReconciliationReport(prisonerCount: Long, activeOnly: Boolean): List<MismatchCaseNote> {
@@ -128,7 +131,6 @@ class CaseNotesReconciliationService(
       .associate { it.caseNoteId to it.transformFromNomis() }
 
     val message = "mappings.size = ${mappings.size}, mappingsDpsDistinctIds.size = ${mappingsDpsDistinctIds.size}, nomisCaseNotes.size = ${nomisCaseNotes.size}, dpsCaseNotes.size = ${dpsCaseNotes.size}"
-    val mismatchCaseNote = MismatchCaseNote(offenderNo, emptySet(), emptySet())
 
     if (mappings.size != nomisCaseNotes.size) {
       log.info("prisoner $offenderNo : $message")
@@ -137,8 +139,7 @@ class CaseNotesReconciliationService(
         "casenotes-reports-reconciliation-mismatch-size-nomis",
         mapOf("offenderNo" to offenderNo, "message" to message, "differences" to differences.joinToString(",")),
       )
-      mismatchCaseNote.notes += message
-      return mismatchCaseNote
+      return MismatchCaseNote(offenderNo, diffsForNomis = differences, notes = listOf(message))
     }
 
     if (mappingsDpsDistinctIds.size != dpsCaseNotes.size) {
@@ -148,38 +149,36 @@ class CaseNotesReconciliationService(
         "casenotes-reports-reconciliation-mismatch-size-dps",
         mapOf("offenderNo" to offenderNo, "message" to message, "differences" to differences.joinToString(",")),
       )
-      mismatchCaseNote.notes += message
-      return mismatchCaseNote
+      return MismatchCaseNote(offenderNo, diffsForDps = differences, notes = listOf(message))
     }
 
-    mappings.forEach {
+    val notes = mappings.mapNotNull {
       val dpsCaseNote = dpsCaseNotes[it.dpsCaseNoteId]
       val nomisCaseNote = nomisCaseNotes[it.nomisCaseNoteId]
       if (dpsCaseNote != nomisCaseNote) {
         "dpsCaseNote = $dpsCaseNote, nomisCaseNote = $nomisCaseNote"
-          .also {
-            log.info("prisoner $offenderNo : $it")
-            mismatchCaseNote.notes += it
-          }
+          .also { log.info("prisoner $offenderNo : $it") }
+      } else {
+        null
       }
     }
-    return if (mismatchCaseNote.notes.isEmpty()) {
+    return if (notes.isEmpty()) {
       null
     } else {
       telemetryClient.trackEvent(
         "casenotes-reports-reconciliation-mismatch",
         mapOf(
           "offenderNo" to offenderNo,
-        ) + mismatchCaseNote.notes.withIndex().associateBy({ (it.index + 1).toString() }, { it.value }),
+        ) + notes.withIndex().associateBy({ (it.index + 1).toString() }, { it.value }),
       )
-      mismatchCaseNote
+      MismatchCaseNote(offenderNo, notes = notes)
     }
   }
 
   private val truncatedToSecondsFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
   private fun CaseNote.transformFromDps() = CommonCaseNoteFields(
-    text,
+    text.truncateToFixNomisMaxLength(),
     type,
     subType,
     occurrenceDateTime.format(truncatedToSecondsFormatter),
@@ -188,7 +187,7 @@ class CaseNotesReconciliationService(
     null,
     amendments.map { a ->
       CommonAmendmentFields(
-        text = a.additionalNoteText,
+        text = a.additionalNoteText.truncateToFixNomisMaxLength(),
         occurrenceDateTime = a.creationDateTime?.format(truncatedToSecondsFormatter),
         authorUsername = a.authorUserName,
       )
@@ -213,13 +212,21 @@ class CaseNotesReconciliationService(
     }.toSortedSet(amendmentComparator),
     caseNoteId,
   )
+
+  // same logic as in nomis prisoner api
+  private fun String.truncateToFixNomisMaxLength(): String = // encodedLength always >= length
+    if (Utf8.encodedLength(this) <= MAX_CASENOTE_LENGTH_BYTES) {
+      this
+    } else {
+      substring(0, MAX_CASENOTE_LENGTH_BYTES - (Utf8.encodedLength(this) - length) - seeDpsReplacement.length) + seeDpsReplacement
+    }
 }
 
 data class MismatchCaseNote(
   val offenderNo: String,
-  val missingFromDps: Set<CommonCaseNoteFields>,
-  val missingFromNomis: Set<CommonCaseNoteFields>,
-  var notes: List<String> = mutableListOf(),
+  val diffsForDps: Set<String> = emptySet(),
+  val diffsForNomis: Set<Long> = emptySet(),
+  var notes: List<String> = emptyList(),
 )
 
 data class CommonCaseNoteFields(

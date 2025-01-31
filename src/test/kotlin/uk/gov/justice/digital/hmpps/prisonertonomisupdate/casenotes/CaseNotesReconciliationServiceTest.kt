@@ -11,6 +11,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNote
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AllPrisonerCaseNoteMappingsDto
@@ -35,6 +36,7 @@ class CaseNotesReconciliationServiceTest {
   private val nomisApiService: NomisApiService = mock()
   private val caseNotesMappingApiService: CaseNotesMappingApiService = mock()
   private val telemetryClient: TelemetryClient = mock()
+  private val seeDpsReplacement = "... see DPS for full text"
 
   fun nomisPrisoner(
     type: String = "CODE",
@@ -89,8 +91,6 @@ class CaseNotesReconciliationServiceTest {
       assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isEqualTo(
         MismatchCaseNote(
           offenderNo = "A3456GH",
-          missingFromDps = emptySet(),
-          missingFromNomis = emptySet(),
           notes = listOf(
             "dpsCaseNote = {id=1, text-hash=-622354608, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}," +
               " nomisCaseNote = {id=1, text-hash=-622354608, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=[USER], amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}",
@@ -122,6 +122,44 @@ class CaseNotesReconciliationServiceTest {
         },
         isNull(),
       )
+    }
+
+    @Test
+    fun `truncated NOMIS case notes don't get marked as a mismatch`() = runTest {
+      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
+        PrisonerCaseNotesResponse(
+          listOf(nomisPrisoner().caseNotes[0].copy(caseNoteText = "${"0123456789".repeat(397)}01234$seeDpsReplacement")),
+        ),
+      )
+      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
+        listOf(dpsPrisoner()[0].copy(text = "${"0123456789".repeat(400)}this is too long")),
+      )
+
+      assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNull()
+      verifyNoInteractions(telemetryClient)
+    }
+
+    @Test
+    fun `truncated NOMIS case note amendments don't get marked as a mismatch`() = runTest {
+      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
+        PrisonerCaseNotesResponse(
+          listOf(
+            nomisPrisoner().caseNotes[0].let {
+              it.copy(amendments = listOf(it.amendments[0].copy(text = "${"0123456789".repeat(397)}01234$seeDpsReplacement")))
+            },
+          ),
+        ),
+      )
+      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
+        listOf(
+          dpsPrisoner()[0].let {
+            it.copy(amendments = listOf(it.amendments[0].copy(additionalNoteText = "${"0123456789".repeat(400)}this is too long")))
+          },
+        ),
+      )
+
+      assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNull()
+      verifyNoInteractions(telemetryClient)
     }
 
     @Test
@@ -248,8 +286,7 @@ class CaseNotesReconciliationServiceTest {
         .isEqualTo(
           MismatchCaseNote(
             offenderNo = "A3456GH",
-            missingFromDps = emptySet(),
-            missingFromNomis = emptySet(),
+            diffsForNomis = setOf(4),
             notes = listOf("mappings.size = 3, mappingsDpsDistinctIds.size = 1, nomisCaseNotes.size = 4, dpsCaseNotes.size = 1"),
           ),
         )
@@ -287,8 +324,7 @@ class CaseNotesReconciliationServiceTest {
         .isEqualTo(
           MismatchCaseNote(
             offenderNo = "A3456GH",
-            missingFromDps = emptySet(),
-            missingFromNomis = emptySet(),
+            diffsForDps = setOf("12345678-0000-0000-0000-000011112345"),
             notes = listOf("mappings.size = 3, mappingsDpsDistinctIds.size = 1, nomisCaseNotes.size = 3, dpsCaseNotes.size = 2"),
           ),
         )

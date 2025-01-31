@@ -279,6 +279,10 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
           .jsonPath("offenderNo").isEqualTo(prisonNumber)
           .jsonPath("notes[0]").isEqualTo("mappings.size = 0, mappingsDpsDistinctIds.size = 0, nomisCaseNotes.size = 2, dpsCaseNotes.size = 0")
           .jsonPath("notes.length()").isEqualTo(1)
+          .jsonPath("diffsForNomis").value<List<Int>> {
+            assertThat(it).containsExactlyInAnyOrder(1, 2)
+          }
+          .jsonPath("diffsForDps.length()").isEqualTo(0)
 
         verify(telemetryClient).trackEvent(
           eq("casenotes-reports-reconciliation-mismatch-size-nomis"),
