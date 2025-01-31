@@ -325,7 +325,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
 
       awsSnsClient.publish(amendActivityEvent()).get()
 
-      await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/schedules/$ACTIVITY_SCHEDULE_ID"))) }
+      await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/schedules/$ACTIVITY_SCHEDULE_ID?earliestSessionDate=$today"))) }
       await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/activities/$ACTIVITY_ID/filtered?earliestSessionDate=$today"))) }
       await untilAsserted { mappingServer.verify(getRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/$ACTIVITY_SCHEDULE_ID"))) }
       await untilAsserted {
@@ -406,7 +406,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
 
       awsSnsClient.publish(amendActivityEvent()).get()
 
-      await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/schedules/$ACTIVITY_SCHEDULE_ID"))) }
+      await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/schedules/$ACTIVITY_SCHEDULE_ID?earliestSessionDate=$today"))) }
       await untilAsserted { activitiesApi.verify(getRequestedFor(urlEqualTo("/activities/$ACTIVITY_ID/filtered?earliestSessionDate=$today"))) }
       await untilAsserted { mappingServer.verify(getRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/$ACTIVITY_SCHEDULE_ID"))) }
       // Both mappings are saved back to the mapping service - including the one no returned from the Activities API

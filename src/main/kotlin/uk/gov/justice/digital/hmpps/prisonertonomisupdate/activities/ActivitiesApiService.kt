@@ -17,7 +17,11 @@ import java.time.LocalDate
 class ActivitiesApiService(@Qualifier("activitiesApiWebClient") private val webClient: WebClient) {
 
   suspend fun getActivitySchedule(activityScheduleId: Long): ActivitySchedule = webClient.get()
-    .uri("/schedules/{activityScheduleId}", activityScheduleId)
+    .uri {
+      it.path("/schedules/{activityScheduleId}")
+        .queryParam("earliestSessionDate", LocalDate.now())
+        .build(activityScheduleId)
+    }
     .retrieve()
     .awaitBody()
 
