@@ -30,6 +30,7 @@ dependencies {
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.9.0")
   // Leaving at 1.43.0 to match the version used in App Insights https://github.com/microsoft/ApplicationInsights-Java/blob/3.6.2/dependencyManagement/build.gradle.kts#L14
   implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.43.0")
+  implementation("com.google.guava:guava:33.4.0-jre")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.1.1")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.25") {
