@@ -14,12 +14,15 @@ import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesDpsApiExtension.Companion.caseNotesDpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerCaseNotesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
 class CaseNotesResourceIntTest : IntegrationTestBase() {
@@ -29,6 +32,9 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
 
   @Autowired
   private lateinit var caseNotesNomisApiMockServer: CaseNotesNomisApiMockServer
+
+  @Autowired
+  private lateinit var caseNotesMappingApi: CaseNotesMappingApiMockServer
 
   @DisplayName("PUT /casenotes/reports/reconciliation")
   @Nested
@@ -190,6 +196,96 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
         },
         isNull(),
       )
+    }
+  }
+
+  @DisplayName("GET /casenotes/reconciliation/{prisonNumber}")
+  @Nested
+  inner class GenerateReconciliationReportForPrisoner {
+    private val prisonNumber = "A0008BB"
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.get().uri("/casenotes/reconciliation/$prisonNumber")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.get().uri("/casenotes/reconciliation/$prisonNumber")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.get().uri("/casenotes/reconciliation/$prisonNumber")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class Validation {
+      @Test
+      fun `return 404 when offender not found`() {
+        webTestClient.get().uri("/casenotes/reconciliation/AB1234C")
+          .headers(setAuthorisation(roles = listOf("NOMIS_CORE_PERSON")))
+          .exchange()
+          .expectStatus().isNotFound
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+      @BeforeEach
+      fun setup() {
+        caseNotesMappingApi.stubGetByPrisoner(prisonNumber)
+        caseNotesNomisApiMockServer.stubGetCaseNotesForPrisoner(prisonNumber)
+        caseNotesDpsApi.stubGetCaseNotesForPrisoner(prisonNumber, "[]")
+      }
+
+      @Test
+      fun `will return no differences`() {
+        webTestClient.get().uri("/casenotes/reconciliation/$prisonNumber")
+          .headers(setAuthorisation(roles = listOf("NOMIS_CORE_PERSON")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody().isEmpty
+
+        verifyNoInteractions(telemetryClient)
+      }
+
+      @Test
+      fun `will return mismatch with nomis`() {
+        caseNotesNomisApiMockServer.stubGetCaseNotesForPrisoner(
+          prisonNumber,
+          PrisonerCaseNotesResponse(
+            caseNotes = listOf(caseNoteResponse(1), caseNoteResponse(2)),
+          ),
+        )
+        webTestClient.get().uri("/casenotes/reconciliation/$prisonNumber")
+          .headers(setAuthorisation(roles = listOf("NOMIS_CORE_PERSON")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("offenderNo").isEqualTo(prisonNumber)
+          .jsonPath("notes[0]").isEqualTo("mappings.size = 0, dpsDistinctIds.size = 0, nomisCaseNotes.size = 2, dpsCaseNotes.size = 0")
+          .jsonPath("notes.length()").isEqualTo(1)
+
+        verify(telemetryClient).trackEvent(
+          eq("casenotes-reports-reconciliation-mismatch-size-nomis"),
+          any(),
+          isNull(),
+        )
+      }
     }
   }
 

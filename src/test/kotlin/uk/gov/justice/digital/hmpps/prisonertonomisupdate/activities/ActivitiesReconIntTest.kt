@@ -121,7 +121,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
     inner class ReportFailsDueToError {
       @Test
       fun `should publish error telemetry if fails to get prisons from NOMIS`() {
-        nomisApi.stubGetServicePrisonsWithError("ACTIVITY", 404)
+        nomisApi.stubGetServicePrisonsWithError("ACTIVITY", 503)
 
         webTestClient.post().uri("/allocations/reports/reconciliation")
           .exchange()
@@ -381,7 +381,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
 
       @Test
       fun `should publish error telemetry if fails to get prisons from NOMIS`() {
-        nomisApi.stubGetServicePrisonsWithError("ACTIVITY", 404)
+        nomisApi.stubGetServicePrisonsWithError("ACTIVITY", 503)
 
         webTestClient.post().uri("/attendances/reports/reconciliation?date=$today")
           .exchange()

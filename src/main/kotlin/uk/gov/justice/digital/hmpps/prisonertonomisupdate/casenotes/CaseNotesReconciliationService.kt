@@ -103,62 +103,7 @@ class CaseNotesReconciliationService(
     val offenderNo = prisonerId.offenderNo
 
     return runCatching {
-      val mappings = caseNotesMappingApiService.getByPrisoner(offenderNo).mappings
-
-      val dpsDistinctIds = mappings.map { it.dpsCaseNoteId }.distinct()
-
-      val dpsCaseNotes = caseNotesDpsApiService.getCaseNotesForPrisoner(offenderNo)
-        .associate { it.caseNoteId to it.transformFromDps() }
-
-      val nomisCaseNotes = caseNotesNomisApiService.getCaseNotesForPrisoner(offenderNo).caseNotes
-        .associate { it.caseNoteId to it.transformFromNomis() }
-
-      val message = "mappings.size = ${mappings.size}, dpsDistinctIds.size = ${dpsDistinctIds.size}, nomisCaseNotes.size = ${nomisCaseNotes.size}, dpsCaseNotes.size = ${dpsCaseNotes.size}"
-      val mismatchCaseNote = MismatchCaseNote(offenderNo, emptySet(), emptySet())
-
-      if (mappings.size != nomisCaseNotes.size) {
-        log.info("prisoner $offenderNo : $message")
-        telemetryClient.trackEvent(
-          "casenotes-reports-reconciliation-mismatch-size-nomis",
-          mapOf("offenderNo" to offenderNo, "message" to message),
-        )
-        mismatchCaseNote.notes += message
-        return mismatchCaseNote
-      }
-
-      if (dpsDistinctIds.size != dpsCaseNotes.size) {
-        log.info("prisoner $offenderNo : $message")
-        telemetryClient.trackEvent(
-          "casenotes-reports-reconciliation-mismatch-size-dps",
-          mapOf("offenderNo" to offenderNo, "message" to message),
-        )
-        mismatchCaseNote.notes += message
-        return mismatchCaseNote
-      }
-
-      mappings.forEach {
-        val dpsCaseNote = dpsCaseNotes[it.dpsCaseNoteId]
-        val nomisCaseNote = nomisCaseNotes[it.nomisCaseNoteId]
-        if (dpsCaseNote != nomisCaseNote) {
-          "dpsCaseNote = $dpsCaseNote, nomisCaseNote = $nomisCaseNote"
-            .also {
-              log.info("prisoner $offenderNo : $it")
-              mismatchCaseNote.notes += it
-            }
-        }
-      }
-      return if (mismatchCaseNote.notes.isEmpty()) {
-        null
-      } else {
-        var i = 0
-        telemetryClient.trackEvent(
-          "casenotes-reports-reconciliation-mismatch",
-          mapOf(
-            "offenderNo" to offenderNo,
-          ) + mismatchCaseNote.notes.associate { (++i).toString() to it },
-        )
-        mismatchCaseNote
-      }
+      checkMatchOrThrowException(offenderNo)
     }.onFailure {
       log.error("Unable to match casenotes for prisoner $offenderNo", it)
       telemetryClient.trackEvent(
@@ -169,6 +114,64 @@ class CaseNotesReconciliationService(
         ),
       )
     }.getOrNull()
+  }
+
+  suspend fun checkMatchOrThrowException(offenderNo: String): MismatchCaseNote? {
+    val mappings = caseNotesMappingApiService.getByPrisoner(offenderNo).mappings
+
+    val dpsDistinctIds = mappings.map { it.dpsCaseNoteId }.distinct()
+
+    val dpsCaseNotes = caseNotesDpsApiService.getCaseNotesForPrisoner(offenderNo)
+      .associate { it.caseNoteId to it.transformFromDps() }
+
+    val nomisCaseNotes = caseNotesNomisApiService.getCaseNotesForPrisoner(offenderNo).caseNotes
+      .associate { it.caseNoteId to it.transformFromNomis() }
+
+    val message = "mappings.size = ${mappings.size}, dpsDistinctIds.size = ${dpsDistinctIds.size}, nomisCaseNotes.size = ${nomisCaseNotes.size}, dpsCaseNotes.size = ${dpsCaseNotes.size}"
+    val mismatchCaseNote = MismatchCaseNote(offenderNo, emptySet(), emptySet())
+
+    if (mappings.size != nomisCaseNotes.size) {
+      log.info("prisoner $offenderNo : $message")
+      telemetryClient.trackEvent(
+        "casenotes-reports-reconciliation-mismatch-size-nomis",
+        mapOf("offenderNo" to offenderNo, "message" to message),
+      )
+      mismatchCaseNote.notes += message
+      return mismatchCaseNote
+    }
+
+    if (dpsDistinctIds.size != dpsCaseNotes.size) {
+      log.info("prisoner $offenderNo : $message")
+      telemetryClient.trackEvent(
+        "casenotes-reports-reconciliation-mismatch-size-dps",
+        mapOf("offenderNo" to offenderNo, "message" to message),
+      )
+      mismatchCaseNote.notes += message
+      return mismatchCaseNote
+    }
+
+    mappings.forEach {
+      val dpsCaseNote = dpsCaseNotes[it.dpsCaseNoteId]
+      val nomisCaseNote = nomisCaseNotes[it.nomisCaseNoteId]
+      if (dpsCaseNote != nomisCaseNote) {
+        "dpsCaseNote = $dpsCaseNote, nomisCaseNote = $nomisCaseNote"
+          .also {
+            log.info("prisoner $offenderNo : $it")
+            mismatchCaseNote.notes += it
+          }
+      }
+    }
+    return if (mismatchCaseNote.notes.isEmpty()) {
+      null
+    } else {
+      telemetryClient.trackEvent(
+        "casenotes-reports-reconciliation-mismatch",
+        mapOf(
+          "offenderNo" to offenderNo,
+        ) + mismatchCaseNote.notes.withIndex().associateBy({ (it.index + 1).toString() }, { it.value }),
+      )
+      mismatchCaseNote
+    }
   }
 
   private val truncatedToSecondsFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
