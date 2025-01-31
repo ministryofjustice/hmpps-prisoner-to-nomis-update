@@ -119,7 +119,7 @@ class CaseNotesReconciliationService(
   suspend fun checkMatchOrThrowException(offenderNo: String): MismatchCaseNote? {
     val mappings = caseNotesMappingApiService.getByPrisoner(offenderNo).mappings
 
-    val dpsDistinctIds = mappings.map { it.dpsCaseNoteId }.distinct()
+    val mappingsDpsDistinctIds = mappings.map { it.dpsCaseNoteId }.distinct()
 
     val dpsCaseNotes = caseNotesDpsApiService.getCaseNotesForPrisoner(offenderNo)
       .associate { it.caseNoteId to it.transformFromDps() }
@@ -127,24 +127,26 @@ class CaseNotesReconciliationService(
     val nomisCaseNotes = caseNotesNomisApiService.getCaseNotesForPrisoner(offenderNo).caseNotes
       .associate { it.caseNoteId to it.transformFromNomis() }
 
-    val message = "mappings.size = ${mappings.size}, dpsDistinctIds.size = ${dpsDistinctIds.size}, nomisCaseNotes.size = ${nomisCaseNotes.size}, dpsCaseNotes.size = ${dpsCaseNotes.size}"
+    val message = "mappings.size = ${mappings.size}, mappingsDpsDistinctIds.size = ${mappingsDpsDistinctIds.size}, nomisCaseNotes.size = ${nomisCaseNotes.size}, dpsCaseNotes.size = ${dpsCaseNotes.size}"
     val mismatchCaseNote = MismatchCaseNote(offenderNo, emptySet(), emptySet())
 
     if (mappings.size != nomisCaseNotes.size) {
       log.info("prisoner $offenderNo : $message")
+      val differences = mappings.map { it.nomisCaseNoteId }.toSet().xor(nomisCaseNotes.map { it.key }.toSet())
       telemetryClient.trackEvent(
         "casenotes-reports-reconciliation-mismatch-size-nomis",
-        mapOf("offenderNo" to offenderNo, "message" to message),
+        mapOf("offenderNo" to offenderNo, "message" to message, "differences" to differences.joinToString(",")),
       )
       mismatchCaseNote.notes += message
       return mismatchCaseNote
     }
 
-    if (dpsDistinctIds.size != dpsCaseNotes.size) {
+    if (mappingsDpsDistinctIds.size != dpsCaseNotes.size) {
       log.info("prisoner $offenderNo : $message")
+      val differences = mappingsDpsDistinctIds.toSet().xor(dpsCaseNotes.map { it.key }.toSet())
       telemetryClient.trackEvent(
         "casenotes-reports-reconciliation-mismatch-size-dps",
-        mapOf("offenderNo" to offenderNo, "message" to message),
+        mapOf("offenderNo" to offenderNo, "message" to message, "differences" to differences.joinToString(",")),
       )
       mismatchCaseNote.notes += message
       return mismatchCaseNote
@@ -284,3 +286,6 @@ private fun equalAmendments(v1: CommonCaseNoteFields, v2: CommonCaseNoteFields):
   }
   return false
 }
+
+// calculate the exclusive or (aka symmetric difference or disjunctive union) of two sets
+infix fun <T> Set<T>.xor(that: Set<T>): Set<T> = (this - that) + (that - this)

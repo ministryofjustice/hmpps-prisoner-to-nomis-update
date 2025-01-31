@@ -250,7 +250,7 @@ class CaseNotesReconciliationServiceTest {
             offenderNo = "A3456GH",
             missingFromDps = emptySet(),
             missingFromNomis = emptySet(),
-            notes = listOf("mappings.size = 3, dpsDistinctIds.size = 1, nomisCaseNotes.size = 4, dpsCaseNotes.size = 1"),
+            notes = listOf("mappings.size = 3, mappingsDpsDistinctIds.size = 1, nomisCaseNotes.size = 4, dpsCaseNotes.size = 1"),
           ),
         )
 
@@ -258,7 +258,8 @@ class CaseNotesReconciliationServiceTest {
         "casenotes-reports-reconciliation-mismatch-size-nomis",
         mapOf(
           "offenderNo" to "A3456GH",
-          "message" to "mappings.size = 3, dpsDistinctIds.size = 1, nomisCaseNotes.size = 4, dpsCaseNotes.size = 1",
+          "message" to "mappings.size = 3, mappingsDpsDistinctIds.size = 1, nomisCaseNotes.size = 4, dpsCaseNotes.size = 1",
+          "differences" to "4",
         ),
         null,
       )
@@ -288,7 +289,7 @@ class CaseNotesReconciliationServiceTest {
             offenderNo = "A3456GH",
             missingFromDps = emptySet(),
             missingFromNomis = emptySet(),
-            notes = listOf("mappings.size = 3, dpsDistinctIds.size = 1, nomisCaseNotes.size = 3, dpsCaseNotes.size = 2"),
+            notes = listOf("mappings.size = 3, mappingsDpsDistinctIds.size = 1, nomisCaseNotes.size = 3, dpsCaseNotes.size = 2"),
           ),
         )
 
@@ -296,7 +297,8 @@ class CaseNotesReconciliationServiceTest {
         "casenotes-reports-reconciliation-mismatch-size-dps",
         mapOf(
           "offenderNo" to "A3456GH",
-          "message" to "mappings.size = 3, dpsDistinctIds.size = 1, nomisCaseNotes.size = 3, dpsCaseNotes.size = 2",
+          "message" to "mappings.size = 3, mappingsDpsDistinctIds.size = 1, nomisCaseNotes.size = 3, dpsCaseNotes.size = 2",
+          "differences" to "12345678-0000-0000-0000-000011112345",
         ),
         null,
       )
