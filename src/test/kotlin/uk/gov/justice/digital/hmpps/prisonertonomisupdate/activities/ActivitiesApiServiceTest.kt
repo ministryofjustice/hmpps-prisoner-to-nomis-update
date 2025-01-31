@@ -183,7 +183,7 @@ internal class ActivitiesApiServiceTest {
       activitiesApiService.getActivitySchedule(1234)
 
       activitiesApi.verify(
-        getRequestedFor(urlEqualTo("/schedules/1234"))
+        getRequestedFor(urlEqualTo("/schedules/1234?earliestSessionDate=${LocalDate.now()}"))
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
