@@ -235,7 +235,7 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
       @Test
       fun `return 404 when offender not found`() {
         webTestClient.get().uri("/casenotes/reconciliation/AB1234C")
-          .headers(setAuthorisation(roles = listOf("NOMIS_CORE_PERSON")))
+          .headers(setAuthorisation(roles = listOf("NOMIS_CASENOTES")))
           .exchange()
           .expectStatus().isNotFound
       }
@@ -253,7 +253,7 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
       @Test
       fun `will return no differences`() {
         webTestClient.get().uri("/casenotes/reconciliation/$prisonNumber")
-          .headers(setAuthorisation(roles = listOf("NOMIS_CORE_PERSON")))
+          .headers(setAuthorisation(roles = listOf("NOMIS_CASENOTES")))
           .exchange()
           .expectStatus()
           .isOk
@@ -271,7 +271,7 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
           ),
         )
         webTestClient.get().uri("/casenotes/reconciliation/$prisonNumber")
-          .headers(setAuthorisation(roles = listOf("NOMIS_CORE_PERSON")))
+          .headers(setAuthorisation(roles = listOf("NOMIS_CASENOTES")))
           .exchange()
           .expectStatus()
           .isOk

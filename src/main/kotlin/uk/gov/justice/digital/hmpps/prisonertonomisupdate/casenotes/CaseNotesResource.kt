@@ -68,12 +68,12 @@ class CaseNotesResource(
     }
   }
 
-  @PreAuthorize("hasRole('NOMIS_CORE_PERSON')")
+  @PreAuthorize("hasRole('NOMIS_CASENOTES')")
   @GetMapping("/casenotes/reconciliation/{prisonNumber}", produces = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
     summary = "Run the reconciliation for this prison number",
     description = """Retrieves the differences for a prisoner. Empty response returned if no differences found. 
-      Requires ROLE_NOMIS_CORE_PERSON""",
+      Requires ROLE_NOMIS_CASENOTES""",
     responses = [
       ApiResponse(
         responseCode = "200",
@@ -91,7 +91,7 @@ class CaseNotesResource(
       ),
       ApiResponse(
         responseCode = "403",
-        description = "Forbidden to access this endpoint. Requires ROLE_NOMIS_CORE_PERSON",
+        description = "Forbidden to access this endpoint. Requires ROLE_NOMIS_CASENOTES",
         content = [
           Content(
             mediaType = "application/json",
