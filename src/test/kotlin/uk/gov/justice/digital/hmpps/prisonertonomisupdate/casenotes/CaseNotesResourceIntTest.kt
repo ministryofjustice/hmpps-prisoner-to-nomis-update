@@ -277,7 +277,7 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .jsonPath("offenderNo").isEqualTo(prisonNumber)
-          .jsonPath("notes[0]").isEqualTo("mappings.size = 0, dpsDistinctIds.size = 0, nomisCaseNotes.size = 2, dpsCaseNotes.size = 0")
+          .jsonPath("notes[0]").isEqualTo("mappings.size = 0, mappingsDpsDistinctIds.size = 0, nomisCaseNotes.size = 2, dpsCaseNotes.size = 0")
           .jsonPath("notes.length()").isEqualTo(1)
 
         verify(telemetryClient).trackEvent(
