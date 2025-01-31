@@ -10,9 +10,8 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
-import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.server.MissingRequestValueException
-import reactor.core.publisher.Mono
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.NotFoundException
 
 @RestControllerAdvice
 class HmppsPrisonerToNomisUpdateExceptionHandler {
@@ -72,20 +71,18 @@ class HmppsPrisonerToNomisUpdateExceptionHandler {
       )
   }
 
-  @ExceptionHandler(NotFound::class)
-  fun handleNotFoundException(e: NotFound): Mono<ResponseEntity<ErrorResponse?>>? {
+  @ExceptionHandler(NotFoundException::class)
+  fun handleNotFoundException(e: NotFoundException): ResponseEntity<ErrorResponse> {
     log.info("Not Found: {}", e.message)
-    return Mono.just(
-      ResponseEntity
-        .status(HttpStatus.NOT_FOUND)
-        .body(
-          ErrorResponse(
-            status = HttpStatus.NOT_FOUND,
-            userMessage = "Not Found: ${e.message}",
-            developerMessage = e.message,
-          ),
+    return ResponseEntity
+      .status(HttpStatus.NOT_FOUND)
+      .body(
+        ErrorResponse(
+          status = HttpStatus.NOT_FOUND,
+          userMessage = "Not Found: ${e.message}",
+          developerMessage = e.message,
         ),
-    )
+      )
   }
 
   companion object {

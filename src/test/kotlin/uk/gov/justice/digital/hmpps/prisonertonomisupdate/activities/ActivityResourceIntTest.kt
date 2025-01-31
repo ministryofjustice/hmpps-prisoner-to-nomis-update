@@ -203,7 +203,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
 
     @Test
     fun `will return error if anything fails`() = runTest {
-      mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 503)
+      activitiesApi.stubGetScheduleWithError(ACTIVITY_SCHEDULE_ID)
 
       webTestClient.put().uri("/activities/$ACTIVITY_SCHEDULE_ID")
         .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))

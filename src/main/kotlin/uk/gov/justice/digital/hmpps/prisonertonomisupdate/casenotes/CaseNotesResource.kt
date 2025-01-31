@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
@@ -113,5 +114,11 @@ class CaseNotesResource(
   )
   suspend fun generateReconciliationReportForPrisoner(
     @Schema(description = "Prison number aka noms id / offender id display", example = "A1234BC") @PathVariable prisonNumber: String,
-  ) = caseNotesReconciliationService.checkMatchOrThrowException(prisonNumber)
+  ) = try {
+    caseNotesReconciliationService.checkMatchOrThrowException(prisonNumber)
+  } catch (notFound: NotFound) {
+    throw NotFoundException("Offender not found $prisonNumber")
+  }
 }
+
+class NotFoundException(message: String) : RuntimeException(message)
