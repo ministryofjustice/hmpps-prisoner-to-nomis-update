@@ -11,6 +11,7 @@ import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.MissingRequestValueException
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.NotFoundException
 
 @RestControllerAdvice
 class HmppsPrisonerToNomisUpdateExceptionHandler {
@@ -65,6 +66,20 @@ class HmppsPrisonerToNomisUpdateExceptionHandler {
         ErrorResponse(
           status = FORBIDDEN,
           userMessage = e.message,
+          developerMessage = e.message,
+        ),
+      )
+  }
+
+  @ExceptionHandler(NotFoundException::class)
+  fun handleNotFoundException(e: NotFoundException): ResponseEntity<ErrorResponse> {
+    log.info("Not Found: {}", e.message)
+    return ResponseEntity
+      .status(HttpStatus.NOT_FOUND)
+      .body(
+        ErrorResponse(
+          status = HttpStatus.NOT_FOUND,
+          userMessage = "Not Found: ${e.message}",
           developerMessage = e.message,
         ),
       )
