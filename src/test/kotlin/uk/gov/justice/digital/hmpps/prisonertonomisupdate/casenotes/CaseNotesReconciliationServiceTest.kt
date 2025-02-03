@@ -92,8 +92,8 @@ class CaseNotesReconciliationServiceTest {
         MismatchCaseNote(
           offenderNo = "A3456GH",
           notes = listOf(
-            "dpsCaseNote = {id=1, text-hash=-622354608, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}," +
-              " nomisCaseNote = {id=1, text-hash=-622354608, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=[USER], amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}",
+            "dpsCaseNote = {id=12345678-0000-0000-0000-000011112222, legacyId=1, text-hash=-622354608, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}," +
+              " nomisCaseNote = {id=1, legacyId=1, text-hash=-622354608, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=[USER], amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}",
           ),
         ),
       )
@@ -115,8 +115,8 @@ class CaseNotesReconciliationServiceTest {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "offenderNo" to OFFENDER_NO,
-              "1" to "dpsCaseNote = {id=1, text-hash=-622354608, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}," +
-                " nomisCaseNote = {id=1, text-hash=-622354608, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=[USER], amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}",
+              "1" to "dpsCaseNote = {id=12345678-0000-0000-0000-000011112222, legacyId=1, text-hash=-622354608, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER, amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}," +
+                " nomisCaseNote = {id=1, legacyId=1, text-hash=-622354608, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=[USER], amendments=[{text-hash=1137158639, occurrenceDateTime=2024-01-01T01:02:03, authorUsername=AMUSER}]}",
             ),
           )
         },
