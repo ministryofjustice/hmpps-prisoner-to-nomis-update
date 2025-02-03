@@ -177,40 +177,40 @@ class CaseNotesReconciliationService(
 
   private val truncatedToSecondsFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
-  private fun CaseNote.transformFromDps() = CommonCaseNoteFields(
-    text.truncateToFixNomisMaxLength(),
-    type,
-    subType,
-    occurrenceDateTime.format(truncatedToSecondsFormatter),
-    creationDateTime.format(truncatedToSecondsFormatter),
-    authorUsername,
-    null,
-    amendments.map { a ->
+  private fun CaseNote.transformFromDps() = ComparisonCaseNote(
+    id = caseNoteId,
+    text = text.truncateToFixNomisMaxLength(),
+    type = type,
+    subType = subType,
+    occurrenceDateTime = occurrenceDateTime.format(truncatedToSecondsFormatter),
+    creationDateTime = creationDateTime.format(truncatedToSecondsFormatter),
+    dpsUsername = authorUsername,
+    amendments = amendments.map { a ->
       CommonAmendmentFields(
         text = a.additionalNoteText.truncateToFixNomisMaxLength(),
         occurrenceDateTime = a.creationDateTime?.format(truncatedToSecondsFormatter),
         authorUsername = a.authorUserName,
       )
     }.toSortedSet(amendmentComparator),
-    legacyId,
+    legacyId = legacyId,
   )
 
-  private fun CaseNoteResponse.transformFromNomis() = CommonCaseNoteFields(
-    caseNoteText,
-    caseNoteType.code,
-    caseNoteSubType.code,
-    occurrenceDateTime,
-    creationDateTime,
-    null,
-    authorUsernames,
-    amendments.map { a ->
+  private fun CaseNoteResponse.transformFromNomis() = ComparisonCaseNote(
+    id = caseNoteId.toString(),
+    text = caseNoteText,
+    type = caseNoteType.code,
+    subType = caseNoteSubType.code,
+    occurrenceDateTime = occurrenceDateTime,
+    creationDateTime = creationDateTime,
+    nomisUsernames = authorUsernames,
+    amendments = amendments.map { a ->
       CommonAmendmentFields(
         text = a.text,
         occurrenceDateTime = a.createdDateTime,
         authorUsername = a.authorUsername,
       )
     }.toSortedSet(amendmentComparator),
-    caseNoteId,
+    legacyId = caseNoteId,
   )
 
   // same logic as in nomis prisoner api
@@ -226,23 +226,24 @@ data class MismatchCaseNote(
   val offenderNo: String,
   val diffsForDps: Set<String> = emptySet(),
   val diffsForNomis: Set<Long> = emptySet(),
-  var notes: List<String> = emptyList(),
+  val notes: List<String> = emptyList(),
 )
 
-data class CommonCaseNoteFields(
+data class ComparisonCaseNote(
+  val id: String,
   val text: String,
   val type: String,
   val subType: String,
   val occurrenceDateTime: String?,
   val creationDateTime: String?,
-  val dpsUsername: String?,
-  val nomisUsernames: List<String>?,
+  val dpsUsername: String? = null,
+  val nomisUsernames: List<String>? = null,
   val amendments: Set<CommonAmendmentFields>,
   val legacyId: Long,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
-    if (other !is CommonCaseNoteFields) return false
+    if (other !is ComparisonCaseNote) return false
     return text == other.text &&
       equalTypes(other) &&
       subType == other.subType &&
@@ -253,19 +254,19 @@ data class CommonCaseNoteFields(
       equalAmendments(this, other)
   }
 
-  private fun equalTypes(nomis: CommonCaseNoteFields): Boolean = (type == nomis.type || (type == "APP" && nomis.type == "CNOTE" && subType == "OUTCOME"))
+  private fun equalTypes(nomis: ComparisonCaseNote): Boolean = type == nomis.type || (type == "APP" && nomis.type == "CNOTE" && subType == "OUTCOME")
 
-  private fun equalUsers(other: CommonCaseNoteFields): Boolean {
-    val equal = other.nomisUsernames?.contains(dpsUsername) == true || dpsUsername == "OMS_OWNER"
+  private fun equalUsers(nomis: ComparisonCaseNote): Boolean {
+    val equal = nomis.nomisUsernames?.contains(dpsUsername) == true || dpsUsername == "OMS_OWNER"
     if (!equal) {
-      CaseNotesReconciliationService.log.info("authorUsername not equal: $dpsUsername !in ${other.nomisUsernames}")
+      CaseNotesReconciliationService.log.info("authorUsername not equal: $dpsUsername !in ${nomis.nomisUsernames}")
     }
     return equal
   }
 
   override fun hashCode(): Int = javaClass.hashCode()
 
-  override fun toString(): String = "{id=$legacyId, text-hash=${Objects.hashCode(text)}, type=$type, subType=$subType, occurrenceDateTime=$occurrenceDateTime, creationDateTime=$creationDateTime, authorUsername=${dpsUsername ?: nomisUsernames}, amendments=$amendments}"
+  override fun toString(): String = "{id=$id, legacyId=$legacyId, text-hash=${Objects.hashCode(text)}, type=$type, subType=$subType, occurrenceDateTime=$occurrenceDateTime, creationDateTime=$creationDateTime, authorUsername=${dpsUsername ?: nomisUsernames}, amendments=$amendments}"
 }
 
 data class CommonAmendmentFields(
@@ -282,7 +283,7 @@ private val amendmentComparator = compareBy(
   CommonAmendmentFields::authorUsername,
 )
 
-private fun equalAmendments(v1: CommonCaseNoteFields, v2: CommonCaseNoteFields): Boolean {
+private fun equalAmendments(v1: ComparisonCaseNote, v2: ComparisonCaseNote): Boolean {
   val a1 = v1.amendments
   val a2 = v2.amendments
   if (a1.size != a2.size) {
