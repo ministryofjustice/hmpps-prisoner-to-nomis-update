@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReference
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -16,6 +18,7 @@ class CourtSentencingReconciliationService(
   private val dpsApiService: CourtSentencingApiService,
   private val nomisApiService: NomisApiService,
   private val mappingService: CourtCaseMappingService,
+  private val courtSentencingService: CourtSentencingService,
 ) {
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -149,7 +152,13 @@ class CourtSentencingReconciliationService(
             .thenBy { it.offenceDate }
             .thenBy { it.outcome },
         )
-        differences.addAll(compareLists(sortCharges(dpsObj.charges), sortCharges(nomisObj.charges), "$parentProperty.charges"))
+        differences.addAll(
+          compareLists(
+            sortCharges(dpsObj.charges),
+            sortCharges(nomisObj.charges),
+            "$parentProperty.charges",
+          ),
+        )
       }
 
       is ChargeFields -> {
@@ -205,6 +214,26 @@ class CourtSentencingReconciliationService(
       }
     }
     return differences
+  }
+
+  suspend fun chargeInsertedRepair(request: CourtChargeRequest) {
+    val event: CourtSentencingService.CourtChargeCreatedEvent = CourtSentencingService.CourtChargeCreatedEvent(
+      additionalInformation = CourtSentencingService.CourtChargeAdditionalInformation(
+        courtChargeId = request.dpsChargeId,
+        courtCaseId = request.dpsCaseId,
+        source = "DPS",
+        courtAppearanceId = null,
+      ),
+      personReference = PersonReferenceList(
+        identifiers = listOf(
+          PersonReference(
+            type = "NOMS",
+            value = request.offenderNo,
+          ),
+        ),
+      ),
+    )
+    courtSentencingService.createCharge(event)
   }
 }
 
