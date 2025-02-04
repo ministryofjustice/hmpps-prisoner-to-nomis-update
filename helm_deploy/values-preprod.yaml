@@ -67,7 +67,7 @@ generic-prometheus-alerts:
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_casenotes_dlq"
     csip:
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_csip_queue"
-      - "syscon-devs-preprod-hmpps_prisoner_to_nomis_csip_dlq"
+      - "syscon-devs-preprod-hmpps_prisoner_to_nomis_csip_dead_letter_queue"
     prisonperson:
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_prisonperson_queue"
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_prisonperson_dlq"
