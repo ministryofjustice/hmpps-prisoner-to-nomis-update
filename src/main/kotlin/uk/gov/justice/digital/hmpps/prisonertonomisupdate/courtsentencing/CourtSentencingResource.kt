@@ -1,11 +1,19 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.microsoft.applicationinsights.TelemetryClient
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.Valid
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -35,4 +43,26 @@ class CourtSentencingResource(
   suspend fun getCaseReconciliationByOffenderNo(
     @PathVariable offenderNo: String,
   ): List<MismatchCaseResponse> = courtSentencingReconciliationService.manualCheckCaseOffenderNo(offenderNo = offenderNo).also { log.info(it.toString()) }
+
+  @PreAuthorize("hasRole('ROLE_NOMIS_SENTENCING')")
+  @PostMapping("/court-sentencing/court-charges/repair")
+  @ResponseStatus(HttpStatus.OK)
+  @Operation(
+    summary = "Resynchronises a charge.inserted from DPS to NOMIS",
+    description = "Used when DPS is in the correct state but NOMIS is wrong, so emergency use only. Requires ROLE_MIGRATE_SENTENCING",
+  )
+  suspend fun chargeInserted(
+    @RequestBody @Valid
+    request: CourtChargeRequest,
+  ) {
+    courtSentencingReconciliationService.chargeInsertedRepair(request = request)
+  }
 }
+
+@Schema(description = "Court Charge Request")
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class CourtChargeRequest(
+  val offenderNo: String,
+  val dpsChargeId: String,
+  val dpsCaseId: String,
+)

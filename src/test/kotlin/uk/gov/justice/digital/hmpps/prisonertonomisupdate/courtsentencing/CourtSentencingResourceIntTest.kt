@@ -1,9 +1,19 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
+import com.github.tomakehurst.wiremock.client.WireMock
+import org.assertj.core.api.Assertions
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers
+import org.mockito.kotlin.any
+import org.mockito.kotlin.isNull
+import org.mockito.kotlin.verify
+import org.springframework.http.MediaType
+import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.AppearanceType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.Charge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ChargeOutcome
@@ -12,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.NextCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtEventChargeResponse
@@ -565,6 +576,163 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
             .expectBody()
             .jsonPath("mismatch").doesNotExist()
         }
+      }
+    }
+  }
+
+  @DisplayName("GET /prisoners/{offenderNo}/court-sentencing/court-charges/repair")
+  @Nested
+  inner class ChargeInsertedRepair {
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.post().uri("/court-sentencing/court-charges/repair")
+          .headers(setAuthorisation(roles = listOf()))
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(
+            BodyInserters.fromValue(
+              CourtChargeRequest(
+                offenderNo = OFFENDER_NO,
+                dpsChargeId = DPS_COURT_CHARGE_ID,
+                dpsCaseId = DPS_COURT_CASE_ID,
+              ),
+            ),
+          )
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.post().uri("/court-sentencing/court-charges/repair")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(
+            BodyInserters.fromValue(
+              CourtChargeRequest(
+                offenderNo = OFFENDER_NO,
+                dpsChargeId = DPS_COURT_CHARGE_ID,
+                dpsCaseId = DPS_COURT_CASE_ID,
+              ),
+            ),
+          )
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.post().uri("/court-sentencing/court-charges/repair")
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(
+            BodyInserters.fromValue(
+              CourtChargeRequest(
+                offenderNo = OFFENDER_NO,
+                dpsChargeId = DPS_COURT_CHARGE_ID,
+                dpsCaseId = DPS_COURT_CASE_ID,
+              ),
+            ),
+          )
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+
+      @BeforeEach
+      fun setUp() {
+        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCharge(
+          DPS_COURT_CHARGE_ID,
+          offenderNo = OFFENDER_NO,
+          caseID = DPS_COURT_CASE_ID,
+        )
+        nomisApi.stubCourtChargeCreate(
+          OFFENDER_NO,
+          NOMIS_COURT_CASE_ID,
+          """{ "offenderChargeId": $NOMIS_COURT_CHARGE_ID }""",
+        )
+        mappingServer.stubGetCourtCaseMappingGivenDpsId(
+          id = DPS_COURT_CASE_ID,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID,
+        )
+
+        mappingServer.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_ID, 404)
+        mappingServer.stubCreateCourtCharge()
+
+        webTestClient.post().uri("/court-sentencing/court-charges/repair")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_SENTENCING")))
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(
+            BodyInserters.fromValue(
+              CourtChargeRequest(
+                offenderNo = OFFENDER_NO,
+                dpsChargeId = DPS_COURT_CHARGE_ID,
+                dpsCaseId = DPS_COURT_CASE_ID,
+              ),
+            ),
+          )
+          .exchange()
+          .expectStatus().isOk
+      }
+
+      @Test
+      fun `will callback back to court sentencing service to get more details`() {
+        waitForAnyProcessingToComplete()
+        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/legacy/charge/${DPS_COURT_CHARGE_ID}")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          ArgumentMatchers.eq("charge-create-success"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(DPS_COURT_CASE_ID)
+            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID.toString())
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtCaseMapping.MappingType.DPS_CREATED.toString())
+            Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            Assertions.assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to create the Charge`() {
+        waitForAnyProcessingToComplete()
+        nomisApi.verify(WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID}/charges")))
+      }
+
+      @Test
+      fun `will create a mapping between the two charges`() {
+        waitForAnyProcessingToComplete()
+
+        await untilAsserted {
+          mappingServer.verify(
+            WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/court-sentencing/court-charges"))
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "dpsCourtChargeId",
+                  WireMock.equalTo(DPS_COURT_CHARGE_ID),
+                ),
+              )
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "nomisCourtChargeId",
+                  WireMock.equalTo(
+                    NOMIS_COURT_CHARGE_ID.toString(),
+                  ),
+                ),
+              ),
+          )
+        }
+        await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
       }
     }
   }
