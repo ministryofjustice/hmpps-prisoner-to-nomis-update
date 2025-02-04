@@ -588,7 +588,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     inner class Security {
       @Test
       fun `access forbidden when no role`() {
-        webTestClient.post().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-charges/repair")
+        webTestClient.post().uri("/court-sentencing/court-charges/repair")
           .headers(setAuthorisation(roles = listOf()))
           .contentType(MediaType.APPLICATION_JSON)
           .body(
@@ -606,7 +606,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `access forbidden with wrong role`() {
-        webTestClient.post().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-charges/repair")
+        webTestClient.post().uri("/court-sentencing/court-charges/repair")
           .headers(setAuthorisation(roles = listOf("BANANAS")))
           .contentType(MediaType.APPLICATION_JSON)
           .body(
@@ -624,7 +624,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `access unauthorised with no auth token`() {
-        webTestClient.post().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-charges/repair")
+        webTestClient.post().uri("/court-sentencing/court-charges/repair")
           .contentType(MediaType.APPLICATION_JSON)
           .body(
             BodyInserters.fromValue(
@@ -663,7 +663,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
         mappingServer.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_ID, 404)
         mappingServer.stubCreateCourtCharge()
 
-        webTestClient.post().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-charges/repair")
+        webTestClient.post().uri("/court-sentencing/court-charges/repair")
           .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_SENTENCING")))
           .contentType(MediaType.APPLICATION_JSON)
           .body(

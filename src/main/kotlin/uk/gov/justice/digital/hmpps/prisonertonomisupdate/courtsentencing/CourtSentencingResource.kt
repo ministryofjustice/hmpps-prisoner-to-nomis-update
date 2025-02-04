@@ -45,7 +45,7 @@ class CourtSentencingResource(
   ): List<MismatchCaseResponse> = courtSentencingReconciliationService.manualCheckCaseOffenderNo(offenderNo = offenderNo).also { log.info(it.toString()) }
 
   @PreAuthorize("hasRole('ROLE_NOMIS_SENTENCING')")
-  @PostMapping("/prisoners/{offenderNo}/court-sentencing/court-charges/repair")
+  @PostMapping("/court-sentencing/court-charges/repair")
   @ResponseStatus(HttpStatus.OK)
   @Operation(
     summary = "Resynchronises a charge.inserted from DPS to NOMIS",
