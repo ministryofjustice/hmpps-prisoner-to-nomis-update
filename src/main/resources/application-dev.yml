@@ -16,4 +16,4 @@ api.base.url:
   court.sentencing: http://localhost:8080
   alerts: http://localhost:8080
   csip: http://localhost:8080
-  contact.person: http://localhost:8080
+  personal.relationships: http://localhost:8080

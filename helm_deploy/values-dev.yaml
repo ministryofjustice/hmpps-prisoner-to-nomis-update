@@ -25,7 +25,7 @@ generic-service:
     API_BASE_URL_CSIP: https://csip-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_CASENOTES: https://dev.offender-case-notes.service.justice.gov.uk
     API_BASE_URL_PRISONPERSON: https://prison-person-api-dev.prison.service.justice.gov.uk
-    API_BASE_URL_CONTACT_PERSON: https://contacts-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_PERSONAL_RELATIONSHIPS: https://personal-relationships-api-dev.hmpps.service.justice.gov.uk
     FEATURE_EVENT_DELETEALL: true
 
 generic-prometheus-alerts:

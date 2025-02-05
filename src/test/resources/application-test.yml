@@ -22,7 +22,7 @@ api.base.url:
   casenotes: http://localhost:8096
   prisonperson: http://localhost:8097
   csip: http://localhost:8098
-  contact.person: http://localhost:8099
+  personal.relationships: http://localhost:8099
 
 hmpps.sqs:
   provider: localstack
