@@ -23,6 +23,7 @@ api.base.url:
   prisonperson: http://localhost:8097
   csip: http://localhost:8098
   personal.relationships: http://localhost:8099
+  organisations: http://localhost:8100
 
 hmpps.sqs:
   provider: localstack

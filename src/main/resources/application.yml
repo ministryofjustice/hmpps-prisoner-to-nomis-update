@@ -96,6 +96,11 @@ spring:
             client-id: ${personal.relationships.client.id}
             client-secret: ${personal.relationships.client.secret}
             authorization-grant-type: client_credentials
+          organisations-api:
+            provider: hmpps-auth
+            client-id: ${organisations.client.id}
+            client-secret: ${organisations.client.secret}
+            authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${api.base.url.hmpps-auth}/oauth/token
