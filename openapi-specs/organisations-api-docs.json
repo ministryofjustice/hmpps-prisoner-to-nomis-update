@@ -1,0 +1,1916 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Organisations API",
+    "description": "API for the management of organisations and their contact details.",
+    "contact": {
+      "name": "HMPPS Digital Studio",
+      "email": "feedback@digital.justice.gov.uk"
+    },
+    "version": "2025-02-05.15.8c59f44"
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Default - this environment"
+    },
+    {
+      "url": "https://organisations-api-dev.hmpps.service.justice.gov.uk",
+      "description": "Development"
+    },
+    {
+      "url": "https://organisations-api-preprod.hmpps.service.justice.gov.uk",
+      "description": "Pre-production"
+    },
+    {
+      "url": "https://organisations-api.hmpps.service.justice.gov.uk",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "bearer-jwt": [
+        "read",
+        "write"
+      ]
+    }
+  ],
+  "tags": [
+    {
+      "name": "Migration and synchronisation",
+      "description": "Migration and synchronisation endpoints"
+    },
+    {
+      "name": "Reference data",
+      "description": "Reference data endpoints"
+    },
+    {
+      "name": "Organisations",
+      "description": "Organisation endpoints"
+    }
+  ],
+  "paths": {
+    "/organisation": {
+      "post": {
+        "tags": [
+          "Organisations"
+        ],
+        "summary": "Create new organisation",
+        "description": "Creates a new organisation",
+        "operationId": "createOrganisation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrganisationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created the organisation successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/migrate/organisation": {
+      "post": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Migrate an organisation",
+        "description": "Migrate an organisation from NOMIS with all of its associated data. If an organisation with the same id id already exists it will be replaced",
+        "operationId": "migrateOrganisation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MigrateOrganisationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The organisation and associated data was created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MigrateOrganisationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request failed validation with invalid or missing data supplied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/reference-codes/group/{groupCode}": {
+      "get": {
+        "tags": [
+          "Reference data"
+        ],
+        "summary": "Return the reference data available for group key.",
+        "description": "Endpoint to return reference data for a provided group key. Sorted by display order then description by default.",
+        "operationId": "getReferenceDataByGroup",
+        "parameters": [
+          {
+            "name": "groupCode",
+            "in": "path",
+            "description": "The group code of the reference codes to load",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ReferenceCodeGroup"
+            },
+            "example": "PHONE_TYPE"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort configuration - default displayOrder, description",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Sort"
+            }
+          },
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "description": "Whether to only return active codes or not, defaults to true",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of reference data codes/values",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReferenceCode"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/organisation/{organisationId}": {
+      "get": {
+        "tags": [
+          "Organisations"
+        ],
+        "summary": "Get organisation",
+        "description": "Gets a organisation by their id",
+        "operationId": "getOrganisationById",
+        "parameters": [
+          {
+            "name": "organisationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Found the organisation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No organisation with that id could be found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/organisation/search": {
+      "get": {
+        "tags": [
+          "Organisations"
+        ],
+        "summary": "Search organisations",
+        "description": "Search all organisations by their name",
+        "operationId": "searchOrganisations",
+        "parameters": [
+          {
+            "name": "request",
+            "in": "query",
+            "description": "Search criteria",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OrganisationSearchRequest"
+            }
+          },
+          {
+            "name": "pageable",
+            "in": "query",
+            "description": "Pageable configurations",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organisations searched successfully. There may be no results.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationSummaryResultItemPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateOrganisationRequest": {
+        "type": "object",
+        "description": "Request to create an new organisation",
+        "properties": {
+          "organisationName": {
+            "type": "string",
+            "description": "The name of the organisation",
+            "example": "Example Limited",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "programmeNumber": {
+            "type": "string",
+            "description": "The programme number for the organisation, stored as FEI_NUMBER in NOMIS",
+            "example": 1,
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "vatNumber": {
+            "type": "string",
+            "description": "The VAT number for the organisation, if known",
+            "example": 123456,
+            "maxLength": 12,
+            "minLength": 0
+          },
+          "caseloadId": {
+            "type": "string",
+            "description": "The id of the caseload for this organisation, this is an agency id in NOMIS",
+            "example": "BXI",
+            "maxLength": 6,
+            "minLength": 0
+          },
+          "comments": {
+            "type": "string",
+            "description": "Any comments on the organisation",
+            "example": "Some additional info",
+            "maxLength": 240,
+            "minLength": 0
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the organisation is active or not",
+            "example": true
+          },
+          "deactivatedDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The date the organisation was deactivated, EXPIRY_DATE in NOMIS",
+            "example": "2010-12-30"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User who created the entry",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was created",
+            "example": "2023-09-23T10:15:30"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the entry",
+            "example": "admin2"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was updated",
+            "example": "2023-09-24T12:00:00"
+          }
+        },
+        "required": [
+          "active",
+          "createdBy",
+          "createdTime",
+          "organisationName"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "userMessage": {
+            "type": "string"
+          },
+          "developerMessage": {
+            "type": "string"
+          },
+          "moreInfo": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "OrganisationAddressDetails": {
+        "type": "object",
+        "description": "An address related to an organisation with descriptions of all reference data",
+        "properties": {
+          "organisationAddressId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The id of the organisation address",
+            "example": 123456
+          },
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The id of the organisation",
+            "example": 123456
+          },
+          "addressType": {
+            "type": "string",
+            "description": "\n      The type of address (optional).\n      This is a coded value (from the group code ADDRESS_TYPE in reference data).\n      The known values are HOME, WORK or BUS (business address).\n    ",
+            "example": "HOME"
+          },
+          "addressTypeDescription": {
+            "type": "string",
+            "description": "The description of the address type",
+            "example": "HOME"
+          },
+          "primaryAddress": {
+            "type": "boolean",
+            "description": "True if this is the primary address otherwise false",
+            "example": true
+          },
+          "flat": {
+            "type": "string",
+            "description": "Flat number or name",
+            "example": "Flat 2B"
+          },
+          "property": {
+            "type": "string",
+            "description": "Building or house number or name",
+            "example": "Mansion House"
+          },
+          "street": {
+            "type": "string",
+            "description": "Street or road name",
+            "example": "Acacia Avenue"
+          },
+          "area": {
+            "type": "string",
+            "description": "Area",
+            "example": "Morton Heights"
+          },
+          "cityCode": {
+            "type": "string",
+            "description": "City code",
+            "example": 25343
+          },
+          "cityDescription": {
+            "type": "string",
+            "description": "The description of city code",
+            "example": "Sheffield"
+          },
+          "countyCode": {
+            "type": "string",
+            "description": "County code",
+            "example": "S.YORKSHIRE"
+          },
+          "countyDescription": {
+            "type": "string",
+            "description": "The description of county code",
+            "example": "South Yorkshire"
+          },
+          "postcode": {
+            "type": "string",
+            "description": "Postcode",
+            "example": "S13 4FH"
+          },
+          "countryCode": {
+            "type": "string",
+            "description": "Country code",
+            "example": "ENG"
+          },
+          "countryDescription": {
+            "type": "string",
+            "description": "The description of country code",
+            "example": "England"
+          },
+          "mailAddress": {
+            "type": "boolean",
+            "description": "Flag to indicate whether mail is allowed to be sent to this address",
+            "example": false
+          },
+          "serviceAddress": {
+            "type": "boolean",
+            "description": "Flag to indicate whether the organisations service is provided at this address",
+            "example": false
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The start date when this address is to be considered active from",
+            "example": "2024-01-01"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The end date when this address is to be considered no longer active",
+            "example": "2024-01-01"
+          },
+          "noFixedAddress": {
+            "type": "boolean",
+            "description": "Flag to indicate whether this address indicates no fixed address",
+            "example": false
+          },
+          "comments": {
+            "type": "string",
+            "description": "Any additional information or comments about the address",
+            "example": "Some additional information"
+          },
+          "specialNeedsCode": {
+            "type": "string",
+            "description": "Special needs code for this address from reference data ORG_ADDRESS_SPECIAL_NEEDS.",
+            "example": "DEAF"
+          },
+          "specialNeedsCodeDescription": {
+            "type": "string",
+            "description": "The description of the special needs code",
+            "example": "Hearing Impaired Translation"
+          },
+          "contactPersonName": {
+            "type": "string",
+            "description": "The name of the contact person at this address",
+            "example": "Joe Bloggs"
+          },
+          "businessHours": {
+            "type": "string",
+            "description": "The business hours of the address",
+            "example": "9-5"
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "description": "Phone numbers associated with this address",
+            "items": {
+              "$ref": "#/components/schemas/OrganisationAddressPhoneDetails"
+            }
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The id of the user who created the entry",
+            "example": "JD000001"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp of when the entry was created",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "The id of the user who last updated the entry",
+            "example": "JD000001"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp of when the entry was last updated",
+            "example": "2024-01-01T00:00:00Z"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "mailAddress",
+          "noFixedAddress",
+          "organisationAddressId",
+          "organisationId",
+          "phoneNumbers",
+          "primaryAddress",
+          "serviceAddress"
+        ]
+      },
+      "OrganisationAddressPhoneDetails": {
+        "type": "object",
+        "description": "An address-specific phone number for an organisation",
+        "properties": {
+          "organisationAddressPhoneId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the address-specific phone number",
+            "example": 1
+          },
+          "organisationPhoneId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the phone number",
+            "example": 1
+          },
+          "organisationAddressId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the linked address",
+            "example": 1
+          },
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the organisation",
+            "example": 123
+          },
+          "phoneType": {
+            "type": "string",
+            "description": "Type of phone code",
+            "example": "MOB"
+          },
+          "phoneTypeDescription": {
+            "type": "string",
+            "description": "Type of phone description",
+            "example": "Mobile phone"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Phone number",
+            "example": "+1234567890"
+          },
+          "extNumber": {
+            "type": "string",
+            "description": "Extension number",
+            "example": 123
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User who created the entry",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was created",
+            "example": "2023-09-23T10:15:30"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the entry",
+            "example": "admin2"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was updated",
+            "example": "2023-09-24T12:00:00"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "organisationAddressId",
+          "organisationAddressPhoneId",
+          "organisationId",
+          "organisationPhoneId",
+          "phoneNumber",
+          "phoneType",
+          "phoneTypeDescription"
+        ]
+      },
+      "OrganisationDetails": {
+        "type": "object",
+        "description": "Complete organisation data with reference data descriptions",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier of the Organisation",
+            "example": 1
+          },
+          "organisationName": {
+            "type": "string",
+            "description": "The name of the organisation",
+            "example": "Example Limited"
+          },
+          "programmeNumber": {
+            "type": "string",
+            "description": "The programme number for the organisation, stored as FEI_NUMBER in NOMIS",
+            "example": 1
+          },
+          "vatNumber": {
+            "type": "string",
+            "description": "The VAT number for the organisation, if known",
+            "example": 123456
+          },
+          "caseloadId": {
+            "type": "string",
+            "description": "The id of the caseload for this organisation, this is an agency id in NOMIS",
+            "example": "BXI"
+          },
+          "comments": {
+            "type": "string",
+            "description": "Any comments on the organisation",
+            "example": "Some additional info"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the organisation is active or not",
+            "example": true
+          },
+          "deactivatedDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The date the organisation was deactivated, EXPIRY_DATE in NOMIS"
+          },
+          "organisationTypes": {
+            "type": "array",
+            "description": "All organisation types associated with an organisation",
+            "items": {
+              "$ref": "#/components/schemas/OrganisationTypeDetails"
+            }
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "description": "All phone numbers associated with an organisation directly and not one of their addresses",
+            "items": {
+              "$ref": "#/components/schemas/OrganisationPhoneDetails"
+            }
+          },
+          "emailAddresses": {
+            "type": "array",
+            "description": "All email addresses associated with an organisation",
+            "items": {
+              "$ref": "#/components/schemas/OrganisationEmailDetails"
+            }
+          },
+          "webAddresses": {
+            "type": "array",
+            "description": "All web addresses associated with an organisation",
+            "items": {
+              "$ref": "#/components/schemas/OrganisationWebAddressDetails"
+            }
+          },
+          "addresses": {
+            "type": "array",
+            "description": "All addresses associated with an organisation",
+            "items": {
+              "$ref": "#/components/schemas/OrganisationAddressDetails"
+            }
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User who created the entry"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was created"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the entry"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was updated"
+          }
+        },
+        "required": [
+          "active",
+          "addresses",
+          "createdBy",
+          "createdTime",
+          "emailAddresses",
+          "organisationId",
+          "organisationName",
+          "organisationTypes",
+          "phoneNumbers",
+          "webAddresses"
+        ]
+      },
+      "OrganisationEmailDetails": {
+        "type": "object",
+        "description": "Email related to an organisation",
+        "properties": {
+          "organisationEmailId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the organisation email",
+            "example": 1
+          },
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the organisation",
+            "example": 123
+          },
+          "emailAddress": {
+            "type": "string",
+            "description": "Email address",
+            "example": "test@example.com"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User who created the entry",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was created",
+            "example": "2023-09-23T10:15:30"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the entry",
+            "example": "admin2"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was updated",
+            "example": "2023-09-24T12:00:00"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "emailAddress",
+          "organisationEmailId",
+          "organisationId"
+        ]
+      },
+      "OrganisationPhoneDetails": {
+        "type": "object",
+        "description": "A phone number related to an organisation with descriptions of all reference data",
+        "properties": {
+          "organisationPhoneId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the organisation phone",
+            "example": 1
+          },
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the organisation",
+            "example": 123
+          },
+          "phoneType": {
+            "type": "string",
+            "description": "Type of phone",
+            "example": "MOB"
+          },
+          "phoneTypeDescription": {
+            "type": "string",
+            "description": "Description of the type of phone",
+            "example": "Mobile"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Phone number",
+            "example": "+1234567890"
+          },
+          "extNumber": {
+            "type": "string",
+            "description": "Extension number",
+            "example": 123
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User who created the entry",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was created",
+            "example": "2023-09-23T10:15:30"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the entry",
+            "example": "admin2"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was updated",
+            "example": "2023-09-24T12:00:00"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "organisationId",
+          "organisationPhoneId",
+          "phoneNumber",
+          "phoneType",
+          "phoneTypeDescription"
+        ]
+      },
+      "OrganisationTypeDetails": {
+        "type": "object",
+        "description": "A type categorizing the organisations",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the organisation",
+            "example": 123
+          },
+          "organisationType": {
+            "type": "string",
+            "description": "Type of organisation",
+            "example": "TRUST"
+          },
+          "organisationTypeDescription": {
+            "type": "string",
+            "description": "Description of the type of organisation",
+            "example": "Trust"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User who created the entry",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was created",
+            "example": "2023-09-23T10:15:30"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the entry",
+            "example": "admin2"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was updated",
+            "example": "2023-09-24T12:00:00"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "organisationId",
+          "organisationType",
+          "organisationTypeDescription"
+        ]
+      },
+      "OrganisationWebAddressDetails": {
+        "type": "object",
+        "description": "Web address related to an organisation",
+        "properties": {
+          "organisationWebAddressId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the organisation web address",
+            "example": 1
+          },
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the organisation",
+            "example": 123
+          },
+          "webAddress": {
+            "type": "string",
+            "description": "Web address",
+            "example": "www.example.com"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User who created the entry",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was created",
+            "example": "2023-09-23T10:15:30"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the entry",
+            "example": "admin2"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was updated",
+            "example": "2023-09-24T12:00:00"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "organisationId",
+          "organisationWebAddressId",
+          "webAddress"
+        ]
+      },
+      "MigrateOrganisationAddress": {
+        "type": "object",
+        "properties": {
+          "nomisAddressId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique address ID in NOMIS",
+            "example": 123
+          },
+          "type": {
+            "type": "string",
+            "description": "Address type from reference data"
+          },
+          "flat": {
+            "type": "string",
+            "description": "Flat number or identifier",
+            "example": "1B"
+          },
+          "premise": {
+            "type": "string",
+            "description": "House name or number",
+            "example": 43
+          },
+          "street": {
+            "type": "string",
+            "description": "Street or road",
+            "example": "Main Street"
+          },
+          "locality": {
+            "type": "string",
+            "description": "Locality",
+            "example": "Keighley"
+          },
+          "postCode": {
+            "type": "string",
+            "description": "Postcode",
+            "example": "BD12 8RD"
+          },
+          "city": {
+            "type": "string",
+            "description": "City - code from reference data"
+          },
+          "county": {
+            "type": "string",
+            "description": "County - code from reference data"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country - code from reference data"
+          },
+          "noFixedAddress": {
+            "type": "boolean",
+            "description": "If true this address should be considered as no fixed address",
+            "example": false
+          },
+          "primaryAddress": {
+            "type": "boolean",
+            "description": "If true this address should be considered as the primary residential address",
+            "example": true
+          },
+          "mailAddress": {
+            "type": "boolean",
+            "description": "If true this address should be considered for sending mail to",
+            "example": true
+          },
+          "serviceAddress": {
+            "type": "boolean",
+            "description": "If this is the service address for the organisation",
+            "example": true
+          },
+          "comment": {
+            "type": "string",
+            "description": "Comments relating to this address",
+            "example": "A comment"
+          },
+          "specialNeedsCode": {
+            "type": "string",
+            "description": "Special needs code for this address from SPECIAL_NEEDS in NOMIS.",
+            "example": "DEAF"
+          },
+          "contactPersonName": {
+            "type": "string",
+            "description": "The name of the contact person at this address",
+            "example": "Joe Bloggs"
+          },
+          "businessHours": {
+            "type": "string",
+            "description": "The business hours for this address",
+            "example": "9-5"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The date this address should be considered valid from",
+            "example": "2018-10-01"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The date this address should be considered valid to",
+            "example": "2022-04-04"
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "description": "A list of phone numbers which are linked to this address",
+            "items": {
+              "$ref": "#/components/schemas/MigrateOrganisationPhoneNumber"
+            }
+          },
+          "createDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createUsername": {
+            "type": "string"
+          },
+          "modifyDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modifyUsername": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mailAddress",
+          "noFixedAddress",
+          "nomisAddressId",
+          "phoneNumbers",
+          "primaryAddress",
+          "serviceAddress"
+        ]
+      },
+      "MigrateOrganisationEmailAddress": {
+        "type": "object",
+        "properties": {
+          "nomisEmailAddressId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique email ID in NOMIS",
+            "example": 123
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address",
+            "example": "test@example.com"
+          },
+          "createDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createUsername": {
+            "type": "string"
+          },
+          "modifyDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modifyUsername": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "nomisEmailAddressId"
+        ]
+      },
+      "MigrateOrganisationPhoneNumber": {
+        "type": "object",
+        "properties": {
+          "nomisPhoneId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique phone ID in NOMIS",
+            "example": 123
+          },
+          "number": {
+            "type": "string",
+            "description": "Telephone number",
+            "example": "098989 98989893"
+          },
+          "extension": {
+            "type": "string",
+            "description": "Extension number (optional)",
+            "example": 100
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of phone number (from reference data)"
+          },
+          "createDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createUsername": {
+            "type": "string"
+          },
+          "modifyDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modifyUsername": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "nomisPhoneId",
+          "number",
+          "type"
+        ]
+      },
+      "MigrateOrganisationRequest": {
+        "type": "object",
+        "description": "Request to migrate an organisation/corporate and all of its sub-elements from NOMIS into this service",
+        "properties": {
+          "nomisCorporateId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The corporate ID from NOMIS",
+            "example": 1233323
+          },
+          "organisationName": {
+            "type": "string",
+            "description": "The name of the organisation",
+            "example": "Example Limited",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "programmeNumber": {
+            "type": "string",
+            "description": "The programme number for the organisation, stored as FEI_NUMBER in NOMIS",
+            "example": 1,
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "vatNumber": {
+            "type": "string",
+            "description": "The VAT number for the organisation, if known",
+            "example": 123456,
+            "maxLength": 12,
+            "minLength": 0
+          },
+          "caseloadId": {
+            "type": "string",
+            "description": "The id of the caseload for this organisation, this is an agency id in NOMIS",
+            "example": "BXI",
+            "maxLength": 6,
+            "minLength": 0
+          },
+          "comments": {
+            "type": "string",
+            "description": "Any comments on the organisation",
+            "example": "Some additional info",
+            "maxLength": 240,
+            "minLength": 0
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the organisation is active or not",
+            "example": true
+          },
+          "deactivatedDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The date the organisation was deactivated, EXPIRY_DATE in NOMIS",
+            "example": "2010-12-30"
+          },
+          "organisationTypes": {
+            "type": "array",
+            "description": "The types of the organisation, CORPORATE_TYPES in NOMIS.",
+            "items": {
+              "$ref": "#/components/schemas/MigrateOrganisationType"
+            }
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "description": "Phone numbers associated directly with the organisation and it's addresses",
+            "items": {
+              "$ref": "#/components/schemas/MigrateOrganisationPhoneNumber"
+            }
+          },
+          "emailAddresses": {
+            "type": "array",
+            "description": "Emails associated with the organisation",
+            "items": {
+              "$ref": "#/components/schemas/MigrateOrganisationEmailAddress"
+            }
+          },
+          "webAddresses": {
+            "type": "array",
+            "description": "Web addresses associated with the organisation",
+            "items": {
+              "$ref": "#/components/schemas/MigrateOrganisationWebAddress"
+            }
+          },
+          "addresses": {
+            "type": "array",
+            "description": "Addresses associated with the organisation",
+            "items": {
+              "$ref": "#/components/schemas/MigrateOrganisationAddress"
+            }
+          },
+          "createDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createUsername": {
+            "type": "string"
+          },
+          "modifyDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modifyUsername": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "active",
+          "addresses",
+          "emailAddresses",
+          "nomisCorporateId",
+          "organisationName",
+          "organisationTypes",
+          "phoneNumbers",
+          "webAddresses"
+        ]
+      },
+      "MigrateOrganisationType": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of organisation from reference data",
+            "example": "TRUST"
+          },
+          "createDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createUsername": {
+            "type": "string"
+          },
+          "modifyDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modifyUsername": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "MigrateOrganisationWebAddress": {
+        "type": "object",
+        "properties": {
+          "nomisWebAddressId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique web address ID in NOMIS",
+            "example": 123
+          },
+          "webAddress": {
+            "type": "string",
+            "description": "Email address",
+            "example": "www.example.com"
+          },
+          "createDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createUsername": {
+            "type": "string"
+          },
+          "modifyDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modifyUsername": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "nomisWebAddressId",
+          "webAddress"
+        ]
+      },
+      "IdPair": {
+        "type": "object",
+        "properties": {
+          "elementType": {
+            "type": "string",
+            "description": "The category of information returned",
+            "enum": [
+              "PHONE",
+              "EMAIL",
+              "ADDRESS",
+              "ADDRESS_PHONE",
+              "ORGANISATION",
+              "WEB_ADDRESS"
+            ],
+            "example": "PHONE"
+          },
+          "nomisId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The unique ID for this piece of data provided in the request",
+            "example": 123435
+          },
+          "dpsId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The unique ID created in the DPS contacts service",
+            "example": 1234
+          }
+        },
+        "required": [
+          "dpsId",
+          "elementType",
+          "nomisId"
+        ]
+      },
+      "MigrateOrganisationResponse": {
+        "type": "object",
+        "properties": {
+          "organisation": {
+            "$ref": "#/components/schemas/IdPair",
+            "description": "The pair of IDs for this organisation in NOMIS"
+          },
+          "organisationTypes": {
+            "type": "array",
+            "description": "List of organisation types that were created",
+            "items": {
+              "type": "string"
+            }
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "description": "List of Nomis and DPS IDs for phone numbers",
+            "items": {
+              "$ref": "#/components/schemas/IdPair"
+            }
+          },
+          "emailAddresses": {
+            "type": "array",
+            "description": "List of Nomis and DPS IDs for email addresses",
+            "items": {
+              "$ref": "#/components/schemas/IdPair"
+            }
+          },
+          "webAddresses": {
+            "type": "array",
+            "description": "List of Nomis and DPS IDs for web addresses",
+            "items": {
+              "$ref": "#/components/schemas/IdPair"
+            }
+          },
+          "addresses": {
+            "type": "array",
+            "description": "List of Nomis and DPS IDs for addresses",
+            "items": {
+              "$ref": "#/components/schemas/MigratedOrganisationAddress"
+            }
+          }
+        },
+        "required": [
+          "addresses",
+          "emailAddresses",
+          "organisation",
+          "organisationTypes",
+          "phoneNumbers",
+          "webAddresses"
+        ]
+      },
+      "MigratedOrganisationAddress": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/IdPair",
+            "description": "The pair of IDs for this organisation address in NOMIS"
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "description": "List of Nomis and DPS IDs for email addresses",
+            "items": {
+              "$ref": "#/components/schemas/IdPair"
+            }
+          }
+        },
+        "required": [
+          "address",
+          "phoneNumbers"
+        ]
+      },
+      "ReferenceCodeGroup": {
+        "type": "string",
+        "enum": [
+          "CITY",
+          "COUNTY",
+          "COUNTRY",
+          "ADDRESS_TYPE",
+          "PHONE_TYPE",
+          "ORGANISATION_TYPE",
+          "ORG_ADDRESS_SPECIAL_NEEDS",
+          "TEST_TYPE",
+          "TEST_SEQ_TYPE"
+        ]
+      },
+      "Sort": {
+        "type": "object",
+        "properties": {
+          "sort": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ReferenceCode": {
+        "type": "object",
+        "description": "Describes the details of a reference code",
+        "properties": {
+          "referenceCodeId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "An internally-generated unique identifier for this reference code.",
+            "example": 12345
+          },
+          "groupCode": {
+            "$ref": "#/components/schemas/ReferenceCodeGroup",
+            "description": "The group name for related reference codes.",
+            "example": "PHONE_TYPE"
+          },
+          "code": {
+            "type": "string",
+            "description": "The code for this reference data",
+            "example": "MOB"
+          },
+          "description": {
+            "type": "string",
+            "description": "A fuller description of the reference code",
+            "example": "Mobile"
+          },
+          "displayOrder": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The default order configured for the reference code, lowest number first.",
+            "example": 5
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the reference code is still in use. Old reference codes are maintained for compatability with legacy data.",
+            "example": true
+          }
+        },
+        "required": [
+          "code",
+          "description",
+          "displayOrder",
+          "groupCode",
+          "isActive",
+          "referenceCodeId"
+        ]
+      },
+      "OrganisationSearchRequest": {
+        "type": "object",
+        "description": "Organisation search request query parameters",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Full or partial name of the organisation",
+            "example": "NHS",
+            "maxLength": 40
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "Pageable": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
+          },
+          "sort": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "OrganisationSummary": {
+        "type": "object",
+        "description": "The high level details of an organisation, it's primary address and any business phone number associated with that address.",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation id",
+            "example": 123456789
+          },
+          "organisationName": {
+            "type": "string",
+            "description": "The name of the organisation",
+            "example": "Bob's Bakery"
+          },
+          "organisationActive": {
+            "type": "boolean",
+            "description": "Whether the organisation is currently active or not",
+            "example": true
+          },
+          "flat": {
+            "type": "string",
+            "description": "Flat number in the address, if any",
+            "example": "Flat 1"
+          },
+          "property": {
+            "type": "string",
+            "description": "Property name or number, if any",
+            "example": 123
+          },
+          "street": {
+            "type": "string",
+            "description": "Street name, if any",
+            "example": "Baker Street"
+          },
+          "area": {
+            "type": "string",
+            "description": "Area or locality, if any",
+            "example": "Marylebone"
+          },
+          "cityCode": {
+            "type": "string",
+            "description": "City code, if any",
+            "example": 25343
+          },
+          "cityDescription": {
+            "type": "string",
+            "description": "The description of the city code, if any",
+            "example": "Sheffield"
+          },
+          "countyCode": {
+            "type": "string",
+            "description": "County code, if any",
+            "example": "S.YORKSHIRE"
+          },
+          "countyDescription": {
+            "type": "string",
+            "description": "The description of county code, if any",
+            "example": "South Yorkshire"
+          },
+          "postcode": {
+            "type": "string",
+            "description": "Postal code, if any",
+            "example": "NW1 6XE"
+          },
+          "countryCode": {
+            "type": "string",
+            "description": "Country code, if any",
+            "example": "ENG"
+          },
+          "countryDescription": {
+            "type": "string",
+            "description": "The description of country code, if any",
+            "example": "England"
+          },
+          "businessPhoneNumber": {
+            "type": "string",
+            "description": "The business phone number for the primary address, if any",
+            "example": "01234 56789"
+          },
+          "businessPhoneNumberExtension": {
+            "type": "string",
+            "description": "The extension for the business phone number for the primary address, if any",
+            "example": 123
+          }
+        },
+        "required": [
+          "organisationActive",
+          "organisationId",
+          "organisationName"
+        ]
+      },
+      "OrganisationSummaryResultItemPage": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrganisationSummary"
+            }
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64",
+            "writeOnly": true
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PageableObject": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "paged": {
+            "type": "boolean"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unpaged": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SortObject": {
+        "type": "object",
+        "properties": {
+          "empty": {
+            "type": "boolean"
+          },
+          "sorted": {
+            "type": "boolean"
+          },
+          "unsorted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearer-jwt": {
+        "type": "http",
+        "name": "Authorization",
+        "in": "header",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

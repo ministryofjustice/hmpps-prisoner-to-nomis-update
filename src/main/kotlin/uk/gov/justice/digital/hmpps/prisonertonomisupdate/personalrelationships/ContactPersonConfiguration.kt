@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
