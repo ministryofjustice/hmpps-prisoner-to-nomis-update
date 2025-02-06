@@ -14,15 +14,14 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.BodyInserters
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.AppearanceType
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.Charge
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ChargeOutcome
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtAppearance
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtAppearanceOutcome
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.NextCourtAppearance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCharge
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtAppearance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyNextCourtAppearance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.TestCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMapping
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseIdentifierResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtEventChargeResponse
@@ -43,19 +42,14 @@ private const val NOMIS_COURT_CASE_2_ID = 8L
 private const val DPS_COURT_CASE_ID = "4321"
 private const val DPS_COURT_CASE_2_ID = "4321"
 private const val DPS_COURT_APPEARANCE_ID = "9c591b18-642a-484a-a967-2d17b5c9c5a1"
-private const val DPS_COURT_APPEARANCE_2_ID = "1c591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val NOMIS_COURT_APPEARANCE_ID = 3L
-private const val NOMIS_COURT_APPEARANCE_2_ID = 4L
-private const val NOMIS_NEXT_COURT_APPEARANCE_ID = 9L
 private const val NOMIS_COURT_CHARGE_ID = 11L
-private const val NOMIS_COURT_CHARGE_2_ID = 12L
 private const val DPS_COURT_CHARGE_ID = "8576aa44-642a-484a-a967-2d17b5c9c5a1"
-private const val DPS_COURT_CHARGE_2_ID = "9996aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val OFFENDER_NO = "AB12345"
-private const val DONCASTER_COURT_CODE = "DRBYYC"
 private const val PRISON_MDI = "MDI"
 private const val PRISON_LEI = "LEI"
 private const val CASE_REFERENCE = "ABC4999"
+private const val CASE_REFERENCE2 = "ABC4888"
 private const val OFFENCE_CODE_1 = "TR11017"
 private const val OFFENCE_CODE_2 = "PR52028A"
 private const val OUTCOME_1 = "4001"
@@ -101,7 +95,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
           id = DPS_COURT_CASE_ID,
           nomisCourtCaseId = NOMIS_COURT_CASE_ID,
         )
-        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCaseForReconciliation(
+        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCaseForReconciliation2(
           DPS_COURT_CASE_ID,
           dpsCourtCaseResponse(
             active = true,
@@ -212,7 +206,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
           id = NOMIS_COURT_CASE_ID,
           dpsCourtCaseId = DPS_COURT_CASE_ID,
         )
-        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCaseForReconciliation(
+        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCaseForReconciliation2(
           DPS_COURT_CASE_ID,
           dpsCourtCaseResponse(
             active = true,
@@ -231,6 +225,16 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
                 ),
               ),
             ),
+            caseReferences = listOf(
+              CaseReferenceLegacyData(
+                offenderCaseReference = CASE_REFERENCE2,
+                updatedDate = LocalDateTime.parse("2024-01-01T10:10:00"),
+              ),
+              CaseReferenceLegacyData(
+                offenderCaseReference = CASE_REFERENCE,
+                updatedDate = LocalDateTime.parse("2024-01-01T10:10:00"),
+              ),
+            ),
           ),
         )
       }
@@ -245,7 +249,12 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
             courtEvents = listOf(
               nomisAppearanceResponse(
                 eventDateTime = LocalDateTime.of(2024, 1, 1, 10, 10, 0),
-                outcome = OffenceResultCodeResponse(code = OUTCOME_2, description = "Outcome text", dispositionCode = "F", chargeStatus = "A"),
+                outcome = OffenceResultCodeResponse(
+                  code = OUTCOME_2,
+                  description = "Outcome text",
+                  dispositionCode = "F",
+                  chargeStatus = "A",
+                ),
                 charges = listOf(
                   nomisChargeResponse(),
                   nomisChargeResponse(offenceCode = OFFENCE_CODE_2),
@@ -256,6 +265,18 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
                 charges = listOf(
                   nomisChargeResponse(),
                 ),
+              ),
+            ),
+            caseIndentifiers = listOf(
+              CaseIdentifierResponse(
+                reference = CASE_REFERENCE,
+                createDateTime = "2024-01-01T10:10:00",
+                type = "CASE/INFO#",
+              ),
+              CaseIdentifierResponse(
+                reference = CASE_REFERENCE2,
+                createDateTime = "2024-01-01T10:10:00",
+                type = "CASE/INFO#",
               ),
             ),
           )
@@ -438,7 +459,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
           ),
         )
 
-        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCaseForReconciliation(
+        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCaseForReconciliation2(
           DPS_COURT_CASE_ID,
           dpsCourtCaseResponse(
             active = true,
@@ -459,7 +480,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
             ),
           ),
         )
-        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCaseForReconciliation(
+        CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCaseForReconciliation2(
           DPS_COURT_CASE_ID,
           dpsCourtCaseResponse(
             active = true,
@@ -492,7 +513,12 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
             courtEvents = listOf(
               nomisAppearanceResponse(
                 eventDateTime = LocalDateTime.of(2024, 1, 1, 10, 10, 0),
-                outcome = OffenceResultCodeResponse(code = OUTCOME_2, description = "Outcome text", dispositionCode = "F", chargeStatus = "A"),
+                outcome = OffenceResultCodeResponse(
+                  code = OUTCOME_2,
+                  description = "Outcome text",
+                  dispositionCode = "F",
+                  chargeStatus = "A",
+                ),
                 charges = listOf(
                   nomisChargeResponse(),
                   nomisChargeResponse(offenceCode = OFFENCE_CODE_2),
@@ -737,32 +763,35 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     }
   }
 
-  fun dpsCourtCaseResponse(active: Boolean, appearances: List<CourtAppearance> = emptyList()) = CourtCase(
+  fun dpsCourtCaseResponse(
+    active: Boolean,
+    appearances: List<LegacyCourtAppearance> = emptyList(),
+    caseReferences: List<CaseReferenceLegacyData> = emptyList(),
+  ) = TestCourtCase(
     courtCaseUuid = DPS_COURT_CASE_ID,
     prisonerId = OFFENDER_NO,
-    status = CourtCase.Status.ACTIVE,
+    active = true,
     appearances = appearances,
-    draftAppearances = emptyList(),
+    caseReferences = caseReferences,
   )
 
   fun dpsAppearanceResponse(
-    outcome: CourtAppearanceOutcome = dpsAppearanceOutcomeResponse(),
-    charges: List<Charge> = emptyList(),
+    outcome: String = OUTCOME_1,
+    charges: List<LegacyCharge> = emptyList(),
     appearanceDate: LocalDate = LocalDate.of(2024, 1, 1),
-  ) = CourtAppearance(
+  ) = LegacyCourtAppearance(
     lifetimeUuid = UUID.fromString(DPS_COURT_APPEARANCE_ID),
+    courtCaseUuid = DPS_COURT_CASE_ID,
     courtCode = PRISON_LEI,
     appearanceDate = appearanceDate,
-    outcome = outcome,
+    appearanceTime = "10:10",
+    nomisOutcomeCode = outcome,
     charges = charges,
-
-    appearanceUuid = UUID.fromString(DPS_COURT_APPEARANCE_ID),
-    warrantType = "WARRANT",
-    nextCourtAppearance = NextCourtAppearance(
+    prisonerId = OFFENDER_NO,
+    nextCourtAppearance = LegacyNextCourtAppearance(
       appearanceDate = LocalDate.of(2024, 2, 1),
       appearanceTime = "10:10",
-      courtCode = PRISON_MDI,
-      appearanceType = AppearanceType(UUID.randomUUID(), "Court Appearance", displayOrder = 1),
+      courtId = PRISON_MDI,
     ),
   )
 
@@ -789,7 +818,12 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
   fun nomisAppearanceResponse(
     id: Long = NOMIS_COURT_APPEARANCE_ID,
-    outcome: OffenceResultCodeResponse = OffenceResultCodeResponse(code = OUTCOME_1, description = "Outcome text", dispositionCode = "F", chargeStatus = "A"),
+    outcome: OffenceResultCodeResponse = OffenceResultCodeResponse(
+      code = OUTCOME_1,
+      description = "Outcome text",
+      dispositionCode = "F",
+      chargeStatus = "A",
+    ),
     eventDateTime: LocalDateTime = LocalDateTime.of(2024, 1, 1, 10, 10, 0),
     nextEventDateTime: String = LocalDateTime.of(2024, 2, 1, 10, 10, 0).toString(),
     charges: List<CourtEventChargeResponse> = emptyList(),
@@ -826,38 +860,31 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       mostSeriousFlag = false,
       offenceDate = offenceStartDate,
       offenceEndDate = offenceStartDate.plusDays(1),
-      resultCode1 = OffenceResultCodeResponse(code = OUTCOME_1, description = "Outcome text", dispositionCode = "F", chargeStatus = "A"),
+      resultCode1 = OffenceResultCodeResponse(
+        code = OUTCOME_1,
+        description = "Outcome text",
+        dispositionCode = "F",
+        chargeStatus = "A",
+      ),
     ),
     offenceDate = offenceStartDate,
     offenceEndDate = offenceStartDate.plusDays(1),
     mostSeriousFlag = false,
-    resultCode1 = OffenceResultCodeResponse(code = OUTCOME_1, description = "Outcome text", dispositionCode = "F", chargeStatus = "A"),
+    resultCode1 = OffenceResultCodeResponse(
+      code = OUTCOME_1,
+      description = "Outcome text",
+      dispositionCode = "F",
+      chargeStatus = "A",
+    ),
   )
 
-  fun dpsChargeResponse(offenceCode: String = OFFENCE_CODE_1, offenceStartDate: LocalDate = LocalDate.of(2023, 1, 1)) = Charge(
+  fun dpsChargeResponse(offenceCode: String = OFFENCE_CODE_1, offenceStartDate: LocalDate = LocalDate.of(2023, 1, 1)) = LegacyCharge(
     lifetimeUuid = UUID.fromString(DPS_COURT_CHARGE_ID),
     offenceCode = offenceCode,
     offenceStartDate = offenceStartDate,
     offenceEndDate = offenceStartDate.plusDays(1),
-    outcome = ChargeOutcome(
-      displayOrder = 1,
-      isSubList = false,
-      nomisCode = OUTCOME_1,
-      outcomeName = "OUTCOME_NAME",
-      outcomeType = "OUTCOME_TYPE",
-      outcomeUuid = UUID.randomUUID(),
-    ),
-    // not of interest but required for the model
-    chargeUuid = UUID.randomUUID(),
-  )
-
-  fun dpsAppearanceOutcomeResponse(nomisCode: String = OUTCOME_1) = CourtAppearanceOutcome(
-    displayOrder = 1,
-    isSubList = false,
-    nomisCode = nomisCode,
-    outcomeName = "OUTCOME_NAME",
-    outcomeType = "OUTCOME_TYPE",
-    outcomeUuid = UUID.randomUUID(),
-    relatedChargeOutcomeUuid = UUID.randomUUID(),
+    nomisOutcomeCode = OUTCOME_1,
+    courtCaseUuid = DPS_COURT_CASE_ID,
+    prisonerId = OFFENDER_NO,
   )
 }

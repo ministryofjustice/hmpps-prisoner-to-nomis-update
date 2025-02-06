@@ -11,10 +11,10 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCharge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.TestCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import java.time.LocalDate
 import java.util.UUID
@@ -209,9 +209,9 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetCourtCaseForReconciliation(courtCaseId: String, courtCaseResponse: CourtCase) {
+  fun stubGetCourtCaseForReconciliation2(courtCaseId: String, courtCaseResponse: TestCourtCase) {
     stubFor(
-      get(WireMock.urlPathMatching("/court-case/$courtCaseId")).willReturn(
+      get(WireMock.urlPathMatching("/legacy/court-case/$courtCaseId/test")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
