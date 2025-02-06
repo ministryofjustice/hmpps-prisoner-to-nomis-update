@@ -261,7 +261,7 @@ hmpps.sqs:
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
-    corporate:
+    organisation:
       queueName: "corporate-${random.uuid}"
       dlqName: "corporate-dlq-${random.uuid}"
       subscribeTopicId: domainevents

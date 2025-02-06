@@ -165,7 +165,7 @@ hmpps.sqs:
         { "eventType":[
           "TBD"
         ]}
-    corporate:
+    organisation:
       queueName: hmpps_prisoner_to_nomis_corporate_queue
       dlqName: hmpps_prisoner_to_nomis_corporate_dlq
       subscribeTopicId: domainevents

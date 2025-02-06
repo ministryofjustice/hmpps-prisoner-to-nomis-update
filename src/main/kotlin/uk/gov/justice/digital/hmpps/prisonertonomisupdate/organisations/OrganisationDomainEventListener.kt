@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.corporate
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
@@ -11,13 +11,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventLi
 import java.util.concurrent.CompletableFuture
 
 @Service
-class CorporateDomainEventListener(
+class OrganisationDomainEventListener(
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
-  corporateService: CorporateService,
+  organisationService: OrganisationService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListener(
-  service = corporateService,
+  service = organisationService,
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
@@ -28,7 +28,7 @@ class CorporateDomainEventListener(
   }
 
   @Suppress("LoggingSimilarMessage")
-  @SqsListener("corporate", factory = "hmppsQueueContainerFactoryProxy")
+  @SqsListener("organisation", factory = "hmppsQueueContainerFactoryProxy")
   fun onMessage(
     rawMessage: String,
   ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->

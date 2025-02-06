@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.corporate
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -9,13 +9,13 @@ import uk.gov.justice.hmpps.kotlin.auth.reactiveAuthorisedWebClient
 import java.time.Duration
 
 @Configuration
-class CorporateConfiguration(
+class OrganisationConfiguration(
   @Value("\${api.base.url.organisations}") val apiBaseUri: String,
   @Value("\${api.timeout:90s}") val timeout: Duration,
 ) {
 
   @Bean
-  fun corporateDpsApiWebClient(
+  fun organisationDpsApiWebClient(
     authorizedClientManager: ReactiveOAuth2AuthorizedClientManager,
     builder: WebClient.Builder,
   ): WebClient = builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "organisations-api", url = apiBaseUri, timeout)
