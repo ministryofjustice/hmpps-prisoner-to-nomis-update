@@ -24,11 +24,11 @@ class CourtSentencingReconciliationService(
   }
 
   suspend fun manualCheckCaseDps(dpsCaseId: String): MismatchCaseResponse = mappingService.getMappingGivenCourtCaseId(dpsCourtCaseId = dpsCaseId).let {
-    MismatchCaseResponse(mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId))
+    MismatchCaseResponse(nomisCaseId = it.nomisCourtCaseId, dpsCaseId = dpsCaseId, mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId))
   }
 
   suspend fun manualCheckCaseNomis(nomisCaseId: Long): MismatchCaseResponse = mappingService.getMappingGivenNomisCourtCaseId(nomisCourtCaseId = nomisCaseId).let {
-    MismatchCaseResponse(mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId))
+    MismatchCaseResponse(nomisCaseId = nomisCaseId, dpsCaseId = it.dpsCourtCaseId, mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId))
   }
 
   suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchCaseResponse> = nomisApiService.getCourtCasesByOffender(offenderNo).map {
@@ -244,6 +244,8 @@ class CourtSentencingReconciliationService(
 }
 
 data class MismatchCaseResponse(
+  val dpsCaseId: String,
+  val nomisCaseId: Long,
   val mismatch: MismatchCase?,
 )
 
