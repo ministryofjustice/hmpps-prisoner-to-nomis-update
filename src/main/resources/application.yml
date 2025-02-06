@@ -91,10 +91,15 @@ spring:
             client-id: ${csip.client.id}
             client-secret: ${csip.client.secret}
             authorization-grant-type: client_credentials
-          contact-person-api:
+          personal-relationships-api:
             provider: hmpps-auth
-            client-id: ${contact.person.client.id}
-            client-secret: ${contact.person.client.secret}
+            client-id: ${personal.relationships.client.id}
+            client-secret: ${personal.relationships.client.secret}
+            authorization-grant-type: client_credentials
+          organisations-api:
+            provider: hmpps-auth
+            client-id: ${organisations.client.id}
+            client-secret: ${organisations.client.secret}
             authorization-grant-type: client_credentials
         provider:
           hmpps-auth:

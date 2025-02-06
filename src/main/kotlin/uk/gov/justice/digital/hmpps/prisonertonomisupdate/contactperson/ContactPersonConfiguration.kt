@@ -14,7 +14,7 @@ import java.time.Duration
 
 @Configuration
 class ContactPersonConfiguration(
-  @Value("\${api.base.url.contact.person}") val apiBaseUri: String,
+  @Value("\${api.base.url.personal.relationships}") val apiBaseUri: String,
   @Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
   @Value("\${api.timeout:90s}") val timeout: Duration,
 ) {
@@ -26,7 +26,7 @@ class ContactPersonConfiguration(
   fun contactPersonApiWebClient(
     authorizedClientManager: ReactiveOAuth2AuthorizedClientManager,
     builder: WebClient.Builder,
-  ): WebClient = builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "contact-person-api", url = apiBaseUri, timeout)
+  ): WebClient = builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "personal-relationships-api", url = apiBaseUri, timeout)
 
   @Component("contactPersonApi")
   class ContactPersonApiHealth(@Qualifier("contactPersonApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
