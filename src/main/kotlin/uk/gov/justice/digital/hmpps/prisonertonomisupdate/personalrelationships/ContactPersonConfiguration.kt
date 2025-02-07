@@ -20,14 +20,14 @@ class ContactPersonConfiguration(
 ) {
 
   @Bean
-  fun contactPersonApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(apiBaseUri, healthTimeout)
+  fun personalRelationshipsApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(apiBaseUri, healthTimeout)
 
   @Bean
-  fun contactPersonApiWebClient(
+  fun personalRelationshipsApiWebClient(
     authorizedClientManager: ReactiveOAuth2AuthorizedClientManager,
     builder: WebClient.Builder,
   ): WebClient = builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "personal-relationships-api", url = apiBaseUri, timeout)
 
-  @Component("contactPersonApi")
-  class ContactPersonApiHealth(@Qualifier("contactPersonApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
+  @Component("personalRelationshipsApi")
+  class PersonRelationshipsApiHealth(@Qualifier("personalRelationshipsApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
 }
