@@ -125,8 +125,19 @@ class NonAssociationsReconciliationService(
     .also { log.info("DPS Page requested: $page, with ${it.size} non-associations") }
 
   internal suspend fun checkMatch(id: NonAssociationIdResponse): List<MismatchNonAssociation> = runCatching {
-    // log.debug("Checking NA: ${id.offenderNo1}, ${id.offenderNo2}")
+    return checkMatchOrThrowException(id)
+  }.onFailure {
+    log.error("Unable to match non-associations for id: ${id.offenderNo1}, ${id.offenderNo2}", it)
+    telemetryClient.trackEvent(
+      "non-associations-reports-reconciliation-mismatch-error",
+      mapOf(
+        "offenderNo1" to id.offenderNo1,
+        "offenderNo2" to id.offenderNo2,
+      ),
+    )
+  }.getOrDefault(emptyList())
 
+  internal suspend fun checkMatchOrThrowException(id: NonAssociationIdResponse): List<MismatchNonAssociation> {
     val today = LocalDate.now()
 
     val (nomisListUnsorted, dpsListUnsorted) = withContext(Dispatchers.Unconfined) {
@@ -147,7 +158,6 @@ class NonAssociationsReconciliationService(
     val dpsList = dpsListUnsorted.sortedWith(compareBy(NonAssociation::whenCreated, NonAssociation::id))
 
     return if (nomisList.size > dpsList.size) {
-      // log.info("Extra Nomis details found for ${id.offenderNo1}, ${id.offenderNo2}")
       (dpsList.size..<nomisList.size)
         .map { index ->
           MismatchNonAssociation(
@@ -177,7 +187,6 @@ class NonAssociationsReconciliationService(
             }
         }
     } else if (nomisList.size < dpsList.size) {
-      // log.info("Extra DPS details found for ${id.offenderNo1}, ${id.offenderNo2}")
       (nomisList.size..<dpsList.size)
         .map { index ->
           MismatchNonAssociation(
@@ -207,7 +216,9 @@ class NonAssociationsReconciliationService(
         }
     } else {
       dpsList.indices
-        .filter { doesNotMatch(nomisList[it], dpsList[it]) && (dpsList.size != 2 || doesNotMatch(nomisList[0], dpsList[1])) }
+        .filter {
+          doesNotMatch(nomisList[it], dpsList[it]) && (dpsList.size != 2 || doesNotMatch(nomisList[0], dpsList[1]))
+        }
         .map { index ->
           val mismatch =
             MismatchNonAssociation(
@@ -245,19 +256,10 @@ class NonAssociationsReconciliationService(
           )
           mismatch
         }
+    }.also {
+      log.debug("Checking NA (onSuccess: ${id.offenderNo1}, ${id.offenderNo2}")
     }
-  }.onSuccess {
-    log.debug("Checking NA (onSuccess: ${id.offenderNo1}, ${id.offenderNo2}")
-  }.onFailure {
-    log.error("Unable to match non-associations for id: ${id.offenderNo1}, ${id.offenderNo2}", it)
-    telemetryClient.trackEvent(
-      "non-associations-reports-reconciliation-mismatch-error",
-      mapOf(
-        "offenderNo1" to id.offenderNo1,
-        "offenderNo2" to id.offenderNo2,
-      ),
-    )
-  }.getOrDefault(emptyList())
+  }
 
   internal fun doesNotMatch(
     nomis: NonAssociationResponse,
@@ -267,7 +269,6 @@ class NonAssociationsReconciliationService(
     return typeDoesNotMatch(nomis.type, dps.restrictionType) ||
       (!nomis.effectiveDate.isAfter(today) && nomis.effectiveDate.toString() != dps.whenCreated.take(10)) ||
       (closedInNomis(nomis, today) xor dps.isClosed) ||
-      // reasonDoesNotMatch(nomis.reason, nomis.recipReason, dps.firstPrisonerRole, dps.secondPrisonerRole, dps.reason) ||
       (nomis.comment == null && dps.comment != NO_COMMENT_PROVIDED) ||
       (nomis.comment != null && nomis.comment != dps.comment)
   }
@@ -283,17 +284,6 @@ class NonAssociationsReconciliationService(
   ) = when (nomisType) {
     "NONEX", "TNA", "WING" -> dpsType != NonAssociation.RestrictionType.WING
     else -> nomisType != dpsType.name.take(4)
-  }
-
-  private fun reasonDoesNotMatch(
-    reason: String,
-    recipReason: String,
-    role1: NonAssociation.FirstPrisonerRole,
-    role2: NonAssociation.SecondPrisonerRole,
-    dpsReasonEnum: NonAssociation.Reason,
-  ): Boolean {
-    val t = translateToRolesAndReason(reason, recipReason)
-    return t.first != role1 || t.second != role2 // too strict: || ((reason == "BUL" || reason == "RIV") && t.third != dpsReasonEnum)
   }
 
   // NOTE this is a copy of the code in SyncAndMigrateService
