@@ -4,7 +4,6 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReference
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
@@ -25,11 +24,11 @@ class CourtSentencingReconciliationService(
   }
 
   suspend fun manualCheckCaseDps(dpsCaseId: String): MismatchCaseResponse = mappingService.getMappingGivenCourtCaseId(dpsCourtCaseId = dpsCaseId).let {
-    MismatchCaseResponse(mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId))
+    MismatchCaseResponse(nomisCaseId = it.nomisCourtCaseId, dpsCaseId = dpsCaseId, mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId))
   }
 
   suspend fun manualCheckCaseNomis(nomisCaseId: Long): MismatchCaseResponse = mappingService.getMappingGivenNomisCourtCaseId(nomisCourtCaseId = nomisCaseId).let {
-    MismatchCaseResponse(mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId))
+    MismatchCaseResponse(nomisCaseId = nomisCaseId, dpsCaseId = it.dpsCourtCaseId, mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId))
   }
 
   suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchCaseResponse> = nomisApiService.getCourtCasesByOffender(offenderNo).map {
@@ -41,13 +40,13 @@ class CourtSentencingReconciliationService(
     val dpsResponse = doApiCallWithRetries { dpsApiService.getCourtCaseForReconciliation(dpsCaseId) }
 
     val dpsFields = CaseFields(
-      active = dpsResponse.status.name == CourtCase.Status.ACTIVE.name,
+      active = dpsResponse.active,
       id = dpsCaseId,
       appearances = dpsResponse.appearances.map {
         AppearanceFields(
           date = it.appearanceDate,
           court = it.courtCode,
-          outcome = it.outcome?.nomisCode,
+          outcome = it.nomisOutcomeCode,
           nextAppearanceDate = it.nextCourtAppearance?.appearanceDate,
           id = it.lifetimeUuid.toString(),
           charges = it.charges.map {
@@ -55,12 +54,13 @@ class CourtSentencingReconciliationService(
               offenceCode = it.offenceCode,
               offenceDate = it.offenceStartDate,
               offenceEndDate = it.offenceEndDate,
-              outcome = it.outcome?.nomisCode,
+              outcome = it.nomisOutcomeCode,
               id = it.lifetimeUuid.toString(),
             )
           },
         )
       },
+      caseReferences = dpsResponse.caseReferences.map { it.offenderCaseReference },
     )
     val nomisFields = CaseFields(
       active = nomisResponse.caseStatus.code == "A",
@@ -83,6 +83,7 @@ class CourtSentencingReconciliationService(
           },
         )
       },
+      caseReferences = nomisResponse.caseInfoNumbers.map { it.reference },
     )
 
     val differenceList = compareObjects(dpsFields, nomisFields)
@@ -123,6 +124,11 @@ class CourtSentencingReconciliationService(
             .thenBy { it.court }
             .thenBy { it.outcome },
         )
+
+        if (!dpsObj.caseReferences.containsAll(nomisObj.caseReferences)) {
+          differences.add(Difference("$parentProperty.caseReferences", dpsObj.caseReferences, nomisObj.caseReferences))
+        }
+
         differences.addAll(compareLists(sortedDpsAppearances, sortedNomisAppearances, "$parentProperty.appearances"))
       }
 
@@ -238,6 +244,8 @@ class CourtSentencingReconciliationService(
 }
 
 data class MismatchCaseResponse(
+  val dpsCaseId: String,
+  val nomisCaseId: Long,
   val mismatch: MismatchCase?,
 )
 
@@ -245,6 +253,7 @@ data class CaseFields(
   val active: Boolean,
   val id: String,
   val appearances: List<AppearanceFields> = emptyList(),
+  val caseReferences: List<String> = emptyList(),
   /* omissions of data that is not consistent: court is not at case level in DPS
      date at Case level is only relevant to nomis */
 ) {

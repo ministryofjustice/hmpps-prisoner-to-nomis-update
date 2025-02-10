@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.contactperson
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
@@ -14,20 +14,20 @@ import java.time.Duration
 
 @Configuration
 class ContactPersonConfiguration(
-  @Value("\${api.base.url.contact.person}") val apiBaseUri: String,
+  @Value("\${api.base.url.personal.relationships}") val apiBaseUri: String,
   @Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
   @Value("\${api.timeout:90s}") val timeout: Duration,
 ) {
 
   @Bean
-  fun contactPersonApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(apiBaseUri, healthTimeout)
+  fun personalRelationshipsApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(apiBaseUri, healthTimeout)
 
   @Bean
-  fun contactPersonApiWebClient(
+  fun personalRelationshipsApiWebClient(
     authorizedClientManager: ReactiveOAuth2AuthorizedClientManager,
     builder: WebClient.Builder,
-  ): WebClient = builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "contact-person-api", url = apiBaseUri, timeout)
+  ): WebClient = builder.reactiveAuthorisedWebClient(authorizedClientManager, registrationId = "personal-relationships-api", url = apiBaseUri, timeout)
 
-  @Component("contactPersonApi")
-  class ContactPersonApiHealth(@Qualifier("contactPersonApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
+  @Component("personalRelationshipsApi")
+  class PersonRelationshipsApiHealth(@Qualifier("personalRelationshipsApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
 }

@@ -65,7 +65,8 @@ tasks {
       "buildCsipApiModel",
       "buildCaseNoteApiModel",
       "buildPrisonPersonApiModel",
-      "buildContactPersonApiModel",
+      "buildPersonalRelationshipsApiModel",
+      "buildOrganisationsApiModel",
     )
     compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
   }
@@ -84,7 +85,8 @@ tasks {
       "buildCsipApiModel",
       "buildCaseNoteApiModel",
       "buildPrisonPersonApiModel",
-      "buildContactPersonApiModel",
+      "buildPersonalRelationshipsApiModel",
+      "buildOrganisationsApiModel",
     )
   }
   withType<KtLintFormatTask> {
@@ -102,7 +104,8 @@ tasks {
       "buildCsipApiModel",
       "buildCaseNoteApiModel",
       "buildPrisonPersonApiModel",
-      "buildContactPersonApiModel",
+      "buildPersonalRelationshipsApiModel",
+      "buildOrganisationsApiModel",
     )
   }
 }
@@ -254,6 +257,26 @@ tasks.register("buildContactPersonApiModel", GenerateTask::class) {
   globalProperties.set(mapOf("models" to "", "modelDocs" to "false", "modelTests" to "false"))
 }
 
+tasks.register("buildPersonalRelationshipsApiModel", GenerateTask::class) {
+  generatorName.set("kotlin")
+  inputSpec.set("openapi-specs/personal-relationships-api-docs.json")
+  outputDir.set("$buildDirectory/generated/personalrelationships")
+  modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model")
+  apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.api")
+  configOptions.set(configValues)
+  globalProperties.set(mapOf("models" to "", "modelDocs" to "false", "modelTests" to "false"))
+}
+
+tasks.register("buildOrganisationsApiModel", GenerateTask::class) {
+  generatorName.set("kotlin")
+  inputSpec.set("openapi-specs/organisations-api-docs.json")
+  outputDir.set("$buildDirectory/generated/organisations")
+  modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model")
+  apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.api")
+  configOptions.set(configValues)
+  globalProperties.set(mapOf("models" to "", "modelDocs" to "false", "modelTests" to "false"))
+}
+
 val generatedProjectDirs = listOf(
   "activities",
   "adjudications",
@@ -267,7 +290,8 @@ val generatedProjectDirs = listOf(
   "casenotes",
   "csip",
   "prisonperson",
-  "contactperson",
+  "personalrelationships",
+  "organisations",
 )
 
 kotlin {

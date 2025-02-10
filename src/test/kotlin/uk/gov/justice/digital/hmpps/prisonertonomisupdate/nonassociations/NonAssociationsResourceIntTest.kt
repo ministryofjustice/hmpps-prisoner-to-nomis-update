@@ -18,6 +18,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NonAssociationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -445,6 +446,106 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
         },
         isNull(),
       )
+    }
+  }
+
+  @DisplayName("GET /non-associations/reconciliation/{prisonNumber1}/{prisonNumber2}")
+  @Nested
+  inner class GenerateReconciliationReportForPrisoner {
+    private val prisonNumber1 = "A0008BB"
+    private val prisonNumber2 = "A0008CC"
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.get().uri("/non-associations/reconciliation/$prisonNumber1/ns/$prisonNumber2")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.get().uri("/non-associations/reconciliation/$prisonNumber1/ns/$prisonNumber2")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.get().uri("/non-associations/reconciliation/$prisonNumber1/ns/$prisonNumber2")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+      @BeforeEach
+      fun setup() {
+      }
+
+      @Test
+      fun `will return no differences`() {
+        nomisApi.stubGetNonAssociationsAll(
+          prisonNumber1,
+          prisonNumber2,
+          "[ ${nonAssociationNomisJson(prisonNumber1, prisonNumber2, false)}, ${nonAssociationNomisJson(prisonNumber1, prisonNumber2)} ]",
+        )
+        nonAssociationsApiServer.stubGetNonAssociationsBetween(
+          prisonNumber1,
+          prisonNumber2,
+          "[ ${nonAssociationDpsJson("LANDING", prisonNumber1, prisonNumber2, false)}, ${nonAssociationDpsJson("LANDING", prisonNumber1, prisonNumber2)} ]",
+        )
+        webTestClient.get().uri("/non-associations/reconciliation/$prisonNumber1/ns/$prisonNumber2")
+          .headers(setAuthorisation(roles = listOf("NOMIS_NON_ASSOCIATIONS")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody().isEmpty
+
+        verifyNoInteractions(telemetryClient)
+      }
+
+      @Test
+      fun `will return mismatch with nomis`() {
+        nomisApi.stubGetNonAssociationsAll(prisonNumber1, prisonNumber2, nonAssociationNomisResponse(prisonNumber1, prisonNumber2))
+        nonAssociationsApiServer.stubGetNonAssociationsBetween(prisonNumber1, prisonNumber2, nonAssociationApiResponse("WING"))
+
+        webTestClient.get().uri("/non-associations/reconciliation/$prisonNumber1/ns/$prisonNumber2")
+          .headers(setAuthorisation(roles = listOf("NOMIS_NON_ASSOCIATIONS")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody().consumeWith(System.out::println)
+          .jsonPath("[0].id.offenderNo1").isEqualTo(prisonNumber1)
+          .jsonPath("[0].id.offenderNo2").isEqualTo(prisonNumber2)
+          .jsonPath("[0].nomisNonAssociation.type").isEqualTo("LAND")
+          .jsonPath("[0].nomisNonAssociation.createdDate").isEqualTo("2023-08-25")
+          .jsonPath("[0].nomisNonAssociation.expiryDate").isEqualTo("2053-10-26")
+          .jsonPath("[0].nomisNonAssociation.closed").isEmpty
+          .jsonPath("[0].nomisNonAssociation.roleReason").isEqualTo("VIC")
+          .jsonPath("[0].nomisNonAssociation.roleReason2").isEqualTo("PER")
+          .jsonPath("[0].nomisNonAssociation.dpsReason").isEmpty
+          .jsonPath("[0].nomisNonAssociation.comment").isEqualTo("Fight on Wing C")
+          .jsonPath("[0].dpsNonAssociation.type").isEqualTo("WING")
+          .jsonPath("[0].dpsNonAssociation.createdDate").isEqualTo("2023-08-25T10:55:04")
+          .jsonPath("[0].dpsNonAssociation.expiryDate").isEmpty
+          .jsonPath("[0].dpsNonAssociation.closed").isEqualTo(false)
+          .jsonPath("[0].dpsNonAssociation.roleReason").isEqualTo("VICTIM")
+          .jsonPath("[0].dpsNonAssociation.roleReason2").isEqualTo("PERPETRATOR")
+          .jsonPath("[0].dpsNonAssociation.dpsReason").isEqualTo("BULLYING")
+          .jsonPath("[0].dpsNonAssociation.comment").isEqualTo("Fight on Wing C")
+          .jsonPath("length()").isEqualTo(1)
+
+        verify(telemetryClient).trackEvent(
+          eq("non-associations-reports-reconciliation-mismatch"),
+          any(),
+          isNull(),
+        )
+      }
     }
   }
 
