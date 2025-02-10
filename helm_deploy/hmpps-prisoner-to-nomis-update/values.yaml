@@ -184,14 +184,14 @@ generic-service:
       HMPPS_SQS_QUEUES_PRISONPERSON_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-prisonperson-dlq:
       HMPPS_SQS_QUEUES_PRISONPERSON_DLQ_NAME: "sqs_queue_name"
-    domain-events-sqs-nomis-update-contactperson:
-      HMPPS_SQS_QUEUES_CONTACTPERSON_QUEUE_NAME: "sqs_queue_name"
-    domain-events-sqs-nomis-update-contactperson-dlq:
-      HMPPS_SQS_QUEUES_CONTACTPERSON_DLQ_NAME: "sqs_queue_name"
-    domain-events-sqs-nomis-update-corporate:
-      HMPPS_SQS_QUEUES_ORGANISATION_QUEUE_NAME: "sqs_queue_name"
-    domain-events-sqs-nomis-update-corporate-dlq:
-      HMPPS_SQS_QUEUES_ORGANISATION_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-personalrelationships:
+      HMPPS_SQS_QUEUES_PERSONALRELATIONSHIPS_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-personalrelationships-dlq:
+      HMPPS_SQS_QUEUES_PERSONALRELATIONSHIPS_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-organisations:
+      HMPPS_SQS_QUEUES_ORGANISATIONS_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-organisations-dlq:
+      HMPPS_SQS_QUEUES_ORGANISATIONS_DLQ_NAME: "sqs_queue_name"
 
   allowlist:
     groups:

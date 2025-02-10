@@ -12,7 +12,7 @@ class ContactPersonRetryQueueService(
   telemetryClient: TelemetryClient,
   objectMapper: ObjectMapper,
 ) : RetryQueueService(
-  queueId = "contactperson",
+  queueId = "personalrelationships",
   hmppsQueueService = hmppsQueueService,
   telemetryClient = telemetryClient,
   objectMapper = objectMapper,

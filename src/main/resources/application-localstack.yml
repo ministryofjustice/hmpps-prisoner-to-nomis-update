@@ -157,41 +157,41 @@ hmpps.sqs:
         { "eventType":[
           "prison-person.physical-attributes.updated"
         ]}
-    contactperson:
-      queueName: hmpps_prisoner_to_nomis_contactperson_queue
-      dlqName: hmpps_prisoner_to_nomis_contactperson_dlq
+    personalrelationships:
+      queueName: hmpps_prisoner_to_nomis_personalrelationships_queue
+      dlqName: hmpps_prisoner_to_nomis_personalrelationships_dlq
       subscribeTopicId: domainevents
       subscribeFilter: >-
         { "eventType":[
           "TBD"
         ]}
-    organisation:
-      queueName: hmpps_prisoner_to_nomis_corporate_queue
-      dlqName: hmpps_prisoner_to_nomis_corporate_dlq
+    organisations:
+      queueName: hmpps_prisoner_to_nomis_organisations_queue
+      dlqName: hmpps_prisoner_to_nomis_organisations_dlq
       subscribeTopicId: domainevents
       subscribeFilter: >-
         { "eventType":[
-          "contacts-api.organisation.created",
-          "contacts-api.organisation.updated",
-          "contacts-api.organisation.deleted",
-          "contacts-api.organisation-type.created",
-          "contacts-api.organisation-type.updated",
-          "contacts-api.organisation-type.deleted",
-          "contacts-api.organisation-address.created",
-          "contacts-api.organisation-address.updated",
-          "contacts-api.organisation-address.deleted",
-          "contacts-api.organisation-email.created",
-          "contacts-api.organisation-email.updated",
-          "contacts-api.organisation-email.deleted",
-          "contacts-api.organisation-web-address.created",
-          "contacts-api.organisation-web-address.updated",
-          "contacts-api.organisation-web-address.deleted",
-          "contacts-api.organisation-phone.created",
-          "contacts-api.organisation-phone.updated",
-          "contacts-api.organisation-phone.deleted",
-          "contacts-api.organisation-address-phone.created",
-          "contacts-api.organisation-address-phone.updated",
-          "contacts-api.organisation-address-phone.deleted"
+          "organisations-api.organisation.created",
+          "organisations-api.organisation.updated",
+          "organisations-api.organisation.deleted",
+          "organisations-api.organisation-type.created",
+          "organisations-api.organisation-type.updated",
+          "organisations-api.organisation-type.deleted",
+          "organisations-api.organisation-address.created",
+          "organisations-api.organisation-address.updated",
+          "organisations-api.organisation-address.deleted",
+          "organisations-api.organisation-email.created",
+          "organisations-api.organisation-email.updated",
+          "organisations-api.organisation-email.deleted",
+          "organisations-api.organisation-web-address.created",
+          "organisations-api.organisation-web-address.updated",
+          "organisations-api.organisation-web-address.deleted",
+          "organisations-api.organisation-phone.created",
+          "organisations-api.organisation-phone.updated",
+          "organisations-api.organisation-phone.deleted",
+          "organisations-api.organisation-address-phone.created",
+          "organisations-api.organisation-address-phone.updated",
+          "organisations-api.organisation-address-phone.deleted"
         ]}
 
   topics:
