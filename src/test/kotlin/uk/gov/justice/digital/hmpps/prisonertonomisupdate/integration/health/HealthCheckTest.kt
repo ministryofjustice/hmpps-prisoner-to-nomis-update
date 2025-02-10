@@ -46,7 +46,6 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("components.courtSentencingApi.status").isEqualTo("UP")
       .jsonPath("components.alertsApi.status").isEqualTo("UP")
       .jsonPath("components.caseNotesApi.status").isEqualTo("UP")
-      .jsonPath("components.prisonPersonApi.status").isEqualTo("UP")
       .jsonPath("components.csipApi.status").isEqualTo("UP")
       .jsonPath("components.personalRelationshipsApi.status").isEqualTo("UP")
       .jsonPath("components.organisationsApi.status").isEqualTo("UP")
