@@ -86,8 +86,9 @@ generic-prometheus-alerts:
     prisonperson:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_prisonperson_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_prisonperson_dlq"
-    contactperson:
-      - "syscon-devs-prod-hmpps_prisoner_to_nomis_contactperson_queue"
-      - "syscon-devs-prod-hmpps_prisoner_to_nomis_contactperson_dlq"
-      - "syscon-devs-prod-hmpps_prisoner_to_nomis_corporate_queue"
-      - "syscon-devs-prod-hmpps_prisoner_to_nomis_corporate_dlq"
+    personalrelationships:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_personalrelationships_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_personalrelationships_dlq"
+    organisations:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_organisations_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_organisations_dlq"

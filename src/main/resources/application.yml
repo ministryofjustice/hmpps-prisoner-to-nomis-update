@@ -183,5 +183,5 @@ hmpps.sqs:
       errorVisibilityTimeout: 5
     courtsentencing:
       errorVisibilityTimeout: 1
-    contactperson:
+    personalrelationships:
       errorVisibilityTimeout: 5

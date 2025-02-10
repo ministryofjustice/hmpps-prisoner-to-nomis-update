@@ -27,7 +27,7 @@ class ContactPersonDomainEventListener(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  @SqsListener("contactperson", factory = "hmppsQueueContainerFactoryProxy")
+  @SqsListener("personalrelationships", factory = "hmppsQueueContainerFactoryProxy")
   fun onMessage(
     rawMessage: String,
   ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
