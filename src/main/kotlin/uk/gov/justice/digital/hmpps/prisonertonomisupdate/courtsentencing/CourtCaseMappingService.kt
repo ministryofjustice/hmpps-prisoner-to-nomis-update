@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
 
 @Service
 class CourtCaseMappingService(
@@ -70,6 +71,14 @@ class CourtCaseMappingService(
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
+  suspend fun createSentenceMapping(request: SentenceMappingDto) {
+    webClient.post()
+      .uri("/mapping/court-sentencing/sentences")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntityOrThrowOnConflict()
+  }
+
   suspend fun getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId: String): CourtCaseMappingDto? = webClient.get()
     .uri("/mapping/court-sentencing/court-cases/dps-court-case-id/{dpsCourtCaseId}", dpsCourtCaseId)
     .retrieve()
@@ -102,6 +111,16 @@ class CourtCaseMappingService(
 
   suspend fun getMappingGivenCourtChargeId(dpsCourtChargeId: String): CourtChargeMappingDto = webClient.get()
     .uri("/mapping/court-sentencing/court-charges/dps-court-charge-id/{dpsCourtChargeId}", dpsCourtChargeId)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun getMappingGivenSentenceIdOrNull(dpsSentenceId: String): SentenceMappingDto? = webClient.get()
+    .uri("/mapping/court-sentencing/sentences/dps-sentence-id/{dpsSentenceId}", dpsSentenceId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
+  suspend fun getMappingGivenSentenceId(dpsSentenceId: String): SentenceMappingDto = webClient.get()
+    .uri("/mapping/court-sentencing/sentences/dps-sentence-id/{dpsSentenceId}", dpsSentenceId)
     .retrieve()
     .awaitBody()
 }

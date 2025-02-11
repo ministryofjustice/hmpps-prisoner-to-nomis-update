@@ -14,8 +14,11 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCharge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyPeriodLength
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.TestCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.UUID
 
@@ -96,7 +99,16 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     prisonerId = offenderNo,
     nomisOutcomeCode = COURT_CHARGE_1_RESULT_CODE,
   )
-  fun stubCourtAppearanceGetWithFourCharges(courtCaseId: String, courtAppearanceId: String, courtCharge1Id: String, courtCharge2Id: String, courtCharge3Id: String, courtCharge4Id: String, offenderNo: String = "A6160DZ") {
+
+  fun stubCourtAppearanceGetWithFourCharges(
+    courtCaseId: String,
+    courtAppearanceId: String,
+    courtCharge1Id: String,
+    courtCharge2Id: String,
+    courtCharge3Id: String,
+    courtCharge4Id: String,
+    offenderNo: String = "A6160DZ",
+  ) {
     val courtAppearance = LegacyCourtAppearance(
       lifetimeUuid = UUID.fromString(courtAppearanceId),
       courtCaseUuid = courtCaseId,
@@ -154,7 +166,13 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
-  fun stubCourtAppearanceGetWitOneCharge(courtCaseId: String, courtAppearanceId: String, courtCharge1Id: String, offenderNo: String = "A6160DZ") {
+
+  fun stubCourtAppearanceGetWitOneCharge(
+    courtCaseId: String,
+    courtAppearanceId: String,
+    courtCharge1Id: String,
+    offenderNo: String = "A6160DZ",
+  ) {
     val courtAppearance = LegacyCourtAppearance(
       lifetimeUuid = UUID.fromString(courtAppearanceId),
       courtCaseUuid = courtCaseId,
@@ -203,6 +221,46 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(courtCase),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubGetSentence(
+    sentenceId: String,
+    caseID: String,
+    chargeUuid: String? = UUID.randomUUID().toString(),
+    periodLengths: List<LegacyPeriodLength> = listOf(
+      LegacyPeriodLength(
+        periodYears = 2,
+        periodMonths = 6,
+        periodDays = 15,
+        sentenceTermCode = "TERM",
+      ),
+    ),
+    offenderNo: String = "A6160DZ",
+    fineAmount: BigDecimal = BigDecimal("1000.00"),
+  ) {
+    val sentence = LegacySentence(
+      prisonerId = offenderNo,
+      chargeLifetimeUuid = UUID.fromString(chargeUuid),
+      lifetimeUuid = UUID.fromString(sentenceId),
+      periodLengths = periodLengths,
+      sentenceCalcType = "CALC",
+      sentenceCategory = "CAT",
+      consecutiveToLifetimeUuid = UUID.randomUUID(),
+      chargeNumber = chargeUuid,
+      fineAmount = fineAmount,
+      legacyData = null,
+      courtCaseId = caseID,
+    )
+    stubFor(
+      get(WireMock.urlPathMatching("/legacy/sentence/$sentenceId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            objectMapper().writeValueAsString(sentence),
           )
           .withStatus(200),
       ),

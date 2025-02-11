@@ -254,6 +254,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
                   description = "Outcome text",
                   dispositionCode = "F",
                   chargeStatus = "A",
+                  conviction = true,
                 ),
                 charges = listOf(
                   nomisChargeResponse(),
@@ -518,6 +519,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
                   description = "Outcome text",
                   dispositionCode = "F",
                   chargeStatus = "A",
+                  conviction = true,
                 ),
                 charges = listOf(
                   nomisChargeResponse(),
@@ -823,6 +825,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       description = "Outcome text",
       dispositionCode = "F",
       chargeStatus = "A",
+      conviction = true,
     ),
     eventDateTime: LocalDateTime = LocalDateTime.of(2024, 1, 1, 10, 10, 0),
     nextEventDateTime: String = LocalDateTime.of(2024, 2, 1, 10, 10, 0).toString(),
@@ -865,6 +868,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
         description = "Outcome text",
         dispositionCode = "F",
         chargeStatus = "A",
+        conviction = true,
       ),
     ),
     offenceDate = offenceStartDate,
@@ -875,6 +879,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       description = "Outcome text",
       dispositionCode = "F",
       chargeStatus = "A",
+      conviction = true,
     ),
   )
 

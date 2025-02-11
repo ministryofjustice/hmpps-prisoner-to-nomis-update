@@ -170,7 +170,8 @@ hmpps.sqs:
         "court-appearance.deleted",
         "charge.inserted",
         "charge.updated",
-        "court-appearance.updated"]}
+        "court-appearance.updated",
+        "sentence.inserted"]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
     alerts:

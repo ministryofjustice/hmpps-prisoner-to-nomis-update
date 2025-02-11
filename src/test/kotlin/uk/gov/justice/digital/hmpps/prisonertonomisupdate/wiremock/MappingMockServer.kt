@@ -1637,4 +1637,52 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+
+  fun stubGetSentenceMappingGivenDpsIdWithError(id: String, status: Int = 500) {
+    stubFor(
+      get("/mapping/court-sentencing/sentences/dps-sentence-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubCreateSentence() {
+    stubFor(
+      post("/mapping/court-sentencing/sentences").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCreateSentenceWithErrorFollowedBySlowSuccess() {
+    stubFor(
+      post("/mapping/court-sentencing/sentences")
+        .inScenario("Retry Mapping Sentence Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Create Mapping Sentence Success"),
+    )
+
+    stubFor(
+      post("/mapping/court-sentencing/sentences")
+        .inScenario("Retry Mapping Sentence Scenario")
+        .whenScenarioStateIs("Create Mapping Sentence Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201)
+            .withFixedDelay(1500),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
 }

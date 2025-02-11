@@ -47,13 +47,13 @@ class CourtSentencingReconciliationService(
           date = it.appearanceDate,
           court = it.courtCode,
           outcome = it.nomisOutcomeCode,
-          nextAppearanceDate = it.nextCourtAppearance?.appearanceDate,
           id = it.lifetimeUuid.toString(),
           charges = it.charges.map {
             ChargeFields(
               offenceCode = it.offenceCode,
               offenceDate = it.offenceStartDate,
               offenceEndDate = it.offenceEndDate,
+              // TODO consider if offendercharge.resultCode1 can be reconciled with dps
               outcome = it.nomisOutcomeCode,
               id = it.lifetimeUuid.toString(),
             )
@@ -70,7 +70,6 @@ class CourtSentencingReconciliationService(
           date = LocalDateTime.parse(it.eventDateTime).toLocalDate(),
           court = it.courtId,
           outcome = it.outcomeReasonCode?.code,
-          nextAppearanceDate = it.nextEventDateTime?.let { LocalDateTime.parse(it).toLocalDate() },
           id = it.id.toString(),
           charges = it.courtEventCharges.map {
             ChargeFields(
@@ -141,16 +140,6 @@ class CourtSentencingReconciliationService(
         }
         if (dpsObj.outcome != nomisObj.outcome) {
           differences.add(Difference("$parentProperty.outcome", dpsObj.outcome, nomisObj.outcome, dpsObj.id))
-        }
-        if (dpsObj.nextAppearanceDate != nomisObj.nextAppearanceDate) {
-          differences.add(
-            Difference(
-              "$parentProperty.nextAppearanceDate",
-              dpsObj.nextAppearanceDate,
-              nomisObj.nextAppearanceDate,
-              dpsObj.id,
-            ),
-          )
         }
 
         fun sortCharges(charges: List<ChargeFields>): List<ChargeFields> = charges.sortedWith(
@@ -267,10 +256,10 @@ data class CaseFields(
 data class AppearanceFields(
   /* legal case type omitted */
   /* appearance times omitted */
+  /* next appearance time is checked on generated appearance rather than this field (which can diverge in nomis) */
   val date: LocalDate?,
   val court: String,
   val outcome: String?,
-  val nextAppearanceDate: LocalDate?,
   val id: String,
   val charges: List<ChargeFields> = emptyList(),
 ) {
@@ -279,8 +268,7 @@ data class AppearanceFields(
     other as AppearanceFields
     return date == other.date &&
       court == other.court &&
-      outcome == other.outcome &&
-      nextAppearanceDate == other.nextAppearanceDate
+      outcome == other.outcome
   }
 }
 
