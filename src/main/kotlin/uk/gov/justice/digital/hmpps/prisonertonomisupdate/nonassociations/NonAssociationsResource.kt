@@ -106,6 +106,6 @@ class NonAssociationsResource(
     @Schema(description = "Prison number aka noms id / offender id display", example = "A1234BC") @PathVariable prisonNumber1: String,
     @Schema(description = "Prison number aka noms id / offender id display", example = "A1234BC") @PathVariable prisonNumber2: String,
   ) = nonAssociationsReconciliationService.checkMatchOrThrowException(NonAssociationIdResponse(prisonNumber1, prisonNumber2)).let {
-    it.ifEmpty { null }
+    it.first.ifEmpty { null }
   }
 }
