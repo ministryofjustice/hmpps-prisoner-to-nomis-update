@@ -38,7 +38,7 @@ class NonAssociationsReconciliationServiceTest {
       listOf(dpsResponse(1L), dpsResponse(2L)),
     )
 
-    val mismatch = nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2))
+    val mismatch = nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)).first
 
     assertThat(mismatch).containsExactly(
       MismatchNonAssociation(
@@ -67,7 +67,7 @@ class NonAssociationsReconciliationServiceTest {
       listOf(dpsResponse(1L)),
     )
 
-    val mismatch = nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2))
+    val mismatch = nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)).first
 
     assertThat(mismatch).containsExactly(
       MismatchNonAssociation(
@@ -93,7 +93,7 @@ class NonAssociationsReconciliationServiceTest {
       listOf(dpsResponse(1L, "comment1")),
     )
 
-    assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)))
+    assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)).first)
       .isEmpty()
   }
 
@@ -113,7 +113,7 @@ class NonAssociationsReconciliationServiceTest {
       ),
     )
 
-    assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)))
+    assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)).first)
       .isEmpty()
   }
 
@@ -133,7 +133,7 @@ class NonAssociationsReconciliationServiceTest {
       ),
     )
 
-    assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)))
+    assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)).first)
       .containsExactly(
         MismatchNonAssociation(
           NonAssociationIdResponse(OFFENDER1, OFFENDER2),
@@ -185,7 +185,7 @@ class NonAssociationsReconciliationServiceTest {
       ),
     )
 
-    assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)))
+    assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)).first)
       .isEmpty()
   }
 
@@ -218,7 +218,7 @@ class NonAssociationsReconciliationServiceTest {
     whenCreated = "2022-01-01T10:00:00",
     whenUpdated = "2022-01-01T10:00:00",
     updatedBy = "me",
-    true,
-    false,
+    isClosed = true,
+    isOpen = false,
   )
 }

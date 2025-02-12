@@ -29,15 +29,12 @@ class NonAssociationsReconciliationService(
   private val pageSize: Long,
 ) {
 
-  var nomisTotalDetails = 0
-
   private companion object {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
+    private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
   suspend fun generateReconciliationReport(nonAssociationsCount: Long): List<List<MismatchNonAssociation>> {
     val allNomisIds = mutableSetOf<NonAssociationIdResponse>()
-    nomisTotalDetails = 0
     val results = nonAssociationsCount.asPages(pageSize).flatMap { page ->
       val nonAssociations = getNomisNonAssociationsForPage(page)
 
@@ -45,9 +42,11 @@ class NonAssociationsReconciliationService(
 
       withContext(Dispatchers.Unconfined) {
         nonAssociations.map { async { checkMatch(correctNomsIdOrder(it)) } }
-      }.awaitAll().filterNot { it.isEmpty() }
+      }.awaitAll()
     }
-    return results + listOf(checkForMissingDpsRecords(allNomisIds))
+    val mismatches = results.map { it.first }
+    val counts = results.sumOf { it.second }
+    return mismatches + listOf(checkForMissingDpsRecords(allNomisIds, counts))
   }
 
   private fun correctNomsIdOrder(id: NonAssociationIdResponse): NonAssociationIdResponse = if (id.offenderNo1 < id.offenderNo2) {
@@ -56,7 +55,7 @@ class NonAssociationsReconciliationService(
     NonAssociationIdResponse(id.offenderNo2, id.offenderNo1)
   }
 
-  internal suspend fun checkForMissingDpsRecords(allNomisIds: Set<NonAssociationIdResponse>): List<MismatchNonAssociation> {
+  internal suspend fun checkForMissingDpsRecords(allNomisIds: Set<NonAssociationIdResponse>, nomisTotalDetails: Int): List<MismatchNonAssociation> {
     val allDpsIds = nonAssociationsApiService.getAllNonAssociations(0, 1).totalElements
     if (allDpsIds.toInt() == nomisTotalDetails) {
       log.info("Total no of NAs matches: DPS=$allDpsIds, Nomis=$nomisTotalDetails")
@@ -124,7 +123,7 @@ class NonAssociationsReconciliationService(
     .getOrElse { emptyList() }
     .also { log.info("DPS Page requested: $page, with ${it.size} non-associations") }
 
-  internal suspend fun checkMatch(id: NonAssociationIdResponse): List<MismatchNonAssociation> = runCatching {
+  internal suspend fun checkMatch(id: NonAssociationIdResponse): Pair<List<MismatchNonAssociation>, Int> = runCatching {
     return checkMatchOrThrowException(id)
   }.onFailure {
     log.error("Unable to match non-associations for id: ${id.offenderNo1}, ${id.offenderNo2}", it)
@@ -135,9 +134,9 @@ class NonAssociationsReconciliationService(
         "offenderNo2" to id.offenderNo2,
       ),
     )
-  }.getOrDefault(emptyList())
+  }.getOrDefault(emptyList<MismatchNonAssociation>() to 0)
 
-  internal suspend fun checkMatchOrThrowException(id: NonAssociationIdResponse): List<MismatchNonAssociation> {
+  internal suspend fun checkMatchOrThrowException(id: NonAssociationIdResponse): Pair<List<MismatchNonAssociation>, Int> {
     val today = LocalDate.now()
 
     val (nomisListUnsorted, dpsListUnsorted) = withContext(Dispatchers.Unconfined) {
@@ -153,11 +152,9 @@ class NonAssociationsReconciliationService(
       // when dates are the same then sort by typeSequence or id which should reflect the order they were created
       .sortedWith(compareBy(NonAssociationResponse::effectiveDate, NonAssociationResponse::typeSequence))
 
-    nomisTotalDetails += nomisList.size
-
     val dpsList = dpsListUnsorted.sortedWith(compareBy(NonAssociation::whenCreated, NonAssociation::id))
 
-    return if (nomisList.size > dpsList.size) {
+    val mismatches = if (nomisList.size > dpsList.size) {
       (dpsList.size..<nomisList.size)
         .map { index ->
           MismatchNonAssociation(
@@ -256,9 +253,8 @@ class NonAssociationsReconciliationService(
           )
           mismatch
         }
-    }.also {
-      log.debug("Checking NA (onSuccess: ${id.offenderNo1}, ${id.offenderNo2}")
     }
+    return mismatches to nomisList.size
   }
 
   internal fun doesNotMatch(
