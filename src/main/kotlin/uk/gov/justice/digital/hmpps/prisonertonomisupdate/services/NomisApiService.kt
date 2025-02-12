@@ -41,6 +41,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Create
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateSentenceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateSentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DeactivateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DeleteHearingResultAwardResponses
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DeleteHearingResultResponse
@@ -715,6 +717,15 @@ class NomisApiService(
 
   suspend fun getCourtCasesByOffender(offenderNo: String): List<CourtCaseResponse> = webClient.get()
     .uri("/prisoners/{offenderNo}/sentencing/court-cases", offenderNo)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun createSentence(
+    offenderNo: String,
+    request: CreateSentenceRequest,
+  ): CreateSentenceResponse = webClient.post()
+    .uri("/prisoners/{offenderNo}/sentences", offenderNo)
+    .bodyValue(request)
     .retrieve()
     .awaitBody()
 

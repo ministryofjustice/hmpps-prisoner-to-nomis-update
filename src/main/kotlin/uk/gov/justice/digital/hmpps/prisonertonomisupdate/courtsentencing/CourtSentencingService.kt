@@ -11,17 +11,22 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCharge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyPeriodLength
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeNomisIdDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseIdentifier
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateSentenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.OffenderChargeRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentenceTermRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
@@ -29,6 +34,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
@@ -50,6 +56,7 @@ class CourtSentencingService(
     COURT_CASE("court-case"),
     COURT_APPEARANCE("court-appearance"),
     COURT_CHARGE("charge"),
+    SENTENCE("sentence"),
   }
 
   suspend fun createCourtCase(createEvent: CourtCaseCreatedEvent) {
@@ -476,13 +483,97 @@ class CourtSentencingService(
     )
   }
 
+  suspend fun createSentenceRetry(message: CreateMappingRetryMessage<SentenceMappingDto>) = courtCaseMappingService.createSentenceMapping(message.mapping).also {
+    telemetryClient.trackEvent(
+      "sentence-mapping-retry-success",
+      message.telemetryAttributes,
+      null,
+    )
+  }
+
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (baseMapping.entityName) {
       EntityType.COURT_CASE.displayName -> createRetry(message.fromJson())
       EntityType.COURT_APPEARANCE.displayName -> createAppearanceRetry(message.fromJson())
       EntityType.COURT_CHARGE.displayName -> createChargeRetry(message.fromJson())
+      EntityType.SENTENCE.displayName -> createSentenceRetry(message.fromJson())
       else -> throw IllegalArgumentException("Unknown entity type: ${baseMapping.entityName}")
+    }
+  }
+
+  // also includes adding any charges that are associated with the appearance
+  suspend fun createSentence(createEvent: SentenceCreatedEvent) {
+    val courtCaseId = createEvent.additionalInformation.courtCaseId
+    val source = createEvent.additionalInformation.source
+    val dpsSentenceId = createEvent.additionalInformation.sentenceId
+    val offenderNo: String = createEvent.personReference.identifiers.first { it.type == "NOMS" }.value
+    val telemetryMap = mutableMapOf(
+      "dpsCourtCaseId" to courtCaseId,
+      "dpsSentenceId" to dpsSentenceId,
+      "offenderNo" to offenderNo,
+    )
+    if (isDpsCreated(source)) {
+      synchronise {
+        name = EntityType.SENTENCE.displayName
+        telemetryClient = this@CourtSentencingService.telemetryClient
+        retryQueueService = courtSentencingRetryQueueService
+        eventTelemetry = telemetryMap
+
+        checkMappingDoesNotExist {
+          courtCaseMappingService.getMappingGivenSentenceIdOrNull(dpsSentenceId)
+        }
+
+        transform {
+          courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = courtCaseId)
+            ?.let { courtCaseMapping ->
+              telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
+              val dpsSentence =
+                courtSentencingApiService.getSentence(dpsSentenceId)
+                  .also { telemetryMap["dpsChargeId"] = it.chargeLifetimeUuid.toString() }
+
+              courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(dpsSentence.chargeLifetimeUuid.toString())
+                ?.let { chargeMapping ->
+
+                  val nomisSentenceResponse =
+                    nomisApiService.createSentence(
+                      offenderNo,
+                      dpsSentence.toNomisSentence(
+                        nomisCaseId = courtCaseMapping.nomisCourtCaseId,
+                        nomisChargeId = chargeMapping.nomisCourtChargeId,
+                      ),
+                    )
+                  telemetryMap["nomisSentenceSeq"] = nomisSentenceResponse.sentenceSeq.toString()
+                  telemetryMap["nomisbookingId"] = nomisSentenceResponse.bookingId.toString()
+                  telemetryMap["nomisChargeId"] = chargeMapping.nomisCourtChargeId.toString()
+
+                  SentenceMappingDto(
+                    nomisBookingId = nomisSentenceResponse.bookingId,
+                    nomisSentenceSequence = nomisSentenceResponse.sentenceSeq.toInt(),
+                    dpsSentenceId = dpsSentence.lifetimeUuid.toString(),
+                  )
+                } ?: let {
+                telemetryMap["reason"] = "Parent entity not found"
+                throw ParentEntityNotFoundRetry(
+                  "Attempt to associate a charge without a nomis charge mapping. Dps charge id: ${dpsSentence.chargeLifetimeUuid} not found for DPS Sentence $dpsSentenceId",
+                )
+              }
+            } ?: let {
+            telemetryMap["reason"] = "Parent entity not found"
+            throw ParentEntityNotFoundRetry(
+              "Attempt to create a sentence on a dps court case without a nomis mapping. Dps court case id: $courtCaseId not found for DPS sentence $dpsSentenceId",
+            )
+          }
+        }
+        saveMapping { courtCaseMappingService.createSentenceMapping(it) }
+      }
+    } else {
+      telemetryMap["reason"] = "Sentence created in NOMIS"
+      telemetryClient.trackEvent(
+        "sentence-create-ignored",
+        telemetryMap,
+        null,
+      )
     }
   }
 
@@ -554,6 +645,12 @@ class CourtSentencingService(
     val courtCaseId: String,
   )
 
+  data class SentenceAdditionalInformation(
+    val sentenceId: String,
+    val source: String,
+    val courtCaseId: String,
+  )
+
   data class CaseReferencesAdditionalInformation(
     val courtCaseId: String,
     val source: String,
@@ -576,6 +673,11 @@ class CourtSentencingService(
 
   data class CaseReferencesUpdatedEvent(
     val additionalInformation: CaseReferencesAdditionalInformation,
+    val personReference: PersonReferenceList,
+  )
+
+  data class SentenceCreatedEvent(
+    val additionalInformation: SentenceAdditionalInformation,
     val personReference: PersonReferenceList,
   )
 }
@@ -625,6 +727,44 @@ fun LegacyCharge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeReq
   offenceDate = this.offenceStartDate,
   offenceEndDate = this.offenceEndDate,
   resultCode1 = this.nomisOutcomeCode,
+)
+
+const val SENTENCE_LEVEL_IND = "IND"
+
+fun LegacySentence.toNomisSentence(
+  nomisChargeId: Long,
+  nomisCaseId: Long,
+): CreateSentenceRequest {
+  val terms: List<SentenceTermRequest> = this.periodLengths.map { it.toNomisSentenceTerm() }
+  return CreateSentenceRequest(
+    caseId = nomisCaseId,
+    offenderChargeIds = listOf(nomisChargeId),
+    // waiting for DPS to provide this
+    startDate = LocalDate.of(2024, 1, 1),
+    // waiting for DPS to provide this
+    status = "A",
+    // TODO DPS to make this mandatory
+    sentenceCategory = this.sentenceCategory!!,
+    // TODO DPS to make this mandatory
+    sentenceCalcType = this.sentenceCalcType!!,
+    sentenceLevel = SENTENCE_LEVEL_IND,
+    sentenceTerm = terms,
+    // waiting for DPS to provide this
+    endDate = LocalDate.of(2026, 1, 1),
+    fine = this.fineAmount,
+  )
+}
+
+fun LegacyPeriodLength.toNomisSentenceTerm(): SentenceTermRequest = SentenceTermRequest(
+  years = this.periodYears,
+  months = this.periodMonths,
+  days = this.periodDays,
+  // TODO DPS to make this mandatory
+  sentenceTermType = this.sentenceTermCode!!,
+  lifeSentenceFlag = this.isLifeSentence ?: false,
+  // waiting for DPS to provide this
+  startDate = LocalDate.of(2024, 1, 1),
+  endDate = LocalDate.of(2026, 1, 1),
 )
 
 private fun CourtChargeBatchUpdateMappingDto.hasAnyMappingsToUpdate(): Boolean = this.courtChargesToCreate.isNotEmpty() || this.courtChargesToDelete.isNotEmpty()

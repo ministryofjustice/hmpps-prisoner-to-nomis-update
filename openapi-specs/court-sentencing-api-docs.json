@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2025-02-06.4693.7086f5b"
+    "version": "2025-02-11.4775.e34df30"
   },
   "servers": [
     {
@@ -3110,7 +3110,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "09:17:45.099442075"
+            "example": "09:01:50.649640943"
           },
           "outcomeDispositionCode": {
             "type": "string"
@@ -3394,7 +3394,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "09:17:45.099442075"
+            "example": "09:01:50.649640943"
           },
           "courtCode": {
             "type": "string"
@@ -3566,10 +3566,14 @@
           "chargeLifetimeUuid": {
             "type": "string",
             "format": "uuid"
+          },
+          "courtCaseId": {
+            "type": "string"
           }
         },
         "required": [
           "chargeLifetimeUuid",
+          "courtCaseId",
           "lifetimeUuid",
           "prisonerId"
         ]
@@ -4060,7 +4064,7 @@
             "$ref": "#/components/schemas/FineAmount"
           },
           "legacyData": {
-            "$ref": "#/components/schemas/JsonNode"
+            "$ref": "#/components/schemas/SentenceLegacyData"
           }
         },
         "required": [
@@ -4092,7 +4096,8 @@
               "DTO",
               "FINE",
               "LEGACY",
-              "NON_CUSTODIAL"
+              "NON_CUSTODIAL",
+              "LEGACY_RECALL"
             ]
           },
           "hintText": {
@@ -4225,6 +4230,9 @@
           "prisonerId": {
             "type": "string"
           },
+          "courtCaseId": {
+            "type": "string"
+          },
           "chargeLifetimeUuid": {
             "type": "string",
             "format": "uuid"
@@ -4261,6 +4269,7 @@
         },
         "required": [
           "chargeLifetimeUuid",
+          "courtCaseId",
           "lifetimeUuid",
           "periodLengths",
           "prisonerId"
@@ -4365,7 +4374,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "09:17:45.099442075"
+            "example": "09:01:50.649640943"
           },
           "charges": {
             "type": "array",
@@ -4396,7 +4405,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "09:17:45.099442075"
+            "example": "09:01:50.649640943"
           },
           "courtId": {
             "type": "string"
@@ -4519,7 +4528,7 @@
             "$ref": "#/components/schemas/Sentence"
           },
           "legacyData": {
-            "$ref": "#/components/schemas/JsonNode"
+            "$ref": "#/components/schemas/ChargeLegacyData"
           }
         },
         "required": [
@@ -4616,7 +4625,7 @@
             "format": "date"
           },
           "legacyData": {
-            "$ref": "#/components/schemas/JsonNode"
+            "$ref": "#/components/schemas/CourtAppearanceLegacyData"
           }
         },
         "required": [
@@ -4696,7 +4705,7 @@
             }
           },
           "legacyData": {
-            "$ref": "#/components/schemas/JsonNode"
+            "$ref": "#/components/schemas/CourtCaseLegacyData"
           },
           "draftAppearances": {
             "type": "array",
@@ -4722,7 +4731,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "09:17:45.099442075"
+            "example": "09:01:50.649640943"
           },
           "courtCode": {
             "type": "string"
@@ -4818,12 +4827,12 @@
             "type": "integer",
             "format": "int32"
           },
-          "paged": {
-            "type": "boolean"
-          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
+          },
+          "paged": {
+            "type": "boolean"
           },
           "unpaged": {
             "type": "boolean"

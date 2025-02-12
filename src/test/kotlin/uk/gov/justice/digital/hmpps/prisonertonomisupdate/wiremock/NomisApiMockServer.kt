@@ -2309,6 +2309,17 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubSentenceCreate(offenderNo: String, response: String) {
+    stubFor(
+      post("/prisoners/$offenderNo/sentences").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(201),
+      ),
+    )
+  }
+
   fun stuGetAllLatestBookings(
     response: BookingIdsWithLast = BookingIdsWithLast(
       lastBookingId = 0,
