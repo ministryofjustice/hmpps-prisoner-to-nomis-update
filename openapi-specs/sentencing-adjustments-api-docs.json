@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2025-01-29.4645.a9a6553"
+    "version": "2025-02-13.4755.b27a9b2"
   },
   "servers": [
     {
@@ -1121,7 +1121,8 @@
               "RX",
               "S240A",
               "UR",
-              "TCA"
+              "TCA",
+              "TSA"
             ]
           },
           "adjustmentDate": {
@@ -1217,7 +1218,8 @@
               "RESTORATION_OF_ADDITIONAL_DAYS_AWARDED",
               "SPECIAL_REMISSION",
               "UNUSED_DEDUCTIONS",
-              "CUSTODY_ABROAD"
+              "CUSTODY_ABROAD",
+              "APPEAL_APPLICANT"
             ]
           },
           "toDate": {
@@ -1255,6 +1257,9 @@
           },
           "timeSpentInCustodyAbroad": {
             "$ref": "#/components/schemas/TimeSpentInCustodyAbroadDto"
+          },
+          "timeSpentAsAnAppealApplicant": {
+            "$ref": "#/components/schemas/TimeSpentAsAnAppealApplicantDto"
           },
           "sentenceSequence": {
             "type": "integer",
@@ -1397,7 +1402,32 @@
         },
         "description": "The details of the tagged bail adjustment"
       },
+      "TimeSpentAsAnAppealApplicantDto": {
+        "required": [
+          "chargeIds"
+        ],
+        "type": "object",
+        "properties": {
+          "courtOfAppealReferenceNumber": {
+            "type": "string",
+            "description": "The court of appeal reference number for the time spent as an appeal applicant adjustment"
+          },
+          "chargeIds": {
+            "type": "array",
+            "description": "The id of the charges for this time spent as an appeal applicant",
+            "items": {
+              "type": "integer",
+              "description": "The id of the charges for this time spent as an appeal applicant",
+              "format": "int64"
+            }
+          }
+        },
+        "description": "The details of the time spent as an appeal applicant adjustment"
+      },
       "TimeSpentInCustodyAbroadDto": {
+        "required": [
+          "chargeIds"
+        ],
         "type": "object",
         "properties": {
           "documentationSource": {
@@ -1407,6 +1437,15 @@
               "COURT_WARRANT",
               "PPCS_LETTER"
             ]
+          },
+          "chargeIds": {
+            "type": "array",
+            "description": "The id of the charges for this time spent in custody abroad adjustment",
+            "items": {
+              "type": "integer",
+              "description": "The id of the charges for this time spent in custody abroad adjustment",
+              "format": "int64"
+            }
           }
         },
         "description": "The details of the time spent in custody abroad adjustment"
@@ -1514,7 +1553,10 @@
               "LAL_LAST_DATE_CANNOT_BE_FUTURE",
               "LAL_DATE_MUST_BE_AFTER_SENTENCE_DATE",
               "SREM_TYPE_NOT_NULL",
-              "TSICA_DOCUMENTATION_SOURCE_NOT_NULL"
+              "TCA_DOCUMENTATION_SOURCE_NOT_NULL",
+              "TSA_COURT_OF_APPEAL_REFERENCE_NOT_NULL",
+              "TSA_COURT_OF_APPEAL_REFERENCE_WRONG_LENGTH",
+              "TSA_COURT_OF_APPEAL_REFERENCE_INVALID_CHARACTERS"
             ]
           },
           "arguments": {
