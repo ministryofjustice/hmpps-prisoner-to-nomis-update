@@ -746,6 +746,15 @@ class NomisApiService(
     .retrieve()
     .awaitBodilessEntity()
 
+  suspend fun deleteSentence(
+    offenderNo: String,
+    sentenceSeq: Int,
+    caseId: Long,
+  ) = webClient.delete()
+    .uri("/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSeq}", offenderNo, caseId, sentenceSeq)
+    .retrieve()
+    .awaitBodilessEntity()
+
   suspend fun mergesSinceDate(offenderNo: String, fromDate: LocalDate): List<MergeDetail> = webClient.get()
     .uri("/prisoners/{offenderNo}/merges?fromDate={fromDate}", offenderNo, fromDate)
     .retrieve()

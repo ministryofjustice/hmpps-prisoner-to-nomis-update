@@ -2336,6 +2336,16 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubSentenceDelete(offenderNo: String, caseId: Long, sentenceSeq: Long) {
+    stubFor(
+      delete("/prisoners/$offenderNo/court-cases/$caseId/sentences/$sentenceSeq").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
+
   fun stuGetAllLatestBookings(
     response: BookingIdsWithLast = BookingIdsWithLast(
       lastBookingId = 0,

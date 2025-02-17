@@ -123,4 +123,14 @@ class CourtCaseMappingService(
     .uri("/mapping/court-sentencing/sentences/dps-sentence-id/{dpsSentenceId}", dpsSentenceId)
     .retrieve()
     .awaitBody()
+
+  suspend fun deleteSentenceMappingByDpsId(dpsSentenceId: String) {
+    webClient.delete()
+      .uri(
+        "/mapping/court-sentencing/sentences/dps-sentence-id/{dpsSentenceId}",
+        dpsSentenceId,
+      )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 }
