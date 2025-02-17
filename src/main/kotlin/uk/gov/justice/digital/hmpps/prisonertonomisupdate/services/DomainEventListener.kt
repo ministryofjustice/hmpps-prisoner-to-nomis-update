@@ -101,6 +101,21 @@ data class MergeAdditionalInformation(
   val removedNomsNumber: String,
 )
 
+data class BookingMovedEvent(
+  val eventType: String,
+  val occurredAt: String,
+  val version: String,
+  val description: String,
+  val additionalInformation: BookingMovedAdditionalInformation,
+)
+
+data class BookingMovedAdditionalInformation(
+  val bookingId: String,
+  val movedFromNomsNumber: String,
+  val movedToNomsNumber: String,
+  val bookingStartDateTime: String,
+)
+
 data class PersonReferenceList(
   val identifiers: List<PersonReference>,
 )

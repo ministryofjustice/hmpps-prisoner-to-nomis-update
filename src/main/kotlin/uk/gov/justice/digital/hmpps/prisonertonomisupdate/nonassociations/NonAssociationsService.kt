@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.model.LegacyNonAssociation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.BookingMovedEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
@@ -145,6 +146,39 @@ class NonAssociationsService(
         ),
       )
     }
+  }
+
+  suspend fun processBookingMoved(event: BookingMovedEvent) {
+    val (bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime) = event.additionalInformation
+
+    val nonAssociationsByBooking = nomisApiService.getNonAssociationsByBooking(bookingId.toLong())
+
+    nonAssociationsByBooking
+      .takeIf(List<*>::isNotEmpty)
+      ?.apply {
+        mappingService.updateList(
+          movedFromNomsNumber,
+          movedToNomsNumber,
+          map {
+            if (movedToNomsNumber == it.offenderNo1) {
+              it.offenderNo2
+            } else {
+              it.offenderNo1
+            }
+          },
+        )
+      }
+
+    telemetryClient.trackEvent(
+      "non-association-booking-moved-success",
+      mapOf(
+        "movedFromNomsNumber" to movedFromNomsNumber,
+        "movedToNomsNumber" to movedToNomsNumber,
+        "bookingId" to bookingId,
+        "bookingStartDateTime" to bookingStartDateTime,
+        "count" to nonAssociationsByBooking.size.toString(),
+      ),
+    )
   }
 
   private fun toCreateNonAssociationRequest(instance: LegacyNonAssociation) = CreateNonAssociationRequest(

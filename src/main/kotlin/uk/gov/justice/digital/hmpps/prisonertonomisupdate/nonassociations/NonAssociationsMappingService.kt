@@ -45,6 +45,14 @@ class NonAssociationMappingService(
       .retrieve()
       .awaitBodilessEntity()
   }
+
+  suspend fun updateList(oldOffenderNo: String, newOffenderNo: String, list: List<String>) {
+    webClient.put()
+      .uri("/mapping/non-associations/update-list/from/{oldOffenderNo}/to/{newOffenderNo}", oldOffenderNo, newOffenderNo)
+      .bodyValue(list)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 }
 
 data class NonAssociationMappingDto(
