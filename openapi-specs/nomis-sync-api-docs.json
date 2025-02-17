@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2025-02-14.11349.cc225da"
+    "version": "2025-02-17.11356.4ccc65b"
   },
   "servers": [
     {
@@ -1128,6 +1128,96 @@
       }
     },
     "/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sequence}": {
+      "get": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "get sentences for an offender using the given case.booking id and sentence sequence",
+        "description": "Requires role NOMIS_SENTENCING. Retrieves a court case by id",
+        "operationId": "getOffenderSentence",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender no",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender no",
+              "example": "AA668EC"
+            },
+            "example": "AA668EC"
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "description": "Case Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Case Id",
+              "example": 4565456
+            },
+            "example": 4565456
+          },
+          {
+            "name": "sequence",
+            "in": "path",
+            "description": "Sentence sequence",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Sentence sequence",
+              "example": 1
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the sentence details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentenceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offender booking not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
       "put": {
         "tags": [
           "sentencing-resource"
@@ -1221,6 +1311,79 @@
           },
           "404": {
             "description": "Sentence does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "deletes a specific sentence",
+        "description": "Requires role NOMIS_SENTENCING. Deletes a sentence by case.booking and sentence sequence",
+        "operationId": "deleteSentence",
+        "parameters": [
+          {
+            "name": "offenderNo",
+            "in": "path",
+            "description": "Offender no",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender no",
+              "example": "AA668EC"
+            },
+            "example": "AA668EC"
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "description": "Case Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Case Id",
+              "example": 4565456
+            },
+            "example": 4565456
+          },
+          {
+            "name": "sequence",
+            "in": "path",
+            "description": "Sentence sequence",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Sentence sequence",
+              "example": 1
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "the sentence has been deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
             "content": {
               "application/json": {
                 "schema": {
@@ -13062,147 +13225,6 @@
         }
       }
     },
-    "/prisoners/booking-id/{bookingId}/sentencing/sentence-sequence/{sequence}": {
-      "get": {
-        "tags": [
-          "sentencing-resource"
-        ],
-        "summary": "get sentences for an offender using the given booking id and sentence sequence",
-        "description": "Requires role NOMIS_SENTENCING. Retrieves a court case by id",
-        "operationId": "getOffenderSentence",
-        "parameters": [
-          {
-            "name": "sequence",
-            "in": "path",
-            "description": "Sentence sequence",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64",
-              "description": "Sentence sequence",
-              "example": 1
-            },
-            "example": 1
-          },
-          {
-            "name": "bookingId",
-            "in": "path",
-            "description": "Offender Booking Id",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64",
-              "description": "Offender Booking Id",
-              "example": 12345
-            },
-            "example": 12345
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "the sentence details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SentenceResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Offender booking not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "sentencing-resource"
-        ],
-        "summary": "deletes a specific sentence",
-        "description": "Requires role NOMIS_SENTENCING. Deletes a sentence by booking and sentence sequence",
-        "operationId": "deleteSentence",
-        "parameters": [
-          {
-            "name": "sequence",
-            "in": "path",
-            "description": "Sentence sequence",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64",
-              "description": "Sentence sequence",
-              "example": 1
-            },
-            "example": 1
-          },
-          {
-            "name": "bookingId",
-            "in": "path",
-            "description": "Offender Booking Id",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64",
-              "description": "Offender Booking Id",
-              "example": 12345
-            },
-            "example": 12345
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "the sentence has been deleted"
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/prisoners/booking-id/{bookingId}/sentencing/court-cases": {
       "get": {
         "tags": [
@@ -23636,6 +23658,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -23652,12 +23680,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -24153,6 +24175,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -24169,12 +24197,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -25775,373 +25797,6 @@
           }
         }
       },
-      "CaseNoteAmendment": {
-        "type": "object",
-        "properties": {
-          "text": {
-            "type": "string",
-            "description": "Free format text body of amendment"
-          },
-          "authorUsername": {
-            "type": "string",
-            "description": "Author login name of person or department that added the amendment"
-          },
-          "authorStaffId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Author STAFF_ID"
-          },
-          "authorFirstName": {
-            "type": "string",
-            "description": "Author first name"
-          },
-          "authorLastName": {
-            "type": "string",
-            "description": "Author last name"
-          },
-          "createdDateTime": {
-            "type": "string",
-            "description": "Amendment created timestamp",
-            "example": "2021-07-05T10:35:17",
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          },
-          "sourceSystem": {
-            "type": "string",
-            "description": "Which system (Nomis or DPS) created the amendment",
-            "enum": [
-              "DPS",
-              "NOMIS"
-            ],
-            "example": "DPS"
-          }
-        },
-        "required": [
-          "authorUsername",
-          "createdDateTime",
-          "sourceSystem",
-          "text"
-        ]
-      },
-      "CaseNoteResponse": {
-        "type": "object",
-        "description": "The data held in NOMIS about a case note associated with a prisoner",
-        "properties": {
-          "caseNoteId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "The primary key"
-          },
-          "bookingId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "The prisoner's bookingId related to this case note"
-          },
-          "caseNoteType": {
-            "$ref": "#/components/schemas/CodeDescription",
-            "description": "The case note type"
-          },
-          "caseNoteSubType": {
-            "$ref": "#/components/schemas/CodeDescription",
-            "description": "The case note subtype"
-          },
-          "noteSourceCode": {
-            "type": "string",
-            "description": "Whether system-generated",
-            "enum": [
-              "AUTO",
-              "EXT",
-              "INST"
-            ]
-          },
-          "occurrenceDateTime": {
-            "type": "string",
-            "description": "Datetime case note occurred",
-            "example": "2021-07-05T10:35:17",
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          },
-          "creationDateTime": {
-            "type": "string",
-            "description": "Datetime case note was created by user",
-            "example": "2021-07-05T10:35:17",
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          },
-          "authorStaffId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Author STAFF_ID"
-          },
-          "authorUsername": {
-            "type": "string",
-            "description": "Author username or login name"
-          },
-          "authorFirstName": {
-            "type": "string",
-            "description": "Author first name"
-          },
-          "authorLastName": {
-            "type": "string",
-            "description": "Author last name"
-          },
-          "authorUsernames": {
-            "type": "array",
-            "description": "List of all usernames for authorStaffId",
-            "items": {
-              "type": "string"
-            }
-          },
-          "prisonId": {
-            "type": "string",
-            "description": "Prison id"
-          },
-          "caseNoteText": {
-            "type": "string",
-            "description": "Free format text body of case note"
-          },
-          "amendments": {
-            "type": "array",
-            "description": "Amendments to the text",
-            "items": {
-              "$ref": "#/components/schemas/CaseNoteAmendment"
-            }
-          },
-          "createdDatetime": {
-            "type": "string",
-            "description": "Created DB timestamp",
-            "example": "2021-07-05T10:35:17",
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          },
-          "createdUsername": {
-            "type": "string",
-            "description": "Created DB username"
-          },
-          "auditModuleName": {
-            "type": "string",
-            "description": "Which screen (or DPS) created the case note",
-            "example": "OIDABCDE"
-          },
-          "sourceSystem": {
-            "type": "string",
-            "description": "Which system (Nomis or DPS) created the case note",
-            "enum": [
-              "DPS",
-              "NOMIS"
-            ],
-            "example": "DPS"
-          }
-        },
-        "required": [
-          "amendments",
-          "authorLastName",
-          "authorStaffId",
-          "authorUsername",
-          "bookingId",
-          "caseNoteId",
-          "caseNoteSubType",
-          "caseNoteText",
-          "caseNoteType",
-          "createdDatetime",
-          "createdUsername",
-          "sourceSystem"
-        ]
-      },
-      "PrisonerCaseNotesResponse": {
-        "type": "object",
-        "description": "The list of case notes held against a booking",
-        "properties": {
-          "caseNotes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CaseNoteResponse"
-            }
-          }
-        },
-        "required": [
-          "caseNotes"
-        ]
-      },
-      "PreviousBookingId": {
-        "type": "object",
-        "description": "ID of previous booking",
-        "properties": {
-          "bookingId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "The NOMIS booking ID",
-            "example": 1234567
-          },
-          "bookingSequence": {
-            "type": "integer",
-            "format": "int64",
-            "description": "The NOMIS booking sequence",
-            "example": 3
-          }
-        },
-        "required": [
-          "bookingId",
-          "bookingSequence"
-        ]
-      },
-      "PrisonerAlertsResponse": {
-        "type": "object",
-        "description": "The list of unique alerts held against a prisoner",
-        "properties": {
-          "latestBookingAlerts": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AlertResponse"
-            }
-          }
-        },
-        "required": [
-          "latestBookingAlerts"
-        ]
-      },
-      "PagePrisonerIds": {
-        "type": "object",
-        "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "size": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "content": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PrisonerIds"
-            }
-          },
-          "number": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
-          "empty": {
-            "type": "boolean"
-          }
-        }
-      },
-      "PrisonerIds": {
-        "type": "object",
-        "description": "Prisoner identifiers",
-        "properties": {
-          "bookingId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Latest booking id",
-            "example": 12345
-          },
-          "offenderNo": {
-            "type": "string",
-            "description": "The NOMIS reference AKA prisoner number",
-            "example": "A1234AA"
-          }
-        },
-        "required": [
-          "bookingId",
-          "offenderNo"
-        ]
-      },
-      "PagePrisonerId": {
-        "type": "object",
-        "properties": {
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "size": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "content": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PrisonerId"
-            }
-          },
-          "number": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
-          "empty": {
-            "type": "boolean"
-          }
-        }
-      },
-      "PrisonerId": {
-        "type": "object",
-        "description": "Prisoner identifier",
-        "properties": {
-          "offenderNo": {
-            "type": "string",
-            "description": "The NOMIS reference AKA prisoner number",
-            "example": "A1234AA"
-          }
-        },
-        "required": [
-          "offenderNo"
-        ]
-      },
-      "PrisonerNosWithLast": {
-        "type": "object",
-        "properties": {
-          "prisonerIds": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PrisonerId"
-            }
-          },
-          "lastOffenderId": {
-            "type": "integer",
-            "format": "int64"
-          }
-        },
-        "required": [
-          "lastOffenderId",
-          "prisonerIds"
-        ]
-      },
       "SentenceResponse": {
         "type": "object",
         "description": "Offender Sentence",
@@ -26398,6 +26053,373 @@
         "required": [
           "startDate",
           "termSequence"
+        ]
+      },
+      "CaseNoteAmendment": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Free format text body of amendment"
+          },
+          "authorUsername": {
+            "type": "string",
+            "description": "Author login name of person or department that added the amendment"
+          },
+          "authorStaffId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Author STAFF_ID"
+          },
+          "authorFirstName": {
+            "type": "string",
+            "description": "Author first name"
+          },
+          "authorLastName": {
+            "type": "string",
+            "description": "Author last name"
+          },
+          "createdDateTime": {
+            "type": "string",
+            "description": "Amendment created timestamp",
+            "example": "2021-07-05T10:35:17",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "sourceSystem": {
+            "type": "string",
+            "description": "Which system (Nomis or DPS) created the amendment",
+            "enum": [
+              "DPS",
+              "NOMIS"
+            ],
+            "example": "DPS"
+          }
+        },
+        "required": [
+          "authorUsername",
+          "createdDateTime",
+          "sourceSystem",
+          "text"
+        ]
+      },
+      "CaseNoteResponse": {
+        "type": "object",
+        "description": "The data held in NOMIS about a case note associated with a prisoner",
+        "properties": {
+          "caseNoteId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The primary key"
+          },
+          "bookingId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The prisoner's bookingId related to this case note"
+          },
+          "caseNoteType": {
+            "$ref": "#/components/schemas/CodeDescription",
+            "description": "The case note type"
+          },
+          "caseNoteSubType": {
+            "$ref": "#/components/schemas/CodeDescription",
+            "description": "The case note subtype"
+          },
+          "noteSourceCode": {
+            "type": "string",
+            "description": "Whether system-generated",
+            "enum": [
+              "AUTO",
+              "EXT",
+              "INST"
+            ]
+          },
+          "occurrenceDateTime": {
+            "type": "string",
+            "description": "Datetime case note occurred",
+            "example": "2021-07-05T10:35:17",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "creationDateTime": {
+            "type": "string",
+            "description": "Datetime case note was created by user",
+            "example": "2021-07-05T10:35:17",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "authorStaffId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Author STAFF_ID"
+          },
+          "authorUsername": {
+            "type": "string",
+            "description": "Author username or login name"
+          },
+          "authorFirstName": {
+            "type": "string",
+            "description": "Author first name"
+          },
+          "authorLastName": {
+            "type": "string",
+            "description": "Author last name"
+          },
+          "authorUsernames": {
+            "type": "array",
+            "description": "List of all usernames for authorStaffId",
+            "items": {
+              "type": "string"
+            }
+          },
+          "prisonId": {
+            "type": "string",
+            "description": "Prison id"
+          },
+          "caseNoteText": {
+            "type": "string",
+            "description": "Free format text body of case note"
+          },
+          "amendments": {
+            "type": "array",
+            "description": "Amendments to the text",
+            "items": {
+              "$ref": "#/components/schemas/CaseNoteAmendment"
+            }
+          },
+          "createdDatetime": {
+            "type": "string",
+            "description": "Created DB timestamp",
+            "example": "2021-07-05T10:35:17",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "createdUsername": {
+            "type": "string",
+            "description": "Created DB username"
+          },
+          "auditModuleName": {
+            "type": "string",
+            "description": "Which screen (or DPS) created the case note",
+            "example": "OIDABCDE"
+          },
+          "sourceSystem": {
+            "type": "string",
+            "description": "Which system (Nomis or DPS) created the case note",
+            "enum": [
+              "DPS",
+              "NOMIS"
+            ],
+            "example": "DPS"
+          }
+        },
+        "required": [
+          "amendments",
+          "authorLastName",
+          "authorStaffId",
+          "authorUsername",
+          "bookingId",
+          "caseNoteId",
+          "caseNoteSubType",
+          "caseNoteText",
+          "caseNoteType",
+          "createdDatetime",
+          "createdUsername",
+          "sourceSystem"
+        ]
+      },
+      "PrisonerCaseNotesResponse": {
+        "type": "object",
+        "description": "The list of case notes held against a booking",
+        "properties": {
+          "caseNotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CaseNoteResponse"
+            }
+          }
+        },
+        "required": [
+          "caseNotes"
+        ]
+      },
+      "PreviousBookingId": {
+        "type": "object",
+        "description": "ID of previous booking",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The NOMIS booking ID",
+            "example": 1234567
+          },
+          "bookingSequence": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The NOMIS booking sequence",
+            "example": 3
+          }
+        },
+        "required": [
+          "bookingId",
+          "bookingSequence"
+        ]
+      },
+      "PrisonerAlertsResponse": {
+        "type": "object",
+        "description": "The list of unique alerts held against a prisoner",
+        "properties": {
+          "latestBookingAlerts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlertResponse"
+            }
+          }
+        },
+        "required": [
+          "latestBookingAlerts"
+        ]
+      },
+      "PagePrisonerIds": {
+        "type": "object",
+        "properties": {
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrisonerIds"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PrisonerIds": {
+        "type": "object",
+        "description": "Prisoner identifiers",
+        "properties": {
+          "bookingId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Latest booking id",
+            "example": 12345
+          },
+          "offenderNo": {
+            "type": "string",
+            "description": "The NOMIS reference AKA prisoner number",
+            "example": "A1234AA"
+          }
+        },
+        "required": [
+          "bookingId",
+          "offenderNo"
+        ]
+      },
+      "PagePrisonerId": {
+        "type": "object",
+        "properties": {
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrisonerId"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PrisonerId": {
+        "type": "object",
+        "description": "Prisoner identifier",
+        "properties": {
+          "offenderNo": {
+            "type": "string",
+            "description": "The NOMIS reference AKA prisoner number",
+            "example": "A1234AA"
+          }
+        },
+        "required": [
+          "offenderNo"
+        ]
+      },
+      "PrisonerNosWithLast": {
+        "type": "object",
+        "properties": {
+          "prisonerIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrisonerId"
+            }
+          },
+          "lastOffenderId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "lastOffenderId",
+          "prisonerIds"
         ]
       },
       "KeyDateAdjustmentResponse": {
@@ -27130,6 +27152,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -27146,12 +27174,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -27283,6 +27305,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -27299,12 +27327,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -27538,6 +27560,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -27554,12 +27582,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -28140,6 +28162,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -28156,12 +28184,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -28261,6 +28283,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -28277,12 +28305,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -28498,6 +28520,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -28514,12 +28542,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -28558,6 +28580,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -28574,12 +28602,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -28899,6 +28921,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -28915,12 +28943,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -29873,6 +29895,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -29889,12 +29917,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -30212,6 +30234,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -30228,12 +30256,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -30277,6 +30299,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -30293,12 +30321,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -30348,6 +30370,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -30364,12 +30392,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -30679,6 +30701,12 @@
             "type": "integer",
             "format": "int32"
           },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -30695,12 +30723,6 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",

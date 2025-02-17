@@ -1835,6 +1835,88 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  inner class DeleteSentence {
+    @Nested
+    inner class WhenSentenceHasBeenDeletedInDPS {
+      @BeforeEach
+      fun setUp() {
+        NomisApiExtension.nomisApi.stubSentenceDelete(
+          offenderNo = OFFENDER_NO,
+          caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+          sentenceSeq = NOMIS_SENTENCE_SEQ,
+        )
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+        MappingExtension.mappingServer.stubGetSentenceMappingGivenDpsId(
+          id = DPS_SENTENCE_ID,
+          nomisSentenceSequence = NOMIS_SENTENCE_SEQ,
+          nomisBookingId = NOMIS_BOOKING_ID,
+        )
+        MappingExtension.mappingServer.stubDeleteSentence(id = DPS_SENTENCE_ID)
+        publishDeleteSentenceDomainEvent()
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          org.mockito.kotlin.eq("sentence-deleted-success"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            Assertions.assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+            Assertions.assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to delete the sentence`() {
+        waitForAnyProcessingToComplete()
+        NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences/$NOMIS_SENTENCE_SEQ")))
+      }
+
+      @Test
+      fun `will call the mapping service to delete the mapping`() {
+        waitForAnyProcessingToComplete()
+        MappingExtension.mappingServer.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/mapping/court-sentencing/sentences/dps-sentence-id/$DPS_SENTENCE_ID")))
+      }
+    }
+
+    @Nested
+    inner class WhenNoMappingExistsForSentence {
+
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetSentenceMappingGivenDpsIdWithError(DPS_SENTENCE_ID, 404)
+        publishDeleteSentenceDomainEvent()
+      }
+
+      @Test
+      fun `will not attempt to delete a sentence in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(1)).trackEvent(
+            org.mockito.kotlin.eq("sentence-deleted-skipped"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            },
+            isNull(),
+          )
+        }
+
+        NomisApiExtension.nomisApi.verify(
+          0,
+          WireMock.deleteRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+  }
+
+  @Nested
   inner class RefreshCaseReferences {
     @Nested
     inner class WhenCourtAppearanceHasBeenUpdatedInDPS {
@@ -2117,6 +2199,28 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
   private fun publishUpdateSentenceDomainEvent(source: String = "DPS") {
     val eventType = "sentence.updated"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(
+          sentenceMessagePayload(
+            sentenceId = DPS_SENTENCE_ID,
+            courtCaseId = COURT_CASE_ID_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            eventType = eventType,
+            source = source,
+          ),
+        )
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishDeleteSentenceDomainEvent(source: String = "DPS") {
+    val eventType = "sentence.deleted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(

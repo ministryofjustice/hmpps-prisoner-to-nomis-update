@@ -1683,6 +1683,16 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubDeleteSentence(id: String) {
+    stubFor(
+      delete("/mapping/court-sentencing/sentences/dps-sentence-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
+
   fun stubCreateSentenceWithErrorFollowedBySlowSuccess() {
     stubFor(
       post("/mapping/court-sentencing/sentences")

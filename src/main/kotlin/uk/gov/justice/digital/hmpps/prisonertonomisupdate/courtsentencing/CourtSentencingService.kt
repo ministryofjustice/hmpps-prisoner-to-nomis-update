@@ -113,7 +113,7 @@ class CourtSentencingService(
     val offenderNo: String = createEvent.personReference.identifiers.first { it.type == "NOMS" }.value
     val telemetryMap = mutableMapOf(
       "dpsCourtCaseId" to courtCaseId,
-      "dpsCourtAppearanceId" to courtAppearanceId,
+      "dpsSentenceId" to courtAppearanceId,
       "offenderNo" to offenderNo,
     )
     if (isDpsCreated(source)) {
@@ -257,6 +257,16 @@ class CourtSentencingService(
       mapOf("dpsCourtAppearanceId" to dpsAppearanceId),
     )
     log.warn("Unable to delete mapping for Court Appearance $dpsAppearanceId. Please delete manually", e)
+  }
+
+  private suspend fun tryToDeleteSentenceMapping(offenderNo: String, dpsSentenceId: String) = kotlin.runCatching {
+    courtCaseMappingService.deleteSentenceMappingByDpsId(dpsSentenceId)
+  }.onFailure { e ->
+    telemetryClient.trackEvent(
+      "sentence-mapping-deleted-failed",
+      mapOf("dpsSentenceId" to dpsSentenceId, "offenderNo" to offenderNo),
+    )
+    log.warn("Unable to delete mapping for Sentence $dpsSentenceId for offender $offenderNo. Please delete manually", e)
   }
 
   suspend fun createCharge(createEvent: CourtChargeCreatedEvent) {
@@ -627,6 +637,44 @@ class CourtSentencingService(
     } else {
       telemetryMap["reason"] = "Sentence updated in NOMIS"
       telemetryClient.trackEvent("sentence-updated-ignored", telemetryMap, null)
+    }
+  }
+
+  suspend fun deleteSentence(createdEvent: SentenceCreatedEvent) {
+    val dpsSentenceId = createdEvent.additionalInformation.sentenceId
+    val dpsCaseId = createdEvent.additionalInformation.courtCaseId
+    val offenderNo = createdEvent.personReference.identifiers.first { it.type == "NOMS" }.value
+    val telemetryMap = mutableMapOf(
+      "dpsCourtCaseId" to dpsCaseId,
+      "dpsSentenceId" to dpsSentenceId,
+      "offenderNo" to offenderNo,
+    )
+    if (isDpsCreated(createdEvent.additionalInformation.source)) {
+      runCatching {
+        courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCaseId)?.also { mapping ->
+          telemetryMap["nomisCourtCaseId"] = mapping.nomisCourtCaseId.toString()
+          courtCaseMappingService.getMappingGivenSentenceIdOrNull(dpsSentenceId)?.also { sentenceMapping ->
+            telemetryMap["nomisSentenceSeq"] = sentenceMapping.nomisSentenceSequence.toString()
+            telemetryMap["nomisBookingId"] = sentenceMapping.nomisBookingId.toString()
+            nomisApiService.deleteSentence(
+              offenderNo = offenderNo,
+              caseId = mapping.nomisCourtCaseId,
+              sentenceSeq = sentenceMapping.nomisSentenceSequence,
+            )
+            tryToDeleteSentenceMapping(offenderNo, dpsSentenceId)
+            telemetryClient.trackEvent("sentence-deleted-success", telemetryMap)
+          } ?: also {
+            telemetryClient.trackEvent("sentence-deleted-skipped", telemetryMap)
+          }
+        } ?: also {
+          telemetryClient.trackEvent("sentence-deleted-skipped", telemetryMap)
+        }
+      }.onFailure { e ->
+        telemetryClient.trackEvent("sentence-deleted-failed", telemetryMap)
+        throw e
+      }
+    } else {
+      telemetryClient.trackEvent("sentence-deleted-ignored", telemetryMap)
     }
   }
 
