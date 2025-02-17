@@ -25,8 +25,8 @@ import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NonAssociationsApiExtension.Companion.nonAssociationsApiServer
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
@@ -74,9 +74,9 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         nonAssociationsApiServer.stubGetNonAssociation(NON_ASSOCIATION_ID, nonAssociationApiResponse)
-        NomisApiExtension.nomisApi.stubNonAssociationCreate("""{ "typeSequence": 1 }""")
-        MappingExtension.mappingServer.stubGetMappingGivenNonAssociationIdWithError(NON_ASSOCIATION_ID, 404)
-        MappingExtension.mappingServer.stubCreateNonAssociation()
+        nomisApi.stubNonAssociationCreate("""{ "typeSequence": 1 }""")
+        mappingServer.stubGetMappingGivenNonAssociationIdWithError(NON_ASSOCIATION_ID, 404)
+        mappingServer.stubCreateNonAssociation()
         publishNonAssociationDomainEvent("non-associations.created")
       }
 
@@ -108,7 +108,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to create the non-association`() {
         waitForCreateProcessingToBeComplete()
 
-        NomisApiExtension.nomisApi.verify(postRequestedFor(urlEqualTo("/non-associations")))
+        nomisApi.verify(postRequestedFor(urlEqualTo("/non-associations")))
       }
 
       @Test
@@ -116,7 +116,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         waitForCreateProcessingToBeComplete()
 
         await untilAsserted {
-          MappingExtension.mappingServer.verify(
+          mappingServer.verify(
             postRequestedFor(urlEqualTo("/mapping/non-associations"))
               .withRequestBody(matchingJsonPath("nonAssociationId", equalTo(NON_ASSOCIATION_ID.toString())))
               .withRequestBody(matchingJsonPath("firstOffenderNo", equalTo(OFFENDER_NO_1)))
@@ -133,7 +133,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
+        mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
         publishNonAssociationDomainEvent("non-associations.created")
       }
 
@@ -149,7 +149,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
           isNull(),
         )
 
-        NomisApiExtension.nomisApi.verify(
+        nomisApi.verify(
           0,
           postRequestedFor(urlEqualTo("/non-associations")),
         )
@@ -160,14 +160,14 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenMappingServiceFailsOnce {
       @BeforeEach
       fun setUp() {
-        MappingExtension.mappingServer.stubGetMappingGivenNonAssociationIdWithError(NON_ASSOCIATION_ID, 404)
-        MappingExtension.mappingServer.stubCreateNonAssociationWithErrorFollowedBySlowSuccess()
-        NomisApiExtension.nomisApi.stubNonAssociationCreate("""{ "typeSequence": 1 }""")
+        mappingServer.stubGetMappingGivenNonAssociationIdWithError(NON_ASSOCIATION_ID, 404)
+        mappingServer.stubCreateNonAssociationWithErrorFollowedBySlowSuccess()
+        nomisApi.stubNonAssociationCreate("""{ "typeSequence": 1 }""")
         nonAssociationsApiServer.stubGetNonAssociation(NON_ASSOCIATION_ID, nonAssociationApiResponse)
         publishNonAssociationDomainEvent("non-associations.created")
 
         await untilCallTo { nonAssociationsApiServer.getCountFor("/legacy/api/non-associations/$NON_ASSOCIATION_ID") } matches { it == 1 }
-        await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/non-associations") } matches { it == 1 }
+        await untilCallTo { nomisApi.postCountFor("/non-associations") } matches { it == 1 }
       }
 
       @Test
@@ -179,7 +179,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
             isNull(),
           )
         }
-        NomisApiExtension.nomisApi.verify(
+        nomisApi.verify(
           1,
           postRequestedFor(urlEqualTo("/non-associations")),
         )
@@ -188,7 +188,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will eventually create a mapping after NOMIS non-association is created`() {
         await untilAsserted {
-          MappingExtension.mappingServer.verify(
+          mappingServer.verify(
             2,
             postRequestedFor(urlEqualTo("/mapping/non-associations"))
               .withRequestBody(matchingJsonPath("nonAssociationId", equalTo("$NON_ASSOCIATION_ID")))
@@ -221,8 +221,8 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         nonAssociationsApiServer.stubGetNonAssociation(id = NON_ASSOCIATION_ID, response = nonAssociationApiResponse)
-        MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
-        NomisApiExtension.nomisApi.stubNonAssociationAmend(OFFENDER_NO_1, OFFENDER_NO_2)
+        mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
+        nomisApi.stubNonAssociationAmend(OFFENDER_NO_1, OFFENDER_NO_2)
         publishNonAssociationDomainEvent("non-associations.amended")
       }
 
@@ -236,7 +236,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will update a nonAssociation in NOMIS`() {
         await untilAsserted {
-          NomisApiExtension.nomisApi.verify(
+          nomisApi.verify(
             putRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1"))
               .withRequestBody(matchingJsonPath("reason", equalTo("VIC")))
               .withRequestBody(matchingJsonPath("recipReason", equalTo("PER")))
@@ -277,8 +277,8 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
             id = NON_ASSOCIATION_ID,
             response = nonAssociationApiResponse,
           )
-          MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
-          NomisApiExtension.nomisApi.stubNonAssociationAmend(OFFENDER_NO_1, OFFENDER_NO_2)
+          mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
+          nomisApi.stubNonAssociationAmend(OFFENDER_NO_1, OFFENDER_NO_2)
           publishNonAssociationDomainEvent("non-associations.amended")
         }
 
@@ -293,7 +293,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will eventually update the nonAssociation in NOMIS`() {
           await untilAsserted {
-            NomisApiExtension.nomisApi.verify(1, putRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1")))
+            nomisApi.verify(1, putRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1")))
             verify(telemetryClient).trackEvent(Mockito.eq("non-association-amend-failed"), any(), isNull())
             verify(telemetryClient).trackEvent(Mockito.eq("non-association-amend-success"), any(), isNull())
           }
@@ -306,8 +306,8 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           nonAssociationsApiServer.stubGetNonAssociation(id = NON_ASSOCIATION_ID, response = nonAssociationApiResponse)
-          MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
-          NomisApiExtension.nomisApi.stubNonAssociationAmendWithError(OFFENDER_NO_1, OFFENDER_NO_2, 503)
+          mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
+          nomisApi.stubNonAssociationAmendWithError(OFFENDER_NO_1, OFFENDER_NO_2, 503)
           publishNonAssociationDomainEvent("non-associations.amended")
         }
 
@@ -351,15 +351,15 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
-        NomisApiExtension.nomisApi.stubNonAssociationClose(OFFENDER_NO_1, OFFENDER_NO_2)
+        mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
+        nomisApi.stubNonAssociationClose(OFFENDER_NO_1, OFFENDER_NO_2)
         publishNonAssociationDomainEvent("non-associations.closed")
       }
 
       @Test
       fun `will close a non-association in NOMIS`() {
         await untilAsserted {
-          NomisApiExtension.nomisApi.verify(putRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1/close")))
+          nomisApi.verify(putRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1/close")))
         }
       }
 
@@ -388,22 +388,22 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
-          NomisApiExtension.nomisApi.stubNonAssociationCloseWithErrorFollowedBySlowSuccess(OFFENDER_NO_1, OFFENDER_NO_2)
+          mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
+          nomisApi.stubNonAssociationCloseWithErrorFollowedBySlowSuccess(OFFENDER_NO_1, OFFENDER_NO_2)
           publishNonAssociationDomainEvent("non-associations.closed")
         }
 
         @Test
         fun `will callback back to mapping service twice to get more details`() {
           await untilAsserted {
-            MappingExtension.mappingServer.verify(2, getRequestedFor(urlEqualTo("/mapping/non-associations/non-association-id/$NON_ASSOCIATION_ID")))
+            mappingServer.verify(2, getRequestedFor(urlEqualTo("/mapping/non-associations/non-association-id/$NON_ASSOCIATION_ID")))
           }
         }
 
         @Test
         fun `will eventually close the non-association in NOMIS`() {
           await untilAsserted {
-            NomisApiExtension.nomisApi.verify(2, putRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1/close")))
+            nomisApi.verify(2, putRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1/close")))
             verify(telemetryClient).trackEvent(Mockito.eq("non-association-close-failed"), any(), isNull())
             verify(telemetryClient).trackEvent(Mockito.eq("non-association-close-success"), any(), isNull())
           }
@@ -415,15 +415,15 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           nonAssociationsApiServer.stubGetNonAssociation(id = NON_ASSOCIATION_ID, response = nonAssociationApiResponse)
-          MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
-          NomisApiExtension.nomisApi.stubNonAssociationCloseWithError(OFFENDER_NO_1, OFFENDER_NO_2, 503)
+          mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
+          nomisApi.stubNonAssociationCloseWithError(OFFENDER_NO_1, OFFENDER_NO_2, 503)
           publishNonAssociationDomainEvent("non-associations.closed")
         }
 
         @Test
         fun `will callback back to mapping service 3 times before given up`() {
           await untilAsserted {
-            MappingExtension.mappingServer.verify(3, getRequestedFor(urlEqualTo("/mapping/non-associations/non-association-id/$NON_ASSOCIATION_ID")))
+            mappingServer.verify(3, getRequestedFor(urlEqualTo("/mapping/non-associations/non-association-id/$NON_ASSOCIATION_ID")))
           }
         }
 
@@ -460,23 +460,23 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        MappingExtension.mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
-        NomisApiExtension.nomisApi.stubNonAssociationDelete(OFFENDER_NO_1, OFFENDER_NO_2)
-        MappingExtension.mappingServer.stubDeleteNonAssociationMapping(NON_ASSOCIATION_ID)
+        mappingServer.stubGetMappingGivenNonAssociationId(NON_ASSOCIATION_ID, nonAssociationMappingResponse)
+        nomisApi.stubNonAssociationDelete(OFFENDER_NO_1, OFFENDER_NO_2)
+        mappingServer.stubDeleteNonAssociationMapping(NON_ASSOCIATION_ID)
         publishNonAssociationDomainEvent("non-associations.deleted")
       }
 
       @Test
       fun `will delete the non-association in NOMIS`() {
         await untilAsserted {
-          NomisApiExtension.nomisApi.verify(deleteRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1")))
+          nomisApi.verify(deleteRequestedFor(urlEqualTo("/non-associations/offender/$OFFENDER_NO_1/ns-offender/$OFFENDER_NO_2/sequence/1")))
         }
       }
 
       @Test
       fun `will delete the mapping`() {
         await untilAsserted {
-          MappingExtension.mappingServer.verify(deleteRequestedFor(urlEqualTo("/mapping/non-associations/non-association-id/$NON_ASSOCIATION_ID")))
+          mappingServer.verify(deleteRequestedFor(urlEqualTo("/mapping/non-associations/non-association-id/$NON_ASSOCIATION_ID")))
         }
       }
 
@@ -502,14 +502,14 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
   inner class Merge {
     @BeforeEach
     fun setUp() {
-      MappingExtension.mappingServer.stubPutMergeNonAssociation(OFFENDER_TO_REMOVE, OFFENDER_TO_SURVIVE)
+      mappingServer.stubPutMergeNonAssociation(OFFENDER_TO_REMOVE, OFFENDER_TO_SURVIVE)
       publishMergeEvent(OFFENDER_TO_REMOVE, OFFENDER_TO_SURVIVE)
     }
 
     @Test
     fun `will correct the mapping`() {
       await untilAsserted {
-        MappingExtension.mappingServer.verify(
+        mappingServer.verify(
           putRequestedFor(urlEqualTo("/mapping/non-associations/merge/from/$OFFENDER_TO_REMOVE/to/$OFFENDER_TO_SURVIVE")),
         )
       }
@@ -528,6 +528,74 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
           isNull(),
         )
       }
+    }
+  }
+
+  @Nested
+  inner class BookingMoved {
+    private val bookingId = 1234567L
+    private val movedFromNomsNumber = "A1234AA"
+    private val movedToNomsNumber = "B1234BB"
+    private val bookingStartDateTime = "2021-07-05T10:55:04"
+
+    @BeforeEach
+    fun setUp() {
+      nomisApi.stubGetNonAssociationsByBooking(
+        bookingId,
+        """
+          [
+            { "offenderNo1": "$movedToNomsNumber", "offenderNo2": "SOME-OTHER" }
+          ]
+          """,
+      )
+      mappingServer.stubUpdateList(movedFromNomsNumber, movedToNomsNumber)
+    }
+
+    @Test
+    fun `will correct the mapping`() {
+      publishBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
+      await untilAsserted {
+        mappingServer.verify(
+          putRequestedFor(urlEqualTo("/mapping/non-associations/update-list/from/$movedFromNomsNumber/to/$movedToNomsNumber"))
+            .withRequestBody(matchingJsonPath("$[0]", equalTo("SOME-OTHER"))),
+        )
+      }
+    }
+
+    @Test
+    fun `will create success telemetry`() {
+      publishBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
+      await untilAsserted {
+        verify(telemetryClient).trackEvent(
+          Mockito.eq("non-association-booking-moved-success"),
+          org.mockito.kotlin.check {
+            assertThat(it["bookingId"]).isEqualTo(bookingId.toString())
+            assertThat(it["movedFromNomsNumber"]).isEqualTo(movedFromNomsNumber)
+            assertThat(it["movedToNomsNumber"]).isEqualTo(movedToNomsNumber)
+            assertThat(it["bookingStartDateTime"]).isEqualTo(bookingStartDateTime)
+            assertThat(it["count"]).isEqualTo("1")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Test
+    fun `No affected NAs found`() {
+      nomisApi.stubGetNonAssociationsByBooking(bookingId, "[]")
+      publishBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
+
+      await untilAsserted {
+        nomisApi.verify(
+          getRequestedFor(urlEqualTo("/non-associations/booking/$bookingId")),
+        )
+      }
+      mappingServer.verify(
+        0,
+        putRequestedFor(
+          urlEqualTo("/mapping/non-associations/update-list/from/$movedFromNomsNumber/to/$movedToNomsNumber"),
+        ),
+      )
     }
   }
 
@@ -560,6 +628,27 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
       "occurredAt":"2024-07-03T12:24:56+01:00",
       "publishedAt":"2024-07-03T12:24:59.097648582+01:00",
       "personReference":{"identifiers":[{"type":"NOMS","value":"$new"}]},
-      "additionalInformation":{"bookingId":"2937673","nomsNumber":"$new","removedNomsNumber":"$old","reason":"MERGE"}}
+      "additionalInformation":{"bookingId":"2937673","nomsNumber":"$new","removedNomsNumber":"$old","reason":"MERGE"}
+      }
+    """
+
+  private fun publishBookingMovedEvent(bookingId: Long, old: String, new: String, bookingStartDateTime: String) {
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(bookingMovedEventPayload(bookingId, old, new, bookingStartDateTime))
+        .messageAttributes(
+          mapOf("eventType" to MessageAttributeValue.builder().dataType("String").stringValue("prison-offender-events.prisoner.booking.moved").build()),
+        ).build(),
+    ).get()
+  }
+
+  private fun bookingMovedEventPayload(bookingId: Long, old: String, new: String, bookingStartDateTime: String) = """{
+      "eventType":"prison-offender-events.prisoner.booking.moved",
+      "version":1,
+      "description":"A prisoner booking has been moved from $old to $new",
+      "occurredAt":"2024-07-03T12:24:56+01:00",
+      "publishedAt":"2024-07-03T12:24:59.097648582+01:00",
+      "additionalInformation":{"bookingId":"$bookingId","movedFromNomsNumber":"$old","movedToNomsNumber":"$new","bookingStartDateTime":"$bookingStartDateTime"}
+      }
     """
 }
