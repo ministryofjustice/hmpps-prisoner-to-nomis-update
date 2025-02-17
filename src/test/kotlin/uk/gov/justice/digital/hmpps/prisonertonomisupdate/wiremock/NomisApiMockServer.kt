@@ -1907,6 +1907,12 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetNonAssociationsByBooking(bookingId: Long, response: String) {
+    stubFor(
+      get(urlPathEqualTo("/non-associations/booking/$bookingId")).willReturn(okJson(response)),
+    )
+  }
+
   // *************************************************** Locations **********************************************
 
   fun stubLocationCreate(response: String) {

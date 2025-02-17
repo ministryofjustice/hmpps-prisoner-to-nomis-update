@@ -113,7 +113,7 @@ class CourtSentencingService(
     val offenderNo: String = createEvent.personReference.identifiers.first { it.type == "NOMS" }.value
     val telemetryMap = mutableMapOf(
       "dpsCourtCaseId" to courtCaseId,
-      "dpsSentenceId" to courtAppearanceId,
+      "dpsCourtAppearanceId" to courtAppearanceId,
       "offenderNo" to offenderNo,
     )
     if (isDpsCreated(source)) {

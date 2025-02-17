@@ -35,6 +35,7 @@ class NonAssociationsDomainEventListener(
       "non-associations.closed" -> nonAssociationsService.closeNonAssociation(message.fromJson())
       "non-associations.deleted" -> nonAssociationsService.deleteNonAssociation(message.fromJson())
       "prison-offender-events.prisoner.merged" -> nonAssociationsService.processMerge(message.fromJson())
+      "prison-offender-events.prisoner.booking.moved" -> nonAssociationsService.processBookingMoved(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
