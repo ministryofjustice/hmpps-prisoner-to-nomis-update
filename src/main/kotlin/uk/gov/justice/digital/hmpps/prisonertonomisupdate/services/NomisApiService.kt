@@ -600,12 +600,10 @@ class NomisApiService(
     )
     .awaitSingle()
 
-  suspend fun getNonAssociationsByBooking(bookingId: Long): List<NonAssociationIdResponse> =
-    webClient
-      .get()
-      .uri("/non-associations/booking/{bookingId}", bookingId)
-      .retrieve()
-      .awaitBody()
+  suspend fun getNonAssociationsByBooking(bookingId: Long): List<NonAssociationIdResponse> = webClient.get()
+    .uri("/non-associations/booking/{bookingId}", bookingId)
+    .retrieve()
+    .awaitBody()
 
   // ///////////////////// LOCATIONS /////////////////////////
 

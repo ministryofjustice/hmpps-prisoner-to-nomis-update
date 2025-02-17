@@ -642,8 +642,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun bookingMovedEventPayload(bookingId: Long, old: String, new: String, bookingStartDateTime: String) =
-    """{
+  private fun bookingMovedEventPayload(bookingId: Long, old: String, new: String, bookingStartDateTime: String) = """{
       "eventType":"prison-offender-events.prisoner.booking.moved",
       "version":1,
       "description":"A prisoner booking has been moved from $old to $new",
