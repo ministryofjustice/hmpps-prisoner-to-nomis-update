@@ -502,7 +502,6 @@ class CourtSentencingService(
     }
   }
 
-  // also includes adding any charges that are associated with the appearance
   suspend fun createSentence(createEvent: SentenceCreatedEvent) {
     val courtCaseId = createEvent.additionalInformation.courtCaseId
     val source = createEvent.additionalInformation.source
@@ -538,10 +537,10 @@ class CourtSentencingService(
                   val nomisSentenceResponse =
                     nomisApiService.createSentence(
                       offenderNo,
-                      dpsSentence.toNomisSentence(
-                        nomisCaseId = courtCaseMapping.nomisCourtCaseId,
+                      request = dpsSentence.toNomisSentence(
                         nomisChargeId = chargeMapping.nomisCourtChargeId,
                       ),
+                      caseId = courtCaseMapping.nomisCourtCaseId,
                     )
                   telemetryMap["nomisSentenceSeq"] = nomisSentenceResponse.sentenceSeq.toString()
                   telemetryMap["nomisbookingId"] = nomisSentenceResponse.bookingId.toString()
@@ -574,6 +573,60 @@ class CourtSentencingService(
         telemetryMap,
         null,
       )
+    }
+  }
+
+  suspend fun updateSentence(createEvent: SentenceCreatedEvent) {
+    val courtCaseId = createEvent.additionalInformation.courtCaseId
+    val source = createEvent.additionalInformation.source
+    val sentenceId = createEvent.additionalInformation.sentenceId
+    val offenderNo: String = createEvent.personReference.identifiers.first { it.type == "NOMS" }.value
+    val telemetryMap = mutableMapOf(
+      "dpsCourtCaseId" to courtCaseId,
+      "dpsSentenceId" to sentenceId,
+      "offenderNo" to offenderNo,
+    )
+
+    if (isDpsCreated(source)) {
+      runCatching {
+        val courtCaseMapping =
+          courtCaseMappingService.getMappingGivenCourtCaseId(courtCaseId).also {
+            telemetryMap["nomisCourtCaseId"] = it.nomisCourtCaseId.toString()
+          }
+        val sentenceMapping =
+          courtCaseMappingService.getMappingGivenSentenceId(sentenceId)
+            .also {
+              telemetryMap["nomisSentenceSeq"] = it.nomisSentenceSequence.toString()
+              telemetryMap["nomisBookingId"] = it.nomisBookingId.toString()
+            }
+
+        val dpsSentence = courtSentencingApiService.getSentence(sentenceId)
+
+        val chargeMapping = courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(dpsSentence.chargeLifetimeUuid.toString()) ?: let {
+          telemetryMap["reason"] = "Parent entity not found. Dps charge id: ${dpsSentence.chargeLifetimeUuid}"
+          throw ParentEntityNotFoundRetry(
+            "Attempt to associate a charge without a nomis charge mapping. Dps charge id: ${dpsSentence.chargeLifetimeUuid} not found for DPS sentence ${dpsSentence.lifetimeUuid}",
+          )
+        }
+
+        nomisApiService.updateSentence(
+          offenderNo = offenderNo,
+          caseId = courtCaseMapping.nomisCourtCaseId,
+          sentenceSeq = sentenceMapping.nomisSentenceSequence,
+          request = dpsSentence.toNomisSentence(nomisChargeId = chargeMapping.nomisCourtChargeId),
+        )
+
+        telemetryClient.trackEvent(
+          "sentence-updated-success",
+          telemetryMap,
+        )
+      }.onFailure { e ->
+        telemetryClient.trackEvent("sentence-updated-failed", telemetryMap, null)
+        throw e
+      }
+    } else {
+      telemetryMap["reason"] = "Sentence updated in NOMIS"
+      telemetryClient.trackEvent("sentence-updated-ignored", telemetryMap, null)
     }
   }
 
@@ -733,11 +786,9 @@ const val SENTENCE_LEVEL_IND = "IND"
 
 fun LegacySentence.toNomisSentence(
   nomisChargeId: Long,
-  nomisCaseId: Long,
 ): CreateSentenceRequest {
   val terms: List<SentenceTermRequest> = this.periodLengths.map { it.toNomisSentenceTerm() }
   return CreateSentenceRequest(
-    caseId = nomisCaseId,
     offenderChargeIds = listOf(nomisChargeId),
     // waiting for DPS to provide this
     startDate = LocalDate.of(2024, 1, 1),
@@ -748,7 +799,7 @@ fun LegacySentence.toNomisSentence(
     // TODO DPS to make this mandatory
     sentenceCalcType = this.sentenceCalcType!!,
     sentenceLevel = SENTENCE_LEVEL_IND,
-    sentenceTerm = terms,
+    sentenceTerms = terms,
     // waiting for DPS to provide this
     endDate = LocalDate.of(2026, 1, 1),
     fine = this.fineAmount,

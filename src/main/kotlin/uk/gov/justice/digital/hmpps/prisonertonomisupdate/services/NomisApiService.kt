@@ -722,12 +722,24 @@ class NomisApiService(
 
   suspend fun createSentence(
     offenderNo: String,
+    caseId: Long,
     request: CreateSentenceRequest,
   ): CreateSentenceResponse = webClient.post()
-    .uri("/prisoners/{offenderNo}/sentences", offenderNo)
+    .uri("/prisoners/{offenderNo}/court-cases/{caseId}/sentences", offenderNo, caseId)
     .bodyValue(request)
     .retrieve()
     .awaitBody()
+
+  suspend fun updateSentence(
+    offenderNo: String,
+    sentenceSeq: Int,
+    caseId: Long,
+    request: CreateSentenceRequest,
+  ) = webClient.put()
+    .uri("/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSeq}", offenderNo, caseId, sentenceSeq)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
 
   suspend fun mergesSinceDate(offenderNo: String, fromDate: LocalDate): List<MergeDetail> = webClient.get()
     .uri("/prisoners/{offenderNo}/merges?fromDate={fromDate}", offenderNo, fromDate)
