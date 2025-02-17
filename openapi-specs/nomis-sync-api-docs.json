@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2025-02-10.11271.8b82d31"
+    "version": "2025-02-14.11349.cc225da"
   },
   "servers": [
     {
@@ -1127,85 +1127,7 @@
         }
       }
     },
-    "/prisoners/booking-id/{bookingId}/sentencing/sentence-sequence/{sequence}": {
-      "get": {
-        "tags": [
-          "sentencing-resource"
-        ],
-        "summary": "get sentences for an offender using the given booking id and sentence sequence",
-        "description": "Requires role NOMIS_SENTENCING. Retrieves a court case by id",
-        "operationId": "getOffenderSentence",
-        "parameters": [
-          {
-            "name": "sequence",
-            "in": "path",
-            "description": "Sentence sequence",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64",
-              "description": "Sentence sequence",
-              "example": 1
-            },
-            "example": 1
-          },
-          {
-            "name": "bookingId",
-            "in": "path",
-            "description": "Offender Booking Id",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64",
-              "description": "Offender Booking Id",
-              "example": 12345
-            },
-            "example": 12345
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "the sentence details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SentenceResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Offender booking not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
+    "/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sequence}": {
       "put": {
         "tags": [
           "sentencing-resource"
@@ -1215,14 +1137,26 @@
         "operationId": "updateSentence",
         "parameters": [
           {
-            "name": "bookingId",
+            "name": "offenderNo",
             "in": "path",
-            "description": "Booking Id",
+            "description": "Offender no",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Offender no",
+              "example": "AA668EC"
+            },
+            "example": "AA668EC"
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "description": "Case Id",
             "required": true,
             "schema": {
               "type": "integer",
               "format": "int64",
-              "description": "Booking Id",
+              "description": "Case Id",
               "example": 4565456
             },
             "example": 4565456
@@ -1287,67 +1221,6 @@
           },
           "404": {
             "description": "Sentence does not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "sentencing-resource"
-        ],
-        "summary": "deletes a specific sentence",
-        "description": "Requires role NOMIS_SENTENCING. Deletes a sentence by booking and sentence sequence",
-        "operationId": "deleteSentence",
-        "parameters": [
-          {
-            "name": "sequence",
-            "in": "path",
-            "description": "Sentence sequence",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64",
-              "description": "Sentence sequence",
-              "example": 1
-            },
-            "example": 1
-          },
-          {
-            "name": "bookingId",
-            "in": "path",
-            "description": "Offender Booking Id",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64",
-              "description": "Offender Booking Id",
-              "example": 12345
-            },
-            "example": 12345
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "the sentence has been deleted"
-          },
-          "401": {
-            "description": "Unauthorized to access this endpoint",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
             "content": {
               "application/json": {
                 "schema": {
@@ -8154,7 +8027,7 @@
         }
       }
     },
-    "/prisoners/{offenderNo}/sentences": {
+    "/prisoners/{offenderNo}/court-cases/{caseId}/sentences": {
       "post": {
         "tags": [
           "sentencing-resource"
@@ -8174,6 +8047,19 @@
               "example": "AB1234K"
             },
             "example": "AB1234K"
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "description": "Case Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Case Id",
+              "example": 4565456
+            },
+            "example": 4565456
           }
         ],
         "requestBody": {
@@ -13176,6 +13062,147 @@
         }
       }
     },
+    "/prisoners/booking-id/{bookingId}/sentencing/sentence-sequence/{sequence}": {
+      "get": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "get sentences for an offender using the given booking id and sentence sequence",
+        "description": "Requires role NOMIS_SENTENCING. Retrieves a court case by id",
+        "operationId": "getOffenderSentence",
+        "parameters": [
+          {
+            "name": "sequence",
+            "in": "path",
+            "description": "Sentence sequence",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Sentence sequence",
+              "example": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "Offender Booking Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Offender Booking Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the sentence details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentenceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offender booking not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "sentencing-resource"
+        ],
+        "summary": "deletes a specific sentence",
+        "description": "Requires role NOMIS_SENTENCING. Deletes a sentence by booking and sentence sequence",
+        "operationId": "deleteSentence",
+        "parameters": [
+          {
+            "name": "sequence",
+            "in": "path",
+            "description": "Sentence sequence",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Sentence sequence",
+              "example": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "bookingId",
+            "in": "path",
+            "description": "Offender Booking Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Offender Booking Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "the sentence has been deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/booking-id/{bookingId}/sentencing/court-cases": {
       "get": {
         "tags": [
@@ -17988,15 +18015,11 @@
           "fine": {
             "type": "number"
           },
-          "sentenceTerm": {
+          "sentenceTerms": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SentenceTermRequest"
             }
-          },
-          "caseId": {
-            "type": "integer",
-            "format": "int64"
           },
           "offenderChargeIds": {
             "type": "array",
@@ -18007,12 +18030,11 @@
           }
         },
         "required": [
-          "caseId",
           "offenderChargeIds",
           "sentenceCalcType",
           "sentenceCategory",
           "sentenceLevel",
-          "sentenceTerm",
+          "sentenceTerms",
           "startDate",
           "status"
         ]
@@ -23614,12 +23636,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -23636,6 +23652,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -24131,12 +24153,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -24153,6 +24169,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -25985,12 +26007,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -26007,6 +26023,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -26052,12 +26074,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -26074,6 +26090,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -27108,12 +27130,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -27130,6 +27146,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -27261,12 +27283,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -27283,6 +27299,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -27516,12 +27538,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -27538,6 +27554,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -28118,12 +28140,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -28140,6 +28156,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -28239,12 +28261,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -28261,6 +28277,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -28476,12 +28498,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -28498,6 +28514,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -28536,12 +28558,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -28558,6 +28574,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -28877,12 +28899,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -28899,6 +28915,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -29851,12 +29873,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -29873,6 +29889,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -30190,12 +30212,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -30212,6 +30228,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -30255,12 +30277,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -30277,6 +30293,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -30326,12 +30348,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -30348,6 +30364,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -30657,12 +30679,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -30679,6 +30695,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",

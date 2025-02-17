@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
 
 class MappingExtension :
   BeforeAllCallback,
@@ -1634,6 +1635,29 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubGetSentenceMappingGivenDpsId(id: String, nomisSentenceSequence: Long, nomisBookingId: Long) {
+    stubFor(
+      get("/mapping/court-sentencing/sentences/dps-sentence-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            // language=json
+            """ 
+              {
+                "dpsSentenceId": "$id",
+                "nomisSentenceSequence": "$nomisSentenceSequence",
+                "nomisBookingId": "$nomisBookingId",
+                "mappingType": "${SentenceMappingDto.MappingType.DPS_CREATED}",
+                "whenCreated": "2021-07-05T10:35:17"
+              }
+            
+            """.trimIndent(),
+          )
+          .withStatus(200),
       ),
     )
   }
