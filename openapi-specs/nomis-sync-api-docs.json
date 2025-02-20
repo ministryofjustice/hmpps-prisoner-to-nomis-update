@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2025-02-17.11356.4ccc65b"
+    "version": "2025-02-20.11380.33dcf57"
   },
   "servers": [
     {
@@ -18049,6 +18049,10 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          "consecutiveToSentenceSeq": {
+            "type": "integer",
+            "format": "int64"
           }
         },
         "required": [
