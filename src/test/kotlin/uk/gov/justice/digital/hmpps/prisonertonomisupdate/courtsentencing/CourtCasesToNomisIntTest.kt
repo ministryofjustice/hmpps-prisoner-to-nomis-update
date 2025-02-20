@@ -1380,6 +1380,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           offenderNo = OFFENDER_NO,
           caseID = COURT_CASE_ID_FOR_CREATION,
           chargeUuid = DPS_COURT_CHARGE_ID,
+          startDate = LocalDate.of(2024, 1, 1),
         )
         NomisApiExtension.nomisApi.stubSentenceCreate(
           offenderNo = OFFENDER_NO,
@@ -1449,6 +1450,18 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               WireMock.matchingJsonPath(
                 "fine",
                 WireMock.equalTo(FINE_AMOUNT),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "startDate",
+                WireMock.equalTo("2024-01-01"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "status",
+                WireMock.equalTo("A"),
               ),
             ),
         )
@@ -1820,7 +1833,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
               Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
               Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-              Assertions.assertThat(it["reason"]).isEqualTo("Parent entity not found. Dps charge id: $DPS_COURT_CHARGE_ID")
+              Assertions.assertThat(it["reason"])
+                .isEqualTo("Parent entity not found. Dps charge id: $DPS_COURT_CHARGE_ID")
             },
             isNull(),
           )

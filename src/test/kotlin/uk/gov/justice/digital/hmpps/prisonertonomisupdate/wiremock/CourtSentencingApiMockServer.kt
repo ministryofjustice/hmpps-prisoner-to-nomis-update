@@ -241,6 +241,9 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     ),
     offenderNo: String = "A6160DZ",
     fineAmount: BigDecimal = BigDecimal("1000.00"),
+    startDate: LocalDate = LocalDate.now(),
+    active: Boolean = true,
+    consecutiveToLifetimeUuid: UUID? = null,
   ) {
     val sentence = LegacySentence(
       prisonerId = offenderNo,
@@ -249,11 +252,12 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       periodLengths = periodLengths,
       sentenceCalcType = "CALC",
       sentenceCategory = "CAT",
-      consecutiveToLifetimeUuid = UUID.randomUUID(),
+      consecutiveToLifetimeUuid = consecutiveToLifetimeUuid,
       chargeNumber = chargeUuid,
       fineAmount = fineAmount,
-      legacyData = null,
       courtCaseId = caseID,
+      sentenceStartDate = startDate,
+      active = active,
     )
     stubFor(
       get(WireMock.urlPathMatching("/legacy/sentence/$sentenceId")).willReturn(

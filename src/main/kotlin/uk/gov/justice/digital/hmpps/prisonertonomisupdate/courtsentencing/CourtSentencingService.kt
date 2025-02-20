@@ -543,12 +543,13 @@ class CourtSentencingService(
 
               courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(dpsSentence.chargeLifetimeUuid.toString())
                 ?.let { chargeMapping ->
-
+                  val consecutiveSentenceSeq = dpsSentence.consecutiveToLifetimeUuid?.let { courtCaseMappingService.getMappingGivenSentenceId(it.toString()).nomisSentenceSequence.toLong() }
                   val nomisSentenceResponse =
                     nomisApiService.createSentence(
                       offenderNo,
                       request = dpsSentence.toNomisSentence(
                         nomisChargeId = chargeMapping.nomisCourtChargeId,
+                        nomisConsecutiveToSentenceSeq = consecutiveSentenceSeq,
                       ),
                       caseId = courtCaseMapping.nomisCourtCaseId,
                     )
@@ -619,11 +620,15 @@ class CourtSentencingService(
           )
         }
 
+        val consecutiveSentenceSeq = dpsSentence.consecutiveToLifetimeUuid?.let { courtCaseMappingService.getMappingGivenSentenceId(it.toString()).nomisSentenceSequence.toLong() }
         nomisApiService.updateSentence(
           offenderNo = offenderNo,
           caseId = courtCaseMapping.nomisCourtCaseId,
           sentenceSeq = sentenceMapping.nomisSentenceSequence,
-          request = dpsSentence.toNomisSentence(nomisChargeId = chargeMapping.nomisCourtChargeId),
+          request = dpsSentence.toNomisSentence(
+            nomisChargeId = chargeMapping.nomisCourtChargeId,
+            nomisConsecutiveToSentenceSeq = consecutiveSentenceSeq,
+          ),
         )
 
         telemetryClient.trackEvent(
@@ -834,23 +839,25 @@ const val SENTENCE_LEVEL_IND = "IND"
 
 fun LegacySentence.toNomisSentence(
   nomisChargeId: Long,
+  nomisConsecutiveToSentenceSeq: Long?,
 ): CreateSentenceRequest {
   val terms: List<SentenceTermRequest> = this.periodLengths.map { it.toNomisSentenceTerm() }
   return CreateSentenceRequest(
     offenderChargeIds = listOf(nomisChargeId),
-    // waiting for DPS to provide this
-    startDate = LocalDate.of(2024, 1, 1),
-    // waiting for DPS to provide this
-    status = "A",
-    // TODO DPS to make this mandatory
-    sentenceCategory = this.sentenceCategory!!,
-    // TODO DPS to make this mandatory
-    sentenceCalcType = this.sentenceCalcType!!,
+    startDate = sentenceStartDate,
+    // no end date provided,
+    status = if (this.active) {
+      "A"
+    } else {
+      "I"
+    },
+    sentenceCategory = this.sentenceCategory,
+    sentenceCalcType = this.sentenceCalcType,
     sentenceLevel = SENTENCE_LEVEL_IND,
     sentenceTerms = terms,
-    // waiting for DPS to provide this
-    endDate = LocalDate.of(2026, 1, 1),
+
     fine = this.fineAmount,
+    consecutiveToSentenceSeq = nomisConsecutiveToSentenceSeq,
   )
 }
 
