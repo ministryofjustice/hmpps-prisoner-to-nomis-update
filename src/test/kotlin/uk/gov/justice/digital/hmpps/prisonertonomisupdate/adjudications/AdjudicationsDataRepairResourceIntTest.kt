@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.Integratio
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension.Companion.adjudicationsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
-import java.time.Duration
 import java.time.LocalDate
 
 private const val DPS_CHARGE_NUMBER = "12345-1"
@@ -184,8 +183,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
         nomisApi.stubAdjudicationAwardsCreate(ADJUDICATION_NUMBER)
         mappingServer.stubCreatePunishments()
 
-        webTestClient.mutate()
-          .responseTimeout(Duration.ofMillis(300000000)).build().post().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DPS_CHARGE_NUMBER/repair")
+        webTestClient.post().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DPS_CHARGE_NUMBER/repair")
           .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ADJUDICATIONS")))
           .exchange()
           .expectStatus().isOk
