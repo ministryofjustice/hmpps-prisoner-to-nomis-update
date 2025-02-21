@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Re
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedEvidenceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationDeleteMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationHearingMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationPunishmentBatchMappingDto
@@ -77,13 +78,14 @@ class AdjudicationsService(
     PUNISHMENT_UNQUASH("punishment-unquash"),
   }
 
-  suspend fun createAdjudication(createEvent: AdjudicationCreatedEvent) {
+  suspend fun createAdjudication(createEvent: AdjudicationCreatedEvent): Long? {
     val chargeNumber = createEvent.additionalInformation.chargeNumber
     val prisonId: String = createEvent.additionalInformation.prisonId
     val telemetryMap = mutableMapOf(
       "chargeNumber" to chargeNumber,
       "prisonId" to prisonId,
     )
+    var createdNomisAdjudicationNumber: Long? = null
     synchronise {
       name = EntityType.ADJUDICATION.displayName
       telemetryClient = this@AdjudicationsService.telemetryClient
@@ -100,7 +102,7 @@ class AdjudicationsService(
         telemetryMap["offenderNo"] = offenderNo
         val nomisAdjudicationResponse =
           nomisApiService.createAdjudication(offenderNo, adjudication.toNomisAdjudication())
-
+        createdNomisAdjudicationNumber = nomisAdjudicationResponse.adjudicationNumber
         AdjudicationMappingDto(
           adjudicationNumber = nomisAdjudicationResponse.adjudicationNumber,
           chargeSequence = nomisAdjudicationResponse.charges.first().chargeSequence,
@@ -109,6 +111,63 @@ class AdjudicationsService(
       }
       saveMapping { adjudicationMappingService.createMapping(it) }
     }
+
+    return createdNomisAdjudicationNumber
+  }
+
+  suspend fun repairAdjudication(
+    prisonId: String,
+    offenderNo: String,
+    chargeNumber: String,
+  ): Long {
+    val adjudication = adjudicationsApiService.getCharge(chargeNumber, prisonId)
+
+    adjudicationMappingService.deleteMappingsForAdjudication(adjudication.toDeleteMappingDto())
+
+    val adjudicationNumber = createAdjudication(
+      AdjudicationCreatedEvent(
+        AdjudicationAdditionalInformation(
+          chargeNumber = chargeNumber,
+          prisonId = prisonId,
+          prisonerNumber = offenderNo,
+        ),
+      ),
+    )
+    adjudication.reportedAdjudication.hearings.forEach {
+      createHearing(
+        HearingEvent(
+          HearingAdditionalInformation(
+            chargeNumber = chargeNumber,
+            prisonId = prisonId,
+            prisonerNumber = offenderNo,
+            hearingId = it.id.toString(),
+          ),
+        ),
+      )
+    }
+    adjudication.reportedAdjudication.outcomes.forEach {
+      upsertOutcome(
+        OutcomeEvent(
+          OutcomeAdditionalInformation(
+            chargeNumber = chargeNumber,
+            prisonId = prisonId,
+            prisonerNumber = offenderNo,
+            hearingId = it.hearing?.id.toString(),
+          ),
+        ),
+      )
+    }
+    createPunishments(
+      PunishmentEvent(
+        PunishmentsAdditionalInformation(
+          chargeNumber = chargeNumber,
+          prisonId = prisonId,
+          prisonerNumber = offenderNo,
+        ),
+      ),
+    )
+
+    return adjudicationNumber!!
   }
 
   suspend fun createRetry(message: CreateMappingRetryMessage<AdjudicationMappingDto>) {
@@ -970,6 +1029,12 @@ class AdjudicationsService(
   )
 }
 
+private fun ReportedAdjudicationResponse.toDeleteMappingDto() = AdjudicationDeleteMappingDto(
+  dpsChargeNumber = this.reportedAdjudication.chargeNumber,
+  dpsHearingIds = this.reportedAdjudication.hearings.map { "${it.id}" },
+  dpsPunishmentIds = this.reportedAdjudication.punishments.map { "${it.id}" },
+)
+
 private fun AdjudicationPunishmentBatchUpdateMappingDto.hasAnyMappingsToUpdate(): Boolean = this.punishmentsToCreate.isNotEmpty() || this.punishmentsToDelete.isNotEmpty()
 
 private fun OutcomeEvent.toHearingEvent(): HearingEvent = HearingEvent(
@@ -1048,7 +1113,7 @@ private fun OutcomeHistoryDto.toNomisCreateHearingResult(): CreateHearingResultR
     findingCode = toNomisFindingCode(findingCode),
     adjudicatorUsername = getAdjudicatorUsernameForInternalHearingOnly(
       hearing.oicHearingType.name,
-      hearing.outcome.adjudicator,
+      hearing.outcome!!.adjudicator,
     ),
   )
 }

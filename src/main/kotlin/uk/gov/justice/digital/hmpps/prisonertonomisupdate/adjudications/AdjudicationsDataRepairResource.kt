@@ -15,6 +15,35 @@ class AdjudicationsDataRepairResource(
   private val adjudicationService: AdjudicationsService,
   private val telemetryClient: TelemetryClient,
 ) {
+  @PostMapping("/prisons/{prisonId}/prisoners/{offenderNo}/adjudication/dps-charge-number/{chargeNumber}/repair")
+  @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("hasRole('NOMIS_ADJUDICATIONS')")
+  @Operation(
+    summary = "Resynchronises adjudication for the given charge from DPS back to NOMIS",
+    description = "Used when an adjudication in NOMIS has been deleted, so emergency use only. Requires ROLE_NOMIS_ADJUDICATIONS",
+  )
+  suspend fun repairAdjudication(
+    @PathVariable prisonId: String,
+    @PathVariable offenderNo: String,
+    @PathVariable chargeNumber: String,
+  ) {
+    val adjudicationNumber = adjudicationService.repairAdjudication(
+      prisonId = prisonId,
+      offenderNo = offenderNo,
+      chargeNumber = chargeNumber,
+    )
+    telemetryClient.trackEvent(
+      "adjudication-adjudication-repair",
+      mapOf(
+        "prisonId" to prisonId,
+        "chargeNumber" to chargeNumber,
+        "offenderNo" to offenderNo,
+        "adjudicationNumber" to "$adjudicationNumber",
+      ),
+      null,
+    )
+  }
+
   @PostMapping("/prisons/{prisonId}/prisoners/{offenderNo}/adjudication/dps-charge-number/{chargeNumber}/punishments/repair")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('NOMIS_ADJUDICATIONS')")

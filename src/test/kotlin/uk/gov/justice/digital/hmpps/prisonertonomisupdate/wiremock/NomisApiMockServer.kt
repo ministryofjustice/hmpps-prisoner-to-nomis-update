@@ -1453,6 +1453,42 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+  fun stubHearingsCreate(adjudicationNumber: Long = 123456, nomisHearingId1: Long = 1, nomisHearingId2: Long = 2) {
+    stubFor(
+      post("/adjudications/adjudication-number/$adjudicationNumber/hearings")
+        .inScenario("Two hearings")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+            {
+              "hearingId": $nomisHearingId1
+            }
+              """.trimIndent(),
+            )
+            .withStatus(200),
+        ).willSetStateTo("2nd Hearing"),
+    )
+    stubFor(
+      post("/adjudications/adjudication-number/$adjudicationNumber/hearings")
+        .inScenario("Two hearings")
+        .whenScenarioStateIs("2nd Hearing")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+            {
+              "hearingId": $nomisHearingId2
+            }
+              """.trimIndent(),
+            )
+            .withStatus(200),
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
 
   fun stubHearingUpdate(adjudicationNumber: Long = 123456, nomisHearingId: Long = 345) {
     stubFor(
