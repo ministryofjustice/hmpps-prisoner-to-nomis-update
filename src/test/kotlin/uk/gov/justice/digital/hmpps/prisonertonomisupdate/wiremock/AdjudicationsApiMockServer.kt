@@ -77,6 +77,21 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     punishments: List<PunishmentDto> = listOf(),
     status: String = "UNSCHEDULED",
     hearingId: Long = 345,
+    hearings: List<HearingDto> = listOf(
+      HearingDto(
+        id = hearingId,
+        locationId = 27187,
+        dateTimeOfHearing = "2023-08-23T14:25:00",
+        oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
+        agencyId = "MDI",
+        outcome = HearingOutcomeDto(
+          id = 962,
+          adjudicator = "JBULLENGEN",
+          code = HearingOutcomeDto.Code.COMPLETE,
+          plea = HearingOutcomeDto.Plea.GUILTY,
+        ),
+      ),
+    ),
   ) {
     val adjudicationDto = ReportedAdjudicationDto(
       chargeNumber = chargeNumber,
@@ -112,22 +127,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       damages = damages,
       evidence = evidence,
       witnesses = emptyList(),
-      hearings = listOf(
-        HearingDto(
-          id = hearingId,
-          locationId = 27187,
-          dateTimeOfHearing = "2023-08-23T14:25:00",
-          oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
-          agencyId = "MDI",
-          outcome = HearingOutcomeDto(
-            id = 962,
-            adjudicator = "JBULLENGEN",
-            code = HearingOutcomeDto.Code.COMPLETE,
-            plea = HearingOutcomeDto.Plea.GUILTY,
-          ),
-
-        ),
-      ),
+      hearings = hearings,
       disIssueHistory = emptyList(),
       outcomes = outcomes,
       punishments = punishments,

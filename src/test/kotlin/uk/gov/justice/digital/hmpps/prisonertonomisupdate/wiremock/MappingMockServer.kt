@@ -766,6 +766,47 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+  fun stubGetByChargeNumberNotFoundFollowedByFound(
+    chargeNumber: String,
+    adjudicationNumber: Long,
+    chargeSequence: Int = 1,
+  ) {
+    stubFor(
+      get("/mapping/adjudications/charge-number/$chargeNumber")
+        .inScenario("Charge mapping not found then found")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+            { 
+              }""",
+            )
+            .withStatus(404),
+        ).willSetStateTo("Found mapping"),
+    )
+    stubFor(
+      get("/mapping/adjudications/charge-number/$chargeNumber")
+        .inScenario("Charge mapping not found then found")
+        .whenScenarioStateIs("Found mapping")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+            { 
+            "chargeSequence": $chargeSequence,  
+            "chargeNumber": "$chargeNumber",  
+            "adjudicationNumber": $adjudicationNumber,  
+            "mappingType": "ADJUDICATION_CREATED",  
+            "whenCreated": "2020-01-01T00:00:00"
+              }""",
+            )
+            .withStatus(200),
+        ),
+    )
+  }
 
   fun stubCreateAdjudicationWithErrorFollowedBySlowSuccess() {
     stubFor(
@@ -836,6 +877,42 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
           )
           .withStatus(200),
       ),
+    )
+  }
+  fun stubGetByDpsHearingIdNotFoundFollowedByFound(dpsHearingId: String, nomisHearingId: Long) {
+    stubFor(
+      get("/mapping/hearings/dps/$dpsHearingId")
+        .inScenario("Hearing mapping not found then found for $dpsHearingId")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+            { 
+              }""",
+            )
+            .withStatus(404),
+        ).willSetStateTo("Mapping found"),
+    )
+    stubFor(
+      get("/mapping/hearings/dps/$dpsHearingId")
+        .inScenario("Hearing mapping not found then found for $dpsHearingId")
+        .whenScenarioStateIs("Mapping found")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+            { 
+            "dpsHearingId": $dpsHearingId,  
+            "nomisHearingId": $nomisHearingId,  
+            "mappingType": "ADJUDICATION_CREATED",  
+            "whenCreated": "2020-01-01T00:00:00"
+              }""",
+            )
+            .withStatus(200),
+        ),
     )
   }
 
@@ -1080,6 +1157,16 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "all gone wrong" }""")
           .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubDeleteMappingsForAdjudication() {
+    stubFor(
+      post("/mapping/adjudications/delete-mappings").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
       ),
     )
   }
