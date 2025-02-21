@@ -20,7 +20,7 @@ class AdjudicationsDataRepairResource(
   @PreAuthorize("hasRole('NOMIS_ADJUDICATIONS')")
   @Operation(
     summary = "Resynchronises adjudication for the given charge from DPS back to NOMIS",
-    description = "Used when an adjudication in NOMIS has been deleted, so emergency use only. Requires ROLE_NOMIS_ADJUDICATIONS",
+    description = "Used when an adjudication in NOMIS has been deleted, so emergency use only. If any element fails run individual repair endpoints for hearings etc assuming adjudication create did succeed. Requires ROLE_NOMIS_ADJUDICATIONS",
   )
   suspend fun repairAdjudication(
     @PathVariable prisonId: String,
