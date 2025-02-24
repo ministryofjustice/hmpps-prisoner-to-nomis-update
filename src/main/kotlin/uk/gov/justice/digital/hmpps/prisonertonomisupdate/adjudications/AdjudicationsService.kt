@@ -1234,9 +1234,10 @@ internal fun ReportedAdjudicationResponse.toNomisAdjudication() = CreateAdjudica
 private fun ReportedAdjudicationResponse.isVictimAlsoTheSuspect() = reportedAdjudication.offenceDetails.victimPrisonersNumber == reportedAdjudication.prisonerNumber
 
 private fun ReportedAdjudicationDto.getOffenceCode() = if (this.didInciteOtherPrisoner()) {
-  this.offenceDetails.offenceRule.withOthersNomisCode!!
+  // for migrated offences this nomisCode will be absent so use paragraphNumber instead
+  this.offenceDetails.offenceRule.withOthersNomisCode ?: this.offenceDetails.offenceRule.paragraphNumber
 } else {
-  this.offenceDetails.offenceRule.nomisCode!!
+  this.offenceDetails.offenceRule.nomisCode ?: this.offenceDetails.offenceRule.paragraphNumber
 }
 
 private fun ReportedAdjudicationDto.didInciteOtherPrisoner() = this.incidentRole.roleCode != null
