@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2025-02-19.4888.731884c"
+    "version": "2025-02-24.5011.38748f6"
   },
   "servers": [
     {
@@ -3117,7 +3117,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "17:04:37.288240575"
+            "example": "14:00:36.128730622"
           },
           "outcomeDispositionCode": {
             "type": "string"
@@ -3285,11 +3285,15 @@
           },
           "legacyData": {
             "$ref": "#/components/schemas/ChargeLegacyData"
+          },
+          "prisonId": {
+            "type": "string"
           }
         },
         "required": [
           "offenceCode",
-          "offenceStartDate"
+          "offenceStartDate",
+          "prisonId"
         ]
       },
       "CreateCourtAppearance": {
@@ -3357,6 +3361,7 @@
           "appearanceDate",
           "charges",
           "courtCode",
+          "prisonId",
           "warrantType"
         ]
       },
@@ -3364,6 +3369,9 @@
         "type": "object",
         "properties": {
           "prisonerId": {
+            "type": "string"
+          },
+          "prisonId": {
             "type": "string"
           },
           "appearances": {
@@ -3378,6 +3386,7 @@
         },
         "required": [
           "appearances",
+          "prisonId",
           "prisonerId"
         ]
       },
@@ -3401,7 +3410,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "17:04:37.288240575"
+            "example": "14:00:36.128730622"
           },
           "courtCode": {
             "type": "string"
@@ -3409,12 +3418,16 @@
           "appearanceTypeUuid": {
             "type": "string",
             "format": "uuid"
+          },
+          "prisonId": {
+            "type": "string"
           }
         },
         "required": [
           "appearanceDate",
           "appearanceTypeUuid",
-          "courtCode"
+          "courtCode",
+          "prisonId"
         ]
       },
       "CreatePeriodLength": {
@@ -3461,10 +3474,6 @@
         "type": "object",
         "properties": {
           "sentenceUuid": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "lifetimeSentenceUuid": {
             "type": "string",
             "format": "uuid"
           },
@@ -4054,10 +4063,6 @@
             "type": "string",
             "format": "uuid"
           },
-          "sentenceLifetimeUuid": {
-            "type": "string",
-            "format": "uuid"
-          },
           "chargeNumber": {
             "type": "string"
           },
@@ -4089,7 +4094,6 @@
         },
         "required": [
           "periodLengths",
-          "sentenceLifetimeUuid",
           "sentenceServeType",
           "sentenceUuid"
         ]
@@ -4180,6 +4184,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Sentence"
+            }
+          },
+          "courtCaseIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           }
         },
@@ -4416,7 +4426,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "17:04:37.288240575"
+            "example": "14:00:36.128730622"
           },
           "charges": {
             "type": "array",
@@ -4447,7 +4457,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "17:04:37.288240575"
+            "example": "14:00:36.128730622"
           },
           "courtId": {
             "type": "string"
@@ -4774,7 +4784,7 @@
           },
           "appearanceTime": {
             "type": "string",
-            "example": "17:04:37.288240575"
+            "example": "14:00:36.128730622"
           },
           "courtCode": {
             "type": "string"

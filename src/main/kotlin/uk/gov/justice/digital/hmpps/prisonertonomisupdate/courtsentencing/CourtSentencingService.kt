@@ -516,10 +516,12 @@ class CourtSentencingService(
     val courtCaseId = createEvent.additionalInformation.courtCaseId
     val source = createEvent.additionalInformation.source
     val dpsSentenceId = createEvent.additionalInformation.sentenceId
+    val dpsAppearanceId = createEvent.additionalInformation.courtAppearanceId
     val offenderNo: String = createEvent.personReference.identifiers.first { it.type == "NOMS" }.value
     val telemetryMap = mutableMapOf(
       "dpsCourtCaseId" to courtCaseId,
       "dpsSentenceId" to dpsSentenceId,
+      "dpsCourtAppearanceId" to dpsAppearanceId,
       "offenderNo" to offenderNo,
     )
     if (isDpsCreated(source)) {
@@ -541,33 +543,44 @@ class CourtSentencingService(
                 courtSentencingApiService.getSentence(dpsSentenceId)
                   .also { telemetryMap["dpsChargeId"] = it.chargeLifetimeUuid.toString() }
 
-              courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(dpsSentence.chargeLifetimeUuid.toString())
-                ?.let { chargeMapping ->
-                  val consecutiveSentenceSeq =
-                    getNomisConsecutiveSentenceSeqOrNull(dpsSentence, telemetryMap)
-                  val nomisSentenceResponse =
-                    nomisApiService.createSentence(
-                      offenderNo,
-                      request = dpsSentence.toNomisSentence(
-                        nomisChargeId = chargeMapping.nomisCourtChargeId,
-                        nomisConsecutiveToSentenceSeq = consecutiveSentenceSeq,
-                      ),
-                      caseId = courtCaseMapping.nomisCourtCaseId,
-                    )
-                  telemetryMap["nomisSentenceSeq"] = nomisSentenceResponse.sentenceSeq.toString()
-                  telemetryMap["nomisbookingId"] = nomisSentenceResponse.bookingId.toString()
-                  telemetryMap["nomisChargeId"] = chargeMapping.nomisCourtChargeId.toString()
-                  telemetryMap["nomisConsecutiveSentenceSequence"] = consecutiveSentenceSeq.toString()
+              courtCaseMappingService.getMappingGivenCourtAppearanceIdOrNull(dpsCourtAppearanceId = dpsAppearanceId)
+                ?.let { appearanceMapping ->
+                  telemetryMap["nomisCourtAppearanceId"] = appearanceMapping.nomisCourtAppearanceId.toString()
+                  courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(dpsSentence.chargeLifetimeUuid.toString())
+                    ?.let { chargeMapping ->
 
-                  SentenceMappingDto(
-                    nomisBookingId = nomisSentenceResponse.bookingId,
-                    nomisSentenceSequence = nomisSentenceResponse.sentenceSeq.toInt(),
-                    dpsSentenceId = dpsSentence.lifetimeUuid.toString(),
-                  )
+                      val consecutiveSentenceSeq =
+                        getNomisConsecutiveSentenceSeqOrNull(dpsSentence, telemetryMap)
+                      val nomisSentenceResponse =
+                        nomisApiService.createSentence(
+                          offenderNo,
+                          request = dpsSentence.toNomisSentence(
+                            nomisChargeId = chargeMapping.nomisCourtChargeId,
+                            nomisConsecutiveToSentenceSeq = consecutiveSentenceSeq,
+                            nomisEventId = appearanceMapping.nomisCourtAppearanceId,
+                          ),
+                          caseId = courtCaseMapping.nomisCourtCaseId,
+                        )
+                      telemetryMap["nomisSentenceSeq"] = nomisSentenceResponse.sentenceSeq.toString()
+                      telemetryMap["nomisbookingId"] = nomisSentenceResponse.bookingId.toString()
+                      telemetryMap["nomisChargeId"] = chargeMapping.nomisCourtChargeId.toString()
+                      telemetryMap["nomisConsecutiveSentenceSequence"] = consecutiveSentenceSeq.toString()
+
+                      SentenceMappingDto(
+                        nomisBookingId = nomisSentenceResponse.bookingId,
+                        nomisSentenceSequence = nomisSentenceResponse.sentenceSeq.toInt(),
+                        dpsSentenceId = dpsSentence.lifetimeUuid.toString(),
+                      )
+                    } ?: let {
+                    telemetryMap["reason"] = "Parent entity not found"
+                    throw ParentEntityNotFoundRetry(
+                      "Attempt to associate a charge without a nomis charge mapping. Dps charge id: ${dpsSentence.chargeLifetimeUuid} not found for DPS Sentence $dpsSentenceId",
+                    )
+                  }
                 } ?: let {
                 telemetryMap["reason"] = "Parent entity not found"
                 throw ParentEntityNotFoundRetry(
-                  "Attempt to associate a charge without a nomis charge mapping. Dps charge id: ${dpsSentence.chargeLifetimeUuid} not found for DPS Sentence $dpsSentenceId",
+                  "Attempt to update a sentence associated with a DPS appearance without a nomis mapping. Dps appearance id: $dpsAppearanceId not found for DPS sentence $dpsSentenceId",
                 )
               }
             } ?: let {
@@ -607,10 +620,12 @@ class CourtSentencingService(
     val courtCaseId = createEvent.additionalInformation.courtCaseId
     val source = createEvent.additionalInformation.source
     val sentenceId = createEvent.additionalInformation.sentenceId
+    val courtAppearanceId = createEvent.additionalInformation.courtAppearanceId
     val offenderNo: String = createEvent.personReference.identifiers.first { it.type == "NOMS" }.value
     val telemetryMap = mutableMapOf(
       "dpsCourtCaseId" to courtCaseId,
       "dpsSentenceId" to sentenceId,
+      "dpsCourtAppearanceId" to courtAppearanceId,
       "offenderNo" to offenderNo,
     )
 
@@ -620,6 +635,15 @@ class CourtSentencingService(
           courtCaseMappingService.getMappingGivenCourtCaseId(courtCaseId).also {
             telemetryMap["nomisCourtCaseId"] = it.nomisCourtCaseId.toString()
           }
+        val appearanceMapping =
+          courtCaseMappingService.getMappingGivenCourtAppearanceIdOrNull(courtAppearanceId) ?: let {
+            telemetryMap["reason"] = "Parent entity not found. Dps appearance id: $courtAppearanceId"
+            throw ParentEntityNotFoundRetry(
+              "Attempt to associate an appearance without a nomis appearance mapping. Dps appearance id: $courtAppearanceId not found for DPS sentence $sentenceId",
+            )
+          }
+        telemetryMap["nomisCourtAppearanceId"] = appearanceMapping.nomisCourtAppearanceId.toString()
+
         val sentenceMapping =
           courtCaseMappingService.getMappingGivenSentenceId(sentenceId)
             .also {
@@ -646,6 +670,7 @@ class CourtSentencingService(
           request = dpsSentence.toNomisSentence(
             nomisChargeId = chargeMapping.nomisCourtChargeId,
             nomisConsecutiveToSentenceSeq = consecutiveSentenceSeq,
+            nomisEventId = appearanceMapping.nomisCourtAppearanceId,
           ),
         )
 
@@ -771,6 +796,7 @@ class CourtSentencingService(
 
   data class SentenceAdditionalInformation(
     val sentenceId: String,
+    val courtAppearanceId: String,
     val source: String,
     val courtCaseId: String,
   )
@@ -858,6 +884,7 @@ const val SENTENCE_LEVEL_IND = "IND"
 fun LegacySentence.toNomisSentence(
   nomisChargeId: Long,
   nomisConsecutiveToSentenceSeq: Long?,
+  nomisEventId: Long,
 ): CreateSentenceRequest {
   val terms: List<SentenceTermRequest> = this.periodLengths.map { it.toNomisSentenceTerm() }
   return CreateSentenceRequest(
@@ -876,6 +903,7 @@ fun LegacySentence.toNomisSentence(
 
     fine = this.fineAmount,
     consecutiveToSentenceSeq = nomisConsecutiveToSentenceSeq,
+    eventId = nomisEventId,
   )
 }
 

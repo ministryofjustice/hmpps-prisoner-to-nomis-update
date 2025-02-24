@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2025-02-20.11380.33dcf57"
+    "version": "2025-02-24.11464.064b502"
   },
   "servers": [
     {
@@ -867,6 +867,36 @@
               "example": "A1234AA"
             },
             "example": "A1234AA"
+          },
+          {
+            "name": "profileTypes",
+            "in": "query",
+            "description": "Profile types",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "description": "Profile types",
+              "example": "HAIR",
+              "items": {
+                "type": "string",
+                "description": "Profile types",
+                "example": "HAIR"
+              }
+            },
+            "example": "HAIR"
+          },
+          {
+            "name": "bookingId",
+            "in": "query",
+            "description": "Booking ID",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Booking ID",
+              "example": 12345
+            },
+            "example": 12345
           }
         ],
         "responses": {
@@ -18053,9 +18083,14 @@
           "consecutiveToSentenceSeq": {
             "type": "integer",
             "format": "int64"
+          },
+          "eventId": {
+            "type": "integer",
+            "format": "int64"
           }
         },
         "required": [
+          "eventId",
           "offenderChargeIds",
           "sentenceCalcType",
           "sentenceCategory",
@@ -20896,6 +20931,12 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The date activities and allocations are ended",
+            "example": "2025-02-20"
           }
         },
         "required": [
@@ -24740,18 +24781,6 @@
             "description": "The booking's unique identifier",
             "example": 1234567
           },
-          "startDateTime": {
-            "type": "string",
-            "description": "The start date of the booking",
-            "example": "2021-07-05T10:35:17",
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          },
-          "endDateTime": {
-            "type": "string",
-            "description": "The end date of the booking, or null if the booking is still active",
-            "example": "2021-07-05T10:35:17",
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          },
           "profileDetails": {
             "type": "array",
             "description": "A list of profile details for this booking",
@@ -24763,6 +24792,12 @@
             "type": "boolean",
             "description": "Whether this is the latest booking or not. Note that latest does not imply active.",
             "example": true
+          },
+          "startDateTime": {
+            "type": "string",
+            "description": "The start date of the booking",
+            "example": "2021-07-05T10:35:17",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
         "required": [
@@ -25996,6 +26031,9 @@
             "items": {
               "$ref": "#/components/schemas/OffenderChargeResponse"
             }
+          },
+          "prisonId": {
+            "type": "string"
           }
         },
         "required": [
@@ -26005,6 +26043,7 @@
           "createdByUsername",
           "createdDateTime",
           "offenderCharges",
+          "prisonId",
           "sentenceSeq",
           "sentenceTerms",
           "startDate",

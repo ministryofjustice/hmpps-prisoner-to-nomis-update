@@ -1398,6 +1398,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           id = DPS_COURT_CHARGE_ID,
           nomisCourtChargeId = NOMIS_COURT_CHARGE_ID,
         )
+        MappingExtension.mappingServer.stubGetCourtAppearanceMappingGivenDpsId(
+          id = DPS_COURT_APPEARANCE_ID,
+          nomisCourtAppearanceId = NOMIS_COURT_APPEARANCE_ID,
+        )
 
         MappingExtension.mappingServer.stubGetSentenceMappingGivenDpsIdWithError(DPS_SENTENCE_ID, 404)
         MappingExtension.mappingServer.stubCreateSentence()
@@ -1419,6 +1423,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           eq("sentence-create-success"),
           org.mockito.kotlin.check {
             Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
             Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
             Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
             Assertions.assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
@@ -1465,6 +1470,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               WireMock.matchingJsonPath(
                 "status",
                 WireMock.equalTo("A"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "eventId",
+                WireMock.equalTo(NOMIS_COURT_APPEARANCE_ID.toString()),
               ),
             ),
         )
@@ -1526,6 +1537,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           id = COURT_CASE_ID_FOR_CREATION,
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
         )
+        MappingExtension.mappingServer.stubGetCourtAppearanceMappingGivenDpsId(
+          id = DPS_COURT_APPEARANCE_ID,
+          nomisCourtAppearanceId = NOMIS_COURT_APPEARANCE_ID,
+        )
         MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(
           id = DPS_COURT_CHARGE_ID,
           nomisCourtChargeId = NOMIS_COURT_CHARGE_ID,
@@ -1546,6 +1561,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           eq("sentence-create-success"),
           org.mockito.kotlin.check {
             Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
             Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
             Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
             Assertions.assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
@@ -1594,6 +1610,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               WireMock.matchingJsonPath(
                 "status",
                 WireMock.equalTo("A"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "eventId",
+                WireMock.equalTo(NOMIS_COURT_APPEARANCE_ID.toString()),
               ),
             )
             .withRequestBody(
@@ -1662,6 +1684,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         MappingExtension.mappingServer.stubGetCourtChargeMappingGivenDpsId(
           id = DPS_COURT_CHARGE_ID,
           nomisCourtChargeId = NOMIS_COURT_CHARGE_ID,
+        )
+        MappingExtension.mappingServer.stubGetCourtAppearanceMappingGivenDpsId(
+          id = DPS_COURT_APPEARANCE_ID,
+          nomisCourtAppearanceId = NOMIS_COURT_APPEARANCE_ID,
         )
 
         MappingExtension.mappingServer.stubGetSentenceMappingGivenDpsIdWithError(DPS_SENTENCE_ID, 404)
@@ -1747,6 +1773,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           id = COURT_CASE_ID_FOR_CREATION,
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
         )
+        MappingExtension.mappingServer.stubGetCourtAppearanceMappingGivenDpsId(
+          id = DPS_COURT_APPEARANCE_ID,
+          nomisCourtAppearanceId = NOMIS_COURT_APPEARANCE_ID,
+        )
         MappingExtension.mappingServer.stubGetSentenceMappingGivenDpsIdWithError(DPS_SENTENCE_ID, 404)
         MappingExtension.mappingServer.stubCreateSentence()
 
@@ -1823,6 +1853,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           id = COURT_CASE_ID_FOR_CREATION,
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
         )
+        MappingExtension.mappingServer.stubGetCourtAppearanceMappingGivenDpsId(
+          id = DPS_COURT_APPEARANCE_ID,
+          nomisCourtAppearanceId = NOMIS_COURT_APPEARANCE_ID,
+        )
 
         MappingExtension.mappingServer.stubGetSentenceMappingGivenDpsId(
           id = DPS_SENTENCE_ID,
@@ -1853,6 +1887,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             Assertions.assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
             Assertions.assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
           },
           isNull(),
@@ -1886,6 +1921,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             eq("sentence-updated-failed"),
             org.mockito.kotlin.check {
               Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+              Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
               Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
               Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
             },
@@ -1914,6 +1950,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(
           id = COURT_CASE_ID_FOR_CREATION,
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+
+        MappingExtension.mappingServer.stubGetCourtAppearanceMappingGivenDpsId(
+          id = DPS_COURT_APPEARANCE_ID,
+          nomisCourtAppearanceId = NOMIS_COURT_APPEARANCE_ID,
         )
 
         MappingExtension.mappingServer.stubGetSentenceMappingGivenDpsId(
@@ -2301,6 +2342,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         .message(
           sentenceMessagePayload(
             sentenceId = DPS_SENTENCE_ID,
+            courtAppearanceId = DPS_COURT_APPEARANCE_ID,
             courtCaseId = COURT_CASE_ID_FOR_CREATION,
             offenderNo = OFFENDER_NO,
             eventType = eventType,
@@ -2323,6 +2365,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         .message(
           sentenceMessagePayload(
             sentenceId = DPS_SENTENCE_ID,
+            courtAppearanceId = DPS_COURT_APPEARANCE_ID,
             courtCaseId = COURT_CASE_ID_FOR_CREATION,
             offenderNo = OFFENDER_NO,
             eventType = eventType,
@@ -2348,6 +2391,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             courtCaseId = COURT_CASE_ID_FOR_CREATION,
             offenderNo = OFFENDER_NO,
             eventType = eventType,
+            courtAppearanceId = DPS_COURT_APPEARANCE_ID,
             source = source,
           ),
         )
@@ -2382,10 +2426,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
   fun sentenceMessagePayload(
     courtCaseId: String,
     sentenceId: String,
+    courtAppearanceId: String,
     offenderNo: String,
     eventType: String,
     source: String = "DPS",
-  ) = """{"eventType":"$eventType", "additionalInformation": {"sentenceId":"$sentenceId", "courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+  ) = """{"eventType":"$eventType", "additionalInformation": {"sentenceId":"$sentenceId", "courtAppearanceId":"$courtAppearanceId", "courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun nomisCourtAppearanceCreateResponse(): String = """{ "id": $NOMIS_COURT_APPEARANCE_ID, 
       |"courtEventChargesIds": [] }
