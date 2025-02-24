@@ -1113,7 +1113,7 @@ private fun OutcomeHistoryDto.toNomisCreateHearingResult(): CreateHearingResultR
     findingCode = toNomisFindingCode(findingCode),
     adjudicatorUsername = getAdjudicatorUsernameForInternalHearingOnly(
       hearing.oicHearingType.name,
-      hearing.outcome.adjudicator,
+      hearing.outcome!!.adjudicator,
     ),
   )
 }

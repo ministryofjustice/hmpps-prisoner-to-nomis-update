@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentDetailsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentRoleDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentStatementDto
@@ -71,13 +70,13 @@ class AdjudicationTransformationTest {
   }
 
   @Test
-  fun `a charge with no code would be rejected`() {
+  fun `will use paragraph number if there is no NOMIS charge code`() {
     val dpsAdjudication = dpsAdjudication().copy(
       reportedAdjudication = dpsAdjudication().reportedAdjudication.copy(
         offenceDetails = OffenceDto(
           offenceCode = 1002,
           offenceRule = OffenceRuleDto(
-            paragraphNumber = "1",
+            paragraphNumber = "51:12A",
             paragraphDescription = "Commits any assault",
             nomisCode = null,
           ),
@@ -86,9 +85,10 @@ class AdjudicationTransformationTest {
       ),
     )
 
-    assertThrows<NullPointerException> {
-      dpsAdjudication.toNomisAdjudication()
-    }
+    val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
+
+    assertThat(nomisAdjudication.charges).hasSize(1)
+    assertThat(nomisAdjudication.charges[0].offenceCode).isEqualTo("51:12A")
   }
 
   @Test
@@ -123,7 +123,7 @@ class AdjudicationTransformationTest {
   }
 
   @Test
-  fun `assume there is a withOther offence code if this adjudication is the other prisoner in an incident`() {
+  fun `use paragraph number if withOther offence code is missing`() {
     val dpsAdjudication = dpsAdjudication().copy(
       reportedAdjudication = dpsAdjudication().reportedAdjudication.copy(
         incidentRole = IncidentRoleDto(
@@ -137,7 +137,7 @@ class AdjudicationTransformationTest {
         offenceDetails = OffenceDto(
           offenceCode = 1002,
           offenceRule = OffenceRuleDto(
-            paragraphNumber = "1",
+            paragraphNumber = "51:1B",
             paragraphDescription = "Commits any assault",
             nomisCode = "51:1B",
             withOthersNomisCode = null,
@@ -147,7 +147,11 @@ class AdjudicationTransformationTest {
         ),
       ),
     )
-    assertThrows<NullPointerException> { dpsAdjudication.toNomisAdjudication() }
+
+    val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
+
+    assertThat(nomisAdjudication.charges).hasSize(1)
+    assertThat(nomisAdjudication.charges[0].offenceCode).isEqualTo("51:1B")
   }
 
   @Test
