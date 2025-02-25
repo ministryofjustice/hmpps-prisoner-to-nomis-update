@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Upsert
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-@Component
+@Component("prisonPersonProfileDetailsNomisApiMockServer")
 class ProfileDetailsNomisApiMockServer(private val objectMapper: ObjectMapper) {
   fun stubPutProfileDetails(
     offenderNo: String = "A1234AA",

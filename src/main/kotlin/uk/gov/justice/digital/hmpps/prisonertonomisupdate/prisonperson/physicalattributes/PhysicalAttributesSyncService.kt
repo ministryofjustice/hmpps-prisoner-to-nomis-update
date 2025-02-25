@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.physical
 import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.profilede
 class PhysicalAttributesSyncService(
   private val dpsApi: PhysicalAttributesDpsApiService,
   private val physicalAttributesNomisApi: PhysicalAttributesNomisApiService,
+  @Qualifier("prisonPersonProfileDetailsNomisApiService")
   private val profileDetailsNomisApi: ProfileDetailsNomisApiService,
   private val eventFeatureSwitch: EventFeatureSwitch,
   private val telemetryClient: TelemetryClient,
