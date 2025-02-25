@@ -279,10 +279,11 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
       }
 
       @Test
-      fun `will call nomis api to create punishment award`() {
+      fun `will call nomis api to create punishment award with the latest hearing date`() {
         nomisApi.verify(
           postRequestedFor(urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/charge/1/awards"))
-            .withRequestBody(matchingJsonPath("awards[0].sanctionType", equalTo("ADA"))),
+            .withRequestBody(matchingJsonPath("awards[0].sanctionType", equalTo("ADA")))
+            .withRequestBody(matchingJsonPath("awards[0].effectiveDate", equalTo("2013-12-03"))),
         )
       }
 

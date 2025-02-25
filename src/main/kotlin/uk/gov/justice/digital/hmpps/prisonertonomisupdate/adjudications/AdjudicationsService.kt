@@ -158,13 +158,10 @@ class AdjudicationsService(
       )
     }
     createPunishments(
-      PunishmentEvent(
-        PunishmentsAdditionalInformation(
-          chargeNumber = chargeNumber,
-          prisonId = prisonId,
-          prisonerNumber = offenderNo,
-        ),
-      ),
+      chargeNumber = chargeNumber,
+      prisonId = prisonId,
+      prisonerNumber = offenderNo,
+      hearingDate = adjudication.reportedAdjudication.hearings.latestHearingDate(),
     )
 
     return adjudicationNumber!!
@@ -624,9 +621,22 @@ class AdjudicationsService(
     }
   }
 
-  suspend fun createPunishments(punishmentEvent: PunishmentEvent) {
-    val eventInfo = punishmentEvent.additionalInformation
-    val telemetryMap = eventInfo.toTelemetryMap()
+  suspend fun createPunishments(punishmentEvent: PunishmentEvent) = createPunishments(
+    chargeNumber = punishmentEvent.additionalInformation.chargeNumber,
+    prisonId = punishmentEvent.additionalInformation.prisonId,
+    prisonerNumber = punishmentEvent.additionalInformation.prisonerNumber,
+  )
+  suspend fun createPunishments(
+    chargeNumber: String,
+    prisonId: String,
+    prisonerNumber: String,
+    hearingDate: LocalDate? = null,
+  ) {
+    val telemetryMap = mutableMapOf(
+      "chargeNumber" to chargeNumber,
+      "prisonId" to prisonId,
+      "offenderNo" to prisonerNumber,
+    )
 
     synchronise {
       name = EntityType.PUNISHMENT.displayName
@@ -636,7 +646,7 @@ class AdjudicationsService(
 
       transform {
         val mapping =
-          adjudicationMappingService.getMappingGivenChargeNumber(eventInfo.chargeNumber)
+          adjudicationMappingService.getMappingGivenChargeNumber(chargeNumber)
             .also {
               telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
               telemetryMap["chargeSequence"] = it.chargeSequence.toString()
@@ -646,15 +656,15 @@ class AdjudicationsService(
         val chargeSequence = mapping.chargeSequence
 
         val punishments = adjudicationsApiService.getCharge(
-          eventInfo.chargeNumber,
-          eventInfo.prisonId,
+          chargeNumber,
+          prisonId,
         ).reportedAdjudication.punishments
 
         val nomisAwardsResponse =
           nomisApiService.createAdjudicationAwards(
             adjudicationNumber,
             chargeSequence,
-            CreateHearingResultAwardRequest(awards = punishments.map { it.toNomisAward() }),
+            CreateHearingResultAwardRequest(awards = punishments.map { it.toNomisAward(hearingDate) }),
           )
             .also { telemetryMap["punishmentsCount"] = it.awardsCreated.size.toString() }
 
@@ -1015,10 +1025,10 @@ class AdjudicationsService(
 
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 
-  private suspend fun PunishmentDto.toNomisAward() = HearingResultAwardRequest(
+  private suspend fun PunishmentDto.toNomisAward(hearingDate: LocalDate? = null) = HearingResultAwardRequest(
     sanctionType = this.type.toNomisSanctionType(),
     sanctionStatus = this.toNomisSanctionStatus(),
-    effectiveDate = this.schedule.startDate ?: this.schedule.suspendedUntil ?: LocalDate.now(),
+    effectiveDate = this.schedule.startDate ?: this.schedule.suspendedUntil ?: hearingDate ?: LocalDate.now(),
     sanctionDays = this.schedule.takeIf { it.measurement == PunishmentScheduleDto.Measurement.DAYS }?.duration ?: 0,
     compensationAmount = this.damagesOwedAmount?.toBigDecimal() ?: stoppagePercentage?.toBigDecimal(),
     commentText = this.toComment(),
@@ -1028,6 +1038,8 @@ class AdjudicationsService(
     },
   )
 }
+
+private fun List<HearingDto>.latestHearingDate(): LocalDate? = this.map { it.dateTimeOfHearing }.maxOfOrNull { it.toLocalDate() }
 
 private fun ReportedAdjudicationResponse.toDeleteMappingDto() = AdjudicationDeleteMappingDto(
   dpsChargeNumber = this.reportedAdjudication.chargeNumber,
