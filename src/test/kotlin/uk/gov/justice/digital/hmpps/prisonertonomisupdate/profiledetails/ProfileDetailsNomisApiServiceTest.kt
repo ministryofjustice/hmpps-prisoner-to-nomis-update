@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.profiledetails
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.profiledetails
 
 import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
@@ -12,18 +12,15 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.PrisonPersonConfiguration
 
 @SpringAPIServiceTest
-@Import(ProfileDetailsNomisApiService::class, PrisonPersonConfiguration::class, ProfileDetailsNomisApiMockServer::class)
+@Import(ProfileDetailsNomisApiService::class, ProfileDetailsNomisApiMockServer::class)
 class ProfileDetailsNomisApiServiceTest {
   @Autowired
-  @Qualifier("prisonPersonProfileDetailsNomisApiService")
   private lateinit var nomisApiService: ProfileDetailsNomisApiService
 
   @Autowired

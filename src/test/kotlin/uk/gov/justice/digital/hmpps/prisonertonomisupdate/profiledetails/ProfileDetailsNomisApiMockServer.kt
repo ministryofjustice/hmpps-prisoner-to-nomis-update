@@ -1,21 +1,18 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.profiledetails
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.profiledetails
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.put
-import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
-import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
-import com.github.tomakehurst.wiremock.verification.LoggedRequest
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertProfileDetailsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-@Component("prisonPersonProfileDetailsNomisApiMockServer")
+@Component
 class ProfileDetailsNomisApiMockServer(private val objectMapper: ObjectMapper) {
   fun stubPutProfileDetails(
     offenderNo: String = "A1234AA",
@@ -42,8 +39,6 @@ class ProfileDetailsNomisApiMockServer(private val objectMapper: ObjectMapper) {
       ),
     )
   }
-
-  fun findAllProfileDetailsRequests(): List<LoggedRequest> = nomisApi.findAll(putRequestedFor(urlPathEqualTo("/prisoners/A1234AA/profile-details")))
 
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
