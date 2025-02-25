@@ -15,7 +15,7 @@ class ContactPersonProfileDetailsDpsApiService(@Qualifier("personalRelationships
     .awaitBody()
 
   suspend fun getNumberOfChildren(prisonerNumber: String): SyncPrisonerNumberOfChildrenResponse = webClient.get()
-    .uri("/sync/{prisonerNuber}/number-of-children", prisonerNumber)
+    .uri("/sync/{prisonerNumber}/number-of-children", prisonerNumber)
     .retrieve()
     .awaitBody()
 }
