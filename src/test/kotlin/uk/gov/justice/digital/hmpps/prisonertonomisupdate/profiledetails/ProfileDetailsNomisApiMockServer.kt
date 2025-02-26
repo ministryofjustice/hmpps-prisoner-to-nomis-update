@@ -15,7 +15,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 @Component
 class ProfileDetailsNomisApiMockServer(private val objectMapper: ObjectMapper) {
   fun stubPutProfileDetails(
-    offenderNo: String = "A1234AA",
+    offenderNo: String = "A1234BC",
     created: Boolean = true,
     bookingId: Long = 12345,
   ) {
