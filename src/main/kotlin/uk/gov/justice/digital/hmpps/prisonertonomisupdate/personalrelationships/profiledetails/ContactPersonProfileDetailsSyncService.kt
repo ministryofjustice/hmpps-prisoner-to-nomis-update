@@ -13,25 +13,44 @@ class ContactPersonProfileDetailsSyncService(
 ) {
 
   suspend fun syncDomesticStatus(event: ContactDomesticStatusCreatedEvent) {
-    syncDomesticStatus(
-      prisonerNumber = event.personReference.identifiers.first { it.type == "prisonerNumber" }.value,
-      domesticStatusId = event.additionalInformation.domesticStatusId,
-    )
+    val prisonerNumber = event.personReference.identifiers.first { it.type == "prisonerNumber" }.value
+    val domesticStatusId = event.additionalInformation.domesticStatusId
+    if (event.additionalInformation.source == "DPS") {
+      syncDomesticStatus(prisonerNumber, domesticStatusId)
+    } else {
+      telemetryClient.trackEvent(
+        "contact-person-domestic-status-ignored",
+        mapOf(
+          "offenderNo" to prisonerNumber,
+          "domesticStatusId" to domesticStatusId.toString(),
+          "reason" to "Domestic status was created in NOMIS",
+        ),
+        null,
+      )
+    }
   }
 
   suspend fun syncDomesticStatus(prisonerNumber: String, domesticStatusId: Long) {
-    dpsApi.getDomesticStatus(prisonerNumber)
-      .let { nomisApi.upsertProfileDetails(prisonerNumber, "MARITAL", it.domesticStatusCode) }
-      .also {
-        telemetryClient.trackEvent(
-          """contact-person-domestic-status-${if (it.created) "created" else "updated"}""",
-          mapOf(
-            "offenderNo" to prisonerNumber,
-            "domesticStatusId" to domesticStatusId.toString(),
-            "bookingId" to it.bookingId.toString(),
-          ),
-          null,
-        )
-      }
+    val telemetry = mutableMapOf(
+      "offenderNo" to prisonerNumber,
+      "domesticStatusId" to domesticStatusId.toString(),
+    )
+    runCatching {
+      dpsApi.getDomesticStatus(prisonerNumber)
+        .also { telemetry["dpsId"] = it.id.toString() }
+        .let { nomisApi.upsertProfileDetails(prisonerNumber, "MARITAL", it.domesticStatusCode) }
+        .also { telemetry["bookingId"] = it.bookingId.toString() }
+        .also {
+          telemetryClient.trackEvent(
+            """contact-person-domestic-status-${if (it.created) "created" else "updated"}""",
+            telemetry,
+            null,
+          )
+        }
+    }.onFailure { e ->
+      telemetry["error"] = e.message ?: "unknown"
+      telemetryClient.trackEvent("contact-person-domestic-status-error", telemetry, null)
+      throw e
+    }
   }
 }

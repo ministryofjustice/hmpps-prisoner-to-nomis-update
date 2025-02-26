@@ -264,8 +264,7 @@ hmpps.sqs:
           "contacts-api.contact-restriction.updated",
           "personal-relationships-api.domestic-status.created"
         ]}
-      dlqMaxReceiveCount: 3
-      visibilityTimeout: 120
+      dlqMaxReceiveCount: 1
     organisations:
       queueName: "organisations-${random.uuid}"
       dlqName: "organisations-dlq-${random.uuid}"
