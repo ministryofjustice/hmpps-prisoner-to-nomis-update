@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.springframework.http.HttpStatusCode
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationDetails
@@ -40,6 +41,19 @@ class OrganisationsDpsApiExtension :
 class OrganisationsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   companion object {
     private const val WIREMOCK_PORT = 8100
+
+    fun organisationDetails() = OrganisationDetails(
+      organisationId = 12345,
+      organisationName = "Boots",
+      active = true,
+      organisationTypes = emptyList(),
+      phoneNumbers = emptyList(),
+      emailAddresses = emptyList(),
+      webAddresses = emptyList(),
+      addresses = emptyList(),
+      createdBy = "A.TEST",
+      createdTime = LocalDateTime.now().minusDays(1),
+    )
   }
 
   fun stubHealthPing(status: Int) {
@@ -63,17 +77,14 @@ class OrganisationsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
-
-  fun organisationDetails() = OrganisationDetails(
-    organisationId = 12345,
-    organisationName = "Boots",
-    active = true,
-    organisationTypes = emptyList(),
-    phoneNumbers = emptyList(),
-    emailAddresses = emptyList(),
-    webAddresses = emptyList(),
-    addresses = emptyList(),
-    createdBy = "A.TEST",
-    createdTime = LocalDateTime.now().minusDays(1),
-  )
+  fun stubGetOrganisation(organisationId: Long, httpStatus: HttpStatusCode) {
+    stubFor(
+      get("/organisation/$organisationId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("{}")
+          .withStatus(httpStatus.value()),
+      ),
+    )
+  }
 }

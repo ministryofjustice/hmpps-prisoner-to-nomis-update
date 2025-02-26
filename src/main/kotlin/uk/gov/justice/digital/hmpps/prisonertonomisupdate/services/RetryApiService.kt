@@ -23,7 +23,7 @@ class RetryApiService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun getBackoffSpec(maxRetryAttempts: Long?, backoffMillis: Long?): RetryBackoffSpec = Retry.backoff(
+  fun getBackoffSpec(maxRetryAttempts: Long? = null, backoffMillis: Long? = null): RetryBackoffSpec = Retry.backoff(
     maxRetryAttempts ?: this.maxRetryAttempts,
     Duration.ofMillis(backoffMillis ?: this.backoffMillis),
   )

@@ -5,13 +5,25 @@ import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Mono
+import reactor.util.retry.Retry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ErrorResponse
 
 suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForNotFound(): T? = this.bodyToMono<T>()
   .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
   .awaitSingleOrNull()
+
+suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForNotFound(retrySpec: Retry): T? = this.bodyToMono<T>()
+  .retryWhen(retrySpec)
+  .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
+  .awaitSingleOrNull()
+
+suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyWithRetry(retrySpec: Retry): T = when (T::class) {
+  Unit::class -> awaitBodilessEntity().let { Unit as T }
+  else -> bodyToMono<T>().retryWhen(retrySpec).awaitSingle()
+}
 
 suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForStatus(vararg status: HttpStatus): T? = this.bodyToMono<T>()
   .onErrorResume(WebClientResponseException::class.java) {
