@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.dpsContactPersonServer
@@ -9,10 +10,17 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerDomesticStatusResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerNumberOfChildrenResponse
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
+import java.time.LocalDateTime
 
 @Component
 class ContactPersonProfileDetailsDpsApiMockServer {
-  fun domesticStatus() = SyncPrisonerDomesticStatusResponse(123)
+  fun domesticStatus(dpsId: Long = 123, domesticStatusCode: String = "M") = SyncPrisonerDomesticStatusResponse(
+    id = dpsId,
+    active = true,
+    domesticStatusCode = domesticStatusCode,
+    createdTime = LocalDateTime.now(),
+    createdBy = "A_USER",
+  )
   fun numberOfChildren() = SyncPrisonerNumberOfChildrenResponse(123)
 
   fun stubGetDomesticStatus(prisonerNumber: String, response: SyncPrisonerDomesticStatusResponse = domesticStatus()) {
@@ -60,4 +68,7 @@ class ContactPersonProfileDetailsDpsApiMockServer {
         ),
     )
   }
+
+  fun verify(pattern: RequestPatternBuilder) = dpsContactPersonServer.verify(pattern)
+  fun verify(count: Int, pattern: RequestPatternBuilder) = dpsContactPersonServer.verify(count, pattern)
 }
