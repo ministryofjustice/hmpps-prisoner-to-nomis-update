@@ -11,13 +11,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventLi
 import java.util.concurrent.CompletableFuture
 
 @Service
-class OrganisationDomainEventListener(
+class OrganisationsDomainEventListener(
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
-  organisationService: OrganisationService,
+  organisationsService: OrganisationsService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListener(
-  service = organisationService,
+  service = organisationsService,
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,

@@ -9,6 +9,9 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.objectMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationDetails
+import java.time.LocalDateTime
 
 class OrganisationsDpsApiExtension :
   BeforeAllCallback,
@@ -49,4 +52,28 @@ class OrganisationsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+
+  fun stubGetOrganisation(organisationId: Long, organisation: OrganisationDetails = organisationDetails()) {
+    stubFor(
+      get("/organisation/$organisationId").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(objectMapper.writeValueAsString(organisation))
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun organisationDetails() = OrganisationDetails(
+    organisationId = 12345,
+    organisationName = "Boots",
+    active = true,
+    organisationTypes = emptyList(),
+    phoneNumbers = emptyList(),
+    emailAddresses = emptyList(),
+    webAddresses = emptyList(),
+    addresses = emptyList(),
+    createdBy = "A.TEST",
+    createdTime = LocalDateTime.now().minusDays(1),
+  )
 }

@@ -31,5 +31,5 @@ class AlertsConfiguration(
   )
 
   @Component("alertsApi")
-  class SentenceAdjustmentsApiHealth(@Qualifier("alertsApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
+  class AlertsApiHealth(@Qualifier("alertsApiHealthWebClient") webClient: WebClient) : ReactiveHealthPingCheck(webClient)
 }

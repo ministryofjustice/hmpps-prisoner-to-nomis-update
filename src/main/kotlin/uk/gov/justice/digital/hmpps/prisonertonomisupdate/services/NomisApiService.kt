@@ -2,18 +2,14 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.core.ParameterizedTypeReference
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.PageRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -885,18 +881,6 @@ data class NomisIncentive(
 )
 
 data class NomisCodeDescription(val code: String, val description: String)
-
-class RestResponsePage<T>(
-  @JsonProperty("content") content: List<T>,
-  @JsonProperty("number") number: Int,
-  @JsonProperty("size") size: Int,
-  @JsonProperty("totalElements") totalElements: Long,
-  @Suppress("UNUSED_PARAMETER")
-  @JsonProperty("pageable")
-  pageable: JsonNode,
-) : PageImpl<T>(content, PageRequest.of(number, size), totalElements)
-
-inline fun <reified T> typeReference() = object : ParameterizedTypeReference<T>() {}
 
 data class PrisonIncentiveLevelRequest(
   val levelCode: String,
