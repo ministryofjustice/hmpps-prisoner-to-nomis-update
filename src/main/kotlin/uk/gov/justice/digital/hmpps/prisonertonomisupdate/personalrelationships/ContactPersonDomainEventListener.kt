@@ -7,6 +7,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileDetailsSyncService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListener
 import java.util.concurrent.CompletableFuture
 
@@ -15,6 +16,7 @@ class ContactPersonDomainEventListener(
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
   val contactPersonService: ContactPersonService,
+  val profileDetailsService: ContactPersonProfileDetailsSyncService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListener(
   service = contactPersonService,
@@ -56,6 +58,7 @@ class ContactPersonDomainEventListener(
       "contacts-api.contact-restriction.updated" -> contactPersonService.contactRestrictionUpdated(message.fromJson())
       "contacts-api.prisoner-contact-restriction.created" -> contactPersonService.prisonerContactRestrictionCreated(message.fromJson())
       "contacts-api.prisoner-contact-restriction.updated" -> contactPersonService.prisonerContactRestrictionUpdated(message.fromJson())
+      "personal-relationships-api.domestic-status.created" -> profileDetailsService.syncDomesticStatus(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
@@ -251,6 +254,17 @@ data class ContactRestrictionUpdatedEvent(
 
 data class ContactRestrictionAdditionalData(
   val contactRestrictionId: Long,
+  override val source: String = "DPS",
+) : SourcedAdditionalData
+
+data class ContactDomesticStatusCreatedEvent(
+  override val additionalInformation: ContactDomesticStatusData,
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
+
+data class ContactDomesticStatusData(
+  val domesticStatusId: Long,
   override val source: String = "DPS",
 ) : SourcedAdditionalData
 
