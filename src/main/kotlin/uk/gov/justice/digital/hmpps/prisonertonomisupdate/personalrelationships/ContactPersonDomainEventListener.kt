@@ -59,6 +59,7 @@ class ContactPersonDomainEventListener(
       "contacts-api.prisoner-contact-restriction.created" -> contactPersonService.prisonerContactRestrictionCreated(message.fromJson())
       "contacts-api.prisoner-contact-restriction.updated" -> contactPersonService.prisonerContactRestrictionUpdated(message.fromJson())
       "personal-relationships-api.domestic-status.created" -> profileDetailsService.syncDomesticStatus(message.fromJson())
+      "personal-relationships-api.number-of-children.created" -> profileDetailsService.syncNumberOfChildren(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
@@ -265,6 +266,17 @@ data class ContactDomesticStatusCreatedEvent(
 
 data class ContactDomesticStatusData(
   val domesticStatusId: Long,
+  override val source: String = "DPS",
+) : SourcedAdditionalData
+
+data class ContactNumberOfChildrenCreatedEvent(
+  override val additionalInformation: ContactNumberOfChildrenData,
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
+
+data class ContactNumberOfChildrenData(
+  val numberOfChildrenId: Long,
   override val source: String = "DPS",
 ) : SourcedAdditionalData
 

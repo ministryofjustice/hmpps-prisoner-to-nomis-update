@@ -14,15 +14,6 @@ import java.time.LocalDateTime
 
 @Component
 class ContactPersonProfileDetailsDpsApiMockServer {
-  fun domesticStatus(dpsId: Long = 123, domesticStatusCode: String = "M") = SyncPrisonerDomesticStatusResponse(
-    id = dpsId,
-    active = true,
-    domesticStatusCode = domesticStatusCode,
-    createdTime = LocalDateTime.now(),
-    createdBy = "A_USER",
-  )
-  fun numberOfChildren() = SyncPrisonerNumberOfChildrenResponse(123)
-
   fun stubGetDomesticStatus(prisonerNumber: String, response: SyncPrisonerDomesticStatusResponse = domesticStatus()) {
     dpsContactPersonServer.stubFor(
       get("/sync/$prisonerNumber/domestic-status")
@@ -72,3 +63,18 @@ class ContactPersonProfileDetailsDpsApiMockServer {
   fun verify(pattern: RequestPatternBuilder) = dpsContactPersonServer.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = dpsContactPersonServer.verify(count, pattern)
 }
+
+fun domesticStatus(dpsId: Long = 123, domesticStatusCode: String = "M") = SyncPrisonerDomesticStatusResponse(
+  id = dpsId,
+  active = true,
+  domesticStatusCode = domesticStatusCode,
+  createdTime = LocalDateTime.now(),
+  createdBy = "A_USER",
+)
+fun numberOfChildren(dpsId: Long = 123, numberOfChildren: String = "3") = SyncPrisonerNumberOfChildrenResponse(
+  id = dpsId,
+  active = true,
+  numberOfChildren = numberOfChildren,
+  createdTime = LocalDateTime.now(),
+  createdBy = "A_USER",
+)
