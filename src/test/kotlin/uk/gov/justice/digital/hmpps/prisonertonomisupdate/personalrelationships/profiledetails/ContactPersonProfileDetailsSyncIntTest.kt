@@ -6,12 +6,10 @@ import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.StringValuePattern
-import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.check
@@ -25,6 +23,8 @@ import org.springframework.http.HttpStatus.NOT_FOUND
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileType.CHILD
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileType.MARITAL
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.profiledetails.ProfileDetailsNomisApiMockServer
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
@@ -34,16 +34,13 @@ class ContactPersonProfileDetailsSyncIntTest(
 ) : SqsIntegrationTestBase() {
 
   @Nested
-  inner class ProfileDetailsCreatedEvent {
+  inner class DomesticStatusCreatedEvent {
     @Nested
     inner class HappyPath {
-      @BeforeEach
-      fun setUp() = runTest {
-        dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC")
-      }
 
       @Test
       fun `should synchronise domestic status`() {
+        dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC", response = domesticStatus(domesticStatusCode = "M"))
         nomisApi.stubPutProfileDetails(offenderNo = "A1234BC", created = true, bookingId = 12345)
 
         publishDomainEvent(
@@ -62,15 +59,17 @@ class ContactPersonProfileDetailsSyncIntTest(
           profileCode = equalTo("M"),
         )
         verifyTelemetry(
+          profileType = MARITAL,
           telemetryType = "created",
           offenderNo = "A1234BC",
-          domesticStatusId = 54321,
+          dpsId = 54321,
           bookingId = 12345,
         )
       }
 
       @Test
       fun `should raise updated telemetry`() {
+        dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC")
         nomisApi.stubPutProfileDetails(created = false)
 
         publishDomainEvent(
@@ -95,7 +94,7 @@ class ContactPersonProfileDetailsSyncIntTest(
 
         dpsApi.verify(count = 0, getRequestedFor(urlPathEqualTo("/sync/A1234BC/domestic-status")))
         nomisApi.verify(count = 0, putRequestedFor(urlPathEqualTo("/prisoners/A1234BC/profile-details")))
-        verifyTelemetry(telemetryType = "ignored", ignoreReason = "Domestic status was created in NOMIS")
+        verifyTelemetry(telemetryType = "ignored", ignoreReason = "Entity was created in NOMIS")
       }
     }
 
@@ -155,9 +154,138 @@ class ContactPersonProfileDetailsSyncIntTest(
     }
   }
 
-  private fun verifyDpsApiCall(prisonerNumber: String = "A1234BC") {
+  @Nested
+  inner class NumberOfChildrenCreatedEvent {
+    @Nested
+    inner class HappyPath {
+
+      @Test
+      fun `should synchronise number of children`() {
+        dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC", response = numberOfChildren(numberOfChildren = "3"))
+        nomisApi.stubPutProfileDetails(offenderNo = "A1234BC", created = true, bookingId = 12345)
+
+        publishDomainEvent(
+          eventType = "personal-relationships-api.number-of-children.created",
+          payload = numberOfChildrenCreatedEvent(
+            prisonerNumber = "A1234BC",
+            numberOfChildrenId = 54321,
+            source = "DPS",
+          ),
+        ).also { waitForAnyProcessingToComplete() }
+
+        verifyDpsApiCall(prisonerNumber = "A1234BC", profileType = CHILD)
+        verifyNomisPutProfileDetails(
+          prisonerNumber = "A1234BC",
+          profileType = equalTo("CHILD"),
+          profileCode = equalTo("3"),
+        )
+        verifyTelemetry(
+          profileType = CHILD,
+          telemetryType = "created",
+          offenderNo = "A1234BC",
+          dpsId = 54321,
+          bookingId = 12345,
+        )
+      }
+
+      @Test
+      fun `should raise updated telemetry`() {
+        dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC")
+        nomisApi.stubPutProfileDetails(created = false)
+
+        publishDomainEvent(
+          eventType = "personal-relationships-api.number-of-children.created",
+          payload = numberOfChildrenCreatedEvent(),
+        ).also { waitForAnyProcessingToComplete() }
+
+        verifyDpsApiCall(profileType = CHILD)
+        verifyNomisPutProfileDetails(profileType = equalTo("CHILD"), profileCode = equalTo("3"))
+        verifyTelemetry(
+          profileType = CHILD,
+          telemetryType = "updated",
+          bookingId = 12345,
+        )
+      }
+
+      @Test
+      fun `should ignore if change performed in NOMIS`() {
+        publishDomainEvent(
+          eventType = "personal-relationships-api.number-of-children.created",
+          payload = numberOfChildrenCreatedEvent(source = "NOMIS"),
+        ).also { waitForAnyProcessingToComplete() }
+
+        dpsApi.verify(count = 0, getRequestedFor(urlPathEqualTo("/sync/A1234BC/number-of-children")))
+        nomisApi.verify(count = 0, putRequestedFor(urlPathEqualTo("/prisoners/A1234BC/number-of-children")))
+        verifyTelemetry(
+          profileType = CHILD,
+          telemetryType = "ignored",
+          ignoreReason = "Entity was created in NOMIS",
+        )
+      }
+    }
+
+    @Nested
+    inner class Failures {
+      @Test
+      fun `should fail if call to DPS fails`() {
+        dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC", errorStatus = BAD_GATEWAY)
+
+        publishDomainEvent(
+          eventType = "personal-relationships-api.number-of-children.created",
+          payload = numberOfChildrenCreatedEvent(),
+        ).also { waitForDlqMessage() }
+
+        verifyDpsApiCall(profileType = CHILD)
+        nomisApi.verify(count = 0, putRequestedFor(urlPathEqualTo("/prisoners/A1234BC/number-of-children")))
+        verifyTelemetry(
+          profileType = CHILD,
+          telemetryType = "error",
+          errorReason = "502 Bad Gateway from GET http://localhost:8099/sync/A1234BC/number-of-children",
+        )
+      }
+
+      @Test
+      fun `should fail if call to DPS returns not found`() {
+        dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC", errorStatus = NOT_FOUND)
+
+        publishDomainEvent(
+          eventType = "personal-relationships-api.number-of-children.created",
+          payload = numberOfChildrenCreatedEvent(),
+        ).also { waitForDlqMessage() }
+
+        verifyDpsApiCall(profileType = CHILD)
+        nomisApi.verify(count = 0, putRequestedFor(urlPathEqualTo("/prisoners/A1234BC/number-of-children")))
+        verifyTelemetry(
+          profileType = CHILD,
+          telemetryType = "error",
+          errorReason = "404 Not Found from GET http://localhost:8099/sync/A1234BC/number-of-children",
+        )
+      }
+
+      @Test
+      fun `should fail if call to NOMIS fails`() {
+        dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC")
+        nomisApi.stubPutProfileDetails(errorStatus = BAD_REQUEST)
+
+        publishDomainEvent(
+          eventType = "personal-relationships-api.number-of-children.created",
+          payload = numberOfChildrenCreatedEvent(),
+        ).also { waitForDlqMessage() }
+
+        verifyDpsApiCall(profileType = CHILD)
+        verifyNomisPutProfileDetails(profileType = equalTo("CHILD"), profileCode = equalTo("3"))
+        verifyTelemetry(
+          profileType = CHILD,
+          telemetryType = "error",
+          errorReason = "400 Bad Request from PUT http://localhost:8082/prisoners/A1234BC/profile-details",
+        )
+      }
+    }
+  }
+
+  private fun verifyDpsApiCall(prisonerNumber: String = "A1234BC", profileType: ContactPersonProfileType = MARITAL) {
     dpsApi.verify(
-      getRequestedFor(urlPathEqualTo("/sync/$prisonerNumber/domestic-status")),
+      getRequestedFor(urlPathEqualTo("/sync/$prisonerNumber/${profileType.identifier}")),
     )
   }
 
@@ -174,18 +302,19 @@ class ContactPersonProfileDetailsSyncIntTest(
   }
 
   private fun verifyTelemetry(
+    profileType: ContactPersonProfileType = MARITAL,
     telemetryType: String,
     offenderNo: String = "A1234BC",
-    domesticStatusId: Long = 54321,
+    dpsId: Long = 54321,
     bookingId: Long? = null,
     ignoreReason: String? = null,
     errorReason: String? = null,
   ) {
     verify(telemetryClient).trackEvent(
-      eq("contact-person-domestic-status-$telemetryType"),
+      eq("contact-person-${profileType.identifier}-$telemetryType"),
       check {
         assertThat(it["offenderNo"]).isEqualTo(offenderNo)
-        assertThat(it["domesticStatusId"]).isEqualTo(domesticStatusId.toString())
+        assertThat(it["dpsId"]).isEqualTo(dpsId.toString())
         bookingId?.run { assertThat(it["bookingId"]).isEqualTo(this.toString()) }
         ignoreReason?.run { assertThat(it["reason"]).isEqualTo(this) }
         errorReason?.run { assertThat(it["error"]).isEqualTo(this) }
@@ -224,6 +353,29 @@ fun domesticStatusCreatedEvent(
       "eventType":"personal-relationships-api.domestic-status.created", 
       "additionalInformation": {
         "domesticStatusId": $domesticStatusId,
+        "source": "$source"
+      },
+      "personReference": {
+        "identifiers": [
+          {
+            "type": "prisonerNumber",
+            "value": "$prisonerNumber"
+          }
+        ]
+      }
+    }
+    """
+
+fun numberOfChildrenCreatedEvent(
+  prisonerNumber: String = "A1234BC",
+  numberOfChildrenId: Long = 54321,
+  source: String = "DPS",
+) = //language=JSON
+  """
+    {
+      "eventType":"personal-relationships-api.number-of-children.created", 
+      "additionalInformation": {
+        "numberOfChildrenId": $numberOfChildrenId,
         "source": "$source"
       },
       "personReference": {
