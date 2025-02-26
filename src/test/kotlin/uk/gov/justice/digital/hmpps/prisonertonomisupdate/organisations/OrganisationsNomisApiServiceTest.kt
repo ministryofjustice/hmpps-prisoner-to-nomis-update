@@ -12,9 +12,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CorporateOrganisationIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @SpringAPIServiceTest
-@Import(OrganisationsNomisApiService::class, OrganisationsNomisApiMockServer::class)
+@Import(
+  OrganisationsNomisApiService::class,
+  OrganisationsNomisApiMockServer::class,
+  RetryApiService::class,
+)
 class OrganisationsNomisApiServiceTest {
   @Autowired
   private lateinit var apiService: OrganisationsNomisApiService

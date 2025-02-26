@@ -37,10 +37,10 @@ class OrganisationsNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
   fun stubGetCorporateOrganisationIds(
-    count: Long = 1,
     content: List<CorporateOrganisationIdResponse> = listOf(
       CorporateOrganisationIdResponse(123456),
     ),
+    count: Long = content.size.toLong(),
   ) {
     nomisApi.stubFor(
       get(urlPathEqualTo("/corporates/ids")).willReturn(

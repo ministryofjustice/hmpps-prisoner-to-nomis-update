@@ -10,7 +10,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CorporateOrganisationIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CorporateOrganisation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 
 @Service
@@ -29,7 +30,7 @@ class OrganisationReconciliationService(
     val organisations = getOrganisationsForPage(page)
 
     withContext(Dispatchers.Unconfined) {
-      organisations.map { async { checkOrganisationMatch(it) } }
+      organisations.map { async { checkOrganisationMatch(it.corporateId) } }
     }.awaitAll().filterNotNull()
   }
 
@@ -46,9 +47,30 @@ class OrganisationReconciliationService(
     .getOrElse { emptyList() }
     .also { log.info("Page requested: $page, with ${it.size} organisations") }
 
-  suspend fun checkOrganisationMatch(organisationId: CorporateOrganisationIdResponse): MismatchOrganisation? = null
+  suspend fun checkOrganisationMatch(corporateAndOrganisationId: Long): MismatchOrganisation? {
+    val dpsOrganisation = dpsApiService.getOrganisation(corporateAndOrganisationId)?.toOrganisation()
+    val nomisOrganisation = nomisApiService.getCorporateOrganisation(corporateAndOrganisationId).toOrganisation()
+    if (nomisOrganisation != dpsOrganisation) {
+      return MismatchOrganisation(organisationId = corporateAndOrganisationId).also { mismatch ->
+        log.warn("Organisation Mismatch found for $corporateAndOrganisationId. DPS: $dpsOrganisation, NOMIS: $nomisOrganisation")
+      }
+    }
+    return null
+  }
 }
+
+private fun OrganisationDetails.toOrganisation() = Organisation(
+  id = this.organisationId,
+  name = this.organisationName,
+)
+
+private fun CorporateOrganisation.toOrganisation() = Organisation(
+  id = this.id,
+  name = this.name,
+)
 
 data class MismatchOrganisation(
   val organisationId: Long,
 )
+
+data class Organisation(val id: Long, val name: String)
