@@ -93,22 +93,26 @@ class SentencingReconciliationService(
           doApiCallWithRetries { adjustmentsApiService.getAdjustments(prisonerId.offenderNo) }
             // temporary fix until DPS filter out old adjustments
             ?.filter { it.bookingId == prisonerId.bookingId }
+            // ignore adjustments that are zero days since the status can differ
+            ?.filter { it.days != 0 }
         }
     }.awaitBoth()
 
     val nomisCounts: AdjustmentCounts = nomisAdjustments.let { adjustment ->
+      val keyDateAdjustments = adjustment.keyDateAdjustments.filter { it.adjustmentDays != 0L }
       AdjustmentCounts(
-        lawfullyAtLarge = adjustment.keyDateAdjustments.count { it.adjustmentType.code == "LAL" },
-        unlawfullyAtLarge = adjustment.keyDateAdjustments.count { it.adjustmentType.code == "UAL" },
-        restorationOfAdditionalDaysAwarded = adjustment.keyDateAdjustments.count { it.adjustmentType.code == "RADA" },
-        additionalDaysAwarded = adjustment.keyDateAdjustments.count { it.adjustmentType.code == "ADA" },
-        specialRemission = adjustment.keyDateAdjustments.count { it.adjustmentType.code == "SREM" },
+        lawfullyAtLarge = keyDateAdjustments.count { it.adjustmentType.code == "LAL" },
+        unlawfullyAtLarge = keyDateAdjustments.count { it.adjustmentType.code == "UAL" },
+        restorationOfAdditionalDaysAwarded = keyDateAdjustments.count { it.adjustmentType.code == "RADA" },
+        additionalDaysAwarded = keyDateAdjustments.count { it.adjustmentType.code == "ADA" },
+        specialRemission = keyDateAdjustments.count { it.adjustmentType.code == "SREM" },
       )
     }.let { counts ->
+      val sentenceAdjustments = nomisAdjustments.sentenceAdjustments.filter { it.adjustmentDays != 0L }
       counts.copy(
-        remand = nomisAdjustments.sentenceAdjustments.count { it.adjustmentType.code in remandAdjustmentTypes },
-        unusedDeductions = nomisAdjustments.sentenceAdjustments.count { it.adjustmentType.code == "UR" },
-        taggedBail = nomisAdjustments.sentenceAdjustments.count { it.adjustmentType.code in taggedBailAdjustmentTypes },
+        remand = sentenceAdjustments.count { it.adjustmentType.code in remandAdjustmentTypes },
+        unusedDeductions = sentenceAdjustments.count { it.adjustmentType.code == "UR" },
+        taggedBail = sentenceAdjustments.count { it.adjustmentType.code in taggedBailAdjustmentTypes },
       )
     }
 

@@ -78,6 +78,33 @@ internal class SentencingReconciliationServiceTest {
     }
 
     @Nested
+    inner class WhenBothSystemsHaveJustZeroDayAdjustments {
+      @BeforeEach
+      fun beforeEach() {
+        sentencingAdjustmentsApi.stubAdjustmentsGet(listOf(adjustment(AdjustmentType.REMAND, effectiveDays = 0)))
+        nomisApi.stubGetSentencingAdjustments(
+          bookingId = 123456,
+          sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
+            keyDateAdjustments = emptyList(),
+            sentenceAdjustments = listOf(sentenceAdjustment(adjustmentType = SentenceAdjustments.RX, effectiveDays = 0)),
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(
+          service.checkBookingAdjustmentsMatch(
+            PrisonerIds(
+              bookingId = 123456L,
+              offenderNo = "A1234AA",
+            ),
+          ),
+        ).isNull()
+      }
+    }
+
+    @Nested
     inner class WhenBothSystemsHaveOneOfEachAdjustmentType {
       @BeforeEach
       fun beforeEach() {
@@ -274,6 +301,40 @@ internal class SentencingReconciliationServiceTest {
             ),
           ),
         )
+      }
+    }
+
+    @Nested
+    inner class WhenDPSHasAnAdditionalZeroDayAdjustment {
+      @BeforeEach
+      fun beforeEach() {
+        sentencingAdjustmentsApi.stubAdjustmentsGet(
+          listOf(
+            adjustment(AdjustmentType.LAWFULLY_AT_LARGE),
+            adjustment(AdjustmentType.ADDITIONAL_DAYS_AWARDED, effectiveDays = 0),
+          ),
+        )
+        nomisApi.stubGetSentencingAdjustments(
+          bookingId = 123456,
+          sentencingAdjustmentsResponse = SentencingAdjustmentsResponse(
+            keyDateAdjustments = listOf(
+              keyDateAdjustment(adjustmentType = KeyDateAdjustments.LAL),
+            ),
+            sentenceAdjustments = listOf(),
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(
+          service.checkBookingAdjustmentsMatch(
+            PrisonerIds(
+              bookingId = ADJUSTMENT_BOOKING_ID,
+              offenderNo = OFFENDER_NO,
+            ),
+          ),
+        ).isNull()
       }
     }
 
@@ -539,6 +600,7 @@ internal fun adjustment(
   fromDate = fromDate,
   toDate = fromDate.plusDays(effectiveDays.toLong()),
   effectiveDays = effectiveDays,
+  days = effectiveDays,
   status = AdjustmentDto.Status.ACTIVE,
   lastUpdatedBy = "NOMIS",
   lastUpdatedDate = LocalDateTime.now(),
