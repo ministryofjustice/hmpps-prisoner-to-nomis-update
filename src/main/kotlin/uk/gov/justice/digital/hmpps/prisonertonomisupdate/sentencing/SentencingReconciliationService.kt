@@ -94,7 +94,7 @@ class SentencingReconciliationService(
             // temporary fix until DPS filter out old adjustments
             ?.filter { it.bookingId == prisonerId.bookingId }
             // ignore adjustments that are zero days since the status can differ
-            ?.filter { it.days != 0 }
+            ?.filter { it.effectiveDays != 0 }
         }
     }.awaitBoth()
 
