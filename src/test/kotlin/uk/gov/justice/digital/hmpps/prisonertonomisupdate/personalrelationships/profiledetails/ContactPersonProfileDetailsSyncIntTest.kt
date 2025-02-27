@@ -6,10 +6,12 @@ import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.StringValuePattern
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.check
@@ -20,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus.BAD_GATEWAY
 import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.NOT_FOUND
+import org.springframework.http.MediaType
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
@@ -47,7 +50,7 @@ class ContactPersonProfileDetailsSyncIntTest(
           eventType = "personal-relationships-api.domestic-status.created",
           payload = domesticStatusCreatedEvent(
             prisonerNumber = "A1234BC",
-            domesticStatusId = 54321,
+            domesticStatusId = 123,
             source = "DPS",
           ),
         ).also { waitForAnyProcessingToComplete() }
@@ -62,6 +65,7 @@ class ContactPersonProfileDetailsSyncIntTest(
           profileType = MARITAL,
           telemetryType = "created",
           offenderNo = "A1234BC",
+          requestedDpsId = 123,
           dpsId = 54321,
           bookingId = 12345,
         )
@@ -94,7 +98,7 @@ class ContactPersonProfileDetailsSyncIntTest(
 
         dpsApi.verify(count = 0, getRequestedFor(urlPathEqualTo("/sync/A1234BC/domestic-status")))
         nomisApi.verify(count = 0, putRequestedFor(urlPathEqualTo("/prisoners/A1234BC/profile-details")))
-        verifyTelemetry(telemetryType = "ignored", ignoreReason = "Entity was created in NOMIS")
+        verifyTelemetry(telemetryType = "ignored", ignoreReason = "Entity was created in NOMIS", dpsId = null)
       }
     }
 
@@ -114,6 +118,7 @@ class ContactPersonProfileDetailsSyncIntTest(
         verifyTelemetry(
           telemetryType = "error",
           errorReason = "502 Bad Gateway from GET http://localhost:8099/sync/A1234BC/domestic-status",
+          dpsId = null,
         )
       }
 
@@ -131,6 +136,7 @@ class ContactPersonProfileDetailsSyncIntTest(
         verifyTelemetry(
           telemetryType = "error",
           errorReason = "404 Not Found from GET http://localhost:8099/sync/A1234BC/domestic-status",
+          dpsId = null,
         )
       }
 
@@ -149,6 +155,7 @@ class ContactPersonProfileDetailsSyncIntTest(
         verifyTelemetry(
           telemetryType = "error",
           errorReason = "400 Bad Request from PUT http://localhost:8082/prisoners/A1234BC/profile-details",
+          dpsId = null,
         )
       }
     }
@@ -168,7 +175,7 @@ class ContactPersonProfileDetailsSyncIntTest(
           eventType = "personal-relationships-api.number-of-children.created",
           payload = numberOfChildrenCreatedEvent(
             prisonerNumber = "A1234BC",
-            numberOfChildrenId = 54321,
+            numberOfChildrenId = 123,
             source = "DPS",
           ),
         ).also { waitForAnyProcessingToComplete() }
@@ -183,6 +190,7 @@ class ContactPersonProfileDetailsSyncIntTest(
           profileType = CHILD,
           telemetryType = "created",
           offenderNo = "A1234BC",
+          requestedDpsId = 123,
           dpsId = 54321,
           bookingId = 12345,
         )
@@ -220,6 +228,7 @@ class ContactPersonProfileDetailsSyncIntTest(
           profileType = CHILD,
           telemetryType = "ignored",
           ignoreReason = "Entity was created in NOMIS",
+          dpsId = null,
         )
       }
     }
@@ -241,6 +250,7 @@ class ContactPersonProfileDetailsSyncIntTest(
           profileType = CHILD,
           telemetryType = "error",
           errorReason = "502 Bad Gateway from GET http://localhost:8099/sync/A1234BC/number-of-children",
+          dpsId = null,
         )
       }
 
@@ -259,6 +269,7 @@ class ContactPersonProfileDetailsSyncIntTest(
           profileType = CHILD,
           telemetryType = "error",
           errorReason = "404 Not Found from GET http://localhost:8099/sync/A1234BC/number-of-children",
+          dpsId = null,
         )
       }
 
@@ -278,8 +289,59 @@ class ContactPersonProfileDetailsSyncIntTest(
           profileType = CHILD,
           telemetryType = "error",
           errorReason = "400 Bad Request from PUT http://localhost:8082/prisoners/A1234BC/profile-details",
+          dpsId = null,
         )
       }
+    }
+  }
+
+  @Nested
+  @DisplayName("PUT /contactperson/sync/profile-details/{prisonerNumber}/{profileType}")
+  inner class SyncEndpoint {
+
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient.put().uri("/contactperson/sync/profile-details/A1234BC/MARITAL")
+        .headers(setAuthorisation(roles = listOf()))
+        .contentType(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden with wrong role`() {
+      webTestClient.put().uri("/contactperson/sync/profile-details/A1234BC/MARITAL")
+        .headers(setAuthorisation(roles = listOf("BANANAS")))
+        .contentType(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access unauthorised with no auth token`() {
+      webTestClient.put().uri("/contactperson/sync/profile-details/A1234BC/MARITAL")
+        .contentType(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
+
+    @Test
+    fun `should sync profile details`() = runTest {
+      dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC")
+      nomisApi.stubPutProfileDetails(created = false)
+
+      webTestClient.put().uri("/contactperson/sync/profile-details/A1234BC/MARITAL")
+        .headers(setAuthorisation(roles = listOf("ROLE_MIGRATE_CONTACTPERSON")))
+        .exchange()
+        .expectStatus().isOk
+
+      verifyDpsApiCall()
+      verifyNomisPutProfileDetails()
+      verifyTelemetry(
+        telemetryType = "updated",
+        requestedDpsId = 0,
+        bookingId = 12345,
+      )
     }
   }
 
@@ -305,7 +367,8 @@ class ContactPersonProfileDetailsSyncIntTest(
     profileType: ContactPersonProfileType = MARITAL,
     telemetryType: String,
     offenderNo: String = "A1234BC",
-    dpsId: Long = 54321,
+    requestedDpsId: Long = 123,
+    dpsId: Long? = 54321,
     bookingId: Long? = null,
     ignoreReason: String? = null,
     errorReason: String? = null,
@@ -314,7 +377,8 @@ class ContactPersonProfileDetailsSyncIntTest(
       eq("contact-person-${profileType.identifier}-$telemetryType"),
       check {
         assertThat(it["offenderNo"]).isEqualTo(offenderNo)
-        assertThat(it["dpsId"]).isEqualTo(dpsId.toString())
+        assertThat(it["requestedDpsId"]).isEqualTo(requestedDpsId.toString())
+        dpsId?.run { assertThat(it["dpsId"]).isEqualTo(dpsId.toString()) }
         bookingId?.run { assertThat(it["bookingId"]).isEqualTo(this.toString()) }
         ignoreReason?.run { assertThat(it["reason"]).isEqualTo(this) }
         errorReason?.run { assertThat(it["error"]).isEqualTo(this) }
@@ -345,7 +409,7 @@ class ContactPersonProfileDetailsSyncIntTest(
 
 fun domesticStatusCreatedEvent(
   prisonerNumber: String = "A1234BC",
-  domesticStatusId: Long = 54321,
+  domesticStatusId: Long = 123,
   source: String = "DPS",
 ) = //language=JSON
   """
@@ -368,7 +432,7 @@ fun domesticStatusCreatedEvent(
 
 fun numberOfChildrenCreatedEvent(
   prisonerNumber: String = "A1234BC",
-  numberOfChildrenId: Long = 54321,
+  numberOfChildrenId: Long = 123,
   source: String = "DPS",
 ) = //language=JSON
   """
