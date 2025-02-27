@@ -54,8 +54,8 @@ class ContactPersonProfileDetailsDpsApiServiceTest(
       dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC")
 
       with(apiService.getDomesticStatus(prisonerNumber = "A1234BC")) {
-        assertThat(id).isEqualTo(123)
-        // TODO SDIT-2576 check the code returned when it's been added to the response
+        assertThat(id).isEqualTo(54321)
+        assertThat(domesticStatusCode).isEqualTo("M")
       }
     }
 
@@ -99,8 +99,8 @@ class ContactPersonProfileDetailsDpsApiServiceTest(
       dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC")
 
       with(apiService.getNumberOfChildren(prisonerNumber = "A1234BC")) {
-        assertThat(id).isEqualTo(123)
-        // TODO SDIT-2576 check the code returned when it's been added to the response
+        assertThat(id).isEqualTo(54321)
+        assertThat(numberOfChildren).isEqualTo("3")
       }
     }
 

@@ -44,20 +44,21 @@ class ContactPersonProfileDetailsSyncService(
     "contact-person-${profileType.identifier}-ignored",
     mapOf(
       "offenderNo" to prisonerNumber,
-      "dpsId" to dpsId.toString(),
+      "requestedDpsId" to dpsId.toString(),
       "reason" to "Entity was created in NOMIS",
     ),
     null,
   )
 
-  private suspend fun syncProfileDetail(prisonerNumber: String, dpsId: Long, profileType: ContactPersonProfileType) {
+  suspend fun syncProfileDetail(prisonerNumber: String, dpsId: Long, profileType: ContactPersonProfileType) {
     val telemetry = mutableMapOf(
       "offenderNo" to prisonerNumber,
-      "dpsId" to dpsId.toString(),
+      "requestedDpsId" to dpsId.toString(),
     )
     runCatching {
-      val (bookingId, created) = performSync(profileType, prisonerNumber)
+      val (bookingId, dpsId, created) = performSync(profileType, prisonerNumber)
       telemetry["bookingId"] = bookingId.toString()
+      telemetry["dpsId"] = dpsId.toString()
       telemetryClient.trackEvent(
         """contact-person-${profileType.identifier}-${if (created) "created" else "updated"}""",
         telemetry,
@@ -73,13 +74,18 @@ class ContactPersonProfileDetailsSyncService(
   private suspend fun performSync(profileType: ContactPersonProfileType, prisonerNumber: String) = when (profileType) {
     MARITAL -> {
       dpsApi.getDomesticStatus(prisonerNumber)
-        .let { nomisApi.upsertProfileDetails(prisonerNumber, "MARITAL", it.domesticStatusCode) }
-        .let { it.bookingId to it.created }
+        .let { dpsResponse ->
+          nomisApi.upsertProfileDetails(prisonerNumber, "MARITAL", dpsResponse.domesticStatusCode)
+            .let { Triple(it.bookingId, dpsResponse.id, it.created) }
+        }
     }
+
     CHILD -> {
       dpsApi.getNumberOfChildren(prisonerNumber)
-        .let { nomisApi.upsertProfileDetails(prisonerNumber, "CHILD", it.numberOfChildren) }
-        .let { it.bookingId to it.created }
+        .let { dpsResponse ->
+          nomisApi.upsertProfileDetails(prisonerNumber, "CHILD", dpsResponse.numberOfChildren)
+            .let { Triple(it.bookingId, dpsResponse.id, it.created) }
+        }
     }
   }
 }
