@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseNo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Objects
 
@@ -176,12 +177,13 @@ class CaseNotesReconciliationService(
   }
 
   private val truncatedToSecondsFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+  private val amendmentFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
 
   private fun CaseNote.transformFromDps(): ComparisonCaseNote {
     val sortedAmendments = amendments.map { a ->
       CommonAmendmentFields(
         text = a.additionalNoteText,
-        occurrenceDateTime = a.creationDateTime?.format(truncatedToSecondsFormatter),
+        occurrenceDateTime = a.creationDateTime?.format(amendmentFormatter),
         authorUsername = a.authorUserName,
       )
     }.toSortedSet(amendmentComparator)
@@ -201,7 +203,7 @@ class CaseNotesReconciliationService(
     val sortedAmendments = amendments.map { a ->
       CommonAmendmentFields(
         text = a.text,
-        occurrenceDateTime = a.createdDateTime,
+        occurrenceDateTime = LocalDateTime.parse(a.createdDateTime).format(amendmentFormatter),
         authorUsername = a.authorUsername,
       )
     }.toSortedSet(amendmentComparator)
