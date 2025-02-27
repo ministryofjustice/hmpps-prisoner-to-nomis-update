@@ -14,9 +14,12 @@ import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyMap
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus.BAD_GATEWAY
@@ -331,7 +334,7 @@ class ContactPersonProfileDetailsSyncIntTest(
       nomisApi.stubPutProfileDetails(created = false)
 
       webTestClient.put().uri("/contactperson/sync/profile-details/A1234BC/MARITAL")
-        .headers(setAuthorisation(roles = listOf("ROLE_MIGRATE_CONTACTPERSON")))
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_CONTACTPERSONS")))
         .exchange()
         .expectStatus().isOk
 
@@ -342,6 +345,65 @@ class ContactPersonProfileDetailsSyncIntTest(
         requestedDpsId = 0,
         bookingId = 12345,
       )
+    }
+
+    @Test
+    fun `should handle error from DPS`() {
+      dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC", errorStatus = NOT_FOUND)
+
+      webTestClient.put().uri("/contactperson/sync/profile-details/A1234BC/MARITAL")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_CONTACTPERSONS")))
+        .exchange()
+        .expectStatus().isBadRequest
+        .expectBody()
+        .jsonPath("userMessage").value<String> {
+          assertThat(it).contains("404 Not Found from GET http://localhost:8099/sync/A1234BC/domestic-status")
+        }
+
+      verifyDpsApiCall()
+      nomisApi.verify(count = 0, putRequestedFor(urlPathEqualTo("/prisoners/A1234BC/profile-details")))
+      verifyTelemetry(
+        telemetryType = "error",
+        errorReason = "404 Not Found from GET http://localhost:8099/sync/A1234BC/domestic-status",
+        requestedDpsId = 0,
+        dpsId = null,
+      )
+    }
+
+    @Test
+    fun `should handle error from NOMIS`() {
+      dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC")
+      nomisApi.stubPutProfileDetails(errorStatus = BAD_REQUEST)
+
+      webTestClient.put().uri("/contactperson/sync/profile-details/A1234BC/MARITAL")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_CONTACTPERSONS")))
+        .exchange()
+        .expectStatus().isBadRequest
+        .expectBody()
+        .jsonPath("userMessage").value<String> {
+          assertThat(it).contains("400 Bad Request from PUT http://localhost:8082/prisoners/A1234BC/profile-details")
+        }
+
+      verifyDpsApiCall()
+      verifyNomisPutProfileDetails()
+      verifyTelemetry(
+        telemetryType = "error",
+        errorReason = "400 Bad Request from PUT http://localhost:8082/prisoners/A1234BC/profile-details",
+        requestedDpsId = 0,
+        dpsId = null,
+      )
+    }
+
+    @Test
+    fun `should handle invalid profile type`() {
+      webTestClient.put().uri("/contactperson/sync/profile-details/A1234BC/BUILD")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_CONTACTPERSONS")))
+        .exchange()
+        .expectStatus().isBadRequest
+
+      dpsApi.verify(count = 0, getRequestedFor(urlPathEqualTo("/sync/A1234BC/domestic-status")))
+      nomisApi.verify(count = 0, putRequestedFor(urlPathEqualTo("/prisoners/A1234BC/profile-details")))
+      verify(telemetryClient, times(0)).trackEvent(anyString(), anyMap(), isNull())
     }
   }
 

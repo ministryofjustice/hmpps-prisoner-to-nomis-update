@@ -21,14 +21,14 @@ import kotlin.runCatching
 
 @RestController
 @RequestMapping("/contactperson/sync/profile-details", produces = [MediaType.APPLICATION_JSON_VALUE])
-@PreAuthorize("hasAnyRole('ROLE_MIGRATE_CONTACTPERSON', 'ROLE_MIGRATE_NOMIS_SYSCON')")
+@PreAuthorize("hasAnyRole('ROLE_NOMIS_CONTACTPERSONS')")
 class ContactPersonProfileDetailsResource(
   private val syncService: ContactPersonProfileDetailsSyncService,
 ) {
   @PutMapping("/{prisonerNumber}/{profileType}")
   @Operation(
     summary = "Synchronises a profile detail to NOMIS",
-    description = "Manually synchronises a profile detail to NOMIS. This is intended for use by developers to recover from errors. Requires role <b>MIGRATE_CONTACTPERSON</b> or <b>MIGRATE_NOMIS_SYSCON/b>",
+    description = "Manually synchronises a profile detail to NOMIS. This is intended for use by developers to recover from errors. Requires role <b>NOMIS_CONTACTPERSONS</b>",
     responses = [
       ApiResponse(
         responseCode = "200",

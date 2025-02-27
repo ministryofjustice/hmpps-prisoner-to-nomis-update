@@ -11,6 +11,7 @@ import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.MissingRequestValueException
+import org.springframework.web.server.ServerWebInputException
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.NotFoundException
 
@@ -102,6 +103,21 @@ class HmppsPrisonerToNomisUpdateExceptionHandler {
     )
   }
 
+  @ExceptionHandler(ServerWebInputException::class)
+  fun handleMethodArgumentTypeMismatchException(e: ServerWebInputException): Mono<ResponseEntity<ErrorResponse>> {
+    log.info("Invalid argument exception: {}", e.message)
+    return Mono.just(
+      ResponseEntity
+        .status(BAD_REQUEST)
+        .body(
+          ErrorResponse(
+            status = BAD_REQUEST,
+            userMessage = "Invalid Argument: ${e.cause?.message}",
+            developerMessage = e.message,
+          ),
+        ),
+    )
+  }
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
