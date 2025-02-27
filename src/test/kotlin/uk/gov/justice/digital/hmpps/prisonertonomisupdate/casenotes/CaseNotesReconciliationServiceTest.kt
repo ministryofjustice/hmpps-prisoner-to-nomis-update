@@ -92,8 +92,8 @@ class CaseNotesReconciliationServiceTest {
         MismatchCaseNote(
           offenderNo = "A3456GH",
           notes = listOf(
-            "dpsCaseNote = {id=12345678-0000-0000-0000-000011112222, legacyId=1, text-hash=-1915471402, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER}," +
-              " nomisCaseNote = {id=1, legacyId=1, text-hash=-1915471402, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=[USER]}",
+            "dpsCaseNote = {id=12345678-0000-0000-0000-000011112222, legacyId=1, text-hash=128700130, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER}," +
+              " nomisCaseNote = {id=1, legacyId=1, text-hash=128700130, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=[USER]}",
           ),
         ),
       )
@@ -115,8 +115,8 @@ class CaseNotesReconciliationServiceTest {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "offenderNo" to OFFENDER_NO,
-              "1" to "dpsCaseNote = {id=12345678-0000-0000-0000-000011112222, legacyId=1, text-hash=-1915471402, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER}," +
-                " nomisCaseNote = {id=1, legacyId=1, text-hash=-1915471402, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=[USER]}",
+              "1" to "dpsCaseNote = {id=12345678-0000-0000-0000-000011112222, legacyId=1, text-hash=128700130, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER}," +
+                " nomisCaseNote = {id=1, legacyId=1, text-hash=128700130, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=[USER]}",
             ),
           )
         },
@@ -160,6 +160,34 @@ class CaseNotesReconciliationServiceTest {
         listOf(
           dpsPrisoner()[0].let {
             it.copy(amendments = listOf(it.amendments[0].copy(additionalNoteText = "${"0123456789".repeat(400)}this is too long")))
+          },
+        ),
+      )
+
+      assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNull()
+      verifyNoInteractions(telemetryClient)
+    }
+
+    @Test
+    fun `partially truncated NOMIS case note amendments don't get marked as a mismatch`() = runTest {
+      val baseNote = "${"0123456789".repeat(393)}0"
+      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
+        PrisonerCaseNotesResponse(
+          listOf(
+            nomisPrisoner().caseNotes[0].copy(
+              caseNoteText = "$baseNote ...[AMUSER updated the case notes on 2024/0$seeDpsReplacement",
+              amendments = listOf(),
+            ),
+          ),
+        ),
+      )
+      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
+        listOf(
+          dpsPrisoner()[0].let {
+            it.copy(
+              text = baseNote,
+              amendments = listOf(it.amendments[0].copy(additionalNoteText = "0123456789".repeat(2))),
+            )
           },
         ),
       )
