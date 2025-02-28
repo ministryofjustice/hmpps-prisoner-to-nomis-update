@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.objectMapper
@@ -17,6 +19,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.Or
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationPhoneDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationTypeDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationWebAddressDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncOrganisationId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.pageContent
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -154,4 +158,32 @@ class OrganisationsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+
+  fun stubGetOrganisationIds(
+    content: List<SyncOrganisationId> = listOf(
+      SyncOrganisationId(123456),
+    ),
+    count: Long = content.size.toLong(),
+  ) {
+    stubFor(
+      get(urlPathEqualTo("/sync/organisations/reconcile")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(pageOrganisationIdResponse(count = count, content = content)),
+      ),
+    )
+  }
+
+  fun pageOrganisationIdResponse(
+    count: Long,
+    content: List<SyncOrganisationId>,
+  ) = pageContent(
+    objectMapper = objectMapper,
+    content = content,
+    pageSize = 1L,
+    pageNumber = 0L,
+    totalElements = count,
+    size = 1,
+  )
 }

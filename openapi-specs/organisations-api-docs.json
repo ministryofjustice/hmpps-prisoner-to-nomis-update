@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2025-02-05.15.8c59f44"
+    "version": "2025-02-28.41.5741e21"
   },
   "servers": [
     {
@@ -50,13 +50,1949 @@
     }
   ],
   "paths": {
+    "/sync/organisation/{organisationId}": {
+      "get": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Returns the data for one organisation by organisationId",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to get the details for one organisation.\n      ",
+        "operationId": "syncGetOrganisationById",
+        "parameters": [
+          {
+            "name": "organisationId",
+            "in": "path",
+            "description": "The internal ID for an organisation.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Returning the details of the organisation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncOrganisationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No organisation with the requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Updates an organisation with altereed or additional details",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to update an organisation.\n      ",
+        "operationId": "syncUpdateOrganisation",
+        "parameters": [
+          {
+            "name": "organisationId",
+            "in": "path",
+            "description": "The internal ID for the organisation.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncUpdateOrganisationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "The organisation was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successfully updated the organisation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncOrganisationResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Deletes one organisation by internal ID",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to delete an organisation.\n      ",
+        "operationId": "syncDeleteOrganisationById",
+        "parameters": [
+          {
+            "name": "organisationId",
+            "in": "path",
+            "description": "The internal ID for the organisation.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Successfully deleted the organisation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncOrganisationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No organisation with the requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sync/organisation-web/{organisationWebId}": {
+      "get": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Returns the data for one organisation web address by ID",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to get the details for one organisation web address.\n      ",
+        "operationId": "syncGetWebById",
+        "parameters": [
+          {
+            "name": "organisationWebId",
+            "in": "path",
+            "description": "The internal ID for an organisation web address.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Returning the details of the organisation web address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncWebResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No organisation web address with the requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Updates an organisation web address with altered or additional details",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to update an organisation's web address.\n      ",
+        "operationId": "syncUpdateWeb",
+        "parameters": [
+          {
+            "name": "organisationWebId",
+            "in": "path",
+            "description": "The internal ID for the organisation web address.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncUpdateWebRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The organisation web address was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successfully updated the organisation's web address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncWebResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Deletes one organisation organisation web address by internal ID",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to delete an organisation web address.\n      ",
+        "operationId": "syncDeleteWebById",
+        "parameters": [
+          {
+            "name": "organisationWebId",
+            "in": "path",
+            "description": "The internal ID for the organisation web address.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Successfully deleted the organisation web address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncWebResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No organisation web address with the requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sync/organisation-types/{organisationId}": {
+      "get": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Returns the organisation types for an organisation by ID",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to get the organisation types for this organisation.\n      ",
+        "operationId": "syncGetTypesByOrganisationId",
+        "parameters": [
+          {
+            "name": "organisationId",
+            "in": "path",
+            "description": "The internal organisation ID.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returning the details of the organisation types",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncTypesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No organisation with the requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Updates the organisation types for a given organisation ID",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to update an organisation's types.\n      ",
+        "operationId": "syncUpdateWeb_1",
+        "parameters": [
+          {
+            "name": "organisationId",
+            "in": "path",
+            "description": "The internal organisation ID.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncUpdateTypesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated the organisation's types",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncTypesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The organisation ID was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sync/organisation-phone/{organisationPhoneId}": {
+      "get": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Returns the data for one organisation phone number by ID",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to get the details for one organisation phone number.\n      ",
+        "operationId": "syncGetPhoneById",
+        "parameters": [
+          {
+            "name": "organisationPhoneId",
+            "in": "path",
+            "description": "The internal ID for an organisation phone number.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "No organisation phone number with the requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Returning the details of the organisation phone number",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPhoneResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Updates an organisation phone number with altered or additional details",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to update an organisation's phone number.\n      ",
+        "operationId": "syncUpdatePhone",
+        "parameters": [
+          {
+            "name": "organisationPhoneId",
+            "in": "path",
+            "description": "The internal ID for the organisation phone number.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncUpdatePhoneRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The organisation phone number was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successfully updated the organisation's phone number",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPhoneResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Deletes one organisation organisation phone by internal ID",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to delete an organisation phone number.\n      ",
+        "operationId": "syncDeletePhoneById",
+        "parameters": [
+          {
+            "name": "organisationPhoneId",
+            "in": "path",
+            "description": "The internal ID for the organisation phone number.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "No organisation phone number with the requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Successfully deleted the organisation phone number",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPhoneResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sync/organisation-email/{organisationEmailId}": {
+      "get": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Returns the data for one organisation email address by ID",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to get the details for one organisation email address.\n      ",
+        "operationId": "syncGetEmailById",
+        "parameters": [
+          {
+            "name": "organisationEmailId",
+            "in": "path",
+            "description": "The internal ID for an organisation email address.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No organisation email address with the requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Returning the details of the organisation email address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncEmailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Updates an organisation email address with altered or additional details",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to update an organisation's email address.\n      ",
+        "operationId": "syncUpdateEmail",
+        "parameters": [
+          {
+            "name": "organisationEmailId",
+            "in": "path",
+            "description": "The internal ID for the organisation email address.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncUpdateEmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successfully updated the organisation's email address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncEmailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The organisation email address was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Deletes one organisation organisation email address by internal ID",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to delete an organisation email address.\n      ",
+        "operationId": "syncDeleteEmailById",
+        "parameters": [
+          {
+            "name": "organisationEmailId",
+            "in": "path",
+            "description": "The internal ID for the organisation email address.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Successfully deleted the organisation email address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncEmailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No organisation email address with the requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sync/organisation-address/{organisationAddressId}": {
+      "get": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Returns the data for one organisation address by ID",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to get the details for one organisation address.\n      ",
+        "operationId": "syncGetAddressById",
+        "parameters": [
+          {
+            "name": "organisationAddressId",
+            "in": "path",
+            "description": "The internal ID for an organisation address",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Returning the details of the organisation address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncAddressResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No organisation address with the requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Updates an organisation address with altered or additional details",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to update an organisation's address.\n      ",
+        "operationId": "syncUpdateAddress",
+        "parameters": [
+          {
+            "name": "organisationAddressId",
+            "in": "path",
+            "description": "The internal ID for the organisation address.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncUpdateAddressRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "The organisation address was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successfully updated the organisation's address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncAddressResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Deletes one organisation organisation address by internal ID",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to delete an organisation address.\n      ",
+        "operationId": "syncDeleteAddressById",
+        "parameters": [
+          {
+            "name": "organisationAddressId",
+            "in": "path",
+            "description": "The internal ID for the organisation address.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No organisation address with the requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Successfully deleted the organisation address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncAddressResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sync/organisation-address-phone/{organisationAddressPhoneId}": {
+      "get": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Returns the data for one organisation address phone number by ID",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to get the details for one organisation address phone number by ID.\n      ",
+        "operationId": "syncGetAddressPhoneById",
+        "parameters": [
+          {
+            "name": "organisationAddressPhoneId",
+            "in": "path",
+            "description": "The internal ID for an organisation address-linked phone number",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No organisation address number with the requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Returning the details of the organisation address-linked phone number",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncAddressPhoneResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Updates an organisation address-linked phone number with altered or additional details",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to update an organisation's address-linked phone number.\n      ",
+        "operationId": "syncUpdateAddressPhone",
+        "parameters": [
+          {
+            "name": "organisationAddressPhoneId",
+            "in": "path",
+            "description": "The internal ID for the organisation address-linked phone number.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncUpdateAddressPhoneRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated the organisation's address-linked phone number",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncAddressPhoneResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The organisation, address or phone number was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Deletes one organisation address-linked phone number by internal ID",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to delete an organisation's address-linked phone number by internal ID.\n      ",
+        "operationId": "syncDeleteAddressPhoneById",
+        "parameters": [
+          {
+            "name": "organisationAddressPhoneId",
+            "in": "path",
+            "description": "The internal ID for the organisation address-linked phone number.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No organisation address-linked phone number with the requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Successfully deleted the organisation address phone number",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncAddressPhoneResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sync/organisation": {
+      "post": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Creates a new organisation with a specified ID",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to create a new organisation.\n      ",
+        "operationId": "syncCreateOrganisation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncCreateOrganisationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Successfully created the organisation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncOrganisationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict. The organisation ID provided in the request already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sync/organisation-web": {
+      "post": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Creates a new web address and links it to an organisation",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to create a new organisation web address.\n      ",
+        "operationId": "syncCreateWeb",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncCreateWebRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created the organisation web address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncWebResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sync/organisation-phone": {
+      "post": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Creates a new phone number and links it to an organisation",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to create a new organisation phone number.\n      ",
+        "operationId": "syncCreatePhone",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncCreatePhoneRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Successfully created the organisation phone number",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPhoneResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sync/organisation-email": {
+      "post": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Creates a new email address and links it to an organisation",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to create a new organisation email address.\n      ",
+        "operationId": "syncCreateEmail",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncCreateEmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Successfully created the organisation email address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncEmailResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sync/organisation-address": {
+      "post": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Creates a new address and links it to an organisation",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to create a new organisation address.\n      ",
+        "operationId": "syncCreateAddress",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncCreateAddressRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Successfully created the organisation address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncAddressResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sync/organisation-address-phone": {
+      "post": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Creates a new address-linked phone number for an organisation",
+        "description": "\n      Requires role: ROLE_ORGANISATIONS_MIGRATION.\n      Used to create a new address-linked phone number for an organisation.\n      ",
+        "operationId": "syncCreateAddressPhone",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncCreateAddressPhoneRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "The organisation or address was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Successfully created the address-linked phone number for an organisation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncAddressPhoneResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/organisation": {
       "post": {
         "tags": [
           "Organisations"
         ],
         "summary": "Create new organisation",
-        "description": "Creates a new organisation",
+        "description": "Creates a new organisation in DPS but does not currently synchronise to NOMIS. Deprecated until this 2-way sync is in place.",
         "operationId": "createOrganisation",
         "requestBody": {
           "content": {
@@ -69,8 +2005,8 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "The request has invalid or missing fields",
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
               "application/json": {
                 "schema": {
@@ -79,8 +2015,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
+          "400": {
+            "description": "The request has invalid or missing fields",
             "content": {
               "application/json": {
                 "schema": {
@@ -110,6 +2046,7 @@
             }
           }
         },
+        "deprecated": true,
         "security": [
           {
             "bearer": []
@@ -156,6 +2093,16 @@
               }
             }
           },
+          "400": {
+            "description": "The request failed validation with invalid or missing data supplied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "Forbidden, requires an appropriate role",
             "content": {
@@ -165,9 +2112,85 @@
                 }
               }
             }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/sync/organisations/reconcile": {
+      "get": {
+        "tags": [
+          "Migration and synchronisation"
+        ],
+        "summary": "Reconciliation endpoint",
+        "description": "Get a paged list of existing organisation IDs to reconcile against",
+        "operationId": "reconcileOrganisations",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
           },
-          "400": {
-            "description": "The request failed validation with invalid or missing data supplied",
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "default": [
+                "organisationId,ASC"
+              ],
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Pageable organisation IDs returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageSyncOrganisationId"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -224,6 +2247,16 @@
           }
         ],
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "List of reference data codes/values",
             "content": {
@@ -233,16 +2266,6 @@
                   "items": {
                     "$ref": "#/components/schemas/ReferenceCode"
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorised, requires a valid Oauth2 token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -285,6 +2308,16 @@
           }
         ],
         "responses": {
+          "401": {
+            "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Found the organisation",
             "content": {
@@ -295,8 +2328,66 @@
               }
             }
           },
+          "404": {
+            "description": "No organisation with that id could be found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/organisation/{organisationId}/summary": {
+      "get": {
+        "tags": [
+          "Organisations"
+        ],
+        "summary": "Get organisation summary",
+        "description": "Gets a summary of an organisation by their id. Includes primary address and any business phone number for that address.",
+        "operationId": "getOrganisationSummaryById",
+        "parameters": [
+          {
+            "name": "organisationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No organisation with that id could be found",
             "content": {
               "application/json": {
                 "schema": {
@@ -315,12 +2406,12 @@
               }
             }
           },
-          "404": {
-            "description": "No organisation with that id could be found",
+          "200": {
+            "description": "Found the organisation",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OrganisationDetails"
+                  "$ref": "#/components/schemas/OrganisationSummary"
                 }
               }
             }
@@ -362,16 +2453,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Organisations searched successfully. There may be no results.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrganisationSummaryResultItemPage"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorised, requires a valid Oauth2 token",
             "content": {
@@ -382,8 +2463,8 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden, requires an appropriate role",
+          "400": {
+            "description": "Invalid request",
             "content": {
               "application/json": {
                 "schema": {
@@ -392,8 +2473,18 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid request",
+          "200": {
+            "description": "Organisations searched successfully. There may be no results.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationSummaryResultItemPage"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, requires an appropriate role",
             "content": {
               "application/json": {
                 "schema": {
@@ -413,6 +2504,1309 @@
   },
   "components": {
     "schemas": {
+      "SyncUpdateOrganisationRequest": {
+        "type": "object",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation ID AKA the corporate ID from NOMIS",
+            "example": 1233323
+          },
+          "organisationName": {
+            "type": "string",
+            "description": "The name of the organisation",
+            "example": "Example Limited",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "programmeNumber": {
+            "type": "string",
+            "description": "The programme number for the organisation, stored as FEI_NUMBER in NOMIS",
+            "example": 1,
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "vatNumber": {
+            "type": "string",
+            "description": "The VAT number for the organisation, if known",
+            "example": 123456,
+            "maxLength": 12,
+            "minLength": 0
+          },
+          "caseloadId": {
+            "type": "string",
+            "description": "The id of the caseload for this organisation, this is an agency id in NOMIS",
+            "example": "BXI",
+            "maxLength": 6,
+            "minLength": 0
+          },
+          "comments": {
+            "type": "string",
+            "description": "Any comments on the organisation",
+            "example": "Some additional info",
+            "maxLength": 240,
+            "minLength": 0
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the organisation is active or not",
+            "example": true
+          },
+          "deactivatedDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The date the organisation was deactivated, EXPIRY_DATE in NOMIS",
+            "example": "2010-12-30"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the entry",
+            "example": "admin2"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was updated",
+            "example": "2023-09-24T12:00:00"
+          }
+        },
+        "required": [
+          "active",
+          "organisationId",
+          "organisationName",
+          "updatedBy",
+          "updatedTime"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "userMessage": {
+            "type": "string"
+          },
+          "developerMessage": {
+            "type": "string"
+          },
+          "moreInfo": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "SyncOrganisationResponse": {
+        "type": "object",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The id of the organisation",
+            "example": 123456
+          },
+          "organisationName": {
+            "type": "string",
+            "description": "Organisation name",
+            "example": "Supplier Services plc"
+          },
+          "programmeNumber": {
+            "type": "string",
+            "description": "Programme number",
+            "example": 8765
+          },
+          "vatNumber": {
+            "type": "string",
+            "description": "VAT number",
+            "example": "GB 55 55 55 55"
+          },
+          "caseloadId": {
+            "type": "string",
+            "description": "Caseload ID (a specific prison)",
+            "example": "HEI"
+          },
+          "comments": {
+            "type": "string",
+            "description": "Comments related to this organisation",
+            "example": "Notes"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Active flag",
+            "example": true
+          },
+          "deactivatedDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The date this organisation was deactivated",
+            "example": "2019-01-01"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User who created the organisation",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the organisation was created",
+            "example": "2023-09-23T10:15:30"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the organisation",
+            "example": "admin2"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the organisation was last updated",
+            "example": "2023-09-24T12:00:00"
+          }
+        },
+        "required": [
+          "active",
+          "createdBy",
+          "createdTime",
+          "organisationId"
+        ]
+      },
+      "SyncUpdateWebRequest": {
+        "type": "object",
+        "description": "Request to update a web address for an organisation",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation ID linked to",
+            "example": 1233323
+          },
+          "webAddress": {
+            "type": "string",
+            "description": "Web address",
+            "example": "www.example.com"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the entry",
+            "example": "admin"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The update timestamp",
+            "example": "2024-01-01T00:00:00Z"
+          }
+        },
+        "required": [
+          "organisationId",
+          "updatedBy",
+          "updatedTime",
+          "webAddress"
+        ]
+      },
+      "SyncWebResponse": {
+        "type": "object",
+        "description": "Response object for web address changes via sync",
+        "properties": {
+          "organisationWebAddressId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The ID for this web address",
+            "example": 111111
+          },
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation ID it is linked to",
+            "example": 1234
+          },
+          "webAddress": {
+            "type": "string",
+            "description": "Web address",
+            "example": "www.example.com"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Username who created",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp created",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "Username who last updated",
+            "example": "admin2"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp last updated",
+            "example": "2023-09-24T12:00:00"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "organisationId",
+          "organisationWebAddressId",
+          "webAddress"
+        ]
+      },
+      "SyncOrganisationType": {
+        "type": "object",
+        "description": "An organisation type",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Organisation type",
+            "example": "SUPPLIER"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User who created the entry",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The created timestamp",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the entry",
+            "example": "admin"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The updated timestamp",
+            "example": "2024-01-01T00:00:00Z"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "type"
+        ]
+      },
+      "SyncUpdateTypesRequest": {
+        "type": "object",
+        "description": "Request to update the list of types assigned to an organisation",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation ID to update",
+            "example": 1233323
+          },
+          "types": {
+            "type": "array",
+            "description": "The list of organisation types (will replace the current types)",
+            "items": {
+              "$ref": "#/components/schemas/SyncOrganisationType"
+            }
+          }
+        },
+        "required": [
+          "organisationId",
+          "types"
+        ]
+      },
+      "SyncTypesResponse": {
+        "type": "object",
+        "description": "Response object for an organisation types update",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation ID the updates refer to",
+            "example": 1234
+          },
+          "types": {
+            "type": "array",
+            "description": "The list of types updated on the organisation",
+            "items": {
+              "$ref": "#/components/schemas/SyncOrganisationType"
+            }
+          }
+        },
+        "required": [
+          "organisationId",
+          "types"
+        ]
+      },
+      "SyncUpdatePhoneRequest": {
+        "type": "object",
+        "description": "Request to update a phone number for an organisation",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation ID this this number is linked to",
+            "example": 1233323
+          },
+          "phoneType": {
+            "type": "string",
+            "description": "Type of phone number",
+            "example": "MOB"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Phone number",
+            "example": "+1234567890"
+          },
+          "extNumber": {
+            "type": "string",
+            "description": "Extension number",
+            "example": 123
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the entry",
+            "example": "admin"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp the phone number was updated",
+            "example": "2024-01-01T00:00:00Z"
+          }
+        },
+        "required": [
+          "organisationId",
+          "phoneNumber",
+          "phoneType",
+          "updatedBy",
+          "updatedTime"
+        ]
+      },
+      "SyncPhoneResponse": {
+        "type": "object",
+        "description": "Response object for phone number changes via sync",
+        "properties": {
+          "organisationPhoneId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The ID for this telephone number",
+            "example": 111111
+          },
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation ID this telephone number is linked with",
+            "example": 1234
+          },
+          "phoneType": {
+            "type": "string",
+            "description": "Type of phone number",
+            "example": "MOB"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Phone number",
+            "example": "+1234567890"
+          },
+          "extNumber": {
+            "type": "string",
+            "description": "Extension number",
+            "example": 123
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User who created the entry",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp of when this phone number was created",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who last updated this phone number",
+            "example": "admin2"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp last updated",
+            "example": "2023-09-24T12:00:00"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "organisationId",
+          "organisationPhoneId",
+          "phoneNumber",
+          "phoneType"
+        ]
+      },
+      "SyncUpdateEmailRequest": {
+        "type": "object",
+        "description": "Request to update an email address for an organisation",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation ID linked to",
+            "example": 1233323
+          },
+          "emailAddress": {
+            "type": "string",
+            "description": "Email address",
+            "example": "name@example.com"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the entry",
+            "example": "admin"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The update timestamp",
+            "example": "2024-01-01T00:00:00Z"
+          }
+        },
+        "required": [
+          "emailAddress",
+          "organisationId",
+          "updatedBy",
+          "updatedTime"
+        ]
+      },
+      "SyncEmailResponse": {
+        "type": "object",
+        "description": "Response object for email address changes via sync",
+        "properties": {
+          "organisationEmailId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The ID for this email address",
+            "example": 111111
+          },
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation ID it is linked to",
+            "example": 1234
+          },
+          "emailAddress": {
+            "type": "string",
+            "description": "Email address",
+            "example": "name@example.com"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Username who created",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp created",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "Username who last updated",
+            "example": "admin2"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp last updated",
+            "example": "2023-09-24T12:00:00"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "emailAddress",
+          "organisationEmailId",
+          "organisationId"
+        ]
+      },
+      "SyncUpdateAddressRequest": {
+        "type": "object",
+        "description": "Request to update an address for an organisation",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation ID linked with",
+            "example": 1233323
+          },
+          "addressType": {
+            "type": "string",
+            "description": "Type of address",
+            "example": "HOME"
+          },
+          "primaryAddress": {
+            "type": "boolean",
+            "description": "Primary address flag",
+            "example": true
+          },
+          "mailAddress": {
+            "type": "boolean",
+            "description": "Mail address flag",
+            "example": true
+          },
+          "serviceAddress": {
+            "type": "boolean",
+            "description": "Service address flag",
+            "example": true
+          },
+          "noFixedAddress": {
+            "type": "boolean",
+            "description": "No fixed address flag",
+            "example": false
+          },
+          "flat": {
+            "type": "string",
+            "description": "Flat number",
+            "example": "4A"
+          },
+          "property": {
+            "type": "string",
+            "description": "Property",
+            "example": "Claremont House"
+          },
+          "street": {
+            "type": "string",
+            "description": "Street or road",
+            "example": "Clarendon Road"
+          },
+          "area": {
+            "type": "string",
+            "description": "Area",
+            "example": "West Mosely"
+          },
+          "cityCode": {
+            "type": "string",
+            "description": "City code",
+            "example": 123456
+          },
+          "countyCode": {
+            "type": "string",
+            "description": "County code",
+            "example": "YORKS"
+          },
+          "postcode": {
+            "type": "string",
+            "description": "Postcode",
+            "example": "B25 1JH"
+          },
+          "countryCode": {
+            "type": "string",
+            "description": "Country code",
+            "example": "GB"
+          },
+          "specialNeedsCode": {
+            "type": "string",
+            "description": "Special needs code",
+            "example": "NEEDS"
+          },
+          "contactPersonName": {
+            "type": "string",
+            "description": "Contact name",
+            "example": "Mr Jones"
+          },
+          "businessHours": {
+            "type": "string",
+            "description": "Business hours description",
+            "example": "9am - 5pm"
+          },
+          "comments": {
+            "type": "string",
+            "description": "Notes on this address",
+            "example": "A comment"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The start date for occupation",
+            "example": "2024-01-01"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The end date for occupation",
+            "example": "2024-01-01"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the entry",
+            "example": "admin"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The update timestamp",
+            "example": "2024-01-01T00:00:00Z"
+          }
+        },
+        "required": [
+          "mailAddress",
+          "noFixedAddress",
+          "organisationId",
+          "primaryAddress",
+          "serviceAddress",
+          "updatedBy",
+          "updatedTime"
+        ]
+      },
+      "SyncAddressResponse": {
+        "type": "object",
+        "description": "Response object for organisation address changes via sync",
+        "properties": {
+          "organisationAddressId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The ID for this address",
+            "example": 111111
+          },
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation ID it is linked to",
+            "example": 1234
+          },
+          "addressType": {
+            "type": "string",
+            "description": "Type of address",
+            "example": "HOME"
+          },
+          "primaryAddress": {
+            "type": "boolean",
+            "description": "Primary address flag",
+            "example": true
+          },
+          "mailAddress": {
+            "type": "boolean",
+            "description": "Mail address flag",
+            "example": true
+          },
+          "serviceAddress": {
+            "type": "boolean",
+            "description": "Service address flag",
+            "example": true
+          },
+          "noFixedAddress": {
+            "type": "boolean",
+            "description": "No fixed address flag",
+            "example": false
+          },
+          "flat": {
+            "type": "string",
+            "description": "Flat number",
+            "example": "4A"
+          },
+          "property": {
+            "type": "string",
+            "description": "Property",
+            "example": "Claremont House"
+          },
+          "street": {
+            "type": "string",
+            "description": "Street or road",
+            "example": "Clarendon Road"
+          },
+          "area": {
+            "type": "string",
+            "description": "Area",
+            "example": "West Mosely"
+          },
+          "cityCode": {
+            "type": "string",
+            "description": "City code",
+            "example": 123456
+          },
+          "countyCode": {
+            "type": "string",
+            "description": "County code",
+            "example": "YORKS"
+          },
+          "postcode": {
+            "type": "string",
+            "description": "Postcode",
+            "example": "B25 1JH"
+          },
+          "countryCode": {
+            "type": "string",
+            "description": "Country code",
+            "example": "GB"
+          },
+          "specialNeedsCode": {
+            "type": "string",
+            "description": "Special needs code",
+            "example": "NEEDS"
+          },
+          "contactPersonName": {
+            "type": "string",
+            "description": "Contact name",
+            "example": "Mr Jones"
+          },
+          "businessHours": {
+            "type": "string",
+            "description": "Business hours description",
+            "example": "9am - 5pm"
+          },
+          "comments": {
+            "type": "string",
+            "description": "Notes on this address",
+            "example": "A comment"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The start date for occupation",
+            "example": "2024-01-01"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The end date for occupation",
+            "example": "2024-01-01"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Username who created",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp created",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "Username who last updated",
+            "example": "admin2"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp last updated",
+            "example": "2023-09-24T12:00:00"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "mailAddress",
+          "noFixedAddress",
+          "organisationAddressId",
+          "organisationId",
+          "primaryAddress",
+          "serviceAddress"
+        ]
+      },
+      "SyncUpdateAddressPhoneRequest": {
+        "type": "object",
+        "description": "Request to update an organisation's address-specific phone number",
+        "properties": {
+          "phoneType": {
+            "type": "string",
+            "description": "Type of phone",
+            "example": "MOB"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Phone number",
+            "example": "+1234567890"
+          },
+          "extNumber": {
+            "type": "string",
+            "description": "Extension number",
+            "example": 123
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "The username of the person who made the update",
+            "example": "JD000001"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The time when the update was made",
+            "example": "2024-01-01T00:00:00Z"
+          }
+        },
+        "required": [
+          "phoneNumber",
+          "phoneType",
+          "updatedBy",
+          "updatedTime"
+        ]
+      },
+      "SyncAddressPhoneResponse": {
+        "type": "object",
+        "description": "An organisation's address-specific phone number",
+        "properties": {
+          "organisationAddressPhoneId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the address-specific phone number",
+            "example": 1
+          },
+          "organisationAddressId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the address to which this phone number is linked",
+            "example": 1
+          },
+          "organisationPhoneId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the phone record",
+            "example": 1
+          },
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the organisation linked to this address",
+            "example": 1
+          },
+          "phoneType": {
+            "type": "string",
+            "description": "Type of phone",
+            "example": "MOB"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Phone number",
+            "example": "+1234567890"
+          },
+          "extNumber": {
+            "type": "string",
+            "description": "Extension number",
+            "example": 123
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User who created the entry",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was created",
+            "example": "2023-09-23T10:15:30"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the entry",
+            "example": "admin2"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was updated",
+            "example": "2023-09-24T12:00:00"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "organisationAddressId",
+          "organisationAddressPhoneId",
+          "organisationId",
+          "organisationPhoneId",
+          "phoneNumber",
+          "phoneType"
+        ]
+      },
+      "SyncCreateOrganisationRequest": {
+        "type": "object",
+        "description": "Request to create a new organisation",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation ID AKA the corporate ID from NOMIS",
+            "example": 1233323
+          },
+          "organisationName": {
+            "type": "string",
+            "description": "The name of the organisation",
+            "example": "Example Limited",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "programmeNumber": {
+            "type": "string",
+            "description": "The programme number for the organisation, stored as FEI_NUMBER in NOMIS",
+            "example": 1,
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "vatNumber": {
+            "type": "string",
+            "description": "The VAT number for the organisation, if known",
+            "example": 123456,
+            "maxLength": 12,
+            "minLength": 0
+          },
+          "caseloadId": {
+            "type": "string",
+            "description": "The id of the caseload for this organisation, this is an agency id in NOMIS",
+            "example": "BXI",
+            "maxLength": 6,
+            "minLength": 0
+          },
+          "comments": {
+            "type": "string",
+            "description": "Any comments on the organisation",
+            "example": "Some additional info",
+            "maxLength": 240,
+            "minLength": 0
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the organisation is active or not",
+            "example": true
+          },
+          "deactivatedDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The date the organisation was deactivated, EXPIRY_DATE in NOMIS",
+            "example": "2010-12-30"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User who created the entry",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was created",
+            "example": "2023-09-23T10:15:30"
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "User who updated the entry",
+            "example": "admin2"
+          },
+          "updatedTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the entry was updated",
+            "example": "2023-09-24T12:00:00"
+          }
+        },
+        "required": [
+          "active",
+          "createdBy",
+          "createdTime",
+          "organisationId",
+          "organisationName"
+        ]
+      },
+      "SyncCreateWebRequest": {
+        "type": "object",
+        "description": "Request to create a new web address for an organisation",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation ID linked to",
+            "example": 1233323
+          },
+          "webAddress": {
+            "type": "string",
+            "description": "Web address",
+            "example": "www.example.com"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Username who created the entry",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The creation timestamp",
+            "example": "2024-01-01T00:00:00Z"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "organisationId",
+          "webAddress"
+        ]
+      },
+      "SyncCreatePhoneRequest": {
+        "type": "object",
+        "description": "Request to create a new phone number for an organisation",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation ID this telephone number is linked with",
+            "example": 1233323
+          },
+          "phoneType": {
+            "type": "string",
+            "description": "Type of phone number",
+            "example": "MOB"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Phone number",
+            "example": "+1234567890"
+          },
+          "extNumber": {
+            "type": "string",
+            "description": "Extension number",
+            "example": 123
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User who created the entry",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp of when this phone number was created",
+            "example": "2024-01-01T00:00:00Z"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "organisationId",
+          "phoneNumber",
+          "phoneType"
+        ]
+      },
+      "SyncCreateEmailRequest": {
+        "type": "object",
+        "description": "Request to create a new email address for an organisation",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation ID linked to",
+            "example": 1233323
+          },
+          "emailAddress": {
+            "type": "string",
+            "description": "Email address",
+            "example": "name@example.com"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Username who created the entry",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The creation timestamp",
+            "example": "2024-01-01T00:00:00Z"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "emailAddress",
+          "organisationId"
+        ]
+      },
+      "SyncCreateAddressRequest": {
+        "type": "object",
+        "description": "Request to create a new address for an organisation",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The organisation ID linked with",
+            "example": 1233323
+          },
+          "addressType": {
+            "type": "string",
+            "description": "Type of address",
+            "example": "HOME"
+          },
+          "primaryAddress": {
+            "type": "boolean",
+            "description": "Primary address flag",
+            "example": true
+          },
+          "mailAddress": {
+            "type": "boolean",
+            "description": "Mail address flag",
+            "example": true
+          },
+          "serviceAddress": {
+            "type": "boolean",
+            "description": "Service address flag",
+            "example": true
+          },
+          "noFixedAddress": {
+            "type": "boolean",
+            "description": "No fixed address flag",
+            "example": false
+          },
+          "flat": {
+            "type": "string",
+            "description": "Flat number",
+            "example": "4A"
+          },
+          "property": {
+            "type": "string",
+            "description": "Property",
+            "example": "Claremont House"
+          },
+          "street": {
+            "type": "string",
+            "description": "Street or road",
+            "example": "Clarendon Road"
+          },
+          "area": {
+            "type": "string",
+            "description": "Area",
+            "example": "West Mosely"
+          },
+          "cityCode": {
+            "type": "string",
+            "description": "City code",
+            "example": 123456
+          },
+          "countyCode": {
+            "type": "string",
+            "description": "County code",
+            "example": "YORKS"
+          },
+          "postcode": {
+            "type": "string",
+            "description": "Postcode",
+            "example": "B25 1JH"
+          },
+          "countryCode": {
+            "type": "string",
+            "description": "Country code",
+            "example": "GB"
+          },
+          "specialNeedsCode": {
+            "type": "string",
+            "description": "Special needs code",
+            "example": "NEEDS"
+          },
+          "contactPersonName": {
+            "type": "string",
+            "description": "Contact name",
+            "example": "Mr Jones"
+          },
+          "businessHours": {
+            "type": "string",
+            "description": "Business hours description",
+            "example": "9am - 5pm"
+          },
+          "comments": {
+            "type": "string",
+            "description": "Notes on this address",
+            "example": "A comment"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The start date for occupation",
+            "example": "2024-01-01"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The end date for occupation",
+            "example": "2024-01-01"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User who created the entry",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The creation timestamp",
+            "example": "2024-01-01T00:00:00Z"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "mailAddress",
+          "noFixedAddress",
+          "organisationId",
+          "primaryAddress",
+          "serviceAddress"
+        ]
+      },
+      "SyncCreateAddressPhoneRequest": {
+        "type": "object",
+        "description": "Request to create an address-linked phone number for an organisation",
+        "properties": {
+          "organisationAddressId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the address to link this number with",
+            "example": 123
+          },
+          "phoneType": {
+            "type": "string",
+            "description": "Type of phone",
+            "example": "MOB"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Phone number",
+            "example": "+1234567890"
+          },
+          "extNumber": {
+            "type": "string",
+            "description": "Extension number",
+            "example": 123
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User who created the entry",
+            "example": "admin"
+          },
+          "createdTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp of when the phone was created",
+            "example": "2024-01-01T00:00:00Z"
+          }
+        },
+        "required": [
+          "createdBy",
+          "createdTime",
+          "organisationAddressId",
+          "phoneNumber",
+          "phoneType"
+        ]
+      },
       "CreateOrganisationRequest": {
         "type": "object",
         "description": "Request to create an new organisation",
@@ -491,30 +3885,6 @@
           "createdBy",
           "createdTime",
           "organisationName"
-        ]
-      },
-      "ErrorResponse": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "errorCode": {
-            "type": "string"
-          },
-          "userMessage": {
-            "type": "string"
-          },
-          "developerMessage": {
-            "type": "string"
-          },
-          "moreInfo": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "status"
         ]
       },
       "OrganisationAddressDetails": {
@@ -1612,6 +4982,107 @@
           "phoneNumbers"
         ]
       },
+      "PageSyncOrganisationId": {
+        "type": "object",
+        "properties": {
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncOrganisationId"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PageableObject": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "paged": {
+            "type": "boolean"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unpaged": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SortObject": {
+        "type": "object",
+        "properties": {
+          "empty": {
+            "type": "boolean"
+          },
+          "sorted": {
+            "type": "boolean"
+          },
+          "unsorted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SyncOrganisationId": {
+        "type": "object",
+        "description": "Response object for sync reconciliation",
+        "properties": {
+          "organisationId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The ID for an organisation",
+            "example": 111111
+          }
+        },
+        "required": [
+          "organisationId"
+        ]
+      },
       "ReferenceCodeGroup": {
         "type": "string",
         "enum": [
@@ -1682,42 +5153,6 @@
           "isActive",
           "referenceCodeId"
         ]
-      },
-      "OrganisationSearchRequest": {
-        "type": "object",
-        "description": "Organisation search request query parameters",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Full or partial name of the organisation",
-            "example": "NHS",
-            "maxLength": 40
-          }
-        },
-        "required": [
-          "name"
-        ]
-      },
-      "Pageable": {
-        "type": "object",
-        "properties": {
-          "page": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
-          },
-          "size": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 1
-          },
-          "sort": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
       },
       "OrganisationSummary": {
         "type": "object",
@@ -1811,6 +5246,42 @@
           "organisationName"
         ]
       },
+      "OrganisationSearchRequest": {
+        "type": "object",
+        "description": "Organisation search request query parameters",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Full or partial name of the organisation",
+            "example": "NHS",
+            "maxLength": 40
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "Pageable": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
+          },
+          "sort": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "OrganisationSummaryResultItemPage": {
         "type": "object",
         "properties": {
@@ -1839,9 +5310,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -1853,51 +5321,14 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
+          "first": {
+            "type": "boolean"
+          },
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
           },
           "empty": {
-            "type": "boolean"
-          }
-        }
-      },
-      "PageableObject": {
-        "type": "object",
-        "properties": {
-          "offset": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
-          },
-          "pageSize": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "paged": {
-            "type": "boolean"
-          },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "unpaged": {
-            "type": "boolean"
-          }
-        }
-      },
-      "SortObject": {
-        "type": "object",
-        "properties": {
-          "empty": {
-            "type": "boolean"
-          },
-          "sorted": {
-            "type": "boolean"
-          },
-          "unsorted": {
             "type": "boolean"
           }
         }
