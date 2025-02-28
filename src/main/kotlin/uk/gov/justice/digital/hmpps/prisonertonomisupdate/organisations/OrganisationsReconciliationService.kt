@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.Or
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 
 @Service
-class OrganisationReconciliationService(
+class OrganisationsReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val dpsApiService: OrganisationsDpsApiService,
   private val nomisApiService: OrganisationsNomisApiService,
@@ -51,8 +51,15 @@ class OrganisationReconciliationService(
     val dpsOrganisation = dpsApiService.getOrganisation(corporateAndOrganisationId)?.toOrganisation()
     val nomisOrganisation = nomisApiService.getCorporateOrganisation(corporateAndOrganisationId).toOrganisation()
     if (nomisOrganisation != dpsOrganisation) {
-      return MismatchOrganisation(organisationId = corporateAndOrganisationId).also { mismatch ->
-        log.warn("Organisation Mismatch found for $corporateAndOrganisationId. DPS: $dpsOrganisation, NOMIS: $nomisOrganisation")
+      return MismatchOrganisation(organisationId = corporateAndOrganisationId).also {
+        telemetryClient.trackEvent(
+          "organisations-reports-reconciliation-mismatch",
+          mapOf(
+            "organisationId" to "$corporateAndOrganisationId",
+            "dpsOrganisation" to dpsOrganisation.toString(),
+            "nomisOrganisation" to nomisOrganisation.toString(),
+          ),
+        )
       }
     }
     return null
@@ -62,15 +69,21 @@ class OrganisationReconciliationService(
 private fun OrganisationDetails.toOrganisation() = Organisation(
   id = this.organisationId,
   name = this.organisationName,
+  active = this.active,
 )
 
 private fun CorporateOrganisation.toOrganisation() = Organisation(
   id = this.id,
   name = this.name,
+  active = this.active,
 )
 
 data class MismatchOrganisation(
   val organisationId: Long,
 )
 
-data class Organisation(val id: Long, val name: String)
+data class Organisation(
+  val id: Long,
+  val name: String,
+  val active: Boolean,
+)

@@ -7,8 +7,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentCaptor
-import org.mockito.Captor
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
@@ -22,10 +20,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Corpor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiMockServer.Companion.organisationDetails
 
 class OrganisationsResourceIntTest : IntegrationTestBase() {
-
-  @Captor
-  lateinit var telemetryCaptor: ArgumentCaptor<Map<String, String>>
-
   @Autowired
   private lateinit var nomisApi: OrganisationsNomisApiMockServer
 

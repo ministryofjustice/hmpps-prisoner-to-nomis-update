@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 @RestController
 class OrganisationsResource(
   private val telemetryClient: TelemetryClient,
-  private val reconciliationService: OrganisationReconciliationService,
+  private val reconciliationService: OrganisationsReconciliationService,
   private val nomisApiService: OrganisationsNomisApiService,
   private val reportScope: CoroutineScope,
 ) {
