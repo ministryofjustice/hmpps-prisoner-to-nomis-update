@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.Corpor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CorporateInternetAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CorporateOrganisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CorporateOrganisationIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CorporateOrganisationType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CorporatePhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -79,10 +80,8 @@ fun corporateOrganisation(corporateId: Long = 123456): CorporateOrganisation = C
   audit = nomisAudit(),
 )
 
-fun CorporateOrganisation.withAddress(address: CorporateAddress = corporateAddress()): CorporateOrganisation = copy(
-  addresses = kotlin.collections.listOf(
-    address,
-  ),
+fun CorporateOrganisation.withAddress(vararg address: CorporateAddress = arrayOf(corporateAddress())): CorporateOrganisation = copy(
+  addresses = address.toList(),
 )
 fun corporateAddress(): CorporateAddress = CorporateAddress(
   id = 12345,
@@ -113,15 +112,11 @@ fun corporateAddress(): CorporateAddress = CorporateAddress(
     modifyDatetime = "2024-10-01T13:31",
   ),
 )
-fun CorporateOrganisation.withPhone(phone: CorporatePhoneNumber = corporatePhone()): CorporateOrganisation = copy(
-  phoneNumbers = kotlin.collections.listOf(
-    phone,
-  ),
+fun CorporateOrganisation.withPhone(vararg phone: CorporatePhoneNumber = arrayOf(corporatePhone())): CorporateOrganisation = copy(
+  phoneNumbers = phone.toList(),
 )
-fun CorporateAddress.withPhone(phone: CorporatePhoneNumber = corporatePhone()): CorporateAddress = copy(
-  phoneNumbers = kotlin.collections.listOf(
-    phone,
-  ),
+fun CorporateAddress.withPhone(vararg phone: CorporatePhoneNumber = arrayOf(corporatePhone())): CorporateAddress = copy(
+  phoneNumbers = phone.toList(),
 )
 fun corporatePhone(): CorporatePhoneNumber = CorporatePhoneNumber(
   id = 12345,
@@ -135,10 +130,8 @@ fun corporatePhone(): CorporatePhoneNumber = CorporatePhoneNumber(
     modifyDatetime = "2024-10-01T13:31",
   ),
 )
-fun CorporateOrganisation.withInternetAddress(internetAddress: CorporateInternetAddress): CorporateOrganisation = this.copy(
-  internetAddresses = kotlin.collections.listOf(
-    internetAddress,
-  ),
+fun CorporateOrganisation.withInternetAddress(vararg internetAddress: CorporateInternetAddress): CorporateOrganisation = this.copy(
+  internetAddresses = internetAddress.toList(),
 )
 
 fun corporateWebAddress(): CorporateInternetAddress = CorporateInternetAddress(
@@ -162,6 +155,11 @@ fun corporateEmail(): CorporateInternetAddress = CorporateInternetAddress(
     modifyUserId = "T.SMITH",
     modifyDatetime = "2024-10-01T13:31",
   ),
+)
+
+fun corporateOrganisationType(type: String) = CorporateOrganisationType(
+  type = CodeDescription(type, "$type description"),
+  audit = nomisAudit(),
 )
 
 fun nomisAudit() = NomisAudit(

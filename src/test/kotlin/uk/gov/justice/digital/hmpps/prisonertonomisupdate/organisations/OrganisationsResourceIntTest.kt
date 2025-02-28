@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CorporateOrganisationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiMockServer.Companion.organisationDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncOrganisationId
 
 class OrganisationsResourceIntTest : IntegrationTestBase() {
   @Autowired
@@ -36,6 +37,12 @@ class OrganisationsResourceIntTest : IntegrationTestBase() {
           CorporateOrganisationIdResponse(1),
           CorporateOrganisationIdResponse(2),
           CorporateOrganisationIdResponse(3),
+        ),
+      )
+      dpsApi.stubGetOrganisationIds(
+        content = listOf(
+          SyncOrganisationId(1),
+          SyncOrganisationId(2),
         ),
       )
       nomisApi.stubGetCorporateOrganisation(1, corporateOrganisation().copy(id = 1, name = "Boots"))
@@ -72,7 +79,27 @@ class OrganisationsResourceIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         eq("organisations-reports-reconciliation-report"),
-        check { assertThat(it).containsEntry("mismatch-count", "2") },
+        check {
+          assertThat(it).containsEntry("mismatch-count", "2")
+          assertThat(it).containsEntry("organisationIds", "[2, 3]")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will output a mismatch when there is a missing DPS record`() {
+      webTestClient.put().uri("/organisations/reports/reconciliation")
+        .exchange()
+        .expectStatus().isAccepted
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("organisations-reports-reconciliation-mismatch"),
+        check {
+          assertThat(it["dpsCount"]).contains("2")
+          assertThat(it["nomisCount"]).contains("3")
+        },
         isNull(),
       )
     }
