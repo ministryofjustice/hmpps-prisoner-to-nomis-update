@@ -34,7 +34,7 @@ class OrganisationsResource(
       runCatching { reconciliationService.generateReconciliationReport(organisationsCount) }
         .onSuccess {
           log.info("Organisations reconciliation report completed with ${it.size} mismatches")
-          telemetryClient.trackEvent("organisations-reports-reconciliation-report", mapOf("mismatch-count" to it.size.toString(), "success" to "true") + it.asMap())
+          telemetryClient.trackEvent("organisations-reports-reconciliation-report", mapOf("mismatch-count" to it.size.toString(), "success" to "true") + it.asTelemetry())
         }
         .onFailure {
           telemetryClient.trackEvent("organisations-reports-reconciliation-report", mapOf("success" to "false"))
@@ -44,4 +44,4 @@ class OrganisationsResource(
   }
 }
 
-private fun List<MismatchOrganisation>.asMap(): Map<String, String> = this.associate { "$it.organisationId" to "TODO" }
+private fun List<MismatchOrganisation>.asTelemetry(): Pair<String, String> = "organisationIds" to (this.map { it.organisationId }.toString())

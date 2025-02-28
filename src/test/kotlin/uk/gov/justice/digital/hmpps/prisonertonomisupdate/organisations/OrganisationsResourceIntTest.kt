@@ -72,7 +72,10 @@ class OrganisationsResourceIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         eq("organisations-reports-reconciliation-report"),
-        check { assertThat(it).containsEntry("mismatch-count", "2") },
+        check {
+          assertThat(it).containsEntry("mismatch-count", "2")
+          assertThat(it).containsEntry("organisationIds", "[2, 3]")
+        },
         isNull(),
       )
     }
