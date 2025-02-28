@@ -27,6 +27,11 @@ class OrganisationsReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
+  suspend fun getOrganisationsCounts(): OrganisationCounts = OrganisationCounts(
+    dpsCount = dpsApiService.getOrganisationIds(0, 1).totalElements!!,
+    nomisCount = nomisApiService.getCorporateOrganisationIds(0, 1).totalElements,
+  )
+
   suspend fun generateReconciliationReport(organisationsCount: Long): List<MismatchOrganisation> = organisationsCount.asPages(pageSize).flatMap { page ->
     val organisations = getOrganisationsForPage(page)
 
@@ -103,3 +108,5 @@ data class Organisation(
   val emailAddresses: SortedSet<String>,
   val webAddresses: SortedSet<String>,
 )
+
+data class OrganisationCounts(val dpsCount: Long, val nomisCount: Long)

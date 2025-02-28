@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 class OrganisationsResource(
   private val telemetryClient: TelemetryClient,
   private val reconciliationService: OrganisationsReconciliationService,
-  private val nomisApiService: OrganisationsNomisApiService,
   private val reportScope: CoroutineScope,
 ) {
 
@@ -26,12 +25,22 @@ class OrganisationsResource(
   @PutMapping("/organisations/reports/reconciliation")
   @ResponseStatus(HttpStatus.ACCEPTED)
   suspend fun generateOrganisationsReconciliationReport() {
-    val organisationsCount = nomisApiService.getCorporateOrganisationIds(0, 1).totalElements
+    val counts = reconciliationService.getOrganisationsCounts()
 
-    telemetryClient.trackEvent("organisations-reports-reconciliation-requested", mapOf("organisations" to organisationsCount.toString()))
+    telemetryClient.trackEvent("organisations-reports-reconciliation-requested", mapOf("organisations" to counts.nomisCount.toString()))
+
+    if (counts.nomisCount != counts.dpsCount) {
+      telemetryClient.trackEvent(
+        "organisations-reports-reconciliation-mismatch",
+        mapOf(
+          "dpsCount" to "$counts.dpsCount",
+          "nomisCount" to "$counts.nomisCount",
+        ),
+      )
+    }
 
     reportScope.launch {
-      runCatching { reconciliationService.generateReconciliationReport(organisationsCount) }
+      runCatching { reconciliationService.generateReconciliationReport(counts.nomisCount) }
         .onSuccess {
           log.info("Organisations reconciliation report completed with ${it.size} mismatches")
           telemetryClient.trackEvent("organisations-reports-reconciliation-report", mapOf("mismatch-count" to it.size.toString(), "success" to "true") + it.asTelemetry())
