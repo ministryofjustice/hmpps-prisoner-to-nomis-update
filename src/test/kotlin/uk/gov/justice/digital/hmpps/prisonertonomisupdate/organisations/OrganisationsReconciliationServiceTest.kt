@@ -18,7 +18,12 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiMockServer.Companion.organisationAddressDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiMockServer.Companion.organisationDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiMockServer.Companion.organisationEmailDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiMockServer.Companion.organisationPhoneDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiMockServer.Companion.organisationTypeDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiMockServer.Companion.organisationWebAddressDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @SpringAPIServiceTest
@@ -112,6 +117,224 @@ internal class OrganisationsReconciliationServiceTest {
             assertThat(it).containsEntry("organisationId", "1")
             assertThat(it["dpsOrganisation"]).contains("active=false")
             assertThat(it["nomisOrganisation"]).contains("active=true")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenOneOrganisationHasMoreAddressesThanTheOther {
+      @BeforeEach
+      fun beforeEach() {
+        nomisApi.stubGetCorporateOrganisation(
+          corporateAndOrganisationId,
+          corporateOrganisation(corporateAndOrganisationId).copy(
+            name = "South Yorkshire Police",
+          ).withAddress(corporateAddress(), corporateAddress()),
+        )
+
+        dpsApi.stubGetOrganisation(
+          corporateAndOrganisationId,
+          organisationDetails().copy(
+            corporateAndOrganisationId,
+            organisationName = "South Yorkshire Police",
+            addresses = listOf(organisationAddressDetails()),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkOrganisationMatch(corporateAndOrganisationId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will show DPS organisation has different address counts`() = runTest {
+        service.checkOrganisationMatch(corporateAndOrganisationId)
+        verify(telemetryClient).trackEvent(
+          eq("organisations-reports-reconciliation-mismatch"),
+          check {
+            assertThat(it).containsEntry("organisationId", "1")
+            assertThat(it["dpsOrganisation"]).contains("addressCount=1")
+            assertThat(it["nomisOrganisation"]).contains("addressCount=2")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenOrganisationsHaveDifferentTypes {
+      @BeforeEach
+      fun beforeEach() {
+        nomisApi.stubGetCorporateOrganisation(
+          corporateAndOrganisationId,
+          corporateOrganisation(corporateAndOrganisationId).copy(
+            name = "South Yorkshire Police",
+            types = listOf(corporateOrganisationType("DOCTOR"), corporateOrganisationType("TEA")),
+          ),
+        )
+
+        dpsApi.stubGetOrganisation(
+          corporateAndOrganisationId,
+          organisationDetails().copy(
+            corporateAndOrganisationId,
+            organisationName = "South Yorkshire Police",
+            organisationTypes = listOf(organisationTypeDetails("DOCTOR"), organisationTypeDetails("POLICE")),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkOrganisationMatch(corporateAndOrganisationId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will show DPS organisation has different types`() = runTest {
+        service.checkOrganisationMatch(corporateAndOrganisationId)
+        verify(telemetryClient).trackEvent(
+          eq("organisations-reports-reconciliation-mismatch"),
+          check {
+            assertThat(it).containsEntry("organisationId", "1")
+            assertThat(it["nomisOrganisation"]).contains("types=[DOCTOR, TEA]")
+            assertThat(it["dpsOrganisation"]).contains("types=[DOCTOR, POLICE]")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenOrganisationsHaveDifferentPhoneNumbers {
+      @BeforeEach
+      fun beforeEach() {
+        nomisApi.stubGetCorporateOrganisation(
+          corporateAndOrganisationId,
+          corporateOrganisation(corporateAndOrganisationId).copy(
+            name = "South Yorkshire Police",
+          ).withPhone(corporatePhone().copy(number = "07973 555 5555"), corporatePhone().copy(number = "0114 555 5555")),
+        )
+
+        dpsApi.stubGetOrganisation(
+          corporateAndOrganisationId,
+          organisationDetails().copy(
+            corporateAndOrganisationId,
+            organisationName = "South Yorkshire Police",
+            phoneNumbers = listOf(organisationPhoneDetails().copy(phoneNumber = "0114 555 5555"), organisationPhoneDetails().copy(phoneNumber = "07973 444 5555")),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkOrganisationMatch(corporateAndOrganisationId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will show DPS organisation has different phone numbers`() = runTest {
+        service.checkOrganisationMatch(corporateAndOrganisationId)
+        verify(telemetryClient).trackEvent(
+          eq("organisations-reports-reconciliation-mismatch"),
+          check {
+            assertThat(it).containsEntry("organisationId", "1")
+            assertThat(it["nomisOrganisation"]).contains("phoneNumbers=[0114 555 5555, 07973 555 5555]")
+            assertThat(it["dpsOrganisation"]).contains("phoneNumbers=[0114 555 5555, 07973 444 5555]")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenOrganisationsHaveDifferentEmailAddresses {
+      @BeforeEach
+      fun beforeEach() {
+        nomisApi.stubGetCorporateOrganisation(
+          corporateAndOrganisationId,
+          corporateOrganisation(corporateAndOrganisationId).copy(
+            name = "South Yorkshire Police",
+          ).withInternetAddress(
+            corporateEmail().copy(internetAddress = "test@test.com"),
+            corporateEmail().copy(internetAddress = "test@gmail.com"),
+          ),
+        )
+
+        dpsApi.stubGetOrganisation(
+          corporateAndOrganisationId,
+          organisationDetails().copy(
+            corporateAndOrganisationId,
+            organisationName = "South Yorkshire Police",
+            emailAddresses = listOf(
+              organisationEmailDetails().copy(emailAddress = "test@test.com"),
+              organisationEmailDetails().copy(emailAddress = "test@yahoo.com"),
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkOrganisationMatch(corporateAndOrganisationId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will show DPS organisation has different email addresses`() = runTest {
+        service.checkOrganisationMatch(corporateAndOrganisationId)
+        verify(telemetryClient).trackEvent(
+          eq("organisations-reports-reconciliation-mismatch"),
+          check {
+            assertThat(it).containsEntry("organisationId", "1")
+            assertThat(it["nomisOrganisation"]).contains("emailAddresses=[test@gmail.com, test@test.com]")
+            assertThat(it["dpsOrganisation"]).contains("emailAddresses=[test@test.com, test@yahoo.com]")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenOrganisationsHaveDifferentWebAddresses {
+      @BeforeEach
+      fun beforeEach() {
+        nomisApi.stubGetCorporateOrganisation(
+          corporateAndOrganisationId,
+          corporateOrganisation(corporateAndOrganisationId).copy(
+            name = "South Yorkshire Police",
+          ).withInternetAddress(
+            corporateWebAddress().copy(internetAddress = "www.test.com"),
+            corporateWebAddress().copy(internetAddress = "www.gmail.com"),
+          ),
+        )
+
+        dpsApi.stubGetOrganisation(
+          corporateAndOrganisationId,
+          organisationDetails().copy(
+            corporateAndOrganisationId,
+            organisationName = "South Yorkshire Police",
+            webAddresses = listOf(
+              organisationWebAddressDetails().copy(webAddress = "www.test.com"),
+              organisationWebAddressDetails().copy(webAddress = "www.yahoo.com"),
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkOrganisationMatch(corporateAndOrganisationId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will show DPS organisation has different web addresses`() = runTest {
+        service.checkOrganisationMatch(corporateAndOrganisationId)
+        verify(telemetryClient).trackEvent(
+          eq("organisations-reports-reconciliation-mismatch"),
+          check {
+            assertThat(it).containsEntry("organisationId", "1")
+            assertThat(it["nomisOrganisation"]).contains("webAddresses=[www.gmail.com, www.test.com]")
+            assertThat(it["dpsOrganisation"]).contains("webAddresses=[www.test.com, www.yahoo.com]")
           },
           isNull(),
         )

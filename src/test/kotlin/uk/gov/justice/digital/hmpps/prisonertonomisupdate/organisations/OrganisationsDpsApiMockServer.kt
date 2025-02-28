@@ -11,7 +11,13 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatusCode
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.objectMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationAddressDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationEmailDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationPhoneDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationTypeDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationWebAddressDetails
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class OrganisationsDpsApiExtension :
@@ -53,6 +59,67 @@ class OrganisationsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       addresses = emptyList(),
       createdBy = "A.TEST",
       createdTime = LocalDateTime.now().minusDays(1),
+    )
+
+    fun organisationAddressDetails() = OrganisationAddressDetails(
+      organisationId = 1,
+      organisationAddressId = 12345,
+      phoneNumbers = emptyList(),
+      comments = "nice area",
+      primaryAddress = true,
+      mailAddress = true,
+      noFixedAddress = false,
+      addressType = "HOME",
+      flat = "Flat 1",
+      property = "Brown Court",
+      area = "Broomhill",
+      street = "Broomhill Street",
+      postcode = "S1 6GG",
+      cityCode = "12345",
+      cityDescription = "Sheffield",
+      countyCode = "S.YORKSHIRE",
+      countyDescription = "South Yorkshire",
+      countryCode = "GBR",
+      countryDescription = "United Kingdom",
+      startDate = LocalDate.parse("2021-01-01"),
+      endDate = LocalDate.parse("2025-01-01"),
+      serviceAddress = true,
+      contactPersonName = "Bob Brown",
+      businessHours = "10am to 10pm Monday to Friday",
+      createdBy = "j.smith",
+      createdTime = LocalDateTime.now(),
+    )
+
+    fun organisationTypeDetails(type: String) = OrganisationTypeDetails(
+      organisationId = 123,
+      organisationType = type,
+      organisationTypeDescription = "Description for $type",
+      createdBy = "j.smith",
+      createdTime = LocalDateTime.now(),
+    )
+
+    fun organisationPhoneDetails() = OrganisationPhoneDetails(
+      organisationPhoneId = 1234,
+      organisationId = 43221,
+      phoneType = "MOB",
+      phoneTypeDescription = "Mobile",
+      phoneNumber = "0114 2222 2222",
+      createdBy = "j.smith",
+      createdTime = LocalDateTime.now(),
+    )
+    fun organisationEmailDetails() = OrganisationEmailDetails(
+      organisationEmailId = 1234,
+      organisationId = 43221,
+      emailAddress = "test@email.com",
+      createdBy = "j.smith",
+      createdTime = LocalDateTime.now(),
+    )
+    fun organisationWebAddressDetails() = OrganisationWebAddressDetails(
+      organisationWebAddressId = 1234,
+      organisationId = 43221,
+      webAddress = "www.internet.com",
+      createdBy = "j.smith",
+      createdTime = LocalDateTime.now(),
     )
   }
 

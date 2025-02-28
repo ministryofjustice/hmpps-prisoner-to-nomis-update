@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CorporateOrganisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
+import java.util.SortedSet
 
 @Service
 class OrganisationsReconciliationService(
@@ -70,12 +71,22 @@ private fun OrganisationDetails.toOrganisation() = Organisation(
   id = this.organisationId,
   name = this.organisationName,
   active = this.active,
+  addressCount = this.addresses.size,
+  types = this.organisationTypes.map { it.organisationType }.toSortedSet(),
+  phoneNumbers = this.phoneNumbers.map { it.phoneNumber }.toSortedSet(),
+  emailAddresses = this.emailAddresses.map { it.emailAddress }.toSortedSet(),
+  webAddresses = this.webAddresses.map { it.webAddress }.toSortedSet(),
 )
 
 private fun CorporateOrganisation.toOrganisation() = Organisation(
   id = this.id,
   name = this.name,
   active = this.active,
+  addressCount = this.addresses.size,
+  types = this.types.map { it.type.code }.toSortedSet(),
+  phoneNumbers = this.phoneNumbers.map { it.number }.toSortedSet(),
+  emailAddresses = this.internetAddresses.filter { it.type == "EMAIL" }.map { it.internetAddress }.toSortedSet(),
+  webAddresses = this.internetAddresses.filter { it.type == "WEB" }.map { it.internetAddress }.toSortedSet(),
 )
 
 data class MismatchOrganisation(
@@ -86,4 +97,9 @@ data class Organisation(
   val id: Long,
   val name: String,
   val active: Boolean,
+  val addressCount: Int,
+  val types: SortedSet<String>,
+  val phoneNumbers: SortedSet<String>,
+  val emailAddresses: SortedSet<String>,
+  val webAddresses: SortedSet<String>,
 )
