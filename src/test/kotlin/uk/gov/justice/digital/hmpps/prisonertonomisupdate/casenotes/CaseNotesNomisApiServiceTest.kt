@@ -14,12 +14,13 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCaseNoteRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCaseNoteResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAmendment
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCaseNoteRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCaseNoteRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCaseNoteResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAmendment
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCaseNoteRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
+import java.time.LocalDateTime
 
 @SpringAPIServiceTest
 @Import(CaseNotesNomisApiService::class, CaseNotesNomisApiMockServer::class, RetryApiService::class)
@@ -96,8 +97,8 @@ class CaseNotesNomisApiServiceTest {
     }
 
     private fun createCaseNoteRequest() = CreateCaseNoteRequest(
-      occurrenceDateTime = "2024-07-01T01:02:03",
-      creationDateTime = "2024-07-02T01:02:03",
+      occurrenceDateTime = LocalDateTime.parse("2024-07-01T01:02:03"),
+      creationDateTime = LocalDateTime.parse("2024-07-02T01:02:03"),
       caseNoteType = "Security",
       caseNoteSubType = "Security",
       authorUsername = "me",
@@ -141,7 +142,7 @@ class CaseNotesNomisApiServiceTest {
             UpdateAmendment(
               text = "amendment",
               authorUsername = "ME",
-              createdDateTime = "2024-05-06T07:08:09",
+              createdDateTime = LocalDateTime.parse("2024-05-06T07:08:09"),
             ),
           ),
         ),

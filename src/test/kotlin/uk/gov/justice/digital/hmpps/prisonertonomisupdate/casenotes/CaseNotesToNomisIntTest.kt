@@ -163,7 +163,7 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
             postRequestedFor(anyUrl())
               .withRequestBodyJsonPath("caseNoteType", "HPI")
               .withRequestBodyJsonPath("caseNoteSubType", "Y")
-              .withRequestBodyJsonPath("occurrenceDateTime", "2024-01-01T01:01")
+              .withRequestBodyJsonPath("occurrenceDateTime", "2024-01-01T01:01:00")
               .withRequestBodyJsonPath("authorUsername", "ME.COM")
               .withRequestBodyJsonPath("caseNoteText", "contents of case note"),
           )
