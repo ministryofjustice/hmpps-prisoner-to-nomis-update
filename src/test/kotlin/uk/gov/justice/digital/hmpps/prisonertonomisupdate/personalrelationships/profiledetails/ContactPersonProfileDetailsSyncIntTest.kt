@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails
 
+import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
@@ -299,6 +300,72 @@ class ContactPersonProfileDetailsSyncIntTest(
   }
 
   @Nested
+  inner class DomesticStatusDeletedEvent {
+    @Nested
+    inner class HappyPath {
+      @Test
+      fun `should sync null domestic status on delete`() {
+        nomisApi.stubPutProfileDetails(offenderNo = "A1234BC", created = false, bookingId = 12345)
+
+        publishDomainEvent(
+          eventType = "personal-relationships-api.domestic-status.deleted",
+          payload = domesticStatusDeletedEvent(
+            prisonerNumber = "A1234BC",
+            domesticStatusId = 123,
+            source = "DPS",
+          ),
+        ).also { waitForAnyProcessingToComplete() }
+
+        verifyNomisPutProfileDetails(
+          prisonerNumber = "A1234BC",
+          profileType = equalTo("MARITAL"),
+          profileCode = absent(),
+        )
+        verifyTelemetry(
+          profileType = MARITAL,
+          telemetryType = "deleted",
+          offenderNo = "A1234BC",
+          requestedDpsId = 123,
+          bookingId = 12345,
+          dpsId = null,
+        )
+      }
+
+      @Test
+      fun `should ignore if delete performed in NOMIS`() {
+        publishDomainEvent(
+          eventType = "personal-relationships-api.domestic-status.deleted",
+          payload = domesticStatusDeletedEvent(source = "NOMIS"),
+        ).also { waitForAnyProcessingToComplete() }
+
+        nomisApi.verify(count = 0, putRequestedFor(urlPathEqualTo("/prisoners/A1234BC/profile-details")))
+        verifyTelemetry(telemetryType = "ignored", ignoreReason = "Entity was created in NOMIS", dpsId = null)
+      }
+    }
+
+    @Nested
+    inner class Failures {
+
+      @Test
+      fun `should fail if call to NOMIS fails`() {
+        nomisApi.stubPutProfileDetails(errorStatus = BAD_REQUEST)
+
+        publishDomainEvent(
+          eventType = "personal-relationships-api.domestic-status.deleted",
+          payload = domesticStatusDeletedEvent(),
+        ).also { waitForDlqMessage() }
+
+        verifyNomisPutProfileDetails(profileCode = absent())
+        verifyTelemetry(
+          telemetryType = "error",
+          errorReason = "400 Bad Request from PUT http://localhost:8082/prisoners/A1234BC/profile-details",
+          dpsId = null,
+        )
+      }
+    }
+  }
+
+  @Nested
   @DisplayName("PUT /contactperson/sync/profile-details/{prisonerNumber}/{profileType}")
   inner class SyncEndpoint {
 
@@ -502,6 +569,29 @@ fun numberOfChildrenCreatedEvent(
       "eventType":"personal-relationships-api.number-of-children.created", 
       "additionalInformation": {
         "numberOfChildrenId": $numberOfChildrenId,
+        "source": "$source"
+      },
+      "personReference": {
+        "identifiers": [
+          {
+            "type": "prisonerNumber",
+            "value": "$prisonerNumber"
+          }
+        ]
+      }
+    }
+    """
+
+fun domesticStatusDeletedEvent(
+  prisonerNumber: String = "A1234BC",
+  domesticStatusId: Long = 123,
+  source: String = "DPS",
+) = //language=JSON
+  """
+    {
+      "eventType":"personal-relationships-api.domestic-status.deleted", 
+      "additionalInformation": {
+        "domesticStatusId": $domesticStatusId,
         "source": "$source"
       },
       "personReference": {
