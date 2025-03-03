@@ -12,11 +12,10 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNote
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseNoteResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseNoteResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Objects
 
@@ -203,7 +202,7 @@ class CaseNotesReconciliationService(
     val sortedAmendments = amendments.map { a ->
       CommonAmendmentFields(
         text = a.text,
-        occurrenceDateTime = LocalDateTime.parse(a.createdDateTime).format(amendmentFormatter),
+        occurrenceDateTime = a.createdDateTime.format(amendmentFormatter),
         authorUsername = a.authorUsername,
       )
     }.toSortedSet(amendmentComparator)
@@ -213,8 +212,8 @@ class CaseNotesReconciliationService(
       text = caseNoteText + sortedAmendments.joinToString("") { it.toNomisAmendment() },
       type = caseNoteType.code,
       subType = caseNoteSubType.code,
-      occurrenceDateTime = occurrenceDateTime,
-      creationDateTime = creationDateTime,
+      occurrenceDateTime = occurrenceDateTime?.format(truncatedToSecondsFormatter),
+      creationDateTime = creationDateTime?.format(truncatedToSecondsFormatter),
       nomisUsernames = authorUsernames,
       legacyId = caseNoteId,
     )

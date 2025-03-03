@@ -88,6 +88,13 @@ val models = listOf(
     output = "nomissync",
     packageName = "nomissync",
   ),
+  // https://nomis-prisoner-api-dev.prison.service.justice.gov.uk/v3/api-docs
+  ModelConfiguration(
+    name = "buildNomisPrisonerApiModel",
+    input = "nomis-prisoner-api-docs.json",
+    output = "nomisprisoner",
+    packageName = "nomisprisoner",
+  ),
   // https://nomis-sync-prisoner-mapping-dev.hmpps.service.justice.gov.uk/v3/api-docs
   ModelConfiguration(
     name = "buildMappingServiceApiModel",

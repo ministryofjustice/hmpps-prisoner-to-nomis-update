@@ -17,11 +17,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AllPrisonerCaseNoteMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CaseNoteMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CaseNoteMappingDto.MappingType
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseNoteAmendment
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseNoteResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDescription
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerCaseNotesResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseNoteAmendment
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseNoteResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerCaseNotesResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDateTime.parse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNoteAmendment as DpsCaseNoteAmendment
@@ -440,13 +440,13 @@ private fun templateNomisCaseNote(
     CaseNoteAmendment(
       text = "the amendment text",
       authorUsername = "AMUSER",
-      createdDateTime = "2024-01-01T01:02:03",
+      createdDateTime = parse("2024-01-01T01:02:03"),
       sourceSystem = CaseNoteAmendment.SourceSystem.NOMIS,
     ),
   ),
-  occurrenceDateTime = "2024-01-01T01:02:03",
-  creationDateTime = "2024-02-02T01:02:03",
-  createdDatetime = "notused",
+  occurrenceDateTime = parse("2024-01-01T01:02:03"),
+  creationDateTime = parse("2024-02-02T01:02:03"),
+  createdDatetime = parse("2022-02-02T01:02:03"),
   createdUsername = "notused",
   sourceSystem = CaseNoteResponse.SourceSystem.NOMIS,
 )

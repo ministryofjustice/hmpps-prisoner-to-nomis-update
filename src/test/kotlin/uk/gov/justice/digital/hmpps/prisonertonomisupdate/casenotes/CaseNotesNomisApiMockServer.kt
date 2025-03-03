@@ -10,11 +10,12 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseNoteResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDescription
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCaseNoteResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerCaseNotesResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseNoteResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCaseNoteResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerCaseNotesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import java.time.LocalDateTime
 
 @Component
 class CaseNotesNomisApiMockServer(private val objectMapper: ObjectMapper) {
@@ -102,10 +103,10 @@ fun caseNoteResponse(caseNoteId: Long) = CaseNoteResponse(
   authorFirstName = "First",
   authorLastName = "Last",
   amendments = emptyList(),
-  createdDatetime = "2021-02-03T04:05:06",
+  createdDatetime = LocalDateTime.parse("2021-02-03T04:05:06"),
   createdUsername = "John",
   noteSourceCode = CaseNoteResponse.NoteSourceCode.INST,
-  occurrenceDateTime = "2021-02-03T04:05:06",
+  occurrenceDateTime = LocalDateTime.parse("2021-02-03T04:05:06"),
   caseNoteText = "the actual casenote",
   sourceSystem = CaseNoteResponse.SourceSystem.DPS,
   auditModuleName = "audit",
