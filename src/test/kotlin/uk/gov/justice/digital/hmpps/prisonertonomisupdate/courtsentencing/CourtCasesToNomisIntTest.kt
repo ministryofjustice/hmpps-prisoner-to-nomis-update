@@ -1477,6 +1477,36 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                 "eventId",
                 WireMock.equalTo(NOMIS_COURT_APPEARANCE_ID.toString()),
               ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "sentenceTerms[0].weeks",
+                WireMock.equalTo("4"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "sentenceTerms[0].years",
+                WireMock.equalTo("2"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "sentenceTerms[0].months",
+                WireMock.equalTo("6"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "sentenceTerms[0].days",
+                WireMock.equalTo("15"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "sentenceTerms[0].sentenceTermType",
+                WireMock.equalTo("TERM"),
+              ),
             ),
         )
       }
@@ -1547,7 +1577,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
 
         MappingExtension.mappingServer.stubGetSentenceMappingGivenDpsIdWithError(DPS_SENTENCE_ID, 404)
-        MappingExtension.mappingServer.stubGetSentenceMappingGivenDpsId(id = DPS_SENTENCE_ID_2, nomisSentenceSequence = NOMIS_SENTENCE_SEQ_2, nomisBookingId = NOMIS_BOOKING_ID)
+        MappingExtension.mappingServer.stubGetSentenceMappingGivenDpsId(
+          id = DPS_SENTENCE_ID_2,
+          nomisSentenceSequence = NOMIS_SENTENCE_SEQ_2,
+          nomisBookingId = NOMIS_BOOKING_ID,
+        )
         MappingExtension.mappingServer.stubCreateSentence()
 
         publishCreateSentenceDomainEvent()

@@ -911,10 +911,10 @@ fun LegacyPeriodLength.toNomisSentenceTerm(): SentenceTermRequest = SentenceTerm
   years = this.periodYears,
   months = this.periodMonths,
   days = this.periodDays,
-  // TODO DPS to make this mandatory
-  sentenceTermType = this.sentenceTermCode!!,
+  weeks = this.periodWeeks,
+  sentenceTermType = this.sentenceTermCode,
   lifeSentenceFlag = this.isLifeSentence ?: false,
-  // waiting for DPS to provide this
+  // TODO waiting for DPS to provide this
   startDate = LocalDate.of(2024, 1, 1),
   endDate = LocalDate.of(2026, 1, 1),
 )
