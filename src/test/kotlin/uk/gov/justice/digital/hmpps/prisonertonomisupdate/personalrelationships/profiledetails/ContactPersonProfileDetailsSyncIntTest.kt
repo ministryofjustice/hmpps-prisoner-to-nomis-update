@@ -366,6 +366,78 @@ class ContactPersonProfileDetailsSyncIntTest(
   }
 
   @Nested
+  inner class NumberOfChildrenDeletedEvent {
+    @Nested
+    inner class HappyPath {
+      @Test
+      fun `should sync null number of children on delete`() {
+        nomisApi.stubPutProfileDetails(offenderNo = "A1234BC", created = false, bookingId = 12345)
+
+        publishDomainEvent(
+          eventType = "personal-relationships-api.number-of-children.deleted",
+          payload = numberOfChildrenDeletedEvent(
+            prisonerNumber = "A1234BC",
+            numberOfChildrenId = 123,
+            source = "DPS",
+          ),
+        ).also { waitForAnyProcessingToComplete() }
+
+        verifyNomisPutProfileDetails(
+          prisonerNumber = "A1234BC",
+          profileType = equalTo("CHILD"),
+          profileCode = absent(),
+        )
+        verifyTelemetry(
+          profileType = CHILD,
+          telemetryType = "deleted",
+          offenderNo = "A1234BC",
+          requestedDpsId = 123,
+          bookingId = 12345,
+          dpsId = null,
+        )
+      }
+
+      @Test
+      fun `should ignore if delete performed in NOMIS`() {
+        publishDomainEvent(
+          eventType = "personal-relationships-api.number-of-children.deleted",
+          payload = numberOfChildrenDeletedEvent(source = "NOMIS"),
+        ).also { waitForAnyProcessingToComplete() }
+
+        nomisApi.verify(count = 0, putRequestedFor(urlPathEqualTo("/prisoners/A1234BC/profile-details")))
+        verifyTelemetry(
+          profileType = CHILD,
+          telemetryType = "ignored",
+          ignoreReason = "Entity was created in NOMIS",
+          dpsId = null,
+        )
+      }
+    }
+
+    @Nested
+    inner class Failures {
+
+      @Test
+      fun `should fail if call to NOMIS fails`() {
+        nomisApi.stubPutProfileDetails(errorStatus = BAD_REQUEST)
+
+        publishDomainEvent(
+          eventType = "personal-relationships-api.number-of-children.deleted",
+          payload = numberOfChildrenDeletedEvent(),
+        ).also { waitForDlqMessage() }
+
+        verifyNomisPutProfileDetails(profileType = equalTo("CHILD"), profileCode = absent())
+        verifyTelemetry(
+          profileType = CHILD,
+          telemetryType = "error",
+          errorReason = "400 Bad Request from PUT http://localhost:8082/prisoners/A1234BC/profile-details",
+          dpsId = null,
+        )
+      }
+    }
+  }
+
+  @Nested
   @DisplayName("PUT /contactperson/sync/profile-details/{prisonerNumber}/{profileType}")
   inner class SyncEndpoint {
 
@@ -592,6 +664,29 @@ fun domesticStatusDeletedEvent(
       "eventType":"personal-relationships-api.domestic-status.deleted", 
       "additionalInformation": {
         "domesticStatusId": $domesticStatusId,
+        "source": "$source"
+      },
+      "personReference": {
+        "identifiers": [
+          {
+            "type": "prisonerNumber",
+            "value": "$prisonerNumber"
+          }
+        ]
+      }
+    }
+    """
+
+fun numberOfChildrenDeletedEvent(
+  prisonerNumber: String = "A1234BC",
+  numberOfChildrenId: Long = 123,
+  source: String = "DPS",
+) = //language=JSON
+  """
+    {
+      "eventType":"personal-relationships-api.number-of-children.deleted", 
+      "additionalInformation": {
+        "numberOfChildrenId": $numberOfChildrenId,
         "source": "$source"
       },
       "personReference": {

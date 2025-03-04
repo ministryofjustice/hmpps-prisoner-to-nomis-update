@@ -264,7 +264,8 @@ hmpps.sqs:
           "contacts-api.contact-restriction.updated",
           "personal-relationships-api.domestic-status.created",
           "personal-relationships-api.number-of-children.created",
-          "personal-relationships-api.domestic-status.deleted"
+          "personal-relationships-api.domestic-status.deleted",
+          "personal-relationships-api.number-of-children.deleted"
         ]}
       dlqMaxReceiveCount: 1
       errorVisibilityTimeout: 0
