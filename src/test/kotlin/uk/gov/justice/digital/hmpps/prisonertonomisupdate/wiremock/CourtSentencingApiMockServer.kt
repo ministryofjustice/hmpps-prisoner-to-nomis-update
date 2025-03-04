@@ -235,6 +235,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       LegacyPeriodLength(
         periodYears = 2,
         periodMonths = 6,
+        periodWeeks = 4,
         periodDays = 15,
         sentenceTermCode = "TERM",
       ),
