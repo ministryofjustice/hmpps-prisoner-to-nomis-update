@@ -81,6 +81,7 @@ private fun OrganisationDetails.toOrganisation() = Organisation(
   phoneNumbers = this.phoneNumbers.map { it.phoneNumber }.toSortedSet(),
   emailAddresses = this.emailAddresses.map { it.emailAddress }.toSortedSet(),
   webAddresses = this.webAddresses.map { it.webAddress }.toSortedSet(),
+  addressPhoneNumbers = this.addresses.map { it.phoneNumbers.map { it.phoneNumber }.toSortedSet() }.toSortedSet { o1, o2 -> o1.joinToString().compareTo(o2.joinToString()) },
 )
 
 private fun CorporateOrganisation.toOrganisation() = Organisation(
@@ -92,6 +93,7 @@ private fun CorporateOrganisation.toOrganisation() = Organisation(
   phoneNumbers = this.phoneNumbers.map { it.number }.toSortedSet(),
   emailAddresses = this.internetAddresses.filter { it.type == "EMAIL" }.map { it.internetAddress }.toSortedSet(),
   webAddresses = this.internetAddresses.filter { it.type == "WEB" }.map { it.internetAddress }.toSortedSet(),
+  addressPhoneNumbers = this.addresses.map { it.phoneNumbers.map { it.number }.toSortedSet() }.toSortedSet { o1, o2 -> o1.joinToString().compareTo(o2.joinToString()) },
 )
 
 data class MismatchOrganisation(
@@ -107,6 +109,7 @@ data class Organisation(
   val phoneNumbers: SortedSet<String>,
   val emailAddresses: SortedSet<String>,
   val webAddresses: SortedSet<String>,
+  val addressPhoneNumbers: SortedSet<SortedSet<String>>,
 )
 
 data class OrganisationCounts(val dpsCount: Long, val nomisCount: Long)
