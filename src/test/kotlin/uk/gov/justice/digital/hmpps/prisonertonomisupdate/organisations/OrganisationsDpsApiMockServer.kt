@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatusCode
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationAddressDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationEmailDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationPhoneDetails
@@ -105,6 +106,17 @@ class OrganisationsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     fun organisationPhoneDetails() = OrganisationPhoneDetails(
       organisationPhoneId = 1234,
       organisationId = 43221,
+      phoneType = "MOB",
+      phoneTypeDescription = "Mobile",
+      phoneNumber = "0114 2222 2222",
+      createdBy = "j.smith",
+      createdTime = LocalDateTime.now(),
+    )
+    fun organisationAddressPhoneDetails() = OrganisationAddressPhoneDetails(
+      organisationAddressPhoneId = 12346,
+      organisationPhoneId = 1234,
+      organisationId = 43221,
+      organisationAddressId = 87665,
       phoneType = "MOB",
       phoneTypeDescription = "Mobile",
       phoneNumber = "0114 2222 2222",

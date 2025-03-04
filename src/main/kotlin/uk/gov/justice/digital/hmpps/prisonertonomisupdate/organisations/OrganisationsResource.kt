@@ -33,8 +33,8 @@ class OrganisationsResource(
       telemetryClient.trackEvent(
         "organisations-reports-reconciliation-mismatch",
         mapOf(
-          "dpsCount" to "$counts.dpsCount",
-          "nomisCount" to "$counts.nomisCount",
+          "dpsCount" to "${counts.dpsCount}",
+          "nomisCount" to "${counts.nomisCount}",
         ),
       )
     }

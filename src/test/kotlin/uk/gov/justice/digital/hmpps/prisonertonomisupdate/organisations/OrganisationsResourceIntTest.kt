@@ -96,10 +96,12 @@ class OrganisationsResourceIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         eq("organisations-reports-reconciliation-mismatch"),
-        check {
-          assertThat(it["dpsCount"]).contains("2")
-          assertThat(it["nomisCount"]).contains("3")
-        },
+        eq(
+          mapOf(
+            "dpsCount" to "2",
+            "nomisCount" to "3",
+          ),
+        ),
         isNull(),
       )
     }

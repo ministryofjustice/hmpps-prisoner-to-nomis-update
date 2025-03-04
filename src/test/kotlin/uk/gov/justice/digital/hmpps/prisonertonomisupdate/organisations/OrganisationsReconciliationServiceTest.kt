@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiMockServer.Companion.organisationAddressDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiMockServer.Companion.organisationAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiMockServer.Companion.organisationDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiMockServer.Companion.organisationEmailDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiMockServer.Companion.organisationPhoneDetails
@@ -241,6 +242,61 @@ internal class OrganisationsReconciliationServiceTest {
             assertThat(it).containsEntry("organisationId", "1")
             assertThat(it["nomisOrganisation"]).contains("phoneNumbers=[0114 555 5555, 07973 555 5555]")
             assertThat(it["dpsOrganisation"]).contains("phoneNumbers=[0114 555 5555, 07973 444 5555]")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenAddressesHaveDifferentPhoneNumbers {
+      @BeforeEach
+      fun beforeEach() {
+        nomisApi.stubGetCorporateOrganisation(
+          corporateAndOrganisationId,
+          corporateOrganisation(corporateAndOrganisationId).copy(
+            name = "South Yorkshire Police",
+          ).withAddress(
+            corporateAddress().withPhone(
+              corporatePhone().copy(number = "07973 555 5555"),
+              corporatePhone().copy(number = "0114 555 5555"),
+            ),
+            corporateAddress().withPhone(corporatePhone().copy(number = "0115 555 5555")),
+          ),
+        )
+
+        dpsApi.stubGetOrganisation(
+          corporateAndOrganisationId,
+          organisationDetails().copy(
+            corporateAndOrganisationId,
+            organisationName = "South Yorkshire Police",
+            addresses = listOf(
+              organisationAddressDetails().copy(
+                phoneNumbers = listOf(
+                  organisationAddressPhoneDetails().copy(phoneNumber = "0114 555 5555"),
+                  organisationAddressPhoneDetails().copy(phoneNumber = "07973 444 5555"),
+                ),
+              ),
+              organisationAddressDetails().copy(phoneNumbers = listOf(organisationAddressPhoneDetails().copy(phoneNumber = "0115 555 5555"))),
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkOrganisationMatch(corporateAndOrganisationId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will show DPS organisation has different address phone numbers`() = runTest {
+        service.checkOrganisationMatch(corporateAndOrganisationId)
+        verify(telemetryClient).trackEvent(
+          eq("organisations-reports-reconciliation-mismatch"),
+          check {
+            assertThat(it).containsEntry("organisationId", "1")
+            assertThat(it["nomisOrganisation"]).contains("addressPhoneNumbers=[[0114 555 5555, 07973 555 5555], [0115 555 5555]]")
+            assertThat(it["dpsOrganisation"]).contains("addressPhoneNumbers=[[0114 555 5555, 07973 444 5555], [0115 555 5555]]")
           },
           isNull(),
         )
