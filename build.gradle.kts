@@ -48,6 +48,9 @@ dependencies {
 
 kotlin {
   jvmToolchain(21)
+  compilerOptions {
+    freeCompilerArgs.add("-Xwhen-guards")
+  }
 }
 
 data class ModelConfiguration(val name: String, val input: String, val output: String, val packageName: String)

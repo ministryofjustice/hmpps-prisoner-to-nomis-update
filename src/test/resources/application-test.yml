@@ -263,9 +263,11 @@ hmpps.sqs:
           "contacts-api.prisoner-contact-restriction.updated",
           "contacts-api.contact-restriction.updated",
           "personal-relationships-api.domestic-status.created",
-          "personal-relationships-api.number-of-children.created"
+          "personal-relationships-api.number-of-children.created",
+          "personal-relationships-api.domestic-status.deleted"
         ]}
       dlqMaxReceiveCount: 1
+      errorVisibilityTimeout: 0
     organisations:
       queueName: "organisations-${random.uuid}"
       dlqName: "organisations-dlq-${random.uuid}"
