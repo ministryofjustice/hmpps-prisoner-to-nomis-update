@@ -61,6 +61,7 @@ class ContactPersonDomainEventListener(
       "personal-relationships-api.domestic-status.created" -> profileDetailsService.syncDomesticStatus(message.fromJson())
       "personal-relationships-api.number-of-children.created" -> profileDetailsService.syncNumberOfChildren(message.fromJson())
       "personal-relationships-api.domestic-status.deleted" -> profileDetailsService.deleteDomesticStatus(message.fromJson())
+      "personal-relationships-api.number-of-children.deleted" -> profileDetailsService.deleteNumberOfChildren(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
@@ -286,6 +287,12 @@ data class ContactNumberOfChildrenData(
   val numberOfChildrenId: Long,
   override val source: String = "DPS",
 ) : SourcedAdditionalData
+
+data class ContactNumberOfChildrenDeletedEvent(
+  override val additionalInformation: ContactNumberOfChildrenData,
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class ContactIdentifiers(val identifiers: List<ContactPersonReference>)
 data class ContactPersonReference(val type: String, val value: String)

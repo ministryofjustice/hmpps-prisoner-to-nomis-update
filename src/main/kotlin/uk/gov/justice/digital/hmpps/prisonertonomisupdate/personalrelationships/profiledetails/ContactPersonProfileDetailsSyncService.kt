@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactDomesticStatusDeletedEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactIdReferencedEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactNumberOfChildrenCreatedEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactNumberOfChildrenDeletedEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileType.CHILD
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileType.MARITAL
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.profiledetails.ProfileDetailsNomisApiService
@@ -49,6 +50,16 @@ class ContactPersonProfileDetailsSyncService(
       syncProfileDetail(prisonerNumber, domesticStatusId, MARITAL, deleted = true)
     } else {
       ignoreTelemetry(prisonerNumber, domesticStatusId, MARITAL)
+    }
+  }
+
+  suspend fun deleteNumberOfChildren(event: ContactNumberOfChildrenDeletedEvent) {
+    val prisonerNumber = event.prisonerNumber()
+    val numberOfChildrenId = event.additionalInformation.numberOfChildrenId
+    if (event.additionalInformation.source == "DPS") {
+      syncProfileDetail(prisonerNumber, numberOfChildrenId, CHILD, deleted = true)
+    } else {
+      ignoreTelemetry(prisonerNumber, numberOfChildrenId, CHILD)
     }
   }
 
@@ -109,7 +120,10 @@ class ContactPersonProfileDetailsSyncService(
         }
     }
 
-    CHILD if (delete) -> TODO("Delete number of children event not supported yet")
+    CHILD if (delete) -> {
+      nomisApi.upsertProfileDetails(prisonerNumber, "CHILD", profileCode = null)
+        .let { SyncResult(it.bookingId) }
+    }
 
     CHILD -> {
       dpsApi.getNumberOfChildren(prisonerNumber)
