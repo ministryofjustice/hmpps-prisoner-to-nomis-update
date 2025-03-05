@@ -293,7 +293,7 @@ hmpps.sqs:
           "organisations-api.organisation-phone.deleted",
           "organisations-api.organisation-address-phone.created",
           "organisations-api.organisation-address-phone.updated",
-          "organisations-api.organisation-address-phone.deleted",
+          "organisations-api.organisation-address-phone.deleted"
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
