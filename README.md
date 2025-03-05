@@ -68,20 +68,20 @@ For some of our external API calls we use `openapi-generator` to generate the mo
 Run the following commands to take a copy of the latest specs (requires `jq` is installed):
 
 ```
-http https://nomis-prisoner-api-dev.prison.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/nomis-prisoner-api-docs.json
-http https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/activities-api-docs.json
-http https://manage-adjudications-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/adjudications-api-docs.json
-http https://locations-inside-prison-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/locations-api-docs.json
-http https://dev.offender-case-notes.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/casenotes-api-docs.json
-http https://non-associations-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/non-associations-api-docs.json
-http https://nomis-sync-prisoner-mapping-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/nomis-mapping-service-api-docs.json
-http https://adjustments-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/sentencing-adjustments-api-docs.json
-http https://remand-and-sentencing-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/court-sentencing-api-docs.json
-http https://csip-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/csip-api-docs.json
-http https://prison-person-api-dev.prison.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/prison-person-api-docs.json
-http https://alerts-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/alerts-api-docs.json
-http https://personal-relationships-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/personal-relationships-api-docs.json
-http https://organisations-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/organisations-api-docs.json
+curl https://nomis-prisoner-api-dev.prison.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/nomis-prisoner-api-docs.json
+curl https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/activities-api-docs.json
+curl https://manage-adjudications-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/adjudications-api-docs.json
+curl https://locations-inside-prison-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/locations-api-docs.json
+curl https://dev.offender-case-notes.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/casenotes-api-docs.json
+curl https://non-associations-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/non-associations-api-docs.json
+curl https://nomis-sync-prisoner-mapping-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/nomis-mapping-service-api-docs.json
+curl https://adjustments-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/sentencing-adjustments-api-docs.json
+curl https://remand-and-sentencing-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/court-sentencing-api-docs.json
+curl https://csip-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/csip-api-docs.json
+curl https://prison-person-api-dev.prison.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/prison-person-api-docs.json
+curl https://alerts-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/alerts-api-docs.json
+curl https://personal-relationships-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/personal-relationships-api-docs.json
+curl https://organisations-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/organisations-api-docs.json
 ```
 
 Then run compile gradle task that will regenerate the models in the `build/generated/src` directory:
