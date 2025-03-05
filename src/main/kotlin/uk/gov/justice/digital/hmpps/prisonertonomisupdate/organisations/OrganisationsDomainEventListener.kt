@@ -58,6 +58,7 @@ class OrganisationsDomainEventListener(
   }
 }
 
+// TODO - create concrete classes where appropriate
 interface SourcedOrganisationsEvent {
   val additionalInformation: OrganisationAdditionalData
   val organisationId: Long
