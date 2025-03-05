@@ -22,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension.Companion.alertsDpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerAlertsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAlertsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 
