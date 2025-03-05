@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts
 
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.Alert
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAlertRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAlertRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAlertRequest
 
 fun Alert.toNomisCreateRequest(): CreateAlertRequest = CreateAlertRequest(
   alertCode = this.alertCode.code,
