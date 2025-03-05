@@ -720,6 +720,12 @@ class ContactPersonService(
     }
   }
 
+  suspend fun contactEmploymentCreated(event: ContactEmploymentCreatedEvent) {
+  }
+  suspend fun contactEmploymentUpdated(event: ContactEmploymentUpdatedEvent) {
+  }
+  suspend fun contactEmploymentDeleted(event: ContactEmploymentDeletedEvent) {
+  }
   suspend fun prisonerContactRestrictionCreated(event: PrisonerContactRestrictionCreatedEvent) {
     val entityName = PRISONER_CONTACT_RESTRICTION.entityName
     val dpsPrisonerContactRestrictionId = event.additionalInformation.prisonerContactRestrictionId
