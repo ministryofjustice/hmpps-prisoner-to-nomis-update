@@ -143,7 +143,7 @@ class LocationsResourceIntTest : IntegrationTestBase() {
     "status": "ACTIVE",
     "isResidential": true,
     "lastModifiedBy": "me",
-    "lastModifiedDate": "2024-05-25"
+    "lastModifiedDate": "2024-05-25T01:02:03"
   }
   """.trimIndent()
 
