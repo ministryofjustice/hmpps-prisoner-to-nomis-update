@@ -68,7 +68,7 @@ For some of our external API calls we use `openapi-generator` to generate the mo
 Run the following commands to take a copy of the latest specs (requires `jq` is installed):
 
 ```
-curl https://nomis-prisoner-api-dev.prison.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/nomis-sync-api-docs.json
+curl https://nomis-prisoner-api-dev.prison.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/nomis-prisoner-api-docs.json
 curl https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/activities-api-docs.json
 curl https://manage-adjudications-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/adjudications-api-docs.json
 curl https://locations-inside-prison-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/locations-api-docs.json
