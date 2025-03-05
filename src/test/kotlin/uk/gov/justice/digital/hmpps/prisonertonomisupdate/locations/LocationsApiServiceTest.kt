@@ -49,7 +49,7 @@ internal class LocationsApiServiceTest {
       "parentId": "57718979-573c-433a-9e51-2d83f887c11c",
       "key": "MDI-A-1-001",
       "lastModifiedBy": "me",
-      "lastModifiedDate": "2024-05-25"
+      "lastModifiedDate": "2024-05-25T01:02:03"
     }
   """.trimIndent()
 

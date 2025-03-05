@@ -67,7 +67,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       "status": "ACTIVE",
       "isResidential": true,
       "lastModifiedBy": "me",
-      "lastModifiedDate": "2024-05-25"
+      "lastModifiedDate": "2024-05-25T01:02:03"
     }
   """.trimIndent()
 
@@ -89,7 +89,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       "proposedReactivationDate": "2024-02-14",
       "permanentlyDeactivated": $permanentlyDeactivated,
       "lastModifiedBy": "me",
-      "lastModifiedDate": "2024-05-25"
+      "lastModifiedDate": "2024-05-25T01:02:03"
     }
   """.trimIndent()
 

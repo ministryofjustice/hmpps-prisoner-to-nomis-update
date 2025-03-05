@@ -18,12 +18,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Certif
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.NonResidentialUsageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateLocationRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationIdResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ProfileRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateLocationRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UsageRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateLocationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.LocationIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ProfileRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateLocationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UsageRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import java.time.LocalDateTime
 import java.util.UUID
 
 private const val DPS_LOCATION_ID = "abcdef01-2345-6789-abcd-ef0123456789"
@@ -230,6 +231,6 @@ internal class LocationsServiceTest {
     orderWithinParentLocation = 4,
     parentId = UUID.fromString(PARENT_DPS_LOCATION_ID),
     lastModifiedBy = "me",
-    lastModifiedDate = "2024-05-25",
+    lastModifiedDate = LocalDateTime.parse("2024-05-25T02:03:04"),
   )
 }
