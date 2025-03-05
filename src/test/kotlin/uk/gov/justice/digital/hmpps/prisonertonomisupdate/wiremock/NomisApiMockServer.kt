@@ -22,19 +22,18 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseIdentifierResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDescription
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtCaseResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtEventResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentencingAdjustmentsResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 class NomisApiExtension :
   BeforeAllCallback,
@@ -916,8 +915,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       get(
         urlPathEqualTo("/prisoners/ids/active"),
       )
-        .withQueryParam("page", WireMock.equalTo("0"))
-        .withQueryParam("size", WireMock.equalTo("1"))
+        .withQueryParam("page", equalTo("0"))
+        .withQueryParam("size", equalTo("1"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -937,8 +936,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       get(
         urlPathEqualTo("/prisoners/ids/active"),
       )
-        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
-        .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
+        .withQueryParam("page", equalTo(pageNumber.toString()))
+        .withQueryParam("size", equalTo(pageSize.toString()))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -961,8 +960,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       get(
         urlPathEqualTo("/prisoners/ids/active"),
       )
-        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
-        .apply { pageSize?.also { withQueryParam("size", WireMock.equalTo(it.toString())) } }
+        .withQueryParam("page", equalTo(pageNumber.toString()))
+        .apply { pageSize?.also { withQueryParam("size", equalTo(it.toString())) } }
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -977,8 +976,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       get(
         urlPathEqualTo("/prisoners/ids/all"),
       )
-        .withQueryParam("page", WireMock.equalTo("0"))
-        .withQueryParam("size", WireMock.equalTo("1"))
+        .withQueryParam("page", equalTo("0"))
+        .withQueryParam("size", equalTo("1"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -991,8 +990,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetAllPrisonersPage1() {
     stubFor(
       get(urlPathEqualTo("/prisoners/ids/all-from-id"))
-        .withQueryParam("offenderId", WireMock.equalTo("0"))
-        .withQueryParam("pageSize", WireMock.equalTo("5"))
+        .withQueryParam("offenderId", equalTo("0"))
+        .withQueryParam("pageSize", equalTo("5"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -1017,8 +1016,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetAllPrisonersPage2() {
     stubFor(
       get(urlPathEqualTo("/prisoners/ids/all-from-id"))
-        .withQueryParam("offenderId", WireMock.equalTo("5"))
-        .withQueryParam("pageSize", WireMock.equalTo("5"))
+        .withQueryParam("offenderId", equalTo("5"))
+        .withQueryParam("pageSize", equalTo("5"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -1043,8 +1042,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       get(
         urlPathEqualTo("/prisoners/ids/all"),
       )
-        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
-        .apply { pageSize?.also { withQueryParam("size", WireMock.equalTo(it.toString())) } }
+        .withQueryParam("page", equalTo(pageNumber.toString()))
+        .apply { pageSize?.also { withQueryParam("size", equalTo(it.toString())) } }
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -1877,8 +1876,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetNonAssociationsInitialCount(response: String) {
     stubFor(
       get(urlPathEqualTo("/non-associations/ids"))
-        .withQueryParam("page", WireMock.equalTo("0"))
-        .withQueryParam("size", WireMock.equalTo("1"))
+        .withQueryParam("page", equalTo("0"))
+        .withQueryParam("size", equalTo("1"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -1891,8 +1890,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetNonAssociationsPage(pageNumber: Long, pageSize: Long = 10, response: String) {
     stubFor(
       get(urlPathEqualTo("/non-associations/ids"))
-        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
-        .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
+        .withQueryParam("page", equalTo(pageNumber.toString()))
+        .withQueryParam("size", equalTo(pageSize.toString()))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -1906,7 +1905,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetNonAssociationsPageWithError(pageNumber: Long, responseCode: Int) {
     stubFor(
       get(urlPathEqualTo("/non-associations/ids"))
-        .withQueryParam("page", WireMock.equalTo(pageNumber.toString())).willReturn(
+        .withQueryParam("page", equalTo(pageNumber.toString())).willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(responseCode)
@@ -2097,8 +2096,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetLocationsInitialCount(response: String) {
     stubFor(
       get(urlPathEqualTo("/locations/ids"))
-        .withQueryParam("page", WireMock.equalTo("0"))
-        .withQueryParam("size", WireMock.equalTo("1"))
+        .withQueryParam("page", equalTo("0"))
+        .withQueryParam("size", equalTo("1"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -2111,8 +2110,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetLocationsPage(pageNumber: Long, pageSize: Long = 10, response: String) {
     stubFor(
       get(urlPathEqualTo("/locations/ids"))
-        .withQueryParam("page", WireMock.equalTo(pageNumber.toString()))
-        .withQueryParam("size", WireMock.equalTo(pageSize.toString()))
+        .withQueryParam("page", equalTo(pageNumber.toString()))
+        .withQueryParam("size", equalTo(pageSize.toString()))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -2126,7 +2125,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetLocationsPageWithError(pageNumber: Long, responseCode: Int) {
     stubFor(
       get(urlPathEqualTo("/locations/ids"))
-        .withQueryParam("page", WireMock.equalTo(pageNumber.toString())).willReturn(
+        .withQueryParam("page", equalTo(pageNumber.toString())).willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(responseCode)
@@ -2302,7 +2301,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     caseIndentifiers: List<CaseIdentifierResponse> = emptyList(),
     courtEvents: List<CourtEventResponse> = emptyList(),
     combinedCaseId: Long? = null,
-    caseStatus: CodeDescription = CodeDescription("A", "Active"),
+    caseStatus: uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription("A", "Active"),
     beginDate: LocalDate = LocalDate.now(),
     response: CourtCaseResponse = CourtCaseResponse(
       bookingId = bookingId,
@@ -2310,17 +2309,18 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       offenderNo = offenderNo,
       caseSequence = 22,
       caseStatus = caseStatus,
-      legalCaseType = CodeDescription("A", "Adult"),
+      legalCaseType = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription("A", "Adult"),
       courtId = "MDI",
       courtEvents = courtEvents,
       offenderCharges = emptyList(),
-      createdDateTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+      createdDateTime = LocalDateTime.now(),
       createdByUsername = "Q1251T",
       lidsCaseNumber = 1,
       primaryCaseInfoNumber = "caseRef1",
       caseInfoNumbers = caseIndentifiers,
       combinedCaseId = combinedCaseId,
       beginDate = beginDate,
+      sentences = emptyList(),
     ),
   ) {
     stubFor(

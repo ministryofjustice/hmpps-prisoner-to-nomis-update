@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture
 class OrganisationsDomainEventListener(
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
-  organisationsService: OrganisationsService,
+  val organisationsService: OrganisationsService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListener(
   service = organisationsService,
@@ -33,29 +33,72 @@ class OrganisationsDomainEventListener(
     rawMessage: String,
   ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
-      "organisations-api.organisation.created" -> log.debug("Received event $eventType")
-      "organisations-api.organisation.updated" -> log.debug("Received event $eventType")
-      "organisations-api.organisation.deleted" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-type.created" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-type.updated" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-type.deleted" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-address.created" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-address.updated" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-address.deleted" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-email.created" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-email.updated" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-email.deleted" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-web-address.created" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-web-address.updated" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-web-address.deleted" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-phone.created" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-phone.updated" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-phone.deleted" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-address-phone.created" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-address-phone.updated" -> log.debug("Received event $eventType")
-      "organisations-api.organisation-address-phone.deleted" -> log.debug("Received event $eventType")
+      "organisations-api.organisation.created" -> organisationsService.organisationCreated(message.fromJson())
+      "organisations-api.organisation.updated" -> organisationsService.organisationUpdated(message.fromJson())
+      "organisations-api.organisation.deleted" -> organisationsService.organisationDeleted(message.fromJson())
+      "organisations-api.organisation-types.updated" -> organisationsService.organisationTypesUpdated(message.fromJson())
+      "organisations-api.organisation-address.created" -> organisationsService.organisationAddressCreated(message.fromJson())
+      "organisations-api.organisation-address.updated" -> organisationsService.organisationAddressUpdated(message.fromJson())
+      "organisations-api.organisation-address.deleted" -> organisationsService.organisationAddressDeleted(message.fromJson())
+      "organisations-api.organisation-email.created" -> organisationsService.organisationEmailCreated(message.fromJson())
+      "organisations-api.organisation-email.updated" -> organisationsService.organisationEmailUpdated(message.fromJson())
+      "organisations-api.organisation-email.deleted" -> organisationsService.organisationEmailDeleted(message.fromJson())
+      "organisations-api.organisation-web.created" -> organisationsService.organisationWebCreated(message.fromJson())
+      "organisations-api.organisation-web.updated" -> organisationsService.organisationWebUpdated(message.fromJson())
+      "organisations-api.organisation-web.deleted" -> organisationsService.organisationWebDeleted(message.fromJson())
+      "organisations-api.organisation-phone.created" -> organisationsService.organisationPhoneCreated(message.fromJson())
+      "organisations-api.organisation-phone.updated" -> organisationsService.organisationPhoneUpdated(message.fromJson())
+      "organisations-api.organisation-phone.deleted" -> organisationsService.organisationPhoneDeleted(message.fromJson())
+      "organisations-api.organisation-address-phone.created" -> organisationsService.organisationAddressPhoneCreated(message.fromJson())
+      "organisations-api.organisation-address-phone.updated" -> organisationsService.organisationAddressPhoneUpdated(message.fromJson())
+      "organisations-api.organisation-address-phone.deleted" -> organisationsService.organisationAddressPhoneDeleted(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
+}
+
+// TODO - create concrete classes where appropriate
+interface SourcedOrganisationsEvent {
+  val additionalInformation: OrganisationAdditionalData
+  val organisationId: Long
+    get() = additionalInformation.organisationId
+}
+
+interface SourcedOrganisationChildEvent {
+  val additionalInformation: OrganisationChildAdditionalData
+  val organisationId: Long
+    get() = additionalInformation.organisationId
+}
+
+interface SourcedAdditionalData {
+  val source: String
+}
+interface OrganisationAdditionalData : SourcedAdditionalData {
+  val organisationId: Long
+}
+interface OrganisationChildAdditionalData : OrganisationAdditionalData {
+  val identifier: Long
+}
+
+data class OrganisationEvent(override val additionalInformation: OrganisationAdditionalData) : SourcedOrganisationsEvent
+data class OrganisationAddressEvent(override val additionalInformation: OrganisationChildAdditionalData) : SourcedOrganisationChildEvent {
+  val addressId: Long
+    get() = additionalInformation.identifier
+}
+data class OrganisationEmailEvent(override val additionalInformation: OrganisationChildAdditionalData) : SourcedOrganisationChildEvent {
+  val emailId: Long
+    get() = additionalInformation.identifier
+}
+data class OrganisationWebEvent(override val additionalInformation: OrganisationChildAdditionalData) : SourcedOrganisationChildEvent {
+  val webId: Long
+    get() = additionalInformation.identifier
+}
+data class OrganisationPhoneEvent(override val additionalInformation: OrganisationChildAdditionalData) : SourcedOrganisationChildEvent {
+  val phoneId: Long
+    get() = additionalInformation.identifier
+}
+data class OrganisationAddressPhoneEvent(override val additionalInformation: OrganisationChildAdditionalData) : SourcedOrganisationChildEvent {
+  val addressPhoneId: Long
+    get() = additionalInformation.identifier
 }

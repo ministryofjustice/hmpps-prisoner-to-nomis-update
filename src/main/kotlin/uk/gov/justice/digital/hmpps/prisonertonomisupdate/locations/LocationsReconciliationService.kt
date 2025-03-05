@@ -13,12 +13,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.ChangeHistory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AmendmentResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ProfileRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AmendmentResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.LocationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ProfileRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 @Service
 class LocationsReconciliationService(
@@ -277,10 +279,16 @@ class LocationsReconciliationService(
       return true
     }
     val nomisListConverted = filteredAmendmentResponses?.map { a ->
-      ChangeHistory(toHistoryAttribute(a.columnName), a.amendedBy, a.amendDateTime, a.oldValue, a.newValue)
+      ChangeHistory(
+        attribute = toHistoryAttribute(a.columnName),
+        amendedBy = a.amendedBy,
+        amendedDate = a.amendDateTime,
+        transactionId = UUID.fromString(a.oldValue),
+        transactionType = a.newValue?.let { ChangeHistory.TransactionType.valueOf(a.newValue!!) },
+      )
     } ?: emptyList()
-    val nomisSetSorted = nomisListConverted.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
-    val dpsSetSorted = filteredDpsHistoryResponses?.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue } ?: emptyList()
+    val nomisSetSorted = nomisListConverted.sortedBy { it.amendedDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + it.attribute + it.amendedBy }
+    val dpsSetSorted = filteredDpsHistoryResponses?.sortedBy { it.amendedDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + it.attribute + it.amendedBy } ?: emptyList()
 
     if (dpsSetSorted.size > nomisSetSorted.size) {
       return true
@@ -290,15 +298,19 @@ class LocationsReconciliationService(
       .any { (nomisItem, dpsItem) ->
         nomisItem.attribute != dpsItem.attribute ||
           nomisItem.amendedBy != dpsItem.amendedBy ||
-          nomisItem.amendedDate != dpsItem.amendedDate ||
-          nomisItem.oldValue != dpsItem.oldValue ||
-          nomisItem.newValue != dpsItem.newValue
+          nomisItem.amendedDate != dpsItem.amendedDate
       }
   }
 
   private fun reportHistory(nomisList: List<AmendmentResponse>?, dpsList: List<ChangeHistory>?): String {
     val nomisListConverted = filterAmendmentResponses(nomisList)?.map { nomis ->
-      ChangeHistory(toHistoryAttribute(nomis.columnName), nomis.amendedBy, nomis.amendDateTime, nomis.oldValue, nomis.newValue)
+      ChangeHistory(
+        attribute = toHistoryAttribute(nomis.columnName),
+        amendedBy = nomis.amendedBy,
+        amendedDate = nomis.amendDateTime,
+        transactionId = UUID.fromString(nomis.oldValue),
+        transactionType = nomis.newValue?.let { ChangeHistory.TransactionType.valueOf(nomis.newValue!!) },
+      )
     } ?: emptyList()
 
     val dpsListNonNull = dpsList ?: emptyList()
@@ -311,15 +323,13 @@ class LocationsReconciliationService(
       """.trimMargin()
     }
 
-    val nomisSetSorted = nomisListConverted.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
-    val dpsSetSorted = dpsListNonNull.sortedBy { it.amendedDate + it.attribute + it.amendedBy + it.oldValue + it.newValue }
+    val nomisSetSorted = nomisListConverted.sortedBy { it.amendedDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + it.attribute + it.amendedBy }
+    val dpsSetSorted = dpsListNonNull.sortedBy { it.amendedDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + it.attribute + it.amendedBy }
 
     nomisSetSorted.zip(dpsSetSorted).forEachIndexed { index, (nomisItem, dpsItem) ->
       if (nomisItem.attribute != dpsItem.attribute ||
         nomisItem.amendedBy != dpsItem.amendedBy ||
-        nomisItem.amendedDate != dpsItem.amendedDate ||
-        nomisItem.oldValue != dpsItem.oldValue ||
-        nomisItem.newValue != dpsItem.newValue
+        nomisItem.amendedDate != dpsItem.amendedDate
       ) {
         return """Item at index $index doesn't match :
             | prev  ${dpsSetSorted.elementAtOrNull(index - 1)}
