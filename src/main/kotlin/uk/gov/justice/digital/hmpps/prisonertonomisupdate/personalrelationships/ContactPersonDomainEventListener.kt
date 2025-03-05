@@ -54,6 +54,9 @@ class ContactPersonDomainEventListener(
       "contacts-api.contact-identity.created" -> contactPersonService.contactIdentityCreated(message.fromJson())
       "contacts-api.contact-identity.updated" -> contactPersonService.contactIdentityUpdated(message.fromJson())
       "contacts-api.contact-identity.deleted" -> contactPersonService.contactIdentityDeleted(message.fromJson())
+      "contacts-api.employment.created" -> contactPersonService.contactEmploymentCreated(message.fromJson())
+      "contacts-api.employment.updated" -> contactPersonService.contactEmploymentUpdated(message.fromJson())
+      "contacts-api.employment.deleted" -> contactPersonService.contactEmploymentDeleted(message.fromJson())
       "contacts-api.contact-restriction.created" -> contactPersonService.contactRestrictionCreated(message.fromJson())
       "contacts-api.contact-restriction.updated" -> contactPersonService.contactRestrictionUpdated(message.fromJson())
       "contacts-api.prisoner-contact-restriction.created" -> contactPersonService.prisonerContactRestrictionCreated(message.fromJson())
@@ -225,6 +228,29 @@ data class ContactIdentityAdditionalData(
   val contactIdentityId: Long,
   override val source: String = "DPS",
 ) : SourcedAdditionalData
+
+data class ContactEmploymentAdditionalData(
+  val employmentId: Long,
+  override val source: String = "DPS",
+) : SourcedAdditionalData
+
+data class ContactEmploymentCreatedEvent(
+  override val additionalInformation: ContactEmploymentAdditionalData,
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
+
+data class ContactEmploymentUpdatedEvent(
+  override val additionalInformation: ContactEmploymentAdditionalData,
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
+
+data class ContactEmploymentDeletedEvent(
+  override val additionalInformation: ContactEmploymentAdditionalData,
+  override val personReference: ContactIdentifiers,
+) : SourcedContactPersonEvent,
+  ContactIdReferencedEvent
 
 data class PrisonerContactRestrictionCreatedEvent(
   override val additionalInformation: PrisonerContactRestrictionAdditionalData,
