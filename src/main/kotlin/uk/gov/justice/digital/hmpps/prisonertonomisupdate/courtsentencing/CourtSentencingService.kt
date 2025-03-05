@@ -20,13 +20,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeNomisIdDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseIdentifier
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseIdentifierRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtAppearanceRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateCourtCaseRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateSentenceRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.OffenderChargeRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SentenceTermRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifier
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtAppearanceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
@@ -34,7 +34,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
@@ -771,7 +770,7 @@ class CourtSentencingService(
     return caseReferences.map { caseReference ->
       CaseIdentifier(
         reference = caseReference.offenderCaseReference,
-        createdDate = caseReference.updatedDate.toString(),
+        createdDate = caseReference.updatedDate,
       )
     }
   }
@@ -853,7 +852,7 @@ fun LegacyCourtAppearance.toNomisCourtAppearance(
   eventDateTime = LocalDateTime.of(
     this.appearanceDate,
     LocalTime.parse(this.appearanceTime),
-  ).toString(),
+  ),
   courtEventType = "CRT",
   courtId = this.courtCode,
   outcomeReasonCode = this.nomisOutcomeCode,
@@ -862,11 +861,11 @@ fun LegacyCourtAppearance.toNomisCourtAppearance(
       LocalDateTime.of(
         next.appearanceDate,
         LocalTime.parse(it),
-      ).toString()
+      )
     } ?: LocalDateTime.of(
       next.appearanceDate,
       LocalTime.MIDNIGHT,
-    ).toString()
+    )
   },
   courtEventCharges = courtEventCharges,
   nextCourtId = this.nextCourtAppearance?.courtId,
@@ -914,9 +913,6 @@ fun LegacyPeriodLength.toNomisSentenceTerm(): SentenceTermRequest = SentenceTerm
   weeks = this.periodWeeks,
   sentenceTermType = this.sentenceTermCode,
   lifeSentenceFlag = this.isLifeSentence ?: false,
-  // TODO waiting for DPS to provide this
-  startDate = LocalDate.of(2024, 1, 1),
-  endDate = LocalDate.of(2026, 1, 1),
 )
 
 private fun CourtChargeBatchUpdateMappingDto.hasAnyMappingsToUpdate(): Boolean = this.courtChargesToCreate.isNotEmpty() || this.courtChargesToDelete.isNotEmpty()
