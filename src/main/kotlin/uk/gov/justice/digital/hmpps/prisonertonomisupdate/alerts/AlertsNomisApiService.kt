@@ -5,15 +5,15 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AlertResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertCode
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAlertType
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerAlertsResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAlertCode
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAlertRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateAlertType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AlertResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAlertCode
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAlertRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAlertResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAlertType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAlertsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAlertCode
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAlertRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAlertType
 
 @Service
 class AlertsNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
