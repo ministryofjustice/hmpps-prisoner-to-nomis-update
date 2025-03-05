@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferen
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Service
 class CourtSentencingReconciliationService(
@@ -67,7 +66,7 @@ class CourtSentencingReconciliationService(
       id = nomisResponse.id.toString(),
       appearances = nomisResponse.courtEvents.map {
         AppearanceFields(
-          date = LocalDateTime.parse(it.eventDateTime).toLocalDate(),
+          date = it.eventDateTime.toLocalDate(),
           court = it.courtId,
           outcome = it.outcomeReasonCode?.code,
           id = it.id.toString(),

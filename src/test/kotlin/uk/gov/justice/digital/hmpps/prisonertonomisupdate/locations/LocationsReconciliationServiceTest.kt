@@ -19,12 +19,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Change
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.NonResidentialUsageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AmendmentResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationIdResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.LocationResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ProfileRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UsageRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AmendmentResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.LocationIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.LocationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ProfileRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UsageRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import java.time.LocalDateTime
 import java.util.UUID
 
 private const val DPS_LOCATION_ID = "abcdef01-2345-6789-abcd-ef0123456789"
@@ -205,7 +206,7 @@ class LocationsReconciliationServiceTest {
     cnaCapacity = 13,
     certified = true,
     createUsername = "TJONES_ADM",
-    createDatetime = "2023-09-25T11:12:45",
+    createDatetime = LocalDateTime.parse("2023-09-25T11:12:45"),
     active = true,
     profiles = listOf(
       ProfileRequest(ProfileRequest.ProfileType.SUP_LVL_TYPE, "C"),
@@ -217,7 +218,7 @@ class LocationsReconciliationServiceTest {
     ),
     amendments = mutableListOf(
       AmendmentResponse(
-        amendDateTime = "2023-09-25T11:12:45",
+        amendDateTime = LocalDateTime.parse("2023-09-25T11:12:45"),
         columnName = "Accommodation Type",
         oldValue = "41",
         newValue = "42",
@@ -225,7 +226,7 @@ class LocationsReconciliationServiceTest {
       ),
       // not counted in DPS as it is a duplicate:
       AmendmentResponse(
-        amendDateTime = "2023-09-25T11:12:45",
+        amendDateTime = LocalDateTime.parse("2023-09-25T11:12:45"),
         columnName = "Accommodation Type",
         oldValue = "41",
         newValue = "42",
@@ -233,7 +234,7 @@ class LocationsReconciliationServiceTest {
       ),
       // not counted in DPS as old and new are the same
       AmendmentResponse(
-        amendDateTime = "2023-09-25T11:12:45",
+        amendDateTime = LocalDateTime.parse("2023-09-25T11:12:45"),
         columnName = "Accommodation Type",
         oldValue = "same",
         newValue = "same",
@@ -275,11 +276,9 @@ class LocationsReconciliationServiceTest {
     ),
     changeHistory = mutableListOf(
       ChangeHistory(
-        amendedDate = "2023-09-25T11:12:45",
+        amendedDate = LocalDateTime.parse("2023-09-25T11:12:45"),
         amendedBy = "STEVE_ADM",
         attribute = "Location Type",
-        oldValue = "41",
-        newValue = "42",
       ),
     ),
     //    deactivatedDate = ,
@@ -287,6 +286,6 @@ class LocationsReconciliationServiceTest {
     //    reactivatedDate = ,
     parentId = UUID.fromString(PARENT_DPS_LOCATION_ID),
     lastModifiedBy = "me",
-    lastModifiedDate = "2024-05-25",
+    lastModifiedDate = LocalDateTime.parse("2024-05-25T11:10:05"),
   )
 }

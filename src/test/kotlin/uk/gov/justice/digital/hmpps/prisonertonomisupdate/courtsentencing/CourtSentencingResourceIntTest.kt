@@ -21,20 +21,19 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.TestCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMapping
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CaseIdentifierResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDescription
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtCaseResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtEventChargeResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourtEventResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.OffenceResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.OffenceResultCodeResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.OffenderChargeResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventChargeResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenceResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenceResultCodeResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.CourtSentencingApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 private const val NOMIS_COURT_CASE_ID = 7L
@@ -271,12 +270,12 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
             caseIndentifiers = listOf(
               CaseIdentifierResponse(
                 reference = CASE_REFERENCE,
-                createDateTime = "2024-01-01T10:10:00",
+                createDateTime = LocalDateTime.parse("2024-01-01T10:10:00"),
                 type = "CASE/INFO#",
               ),
               CaseIdentifierResponse(
                 reference = CASE_REFERENCE2,
-                createDateTime = "2024-01-01T10:10:00",
+                createDateTime = LocalDateTime.parse("2024-01-01T10:10:00"),
                 type = "CASE/INFO#",
               ),
             ),
@@ -806,7 +805,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     offenderNo = OFFENDER_NO,
     courtEvents = events,
     courtId = PRISON_LEI,
-    createdDateTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+    createdDateTime = LocalDateTime.now(),
     createdByUsername = "Q1251T",
     caseStatus = CodeDescription("A", "Active"),
     legalCaseType = CodeDescription("CRT", "Court Appearance"),
@@ -816,6 +815,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     offenderCharges = emptyList(),
     caseSequence = 1,
     caseInfoNumbers = emptyList(),
+    sentences = emptyList(),
   )
 
   fun nomisAppearanceResponse(
@@ -828,7 +828,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       conviction = true,
     ),
     eventDateTime: LocalDateTime = LocalDateTime.of(2024, 1, 1, 10, 10, 0),
-    nextEventDateTime: String = LocalDateTime.of(2024, 2, 1, 10, 10, 0).toString(),
+    nextEventDateTime: LocalDateTime = LocalDateTime.of(2024, 2, 1, 10, 10, 0),
     charges: List<CourtEventChargeResponse> = emptyList(),
   ) = CourtEventResponse(
     id = id,
@@ -836,12 +836,12 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     caseId = NOMIS_COURT_CASE_ID,
     courtId = PRISON_LEI,
     courtEventCharges = charges,
-    createdDateTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+    createdDateTime = LocalDateTime.now(),
     createdByUsername = "Q1251T",
     courtEventType = CodeDescription("CRT", "Court Appearance"),
     outcomeReasonCode = outcome,
     eventStatus = CodeDescription("SCH", "Scheduled (Approved)"),
-    eventDateTime = eventDateTime.toString(),
+    eventDateTime = eventDateTime,
     courtOrders = emptyList(),
     nextEventDateTime = nextEventDateTime,
   )
