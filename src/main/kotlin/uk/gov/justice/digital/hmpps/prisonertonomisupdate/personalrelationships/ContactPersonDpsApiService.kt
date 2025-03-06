@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactRestriction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncEmployment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerContactRestriction
 
@@ -48,6 +49,11 @@ class ContactPersonDpsApiService(@Qualifier("personalRelationshipsApiWebClient")
 
   suspend fun getContactIdentity(contactIdentityId: Long): SyncContactIdentity = webClient.get()
     .uri("/sync/contact-identity/{contactIdentityId}", contactIdentityId)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun getContactEmployment(contactEmploymentId: Long): SyncEmployment = webClient.get()
+    .uri("/sync/employment/{contactEmploymentId}", contactEmploymentId)
     .retrieve()
     .awaitBody()
 

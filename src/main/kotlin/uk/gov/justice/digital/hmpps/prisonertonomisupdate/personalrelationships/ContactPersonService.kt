@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactRestrictionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmailMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmploymentMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonIdentifierMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonEmploymentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonRequest
@@ -32,6 +34,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonService.Companion.MappingTypes.CONTACT_ADDRESS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonService.Companion.MappingTypes.CONTACT_ADDRESS_PHONE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonService.Companion.MappingTypes.CONTACT_EMAIL
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonService.Companion.MappingTypes.CONTACT_EMPLOYMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonService.Companion.MappingTypes.CONTACT_IDENTITY
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonService.Companion.MappingTypes.CONTACT_PERSON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonService.Companion.MappingTypes.CONTACT_PHONE
@@ -44,6 +47,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactRestriction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncEmployment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
@@ -69,6 +73,7 @@ class ContactPersonService(
       CONTACT_PHONE("contact-phone"),
       CONTACT_ADDRESS_PHONE("contact-address-phone"),
       CONTACT_IDENTITY("contact-identity"),
+      CONTACT_EMPLOYMENT("contact-employment"),
       PRISONER_CONTACT_RESTRICTION("prisoner-contact-restriction"),
       CONTACT_RESTRICTION("contact-restriction"),
       ;
@@ -721,6 +726,44 @@ class ContactPersonService(
   }
 
   suspend fun contactEmploymentCreated(event: ContactEmploymentCreatedEvent) {
+    val entityName = CONTACT_EMPLOYMENT.entityName
+    val dpsContactEmploymentId = event.additionalInformation.employmentId
+    val telemetryMap = mutableMapOf(
+      "dpsContactEmploymentId" to dpsContactEmploymentId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      synchronise {
+        name = entityName
+        telemetryClient = this@ContactPersonService.telemetryClient
+        retryQueueService = contactPersonRetryQueueService
+        eventTelemetry = telemetryMap
+
+        checkMappingDoesNotExist {
+          mappingApiService.getByDpsContactEmploymentIdOrNull(dpsContactEmploymentId)
+        }
+        transform {
+          val dpsEmployment = dpsApiService.getContactEmployment(dpsContactEmploymentId).also {
+            telemetryMap["dpsContactId"] = it.contactId.toString()
+            telemetryMap["nomisPersonId"] = it.contactId.toString()
+          }
+          nomisApiService.createPersonEmployment(dpsEmployment.contactId, dpsEmployment.toNomisCreateRequest()).also {
+            telemetryMap["nomisSequenceNumber"] = it.sequence.toString()
+          }.let {
+            PersonEmploymentMappingDto(
+              dpsId = dpsContactEmploymentId.toString(),
+              // nomis person ID is same as DPS contact id
+              nomisPersonId = dpsEmployment.contactId,
+              nomisSequenceNumber = it.sequence,
+              mappingType = PersonEmploymentMappingDto.MappingType.DPS_CREATED,
+            )
+          }
+        }
+        saveMapping { mappingApiService.createEmploymentMapping(it) }
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
+    }
   }
   suspend fun contactEmploymentUpdated(event: ContactEmploymentUpdatedEvent) {
   }
@@ -890,6 +933,7 @@ class ContactPersonService(
       CONTACT_IDENTITY -> createContactIdentifierMapping(message.fromJson())
       PRISONER_CONTACT_RESTRICTION -> createContactRestrictionMapping(message.fromJson())
       CONTACT_RESTRICTION -> createPersonRestrictionMapping(message.fromJson())
+      CONTACT_EMPLOYMENT -> createContactEmploymentMapping(message.fromJson())
     }
   }
 
@@ -943,6 +987,15 @@ class ContactPersonService(
     mappingApiService.createIdentifierMapping(message.mapping).also {
       telemetryClient.trackEvent(
         "contact-identity-create-success",
+        message.telemetryAttributes,
+        null,
+      )
+    }
+  }
+  suspend fun createContactEmploymentMapping(message: CreateMappingRetryMessage<PersonEmploymentMappingDto>) {
+    mappingApiService.createEmploymentMapping(message.mapping).also {
+      telemetryClient.trackEvent(
+        "contact-employment-create-success",
         message.telemetryAttributes,
         null,
       )
@@ -1106,6 +1159,11 @@ private fun SyncContactIdentity.toNomisUpdateRequest(): UpdatePersonIdentifierRe
   identifier = this.identityValue,
   issuedAuthority = this.issuingAuthority,
   typeCode = this.identityType,
+)
+
+private fun SyncEmployment.toNomisCreateRequest(): CreatePersonEmploymentRequest = CreatePersonEmploymentRequest(
+  corporateId = this.organisationId,
+  active = this.active,
 )
 
 private fun SyncPrisonerContactRestriction.toNomisCreateRequest(): CreateContactPersonRestrictionRequest = CreateContactPersonRestrictionRequest(

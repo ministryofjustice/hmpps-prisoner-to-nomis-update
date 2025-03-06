@@ -201,6 +201,32 @@ class ContactPersonDpsApiServiceTest {
   }
 
   @Nested
+  inner class GetContactEmployment {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsContactPersonServer.stubGetContactEmployment(contactEmploymentId = 1234567)
+
+      apiService.getContactEmployment(contactEmploymentId = 1234567)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get sync endpoint`() = runTest {
+      dpsContactPersonServer.stubGetContactEmployment(contactEmploymentId = 1234567)
+
+      apiService.getContactEmployment(contactEmploymentId = 1234567)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/employment/1234567")),
+      )
+    }
+  }
+
+  @Nested
   inner class GetContactRestriction {
     @Test
     internal fun `will pass oath2 token to endpoint`() = runTest {
