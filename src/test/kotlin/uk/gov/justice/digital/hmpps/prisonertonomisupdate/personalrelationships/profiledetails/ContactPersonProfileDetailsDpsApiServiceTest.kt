@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import org.springframework.http.HttpStatus.BAD_GATEWAY
+import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -53,7 +55,7 @@ class ContactPersonProfileDetailsDpsApiServiceTest(
     fun `will parse the response`() = runTest {
       dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC")
 
-      with(apiService.getDomesticStatus(prisonerNumber = "A1234BC")) {
+      with(apiService.getDomesticStatus(prisonerNumber = "A1234BC")!!) {
         assertThat(id).isEqualTo(54321)
         assertThat(domesticStatusCode).isEqualTo("M")
       }
@@ -61,11 +63,18 @@ class ContactPersonProfileDetailsDpsApiServiceTest(
 
     @Test
     fun `will throw in error`() = runTest {
-      dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC", errorStatus = NOT_FOUND)
+      dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC", errorStatus = BAD_REQUEST)
 
-      assertThrows<WebClientResponseException.NotFound> {
+      assertThrows<WebClientResponseException.BadRequest> {
         apiService.getDomesticStatus(prisonerNumber = "A1234BC")
       }
+    }
+
+    @Test
+    fun `will return null for not found`() = runTest {
+      dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC", errorStatus = NOT_FOUND)
+
+      assertThat(apiService.getDomesticStatus(prisonerNumber = "A1234BC")).isNull()
     }
   }
 
@@ -98,7 +107,7 @@ class ContactPersonProfileDetailsDpsApiServiceTest(
     fun `will parse the response`() = runTest {
       dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC")
 
-      with(apiService.getNumberOfChildren(prisonerNumber = "A1234BC")) {
+      with(apiService.getNumberOfChildren(prisonerNumber = "A1234BC")!!) {
         assertThat(id).isEqualTo(54321)
         assertThat(numberOfChildren).isEqualTo("3")
       }
@@ -106,11 +115,18 @@ class ContactPersonProfileDetailsDpsApiServiceTest(
 
     @Test
     fun `will throw in error`() = runTest {
-      dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC", errorStatus = NOT_FOUND)
+      dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC", errorStatus = BAD_GATEWAY)
 
-      assertThrows<WebClientResponseException.NotFound> {
+      assertThrows<WebClientResponseException.BadGateway> {
         apiService.getNumberOfChildren(prisonerNumber = "A1234BC")
       }
+    }
+
+    @Test
+    fun `will return null when not found`() = runTest {
+      dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC", errorStatus = NOT_FOUND)
+
+      assertThat(apiService.getNumberOfChildren(prisonerNumber = "A1234BC")).isNull()
     }
   }
 }

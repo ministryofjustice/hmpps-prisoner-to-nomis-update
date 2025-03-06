@@ -104,6 +104,32 @@ class ContactPersonProfileDetailsSyncIntTest(
         nomisApi.verify(count = 0, putRequestedFor(urlPathEqualTo("/prisoners/A1234BC/profile-details")))
         verifyTelemetry(telemetryType = "ignored", ignoreReason = "Entity was created in NOMIS", dpsId = null)
       }
+
+      @Test
+      fun `should set NOMIS to null if DPS returns not found`() {
+        dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC", errorStatus = NOT_FOUND)
+        nomisApi.stubPutProfileDetails()
+
+        publishDomainEvent(
+          eventType = "personal-relationships-api.domestic-status.created",
+          payload = domesticStatusCreatedEvent(),
+        ).also { waitForAnyProcessingToComplete() }
+
+        verifyDpsApiCall()
+        verifyNomisPutProfileDetails(
+          prisonerNumber = "A1234BC",
+          profileType = equalTo("MARITAL"),
+          profileCode = absent(),
+        )
+        verifyTelemetry(
+          profileType = MARITAL,
+          telemetryType = "created",
+          offenderNo = "A1234BC",
+          requestedDpsId = 123,
+          dpsId = null,
+          bookingId = 12345,
+        )
+      }
     }
 
     @Nested
@@ -127,8 +153,8 @@ class ContactPersonProfileDetailsSyncIntTest(
       }
 
       @Test
-      fun `should fail if call to DPS returns not found`() {
-        dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC", errorStatus = NOT_FOUND)
+      fun `should fail if call to DPS returns error`() {
+        dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC", errorStatus = BAD_REQUEST)
 
         publishDomainEvent(
           eventType = "personal-relationships-api.domestic-status.created",
@@ -139,7 +165,7 @@ class ContactPersonProfileDetailsSyncIntTest(
         nomisApi.verify(count = 0, putRequestedFor(urlPathEqualTo("/prisoners/A1234BC/profile-details")))
         verifyTelemetry(
           telemetryType = "error",
-          errorReason = "404 Not Found from GET http://localhost:8099/sync/A1234BC/domestic-status",
+          errorReason = "400 Bad Request from GET http://localhost:8099/sync/A1234BC/domestic-status",
           dpsId = null,
         )
       }
@@ -235,6 +261,32 @@ class ContactPersonProfileDetailsSyncIntTest(
           dpsId = null,
         )
       }
+
+      @Test
+      fun `should set NOMIS to null if DPS returns not found`() {
+        dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC", errorStatus = NOT_FOUND)
+        nomisApi.stubPutProfileDetails()
+
+        publishDomainEvent(
+          eventType = "personal-relationships-api.number-of-children.created",
+          payload = numberOfChildrenCreatedEvent(),
+        ).also { waitForAnyProcessingToComplete() }
+
+        verifyDpsApiCall(profileType = CHILD)
+        verifyNomisPutProfileDetails(
+          prisonerNumber = "A1234BC",
+          profileType = equalTo("CHILD"),
+          profileCode = absent(),
+        )
+        verifyTelemetry(
+          profileType = CHILD,
+          telemetryType = "created",
+          offenderNo = "A1234BC",
+          requestedDpsId = 123,
+          dpsId = null,
+          bookingId = 12345,
+        )
+      }
     }
 
     @Nested
@@ -259,8 +311,8 @@ class ContactPersonProfileDetailsSyncIntTest(
       }
 
       @Test
-      fun `should fail if call to DPS returns not found`() {
-        dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC", errorStatus = NOT_FOUND)
+      fun `should fail if call to DPS returns error`() {
+        dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC", errorStatus = BAD_REQUEST)
 
         publishDomainEvent(
           eventType = "personal-relationships-api.number-of-children.created",
@@ -272,7 +324,7 @@ class ContactPersonProfileDetailsSyncIntTest(
         verifyTelemetry(
           profileType = CHILD,
           telemetryType = "error",
-          errorReason = "404 Not Found from GET http://localhost:8099/sync/A1234BC/number-of-children",
+          errorReason = "400 Bad Request from GET http://localhost:8099/sync/A1234BC/number-of-children",
           dpsId = null,
         )
       }
@@ -488,7 +540,7 @@ class ContactPersonProfileDetailsSyncIntTest(
 
     @Test
     fun `should handle error from DPS`() {
-      dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC", errorStatus = NOT_FOUND)
+      dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC", errorStatus = BAD_GATEWAY)
 
       webTestClient.put().uri("/contactperson/sync/profile-details/A1234BC/MARITAL")
         .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_CONTACTPERSONS")))
@@ -496,14 +548,14 @@ class ContactPersonProfileDetailsSyncIntTest(
         .expectStatus().isBadRequest
         .expectBody()
         .jsonPath("userMessage").value<String> {
-          assertThat(it).contains("404 Not Found from GET http://localhost:8099/sync/A1234BC/domestic-status")
+          assertThat(it).contains("502 Bad Gateway from GET http://localhost:8099/sync/A1234BC/domestic-status")
         }
 
       verifyDpsApiCall()
       nomisApi.verify(count = 0, putRequestedFor(urlPathEqualTo("/prisoners/A1234BC/profile-details")))
       verifyTelemetry(
         telemetryType = "error",
-        errorReason = "404 Not Found from GET http://localhost:8099/sync/A1234BC/domestic-status",
+        errorReason = "502 Bad Gateway from GET http://localhost:8099/sync/A1234BC/domestic-status",
         requestedDpsId = 0,
         dpsId = null,
       )
