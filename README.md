@@ -71,11 +71,17 @@ configuration two tasks are created:
 
 So, for example, running
 ```shell
-./gradlew clean writeNonAssociationsJson buildNonAssociationsApiModel compileKotlin compileTestKotlin
+./gradlew writeNonAssociationsJson compileKotlin compileTestKotlin
 ```
 
 Will download the non associations Open API specification from dev, generate the model and then compile the code.
 The json specification can then be committed to the repository.
+
+Running:
+```shell
+./gradlew tasks
+```
+Will show all the build API and write JSON tasks available.
 
 ## Runbook
 
