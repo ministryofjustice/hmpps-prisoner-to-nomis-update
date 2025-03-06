@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPDpsApiExtensi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.PrisonPersonDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
@@ -108,7 +107,6 @@ class HealthCheckTest : IntegrationTestBase() {
     CourtSentencingApiExtension.courtSentencingApi.stubHealthPing(status)
     AlertsDpsApiExtension.alertsDpsApi.stubHealthPing(status)
     CaseNotesDpsApiExtension.caseNotesDpsApi.stubHealthPing(status)
-    PrisonPersonDpsApiExtension.dpsApi.stubHealthPing(status)
     CSIPDpsApiExtension.csipDpsApi.stubHealthPing(status)
     ContactPersonDpsApiExtension.dpsContactPersonServer.stubHealthPing(status)
     OrganisationsDpsApiExtension.dpsOrganisationsServer.stubHealthPing(status)

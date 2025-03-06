@@ -20,7 +20,6 @@ api.base.url:
   court.sentencing: http://localhost:8094
   alerts: http://localhost:8095
   casenotes: http://localhost:8096
-  prisonperson: http://localhost:8097
   csip: http://localhost:8098
   personal.relationships: http://localhost:8099
   organisations: http://localhost:8100
@@ -221,17 +220,6 @@ hmpps.sqs:
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
-    prisonperson:
-      queueName: "prisonperson-${random.uuid}"
-      dlqName: "prisonperson-dlq-${random.uuid}"
-      subscribeTopicId: domainevents
-      subscribeFilter: >-
-        { "eventType":[
-          "prison-person.physical-attributes.updated",
-          "prisoner-offender-search.prisoner.received"
-        ]}
-      dlqMaxReceiveCount: 3
-      visibilityTimeout: 120
     personalrelationships:
       queueName: "personalrelationships-${random.uuid}"
       dlqName: "personalrelationships-dlq-${random.uuid}"
@@ -326,13 +314,8 @@ reports:
   locations:
     reconciliation:
       page-size: 10
-  prisonperson:
-    reconciliation:
-      page-size: 3
   csip:
     reconciliation:
       page-size: 10
 
 api.locations.timeout: 1s
-
-feature.recon.prison-person.profile-details: true

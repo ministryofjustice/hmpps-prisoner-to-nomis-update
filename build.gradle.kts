@@ -131,10 +131,6 @@ val models = listOf(
     url = "https://dev.offender-case-notes.service.justice.gov.uk/v3/api-docs",
   ),
   ModelConfiguration(
-    name = "prison-person",
-    packageName = "prisonperson",
-  ),
-  ModelConfiguration(
     name = "personal-relationships",
     packageName = "personalrelationships",
     url = "https://personal-relationships-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",

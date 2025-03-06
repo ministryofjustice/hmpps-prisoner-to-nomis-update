@@ -72,10 +72,6 @@ generic-service:
           deny all;
           return 401;
         }
-        location /prisonperson/reports/reconciliation {
-          deny all;
-          return 401;
-        }
         location /organisations/reports/reconciliation {
           deny all;
           return 401;
@@ -91,7 +87,6 @@ generic-service:
     SPRING_PROFILES_ACTIVE: "logstash"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
     FEATURE_EVENT_DELETEALL: false
-    FEATURE_RECON_PRISON_PERSON_PROFILE_DETAILS : false
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:
@@ -130,8 +125,6 @@ generic-service:
       CSIP_CLIENT_SECRET: "CSIP_CLIENT_SECRET"
       CASENOTES_CLIENT_ID: "CASENOTES_CLIENT_ID"
       CASENOTES_CLIENT_SECRET: "CASENOTES_CLIENT_SECRET"
-      PRISON_PERSON_CLIENT_ID: "PRISON_PERSON_CLIENT_ID"
-      PRISON_PERSON_CLIENT_SECRET: "PRISON_PERSON_CLIENT_SECRET"
       PERSONAL_RELATIONSHIPS_CLIENT_ID: "PERSONAL_RELATIONSHIPS_CLIENT_ID"
       PERSONAL_RELATIONSHIPS_CLIENT_SECRET: "PERSONAL_RELATIONSHIPS_CLIENT_SECRET"
       ORGANISATIONS_CLIENT_ID: "ORGANISATIONS_CLIENT_ID"
@@ -184,10 +177,6 @@ generic-service:
       HMPPS_SQS_QUEUES_CSIP_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-csip-dlq:
       HMPPS_SQS_QUEUES_CSIP_DLQ_NAME: "sqs_queue_name"
-    domain-events-sqs-nomis-update-prisonperson:
-      HMPPS_SQS_QUEUES_PRISONPERSON_QUEUE_NAME: "sqs_queue_name"
-    domain-events-sqs-nomis-update-prisonperson-dlq:
-      HMPPS_SQS_QUEUES_PRISONPERSON_DLQ_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-personalrelationships:
       HMPPS_SQS_QUEUES_PERSONALRELATIONSHIPS_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-personalrelationships-dlq:
