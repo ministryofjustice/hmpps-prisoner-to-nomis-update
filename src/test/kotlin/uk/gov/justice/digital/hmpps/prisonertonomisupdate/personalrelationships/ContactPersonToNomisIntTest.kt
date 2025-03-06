@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactRestrictionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmailMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmploymentMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonIdentifierMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
@@ -38,6 +39,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddressPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactEmail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactEmployment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactRestriction
@@ -48,6 +50,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonContactResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonEmploymentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonIdentifierResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonResponse
@@ -3878,6 +3881,237 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  @DisplayName("contacts-api.contact-employment.created")
+  inner class ContactEmploymentCreated {
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a Contact Employment create")
+    inner class WhenNomisCreated {
+
+      @BeforeEach
+      fun setUp() {
+        publishCreateContactEmploymentDomainEvent(contactEmploymentId = "12345", source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contact-employment-create-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Contact Employment create")
+    inner class WhenDpsCreated {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val dpsContactEmploymentId = 1234567L
+        private val nomisSequenceNumber = 4L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactEmploymentIdOrNull(dpsContactEmploymentId = dpsContactEmploymentId, null)
+          dpsApi.stubGetContactEmployment(
+            contactEmploymentId = dpsContactEmploymentId,
+            contactEmployment().copy(
+              organisationId = 87654,
+              contactId = nomisPersonIdAndDpsContactId,
+              employmentId = dpsContactEmploymentId,
+              active = true,
+            ),
+          )
+          nomisApi.stubCreatePersonEmployment(personId = nomisPersonIdAndDpsContactId, createPersonEmploymentResponse().copy(sequence = nomisSequenceNumber))
+          mappingApi.stubCreateEmploymentMapping()
+          publishCreateContactEmploymentDomainEvent(contactEmploymentId = dpsContactEmploymentId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the create`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-employment-create-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the employment created`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-employment-create-success"),
+            check {
+              assertThat(it).containsEntry("dpsContactEmploymentId", dpsContactEmploymentId.toString())
+              assertThat(it).containsEntry("nomisSequenceNumber", nomisSequenceNumber.toString())
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call back to DPS to get employment details`() {
+          dpsApi.verify(getRequestedFor(urlEqualTo("/sync/employment/$dpsContactEmploymentId")))
+        }
+
+        @Test
+        fun `will create the employment in NOMIS`() {
+          nomisApi.verify(postRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/employment")))
+        }
+
+        @Test
+        fun `the created employment will contain details of the DPS contact employment`() {
+          nomisApi.verify(
+            postRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("corporateId", "87654")
+              .withRequestBodyJsonPath("active", "true"),
+          )
+        }
+
+        @Test
+        fun `will create a mapping between the NOMIS and DPS ids`() {
+          mappingApi.verify(
+            postRequestedFor(urlEqualTo("/mapping/contact-person/employment"))
+              .withRequestBodyJsonPath("dpsId", "$dpsContactEmploymentId")
+              .withRequestBodyJsonPath("nomisSequenceNumber", nomisSequenceNumber)
+              .withRequestBodyJsonPath("nomisPersonId", nomisPersonIdAndDpsContactId)
+              .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when mapping service fails once")
+      inner class MappingFailure {
+        private val dpsContactEmploymentId = 1234567L
+        private val nomisSequenceNumber = 4L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactEmploymentIdOrNull(dpsContactEmploymentId = dpsContactEmploymentId, null)
+          dpsApi.stubGetContactEmployment(
+            contactEmploymentId = dpsContactEmploymentId,
+            contactEmployment().copy(
+              employmentId = dpsContactEmploymentId,
+              contactId = nomisPersonIdAndDpsContactId,
+            ),
+          )
+          nomisApi.stubCreatePersonEmployment(personId = nomisPersonIdAndDpsContactId, createPersonEmploymentResponse().copy(sequence = nomisSequenceNumber))
+          mappingApi.stubCreateEmploymentMappingFollowedBySuccess()
+          publishCreateContactEmploymentDomainEvent(contactEmploymentId = dpsContactEmploymentId.toString())
+        }
+
+        @Test
+        fun `will send telemetry for initial failure`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("contact-employment-mapping-create-failed"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will eventually send telemetry for success`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("contact-employment-create-success"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will create the employment in NOMIS once`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("contact-employment-create-success"),
+              any(),
+              isNull(),
+            )
+            nomisApi.verify(1, postRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/employment")))
+          }
+        }
+      }
+
+      @Nested
+      @DisplayName("when mapping service detects a duplicate mapping")
+      inner class DuplicateMappingFailure {
+        private val dpsContactEmploymentId = 1234567L
+        private val nomisSequenceNumber = 4L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactEmploymentIdOrNull(dpsContactEmploymentId = dpsContactEmploymentId, null)
+          dpsApi.stubGetContactEmployment(
+            contactEmploymentId = dpsContactEmploymentId,
+            contactEmployment().copy(
+              employmentId = dpsContactEmploymentId,
+              contactId = nomisPersonIdAndDpsContactId,
+            ),
+          )
+          nomisApi.stubCreatePersonEmployment(nomisPersonIdAndDpsContactId, createPersonEmploymentResponse().copy(sequence = nomisSequenceNumber))
+          mappingApi.stubCreateEmploymentMapping(
+            error = DuplicateMappingErrorResponse(
+              moreInfo = DuplicateErrorContentObject(
+                duplicate = PersonEmploymentMappingDto(
+                  dpsId = dpsContactEmploymentId.toString(),
+                  nomisPersonId = nomisPersonIdAndDpsContactId,
+                  nomisSequenceNumber = 5,
+                  mappingType = PersonEmploymentMappingDto.MappingType.DPS_CREATED,
+                ),
+                existing = PersonEmploymentMappingDto(
+                  dpsId = dpsContactEmploymentId.toString(),
+                  nomisPersonId = nomisPersonIdAndDpsContactId,
+                  nomisSequenceNumber = nomisSequenceNumber,
+                  mappingType = PersonEmploymentMappingDto.MappingType.DPS_CREATED,
+                ),
+              ),
+              errorCode = 1409,
+              status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+              userMessage = "Duplicate mapping",
+            ),
+          )
+          publishCreateContactEmploymentDomainEvent(contactEmploymentId = dpsContactEmploymentId.toString())
+        }
+
+        @Test
+        fun `will send telemetry for duplicate`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("to-nomis-synch-contact-employment-duplicate"),
+              any(),
+              isNull(),
+            )
+          }
+        }
+
+        @Test
+        fun `will create the employment in NOMIS once`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("to-nomis-synch-contact-employment-duplicate"),
+              any(),
+              isNull(),
+            )
+            nomisApi.verify(1, postRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/employment")))
+          }
+        }
+      }
+    }
+  }
+
   private fun publishCreateContactDomainEvent(contactId: String, source: String = "DPS") {
     with("contacts-api.contact.created") {
       publishDomainEvent(eventType = this, payload = contactMessagePayload(eventType = this, contactId = contactId, source = source))
@@ -4005,6 +4239,12 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
   private fun publishDeleteContactIdentityDomainEvent(contactIdentityId: String, contactId: String, source: String = "DPS") {
     with("contacts-api.contact-identity.deleted") {
       publishDomainEvent(eventType = this, payload = contactIdentityMessagePayload(eventType = this, contactIdentityId = contactIdentityId, contactId = contactId, source = source))
+    }
+  }
+
+  private fun publishCreateContactEmploymentDomainEvent(contactEmploymentId: String, source: String = "DPS") {
+    with("contacts-api.employment.created") {
+      publishDomainEvent(eventType = this, payload = contactEmploymentMessagePayload(eventType = this, employmentId = contactEmploymentId, source = source))
     }
   }
 
@@ -4239,6 +4479,30 @@ fun contactIdentityMessagePayload(
       "eventType":"$eventType", 
       "additionalInformation": {
         "contactIdentityId": "$contactIdentityId",
+        "source": "$source"
+      },
+      "personReference": {
+        "identifiers": [
+          {
+            "type": "DPS_CONTACT_ID",
+            "value": "$contactId"
+          }
+        ]
+      }
+    }
+    """
+
+fun contactEmploymentMessagePayload(
+  eventType: String,
+  employmentId: String,
+  source: String = "DPS",
+  contactId: String = "87654",
+) = //language=JSON
+  """
+    {
+      "eventType":"$eventType", 
+      "additionalInformation": {
+        "employmentId": "$employmentId",
         "source": "$source"
       },
       "personReference": {
