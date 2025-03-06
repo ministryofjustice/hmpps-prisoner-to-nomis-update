@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonEmploymentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonRequest
@@ -766,6 +767,25 @@ class ContactPersonService(
     }
   }
   suspend fun contactEmploymentUpdated(event: ContactEmploymentUpdatedEvent) {
+    val entityName = CONTACT_EMPLOYMENT.entityName
+    val dpsContactEmploymentId = event.additionalInformation.employmentId
+    val telemetryMap = mutableMapOf(
+      "dpsContactEmploymentId" to dpsContactEmploymentId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      val mapping = mappingApiService.getByDpsContactEmploymentId(dpsContactEmploymentId).also {
+        telemetryMap["nomisSequenceNumber"] = it.nomisSequenceNumber.toString()
+        telemetryMap["nomisPersonId"] = it.nomisPersonId.toString()
+      }
+      val dpsContactEmployment = dpsApiService.getContactEmployment(dpsContactEmploymentId).also {
+        telemetryMap["dpsContactId"] = it.contactId.toString()
+      }
+      nomisApiService.updatePersonEmployment(personId = mapping.nomisPersonId, sequence = mapping.nomisSequenceNumber, dpsContactEmployment.toNomisUpdateRequest())
+      telemetryClient.trackEvent("$entityName-update-success", telemetryMap)
+    } else {
+      telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
+    }
   }
   suspend fun contactEmploymentDeleted(event: ContactEmploymentDeletedEvent) {
   }
@@ -1162,6 +1182,11 @@ private fun SyncContactIdentity.toNomisUpdateRequest(): UpdatePersonIdentifierRe
 )
 
 private fun SyncEmployment.toNomisCreateRequest(): CreatePersonEmploymentRequest = CreatePersonEmploymentRequest(
+  corporateId = this.organisationId,
+  active = this.active,
+)
+
+private fun SyncEmployment.toNomisUpdateRequest() = UpdatePersonEmploymentRequest(
   corporateId = this.organisationId,
   active = this.active,
 )

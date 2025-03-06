@@ -4112,6 +4112,109 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  @DisplayName("contacts-api.contact-employment.updated")
+  inner class ContactEmploymentUpdated {
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a Contact Employment update")
+    inner class WhenNomisUpdated {
+
+      @BeforeEach
+      fun setUp() {
+        publishUpdateContactEmploymentDomainEvent(contactEmploymentId = "12345", source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contact-employment-update-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Contact Employment update")
+    inner class WhenDpsUpdated {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val dpsContactEmploymentId = 1234567L
+        private val nomisSequenceNumber = 4L
+        private val nomisPersonIdAndDpsContactId = 54321L
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsContactEmploymentId(
+            dpsContactEmploymentId = dpsContactEmploymentId,
+            PersonEmploymentMappingDto(
+              dpsId = dpsContactEmploymentId.toString(),
+              nomisPersonId = nomisPersonIdAndDpsContactId,
+              nomisSequenceNumber = nomisSequenceNumber,
+              mappingType = PersonEmploymentMappingDto.MappingType.MIGRATED,
+            ),
+          )
+          dpsApi.stubGetContactEmployment(
+            contactEmploymentId = dpsContactEmploymentId,
+            contactEmployment().copy(
+              organisationId = 54321,
+              contactId = nomisPersonIdAndDpsContactId,
+              active = false,
+            ),
+          )
+          nomisApi.stubUpdatePersonEmployment(personId = nomisPersonIdAndDpsContactId, sequence = nomisSequenceNumber)
+          publishUpdateContactEmploymentDomainEvent(contactEmploymentId = dpsContactEmploymentId.toString())
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the update`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-employment-update-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the employment updated`() {
+          verify(telemetryClient).trackEvent(
+            eq("contact-employment-update-success"),
+            check {
+              assertThat(it).containsEntry("dpsContactEmploymentId", dpsContactEmploymentId.toString())
+              assertThat(it).containsEntry("nomisSequenceNumber", nomisSequenceNumber.toString())
+              assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+              assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call back to DPS to get employment details`() {
+          dpsApi.verify(getRequestedFor(urlEqualTo("/sync/employment/$dpsContactEmploymentId")))
+        }
+
+        @Test
+        fun `will update the employment in NOMIS`() {
+          nomisApi.verify(putRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/employment/$nomisSequenceNumber")))
+        }
+
+        @Test
+        fun `the updated employment will contain details of the DPS contact employment`() {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("corporateId", "54321")
+              .withRequestBodyJsonPath("active", "false"),
+          )
+        }
+      }
+    }
+  }
+
   private fun publishCreateContactDomainEvent(contactId: String, source: String = "DPS") {
     with("contacts-api.contact.created") {
       publishDomainEvent(eventType = this, payload = contactMessagePayload(eventType = this, contactId = contactId, source = source))
@@ -4244,6 +4347,12 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
 
   private fun publishCreateContactEmploymentDomainEvent(contactEmploymentId: String, source: String = "DPS") {
     with("contacts-api.employment.created") {
+      publishDomainEvent(eventType = this, payload = contactEmploymentMessagePayload(eventType = this, employmentId = contactEmploymentId, source = source))
+    }
+  }
+
+  private fun publishUpdateContactEmploymentDomainEvent(contactEmploymentId: String, source: String = "DPS") {
+    with("contacts-api.employment.updated") {
       publishDomainEvent(eventType = this, payload = contactEmploymentMessagePayload(eventType = this, employmentId = contactEmploymentId, source = source))
     }
   }
