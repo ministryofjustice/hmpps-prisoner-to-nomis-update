@@ -17,7 +17,7 @@ OLD_VERSION=$(jq -r .info.version "$SPECS_JSON")
 echo "old_version=$OLD_VERSION" >>"$GITHUB_OUTPUT"
 
 # build the model and grab new json
-./gradlew clean "$MODEL_TASK" "$JSON_TASK"
+./gradlew "$MODEL_TASK" "$JSON_TASK"
 
 mv "build/generated/$PROJECT" build/model_copy
 
