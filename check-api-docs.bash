@@ -12,6 +12,7 @@ if [[ -z ${GITHUB_OUTPUT+x} ]]; then
 else
   OUTPUT_COMPARISON=false
 fi
+export _JAVA_OPTIONS="-Xmx512m -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2 -Djava.util.concurrent.ForkJoinPool.common.parallelism=2 -Dorg.gradle.daemon=false -Dkotlin.compiler.execution.strategy=in-process"
 
 OLD_VERSION=$(jq -r .info.version "$SPECS_JSON")
 echo "old_version=$OLD_VERSION" >>"$GITHUB_OUTPUT"
