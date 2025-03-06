@@ -115,8 +115,8 @@ class ContactPersonProfileDetailsSyncService(
     MARITAL -> {
       dpsApi.getDomesticStatus(prisonerNumber)
         .let { dpsResponse ->
-          nomisApi.upsertProfileDetails(prisonerNumber, "MARITAL", dpsResponse.domesticStatusCode)
-            .let { SyncResult(it.bookingId, it.created, dpsResponse.id) }
+          nomisApi.upsertProfileDetails(prisonerNumber, "MARITAL", dpsResponse?.domesticStatusCode)
+            .let { SyncResult(it.bookingId, it.created, dpsResponse?.id) }
         }
     }
 
@@ -128,8 +128,8 @@ class ContactPersonProfileDetailsSyncService(
     CHILD -> {
       dpsApi.getNumberOfChildren(prisonerNumber)
         .let { dpsResponse ->
-          nomisApi.upsertProfileDetails(prisonerNumber, "CHILD", dpsResponse.numberOfChildren)
-            .let { SyncResult(it.bookingId, it.created, dpsResponse.id) }
+          nomisApi.upsertProfileDetails(prisonerNumber, "CHILD", dpsResponse?.numberOfChildren)
+            .let { SyncResult(it.bookingId, it.created, dpsResponse?.id) }
         }
     }
   }
