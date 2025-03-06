@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.WebClientConfig
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.prisonperson.PrisonPersonDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
@@ -58,7 +57,6 @@ import kotlin.annotation.AnnotationTarget.CLASS
   LocationsApiExtension::class,
   AlertsDpsApiExtension::class,
   CaseNotesDpsApiExtension::class,
-  PrisonPersonDpsApiExtension::class,
   CSIPDpsApiExtension::class,
   ContactPersonDpsApiExtension::class,
   OrganisationsDpsApiExtension::class,

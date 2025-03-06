@@ -106,12 +106,6 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   internal val csipQueueUrl by lazy { csipQueue.queueUrl }
   internal val csipDlqUrl by lazy { csipQueue.dlqUrl }
 
-  internal val prisonPersonQueue by lazy { hmppsQueueService.findByQueueId("prisonperson") as HmppsQueue }
-  internal val prisonPersonQueueClient by lazy { prisonPersonQueue.sqsClient }
-  internal val prisonPersonDlqClient by lazy { prisonPersonQueue.sqsDlqClient }
-  internal val prisonPersonQueueUrl by lazy { prisonPersonQueue.queueUrl }
-  internal val prisonPersonDlqUrl by lazy { prisonPersonQueue.dlqUrl }
-
   internal val personalRelationshipsQueue by lazy { hmppsQueueService.findByQueueId("personalrelationships") as HmppsQueue }
   internal val personalRelationshipsQueueClient by lazy { personalRelationshipsQueue.sqsClient }
   internal val personalRelationshipsDlqClient by lazy { personalRelationshipsQueue.sqsDlqClient }
@@ -159,9 +153,6 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 
     awsSqsCSIPClient.purgeQueue(csipQueueUrl).get()
     awsSqsCSIPDlqClient?.purgeQueue(csipDlqUrl)?.get()
-
-    prisonPersonQueueClient.purgeQueue(prisonPersonQueueUrl).get()
-    prisonPersonDlqClient?.purgeQueue(prisonPersonDlqUrl)?.get()
 
     personalRelationshipsQueueClient.purgeQueue(personalRelationshipsQueueUrl).get()
     personalRelationshipsDlqClient?.purgeQueue(personalRelationshipsDlqUrl)?.get()
