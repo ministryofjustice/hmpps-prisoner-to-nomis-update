@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonContactResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonEmploymentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonEmploymentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonIdentifierResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonPhoneRequest
@@ -23,6 +25,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonEmploymentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonRequest
@@ -229,6 +232,37 @@ class ContactPersonNomisApiService(@Qualifier("nomisApiWebClient") private val w
     webClient.delete()
       .uri(
         "/persons/{personId}/identifier/{sequence}",
+        personId,
+        sequence,
+      )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
+  suspend fun createPersonEmployment(personId: Long, request: CreatePersonEmploymentRequest): CreatePersonEmploymentResponse = webClient.post()
+    .uri(
+      "/persons/{personId}/employment",
+      personId,
+    )
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun updatePersonEmployment(personId: Long, sequence: Long, request: UpdatePersonEmploymentRequest) {
+    webClient.put()
+      .uri(
+        "/persons/{personId}/employment/{sequence}",
+        personId,
+        sequence,
+      )
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+  suspend fun deletePersonEmployment(personId: Long, sequence: Long) {
+    webClient.delete()
+      .uri(
+        "/persons/{personId}/employment/{sequence}",
         personId,
         sequence,
       )

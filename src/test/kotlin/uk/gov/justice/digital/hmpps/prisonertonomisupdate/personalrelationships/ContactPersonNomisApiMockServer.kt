@@ -17,6 +17,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonContactResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonEmploymentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonEmploymentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonIdentifierResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonPhoneRequest
@@ -27,6 +29,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonEmploymentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonRequest
@@ -131,6 +134,20 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
       identifier = "SMNI772727DL",
       typeCode = "DL",
       issuedAuthority = "DVLA",
+    )
+
+    fun createPersonEmploymentResponse(): CreatePersonEmploymentResponse = CreatePersonEmploymentResponse(
+      sequence = 4,
+    )
+
+    fun createPersonEmploymentRequest(): CreatePersonEmploymentRequest = CreatePersonEmploymentRequest(
+      corporateId = 123,
+      active = true,
+    )
+
+    fun updatePersonEmploymentRequest(): UpdatePersonEmploymentRequest = UpdatePersonEmploymentRequest(
+      corporateId = 123,
+      active = false,
     )
 
     fun createContactPersonRestrictionResponse(): CreateContactPersonRestrictionResponse = CreateContactPersonRestrictionResponse(
@@ -408,6 +425,45 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
   ) {
     nomisApi.stubFor(
       delete(urlEqualTo("/persons/$personId/identifier/$sequence")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
+
+  fun stubCreatePersonEmployment(
+    personId: Long = 123456,
+    response: CreatePersonEmploymentResponse = createPersonEmploymentResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/persons/$personId/employment")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubUpdatePersonEmployment(
+    personId: Long = 123456,
+    sequence: Long = 4,
+  ) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/persons/$personId/employment/$sequence")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
+  fun stubDeletePersonEmployment(
+    personId: Long = 123456,
+    sequence: Long = 4,
+  ) {
+    nomisApi.stubFor(
+      delete(urlEqualTo("/persons/$personId/employment/$sequence")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value()),

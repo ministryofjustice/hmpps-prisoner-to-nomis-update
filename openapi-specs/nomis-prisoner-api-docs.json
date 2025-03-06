@@ -7,7 +7,7 @@
       "name": "HMPPS Digital Studio",
       "email": "feedback@digital.justice.gov.uk"
     },
-    "version": "2025-03-05.11544.841c405"
+    "version": "2025-03-05.11561.695f378"
   },
   "servers": [
     {
@@ -2215,7 +2215,7 @@
           "required": true
         },
         "responses": {
-          "209": {
+          "200": {
             "description": "Person Identifier updated"
           },
           "400": {
@@ -2298,6 +2298,170 @@
         "responses": {
           "204": {
             "description": "Person Identifier deleted"
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Person does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons/{personId}/employment/{sequence}": {
+      "put": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Updates a person employment",
+        "description": "Updates a person employment in NOMIS. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "updatePersonEmployment",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Person Id",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "sequence",
+            "in": "path",
+            "description": "Employment sequence",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Employment sequence",
+              "example": 4
+            },
+            "example": 4
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonEmploymentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Person Employment updated"
+          },
+          "400": {
+            "description": "Invalid request data, e.g type is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Person or employment does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Deletes a person employment",
+        "description": "Deletes a person employment in NOMIS. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "deletePersonEmployment",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Person Id",
+              "example": 12345
+            },
+            "example": 12345
+          },
+          {
+            "name": "sequence",
+            "in": "path",
+            "description": "Employment sequence",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Employment sequence",
+              "example": 4
+            },
+            "example": 4
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Person Employment deleted"
           },
           "401": {
             "description": "Unauthorized to access this endpoint",
@@ -9452,6 +9616,93 @@
         }
       }
     },
+    "/persons/{personId}/employment": {
+      "post": {
+        "tags": [
+          "contact-person-resource"
+        ],
+        "summary": "Creates a person employment",
+        "description": "Creates a person employment in NOMIS. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId": "createPersonEmployment",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "description": "Person Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Person Id",
+              "example": 12345
+            },
+            "example": 12345
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonEmploymentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Person Employment sequence returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatePersonEmploymentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data, e.g corporate is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Person does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/persons/{personId}/email": {
       "post": {
         "tags": [
@@ -11580,6 +11831,73 @@
           },
           "401": {
             "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/visit-orders/visit-balance-adjustment/{visitBalanceAdjustmentId}": {
+      "get": {
+        "tags": [
+          "visit-order-balance-resource"
+        ],
+        "summary": "Get specific offender visit balance adjustment",
+        "description": "Retrieves offender visit balance adjustment. Requires ROLE_NOMIS_VISIT_ORDERS",
+        "operationId": "getVisitBalanceAdjustment",
+        "parameters": [
+          {
+            "name": "visitBalanceAdjustmentId",
+            "in": "path",
+            "description": "Visit balance adjustment id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Visit balance adjustment id",
+              "example": 5
+            },
+            "example": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Visit balance adjustment returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisitBalanceAdjustmentResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized to access this endpoint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden to access this endpoint. Requires ROLE_NOMIS_VISIT_ORDERS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Adjustment does not exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -18532,6 +18850,24 @@
           "typeCode"
         ]
       },
+      "UpdatePersonEmploymentRequest": {
+        "type": "object",
+        "properties": {
+          "corporateId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The id of the corporate organisation this employment is at"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "True is employment is active"
+          }
+        },
+        "required": [
+          "active",
+          "corporateId"
+        ]
+      },
       "UpdatePersonEmailRequest": {
         "type": "object",
         "properties": {
@@ -22500,6 +22836,37 @@
           "typeCode"
         ]
       },
+      "CreatePersonEmploymentResponse": {
+        "type": "object",
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique NOMIS sequence for this employment for this person"
+          }
+        },
+        "required": [
+          "sequence"
+        ]
+      },
+      "CreatePersonEmploymentRequest": {
+        "type": "object",
+        "properties": {
+          "corporateId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The id of the corporate organisation this employment is at"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "True is employment is active"
+          }
+        },
+        "required": [
+          "active",
+          "corporateId"
+        ]
+      },
       "CreatePersonEmailResponse": {
         "type": "object",
         "properties": {
@@ -23741,12 +24108,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -23763,6 +24124,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -23786,9 +24153,6 @@
           "sort": {
             "$ref": "#/components/schemas/SortObject"
           },
-          "unpaged": {
-            "type": "boolean"
-          },
           "pageSize": {
             "type": "integer",
             "format": "int32"
@@ -23799,6 +24163,9 @@
           "pageNumber": {
             "type": "integer",
             "format": "int32"
+          },
+          "unpaged": {
+            "type": "boolean"
           }
         }
       },
@@ -23829,6 +24196,65 @@
         "required": [
           "visitId"
         ]
+      },
+      "VisitBalanceAdjustmentResponse": {
+        "type": "object",
+        "description": "The visit orders balance changes held against a booking for a prisoner",
+        "properties": {
+          "remainingVisitOrders": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Number of visit orders affected by the adjustment"
+          },
+          "previousRemainingVisitOrders": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Previous number of visit orders before the adjustment"
+          },
+          "remainingPrivilegedVisitOrders": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Number of privileged visit orders affected by the adjustment"
+          },
+          "previousRemainingPrivilegedVisitOrders": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Previous number of privileged visit orders before the adjustment"
+          },
+          "adjustmentReason": {
+            "$ref": "#/components/schemas/CodeDescription",
+            "description": "Adjustment reason"
+          },
+          "adjustmentDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date the adjust was made"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Comment text"
+          },
+          "expiryBalance": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Expiry balance"
+          },
+          "expiryDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Expiry date"
+          },
+          "endorsedStaffId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Which staff member endorsed the adjustment aka Entered by"
+          },
+          "authorisedStaffId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Which staff member authorised the adjustment"
+          }
+        }
       },
       "SplashConditionDto": {
         "type": "object",
@@ -24256,12 +24682,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -24278,6 +24698,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -24343,7 +24769,7 @@
             "type": "array",
             "description": "Balance adjustments for this prisoner over the last 28 days",
             "items": {
-              "$ref": "#/components/schemas/VisitOrderBalanceAdjResponse"
+              "$ref": "#/components/schemas/VisitBalanceAdjustmentResponse"
             }
           }
         },
@@ -24352,69 +24778,6 @@
           "remainingVisitOrders",
           "visitOrderBalanceAdjustments"
         ]
-      },
-      "VisitOrderBalanceAdjResponse": {
-        "type": "object",
-        "description": "The visit orders balance changes held against a booking for a  prisoner",
-        "properties": {
-          "remainingVisitOrders": {
-            "type": "integer",
-            "format": "int32",
-            "description": "Number of visit orders affected by the adjustment"
-          },
-          "previousRemainingVisitOrders": {
-            "type": "integer",
-            "format": "int32",
-            "description": "Previous number of visit orders before the adjustment"
-          },
-          "remainingPrivilegedVisitOrders": {
-            "type": "integer",
-            "format": "int32",
-            "description": "Number of privileged visit orders affected by the adjustment"
-          },
-          "previousRemainingPrivilegedVisitOrders": {
-            "type": "integer",
-            "format": "int32",
-            "description": "Previous number of privileged visit orders before the adjustment"
-          },
-          "adjustmentReason": {
-            "$ref": "#/components/schemas/CodeDescription",
-            "description": "Adjustment reason"
-          },
-          "adjustmentDate": {
-            "type": "string",
-            "format": "date",
-            "description": "Date the adjust was made"
-          },
-          "comment": {
-            "type": "string",
-            "description": "Comment text"
-          },
-          "expiryBalance": {
-            "type": "integer",
-            "format": "int32",
-            "description": "Expiry balance"
-          },
-          "expiryDate": {
-            "type": "string",
-            "format": "date",
-            "description": "Expiry date"
-          },
-          "expiryStatus": {
-            "type": "string",
-            "description": "Expiry status"
-          },
-          "endorsedStaffId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Which staff member endorsed the adjustment aka Entered by"
-          },
-          "authorisedStaffId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Which staff member authorised the adjustment"
-          }
-        }
       },
       "OffenceResponse": {
         "type": "object",
@@ -26449,12 +26812,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -26471,6 +26828,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -26516,12 +26879,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -26538,6 +26895,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -27314,12 +27677,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -27336,6 +27693,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -27467,12 +27830,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -27489,6 +27846,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -27721,12 +28084,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -27743,6 +28100,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -28308,12 +28671,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -28330,6 +28687,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -28429,12 +28792,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -28451,6 +28808,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -28663,12 +29026,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -28685,6 +29042,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -28723,12 +29086,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -28745,6 +29102,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -29064,12 +29427,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -29086,6 +29443,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -30034,12 +30397,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -30056,6 +30413,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -30373,12 +30736,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -30395,6 +30752,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -30438,12 +30801,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -30460,6 +30817,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -30509,12 +30872,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -30531,6 +30888,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
@@ -30840,12 +31203,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -30862,6 +31219,12 @@
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "numberOfElements": {
             "type": "integer",
