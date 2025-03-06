@@ -1,8 +1,12 @@
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 import org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask
 import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+import java.net.URI
+import java.nio.file.Files
+import java.nio.file.Paths
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "7.1.3"
@@ -53,135 +57,118 @@ kotlin {
   }
 }
 
-data class ModelConfiguration(val name: String, val input: String, val output: String, val packageName: String)
+data class ModelConfiguration(val name: String, val packageName: String, val url: String) {
+  fun toBuildModelTaskName(): String = "build${nameToCamel()}ApiModel"
+  fun toWriteJsonTaskName(): String = "write${nameToCamel()}Json"
+  private val snakeRegex = "-[a-zA-Z]".toRegex()
+  private fun nameToCamel(): String = snakeRegex.replace(name) {
+    it.value.replace("-", "").uppercase()
+  }.replaceFirstChar { it.uppercase() }
+  val input: String
+    get() = "openapi-specs/$name-api-docs.json"
+  val output: String
+    get() = name
+}
 
 val models = listOf(
-  // https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs
   ModelConfiguration(
-    name = "buildActivityApiModel",
-    input = "activities-api-docs.json",
-    output = "activities",
+    name = "activities",
     packageName = "activities",
+    url = "https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs",
   ),
-  // https://adjudications-api-dev.prison.service.justice.gov.uk/v3/api-docs
   ModelConfiguration(
-    name = "buildAdjudicationApiModel",
-    input = "adjudications-api-docs.json",
-    output = "adjudications",
+    name = "adjudications",
     packageName = "adjudications",
+    url = "https://manage-adjudications-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
-  // https://non-associations-api-dev.hmpps.service.justice.gov.uk/v3/api-docs
   ModelConfiguration(
-    name = "buildNonAssociationApiModel",
-    input = "non-associations-api-docs.json",
-    output = "nonassociations",
+    name = "non-associations",
     packageName = "nonassociations",
+    url = "https://non-associations-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
-  // https://locations-inside-prison-api-dev.hmpps.service.justice.gov.uk/v3/api-docs
   ModelConfiguration(
-    name = "buildLocationsApiModel",
-    input = "locations-api-docs.json",
-    output = "locations",
+    name = "locations",
     packageName = "locations",
+    url = "https://locations-inside-prison-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
-  // https://nomis-prisoner-api-dev.prison.service.justice.gov.uk/v3/api-docs
   ModelConfiguration(
-    name = "buildNomisSyncApiModel",
-    input = "nomis-sync-api-docs.json",
-    output = "nomissync",
+    name = "nomis-sync",
     packageName = "nomissync",
+    url = "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk/v3/api-docs",
   ),
-  // https://nomis-prisoner-api-dev.prison.service.justice.gov.uk/v3/api-docs
   ModelConfiguration(
-    name = "buildNomisPrisonerApiModel",
-    input = "nomis-prisoner-api-docs.json",
-    output = "nomisprisoner",
+    name = "nomis-prisoner",
     packageName = "nomisprisoner",
+    url = "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk/v3/api-docs",
   ),
-  // https://nomis-sync-prisoner-mapping-dev.hmpps.service.justice.gov.uk/v3/api-docs
   ModelConfiguration(
-    name = "buildMappingServiceApiModel",
-    input = "nomis-mapping-service-api-docs.json",
-    output = "mappings",
+    name = "nomis-mapping-service",
     packageName = "nomismappings",
+    url = "https://nomis-sync-prisoner-mapping-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
-  // https://adjustments-api-dev.hmpps.service.justice.gov.uk/v3/api-docs
   ModelConfiguration(
-    name = "buildSentencingAdjustmentsApiModel",
-    input = "sentencing-adjustments-api-docs.json",
-    output = "sentencingadjustments",
+    name = "sentencing-adjustments",
     packageName = "sentencing.adjustments",
+    url = "https://adjustments-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
-  // https://remand-and-sentencing-api-dev.hmpps.service.justice.gov.uk/v3/api-docs
   ModelConfiguration(
-    name = "buildCourtSentencingApiModel",
-    input = "court-sentencing-api-docs.json",
-    output = "courtsentencing",
+    name = "court-sentencing",
     packageName = "court.sentencing",
+    url = "https://remand-and-sentencing-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
-  // https://alerts-api-dev.hmpps.service.justice.gov.uk/v3/api-docs
   ModelConfiguration(
-    name = "buildAlertsApiModel",
-    input = "alerts-api-docs.json",
-    output = "alerts",
+    name = "alerts",
     packageName = "alerts",
+    url = "https://alerts-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
-  // https://csip-api-dev.prison.service.justice.gov.uk/v3/api-docs
   ModelConfiguration(
-    name = "buildCsipApiModel",
-    input = "csip-api-docs.json",
-    output = "csip",
+    name = "csip",
     packageName = "csip",
+    url = "https://csip-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
-  // https://casenotes-api-dev.prison.service.justice.gov.uk/v3/api-docs
   ModelConfiguration(
-    name = "buildCaseNotesApiModel",
-    input = "casenotes-api-docs.json",
-    output = "casenotes",
+    name = "casenotes",
     packageName = "casenotes",
+    url = "https://dev.offender-case-notes.service.justice.gov.uk/v3/api-docs",
   ),
-  // https://prison-person-api-dev.prison.service.justice.gov.uk/v3/api-docs
   ModelConfiguration(
-    name = "buildPrisonPersonApiModel",
-    input = "prison-person-api-docs.json",
-    output = "prisonperson",
+    name = "prison-person",
     packageName = "prisonperson",
+    url = "https://prison-person-api-dev.prison.service.justice.gov.uk/v3/api-docs",
   ),
-  // https://personal-relationships-api-dev.hmpps.service.justice.gov.uk/v3/api-docs
   ModelConfiguration(
-    name = "buildPersonalRelationshipsApiModel",
-    input = "personal-relationships-api-docs.json",
-    output = "personalrelationships",
+    name = "personal-relationships",
     packageName = "personalrelationships",
+    url = "https://personal-relationships-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
-  // https://organisations-api-dev.hmpps.service.justice.gov.uk/v3/api-docs
   ModelConfiguration(
-    name = "buildOrganisationsApiModel",
-    input = "organisations-api-docs.json",
-    output = "organisations",
+    name = "organisations",
     packageName = "organisations",
+    url = "https://organisations-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
 )
 
 tasks {
   withType<KotlinCompile> {
-    dependsOn(models.map { it.name })
+    dependsOn(models.map { it.toBuildModelTaskName() })
     compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
   }
   withType<KtLintCheckTask> {
     // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
-    mustRunAfter(models.map { it.name })
+    mustRunAfter(models.map { it.toBuildModelTaskName() })
   }
   withType<KtLintFormatTask> {
     // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
-    mustRunAfter(models.map { it.name })
+    mustRunAfter(models.map { it.toBuildModelTaskName() })
   }
 }
 models.forEach {
-  tasks.register(it.name, GenerateTask::class) {
+  tasks.register(it.toBuildModelTaskName(), GenerateTask::class) {
+    group = "Generate model from API JSON definition"
+    description = "Generate model from API JSON definition for ${it.name}"
     generatorName.set("kotlin")
     skipValidateSpec.set(true)
-    inputSpec.set("openapi-specs/${it.input}")
+    inputSpec.set(it.input)
     outputDir.set("$buildDirectory/generated/${it.output}")
     modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.${it.packageName}.model")
     apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.${it.packageName}.api")
@@ -189,6 +176,17 @@ models.forEach {
     globalProperties.set(mapOf("models" to ""))
     generateModelTests.set(false)
     generateModelDocumentation.set(false)
+  }
+  tasks.register(it.toWriteJsonTaskName()) {
+    group = "Write JSON"
+    description = "Write JSON for ${it.name}"
+    doLast {
+      val json = URI.create(it.url).toURL().readText()
+      val formattedJson = ObjectMapper().let { mapper ->
+        mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mapper.readTree(json))
+      }
+      Files.write(Paths.get(it.input), formattedJson.toByteArray())
+    }
   }
 }
 
