@@ -788,7 +788,33 @@ class ContactPersonService(
     }
   }
   suspend fun contactEmploymentDeleted(event: ContactEmploymentDeletedEvent) {
+    val entityName = CONTACT_EMPLOYMENT.entityName
+    val dpsContactEmploymentId = event.additionalInformation.employmentId
+    val dpsContactId = event.contactId()
+    val telemetryMap = mutableMapOf(
+      "dpsContactEmploymentId" to dpsContactEmploymentId.toString(),
+      "dpsContactId" to dpsContactId.toString(),
+      "nomisPersonId" to dpsContactId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      mappingApiService.getByDpsContactEmploymentIdOrNull(dpsContactEmploymentId)?.also {
+        telemetryMap["nomisSequenceNumber"] = it.nomisSequenceNumber.toString()
+        telemetryMap["nomisPersonId"] = it.nomisPersonId.toString()
+        nomisApiService.deletePersonEmployment(
+          personId = it.nomisPersonId,
+          sequence = it.nomisSequenceNumber,
+        )
+        mappingApiService.deleteByNomisEmploymentIds(nomisPersonId = it.nomisPersonId, nomisSequenceNumber = it.nomisSequenceNumber)
+        telemetryClient.trackEvent("$entityName-delete-success", telemetryMap)
+      } ?: run {
+        telemetryClient.trackEvent("$entityName-delete-skipped", telemetryMap)
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-delete-ignored", telemetryMap)
+    }
   }
+
   suspend fun prisonerContactRestrictionCreated(event: PrisonerContactRestrictionCreatedEvent) {
     val entityName = PRISONER_CONTACT_RESTRICTION.entityName
     val dpsPrisonerContactRestrictionId = event.additionalInformation.prisonerContactRestrictionId
