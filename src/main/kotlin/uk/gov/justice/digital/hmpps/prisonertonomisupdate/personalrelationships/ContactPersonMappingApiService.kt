@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactRestrictionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmailMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmploymentMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonIdentifierMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
@@ -163,6 +164,33 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
       .awaitBodilessEntity()
   }
 
+  suspend fun getByDpsContactEmploymentIdOrNull(dpsContactEmploymentId: Long): PersonEmploymentMappingDto? = webClient.get()
+    .uri(
+      "/mapping/contact-person/employment/dps-contact-employment-id/{dpsContactEmploymentId}",
+      dpsContactEmploymentId,
+    )
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
+  suspend fun getByDpsContactEmploymentId(dpsContactEmploymentId: Long): PersonEmploymentMappingDto = webClient.get()
+    .uri(
+      "/mapping/contact-person/employment/dps-contact-employment-id/{dpsContactEmploymentId}",
+      dpsContactEmploymentId,
+    )
+    .retrieve()
+    .awaitBody()
+
+  suspend fun deleteByNomisEmploymentIds(nomisPersonId: Long, nomisSequenceNumber: Long) {
+    webClient.delete()
+      .uri(
+        "/mapping/contact-person/employment/nomis-person-id/{nomisPersonId}/nomis-sequence-number/{nomisSequenceNumber}",
+        nomisPersonId,
+        nomisSequenceNumber,
+      )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
   suspend fun getByDpsPrisonerContactRestrictionIdOrNull(dpsPrisonerContactRestrictionId: Long): PersonContactRestrictionMappingDto? = webClient.get()
     .uri(
       "/mapping/contact-person/contact-restriction/dps-prisoner-contact-restriction-id/{dpsPrisonerContactRestrictionId}",
@@ -241,6 +269,12 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
 
   suspend fun createIdentifierMapping(mappings: PersonIdentifierMappingDto) = webClient.post()
     .uri("/mapping/contact-person/identifier")
+    .bodyValue(mappings)
+    .retrieve()
+    .awaitBodilessEntityOrThrowOnConflict()
+
+  suspend fun createEmploymentMapping(mappings: PersonEmploymentMappingDto) = webClient.post()
+    .uri("/mapping/contact-person/employment")
     .bodyValue(mappings)
     .retrieve()
     .awaitBodilessEntityOrThrowOnConflict()

@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactRestrictionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmailMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmploymentMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonIdentifierMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
@@ -625,6 +626,106 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
       post("/mapping/contact-person/identifier")
         .inScenario("Retry Mapping Identifier Scenario")
         .whenScenarioStateIs("Cause Mapping Identifier Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetByDpsContactEmploymentIdOrNull(
+    dpsContactEmploymentId: Long = 123456,
+    mapping: PersonEmploymentMappingDto? = PersonEmploymentMappingDto(
+      nomisPersonId = 654321,
+      nomisSequenceNumber = 4,
+      dpsId = dpsContactEmploymentId.toString(),
+      mappingType = PersonEmploymentMappingDto.MappingType.MIGRATED,
+    ),
+  ) {
+    mapping?.apply {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/contact-person/employment/dps-contact-employment-id/$dpsContactEmploymentId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(objectMapper.writeValueAsString(mapping)),
+        ),
+      )
+    } ?: run {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/contact-person/employment/dps-contact-employment-id/$dpsContactEmploymentId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.NOT_FOUND.value())
+            .withBody(objectMapper.writeValueAsString(ErrorResponse(status = 404))),
+        ),
+      )
+    }
+  }
+
+  fun stubGetByDpsContactEmploymentId(
+    dpsContactEmploymentId: Long = 123456,
+    mapping: PersonEmploymentMappingDto = PersonEmploymentMappingDto(
+      nomisPersonId = 654321,
+      nomisSequenceNumber = 4,
+      dpsId = dpsContactEmploymentId.toString(),
+      mappingType = PersonEmploymentMappingDto.MappingType.MIGRATED,
+    ),
+  ) = stubGetByDpsContactEmploymentIdOrNull(dpsContactEmploymentId, mapping)
+
+  fun stubDeleteByNomisEmploymentIds(
+    nomisPersonId: Long = 123456,
+    nomisSequenceNumber: Long = 4,
+  ) {
+    mappingServer.stubFor(
+      delete(urlEqualTo("/mapping/contact-person/employment/nomis-person-id/$nomisPersonId/nomis-sequence-number/$nomisSequenceNumber")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
+  fun stubCreateEmploymentMapping() {
+    mappingServer.stubFor(
+      post("/mapping/contact-person/employment").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCreateEmploymentMapping(error: DuplicateMappingErrorResponse) {
+    mappingServer.stubFor(
+      post("/mapping/contact-person/employment").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(409)
+          .withBody(objectMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubCreateEmploymentMappingFollowedBySuccess(status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      post("/mapping/contact-person/employment")
+        .inScenario("Retry Mapping Employment Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(objectMapper.writeValueAsString(error)),
+        ).willSetStateTo("Cause Mapping Employment Success"),
+    )
+
+    mappingServer.stubFor(
+      post("/mapping/contact-person/employment")
+        .inScenario("Retry Mapping Employment Scenario")
+        .whenScenarioStateIs("Cause Mapping Employment Success")
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")

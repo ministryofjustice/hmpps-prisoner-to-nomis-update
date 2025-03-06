@@ -21,6 +21,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonContactResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonEmploymentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonEmploymentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonIdentifierResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonPhoneRequest
@@ -31,6 +33,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.updatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.updatePersonContactRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.updatePersonEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.updatePersonEmploymentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.updatePersonIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.updatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.updatePersonRequest
@@ -610,6 +613,90 @@ class ContactPersonNomisApiServiceTest {
 
       mockServer.verify(
         deleteRequestedFor(urlPathEqualTo("/persons/1234567/identifier/4")),
+      )
+    }
+  }
+
+  @Nested
+  inner class CreatePersonEmployment {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubCreatePersonEmployment(personId = 1234567)
+
+      apiService.createPersonEmployment(personId = 1234567, request = createPersonEmploymentRequest())
+
+      mockServer.verify(
+        postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call create endpoint`() = runTest {
+      mockServer.stubCreatePersonEmployment(personId = 1234567)
+
+      apiService.createPersonEmployment(personId = 1234567, request = createPersonEmploymentRequest())
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/persons/1234567/employment")),
+      )
+    }
+
+    @Test
+    fun `will return employment id `() = runTest {
+      mockServer.stubCreatePersonEmployment(personId = 1234567, response = createPersonEmploymentResponse().copy(sequence = 4))
+
+      val response = apiService.createPersonEmployment(personId = 1234567, request = createPersonEmploymentRequest())
+
+      assertThat(response.sequence).isEqualTo(4)
+    }
+  }
+
+  @Nested
+  inner class UpdatePersonEmployment {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubUpdatePersonEmployment(personId = 1234567, sequence = 4)
+
+      apiService.updatePersonEmployment(personId = 1234567, sequence = 4, updatePersonEmploymentRequest())
+
+      mockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call update endpoint`() = runTest {
+      mockServer.stubUpdatePersonEmployment(personId = 1234567, sequence = 4)
+
+      apiService.updatePersonEmployment(personId = 1234567, sequence = 4, updatePersonEmploymentRequest())
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/persons/1234567/employment/4")),
+      )
+    }
+  }
+
+  @Nested
+  inner class DeletePersonEmployment {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubDeletePersonEmployment(personId = 1234567, sequence = 4)
+
+      apiService.deletePersonEmployment(personId = 1234567, sequence = 4)
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call delete endpoint`() = runTest {
+      mockServer.stubDeletePersonEmployment(personId = 1234567, sequence = 4)
+
+      apiService.deletePersonEmployment(personId = 1234567, sequence = 4)
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/persons/1234567/employment/4")),
       )
     }
   }

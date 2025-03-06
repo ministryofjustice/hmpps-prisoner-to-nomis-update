@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactRestrictionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmailMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonEmploymentMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonIdentifierMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
@@ -1190,6 +1191,197 @@ class ContactPersonMappingApiServiceTest {
 
       mockServer.verify(
         deleteRequestedFor(urlPathEqualTo("/mapping/contact-person/identifier/nomis-person-id/1234567/nomis-sequence-number/4")),
+      )
+    }
+  }
+
+  @Nested
+  inner class CreateEmploymentMapping {
+    @Test
+    internal fun `will pass oath2 token to create mapping endpoint`() = runTest {
+      mockServer.stubCreateEmploymentMapping()
+
+      apiService.createEmploymentMapping(
+        PersonEmploymentMappingDto(
+          mappingType = PersonEmploymentMappingDto.MappingType.DPS_CREATED,
+          nomisPersonId = 1234567,
+          nomisSequenceNumber = 4,
+          dpsId = "1234567",
+        ),
+      )
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/mapping/contact-person/employment"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will throw error when 409 conflict`() = runTest {
+      val nomisPersonId = 2234567890
+      val nomisSequenceNumber = 4
+      val dpsId = "2234567890"
+      val existingNomisSequenceNumber = 5
+
+      mockServer.stubCreateEmploymentMapping(
+        error = DuplicateMappingErrorResponse(
+          moreInfo = DuplicateErrorContentObject(
+            duplicate = PersonEmploymentMappingDto(
+              dpsId = dpsId,
+              nomisPersonId = nomisPersonId,
+              nomisSequenceNumber = nomisSequenceNumber.toLong(),
+              mappingType = PersonEmploymentMappingDto.MappingType.DPS_CREATED,
+            ),
+            existing = PersonEmploymentMappingDto(
+              dpsId = dpsId,
+              nomisPersonId = nomisPersonId,
+              nomisSequenceNumber = existingNomisSequenceNumber.toLong(),
+              mappingType = PersonEmploymentMappingDto.MappingType.DPS_CREATED,
+            ),
+          ),
+          errorCode = 1409,
+          status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+          userMessage = "Duplicate mapping",
+        ),
+      )
+
+      val error = assertThrows<DuplicateMappingException> {
+        apiService.createEmploymentMapping(
+          PersonEmploymentMappingDto(
+            mappingType = PersonEmploymentMappingDto.MappingType.NOMIS_CREATED,
+            nomisPersonId = nomisPersonId,
+            nomisSequenceNumber = nomisSequenceNumber.toLong(),
+            dpsId = dpsId,
+          ),
+        )
+      }.error
+
+      assertThat(error.moreInfo.existing!!["dpsId"]).isEqualTo(dpsId)
+      assertThat(error.moreInfo.existing!!["nomisPersonId"]).isEqualTo(nomisPersonId)
+      assertThat(error.moreInfo.existing!!["nomisSequenceNumber"]).isEqualTo(existingNomisSequenceNumber)
+      assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
+      assertThat(error.moreInfo.duplicate["nomisPersonId"]).isEqualTo(nomisPersonId)
+      assertThat(error.moreInfo.duplicate["nomisSequenceNumber"]).isEqualTo(nomisSequenceNumber)
+    }
+  }
+
+  @Nested
+  inner class GetByDpsContactEmploymentIdOrNull {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetByDpsContactEmploymentIdOrNull(dpsContactEmploymentId = 1234567)
+
+      apiService.getByDpsContactEmploymentIdOrNull(dpsContactEmploymentId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass DPS id to service`() = runTest {
+      mockServer.stubGetByDpsContactEmploymentIdOrNull(dpsContactEmploymentId = 1234567)
+
+      apiService.getByDpsContactEmploymentIdOrNull(dpsContactEmploymentId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/contact-person/employment/dps-contact-employment-id/1234567")),
+      )
+    }
+
+    @Test
+    fun `will return nomisId when mapping exists`() = runTest {
+      mockServer.stubGetByDpsContactEmploymentIdOrNull(
+        dpsContactEmploymentId = 1234567,
+        mapping = PersonEmploymentMappingDto(
+          dpsId = "1234567",
+          nomisPersonId = 1234567,
+          nomisSequenceNumber = 4,
+          mappingType = PersonEmploymentMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      val mapping = apiService.getByDpsContactEmploymentIdOrNull(dpsContactEmploymentId = 1234567)
+
+      assertThat(mapping?.nomisPersonId).isEqualTo(1234567)
+      assertThat(mapping?.nomisSequenceNumber).isEqualTo(4)
+    }
+
+    @Test
+    fun `will return null if mapping does not exist`() = runTest {
+      mockServer.stubGetByDpsContactEmploymentIdOrNull(
+        dpsContactEmploymentId = 1234567,
+        mapping = null,
+      )
+
+      assertThat(apiService.getByDpsContactEmploymentIdOrNull(dpsContactEmploymentId = 1234567))
+    }
+  }
+
+  @Nested
+  inner class GetByDpsContactEmploymentId {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetByDpsContactEmploymentId(dpsContactEmploymentId = 1234567)
+
+      apiService.getByDpsContactEmploymentId(dpsContactEmploymentId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass DPS id to service`() = runTest {
+      mockServer.stubGetByDpsContactEmploymentId(dpsContactEmploymentId = 1234567)
+
+      apiService.getByDpsContactEmploymentId(dpsContactEmploymentId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/contact-person/employment/dps-contact-employment-id/1234567")),
+      )
+    }
+
+    @Test
+    fun `will return nomis id`() = runTest {
+      mockServer.stubGetByDpsContactEmploymentId(
+        dpsContactEmploymentId = 1234567,
+        mapping = PersonEmploymentMappingDto(
+          dpsId = "1234567",
+          nomisPersonId = 1234567,
+          nomisSequenceNumber = 4,
+          mappingType = PersonEmploymentMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      val mapping = apiService.getByDpsContactEmploymentId(dpsContactEmploymentId = 1234567)
+
+      assertThat(mapping.nomisPersonId).isEqualTo(1234567)
+      assertThat(mapping.nomisSequenceNumber).isEqualTo(4)
+    }
+  }
+
+  @Nested
+  inner class DeleteByNomisEmploymentId {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubDeleteByNomisEmploymentIds(nomisPersonId = 1234567, nomisSequenceNumber = 4)
+
+      apiService.deleteByNomisEmploymentIds(nomisPersonId = 1234567, nomisSequenceNumber = 4)
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass NOMIS ids to service`() = runTest {
+      mockServer.stubDeleteByNomisEmploymentIds(nomisPersonId = 1234567, nomisSequenceNumber = 4)
+
+      apiService.deleteByNomisEmploymentIds(nomisPersonId = 1234567, nomisSequenceNumber = 4)
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/mapping/contact-person/employment/nomis-person-id/1234567/nomis-sequence-number/4")),
       )
     }
   }
