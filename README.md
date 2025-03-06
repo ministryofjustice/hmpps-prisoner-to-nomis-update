@@ -63,42 +63,19 @@ e.g.
 
 For some of our external API calls we use `openapi-generator` to generate the models used in the API clients. The Open API specifications used can be found in directory `openapi-specs`.
 
-### Updating the Open API specs
+In the build.gradle.kts there is a `ModelConfiguration` for each of the models.  This contains the URL to be used to
+obtain the JSON Open API specification and also the package name to be used for the generated models.  For each model
+configuration two tasks are created:
+1. `write<ModelName>Json` - this task will download the Open API specification and save it to `openapi-specs`.
+2. `build<ModelName>ApiModel` - this task will generate the models from the specification
 
-Run the following commands to take a copy of the latest specs (requires `jq` is installed):
-
-```
-curl https://nomis-prisoner-api-dev.prison.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/nomis-prisoner-api-docs.json
-curl https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/activities-api-docs.json
-curl https://manage-adjudications-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/adjudications-api-docs.json
-curl https://locations-inside-prison-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/locations-api-docs.json
-curl https://dev.offender-case-notes.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/casenotes-api-docs.json
-curl https://non-associations-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/non-associations-api-docs.json
-curl https://nomis-sync-prisoner-mapping-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/nomis-mapping-service-api-docs.json
-curl https://adjustments-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/sentencing-adjustments-api-docs.json
-curl https://remand-and-sentencing-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/court-sentencing-api-docs.json
-curl https://csip-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/csip-api-docs.json
-curl https://prison-person-api-dev.prison.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/prison-person-api-docs.json
-curl https://alerts-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/alerts-api-docs.json
-curl https://personal-relationships-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/personal-relationships-api-docs.json
-curl https://organisations-api-dev.hmpps.service.justice.gov.uk/v3/api-docs | jq . > openapi-specs/organisations-api-docs.json
+So, for example, running
+```shell
+./gradlew clean writeNonAssociationsJson buildNonAssociationsApiModel compileKotlin compileTestKotlin
 ```
 
-Then run compile gradle task that will regenerate the models in the `build/generated/src` directory:
-
-`./gradlew clean compileKotlin`
-
-Now build the project and deal with any compile errors caused by changes to the generated models.
-
-Finally run the tests and fix any issues caused by changes to the models.
-
-### Adding new Open API specs
-
-Add the instructions for the curl command above but obviously with a different file name
-
-In the build.gradle add a new task similar to the `buildActivityApiModel` task
-In the build.gradle add dependencies in the appropriate tasks e.g. in `withType<KotlinCompile>` for the new task
-
+Will download the non associations Open API specification from dev, generate the model and then compile the code.
+The json specification can then be committed to the repository.
 
 ## Runbook
 
