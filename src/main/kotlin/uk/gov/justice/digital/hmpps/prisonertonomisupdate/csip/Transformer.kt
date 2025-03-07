@@ -12,17 +12,17 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Review
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.SaferCustodyScreeningOutcome
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CSIPChildMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CSIPFullMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ActionsRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AttendeeRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CSIPFactorRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.DecisionRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.InterviewDetailRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.InvestigationDetailRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PlanRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ReviewRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.SaferCustodyScreeningRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertCSIPRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertReportDetailsRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ActionsRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AttendeeRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CSIPFactorRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DecisionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.InterviewDetailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.InvestigationDetailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PlanRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ReviewRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SaferCustodyScreeningRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertCSIPRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertReportDetailsRequest
 
 fun CsipRecord.toNomisUpsertRequest(mapping: CSIPFullMappingDto? = null) = UpsertCSIPRequest(
   id = mapping?.nomisCSIPReportId,

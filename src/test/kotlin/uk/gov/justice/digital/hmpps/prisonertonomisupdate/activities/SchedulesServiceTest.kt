@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleInstance.TimeSlot.AM
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityScheduleLite
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateCourseScheduleResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourseScheduleResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 
