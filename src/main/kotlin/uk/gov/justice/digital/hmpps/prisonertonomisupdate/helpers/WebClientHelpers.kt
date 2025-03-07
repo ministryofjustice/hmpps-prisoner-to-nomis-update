@@ -9,7 +9,7 @@ import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Mono
 import reactor.util.retry.Retry
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ErrorResponse
 
 suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForNotFound(): T? = this.bodyToMono<T>()
   .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
