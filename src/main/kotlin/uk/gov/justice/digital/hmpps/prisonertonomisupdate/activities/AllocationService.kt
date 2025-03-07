@@ -9,8 +9,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Alloc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Allocation.Status.SUSPENDED_WITH_PAY
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Slot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationExclusion
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AllocationExclusion
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertAllocationRequest
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 

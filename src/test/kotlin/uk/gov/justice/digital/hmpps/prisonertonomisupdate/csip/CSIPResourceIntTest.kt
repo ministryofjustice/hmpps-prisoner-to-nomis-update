@@ -24,8 +24,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPDpsApiExtensi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.ReferenceData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.model.Review
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDescription
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.PrisonerCSIPsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerCSIPsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 

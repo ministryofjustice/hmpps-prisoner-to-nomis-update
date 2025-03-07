@@ -25,24 +25,24 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ChargeToCreate
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourseScheduleRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAdjudicationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateLocationRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ChargeToCreate
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CourseScheduleRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateActivityRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateAdjudicationRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CreateHearingResultAwardRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.EvidenceToUpdateOrAdd
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ExistingHearingResultAwardRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.HearingResultAwardRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.IncidentToCreate
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.RepairToUpdateOrAdd
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UnquashHearingResultAwardRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateActivityRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateEvidenceRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateHearingResultAwardRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpdateRepairsRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.EvidenceToUpdateOrAdd
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ExistingHearingResultAwardRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.HearingResultAwardRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IncidentToCreate
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MergeDetail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RepairToUpdateOrAdd
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UnquashHearingResultAwardRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateActivityRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateEvidenceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateHearingResultAwardRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRepairsRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -1224,8 +1224,8 @@ internal class NomisApiServiceTest {
       nomisApi.stubGetMergesFromDate(
         offenderNo = "A1234AA",
         merges = listOf(
-          MergeDetail(deletedOffenderNo = "A1234AB", retainedOffenderNo = "A1234AA", previousBookingId = 1234, activeBookingId = 1235, requestDateTime = "2024-02-02T12:34:56"),
-          MergeDetail(deletedOffenderNo = "A1234AC", retainedOffenderNo = "A1234AA", previousBookingId = 1233, activeBookingId = 1234, requestDateTime = "2024-02-01T13:34:56"),
+          MergeDetail(deletedOffenderNo = "A1234AB", retainedOffenderNo = "A1234AA", previousBookingId = 1234, activeBookingId = 1235, requestDateTime = LocalDateTime.parse("2024-02-02T12:34:56")),
+          MergeDetail(deletedOffenderNo = "A1234AC", retainedOffenderNo = "A1234AA", previousBookingId = 1233, activeBookingId = 1234, requestDateTime = LocalDateTime.parse("2024-02-01T13:34:56")),
         ),
       )
 

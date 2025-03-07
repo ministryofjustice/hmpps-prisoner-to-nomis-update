@@ -7,7 +7,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceSync
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.AttendancePaidException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.PrisonerMovedAllocationEndedException
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAttendanceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertAttendanceRequest
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate

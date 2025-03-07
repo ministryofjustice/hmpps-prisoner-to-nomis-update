@@ -11,8 +11,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AllocationReconciliationResponse as DpsAllocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceReconciliationResponse as DpsAttendanceResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationReconciliationResponse as NomisAllocationResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AttendanceReconciliationResponse as NomisAttendanceResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AllocationReconciliationResponse as NomisAllocationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AttendanceReconciliationResponse as NomisAttendanceResponse
 
 @Service
 class ActivitiesReconService(

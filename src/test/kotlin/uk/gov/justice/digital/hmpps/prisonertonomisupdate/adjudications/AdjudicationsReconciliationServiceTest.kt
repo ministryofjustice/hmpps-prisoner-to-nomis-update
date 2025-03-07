@@ -30,17 +30,18 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Pu
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentScheduleDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ADASummary
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationADAAwardSummaryResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.ADASummary
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AdjudicationADAAwardSummaryResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.CodeDescription
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension.Companion.adjudicationsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @SpringAPIServiceTest
 @Import(
@@ -306,7 +307,7 @@ internal class AdjudicationsReconciliationServiceTest {
           nomisApi.stubGetMergesFromDate(
             offenderNo = "A1234AA",
             merges = listOf(
-              MergeDetail(deletedOffenderNo = "A1234AB", retainedOffenderNo = "A1234AA", previousBookingId = 1234, activeBookingId = 1235, requestDateTime = "2024-02-02T12:34:56"),
+              MergeDetail(deletedOffenderNo = "A1234AB", retainedOffenderNo = "A1234AA", previousBookingId = 1234, activeBookingId = 1235, requestDateTime = LocalDateTime.parse("2024-02-02T12:34:56")),
             ),
           )
           mappingServer.stubGetByChargeNumber("MDI-00010", 10234567)
@@ -380,7 +381,7 @@ internal class AdjudicationsReconciliationServiceTest {
           nomisApi.stubGetMergesFromDate(
             offenderNo = "A1234AA",
             merges = listOf(
-              MergeDetail(deletedOffenderNo = "A1234AB", retainedOffenderNo = "A1234AA", previousBookingId = 1234, activeBookingId = 1235, requestDateTime = "2024-02-02T12:34:56"),
+              MergeDetail(deletedOffenderNo = "A1234AB", retainedOffenderNo = "A1234AA", previousBookingId = 1234, activeBookingId = 1235, requestDateTime = LocalDateTime.parse("2024-02-02T12:34:56")),
             ),
           )
           mappingServer.stubGetByChargeNumber("MDI-00001", 1000001)
@@ -428,7 +429,7 @@ internal class AdjudicationsReconciliationServiceTest {
           nomisApi.stubGetMergesFromDate(
             offenderNo = "A1234AA",
             merges = listOf(
-              MergeDetail(deletedOffenderNo = "A1234AB", retainedOffenderNo = "A1234AA", previousBookingId = 1234, activeBookingId = 1235, requestDateTime = "2024-02-02T12:34:56"),
+              MergeDetail(deletedOffenderNo = "A1234AB", retainedOffenderNo = "A1234AA", previousBookingId = 1234, activeBookingId = 1235, requestDateTime = LocalDateTime.parse("2024-02-02T12:34:56")),
             ),
           )
           mappingServer.stubGetByChargeNumber("MDI-00001", 1000001)
@@ -520,7 +521,7 @@ internal class AdjudicationsReconciliationServiceTest {
           nomisApi.stubGetMergesFromDate(
             offenderNo = "A1234AA",
             merges = listOf(
-              MergeDetail(deletedOffenderNo = "A1234AB", retainedOffenderNo = "A1234AA", previousBookingId = 1234, activeBookingId = 1235, requestDateTime = "2024-02-02T12:34:56"),
+              MergeDetail(deletedOffenderNo = "A1234AB", retainedOffenderNo = "A1234AA", previousBookingId = 1234, activeBookingId = 1235, requestDateTime = LocalDateTime.parse("2024-02-02T12:34:56")),
             ),
           )
           mappingServer.stubGetByChargeNumber("MDI-00001", 1000001)

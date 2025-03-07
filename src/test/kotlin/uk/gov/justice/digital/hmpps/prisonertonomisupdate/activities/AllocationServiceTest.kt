@@ -22,8 +22,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Slot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Slot.TimeSlot.AM
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Slot.TimeSlot.ED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Slot.TimeSlot.PM
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.AllocationExclusion
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomissync.model.UpsertAllocationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AllocationExclusion
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertAllocationResponse
 import java.time.LocalDate
 
 class AllocationServiceTest {
