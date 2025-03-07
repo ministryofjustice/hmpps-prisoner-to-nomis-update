@@ -108,7 +108,7 @@ class AdjudicationsReconciliationService(
           "nomisAdaDays" to (nomisAdaSummary.days.toString()),
           "originalDpsAdaDays" to (dpsAdjudications.toAdaSummary().days.toString()),
           "dpsAdaDays" to (dpsAdaSummary.days.toString()),
-          "mergeDate" to (merges.last().requestDateTime),
+          "mergeDate" to (merges.last().requestDateTime.toString()),
           "mergeFrom" to (merges.last().deletedOffenderNo),
           "missingAdjudications" to (adjudicationsNotPresentOnDPSBooking.joinToString()),
         )
