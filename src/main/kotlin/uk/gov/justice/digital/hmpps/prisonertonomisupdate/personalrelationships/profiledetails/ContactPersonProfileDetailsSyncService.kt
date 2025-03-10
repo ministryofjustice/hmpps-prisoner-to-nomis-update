@@ -66,7 +66,7 @@ class ContactPersonProfileDetailsSyncService(
     }
   }
 
-  private fun ContactIdReferencedEvent.prisonerNumber() = personReference.identifiers.first { it.type == "prisonerNumber" }.value
+  private fun ContactIdReferencedEvent.prisonerNumber() = personReference.identifiers.first { it.type == "NOMS" }.value
 
   private fun ignoreTelemetry(prisonerNumber: String, dpsId: Long, profileType: ContactPersonProfileType) = telemetryClient.trackEvent(
     "contact-person-${profileType.identifier}-ignored",
