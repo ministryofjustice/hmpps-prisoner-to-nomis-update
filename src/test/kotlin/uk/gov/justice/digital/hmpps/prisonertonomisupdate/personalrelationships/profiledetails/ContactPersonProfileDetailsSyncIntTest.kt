@@ -780,7 +780,7 @@ fun domesticStatusCreatedEvent(
       "personReference": {
         "identifiers": [
           {
-            "type": "prisonerNumber",
+            "type": "NOMS",
             "value": "$prisonerNumber"
           }
         ]
@@ -803,7 +803,7 @@ fun numberOfChildrenCreatedEvent(
       "personReference": {
         "identifiers": [
           {
-            "type": "prisonerNumber",
+            "type": "NOMS",
             "value": "$prisonerNumber"
           }
         ]
@@ -826,7 +826,7 @@ fun domesticStatusDeletedEvent(
       "personReference": {
         "identifiers": [
           {
-            "type": "prisonerNumber",
+            "type": "NOMS",
             "value": "$prisonerNumber"
           }
         ]
@@ -849,7 +849,7 @@ fun numberOfChildrenDeletedEvent(
       "personReference": {
         "identifiers": [
           {
-            "type": "prisonerNumber",
+            "type": "NOMS",
             "value": "$prisonerNumber"
           }
         ]
