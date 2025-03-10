@@ -78,7 +78,7 @@ class NonAssociationsReconciliationService(
             null,
             NonAssociationReportDetail(
               it.restrictionType.name,
-              it.whenCreated,
+              it.whenCreated.toLocalDate(),
               null,
               it.isClosed,
               it.firstPrisonerRole.name,
@@ -161,8 +161,8 @@ class NonAssociationsReconciliationService(
             id,
             NonAssociationReportDetail(
               nomisList[index].type,
-              nomisList[index].effectiveDate.toString(),
-              nomisList[index].expiryDate?.toString(),
+              nomisList[index].effectiveDate,
+              nomisList[index].expiryDate,
               null,
               nomisList[index].reason,
               nomisList[index].recipReason,
@@ -191,7 +191,7 @@ class NonAssociationsReconciliationService(
             null,
             NonAssociationReportDetail(
               dpsList[index].restrictionType.name,
-              dpsList[index].whenCreated,
+              dpsList[index].whenCreated.toLocalDate(),
               null,
               dpsList[index].isClosed,
               dpsList[index].firstPrisonerRole.name,
@@ -222,8 +222,8 @@ class NonAssociationsReconciliationService(
               id,
               NonAssociationReportDetail(
                 nomisList[index].type,
-                nomisList[index].effectiveDate.toString(),
-                nomisList[index].expiryDate?.toString(),
+                nomisList[index].effectiveDate,
+                nomisList[index].expiryDate,
                 null,
                 nomisList[index].reason,
                 nomisList[index].recipReason,
@@ -232,7 +232,7 @@ class NonAssociationsReconciliationService(
               ),
               NonAssociationReportDetail(
                 dpsList[index].restrictionType.name,
-                dpsList[index].whenCreated,
+                dpsList[index].whenCreated.toLocalDate(),
                 null,
                 dpsList[index].isClosed,
                 dpsList[index].firstPrisonerRole.name,
@@ -263,7 +263,7 @@ class NonAssociationsReconciliationService(
   ): Boolean {
     val today = LocalDate.now()
     return typeDoesNotMatch(nomis.type, dps.restrictionType) ||
-      (!nomis.effectiveDate.isAfter(today) && nomis.effectiveDate.toString() != dps.whenCreated.take(10)) ||
+      (!nomis.effectiveDate.isAfter(today) && nomis.effectiveDate != dps.whenCreated.toLocalDate()) ||
       (closedInNomis(nomis, today) xor dps.isClosed) ||
       (nomis.comment == null && dps.comment != NO_COMMENT_PROVIDED) ||
       (nomis.comment != null && nomis.comment != dps.comment)
@@ -333,8 +333,8 @@ class NonAssociationsReconciliationService(
 
 data class NonAssociationReportDetail(
   val type: String,
-  val createdDate: String,
-  val expiryDate: String? = null,
+  val createdDate: LocalDate,
+  val expiryDate: LocalDate? = null,
   val closed: Boolean? = null,
   val roleReason: String,
   val roleReason2: String,

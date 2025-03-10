@@ -261,32 +261,32 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
           assertThat(it).containsEntry(
             "NonAssociationIdResponse(offenderNo1=A0010TY, offenderNo2=B0010TZ)",
             "nomis=NonAssociationReportDetail(type=LAND, createdDate=2023-08-25, expiryDate=2053-10-26, closed=null, roleReason=VIC, roleReason2=PER, dpsReason=null, comment=Fight on Wing C)," +
-              " dps=NonAssociationReportDetail(type=WING, createdDate=2023-08-25T10:55:04, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+              " dps=NonAssociationReportDetail(type=WING, createdDate=2023-08-25, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
           )
           assertThat(it).containsEntry(
             "NonAssociationIdResponse(offenderNo1=A0020TY, offenderNo2=B0020TZ)",
             "nomis=NonAssociationReportDetail(type=LAND, createdDate=2023-08-25, expiryDate=2053-10-26, closed=null, roleReason=VIC, roleReason2=PER, dpsReason=null, comment=Fight on Wing C)," +
-              " dps=NonAssociationReportDetail(type=WING, createdDate=2023-08-25T10:55:04, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+              " dps=NonAssociationReportDetail(type=WING, createdDate=2023-08-25, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
           )
           assertThat(it).containsEntry(
             "NonAssociationIdResponse(offenderNo1=A0030TY, offenderNo2=B0030TZ)",
             "nomis=NonAssociationReportDetail(type=LAND, createdDate=2023-08-25, expiryDate=2053-10-26, closed=null, roleReason=VIC, roleReason2=PER, dpsReason=null, comment=Fight on Wing C)," +
-              " dps=NonAssociationReportDetail(type=WING, createdDate=2023-08-25T10:55:04, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+              " dps=NonAssociationReportDetail(type=WING, createdDate=2023-08-25, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
           )
           assertThat(it).containsEntry(
             "NonAssociationIdResponse(offenderNo1=A0035TY, offenderNo2=B0035TZ)",
             "nomis=null," +
-              " dps=NonAssociationReportDetail(type=CELL, createdDate=2023-08-25T10:55:04, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+              " dps=NonAssociationReportDetail(type=CELL, createdDate=2023-08-25, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
           )
           assertThat(it).containsEntry(
             "NonAssociationIdResponse(offenderNo1=A0036TY, offenderNo2=B0036TZ)",
             "nomis=null," +
-              " dps=NonAssociationReportDetail(type=CELL, createdDate=2023-08-25T10:55:04, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+              " dps=NonAssociationReportDetail(type=CELL, createdDate=2023-08-25, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
           )
           assertThat(it).containsEntry(
             "NonAssociationIdResponse(offenderNo1=A0037TY, offenderNo2=B0037TZ)",
             "nomis=null," +
-              " dps=NonAssociationReportDetail(type=CELL, createdDate=2023-08-25T10:55:04, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+              " dps=NonAssociationReportDetail(type=CELL, createdDate=2023-08-25, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
           )
         },
         isNull(),
@@ -313,7 +313,7 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
         )
         assertThat(this).containsEntry(
           "dps",
-          "NonAssociationReportDetail(type=WING, createdDate=2023-08-25T10:55:04, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+          "NonAssociationReportDetail(type=WING, createdDate=2023-08-25, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
         )
       }
       with(telemetryCaptor.allValues[1]) {
@@ -325,7 +325,7 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
         )
         assertThat(this).containsEntry(
           "dps",
-          "NonAssociationReportDetail(type=WING, createdDate=2023-08-25T10:55:04, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+          "NonAssociationReportDetail(type=WING, createdDate=2023-08-25, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
         )
       }
       with(telemetryCaptor.allValues[2]) {
@@ -337,7 +337,7 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
         )
         assertThat(this).containsEntry(
           "dps",
-          "NonAssociationReportDetail(type=WING, createdDate=2023-08-25T10:55:04, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+          "NonAssociationReportDetail(type=WING, createdDate=2023-08-25, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
         )
       }
       with(telemetryCaptor.allValues[3]) {
@@ -346,7 +346,7 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
         assertThat(this).doesNotContainKey("nomis")
         assertThat(this).containsEntry(
           "dps",
-          "NonAssociationReportDetail(type=CELL, createdDate=2023-08-25T10:55:04, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+          "NonAssociationReportDetail(type=CELL, createdDate=2023-08-25, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
         )
       }
       with(telemetryCaptor.allValues[4]) {
@@ -354,7 +354,7 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
         assertThat(this).containsEntry("offenderNo2", "B0036TZ")
         assertThat(this).containsEntry(
           "dps",
-          "NonAssociationReportDetail(type=CELL, createdDate=2023-08-25T10:55:04, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+          "NonAssociationReportDetail(type=CELL, createdDate=2023-08-25, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
         )
       }
       with(telemetryCaptor.allValues[5]) {
@@ -362,7 +362,7 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
         assertThat(this).containsEntry("offenderNo2", "B0037TZ")
         assertThat(this).containsEntry(
           "dps",
-          "NonAssociationReportDetail(type=CELL, createdDate=2023-08-25T10:55:04, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+          "NonAssociationReportDetail(type=CELL, createdDate=2023-08-25, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
         )
       }
     }
@@ -391,12 +391,12 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
           assertThat(it).containsEntry(
             "NonAssociationIdResponse(offenderNo1=A0010TY, offenderNo2=B0010TZ)",
             "nomis=NonAssociationReportDetail(type=LAND, createdDate=2023-08-25, expiryDate=2053-10-26, closed=null, roleReason=VIC, roleReason2=PER, dpsReason=null, comment=Fight on Wing C)," +
-              " dps=NonAssociationReportDetail(type=WING, createdDate=2023-08-25T10:55:04, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+              " dps=NonAssociationReportDetail(type=WING, createdDate=2023-08-25, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
           )
           assertThat(it).containsEntry(
             "NonAssociationIdResponse(offenderNo1=A0030TY, offenderNo2=B0030TZ)",
             "nomis=NonAssociationReportDetail(type=LAND, createdDate=2023-08-25, expiryDate=2053-10-26, closed=null, roleReason=VIC, roleReason2=PER, dpsReason=null, comment=Fight on Wing C)," +
-              " dps=NonAssociationReportDetail(type=WING, createdDate=2023-08-25T10:55:04, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+              " dps=NonAssociationReportDetail(type=WING, createdDate=2023-08-25, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
           )
         },
         isNull(),
@@ -436,12 +436,12 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
           assertThat(it).containsEntry(
             "NonAssociationIdResponse(offenderNo1=A0010TY, offenderNo2=B0010TZ)",
             "nomis=NonAssociationReportDetail(type=LAND, createdDate=2023-08-25, expiryDate=2053-10-26, closed=null, roleReason=VIC, roleReason2=PER, dpsReason=null, comment=Fight on Wing C)," +
-              " dps=NonAssociationReportDetail(type=WING, createdDate=2023-08-25T10:55:04, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+              " dps=NonAssociationReportDetail(type=WING, createdDate=2023-08-25, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
           )
           assertThat(it).containsEntry(
             "NonAssociationIdResponse(offenderNo1=A0020TY, offenderNo2=B0020TZ)",
             "nomis=NonAssociationReportDetail(type=LAND, createdDate=2023-08-25, expiryDate=2053-10-26, closed=null, roleReason=VIC, roleReason2=PER, dpsReason=null, comment=Fight on Wing C)," +
-              " dps=NonAssociationReportDetail(type=WING, createdDate=2023-08-25T10:55:04, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
+              " dps=NonAssociationReportDetail(type=WING, createdDate=2023-08-25, expiryDate=null, closed=false, roleReason=VICTIM, roleReason2=PERPETRATOR, dpsReason=BULLYING, comment=Fight on Wing C)",
           )
         },
         isNull(),
@@ -531,7 +531,7 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
           .jsonPath("[0].nomisNonAssociation.dpsReason").isEmpty
           .jsonPath("[0].nomisNonAssociation.comment").isEqualTo("Fight on Wing C")
           .jsonPath("[0].dpsNonAssociation.type").isEqualTo("WING")
-          .jsonPath("[0].dpsNonAssociation.createdDate").isEqualTo("2023-08-25T10:55:04")
+          .jsonPath("[0].dpsNonAssociation.createdDate").isEqualTo("2023-08-25")
           .jsonPath("[0].dpsNonAssociation.expiryDate").isEmpty
           .jsonPath("[0].dpsNonAssociation.closed").isEqualTo(false)
           .jsonPath("[0].dpsNonAssociation.roleReason").isEqualTo("VICTIM")

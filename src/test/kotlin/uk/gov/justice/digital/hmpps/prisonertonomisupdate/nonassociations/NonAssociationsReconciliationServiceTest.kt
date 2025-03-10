@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.No
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.model.NonAssociation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 private const val OFFENDER1 = "A0001AA"
 private const val OFFENDER2 = "B0001BB"
@@ -46,7 +47,7 @@ class NonAssociationsReconciliationServiceTest {
         null,
         NonAssociationReportDetail(
           type = "LANDING",
-          createdDate = "2022-01-01T10:00:00",
+          createdDate = LocalDate.parse("2022-01-01"),
           closed = true,
           roleReason = "VICTIM",
           roleReason2 = "PERPETRATOR",
@@ -74,7 +75,7 @@ class NonAssociationsReconciliationServiceTest {
         NonAssociationIdResponse(OFFENDER1, OFFENDER2),
         NonAssociationReportDetail(
           type = "LAND",
-          createdDate = "2022-01-01",
+          createdDate = LocalDate.parse("2022-01-01"),
           roleReason = "VIC",
           roleReason2 = "PER",
         ),
@@ -139,15 +140,15 @@ class NonAssociationsReconciliationServiceTest {
           NonAssociationIdResponse(OFFENDER1, OFFENDER2),
           NonAssociationReportDetail(
             type = "LAND",
-            createdDate = "2022-01-01",
-            expiryDate = "2022-01-01",
+            createdDate = LocalDate.parse("2022-01-01"),
+            expiryDate = LocalDate.parse("2022-01-01"),
             roleReason = "VIC",
             roleReason2 = "PER",
             comment = "comment2",
           ),
           NonAssociationReportDetail(
             type = "LANDING",
-            createdDate = "2022-01-01T10:00:00",
+            createdDate = LocalDate.parse("2022-01-01"),
             closed = true,
             roleReason = "VICTIM",
             roleReason2 = "PERPETRATOR",
@@ -215,8 +216,8 @@ class NonAssociationsReconciliationServiceTest {
     NonAssociation.RestrictionType.LANDING,
     "typedesc",
     comment = comment,
-    whenCreated = "2022-01-01T10:00:00",
-    whenUpdated = "2022-01-01T10:00:00",
+    whenCreated = LocalDateTime.parse("2022-01-01T10:00:00"),
+    whenUpdated = LocalDateTime.parse("2022-01-01T10:00:00"),
     updatedBy = "me",
     isClosed = true,
     isOpen = false,
