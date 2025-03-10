@@ -15,8 +15,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSyste
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MergeEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
-import java.time.LocalDateTime
-
 @Service
 class NonAssociationsService(
   private val nonAssociationsApiService: NonAssociationsApiService,
@@ -187,7 +185,7 @@ class NonAssociationsService(
     reason = instance.reasonCode.value,
     recipReason = instance.offenderNonAssociation.reasonCode.value,
     type = instance.typeCode.value,
-    effectiveDate = LocalDateTime.parse(instance.effectiveDate).toLocalDate(),
+    effectiveDate = instance.effectiveDate.toLocalDate(),
     authorisedBy = instance.authorisedBy,
     comment = instance.comments,
   )
@@ -196,7 +194,7 @@ class NonAssociationsService(
     reason = instance.reasonCode.value,
     recipReason = instance.offenderNonAssociation.reasonCode.value,
     type = instance.typeCode.value,
-    effectiveDate = LocalDateTime.parse(instance.effectiveDate).toLocalDate(),
+    effectiveDate = instance.effectiveDate.toLocalDate(),
     authorisedBy = instance.authorisedBy,
     comment = instance.comments,
   )

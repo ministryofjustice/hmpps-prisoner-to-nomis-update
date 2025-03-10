@@ -57,7 +57,7 @@ kotlin {
   }
 }
 
-data class ModelConfiguration(val name: String, val packageName: String, val url: String) {
+data class ModelConfiguration(val name: String, val packageName: String, val url: String, val models: String = "") {
   fun toBuildModelTaskName(): String = "build${nameToCamel()}ApiModel"
   fun toWriteJsonTaskName(): String = "write${nameToCamel()}Json"
   private val snakeRegex = "-[a-zA-Z]".toRegex()
@@ -85,11 +85,13 @@ val models = listOf(
     name = "non-associations",
     packageName = "nonassociations",
     url = "https://non-associations-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+    models = "LegacyNonAssociation,LegacyNonAssociationOtherPrisonerDetails,NonAssociation",
   ),
   ModelConfiguration(
     name = "locations",
     packageName = "locations",
     url = "https://locations-inside-prison-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+    models = "Capacity,Certification,ChangeHistory,LegacyLocation,NonResidentialUsageDto",
   ),
   ModelConfiguration(
     name = "nomis-prisoner",
@@ -115,16 +117,19 @@ val models = listOf(
     name = "alerts",
     packageName = "alerts",
     url = "https://alerts-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+    models = "Alert,AlertCode,AlertCodeSummary,AlertType",
   ),
   ModelConfiguration(
     name = "csip",
     packageName = "csip",
     url = "https://csip-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+    models = "Attendee,ContributoryFactor,CsipRecord,DecisionAndActions,IdentifiedNeed,Interview,Investigation,Plan,ReferenceData,Referral,Review,SaferCustodyScreeningOutcome",
   ),
   ModelConfiguration(
     name = "casenotes",
     packageName = "casenotes",
     url = "https://dev.offender-case-notes.service.justice.gov.uk/v3/api-docs",
+    models = "CaseNote,CaseNoteAmendment",
   ),
   ModelConfiguration(
     name = "personal-relationships",
@@ -163,7 +168,7 @@ models.forEach {
     modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.${it.packageName}.model")
     apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.${it.packageName}.api")
     configOptions.set(configValues)
-    globalProperties.set(mapOf("models" to ""))
+    globalProperties.set(mapOf("models" to it.models))
     generateModelTests.set(false)
     generateModelDocumentation.set(false)
   }
