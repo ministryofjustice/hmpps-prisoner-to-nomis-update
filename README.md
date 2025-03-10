@@ -2,7 +2,7 @@
 [![repo standards badge](https://img.shields.io/badge/endpoint.svg?&style=flat&logo=github&url=https%3A%2F%2Foperations-engineering-reports.cloud-platform.service.justice.gov.uk%2Fapi%2Fv1%2Fcompliant_public_repositories%2Fhmpps-prisoner-to-nomis-update)](https://operations-engineering-reports.cloud-platform.service.justice.gov.uk/public-report/hmpps-prisoner-to-nomis-update "Link to report")
 [![CircleCI](https://circleci.com/gh/ministryofjustice/hmpps-prisoner-to-nomis-update/tree/main.svg?style=svg)](https://circleci.com/gh/ministryofjustice/hmpps-prisoner-to-nomis-update)
 [![Docker Repository on Quay](https://img.shields.io/badge/quay.io-repository-2496ED.svg?logo=docker)](https://quay.io/repository/hmpps/hmpps-prisoner-to-nomis-update)
-[![API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html)
+[![API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/swagger-ui/index.html)
 
 # hmpps-prisoner-to-nomis-update
 
@@ -334,7 +334,7 @@ customEvents
 | where (customDimensions.bookingId == '<insert booking id>' or customDimensions.offenderNo == '<insert offenderNo>' or customDimensions.nomsNumber == '<insert offenderNo>' or customDimensions.prisonerNumber == '<insert offenderNo>')
 ```
 
-Often the fix involves re-synchronising the DPS allocations which can be done with an [endpoint in the synchronisation service](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html#/activities-resource/synchroniseUpsertAllocation).
+Often the fix involves re-synchronising the DPS allocations which can be done with an [endpoint in the synchronisation service](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/swagger-ui/index.html#/activities-resource/synchroniseUpsertAllocation).
 
 ##### Known issues
 
@@ -376,7 +376,7 @@ customEvents
 | where (customDimensions.bookingId == '<insert booking id>' or customDimensions.offenderNo == '<insert offenderNo>' or customDimensions.nomsNumber == '<insert offenderNo>' or customDimensions.prisonerNumber == '<insert offenderNo>')
 ```
 
-Often the fix involves re-synchronising the DPS attendances which can be done with an [endpoint in the synchronisation service](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html#/activities-resource/synchroniseUpsertAttendance).
+Often the fix involves re-synchronising the DPS attendances which can be done with an [endpoint in the synchronisation service](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/swagger-ui/index.html#/activities-resource/synchroniseUpsertAttendance).
 
 ##### Re-running old attendance reconciliation errors
 
@@ -402,7 +402,7 @@ curl -XPOST 'http://localhost:8080/attendances/reports/reconciliation?date=2023-
 
 When a message ends up on the Activities Dead Letter Queue (DLQ) we receive an alert. To work out what went wrong:
 
-* First call the [get-dlq-messages endpoint](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html#/hmpps-reactive-queue-resource/getDlqMessages) to get the failed message. Note that the queue name can be found on the `/health` endpoint.
+* First call the [get-dlq-messages endpoint](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/swagger-ui/index.html#/hmpps-reactive-queue-resource/getDlqMessages) to get the failed message. Note that the queue name can be found on the `/health` endpoint.
 * There should be an event type in the message and an id in the `additionalInformation` details, both of which tell you what the message was trying to achieve
 
 Find recent failures in App Insights Logs with the following query and look for the additionalInformation id in customDimensions (probably `dpsActivityScheduleId`/`nomisCourseActivityId` but there are other dps/nomis ids for different event types):
@@ -434,7 +434,7 @@ exceptions
 After investigating the error you should now know if it's recoverable or not.
 
 * If the error is recoverable (e.g. calls to another service received a 504) then you can leave the message on the DLQ because a retry should work once the other service recovers.
-* If the error is unrecoverable (e.g. calls to another service received a 400) then you probably have enough information to diagnose the issue and constant failing retries/alerts will be annoying. Consider [purging the DLQ](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html#/hmpps-reactive-queue-resource/purgeQueue).
+* If the error is unrecoverable (e.g. calls to another service received a 400) then you probably have enough information to diagnose the issue and constant failing retries/alerts will be annoying. Consider [purging the DLQ](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/swagger-ui/index.html#/hmpps-reactive-queue-resource/purgeQueue).
 
 #### Activities API breaking changes
 
