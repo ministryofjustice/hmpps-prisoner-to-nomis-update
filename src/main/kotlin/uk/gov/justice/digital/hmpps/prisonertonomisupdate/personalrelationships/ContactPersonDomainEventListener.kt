@@ -65,6 +65,7 @@ class ContactPersonDomainEventListener(
       "personal-relationships-api.number-of-children.created" -> profileDetailsService.syncNumberOfChildren(message.fromJson())
       "personal-relationships-api.domestic-status.deleted" -> profileDetailsService.deleteDomesticStatus(message.fromJson())
       "personal-relationships-api.number-of-children.deleted" -> profileDetailsService.deleteNumberOfChildren(message.fromJson())
+      "prisoner-offender-search.prisoner.received" -> profileDetailsService.readmissionSwitchBooking(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
@@ -319,6 +320,16 @@ data class ContactNumberOfChildrenDeletedEvent(
   override val personReference: ContactIdentifiers,
 ) : SourcedContactPersonEvent,
   ContactIdReferencedEvent
+
+data class ReadmissionSwitchBookingEvent(
+  val additionalInformation: ReadmissionSwitchBookingData,
+)
+
+data class ReadmissionSwitchBookingData(
+  val nomsNumber: String,
+  val reason: String,
+  val prisonId: String,
+)
 
 data class ContactIdentifiers(val identifiers: List<ContactPersonReference>)
 data class ContactPersonReference(val type: String, val value: String)

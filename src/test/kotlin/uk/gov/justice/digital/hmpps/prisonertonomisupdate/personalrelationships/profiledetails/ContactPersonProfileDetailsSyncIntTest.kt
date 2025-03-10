@@ -598,19 +598,124 @@ class ContactPersonProfileDetailsSyncIntTest(
     }
   }
 
-  private fun verifyDpsApiCall(prisonerNumber: String = "A1234BC", profileType: ContactPersonProfileType = MARITAL) {
+  @Nested
+  inner class ReadmissionSwitchBookingEvent {
+    @Test
+    fun `should sync domestic status and number of children`() = runTest {
+      dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC")
+      dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC")
+      nomisApi.stubPutProfileDetails(created = false)
+
+      publishDomainEvent(
+        eventType = "prisoner-offender-search.prisoner.received",
+        payload = readmissionSwitchedBookingEvent(prisonerNumber = "A1234BC", reason = "READMISSION_SWITCH_BOOKING"),
+      ).also { waitForAnyProcessingToComplete(times = 2) }
+
+      verifyDpsApiCall(profileType = MARITAL)
+      verifyDpsApiCall(profileType = CHILD)
+      verifyNomisPutProfileDetails(profileType = equalTo("MARITAL"), profileCode = equalTo("M"))
+      verifyNomisPutProfileDetails(profileType = equalTo("CHILD"), profileCode = equalTo("3"))
+      verifyTelemetry(
+        profileType = MARITAL,
+        telemetryType = "updated",
+        requestedDpsId = 0,
+        bookingId = 12345,
+      )
+      verifyTelemetry(
+        profileType = CHILD,
+        telemetryType = "updated",
+        requestedDpsId = 0,
+        bookingId = 12345,
+      )
+    }
+
+    @Test
+    fun `should handle a failed call to DPS`() = runTest {
+      dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC")
+      dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC", BAD_GATEWAY)
+      nomisApi.stubPutProfileDetails(created = false)
+
+      publishDomainEvent(
+        eventType = "prisoner-offender-search.prisoner.received",
+        payload = readmissionSwitchedBookingEvent(prisonerNumber = "A1234BC"),
+      ).also { waitForDlqMessage() }
+
+      verifyDpsApiCall(profileType = MARITAL)
+      verifyDpsApiCall(profileType = CHILD)
+      verifyNomisPutProfileDetails(profileType = equalTo("MARITAL"), profileCode = equalTo("M"))
+      verifyNomisPutProfileDetails(count = 0, profileType = equalTo("CHILD"), profileCode = equalTo("3"))
+      verifyTelemetry(
+        profileType = MARITAL,
+        telemetryType = "updated",
+        requestedDpsId = 0,
+        bookingId = null,
+      )
+      verifyTelemetry(
+        profileType = CHILD,
+        telemetryType = "error",
+        requestedDpsId = 0,
+        bookingId = null,
+        dpsId = null,
+        errorReason = "502 Bad Gateway from GET http://localhost:8099/sync/A1234BC/number-of-children",
+      )
+    }
+
+    @Test
+    fun `should handle a failed call to NOMIS`() = runTest {
+      dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC")
+      dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC")
+      nomisApi.stubPutProfileDetails(BAD_REQUEST)
+
+      publishDomainEvent(
+        eventType = "prisoner-offender-search.prisoner.received",
+        payload = readmissionSwitchedBookingEvent(prisonerNumber = "A1234BC"),
+      ).also { waitForAnyProcessingToComplete() }
+
+      verifyDpsApiCall(profileType = MARITAL)
+      verifyDpsApiCall(count = 0, profileType = CHILD)
+      verifyNomisPutProfileDetails(profileType = equalTo("MARITAL"), profileCode = equalTo("M"))
+      verifyNomisPutProfileDetails(count = 0, profileType = equalTo("CHILD"), profileCode = equalTo("3"))
+      verifyTelemetry(
+        profileType = MARITAL,
+        telemetryType = "error",
+        requestedDpsId = 0,
+        dpsId = null,
+        bookingId = null,
+        errorReason = "400 Bad Request from PUT http://localhost:8082/prisoners/A1234BC/profile-details",
+      )
+    }
+
+    @Test
+    fun `should do nothing if receive not for a switch booking`() = runTest {
+      publishDomainEvent(
+        eventType = "prisoner-offender-search.prisoner.received",
+        payload = readmissionSwitchedBookingEvent(prisonerNumber = "A1234BC", reason = "ANY_OTHER_REASON"),
+      ).also { waitForAnyProcessingToComplete(times = 0) }
+
+      verifyDpsApiCall(count = 0, profileType = MARITAL)
+      verifyDpsApiCall(count = 0, profileType = CHILD)
+      verifyNomisPutProfileDetails(count = 0, profileType = equalTo("MARITAL"), profileCode = equalTo("M"))
+      verifyNomisPutProfileDetails(count = 0, profileType = equalTo("CHILD"), profileCode = equalTo("3"))
+      verify(telemetryClient, times(0)).trackEvent(anyString(), anyMap(), isNull())
+    }
+  }
+
+  private fun verifyDpsApiCall(prisonerNumber: String = "A1234BC", profileType: ContactPersonProfileType = MARITAL, count: Int = 1) {
     dpsApi.verify(
+      count = count,
       getRequestedFor(urlPathEqualTo("/sync/$prisonerNumber/${profileType.identifier}")),
     )
   }
 
   private fun verifyNomisPutProfileDetails(
+    count: Int = 1,
     prisonerNumber: String = "A1234BC",
     profileType: StringValuePattern = equalTo("MARITAL"),
     profileCode: StringValuePattern = equalTo("M"),
   ) {
     nomisApi.verify(
-      putRequestedFor(urlPathEqualTo("/prisoners/$prisonerNumber/profile-details"))
+      count = count,
+      pattern = putRequestedFor(urlPathEqualTo("/prisoners/$prisonerNumber/profile-details"))
         .withRequestBody(matchingJsonPath("profileType", profileType))
         .withRequestBody(matchingJsonPath("profileCode", profileCode)),
     )
@@ -748,6 +853,21 @@ fun numberOfChildrenDeletedEvent(
             "value": "$prisonerNumber"
           }
         ]
+      }
+    }
+    """
+
+fun readmissionSwitchedBookingEvent(
+  prisonerNumber: String = "A1234BC",
+  reason: String = "READMISSION_SWITCH_BOOKING",
+) = //language=JSON
+  """
+    {
+      "eventType":"prisoner-offender-search.prisoner.received", 
+      "additionalInformation": {
+        "nomsNumber": "$prisonerNumber",
+        "reason": "$reason",
+        "prisonId": "ANY"
       }
     }
     """
