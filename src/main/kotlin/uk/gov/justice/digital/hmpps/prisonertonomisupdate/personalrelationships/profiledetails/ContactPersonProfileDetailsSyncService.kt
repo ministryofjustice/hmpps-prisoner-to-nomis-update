@@ -2,11 +2,13 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactDomesticStatusCreatedEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactDomesticStatusDeletedEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactIdReferencedEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactNumberOfChildrenCreatedEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactNumberOfChildrenDeletedEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReadmissionSwitchBookingEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileType.CHILD
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileType.MARITAL
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.profiledetails.ProfileDetailsNomisApiService
@@ -20,6 +22,7 @@ enum class ContactPersonProfileType(val identifier: String) {
 class ContactPersonProfileDetailsSyncService(
   private val dpsApi: ContactPersonProfileDetailsDpsApiService,
   private val nomisApi: ProfileDetailsNomisApiService,
+  private val eventFeatureSwitch: EventFeatureSwitch,
   private val telemetryClient: TelemetryClient,
 ) {
 
@@ -103,6 +106,21 @@ class ContactPersonProfileDetailsSyncService(
       telemetry["error"] = e.message ?: "unknown"
       telemetryClient.trackEvent("contact-person-${profileType.identifier}-error", telemetry, null)
       throw e
+    }
+  }
+
+  suspend fun readmissionSwitchBooking(event: ReadmissionSwitchBookingEvent) {
+    // We're filtering for this reason in the Topic subscription filter, but this is just in case we listen for other prisoner received events later
+    if (event.additionalInformation.reason != "READMISSION_SWITCH_BOOKING") return
+
+    val prisonerNumber = event.additionalInformation.nomsNumber
+
+    if (eventFeatureSwitch.isEnabled("personal-relationships-api.domestic-status.created")) {
+      syncProfileDetail(prisonerNumber, 0, MARITAL)
+    }
+
+    if (eventFeatureSwitch.isEnabled("personal-relationships-api.number-of-children.created")) {
+      syncProfileDetail(prisonerNumber, 0, CHILD)
     }
   }
 

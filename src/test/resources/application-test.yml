@@ -256,7 +256,8 @@ hmpps.sqs:
           "personal-relationships-api.domestic-status.created",
           "personal-relationships-api.number-of-children.created",
           "personal-relationships-api.domestic-status.deleted",
-          "personal-relationships-api.number-of-children.deleted"
+          "personal-relationships-api.number-of-children.deleted",
+          "prisoner-offender-search.prisoner.received"
         ]}
       dlqMaxReceiveCount: 1
       errorVisibilityTimeout: 0
