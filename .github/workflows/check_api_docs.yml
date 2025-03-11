@@ -11,12 +11,23 @@ permissions:
 
 jobs:
   build:
-    runs-on: [ self-hosted, hmpps-github-actions-runner ]
+    runs-on: [self-hosted, hmpps-github-actions-runner]
     strategy:
       matrix:
         project:
           - activities
           - adjudications
+          - alerts
+          - casenotes
+          - court-sentencing
+          - csip
+          - locations
+          - nomis-mapping-service
+          - nomis-prisoner
+          - non-associations
+          - organisations
+          - personal-relationships
+          - sentencing-adjustments
     steps:
       - uses: actions/checkout@v4
 
