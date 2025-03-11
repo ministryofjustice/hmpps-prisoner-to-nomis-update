@@ -46,6 +46,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: build/api.diff
+          name: ${{ matrix.project }}-api.diff
 
       - name: Create Pull Request
         if: steps.check-api.outputs.differences == 'true'
