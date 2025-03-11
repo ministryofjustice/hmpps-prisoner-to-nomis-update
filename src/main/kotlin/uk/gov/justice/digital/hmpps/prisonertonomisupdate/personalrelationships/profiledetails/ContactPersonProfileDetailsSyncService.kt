@@ -16,6 +16,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.profiledetails.Profile
 enum class ContactPersonProfileType(val identifier: String) {
   MARITAL("domestic-status"),
   CHILD("number-of-children"),
+  ;
+
+  companion object {
+    fun all() = entries.map { it.name }
+  }
 }
 
 @Service

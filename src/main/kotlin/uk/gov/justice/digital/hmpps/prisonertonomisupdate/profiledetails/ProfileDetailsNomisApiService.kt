@@ -4,8 +4,11 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerProfileDetailsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertProfileDetailsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertProfileDetailsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileType
 
 @Service
 class ProfileDetailsNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
@@ -14,4 +17,14 @@ class ProfileDetailsNomisApiService(@Qualifier("nomisApiWebClient") private val 
     .bodyValue(UpsertProfileDetailsRequest(profileType, profileCode))
     .retrieve()
     .awaitBody()
+
+  suspend fun getProfileDetails(offenderNo: String): PrisonerProfileDetailsResponse? = webClient.get()
+    .uri {
+      it.path("/prisoners/{offenderNo}/profile-details")
+        .queryParam("profileTypes", ContactPersonProfileType.all())
+        .queryParam("latestBookingOnly", "true")
+        .build(offenderNo)
+    }
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 }
