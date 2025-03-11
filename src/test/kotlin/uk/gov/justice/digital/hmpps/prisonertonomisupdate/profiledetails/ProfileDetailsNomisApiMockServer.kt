@@ -48,36 +48,7 @@ class ProfileDetailsNomisApiMockServer(private val objectMapper: ObjectMapper) {
 
   fun stubGetProfileDetails(
     offenderNo: String,
-    response: PrisonerProfileDetailsResponse = PrisonerProfileDetailsResponse(
-      offenderNo = offenderNo,
-      bookings = listOf(
-        BookingProfileDetailsResponse(
-          bookingId = 1,
-          startDateTime = LocalDateTime.parse("2024-02-03T12:34:56"),
-          latestBooking = true,
-          profileDetails = listOf(
-            ProfileDetailsResponse(
-              type = "MARITAL",
-              code = "M",
-              createDateTime = LocalDateTime.now(),
-              createdBy = "A_USER",
-              modifiedDateTime = LocalDateTime.now(),
-              modifiedBy = "ANOTHER_USER",
-              auditModuleName = "NOMIS",
-            ),
-            ProfileDetailsResponse(
-              type = "CHILD",
-              code = "3",
-              createDateTime = LocalDateTime.now(),
-              createdBy = "A_USER",
-              modifiedDateTime = LocalDateTime.now(),
-              modifiedBy = "ANOTHER_USER",
-              auditModuleName = "NOMIS",
-            ),
-          ),
-        ),
-      ),
-    ),
+    response: PrisonerProfileDetailsResponse = profileDetailsResponse(offenderNo),
   ) {
     nomisApi.stubFor(
       get(urlPathEqualTo("/prisoners/$offenderNo/profile-details")).willReturn(
@@ -103,3 +74,25 @@ class ProfileDetailsNomisApiMockServer(private val objectMapper: ObjectMapper) {
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }
+
+fun profileDetailsResponse(offenderNo: String, bookings: List<BookingProfileDetailsResponse> = listOf(booking())) = PrisonerProfileDetailsResponse(
+  offenderNo = offenderNo,
+  bookings = bookings,
+)
+
+fun booking(profileDetails: List<ProfileDetailsResponse> = listOf(profileDetails())) = BookingProfileDetailsResponse(
+  bookingId = 1,
+  startDateTime = LocalDateTime.parse("2024-02-03T12:34:56"),
+  latestBooking = true,
+  profileDetails = profileDetails,
+)
+
+fun profileDetails(type: String = "MARITAL", code: String = "M") = ProfileDetailsResponse(
+  type = type,
+  code = code,
+  createDateTime = LocalDateTime.now(),
+  createdBy = "A_USER",
+  modifiedDateTime = LocalDateTime.now(),
+  modifiedBy = "ANOTHER_USER",
+  auditModuleName = "NOMIS",
+)
