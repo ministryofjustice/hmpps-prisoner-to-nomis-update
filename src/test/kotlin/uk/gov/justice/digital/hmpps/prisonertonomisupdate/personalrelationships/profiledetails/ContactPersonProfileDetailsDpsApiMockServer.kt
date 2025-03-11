@@ -64,14 +64,14 @@ class ContactPersonProfileDetailsDpsApiMockServer {
   fun verify(count: Int, pattern: RequestPatternBuilder) = dpsContactPersonServer.verify(count, pattern)
 }
 
-fun domesticStatus(dpsId: Long = 54321, domesticStatusCode: String = "M") = SyncPrisonerDomesticStatusResponse(
+fun domesticStatus(dpsId: Long = 54321, domesticStatusCode: String? = "M") = SyncPrisonerDomesticStatusResponse(
   id = dpsId,
   active = true,
   domesticStatusCode = domesticStatusCode,
   createdTime = LocalDateTime.now(),
   createdBy = "A_USER",
 )
-fun numberOfChildren(dpsId: Long = 54321, numberOfChildren: String = "3") = SyncPrisonerNumberOfChildrenResponse(
+fun numberOfChildren(dpsId: Long = 54321, numberOfChildren: String? = "3") = SyncPrisonerNumberOfChildrenResponse(
   id = dpsId,
   active = true,
   numberOfChildren = numberOfChildren,
