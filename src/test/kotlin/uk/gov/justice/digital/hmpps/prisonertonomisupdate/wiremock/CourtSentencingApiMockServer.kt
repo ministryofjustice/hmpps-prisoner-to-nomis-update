@@ -238,6 +238,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         periodWeeks = 4,
         periodDays = 15,
         sentenceTermCode = "TERM",
+        periodLengthUuid = UUID.randomUUID(),
       ),
     ),
     offenderNo: String = "A6160DZ",
@@ -259,6 +260,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       courtCaseId = caseID,
       sentenceStartDate = startDate,
       active = active,
+      appearanceUuid = UUID.randomUUID(),
     )
     stubFor(
       get(WireMock.urlPathMatching("/legacy/sentence/$sentenceId")).willReturn(

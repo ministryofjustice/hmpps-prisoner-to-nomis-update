@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-02-27.8305.cc83307"
+    "version" : "2025-03-10.8405.ac80ef4"
   },
   "servers" : [ {
     "url" : "/",
@@ -3662,15 +3662,15 @@
         "type" : "oauth2",
         "flows" : {
           "clientCredentials" : {
-            "tokenUrl" : "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token",
+            "tokenUrl" : "https://sign-in.hmpps.service.justice.gov.uk/auth/oauth/token",
             "scopes" : {
               "read" : "Allows read of data",
               "write" : "Allows write of data"
             }
           },
           "authorizationCode" : {
-            "authorizationUrl" : "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/authorize",
-            "tokenUrl" : "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token",
+            "authorizationUrl" : "https://sign-in.hmpps.service.justice.gov.uk/auth/oauth/authorize",
+            "tokenUrl" : "https://sign-in.hmpps.service.justice.gov.uk/auth/oauth/token",
             "scopes" : {
               "read" : "Allows read of data",
               "write" : "Allows write of data"
