@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Re
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedEvidenceDto
+import java.time.LocalDateTime
 
 class AdjudicationsApiExtension :
   BeforeAllCallback,
@@ -81,7 +82,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       HearingDto(
         id = hearingId,
         locationId = 27187,
-        dateTimeOfHearing = "2023-08-23T14:25:00",
+        dateTimeOfHearing = LocalDateTime.parse("2023-08-23T14:25:00"),
         oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
         agencyId = "MDI",
         outcome = HearingOutcomeDto(
@@ -99,9 +100,9 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       gender = ReportedAdjudicationDto.Gender.MALE,
       incidentDetails = IncidentDetailsDto(
         locationId = 197683,
-        dateTimeOfIncident = "2023-07-11T09:00:00",
-        dateTimeOfDiscovery = "2023-07-11T09:00:00",
-        handoverDeadline = "2023-07-13T09:00:00",
+        dateTimeOfIncident = LocalDateTime.parse("2023-07-11T09:00:00"),
+        dateTimeOfDiscovery = LocalDateTime.parse("2023-07-11T09:00:00"),
+        handoverDeadline = LocalDateTime.parse("2023-07-13T09:00:00"),
       ),
       isYouthOffender = false,
       incidentRole = IncidentRoleDto(),
@@ -119,7 +120,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         completed = true,
       ),
       createdByUserId = "TWRIGHT",
-      createdDateTime = "2023-07-25T15:19:37.476664",
+      createdDateTime = LocalDateTime.parse("2023-07-25T15:19:37"),
       status = ReportedAdjudicationDto.Status.valueOf(status),
       reviewedByUserId = "AMARKE_GEN",
       statusReason = "",
@@ -158,7 +159,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         hearing = HearingDto(
           id = hearingId,
           locationId = 27187,
-          dateTimeOfHearing = "2023-04-27T17:45:00",
+          dateTimeOfHearing = LocalDateTime.parse("2023-04-27T17:45:00"),
           oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
           outcome = HearingOutcomeDto(
             id = 407,
@@ -233,7 +234,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         hearing = HearingDto(
           id = hearingId,
           locationId = 27187,
-          dateTimeOfHearing = "2023-10-04T13:20:00",
+          dateTimeOfHearing = LocalDateTime.parse("2023-10-04T13:20:00"),
           oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
           outcome = HearingOutcomeDto(
             id = 975,
@@ -270,7 +271,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         hearing = HearingDto(
           id = hearingId,
           locationId = 357596,
-          dateTimeOfHearing = "2023-10-12T14:00:00",
+          dateTimeOfHearing = LocalDateTime.parse("2023-10-12T14:00:00"),
           oicHearingType = HearingDto.OicHearingType.valueOf(hearingType),
           outcome = HearingOutcomeDto(
             id = 1031,
@@ -306,7 +307,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         hearing = HearingDto(
           id = hearingId,
           locationId = 27187,
-          dateTimeOfHearing = "2023-10-04T13:20:00",
+          dateTimeOfHearing = LocalDateTime.parse("2023-10-04T13:20:00"),
           oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
           outcome = HearingOutcomeDto(
             id = 976,
@@ -385,7 +386,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         hearing = HearingDto(
           id = 816,
           locationId = 357596,
-          dateTimeOfHearing = "2023-10-26T16:10:00",
+          dateTimeOfHearing = LocalDateTime.parse("2023-10-26T16:10:00"),
           oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
           agencyId = "MDI",
         ),

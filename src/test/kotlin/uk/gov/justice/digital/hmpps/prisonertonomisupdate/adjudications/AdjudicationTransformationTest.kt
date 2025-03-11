@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Re
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedEvidenceDto
+import java.time.LocalDateTime
 
 class AdjudicationTransformationTest {
   @Test
@@ -21,12 +22,12 @@ class AdjudicationTransformationTest {
         chargeNumber = "1234567",
         incidentDetails = IncidentDetailsDto(
           locationId = 543311,
-          dateTimeOfIncident = "2023-07-27T23:30:00",
-          dateTimeOfDiscovery = "2023-07-28T01:12:00",
-          handoverDeadline = "2023-07-30T01:12:00",
+          dateTimeOfIncident = LocalDateTime.parse("2023-07-27T23:30:00"),
+          dateTimeOfDiscovery = LocalDateTime.parse("2023-07-28T01:12:00"),
+          handoverDeadline = LocalDateTime.parse("2023-07-30T01:12:00"),
         ),
         createdByUserId = "GBROWN",
-        createdDateTime = "2023-07-29T12:01:15.94454",
+        createdDateTime = LocalDateTime.parse("2023-07-29T12:01:15"),
         originatingAgencyId = "WWI",
         incidentStatement = IncidentStatementDto(
           statement = "A fight broke out and there was damage",
@@ -284,9 +285,9 @@ private fun dpsAdjudication() = ReportedAdjudicationResponse(
     gender = ReportedAdjudicationDto.Gender.FEMALE,
     incidentDetails = IncidentDetailsDto(
       locationId = 543311,
-      dateTimeOfIncident = "2023-07-27T23:30:00",
-      dateTimeOfDiscovery = "2023-07-28T01:12:00",
-      handoverDeadline = "2023-07-30T01:12:00",
+      dateTimeOfIncident = LocalDateTime.parse("2023-07-27T23:30:00"),
+      dateTimeOfDiscovery = LocalDateTime.parse("2023-07-28T01:12:00"),
+      handoverDeadline = LocalDateTime.parse("2023-07-30T01:12:00"),
     ),
     isYouthOffender = false,
     incidentRole = IncidentRoleDto(),
@@ -306,7 +307,7 @@ private fun dpsAdjudication() = ReportedAdjudicationResponse(
       completed = true,
     ),
     createdByUserId = "ABARTLETT",
-    createdDateTime = "2023-07-28T12:00:15.94454",
+    createdDateTime = LocalDateTime.parse("2023-07-28T12:00:15.94454"),
     status = ReportedAdjudicationDto.Status.UNSCHEDULED,
     damages = emptyList(),
     evidence = emptyList(),

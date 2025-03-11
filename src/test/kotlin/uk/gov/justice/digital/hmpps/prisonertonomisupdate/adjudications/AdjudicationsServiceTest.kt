@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Re
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationHearingMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import java.time.LocalDateTime
 
 private const val DPS_HEARING_ID = "123"
 private const val NOMIS_HEARING_ID = 456L
@@ -111,9 +112,9 @@ internal class AdjudicationsServiceTest {
       gender = ReportedAdjudicationDto.Gender.MALE,
       incidentDetails = IncidentDetailsDto(
         locationId = 2,
-        dateTimeOfDiscovery = "2023-09-26T08:15:00",
-        dateTimeOfIncident = "2023-09-26T08:15:00",
-        handoverDeadline = "2023-09-26T08:15:00",
+        dateTimeOfDiscovery = LocalDateTime.parse("2023-09-26T08:15:00"),
+        dateTimeOfIncident = LocalDateTime.parse("2023-09-26T08:15:00"),
+        handoverDeadline = LocalDateTime.parse("2023-09-26T08:15:00"),
       ),
       isYouthOffender = false,
       incidentRole = IncidentRoleDto(),
@@ -124,7 +125,7 @@ internal class AdjudicationsServiceTest {
       ),
       incidentStatement = IncidentStatementDto(statement = "s"),
       createdByUserId = "me",
-      createdDateTime = "2023-09-26T08:15:00",
+      createdDateTime = LocalDateTime.parse("2023-09-26T08:15:00"),
       status = ReportedAdjudicationDto.Status.CHARGE_PROVED,
       damages = emptyList(),
       evidence = emptyList(),
@@ -133,7 +134,7 @@ internal class AdjudicationsServiceTest {
         HearingDto(
           id = DPS_HEARING_ID.toLong(),
           locationId = 123,
-          dateTimeOfHearing = "",
+          dateTimeOfHearing = LocalDateTime.now(),
           oicHearingType = oicHearingType,
           agencyId = "MDI",
           outcome = HearingOutcomeDto(
@@ -148,7 +149,7 @@ internal class AdjudicationsServiceTest {
           hearing = HearingDto(
             id = DPS_HEARING_ID.toLong(),
             locationId = 123,
-            dateTimeOfHearing = "",
+            dateTimeOfHearing = LocalDateTime.now(),
             oicHearingType = oicHearingType,
             agencyId = "MDI",
             outcome = HearingOutcomeDto(

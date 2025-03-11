@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtens
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 private const val CHARGE_NUMBER_FOR_CREATION = "12345-1"
@@ -1152,7 +1153,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
               hearing = HearingDto(
                 id = 812,
                 locationId = 27187,
-                dateTimeOfHearing = "2023-10-26T15:30:00",
+                dateTimeOfHearing = LocalDateTime.parse("2023-10-26T15:30:00"),
                 oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
                 outcome = HearingOutcomeDto(
                   id = 1144,
@@ -1250,7 +1251,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 hearing = HearingDto(
                   id = 812,
                   locationId = 27187,
-                  dateTimeOfHearing = "2023-10-26T15:30:00",
+                  dateTimeOfHearing = LocalDateTime.parse("2023-10-26T15:30:00"),
                   oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
                   outcome = HearingOutcomeDto(
                     id = 1144,
@@ -1325,7 +1326,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
               hearing = HearingDto(
                 id = 812,
                 locationId = 27187,
-                dateTimeOfHearing = "2023-10-26T15:30:00",
+                dateTimeOfHearing = LocalDateTime.parse("2023-10-26T15:30:00"),
                 oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
                 outcome = HearingOutcomeDto(
                   id = 1144,
@@ -1444,7 +1445,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
               hearing = HearingDto(
                 id = 812,
                 locationId = 27187,
-                dateTimeOfHearing = "2023-10-26T15:30:00",
+                dateTimeOfHearing = LocalDateTime.parse("2023-10-26T15:30:00"),
                 oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
                 outcome = HearingOutcomeDto(
                   id = 1144,
@@ -1618,7 +1619,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 hearing = HearingDto(
                   id = 812,
                   locationId = 27187,
-                  dateTimeOfHearing = "2023-10-26T15:30:00",
+                  dateTimeOfHearing = LocalDateTime.parse("2023-10-26T15:30:00"),
                   oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
                   outcome = HearingOutcomeDto(
                     id = 1144,

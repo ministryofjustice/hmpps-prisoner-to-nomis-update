@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.Adjudications
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 private const val DPS_CHARGE_NUMBER = "12345-1"
 private const val DPS_HEARING_ID = "654321"
@@ -83,7 +84,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
           hearings = listOf(
             HearingDto(
               locationId = 188489,
-              dateTimeOfHearing = "2013-09-09T10:00:00",
+              dateTimeOfHearing = LocalDateTime.parse("2013-09-09T10:00:00"),
               oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
               agencyId = PRISON_ID,
               id = 634775,
@@ -98,7 +99,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
             ),
             HearingDto(
               locationId = 138711,
-              dateTimeOfHearing = "2013-12-03T09:00:00",
+              dateTimeOfHearing = LocalDateTime.parse("2013-12-03T09:00:00"),
               oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
               agencyId = PRISON_ID,
               id = 634798,
@@ -129,7 +130,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
             OutcomeHistoryDto(
               hearing = HearingDto(
                 locationId = 188489,
-                dateTimeOfHearing = "2013-09-09T10:00:00",
+                dateTimeOfHearing = LocalDateTime.parse("2013-09-09T10:00:00"),
                 oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
                 agencyId = PRISON_ID,
                 id = 634775,
@@ -146,7 +147,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
             OutcomeHistoryDto(
               hearing = HearingDto(
                 locationId = 138711,
-                dateTimeOfHearing = "2013-12-03T09:00:00",
+                dateTimeOfHearing = LocalDateTime.parse("2013-12-03T09:00:00"),
                 oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
                 agencyId = PRISON_ID,
                 id = 634798,
