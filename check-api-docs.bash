@@ -5,13 +5,15 @@ PROJECT=${1?No project specified}
 PROJECT_CAMEL=$(echo "$PROJECT" | sed -r 's/(^|-)([a-z])/\U\2/g')
 MODEL_TASK="build${PROJECT_CAMEL}ApiModel"
 JSON_TASK="write${PROJECT_CAMEL}Json"
+PROD_VERSION_TASK="read${PROJECT_CAMEL}ProductionVersion"
 SPECS_JSON="openapi-specs/$PROJECT-api-docs.json"
 if [[ -z ${GITHUB_OUTPUT+x} ]]; then
-  GITHUB_OUTPUT=output
+  GITHUB_OUTPUT=check-api-docs.log
   OUTPUT_COMPARISON=true
 else
   OUTPUT_COMPARISON=false
 fi
+export _JAVA_OPTIONS="-Xmx768m -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2 -XX:ParallelGCThreads=2 -Djava.util.concurrent.ForkJoinPool.common.parallelism=2 -Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-XX:+UseContainerSupport -Dkotlin.compiler.execution.strategy=in-process -Dorg.gradle.workers.max=1"
 
 OLD_VERSION=$(jq -r .info.version "$SPECS_JSON")
 echo "old_version=$OLD_VERSION" >>"$GITHUB_OUTPUT"
@@ -36,7 +38,10 @@ fi
 # and compare
 if ! diff -r build/model_copy "build/generated/$PROJECT" >"build/api.diff"; then
   echo "Found differences between old ($OLD_VERSION) and new ($NEW_VERSION) models"
-  echo "differences=true" >>"$GITHUB_OUTPUT"
+  {
+    printf "differences=true\nproduction_version="
+    ./gradlew -q "$PROD_VERSION_TASK"
+  } >>"$GITHUB_OUTPUT"
 else
   echo "No differences found"
   echo "differences=false" >>"$GITHUB_OUTPUT"
