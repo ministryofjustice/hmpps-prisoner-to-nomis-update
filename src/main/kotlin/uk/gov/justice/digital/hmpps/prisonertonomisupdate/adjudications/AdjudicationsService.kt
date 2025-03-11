@@ -1306,8 +1306,7 @@ private fun ReportedEvidenceDto.toNomisUpdateEvidence() = EvidenceToUpdateOrAdd(
   detail = this.details,
 )
 
-private fun String.toLocalDate() = LocalDateTime.parse(this).toLocalDate()
-private fun String.toLocalTimeAtMinute() = LocalDateTime.parse(this).toLocalTime().withSecond(0).withNano(0)
+private fun LocalDateTime.toLocalTimeAtMinute() = this.toLocalTime().withSecond(0).withNano(0)
 
 data class AdjudicationAdditionalInformation(
   val chargeNumber: String,

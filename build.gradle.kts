@@ -60,6 +60,7 @@ kotlin {
 data class ModelConfiguration(val name: String, val packageName: String, val url: String, val models: String = "") {
   fun toBuildModelTaskName(): String = "build${nameToCamel()}ApiModel"
   fun toWriteJsonTaskName(): String = "write${nameToCamel()}Json"
+  fun toReadProductionVersionTaskName(): String = "read${nameToCamel()}ProductionVersion"
   private val snakeRegex = "-[a-zA-Z]".toRegex()
   private fun nameToCamel(): String = snakeRegex.replace(name) {
     it.value.replace("-", "").uppercase()
@@ -75,11 +76,13 @@ val models = listOf(
     name = "activities",
     packageName = "activities",
     url = "https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs",
+    models = "Activity,ActivityCategory,ActivityEligibility,ActivityLite,ActivityMinimumEducationLevel,ActivityPay,ActivitySchedule,ActivityScheduleInstance,ActivityScheduleLite,ActivityScheduleSlot,Allocation,AllocationReconciliationResponse,AppointmentInstance,Attendance,AttendanceHistory,AttendanceReason,AttendanceReconciliationResponse,AttendanceSync,BookingCount,DeallocationReason,EarliestReleaseDate,EligibilityRule,EventOrganiser,EventTier,InternalLocation,PlannedDeallocation,PlannedSuspension,PrisonPayBand,ScheduledInstance,Slot,Suspension",
   ),
   ModelConfiguration(
     name = "adjudications",
     packageName = "adjudications",
     url = "https://manage-adjudications-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+    models = "CombinedOutcomeDto,DisIssueHistoryDto,HearingDto,HearingOutcomeDto,IncidentDetailsDto,IncidentRoleDto,IncidentStatementDto,OffenceDto,OffenceRuleDto,OffenceRuleDetailsDto,OutcomeDto,OutcomeHistoryDto,PunishmentDto,PunishmentCommentDto,PunishmentScheduleDto,RehabilitativeActivityDto,ReportedAdjudicationDto,ReportedAdjudicationResponse,ReportedDamageDto,ReportedEvidenceDto,ReportedWitnessDto",
   ),
   ModelConfiguration(
     name = "non-associations",
@@ -107,6 +110,7 @@ val models = listOf(
     name = "sentencing-adjustments",
     packageName = "sentencing.adjustments",
     url = "https://adjustments-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+    models = "AdjustmentDto,AdditionalDaysAwardedDto,LawfullyAtLargeDto,LegacyAdjustment,RemandDto,SpecialRemissionDto,TaggedBailDto,TimeSpentAsAnAppealApplicantDto,TimeSpentInCustodyAbroadDto,UnlawfullyAtLargeDto",
   ),
   ModelConfiguration(
     name = "court-sentencing",
@@ -181,6 +185,18 @@ models.forEach {
         mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mapper.readTree(json))
       }
       Files.write(Paths.get(it.input), formattedJson.toByteArray())
+    }
+  }
+  tasks.register(it.toReadProductionVersionTaskName()) {
+    group = "Read current production version"
+    description = "Read current production version for ${it.name}"
+    doLast {
+      val productionUrl = it.url.replace("-dev".toRegex(), "")
+        .replace("dev.".toRegex(), "")
+        .replace("/v3/api-docs".toRegex(), "/info")
+      val json = URI.create(productionUrl).toURL().readText()
+      val version = ObjectMapper().readTree(json).at("/build/version").asText()
+      println(version)
     }
   }
 }
