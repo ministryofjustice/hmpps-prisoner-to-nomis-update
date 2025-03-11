@@ -8,21 +8,30 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNul
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerProfileDetailsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertProfileDetailsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertProfileDetailsResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileType
 
 @Service
 class ProfileDetailsNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
-  suspend fun upsertProfileDetails(offenderNo: String, profileType: String, profileCode: String?): UpsertProfileDetailsResponse = webClient.put()
+  suspend fun upsertProfileDetails(
+    offenderNo: String,
+    profileType: String,
+    profileCode: String?,
+  ): UpsertProfileDetailsResponse = webClient.put()
     .uri("/prisoners/{offenderNo}/profile-details", offenderNo)
     .bodyValue(UpsertProfileDetailsRequest(profileType, profileCode))
     .retrieve()
     .awaitBody()
 
-  suspend fun getProfileDetails(offenderNo: String): PrisonerProfileDetailsResponse? = webClient.get()
+  suspend fun getProfileDetails(
+    offenderNo: String,
+    profileTypes: List<String>,
+    latestBookingOnly: Boolean = false,
+    bookingId: Long? = null,
+  ): PrisonerProfileDetailsResponse? = webClient.get()
     .uri {
       it.path("/prisoners/{offenderNo}/profile-details")
-        .queryParam("profileTypes", ContactPersonProfileType.all())
-        .queryParam("latestBookingOnly", "true")
+        .queryParam("profileTypes", profileTypes)
+        .apply { bookingId?.run { queryParam("bookingId", "$bookingId") } }
+        .queryParam("latestBookingOnly", "$latestBookingOnly")
         .build(offenderNo)
     }
     .retrieve()

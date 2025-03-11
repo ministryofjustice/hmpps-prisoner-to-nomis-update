@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileType
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -75,7 +76,8 @@ class ProfileDetailsNomisApiServiceTest {
     fun `will return created and booking ID`() = runTest {
       nomisApi.stubPutProfileDetails(offenderNo = "A1234KT")
 
-      val response = nomisApiService.upsertProfileDetails(offenderNo = "A1234KT", profileType = "BUILD", profileCode = "SMALL")
+      val response =
+        nomisApiService.upsertProfileDetails(offenderNo = "A1234KT", profileType = "BUILD", profileCode = "SMALL")
 
       assertThat(response.bookingId).isEqualTo(12345)
       assertThat(response.created).isTrue()
@@ -97,7 +99,11 @@ class ProfileDetailsNomisApiServiceTest {
     internal fun `will pass oath2 token to service`() = runTest {
       nomisApi.stubGetProfileDetails(offenderNo = "A1234KT")
 
-      nomisApiService.getProfileDetails(offenderNo = "A1234KT")
+      nomisApiService.getProfileDetails(
+        offenderNo = "A1234KT",
+        profileTypes = ContactPersonProfileType.all(),
+        latestBookingOnly = true,
+      )
 
       nomisApi.verify(
         getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
@@ -108,7 +114,11 @@ class ProfileDetailsNomisApiServiceTest {
     internal fun `will pass parameters to the service`() = runTest {
       nomisApi.stubGetProfileDetails(offenderNo = "A1234KT")
 
-      nomisApiService.getProfileDetails(offenderNo = "A1234KT")
+      nomisApiService.getProfileDetails(
+        offenderNo = "A1234KT",
+        profileTypes = ContactPersonProfileType.all(),
+        latestBookingOnly = true,
+      )
 
       nomisApi.verify(
         getRequestedFor(urlPathEqualTo("/prisoners/A1234KT/profile-details"))
@@ -121,7 +131,12 @@ class ProfileDetailsNomisApiServiceTest {
     fun `will return profile details`() = runTest {
       nomisApi.stubGetProfileDetails(offenderNo = "A1234KT")
 
-      val profileDetailsResponse = nomisApiService.getProfileDetails(offenderNo = "A1234KT")
+      val profileDetailsResponse =
+        nomisApiService.getProfileDetails(
+          offenderNo = "A1234KT",
+          profileTypes = ContactPersonProfileType.all(),
+          latestBookingOnly = true,
+        )
 
       with(profileDetailsResponse!!) {
         assertThat(offenderNo).isEqualTo("A1234KT")
@@ -143,7 +158,13 @@ class ProfileDetailsNomisApiServiceTest {
     fun `will return null when not found`() = runTest {
       nomisApi.stubGetProfileDetails(offenderNo = "A1234KT", errorStatus = NOT_FOUND)
 
-      assertThat(nomisApiService.getProfileDetails(offenderNo = "A1234KT")).isNull()
+      assertThat(
+        nomisApiService.getProfileDetails(
+          offenderNo = "A1234KT",
+          profileTypes = ContactPersonProfileType.all(),
+          latestBookingOnly = true,
+        ),
+      ).isNull()
     }
 
     @Test
@@ -151,7 +172,11 @@ class ProfileDetailsNomisApiServiceTest {
       nomisApi.stubGetProfileDetails(offenderNo = "A1234KT", errorStatus = INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
-        nomisApiService.getProfileDetails(offenderNo = "A1234KT")
+        nomisApiService.getProfileDetails(
+          offenderNo = "A1234KT",
+          profileTypes = ContactPersonProfileType.all(),
+          latestBookingOnly = true,
+        )
       }
     }
   }
