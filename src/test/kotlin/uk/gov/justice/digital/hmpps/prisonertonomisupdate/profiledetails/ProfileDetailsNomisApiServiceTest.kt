@@ -129,7 +129,20 @@ class ProfileDetailsNomisApiServiceTest {
 
     @Test
     fun `will return profile details`() = runTest {
-      nomisApi.stubGetProfileDetails(offenderNo = "A1234KT")
+      nomisApi.stubGetProfileDetails(
+        offenderNo = "A1234KT",
+        response = profileDetailsResponse(
+          "A1234KT",
+          listOf(
+            booking(
+              listOf(
+                profileDetails(type = "MARITAL", code = "M"),
+                profileDetails(type = "CHILD", code = "3"),
+              ),
+            ),
+          ),
+        ),
+      )
 
       val profileDetailsResponse =
         nomisApiService.getProfileDetails(
