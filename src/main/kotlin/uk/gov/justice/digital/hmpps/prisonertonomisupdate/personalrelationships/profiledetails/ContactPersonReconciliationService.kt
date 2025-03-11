@@ -22,7 +22,7 @@ class ContactPersonReconciliationService(
   @Autowired private val telemetryClient: TelemetryClient,
 ) {
 
-  suspend fun checkPrisoner(prisonerNumber: String): String? {
+  suspend fun checkPrisoner(prisonerNumber: String): String? = runCatching {
     val apiResponses = withContext(Dispatchers.Unconfined) {
       ApiResponses(
         async { doApiCallWithRetries { nomisApi.getProfileDetails(prisonerNumber, ContactPersonProfileType.all()) } },
@@ -31,7 +31,7 @@ class ContactPersonReconciliationService(
       )
     }
 
-    return findDifferences(apiResponses)
+    findDifferences(apiResponses)
       ?.let { differences ->
         prisonerNumber
           .also {
@@ -42,7 +42,13 @@ class ContactPersonReconciliationService(
             )
           }
       }
-  }
+  }.onFailure { e ->
+    telemetryClient.trackEvent(
+      "contact-person-profile-details-reconciliation-prisoner-error",
+      mapOf("offenderNo" to prisonerNumber, "error" to "${e.message}"),
+      null,
+    )
+  }.getOrNull()
 
   private fun findDifferences(apiResponses: ApiResponses): List<String>? {
     val differences = mutableListOf<String>()
@@ -50,16 +56,22 @@ class ContactPersonReconciliationService(
     val nomisDomesticStatus = apiResponses.nomisProfileDetails?.findDomesticStatusCode(MARITAL.name)
     val dpsDomesticStatus = apiResponses.dpsDomesticStatus?.domesticStatusCode
     if (nomisDomesticStatus != dpsDomesticStatus) {
-      differences += MARITAL.identifier
+      differences += MARITAL.identifier + checkForNull(nomisDomesticStatus, dpsDomesticStatus)
     }
 
     val nomisNumberOfChildren = apiResponses.nomisProfileDetails?.findDomesticStatusCode(CHILD.name)
     val dpsNumberOfChildren = apiResponses.dpsNumberOfChildren?.numberOfChildren
     if (nomisNumberOfChildren != dpsNumberOfChildren) {
-      differences += CHILD.identifier
+      differences += CHILD.identifier + checkForNull(nomisNumberOfChildren, dpsNumberOfChildren)
     }
 
     return differences.takeIf { it.isNotEmpty() }
+  }
+
+  private fun checkForNull(nomis: String?, dps: String?): String = when {
+    nomis == null -> "-null-nomis"
+    dps == null -> "-null-dps"
+    else -> ""
   }
 
   private data class ApiResponses(

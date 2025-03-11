@@ -87,7 +87,7 @@ fun booking(profileDetails: List<ProfileDetailsResponse> = listOf(profileDetails
   profileDetails = profileDetails,
 )
 
-fun profileDetails(type: String = "MARITAL", code: String = "M") = ProfileDetailsResponse(
+fun profileDetails(type: String = "MARITAL", code: String? = "M") = ProfileDetailsResponse(
   type = type,
   code = code,
   createDateTime = LocalDateTime.now(),
