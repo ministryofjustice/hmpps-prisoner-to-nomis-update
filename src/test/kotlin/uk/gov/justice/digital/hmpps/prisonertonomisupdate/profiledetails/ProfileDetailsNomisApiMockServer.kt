@@ -7,7 +7,9 @@ import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import com.github.tomakehurst.wiremock.http.Fault
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
+import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingProfileDetailsResponse
@@ -68,6 +70,32 @@ class ProfileDetailsNomisApiMockServer(private val objectMapper: ObjectMapper) {
           .withStatus(errorStatus.value())
           .withBody(objectMapper.writeValueAsString(ErrorResponse(status = errorStatus, userMessage = "some error"))),
       ),
+    )
+  }
+
+  fun stubGetProfileDetailsAfterRetry(
+    offenderNo: String,
+    response: PrisonerProfileDetailsResponse = profileDetailsResponse(offenderNo),
+  ) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/prisoners/$offenderNo/profile-details"))
+        .inScenario("Works on retry")
+        .willReturn(
+          aResponse()
+            .withFault(Fault.CONNECTION_RESET_BY_PEER),
+        ).willSetStateTo("Failed first call"),
+    )
+
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/prisoners/$offenderNo/profile-details"))
+        .inScenario("Works on retry")
+        .whenScenarioStateIs("Failed first call")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(objectMapper.writeValueAsString(response)),
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 

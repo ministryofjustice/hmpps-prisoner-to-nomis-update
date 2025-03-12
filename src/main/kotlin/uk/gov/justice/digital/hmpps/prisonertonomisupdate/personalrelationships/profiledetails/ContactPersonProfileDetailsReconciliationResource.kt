@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -44,9 +45,14 @@ class ContactPersonProfileDetailsReconciliationResource(
             ),
           )
         }
-        .onFailure {
-          telemetryClient.trackEvent("$TELEMETRY_PREFIX-report-error")
+        .onFailure { e ->
+          telemetryClient.trackEvent("$TELEMETRY_PREFIX-report-error", mapOf("error" to "${e.message}"))
+          log.error("Failed to generate contact person profile details reconciliation report", e)
         }
     }
+  }
+
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
   }
 }
