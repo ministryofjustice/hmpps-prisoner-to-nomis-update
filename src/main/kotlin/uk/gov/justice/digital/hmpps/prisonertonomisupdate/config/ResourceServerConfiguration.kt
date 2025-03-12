@@ -23,6 +23,7 @@ class ResourceServerConfiguration {
         "/csip/reports/reconciliation",
         "/organisations/reports/reconciliation",
         "/activities/mappings/unknown-mappings",
+        "/contact-person/profile-details/reports/reconciliation",
       )
     }
   }

@@ -4,23 +4,54 @@ import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerProfileDetailsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerDomesticStatusResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerNumberOfChildrenResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileType.CHILD
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileType.MARITAL
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.profiledetails.ProfileDetailsNomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 
 @Service
-class ContactPersonReconciliationService(
+class ContactPersonProfileDetailsReconciliationService(
+  @Autowired private val nomisIdsApi: NomisApiService,
   @Autowired private val nomisApi: ProfileDetailsNomisApiService,
   @Autowired private val dpsApi: ContactPersonProfileDetailsDpsApiService,
+  @Value("\${reports.contact-person.profile-details.reconciliation.page-size:20}") private val pageSize: Long = 20,
+  @Value("\${feature.recon.contact-person.profile-details:true}") private val reconciliationTurnedOn: Boolean = true,
   @Autowired private val telemetryClient: TelemetryClient,
 ) {
+  companion object {
+    const val TELEMETRY_PREFIX = "contact-person-profile-details-reconciliation"
+  }
+
+  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<String> = if (reconciliationTurnedOn) {
+    activePrisonersCount
+      .asPages(pageSize)
+      .flatMap { page ->
+        val activePrisoners = getActivePrisonersForPage(page)
+
+        withContext(Dispatchers.Unconfined) {
+          activePrisoners.map { async { checkPrisoner(it.offenderNo) } }
+        }.awaitAll().filterNotNull()
+      }
+  } else {
+    emptyList()
+  }
+
+  private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) = runCatching { nomisIdsApi.getActivePrisoners(page.first, page.second).content }
+    .onFailure {
+      telemetryClient.trackEvent("$TELEMETRY_PREFIX-page-error", mapOf("page" to page.first.toString(), "error" to (it.message ?: "unknown error")))
+    }
+    .getOrElse { emptyList() }
 
   suspend fun checkPrisoner(prisonerNumber: String): String? = runCatching {
     val apiResponses = withContext(Dispatchers.Unconfined) {
@@ -36,7 +67,7 @@ class ContactPersonReconciliationService(
         prisonerNumber
           .also {
             telemetryClient.trackEvent(
-              "contact-person-profile-details-reconciliation-prisoner-failed",
+              "$TELEMETRY_PREFIX-prisoner-failed",
               mapOf("offenderNo" to it, "differences" to differences.joinToString()),
               null,
             )
@@ -44,7 +75,7 @@ class ContactPersonReconciliationService(
       }
   }.onFailure { e ->
     telemetryClient.trackEvent(
-      "contact-person-profile-details-reconciliation-prisoner-error",
+      "$TELEMETRY_PREFIX-prisoner-error",
       mapOf("offenderNo" to prisonerNumber, "error" to "${e.message}"),
       null,
     )
