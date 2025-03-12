@@ -318,5 +318,8 @@ reports:
   csip:
     reconciliation:
       page-size: 10
+  contact-person.profile-details:
+    reconciliation:
+      page-size: 3
 
 api.locations.timeout: 1s
