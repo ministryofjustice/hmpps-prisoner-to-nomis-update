@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummaryPage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummaryPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddress
@@ -155,6 +156,23 @@ class ContactPersonDpsApiExtension :
 
     fun prisonerContactSummaryPage() = PrisonerContactSummaryPage(
       content = emptyList(),
+    )
+
+    fun prisonerContactSummary(id: Long) = PrisonerContactSummary(
+      prisonerContactId = id,
+      contactId = 1,
+      prisonerNumber = "A1234KT",
+      lastName = "SMITH",
+      firstName = "JANE",
+      relationshipTypeCode = "S",
+      relationshipTypeDescription = "Social",
+      relationshipToPrisonerCode = "BRO",
+      relationshipToPrisonerDescription = "Brother",
+      isApprovedVisitor = true,
+      isNextOfKin = false,
+      isEmergencyContact = false,
+      isRelationshipActive = true,
+      currentTerm = true,
     )
   }
 

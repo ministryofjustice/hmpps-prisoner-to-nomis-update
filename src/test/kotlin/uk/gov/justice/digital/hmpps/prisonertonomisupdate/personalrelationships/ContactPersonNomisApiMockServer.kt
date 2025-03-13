@@ -10,6 +10,8 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactForPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateContactPersonRestrictionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonAddressRequest
@@ -26,6 +28,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerWithContacts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonAddressRequest
@@ -37,6 +41,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Component
 class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
@@ -173,6 +178,28 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
 
     fun prisonerWithContacts() = PrisonerWithContacts(
       contacts = emptyList(),
+    )
+
+    fun prisonerContact(id: Long = 1) = PrisonerContact(
+      id = id,
+      bookingId = 1,
+      bookingSequence = 1,
+      contactType = CodeDescription("S", "Social"),
+      relationshipType = CodeDescription("BRO", "Brother"),
+      active = true,
+      approvedVisitor = true,
+      nextOfKin = false,
+      emergencyContact = false,
+      person = ContactForPerson(
+        personId = 1,
+        lastName = "SMITH",
+        firstName = "JANE",
+      ),
+      restrictions = emptyList(),
+      audit = NomisAudit(
+        createDatetime = LocalDateTime.now(),
+        createUsername = "T.SMOTH",
+      ),
     )
   }
 
