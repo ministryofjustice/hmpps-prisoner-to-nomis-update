@@ -159,8 +159,8 @@ class ContactPersonDpsApiExtension :
     )
 
     fun prisonerContactSummary(id: Long) = PrisonerContactSummary(
-      prisonerContactId = id,
-      contactId = 1,
+      prisonerContactId = 1,
+      contactId = id,
       prisonerNumber = "A1234KT",
       lastName = "SMITH",
       firstName = "JANE",

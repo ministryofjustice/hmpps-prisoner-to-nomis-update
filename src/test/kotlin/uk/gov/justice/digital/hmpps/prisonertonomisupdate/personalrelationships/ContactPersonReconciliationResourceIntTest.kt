@@ -46,8 +46,8 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
       )
       nomisApi.stubGetPrisonerContacts("A0001TZ", prisonerWithContacts().copy(contacts = listOf(prisonerContact(1), prisonerContact(2))))
       dpsApi.stubGetPrisonerContacts("A0001TZ", prisonerContactSummaryPage().copy(totalElements = 2, content = listOf(prisonerContactSummary(1))))
-      nomisApi.stubGetPrisonerContacts("A0002TZ", prisonerWithContacts())
-      dpsApi.stubGetPrisonerContacts("A0002TZ", prisonerContactSummaryPage())
+      nomisApi.stubGetPrisonerContacts("A0002TZ", prisonerWithContacts().copy(contacts = listOf(prisonerContact(1), prisonerContact(2))))
+      dpsApi.stubGetPrisonerContacts("A0002TZ", prisonerContactSummaryPage().copy(totalElements = 2, content = listOf(prisonerContactSummary(1), prisonerContactSummary(99))))
       nomisApi.stubGetPrisonerContacts("A0003TZ", prisonerWithContacts())
       dpsApi.stubGetPrisonerContacts("A0003TZ", prisonerContactSummaryPage())
     }
@@ -77,7 +77,7 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
       verify(telemetryClient).trackEvent(
         eq("contact-person-prisoner-contact-reconciliation-report"),
         check {
-          assertThat(it).containsEntry("mismatch-count", "1")
+          assertThat(it).containsEntry("mismatch-count", "2")
         },
         isNull(),
       )
@@ -97,6 +97,27 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
             "offenderNo" to "A0001TZ",
             "dpsContactCount" to "1",
             "nomisContactCount" to "2",
+            "reason" to "different-number-of-contacts",
+          ),
+        ),
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will output a mismatch when there are different people`() {
+      webTestClient.put().uri("/contact-person/prisoner-contact/reports/reconciliation")
+        .exchange()
+        .expectStatus().isAccepted
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("contact-person-prisoner-contact-reconciliation-mismatch"),
+        eq(
+          mapOf(
+            "offenderNo" to "A0002TZ",
+            "contactId" to "2",
+            "reason" to "different-contacts",
           ),
         ),
         isNull(),
