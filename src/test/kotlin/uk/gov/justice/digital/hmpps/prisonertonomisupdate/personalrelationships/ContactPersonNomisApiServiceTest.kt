@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
@@ -37,9 +38,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.updatePersonIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.updatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.updatePersonRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @SpringAPIServiceTest
-@Import(ContactPersonNomisApiService::class, ContactPersonNomisApiMockServer::class)
+@Import(ContactPersonNomisApiService::class, ContactPersonNomisApiMockServer::class, RetryApiService::class)
 class ContactPersonNomisApiServiceTest {
   @Autowired
   private lateinit var apiService: ContactPersonNomisApiService
@@ -819,6 +821,32 @@ class ContactPersonNomisApiServiceTest {
 
       mockServer.verify(
         putRequestedFor(urlPathEqualTo("/persons/1234567/contact/67890/restriction/838383")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetPrisonerContacts {
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetPrisonerContacts(prisonerNumber = "A1234KT")
+
+      apiService.getContactsForPrisoner("A1234KT")
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get endpoint`() = runTest {
+      mockServer.stubGetPrisonerContacts(prisonerNumber = "A1234KT")
+
+      apiService.getContactsForPrisoner("A1234KT")
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/prisoners/A1234KT/contacts")),
       )
     }
   }

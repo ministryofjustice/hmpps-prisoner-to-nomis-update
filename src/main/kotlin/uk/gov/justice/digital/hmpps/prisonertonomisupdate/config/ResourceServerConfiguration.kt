@@ -24,6 +24,7 @@ class ResourceServerConfiguration {
         "/organisations/reports/reconciliation",
         "/activities/mappings/unknown-mappings",
         "/contact-person/profile-details/reports/reconciliation",
+        "/contact-person/prisoner-contact/reports/reconciliation",
       )
     }
   }
