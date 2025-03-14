@@ -168,7 +168,6 @@ class ContactPersonReconciliationService(
     emergencyContact = this.isEmergencyContact,
     nextOfKin = this.isNextOfKin,
     approvedVisitor = this.isApprovedVisitor,
-    active = this.isRelationshipActive,
     currentTerm = this.currentTerm,
   )
 
@@ -181,7 +180,6 @@ class ContactPersonReconciliationService(
     emergencyContact = this.emergencyContact,
     nextOfKin = this.nextOfKin,
     approvedVisitor = this.approvedVisitor,
-    active = this.active,
     currentTerm = this.bookingSequence == 1L,
   )
 
@@ -205,7 +203,6 @@ data class ContactSummary(
   val emergencyContact: Boolean,
   val nextOfKin: Boolean,
   val approvedVisitor: Boolean,
-  val active: Boolean,
   val currentTerm: Boolean,
 )
 data class MismatchPrisonerContacts(
