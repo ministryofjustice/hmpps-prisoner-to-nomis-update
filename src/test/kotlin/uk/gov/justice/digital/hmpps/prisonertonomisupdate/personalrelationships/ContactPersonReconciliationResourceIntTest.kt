@@ -97,6 +97,8 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
             "offenderNo" to "A0001TZ",
             "dpsContactCount" to "1",
             "nomisContactCount" to "2",
+            "contactIdsMissingFromNomis" to "[]",
+            "contactIdsMissingFromDps" to "[2]",
             "reason" to "different-number-of-contacts",
           ),
         ),
@@ -116,7 +118,10 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
         eq(
           mapOf(
             "offenderNo" to "A0002TZ",
-            "contactId" to "2",
+            "dpsContactCount" to "2",
+            "nomisContactCount" to "2",
+            "contactIdsMissingFromNomis" to "[99]",
+            "contactIdsMissingFromDps" to "[2]",
             "reason" to "different-contacts",
           ),
         ),
