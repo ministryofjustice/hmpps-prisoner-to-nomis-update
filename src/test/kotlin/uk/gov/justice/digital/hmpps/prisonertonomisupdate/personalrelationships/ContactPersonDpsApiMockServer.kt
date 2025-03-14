@@ -158,7 +158,7 @@ class ContactPersonDpsApiExtension :
       content = emptyList(),
     )
 
-    fun prisonerContactSummary(id: Long) = PrisonerContactSummary(
+    fun prisonerContactSummary(id: Long = 1) = PrisonerContactSummary(
       prisonerContactId = 1,
       contactId = id,
       prisonerNumber = "A1234KT",
