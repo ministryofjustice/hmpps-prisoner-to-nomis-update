@@ -232,7 +232,7 @@ fun dpsCsipRecord(
     reviews = listOf(
       Review(
         reviewUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6444"),
-        reviewSequence = 1,
+        reviewSequence = 7,
         reviewDate = LocalDate.parse("2024-04-01"),
         nextReviewDate = null,
         csipClosedDate = LocalDate.parse("2024-04-16"),

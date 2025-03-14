@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-05.11561.695f378"
+    "version" : "2025-03-14.11697.ce00be3"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -790,7 +790,7 @@
       "get" : {
         "tags" : [ "profile-details-resource" ],
         "summary" : "Get profile details for a prisoner",
-        "description" : "Retrieves profile details for a prisoner and all of their aliases and bookings. Requires ROLE_NOMIS_PRISON_PERSON",
+        "description" : "Retrieves profile details for a prisoner and all of their aliases and bookings. Requires ROLE_NOMIS_CONTACTPERSONS",
         "operationId" : "getProfileDetails",
         "parameters" : [ {
           "name" : "offenderNo",
@@ -831,6 +831,17 @@
             "example" : 12345
           },
           "example" : 12345
+        }, {
+          "name" : "latestBookingOnly",
+          "in" : "query",
+          "description" : "Latest booking only?",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "description" : "Latest booking only?",
+            "example" : true
+          },
+          "example" : true
         } ],
         "responses" : {
           "200" : {
@@ -854,7 +865,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -878,7 +889,7 @@
       "put" : {
         "tags" : [ "profile-details-resource" ],
         "summary" : "Upsert profile details for a prisoner",
-        "description" : "Upserts profile details on the latest booking for a prisoner, if it exists. Requires ROLE_NOMIS_PRISON_PERSON",
+        "description" : "Upserts profile details on the latest booking for a prisoner, if it exists. Requires ROLE_NOMIS_CONTACTPERSONS",
         "operationId" : "upsertPhysicalAttributes",
         "parameters" : [ {
           "name" : "offenderNo",
@@ -924,139 +935,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prisoner does not exist or has no bookings",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/prisoners/{offenderNo}/physical-attributes" : {
-      "get" : {
-        "tags" : [ "physical-attributes-resource" ],
-        "summary" : "Get physical attributes for a prisoner",
-        "description" : "Retrieves physical attributes for a prisoner and all of their aliases and bookings. Requires ROLE_NOMIS_PRISON_PERSON",
-        "operationId" : "getPhysicalAttributes",
-        "parameters" : [ {
-          "name" : "offenderNo",
-          "in" : "path",
-          "description" : "Offender number",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Offender number",
-            "example" : "A1234AA"
-          },
-          "example" : "A1234AA"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Physical Attributes Returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerPhysicalAttributesResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prisoner does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put" : {
-        "tags" : [ "physical-attributes-resource" ],
-        "summary" : "Upsert physical attributes for a prisoner",
-        "description" : "Upserts physical attributes on the latest booking for a prisoner, if it exists. Requires ROLE_NOMIS_PRISON_PERSON",
-        "operationId" : "upsertPhysicalAttributes_1",
-        "parameters" : [ {
-          "name" : "offenderNo",
-          "in" : "path",
-          "description" : "Offender number",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Offender number",
-            "example" : "A1234AA"
-          },
-          "example" : "A1234AA"
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/UpsertPhysicalAttributesRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Physical Attributes Updated",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/UpsertPhysicalAttributesResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -11150,9 +11029,9 @@
     },
     "/visit-orders/visit-balance-adjustment/{visitBalanceAdjustmentId}" : {
       "get" : {
-        "tags" : [ "visit-order-balance-resource" ],
+        "tags" : [ "visit-balance-resource" ],
         "summary" : "Get specific offender visit balance adjustment",
-        "description" : "Retrieves offender visit balance adjustment. Requires ROLE_NOMIS_VISIT_ORDERS",
+        "description" : "Retrieves offender visit balance adjustment. Requires ROLE_NOMIS_VISIT_BALANCE",
         "operationId" : "getVisitBalanceAdjustment",
         "parameters" : [ {
           "name" : "visitBalanceAdjustmentId",
@@ -11189,7 +11068,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_VISIT_ORDERS",
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_VISIT_BALANCE",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -11200,6 +11079,146 @@
           },
           "404" : {
             "description" : "Adjustment does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/visit-balances/{visitBalanceId}" : {
+      "get" : {
+        "tags" : [ "visit-balance-resource" ],
+        "summary" : "Get visit balance data for a booking",
+        "description" : "Retrieves visit order balance details for the last month for a booking. Requires ROLE_NOMIS_VISIT_BALANCE",
+        "operationId" : "getVisitBalanceByIdToMigrate",
+        "parameters" : [ {
+          "name" : "visitBalanceId",
+          "in" : "path",
+          "description" : "Visit balance (offender booking) id.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Visit balance (offender booking) id.",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Visit balance returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerVisitBalanceResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_VISIT_BALANCE",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/visit-balances/ids" : {
+      "get" : {
+        "tags" : [ "visit-balance-resource" ],
+        "summary" : "Find paged visit balance ids",
+        "description" : "\n      Returns the visit balance ids (which are booking ids) for the latest booking for offenders with balance entries.\n      Requires role NOMIS_VISIT_BALANCE",
+        "operationId" : "findVisitBalanceIds",
+        "parameters" : [ {
+          "name" : "pageRequest",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/Pageable"
+          }
+        }, {
+          "name" : "prisonId",
+          "in" : "query",
+          "description" : "Prison id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison id"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageVisitBalanceIdResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_VISIT_BALANCE",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -11674,6 +11693,68 @@
         }
       }
     },
+    "/prisoners/{prisonNumber}/visit-orders/balance" : {
+      "get" : {
+        "tags" : [ "visit-balance-resource" ],
+        "summary" : "Get visit order balance data for a prisoner",
+        "description" : "Retrieves visit order balance details for the last month for a prisoner. Requires ROLE_NOMIS_VISIT_BALANCE",
+        "operationId" : "getVisitBalanceToMigrate",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "Prison number aka Offender No.",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison number aka Offender No.",
+            "example" : "A1234AK"
+          },
+          "example" : "A1234AK"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Visit balance returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerVisitBalanceResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_VISIT_BALANCE",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}" : {
       "get" : {
         "tags" : [ "prisoners-resource" ],
@@ -11726,68 +11807,6 @@
           },
           "404" : {
             "description" : "Prisoner not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/prisoners/{offenderNo}/visit-orders/balance/to-migrate" : {
-      "get" : {
-        "tags" : [ "visit-order-balance-resource" ],
-        "summary" : "Get visit order balance data for a prisoner",
-        "description" : "Retrieves visit order balance details for the last month for a prisoner. Requires ROLE_NOMIS_VISIT_ORDERS",
-        "operationId" : "getVisitOrderBalanceToMigrate",
-        "parameters" : [ {
-          "name" : "offenderNo",
-          "in" : "path",
-          "description" : "Offender No AKA prisoner number",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Offender No AKA prisoner number",
-            "example" : "A1234AK"
-          },
-          "example" : "A1234AK"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Visit Orders Returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerVisitOrderBalanceResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_VISIT_ORDERS",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prisoner does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -12162,68 +12181,6 @@
         }
       }
     },
-    "/prisoners/{offenderNo}/prison-person/reconciliation" : {
-      "get" : {
-        "tags" : [ "prison-person-recon-resource" ],
-        "summary" : "Get prison person reconciliation details for a prisoner",
-        "description" : "Retrieves reconciliation details used to check NOMIS and DPS are aligned. Requires ROLE_NOMIS_PRISON_PERSON",
-        "operationId" : "getReconciliation",
-        "parameters" : [ {
-          "name" : "offenderNo",
-          "in" : "path",
-          "description" : "Offender number",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Offender number",
-            "example" : "A1234AA"
-          },
-          "example" : "A1234AA"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Physical Attributes Returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonPersonReconciliationResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prisoner does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/prisoners/{offenderNo}/merges" : {
       "get" : {
         "tags" : [ "prisoners-resource" ],
@@ -12340,6 +12297,58 @@
           },
           "404" : {
             "description" : "Prisoner does not exist or has no csips",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/contacts" : {
+      "get" : {
+        "tags" : [ "contact-person-resource" ],
+        "summary" : "Gets a prisoner's contacts",
+        "description" : "Retrieves all contacts across all bookings for a prisoner. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId" : "getPrisonerWithContacts",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender No aka prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender No aka prisoner number",
+            "example" : "A1234KT"
+          },
+          "example" : "A1234KT"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Contacts Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerWithContacts"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -12674,7 +12683,7 @@
       "get" : {
         "tags" : [ "prisoners-resource" ],
         "summary" : "Gets the identifier for all prisoners.",
-        "description" : "Requires role SYNCHRONISATION_REPORTING, NOMIS_ALERTS, NOMIS_PRISON_PERSON or NOMIS_CORE_PERSON.",
+        "description" : "Requires role SYNCHRONISATION_REPORTING, NOMIS_ALERTS, 'ROLE_NOMIS_SENTENCING' or NOMIS_CORE_PERSON.",
         "operationId" : "getAllPrisoners",
         "parameters" : [ {
           "name" : "pageRequest",
@@ -12706,7 +12715,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING or ROLE_NOMIS_ALERTS not present",
+            "description" : "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING, 'ROLE_NOMIS_SENTENCING' or ROLE_NOMIS_ALERTS not present",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -12820,72 +12829,6 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING not present",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/prisoners/booking-id/{bookingId}/sentencing/court-cases" : {
-      "get" : {
-        "tags" : [ "sentencing-resource" ],
-        "summary" : "get court cases for an offender booking",
-        "description" : "Requires role NOMIS_SENTENCING. Retrieves a court case by id",
-        "operationId" : "getCourtCasesByOffenderBooking",
-        "parameters" : [ {
-          "name" : "bookingId",
-          "in" : "path",
-          "description" : "Booking Id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Booking Id",
-            "example" : 12345
-          },
-          "example" : 12345
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "the list of court cases",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/CourtCaseResponse"
-                  }
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Offender booking not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -14233,133 +14176,6 @@
         }
       }
     },
-    "/identifying-marks/images/{imageId}/details" : {
-      "get" : {
-        "tags" : [ "identifying-mark-images-resource" ],
-        "summary" : "Get an identifying mark image details",
-        "description" : "Retrieves an identifying mark image details. Note this does not include the image itself which is available on a separate endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
-        "operationId" : "getIdentifyingMarksImageDetails",
-        "parameters" : [ {
-          "name" : "imageId",
-          "in" : "path",
-          "description" : "Image id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Image id",
-            "example" : 12345
-          },
-          "example" : 12345
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Image details returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/IdentifyingMarkImageDetailsResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Image does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/identifying-marks/images/{imageId}/data" : {
-      "get" : {
-        "tags" : [ "identifying-mark-images-resource" ],
-        "summary" : "Get an identifying mark image in JPEG format",
-        "description" : "Retrieves an identifying mark image in JPEG format. Requires ROLE_NOMIS_PRISON_PERSON",
-        "operationId" : "getIdentifyingMarksImageData",
-        "parameters" : [ {
-          "name" : "imageId",
-          "in" : "path",
-          "description" : "Image id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Image id",
-            "example" : 12345
-          },
-          "example" : 12345
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Image  returned",
-            "content" : {
-              "image/jpeg" : {
-                "schema" : {
-                  "type" : "string",
-                  "format" : "byte"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Image does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/documents/{id}" : {
       "get" : {
         "tags" : [ "document-resource" ],
@@ -15134,69 +14950,6 @@
           },
           "404" : {
             "description" : "Offender does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/bookings/{bookingId}/identifying-marks" : {
-      "get" : {
-        "tags" : [ "identifying-marks-resource" ],
-        "summary" : "Get identifying marks for a prisoner's booking",
-        "description" : "Retrieves identifying marks for a booking. Requires ROLE_NOMIS_PRISON_PERSON",
-        "operationId" : "getBookingIdentifyingMarks",
-        "parameters" : [ {
-          "name" : "bookingId",
-          "in" : "path",
-          "description" : "Booking id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Booking id",
-            "example" : 12345
-          },
-          "example" : 12345
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Identifying marks Returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/BookingIdentifyingMarksResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISON_PERSON",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prisoner does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -17231,38 +16984,6 @@
         },
         "required" : [ "bookingId", "created" ]
       },
-      "UpsertPhysicalAttributesRequest" : {
-        "type" : "object",
-        "description" : "Physical attributes to update a prisoner",
-        "properties" : {
-          "height" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Height (cm)"
-          },
-          "weight" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Weight (kg)"
-          }
-        }
-      },
-      "UpsertPhysicalAttributesResponse" : {
-        "type" : "object",
-        "description" : "Physical attributes upsert response",
-        "properties" : {
-          "created" : {
-            "type" : "boolean",
-            "description" : "Whether the record was created or updated"
-          },
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The offender booking ID that was changed"
-          }
-        },
-        "required" : [ "bookingId", "created" ]
-      },
       "CreateSentenceRequest" : {
         "type" : "object",
         "description" : "Sentence request",
@@ -18556,9 +18277,14 @@
           "recordedBy" : {
             "type" : "string",
             "description" : "The username of the person who recorded the review"
+          },
+          "reviewSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number of the review, allowing for dps to set "
           }
         },
-        "required" : [ "caseNote", "closeCSIP", "csipUpdated", "dpsId", "peopleInformed", "recordedBy", "recordedDate", "remainOnCSIP" ]
+        "required" : [ "caseNote", "closeCSIP", "csipUpdated", "dpsId", "peopleInformed", "recordedBy", "recordedDate", "remainOnCSIP", "reviewSequence" ]
       },
       "SaferCustodyScreeningRequest" : {
         "type" : "object",
@@ -22149,7 +21875,7 @@
       },
       "VisitBalanceAdjustmentResponse" : {
         "type" : "object",
-        "description" : "The visit orders balance changes held against a booking for a prisoner",
+        "description" : "The visit order balance changes held against a booking for a prisoner",
         "properties" : {
           "remainingVisitOrders" : {
             "type" : "integer",
@@ -22203,8 +21929,98 @@
             "type" : "integer",
             "format" : "int64",
             "description" : "Which staff member authorised the adjustment"
+          },
+          "createUsername" : {
+            "type" : "string",
+            "description" : "Who created the adjustment"
+          }
+        },
+        "required" : [ "adjustmentDate", "createUsername" ]
+      },
+      "PrisonerVisitBalanceResponse" : {
+        "type" : "object",
+        "description" : "The visit balance held against a prisoner's latest booking",
+        "properties" : {
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "Prison number aka noms id / offender id display",
+            "example" : "A1234BC"
+          },
+          "remainingVisitOrders" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total number of unallocated (remaining) visit orders"
+          },
+          "remainingPrivilegedVisitOrders" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total number of unallocated (remaining) privileged visit orders"
+          },
+          "lastIEPAllocationDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date of the last IEP Allocation date via the batch process, if it exists"
+          }
+        },
+        "required" : [ "prisonNumber", "remainingPrivilegedVisitOrders", "remainingVisitOrders" ]
+      },
+      "PageVisitBalanceIdResponse" : {
+        "type" : "object",
+        "properties" : {
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/VisitBalanceIdResponse"
+            }
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
+          "empty" : {
+            "type" : "boolean"
           }
         }
+      },
+      "VisitBalanceIdResponse" : {
+        "type" : "object",
+        "description" : "visit balance id",
+        "properties" : {
+          "visitBalanceId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The visit balance (booking) id"
+          }
+        },
+        "required" : [ "visitBalanceId" ]
       },
       "SplashConditionDto" : {
         "type" : "object",
@@ -22639,30 +22455,6 @@
           }
         },
         "required" : [ "code", "description" ]
-      },
-      "PrisonerVisitOrderBalanceResponse" : {
-        "type" : "object",
-        "description" : "The list of visit orders held against a prisoner",
-        "properties" : {
-          "remainingVisitOrders" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Total number of unallocated (remaining) visit orders"
-          },
-          "remainingPrivilegedVisitOrders" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Total number of unallocated (remaining) privileged visit orders"
-          },
-          "visitOrderBalanceAdjustments" : {
-            "type" : "array",
-            "description" : "Balance adjustments for this prisoner over the last 28 days",
-            "items" : {
-              "$ref" : "#/components/schemas/VisitBalanceAdjustmentResponse"
-            }
-          }
-        },
-        "required" : [ "remainingPrivilegedVisitOrders", "remainingVisitOrders", "visitOrderBalanceAdjustments" ]
       },
       "OffenceResponse" : {
         "type" : "object",
@@ -23434,173 +23226,6 @@
         },
         "required" : [ "createDateTime", "createdBy", "type" ]
       },
-      "PrisonPersonReconciliationResponse" : {
-        "type" : "object",
-        "description" : "Reconciliation details held against a prisoner",
-        "properties" : {
-          "offenderNo" : {
-            "type" : "string",
-            "description" : "The prisoner's unique identifier",
-            "example" : "A1234AA"
-          },
-          "height" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The height of the prisoner in centimetres",
-            "example" : 180
-          },
-          "weight" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The weight of the prisoner in kilograms",
-            "example" : 80
-          },
-          "face" : {
-            "type" : "string",
-            "description" : "Shape of face",
-            "example" : "ROUND"
-          },
-          "build" : {
-            "type" : "string",
-            "description" : "Build",
-            "example" : "SLIM"
-          },
-          "facialHair" : {
-            "type" : "string",
-            "description" : "Facial hair",
-            "example" : "CLEAN_SHAVEN"
-          },
-          "hair" : {
-            "type" : "string",
-            "description" : "Hair colour",
-            "example" : "BLACK"
-          },
-          "leftEyeColour" : {
-            "type" : "string",
-            "description" : "Left eye colour",
-            "example" : "BLUE"
-          },
-          "rightEyeColour" : {
-            "type" : "string",
-            "description" : "Right eye colour",
-            "example" : "BROWN"
-          },
-          "shoeSize" : {
-            "type" : "string",
-            "description" : "Shoe size",
-            "example" : 8.5
-          }
-        },
-        "required" : [ "offenderNo" ]
-      },
-      "BookingPhysicalAttributesResponse" : {
-        "type" : "object",
-        "description" : "Physical attributes held against a booking",
-        "properties" : {
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The booking's unique identifier",
-            "example" : 1234567
-          },
-          "startDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The start date of the booking",
-            "example" : "2020-07-17T12:34:56"
-          },
-          "endDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The end date of the booking, or null if the booking is still active",
-            "example" : "2021-07-16T12:34:56"
-          },
-          "physicalAttributes" : {
-            "type" : "array",
-            "description" : "A list of physical attributes for this booking",
-            "items" : {
-              "$ref" : "#/components/schemas/PhysicalAttributesResponse"
-            }
-          },
-          "latestBooking" : {
-            "type" : "boolean",
-            "description" : "Whether this is the latest booking or not. Note that latest does not imply active.",
-            "example" : true
-          }
-        },
-        "required" : [ "bookingId", "latestBooking", "physicalAttributes", "startDateTime" ]
-      },
-      "PhysicalAttributesResponse" : {
-        "type" : "object",
-        "description" : "Physical attributes recorded against a prisoner",
-        "properties" : {
-          "attributeSequence" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Multiple physical attribute records can be created for each booking",
-            "example" : 1
-          },
-          "heightCentimetres" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The height of the prisoner in centimetres",
-            "example" : 180
-          },
-          "weightKilograms" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The weight of the prisoner in kilograms",
-            "example" : 80
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The time the physical attributes were created",
-            "example" : "2020-07-17T12:34:56"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The user who created the physical attributes",
-            "example" : "AQ425D"
-          },
-          "modifiedDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The time the physical attributes were last changed",
-            "example" : "2021-07-16T12:34:56"
-          },
-          "modifiedBy" : {
-            "type" : "string",
-            "description" : "The user who modified the physical attributes",
-            "example" : "AQ425D"
-          },
-          "auditModuleName" : {
-            "type" : "string",
-            "description" : "The name of the module that last changed the physical attributes, indicates if this was NOMIS or the synchronisation service",
-            "example" : "DPS_SYNCHRONISATION"
-          }
-        },
-        "required" : [ "createDateTime", "createdBy" ]
-      },
-      "PrisonerPhysicalAttributesResponse" : {
-        "type" : "object",
-        "description" : "Physical attributes held against a prisoner",
-        "properties" : {
-          "offenderNo" : {
-            "type" : "string",
-            "description" : "The prisoner's unique identifier",
-            "example" : "A1234AA"
-          },
-          "bookings" : {
-            "type" : "array",
-            "description" : "A list of bookings and their physical attributes",
-            "items" : {
-              "$ref" : "#/components/schemas/BookingPhysicalAttributesResponse"
-            }
-          }
-        },
-        "required" : [ "bookings", "offenderNo" ]
-      },
       "MergeDetail" : {
         "type" : "object",
         "description" : "Details of a prisoner merge",
@@ -24282,6 +23907,164 @@
           }
         }
       },
+      "ContactForPerson" : {
+        "type" : "object",
+        "description" : "The data held in NOMIS about a person's contact with a prisoner",
+        "properties" : {
+          "personId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of person associated with the prisoner"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "Last name of the person",
+            "example" : "Smith"
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "First name of the person",
+            "example" : "John"
+          }
+        },
+        "required" : [ "firstName", "lastName", "personId" ]
+      },
+      "ContactRestriction" : {
+        "type" : "object",
+        "description" : "The data held in NOMIS about a person's restriction with a prisoner",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of the restriction"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Restriction type"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Free format comment text"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date restriction became active"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date restriction is no longer active"
+          },
+          "enteredStaff" : {
+            "$ref" : "#/components/schemas/ContactRestrictionEnteredStaff",
+            "description" : "Staff member who created the restriction"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          }
+        },
+        "required" : [ "audit", "effectiveDate", "enteredStaff", "id", "type" ]
+      },
+      "ContactRestrictionEnteredStaff" : {
+        "type" : "object",
+        "properties" : {
+          "staffId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS staff id"
+          },
+          "username" : {
+            "type" : "string",
+            "description" : "username for staff member. For staff with multiple accounts this will be the general account username."
+          }
+        },
+        "required" : [ "staffId", "username" ]
+      },
+      "PrisonerContact" : {
+        "type" : "object",
+        "description" : "The data held in NOMIS about a prisoner's contact with a person",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS sequence for the identifier for this contact"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of booking associated with the contact"
+          },
+          "bookingSequence" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking sequence this contact is related to. When 1 this indicates contact is for current term"
+          },
+          "contactType" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The contact type"
+          },
+          "relationshipType" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The relationship type"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "True if active"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date contact is no longer active"
+          },
+          "approvedVisitor" : {
+            "type" : "boolean",
+            "description" : "True if approved to visit the prisoner"
+          },
+          "nextOfKin" : {
+            "type" : "boolean",
+            "description" : "True if next of kin to the prisoner"
+          },
+          "emergencyContact" : {
+            "type" : "boolean",
+            "description" : "True if emergency contact for the prisoner"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Free format comment text"
+          },
+          "person" : {
+            "$ref" : "#/components/schemas/ContactForPerson",
+            "description" : "The person this prisoner is a contact for"
+          },
+          "restrictions" : {
+            "type" : "array",
+            "description" : "List of restrictions specifically between the prisoner and this contact",
+            "items" : {
+              "$ref" : "#/components/schemas/ContactRestriction"
+            }
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          }
+        },
+        "required" : [ "active", "approvedVisitor", "audit", "bookingId", "bookingSequence", "contactType", "emergencyContact", "id", "nextOfKin", "person", "relationshipType", "restrictions" ]
+      },
+      "PrisonerWithContacts" : {
+        "type" : "object",
+        "properties" : {
+          "contacts" : {
+            "type" : "array",
+            "description" : "List of contacts for this prisoner",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerContact"
+            }
+          }
+        },
+        "required" : [ "contacts" ]
+      },
       "CaseNoteAmendment" : {
         "type" : "object",
         "properties" : {
@@ -24901,59 +24684,6 @@
         },
         "required" : [ "addresses", "audit", "contacts", "emailAddresses", "employments", "firstName", "identifiers", "interpreterRequired", "lastName", "personId", "phoneNumbers", "restrictions" ]
       },
-      "ContactRestriction" : {
-        "type" : "object",
-        "description" : "The data held in NOMIS about a person's restriction with a prisoner",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Unique NOMIS Id of the restriction"
-          },
-          "type" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "Restriction type"
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "Free format comment text"
-          },
-          "effectiveDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Date restriction became active"
-          },
-          "expiryDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Date restriction is no longer active"
-          },
-          "enteredStaff" : {
-            "$ref" : "#/components/schemas/ContactRestrictionEnteredStaff",
-            "description" : "Staff member who created the restriction"
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit data associated with the records"
-          }
-        },
-        "required" : [ "audit", "effectiveDate", "enteredStaff", "id", "type" ]
-      },
-      "ContactRestrictionEnteredStaff" : {
-        "type" : "object",
-        "properties" : {
-          "staffId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS staff id"
-          },
-          "username" : {
-            "type" : "string",
-            "description" : "username for staff member. For staff with multiple accounts this will be the general account username."
-          }
-        },
-        "required" : [ "staffId", "username" ]
-      },
       "PersonAddress" : {
         "type" : "object",
         "description" : "The data held in NOMIS about a address number",
@@ -25055,7 +24785,7 @@
           "id" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "Unique NOMIS sequence for this identifier for this contact"
+            "description" : "Unique NOMIS sequence for the identifier for this contact"
           },
           "contactType" : {
             "$ref" : "#/components/schemas/CodeDescription",
@@ -26321,89 +26051,6 @@
         },
         "required" : [ "auditModule", "bookingId", "currentIep", "iepDateTime", "iepLevel", "incentiveSequence", "offenderNo", "prisonId", "whenCreated" ]
       },
-      "IdentifyingMarkImageDetailsResponse" : {
-        "type" : "object",
-        "description" : "Image details, not including the image itself",
-        "properties" : {
-          "imageId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The unique image identifier",
-            "example" : 1234567
-          },
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The booking's unique identifier",
-            "example" : 1234567
-          },
-          "idMarksSeq" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The identifying mark sequence, part of the identifying mark unique key",
-            "example" : 1
-          },
-          "captureDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The time the image was captured",
-            "example" : "2024-11-26T10:52:54"
-          },
-          "bodyPartCode" : {
-            "type" : "string",
-            "description" : "The body part",
-            "example" : "ARM"
-          },
-          "markTypeCode" : {
-            "type" : "string",
-            "description" : "The type of identifying mark",
-            "example" : "TAT"
-          },
-          "default" : {
-            "type" : "boolean",
-            "description" : "Whether this is the default image for the bookingId/idMarksSeq",
-            "example" : true
-          },
-          "imageExists" : {
-            "type" : "boolean",
-            "description" : "Whether image data exists yet. Image records are created prior to the actual image being added to them (which sometimes never happens).",
-            "example" : true
-          },
-          "imageSourceCode" : {
-            "type" : "string",
-            "description" : "The source of the image",
-            "example" : "FILE"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The time the image record was created. Note records are created without an image which is added later.",
-            "example" : "2020-07-17T12:34:56"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The user who created the image record",
-            "example" : "AQ425D"
-          },
-          "modifiedDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The time the image record was last changed",
-            "example" : "2021-07-16T12:34:56"
-          },
-          "modifiedBy" : {
-            "type" : "string",
-            "description" : "The user who modified the image record",
-            "example" : "AQ425D"
-          },
-          "auditModuleName" : {
-            "type" : "string",
-            "description" : "The name of the module that last changed the image, indicates if this was NOMIS or the synchronisation service",
-            "example" : "DPS_SYNCHRONISATION"
-          }
-        },
-        "required" : [ "bodyPartCode", "bookingId", "captureDateTime", "createDateTime", "createdBy", "default", "idMarksSeq", "imageExists", "imageId", "imageSourceCode", "markTypeCode" ]
-      },
       "CSIPIdResponse" : {
         "type" : "object",
         "description" : "CSIP id",
@@ -27402,117 +27049,6 @@
           }
         },
         "required" : [ "bookingId", "latestBooking", "sexualOrientation", "startDateTime" ]
-      },
-      "BookingIdentifyingMarksResponse" : {
-        "type" : "object",
-        "description" : "Identifying marks held against a booking",
-        "properties" : {
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The booking's unique identifier",
-            "example" : 1234567
-          },
-          "startDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The start date of the booking",
-            "example" : "2020-07-17T12:34:56"
-          },
-          "endDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The end date of the booking, or null if the booking is still active",
-            "example" : "2021-07-16T12:34:56"
-          },
-          "latestBooking" : {
-            "type" : "boolean",
-            "description" : "Whether this is the latest booking or not. Note that latest does not imply active.",
-            "example" : true
-          },
-          "identifyingMarks" : {
-            "type" : "array",
-            "description" : "A list of identifying marks for this booking",
-            "items" : {
-              "$ref" : "#/components/schemas/IdentifyingMarksResponse"
-            }
-          }
-        },
-        "required" : [ "bookingId", "identifyingMarks", "latestBooking", "startDateTime" ]
-      },
-      "IdentifyingMarksResponse" : {
-        "type" : "object",
-        "description" : "Identifying marks",
-        "properties" : {
-          "idMarksSeq" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Multiple identifying marks records can be created for each booking",
-            "example" : 1
-          },
-          "bodyPartCode" : {
-            "type" : "string",
-            "description" : "The body part code",
-            "example" : "TORSO"
-          },
-          "markTypeCode" : {
-            "type" : "string",
-            "description" : "The mark type code",
-            "example" : "TAT"
-          },
-          "sideCode" : {
-            "type" : "string",
-            "description" : "The side code",
-            "example" : "F"
-          },
-          "partOrientationCode" : {
-            "type" : "string",
-            "description" : "The part orientation code",
-            "example" : "LOW"
-          },
-          "commentText" : {
-            "type" : "string",
-            "description" : "Optional comments",
-            "example" : "Scar above left eye"
-          },
-          "imageIds" : {
-            "type" : "array",
-            "description" : "The IDs of images associated to the mark",
-            "example" : [ 12345, 56789 ],
-            "items" : {
-              "type" : "integer",
-              "format" : "int64"
-            }
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The time the identifying marks were created",
-            "example" : "2020-07-17T12:34:56"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The user who created the identifying marks",
-            "example" : "AQ425D"
-          },
-          "modifiedDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The time the identifying marks were last changed",
-            "example" : "2021-07-16T12:34:56"
-          },
-          "modifiedBy" : {
-            "type" : "string",
-            "description" : "The user who modified the identifying marks",
-            "example" : "AQ425D"
-          },
-          "auditModuleName" : {
-            "type" : "string",
-            "description" : "The name of the module that last changed the identifying marks, indicates if this was NOMIS or the synchronisation service",
-            "example" : "DPS_SYNCHRONISATION"
-          }
-        },
-        "required" : [ "bodyPartCode", "createDateTime", "createdBy", "imageIds", "markTypeCode" ]
       },
       "BookingIdsWithLast" : {
         "type" : "object",

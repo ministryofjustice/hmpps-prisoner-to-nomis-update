@@ -187,6 +187,17 @@ class CSIPService(
     log.warn("Unable to delete mapping for csip $dpsCsipId. Please delete manually", e)
   }
 
+  suspend fun repairCsipReport(prisonNumber: String, dpsCsipReportId: String) = updateCSIPReport(
+    CSIPEvent(
+      description = null,
+      eventType = "csip-repair",
+      personReference = PersonReference.withNomsNumber(prisonNumber),
+      additionalInformation = CSIPAdditionalInformation(
+        recordUuid = dpsCsipReportId,
+      ),
+    ),
+  )
+
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
 
