@@ -72,6 +72,7 @@ fun Review.toNomisReviewRequest(nomisReviewId: Long? = null, attendeeMappings: L
   summary = summary,
   nextReviewDate = nextReviewDate,
   closeDate = csipClosedDate,
+  reviewSequence = reviewSequence,
   attendees = attendees.map {
     it.toNomisAttendeeRequest(
       attendeeMappings?.find(it.attendeeUuid.toString())?.nomisId,

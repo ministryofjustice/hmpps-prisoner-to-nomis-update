@@ -159,7 +159,7 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
         }
 
         @Test
-        fun `the created csip will contain details of the DPS csip intervies`() {
+        fun `the created csip will contain details of the DPS csip interview`() {
           csipNomisApi.verify(
             putRequestedFor(anyUrl())
               .withRequestBodyJsonPath("investigation.interviews[0].dpsId", "8cdadcf3-b003-4116-9956-c99bd8df6222")
@@ -211,7 +211,8 @@ class CSIPToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("reviews[0].peopleInformed", false)
               .withRequestBodyJsonPath("reviews[0].recordedDate", "2024-04-01")
               .withRequestBodyJsonPath("reviews[0].recordedBy", "JSMITH")
-              .withRequestBodyJsonPath("reviews[0].closeDate", "2024-04-16"),
+              .withRequestBodyJsonPath("reviews[0].closeDate", "2024-04-16")
+              .withRequestBodyJsonPath("reviews[0].reviewSequence", 7),
           )
         }
 
