@@ -11,7 +11,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 
@@ -90,16 +92,23 @@ class ContactPersonReconciliationService(
     }.awaitBoth()
 
     return if (nomisContacts.size == dpsContacts.size) {
-      null
+      val dpsContactSummaries = dpsContacts.map { it.asSummary() }.sortedBy { it.contactId }
+      val nomisContactSummaries = nomisContacts.map { it.asSummary() }.sortedBy { it.contactId }
+      checkContactsMatch(
+        prisonerId = prisonerId,
+        dpsContactSummaries = dpsContactSummaries,
+        nomisContactSummaries = nomisContactSummaries,
+      )
     } else {
       MismatchPrisonerContacts(prisonerId.offenderNo, nomisContactCount = nomisContacts.size, dpsContactCount = dpsContacts.size).also { mismatch ->
-        log.info("Sentencing Adjustments Mismatch found  $mismatch")
+        log.info("Prisoner contact sizes do not match  $mismatch")
         telemetryClient.trackEvent(
           "$TELEMETRY_PREFIX-mismatch",
           mapOf(
             "offenderNo" to mismatch.offenderNo,
             "dpsContactCount" to (mismatch.dpsContactCount.toString()),
             "nomisContactCount" to (mismatch.nomisContactCount.toString()),
+            "reason" to "different-number-of-contacts",
           ),
         )
       }
@@ -115,6 +124,50 @@ class ContactPersonReconciliationService(
     )
   }.getOrNull()
 
+  suspend fun checkContactsMatch(prisonerId: PrisonerIds, dpsContactSummaries: List<ContactSummary>, nomisContactSummaries: List<ContactSummary>): MismatchPrisonerContacts? {
+    nomisContactSummaries.forEach {
+      val nomisContact = it
+      val dpsContact = dpsContactSummaries.find { dpsContact -> dpsContact.contactId == nomisContact.contactId }
+      if (dpsContact == null) {
+        return MismatchPrisonerContacts(prisonerId.offenderNo, nomisContactCount = nomisContactSummaries.size, dpsContactCount = dpsContactSummaries.size).also { mismatch ->
+          log.info("NOMIS has different contacts found $mismatch")
+          telemetryClient.trackEvent(
+            "$TELEMETRY_PREFIX-mismatch",
+            mapOf(
+              "offenderNo" to mismatch.offenderNo,
+              "contactId" to (nomisContact.contactId.toString()),
+              "reason" to "different-contacts",
+            ),
+          )
+        }
+      }
+    }
+    return null
+  }
+  private fun PrisonerContactSummary.asSummary() = ContactSummary(
+    contactId = this.contactId,
+    firstName = this.firstName,
+    lastName = this.lastName,
+    relationshipCode = this.relationshipToPrisonerCode,
+    contactType = this.relationshipToPrisonerCode,
+    emergencyContact = this.isEmergencyContact,
+    nextOfKin = this.isNextOfKin,
+    approvedVisitor = this.isApprovedVisitor,
+    active = this.isRelationshipActive,
+  )
+
+  private fun PrisonerContact.asSummary() = ContactSummary(
+    contactId = this.person.personId,
+    firstName = this.person.firstName,
+    lastName = this.person.lastName,
+    relationshipCode = this.relationshipType.code,
+    contactType = this.contactType.code,
+    emergencyContact = this.emergencyContact,
+    nextOfKin = this.nextOfKin,
+    approvedVisitor = this.approvedVisitor,
+    active = this.active,
+  )
+
   // Last page will be a non-null page with items less than page size
   private fun PageResult.notLastPage(): Boolean = when (this) {
     is SuccessPageResult -> this.value.prisonerIds.size == pageSize.toInt()
@@ -126,6 +179,17 @@ class ContactPersonReconciliationService(
   class ErrorPageResult(val error: Throwable) : PageResult()
 }
 
+data class ContactSummary(
+  val contactId: Long,
+  val firstName: String,
+  val lastName: String,
+  val relationshipCode: String,
+  val contactType: String,
+  val emergencyContact: Boolean,
+  val nextOfKin: Boolean,
+  val approvedVisitor: Boolean,
+  val active: Boolean,
+)
 data class MismatchPrisonerContacts(
   val offenderNo: String,
   val dpsContactCount: Int,
