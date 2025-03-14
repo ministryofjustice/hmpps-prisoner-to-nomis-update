@@ -849,5 +849,17 @@ class ContactPersonNomisApiServiceTest {
         getRequestedFor(urlPathEqualTo("/prisoners/A1234KT/contacts")),
       )
     }
+
+    @Test
+    fun `will request just active contacts`() = runTest {
+      mockServer.stubGetPrisonerContacts(prisonerNumber = "A1234KT")
+
+      apiService.getContactsForPrisoner("A1234KT")
+
+      mockServer.verify(
+        getRequestedFor(anyUrl())
+          .withQueryParam("active-only", equalTo("true")),
+      )
+    }
   }
 }

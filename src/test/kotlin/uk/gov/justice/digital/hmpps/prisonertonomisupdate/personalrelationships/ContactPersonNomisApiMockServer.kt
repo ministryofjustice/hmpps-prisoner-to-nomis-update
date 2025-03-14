@@ -7,6 +7,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -560,7 +561,7 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
 
   fun stubGetPrisonerContacts(prisonerNumber: String, response: PrisonerWithContacts = prisonerWithContacts()) {
     nomisApi.stubFor(
-      get(urlEqualTo("/prisoners/$prisonerNumber/contacts")).willReturn(
+      get(urlPathEqualTo("/prisoners/$prisonerNumber/contacts")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())

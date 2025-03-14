@@ -302,5 +302,19 @@ class ContactPersonDpsApiServiceTest {
         getRequestedFor(urlPathEqualTo("/prisoner/A1234KT/contact")),
       )
     }
+
+    @Test
+    fun `will request a single huge page of just active contacts`() = runTest {
+      dpsContactPersonServer.stubGetPrisonerContacts(prisonerNumber = "A1234KT")
+
+      apiService.getPrisonerContacts("A1234KT")
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(anyUrl())
+          .withQueryParam("size", equalTo("10000"))
+          .withQueryParam("page", equalTo("0"))
+          .withQueryParam("active", equalTo("true")),
+      )
+    }
   }
 }
