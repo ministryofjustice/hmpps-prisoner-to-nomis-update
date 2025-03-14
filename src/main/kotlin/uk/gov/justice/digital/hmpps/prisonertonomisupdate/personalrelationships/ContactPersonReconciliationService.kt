@@ -23,7 +23,7 @@ class ContactPersonReconciliationService(
   private val nomisApiService: ContactPersonNomisApiService,
   private val nomisPrisonerApiService: NomisApiService,
   private val dpsApiService: ContactPersonDpsApiService,
-  @Value("\${reports.contact-person.prisoner-contact.reconciliation.page-size:20}") private val pageSize: Long = 20,
+  @Value("\${reports.contact-person.prisoner-contact.reconciliation.page-size:10}") private val pageSize: Long = 20,
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -91,8 +91,20 @@ class ContactPersonReconciliationService(
         async { dpsApiService.getPrisonerContacts(prisonerId.offenderNo).content!! }
     }.awaitBoth()
 
-    val dpsContactSummaries = dpsContacts.map { it.asSummary() }.sortedBy { it.contactId }
-    val nomisContactSummaries = nomisContacts.map { it.asSummary() }.sortedBy { it.contactId }
+    val dpsContactSummaries = dpsContacts.map { it.asSummary() }.sortedWith(
+      compareBy(
+        ContactSummary::contactId,
+        ContactSummary::relationshipCode,
+        ContactSummary::currentTerm,
+      ),
+    )
+    val nomisContactSummaries = nomisContacts.map { it.asSummary() }.sortedWith(
+      compareBy(
+        ContactSummary::contactId,
+        ContactSummary::relationshipCode,
+        ContactSummary::currentTerm,
+      ),
+    )
 
     checkContactsMatch(
       prisonerId = prisonerId,
