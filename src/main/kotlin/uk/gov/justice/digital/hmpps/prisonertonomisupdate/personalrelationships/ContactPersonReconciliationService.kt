@@ -23,7 +23,7 @@ class ContactPersonReconciliationService(
   private val nomisApiService: ContactPersonNomisApiService,
   private val nomisPrisonerApiService: NomisApiService,
   private val dpsApiService: ContactPersonDpsApiService,
-  @Value("\${reports.contact-person.prisoner-contact.reconciliation.page-size:10}") private val pageSize: Long = 20,
+  @Value("\${reports.contact-person.prisoner-contact.reconciliation.page-size:10}") private val pageSize: Long = 10,
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
