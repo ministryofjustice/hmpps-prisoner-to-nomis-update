@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddress
@@ -19,6 +21,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestriction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummaryPage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummaryPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddressPhone
@@ -147,6 +152,27 @@ class ContactPersonDpsApiExtension :
       comments = "Banned for life",
       createdBy = "JANE.SAM",
       createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+    )
+
+    fun prisonerContactSummaryPage() = PrisonerContactSummaryPage(
+      content = emptyList(),
+    )
+
+    fun prisonerContactSummary(id: Long = 1) = PrisonerContactSummary(
+      prisonerContactId = 1,
+      contactId = id,
+      prisonerNumber = "A1234KT",
+      lastName = "SMITH",
+      firstName = "JANE",
+      relationshipTypeCode = "S",
+      relationshipTypeDescription = "Social",
+      relationshipToPrisonerCode = "BRO",
+      relationshipToPrisonerDescription = "Brother",
+      isApprovedVisitor = true,
+      isNextOfKin = false,
+      isEmergencyContact = false,
+      isRelationshipActive = true,
+      currentTerm = true,
     )
   }
 
@@ -292,6 +318,17 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withHeader("Content-Type", "application/json")
             .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
         ),
+    )
+  }
+
+  fun stubGetPrisonerContacts(prisonerNumber: String, response: PrisonerContactSummaryPage = prisonerContactSummaryPage()) {
+    stubFor(
+      get(urlPathEqualTo("/prisoner/$prisonerNumber/contact")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+      ),
     )
   }
 }

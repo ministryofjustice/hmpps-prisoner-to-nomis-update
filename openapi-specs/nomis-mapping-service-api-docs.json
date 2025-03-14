@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-07.6040.6cb322f"
+    "version" : "2025-03-10.6056.44a21ea"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -2826,7 +2826,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/ContactPersonMappingsDto"
+                "$ref" : "#/components/schemas/ContactPersonPrisonerMappingsDto"
               }
             }
           },
@@ -15234,6 +15234,154 @@
         },
         "required" : [ "cprId", "nomisId" ]
       },
+      "ContactPersonPrisonerMappingsDto" : {
+        "type" : "object",
+        "description" : "New and old mappings related to a prisoner",
+        "properties" : {
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "personContactMapping" : {
+            "type" : "array",
+            "description" : "Person contact mapping",
+            "items" : {
+              "$ref" : "#/components/schemas/ContactPersonSimpleMappingIdDto"
+            }
+          },
+          "personContactRestrictionMapping" : {
+            "type" : "array",
+            "description" : "Person contact restriction mapping",
+            "items" : {
+              "$ref" : "#/components/schemas/ContactPersonSimpleMappingIdDto"
+            }
+          },
+          "personContactMappingsToRemoveByDpsId" : {
+            "type" : "array",
+            "description" : "Person contact mappings to remove",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "personContactRestrictionMappingsToRemoveByDpsId" : {
+            "type" : "array",
+            "description" : "Person contact restriction mappings to remove",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "mappingType", "personContactMapping", "personContactMappingsToRemoveByDpsId", "personContactRestrictionMapping", "personContactRestrictionMappingsToRemoveByDpsId" ]
+      },
+      "ContactPersonSimpleMappingIdDto" : {
+        "type" : "object",
+        "description" : "NOMIS to DPS simple mapping IDs",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS id"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
+          }
+        },
+        "required" : [ "dpsId", "nomisId" ]
+      },
+      "PersonPhoneMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS id"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
+          },
+          "dpsPhoneType" : {
+            "type" : "string",
+            "description" : "DPS phone type",
+            "enum" : [ "ADDRESS", "PERSON" ]
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsId", "dpsPhoneType", "mappingType", "nomisId" ]
+      },
+      "PersonRestrictionMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS id"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsId", "mappingType", "nomisId" ]
+      },
+      "PersonMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS id"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsId", "mappingType", "nomisId" ]
+      },
       "ContactPersonMappingsDto" : {
         "type" : "object",
         "description" : "Mappings for a Person and there associated child entities",
@@ -15357,108 +15505,6 @@
           }
         },
         "required" : [ "dpsId", "nomisPersonId", "nomisSequenceNumber" ]
-      },
-      "ContactPersonSimpleMappingIdDto" : {
-        "type" : "object",
-        "description" : "NOMIS to DPS simple mapping IDs",
-        "properties" : {
-          "dpsId" : {
-            "type" : "string",
-            "description" : "DPS id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          }
-        },
-        "required" : [ "dpsId", "nomisId" ]
-      },
-      "PersonPhoneMappingDto" : {
-        "type" : "object",
-        "properties" : {
-          "dpsId" : {
-            "type" : "string",
-            "description" : "DPS id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          },
-          "dpsPhoneType" : {
-            "type" : "string",
-            "description" : "DPS phone type",
-            "enum" : [ "ADDRESS", "PERSON" ]
-          },
-          "label" : {
-            "type" : "string"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "dpsId", "dpsPhoneType", "mappingType", "nomisId" ]
-      },
-      "PersonRestrictionMappingDto" : {
-        "type" : "object",
-        "properties" : {
-          "dpsId" : {
-            "type" : "string",
-            "description" : "DPS id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          },
-          "label" : {
-            "type" : "string"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisId" ]
-      },
-      "PersonMappingDto" : {
-        "type" : "object",
-        "properties" : {
-          "dpsId" : {
-            "type" : "string",
-            "description" : "DPS id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          },
-          "label" : {
-            "type" : "string"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisId" ]
       },
       "PersonIdentifierMappingDto" : {
         "type" : "object",
@@ -15963,12 +16009,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -15985,6 +16025,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -16012,15 +16058,15 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
           }
         }
       },
@@ -16085,12 +16131,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -16107,6 +16147,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -16174,12 +16220,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -16196,6 +16236,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -16278,12 +16324,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -16300,6 +16340,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -16378,12 +16424,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -16400,6 +16440,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -16452,12 +16498,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -16474,6 +16514,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -16520,12 +16566,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -16542,6 +16582,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",

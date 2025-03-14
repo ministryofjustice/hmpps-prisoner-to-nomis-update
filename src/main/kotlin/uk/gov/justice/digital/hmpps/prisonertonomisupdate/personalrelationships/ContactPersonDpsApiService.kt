@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummaryPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddressPhone
@@ -64,6 +65,11 @@ class ContactPersonDpsApiService(@Qualifier("personalRelationshipsApiWebClient")
 
   suspend fun getPrisonerContactRestriction(prisonerContactRestrictionId: Long): SyncPrisonerContactRestriction = webClient.get()
     .uri("/sync/prisoner-contact-restriction/{prisonerContactRestrictionId}", prisonerContactRestrictionId)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun getPrisonerContacts(prisonNumber: String): PrisonerContactSummaryPage = webClient.get()
+    .uri("/prisoner/{prisonNumber}/contact?page=0&size=10000", prisonNumber)
     .retrieve()
     .awaitBody()
 }

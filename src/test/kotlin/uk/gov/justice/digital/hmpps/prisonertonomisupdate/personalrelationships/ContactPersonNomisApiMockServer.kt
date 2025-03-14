@@ -3,12 +3,15 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
+import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactForPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateContactPersonRestrictionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonAddressRequest
@@ -25,6 +28,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerWithContacts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonContactRequest
@@ -35,6 +41,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Component
 class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
@@ -167,6 +174,32 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
       enteredStaffUsername = "j.much",
       effectiveDate = LocalDate.parse("2020-01-01"),
       expiryDate = LocalDate.parse("2026-01-01"),
+    )
+
+    fun prisonerWithContacts() = PrisonerWithContacts(
+      contacts = emptyList(),
+    )
+
+    fun prisonerContact(id: Long = 1) = PrisonerContact(
+      id = 1,
+      bookingId = 1,
+      bookingSequence = 1,
+      contactType = CodeDescription("S", "Social"),
+      relationshipType = CodeDescription("BRO", "Brother"),
+      active = true,
+      approvedVisitor = true,
+      nextOfKin = false,
+      emergencyContact = false,
+      person = ContactForPerson(
+        personId = id,
+        lastName = "SMITH",
+        firstName = "JANE",
+      ),
+      restrictions = emptyList(),
+      audit = NomisAudit(
+        createDatetime = LocalDateTime.now(),
+        createUsername = "T.SMOTH",
+      ),
     )
   }
 
@@ -525,6 +558,16 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
 
+  fun stubGetPrisonerContacts(prisonerNumber: String, response: PrisonerWithContacts = prisonerWithContacts()) {
+    nomisApi.stubFor(
+      get(urlEqualTo("/prisoners/$prisonerNumber/contacts")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }

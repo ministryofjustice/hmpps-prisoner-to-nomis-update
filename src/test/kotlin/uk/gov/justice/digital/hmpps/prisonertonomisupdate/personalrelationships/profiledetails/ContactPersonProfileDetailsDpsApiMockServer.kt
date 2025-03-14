@@ -2,7 +2,9 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.http.Fault
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
+import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.dpsContactPersonServer
@@ -37,7 +39,33 @@ class ContactPersonProfileDetailsDpsApiMockServer {
     )
   }
 
-  fun stubGetNumberOfChildren(prisonerNumber: String, response: SyncPrisonerNumberOfChildrenResponse = numberOfChildren()) {
+  fun stubGetDomesticStatusAfterRetry(prisonerNumber: String, response: SyncPrisonerDomesticStatusResponse = domesticStatus()) {
+    dpsContactPersonServer.stubFor(
+      get("/sync/$prisonerNumber/domestic-status")
+        .inScenario("Domestic status works on retry")
+        .willReturn(
+          aResponse()
+            .withFault(Fault.CONNECTION_RESET_BY_PEER),
+        ).willSetStateTo("Failed first call"),
+    )
+
+    dpsContactPersonServer.stubFor(
+      get("/sync/$prisonerNumber/domestic-status")
+        .inScenario("Domestic status works on retry")
+        .whenScenarioStateIs("Failed first call")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(objectMapper.writeValueAsString(response)),
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetNumberOfChildren(
+    prisonerNumber: String,
+    response: SyncPrisonerNumberOfChildrenResponse = numberOfChildren(),
+  ) {
     dpsContactPersonServer.stubFor(
       get("/sync/$prisonerNumber/number-of-children")
         .willReturn(
@@ -60,18 +88,44 @@ class ContactPersonProfileDetailsDpsApiMockServer {
     )
   }
 
+  fun stubGetNumberOfChildrenAfterRetry(
+    prisonerNumber: String,
+    response: SyncPrisonerNumberOfChildrenResponse = numberOfChildren(),
+  ) {
+    dpsContactPersonServer.stubFor(
+      get("/sync/$prisonerNumber/number-of-children")
+        .inScenario("Number of children works on retry")
+        .willReturn(
+          aResponse()
+            .withFault(Fault.CONNECTION_RESET_BY_PEER),
+        ).willSetStateTo("Failed first call"),
+    )
+    dpsContactPersonServer.stubFor(
+      get("/sync/$prisonerNumber/number-of-children")
+        .inScenario("Number of children works on retry")
+        .whenScenarioStateIs("Failed first call")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(objectMapper.writeValueAsString(response)),
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
   fun verify(pattern: RequestPatternBuilder) = dpsContactPersonServer.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = dpsContactPersonServer.verify(count, pattern)
 }
 
-fun domesticStatus(dpsId: Long = 54321, domesticStatusCode: String = "M") = SyncPrisonerDomesticStatusResponse(
+fun domesticStatus(dpsId: Long = 54321, domesticStatusCode: String? = "M") = SyncPrisonerDomesticStatusResponse(
   id = dpsId,
   active = true,
   domesticStatusCode = domesticStatusCode,
   createdTime = LocalDateTime.now(),
   createdBy = "A_USER",
 )
-fun numberOfChildren(dpsId: Long = 54321, numberOfChildren: String = "3") = SyncPrisonerNumberOfChildrenResponse(
+
+fun numberOfChildren(dpsId: Long = 54321, numberOfChildren: String? = "3") = SyncPrisonerNumberOfChildrenResponse(
   id = dpsId,
   active = true,
   numberOfChildren = numberOfChildren,
