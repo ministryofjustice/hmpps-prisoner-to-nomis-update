@@ -95,14 +95,12 @@ class ContactPersonReconciliationService(
       compareBy(
         ContactSummary::contactId,
         ContactSummary::relationshipCode,
-        ContactSummary::currentTerm,
       ),
     )
     val nomisContactSummaries = nomisContacts.map { it.asSummary() }.sortedWith(
       compareBy(
         ContactSummary::contactId,
         ContactSummary::relationshipCode,
-        ContactSummary::currentTerm,
       ),
     )
 
@@ -180,7 +178,6 @@ class ContactPersonReconciliationService(
     emergencyContact = this.isEmergencyContact,
     nextOfKin = this.isNextOfKin,
     approvedVisitor = this.isApprovedVisitor,
-    currentTerm = this.currentTerm,
   )
 
   private fun PrisonerContact.asSummary() = ContactSummary(
@@ -192,7 +189,6 @@ class ContactPersonReconciliationService(
     emergencyContact = this.emergencyContact,
     nextOfKin = this.nextOfKin,
     approvedVisitor = this.approvedVisitor,
-    currentTerm = this.bookingSequence == 1L,
   )
 
   // Last page will be a non-null page with items less than page size
@@ -215,7 +211,6 @@ data class ContactSummary(
   val emergencyContact: Boolean,
   val nextOfKin: Boolean,
   val approvedVisitor: Boolean,
-  val currentTerm: Boolean,
 )
 data class MismatchPrisonerContacts(
   val offenderNo: String,

@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import reactor.util.context.Context
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummaryPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddress
@@ -15,9 +17,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncEmployment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerContactRestriction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
-class ContactPersonDpsApiService(@Qualifier("personalRelationshipsApiWebClient") private val webClient: WebClient) {
+class ContactPersonDpsApiService(@Qualifier("personalRelationshipsApiWebClient") private val webClient: WebClient, retryApiService: RetryApiService) {
+  private val backoffSpec = retryApiService.getBackoffSpec().withRetryContext(
+    Context.of("api", "ContactPersonDpsApiService"),
+  )
+
   suspend fun getContact(contactId: Long): SyncContact = webClient.get()
     .uri("/sync/contact/{contactId}", contactId)
     .retrieve()
@@ -71,5 +78,5 @@ class ContactPersonDpsApiService(@Qualifier("personalRelationshipsApiWebClient")
   suspend fun getPrisonerContacts(prisonNumber: String): PrisonerContactSummaryPage = webClient.get()
     .uri("/prisoner/{prisonNumber}/contact?page=0&size=10000&active=true", prisonNumber)
     .retrieve()
-    .awaitBody()
+    .awaitBodyWithRetry(backoffSpec)
 }
