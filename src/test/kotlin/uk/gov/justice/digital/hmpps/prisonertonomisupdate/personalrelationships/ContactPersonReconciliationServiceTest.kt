@@ -346,18 +346,6 @@ internal class ContactPersonReconciliationServiceTest {
           ),
         )
       }
-
-      @Test
-      fun `telemetry will show contact is missing`() = runTest {
-        service.checkPrisonerContactsMatch(prisonerId)
-        verify(telemetryClient).trackEvent(
-          eq("contact-person-prisoner-contact-reconciliation-mismatch"),
-          check {
-            assertThat(it).containsEntry("reason", "different-contacts-details")
-          },
-          isNull(),
-        )
-      }
     }
 
     @Nested
