@@ -304,7 +304,7 @@ class ContactPersonDpsApiServiceTest {
     }
 
     @Test
-    fun `will request a single huge page of all contacts including inactive one`() = runTest {
+    fun `will request a single huge page of just active contacts`() = runTest {
       dpsContactPersonServer.stubGetPrisonerContacts(prisonerNumber = "A1234KT")
 
       apiService.getPrisonerContacts("A1234KT")
@@ -313,7 +313,7 @@ class ContactPersonDpsApiServiceTest {
         getRequestedFor(anyUrl())
           .withQueryParam("size", equalTo("10000"))
           .withQueryParam("page", equalTo("0"))
-          .withQueryParam("active", equalTo("false")),
+          .withQueryParam("active", equalTo("true")),
       )
     }
   }
