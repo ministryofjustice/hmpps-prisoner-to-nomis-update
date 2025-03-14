@@ -21786,6 +21786,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -21802,12 +21808,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21831,12 +21831,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
@@ -21929,85 +21929,6 @@
             "type" : "integer",
             "format" : "int64",
             "description" : "Which staff member authorised the adjustment"
-          },
-          "createUsername" : {
-            "type" : "string",
-            "description" : "Who created the adjustment"
-          }
-        },
-        "required" : [ "adjustmentDate", "createUsername" ]
-      },
-      "PageVisitBalanceIdResponse" : {
-        "type" : "object",
-        "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "size" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "content" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/VisitBalanceIdResponse"
-            }
-          },
-          "number" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
-          "empty" : {
-            "type" : "boolean"
-          }
-        }
-      },
-      "VisitBalanceIdResponse" : {
-        "type" : "object",
-        "description" : "visit balance id",
-        "properties" : {
-          "visitBalanceId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The visit balance (booking) id"
-          }
-        },
-        "required" : [ "visitBalanceId" ]
-      },
-      "SplashConditionDto" : {
-        "type" : "object",
-        "description" : "Splash Screen Access Condition details",
-        "properties" : {
-          "prisonId" : {
-            "type" : "string",
-            "description" : "The prisonId or **ALL**",
-            "example" : "MDI but can be **ALL** for all"
-          },
-          "accessBlocked" : {
-            "type" : "boolean",
-            "description" : "Whether access to the screen is blocked",
-            "example" : true
           },
           "createUsername" : {
             "type" : "string",
@@ -22471,6 +22392,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -22487,12 +22414,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22534,28 +22455,6 @@
           }
         },
         "required" : [ "code", "description" ]
-      },
-      "PrisonerVisitOrderBalanceResponse" : {
-        "type" : "object",
-        "description" : "The list of visit orders held against a prisoner",
-        "properties" : {
-          "remainingVisitOrders" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Total number of unallocated (remaining) visit orders"
-          },
-          "remainingPrivilegedVisitOrders" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Total number of unallocated (remaining) privileged visit orders"
-          },
-          "lastIEPAllocationDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The date of the last IEP Allocation date via the batch process, if it exists"
-          }
-        },
-        "required" : [ "remainingPrivilegedVisitOrders", "remainingVisitOrders" ]
       },
       "OffenceResponse" : {
         "type" : "object",
@@ -24166,164 +24065,6 @@
         },
         "required" : [ "contacts" ]
       },
-      "ContactForPerson" : {
-        "type" : "object",
-        "description" : "The data held in NOMIS about a person's contact with a prisoner",
-        "properties" : {
-          "personId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Unique NOMIS Id of person associated with the prisoner"
-          },
-          "lastName" : {
-            "type" : "string",
-            "description" : "Last name of the person",
-            "example" : "Smith"
-          },
-          "firstName" : {
-            "type" : "string",
-            "description" : "First name of the person",
-            "example" : "John"
-          }
-        },
-        "required" : [ "firstName", "lastName", "personId" ]
-      },
-      "ContactRestriction" : {
-        "type" : "object",
-        "description" : "The data held in NOMIS about a person's restriction with a prisoner",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Unique NOMIS Id of the restriction"
-          },
-          "type" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "Restriction type"
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "Free format comment text"
-          },
-          "effectiveDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Date restriction became active"
-          },
-          "expiryDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Date restriction is no longer active"
-          },
-          "enteredStaff" : {
-            "$ref" : "#/components/schemas/ContactRestrictionEnteredStaff",
-            "description" : "Staff member who created the restriction"
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit data associated with the records"
-          }
-        },
-        "required" : [ "audit", "effectiveDate", "enteredStaff", "id", "type" ]
-      },
-      "ContactRestrictionEnteredStaff" : {
-        "type" : "object",
-        "properties" : {
-          "staffId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS staff id"
-          },
-          "username" : {
-            "type" : "string",
-            "description" : "username for staff member. For staff with multiple accounts this will be the general account username."
-          }
-        },
-        "required" : [ "staffId", "username" ]
-      },
-      "PrisonerContact" : {
-        "type" : "object",
-        "description" : "The data held in NOMIS about a prisoner's contact with a person",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Unique NOMIS sequence for the identifier for this contact"
-          },
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Unique NOMIS Id of booking associated with the contact"
-          },
-          "bookingSequence" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Booking sequence this contact is related to. When 1 this indicates contact is for current term"
-          },
-          "contactType" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The contact type"
-          },
-          "relationshipType" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The relationship type"
-          },
-          "active" : {
-            "type" : "boolean",
-            "description" : "True if active"
-          },
-          "expiryDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Date contact is no longer active"
-          },
-          "approvedVisitor" : {
-            "type" : "boolean",
-            "description" : "True if approved to visit the prisoner"
-          },
-          "nextOfKin" : {
-            "type" : "boolean",
-            "description" : "True if next of kin to the prisoner"
-          },
-          "emergencyContact" : {
-            "type" : "boolean",
-            "description" : "True if emergency contact for the prisoner"
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "Free format comment text"
-          },
-          "person" : {
-            "$ref" : "#/components/schemas/ContactForPerson",
-            "description" : "The person this prisoner is a contact for"
-          },
-          "restrictions" : {
-            "type" : "array",
-            "description" : "List of restrictions specifically between the prisoner and this contact",
-            "items" : {
-              "$ref" : "#/components/schemas/ContactRestriction"
-            }
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit data associated with the records"
-          }
-        },
-        "required" : [ "active", "approvedVisitor", "audit", "bookingId", "bookingSequence", "contactType", "emergencyContact", "id", "nextOfKin", "person", "relationshipType", "restrictions" ]
-      },
-      "PrisonerWithContacts" : {
-        "type" : "object",
-        "properties" : {
-          "contacts" : {
-            "type" : "array",
-            "description" : "List of contacts for this prisoner",
-            "items" : {
-              "$ref" : "#/components/schemas/PrisonerContact"
-            }
-          }
-        },
-        "required" : [ "contacts" ]
-      },
       "CaseNoteAmendment" : {
         "type" : "object",
         "properties" : {
@@ -24517,6 +24258,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -24533,12 +24280,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -24581,6 +24322,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -24597,12 +24344,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25228,6 +24969,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -25244,12 +24991,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25367,6 +25108,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -25383,12 +25130,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25588,6 +25329,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -25604,12 +25351,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26104,6 +25845,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26120,12 +25867,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26214,6 +25955,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26230,12 +25977,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26333,6 +26074,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26349,12 +26096,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26391,6 +26132,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26407,12 +26154,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26697,6 +26438,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26713,12 +26460,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27458,6 +27199,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27474,12 +27221,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27757,6 +27498,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27773,12 +27520,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27819,6 +27560,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27835,12 +27582,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27886,6 +27627,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27902,12 +27649,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -28179,6 +27920,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -28195,12 +27942,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
