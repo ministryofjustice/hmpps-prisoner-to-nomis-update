@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-10.6056.44a21ea"
+    "version" : "2025-03-13.6145.c0f7bbb"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -322,6 +322,56 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/contact-person/profile-details/migration" : {
+      "put" : {
+        "tags" : [ "contact-person-profile-details-migration-resource" ],
+        "summary" : "Creates or updates a contact person profile details migration mapping for a migration",
+        "description" : "Creates updates a contact person profile details migration mapping for a migration between NOMIS ids and dps ids. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId" : "createMappings",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ContactPersonProfileDetailsMigrationMappingRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Mappings created or updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ContactPersonProfileDetailMigrationMapping"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2210,6 +2260,68 @@
         }
       }
     },
+    "/mapping/court-sentencing/prisoner/{offenderNo}/court-cases" : {
+      "post" : {
+        "tags" : [ "court-sentencing-mapping-resource" ],
+        "summary" : "Creates new court case hierarchical mappings for an offender during migration.",
+        "description" : "Creates mappings between nomis Court Case ID and DPS Court Case ID for an offender. Only used by migration. Also maps child entities: Court appearances and charges. Requires ROLE_NOMIS_COURT_SENTENCING",
+        "operationId" : "createMigrationMapping",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CourtCaseMigrationMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/court-sentencing/court-cases" : {
       "post" : {
         "tags" : [ "court-sentencing-mapping-resource" ],
@@ -2229,13 +2341,7 @@
         "responses" : {
           "201" : {
             "description" : "Mapping created",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CourtCaseMapping"
-                }
-              }
-            }
+            "content" : { }
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
@@ -2543,7 +2649,7 @@
         "tags" : [ "corporate-mapping-resource" ],
         "summary" : "Creates a tree of corporate mappings typically for a migration",
         "description" : "Creates a tree of corporate mappings typically for a migration between NOMIS ids and dps ids. Requires ROLE_NOMIS_CONTACTPERSONS",
-        "operationId" : "createMappings",
+        "operationId" : "createMappings_1",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2759,7 +2865,7 @@
         "tags" : [ "core-person-mapping-resource" ],
         "summary" : "Creates a tree of core person mappings typically for a migration",
         "description" : "Creates a tree of core person mappings typically for a migration between NOMIS ids and cpr ids. Requires ROLE_NOMIS_CORE_PERSON",
-        "operationId" : "createMappings_1",
+        "operationId" : "createMappings_2",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3073,7 +3179,7 @@
         "tags" : [ "contact-person-mapping-resource" ],
         "summary" : "Creates a tree of contact person mappings typically for a migration",
         "description" : "Creates a tree of contact person mappings typically for a migration between NOMIS ids and dps ids. Requires ROLE_NOMIS_CONTACTPERSONS",
-        "operationId" : "createMappings_2",
+        "operationId" : "createMappings_3",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3626,7 +3732,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "Creates a batch of new casenote mappings",
         "description" : "Creates a mapping between a batch of nomis casenote ids and dps casenote id. Requires ROLE_NOMIS_CASENOTES",
-        "operationId" : "createMappings_3",
+        "operationId" : "createMappings_4",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3866,7 +3972,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Creates a batch of new alert mappings",
         "description" : "Creates a mapping between a batch of nomis alert ids and dps alert id. Requires ROLE_NOMIS_ALERTS",
-        "operationId" : "createMappings_4",
+        "operationId" : "createMappings_5",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -7613,6 +7719,171 @@
         }
       }
     },
+    "/mapping/court-sentencing/prisoner/{offenderNo}/migration-summary" : {
+      "get" : {
+        "tags" : [ "court-sentencing-mapping-resource" ],
+        "summary" : "Get court sentencing migration summary for offender",
+        "description" : "Retrieves the migration summary for and offender using the Nomis Prison Number (Offender number). The presence of this record indicated that the offender's court sentencing data has been migrated. Requires ROLE_NOMIS_COURT_SENTENCING",
+        "operationId" : "getCourtSentencingMigrationData",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "NOMIS prison Number aka offender no.",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS prison Number aka offender no.",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender migration summary returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtSentencingMigrationSummary"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No record exists for the offender",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "court-sentencing-mapping-resource" ],
+        "summary" : "delete court sentencing migration summary for offender",
+        "description" : "Deletes the migration summary for and offender using the Nomis Prison Number (Offender number). The presence of this record indicated that the offender's court sentencing data has been migrated. Requires ROLE_NOMIS_COURT_SENTENCING",
+        "operationId" : "deleteCourtSentencingMigrationData",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "NOMIS prison Number aka offender no.",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS prison Number aka offender no.",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Offender migration summary deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-sentencing/prisoner/migration-id/{migrationId}" : {
+      "get" : {
+        "tags" : [ "court-sentencing-mapping-resource" ],
+        "summary" : "Get paged offender migration summary by migration id",
+        "description" : "Retrieve all mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged.",
+        "operationId" : "getMappingsByMigrationId_2",
+        "parameters" : [ {
+          "name" : "pageRequest",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/Pageable"
+          }
+        }, {
+          "name" : "migrationId",
+          "in" : "path",
+          "description" : "Migration Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Migration Id",
+            "example" : "2020-03-24T12:00:00"
+          },
+          "example" : "2020-03-24T12:00:00"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping page returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageCourtSentencingMigrationSummary"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/court-sentencing/court-charges/nomis-court-charge-id/{courtChargeId}" : {
       "get" : {
         "tags" : [ "court-sentencing-mapping-resource" ],
@@ -7760,65 +8031,6 @@
           },
           "404" : {
             "description" : "Id does not exist in mapping table",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mapping/court-sentencing/court-cases/migration-id/{migrationId}" : {
-      "get" : {
-        "tags" : [ "court-sentencing-mapping-resource" ],
-        "summary" : "Get paged mappings by migration id",
-        "description" : "Retrieve all mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged.",
-        "operationId" : "getMappingsByMigrationId_2",
-        "parameters" : [ {
-          "name" : "pageRequest",
-          "in" : "query",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
-          }
-        }, {
-          "name" : "migrationId",
-          "in" : "path",
-          "description" : "Migration Id",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Migration Id",
-            "example" : "2020-03-24T12:00:00"
-          },
-          "example" : "2020-03-24T12:00:00"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Mapping page returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PageCourtCaseMappingDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -9619,6 +9831,65 @@
           },
           "404" : {
             "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/contact-person/profile-details/migration/migration-id/{migrationId}" : {
+      "get" : {
+        "tags" : [ "contact-person-profile-details-migration-resource" ],
+        "summary" : "get paged mappings by migration id",
+        "description" : "Retrieve all contact person profile details migration mappings for the given migration id (identifies a single migration run). Results are paged.",
+        "operationId" : "getMigratedMappings",
+        "parameters" : [ {
+          "name" : "pageRequest",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/Pageable"
+          }
+        }, {
+          "name" : "migrationId",
+          "in" : "path",
+          "description" : "Migration Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Migration Id",
+            "example" : "2020-03-24T12:00:00"
+          },
+          "example" : "2020-03-24T12:00:00"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping page returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageContactPersonProfileDetailMigrationMapping"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -13795,6 +14066,65 @@
         },
         "required" : [ "nomisCourtChargeId" ]
       },
+      "ContactPersonProfileDetailsMigrationMappingRequest" : {
+        "type" : "object",
+        "description" : "Mappings for a Contact Person Profile Details Migration",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "NOMIS prisoner number",
+            "example" : "G1234AA"
+          },
+          "migrationId" : {
+            "type" : "string",
+            "description" : "Migration Id",
+            "example" : "2022-03-23T12:00:00"
+          },
+          "domesticStatusDpsIds" : {
+            "type" : "string",
+            "description" : "Domestic status DPS ids created",
+            "example" : "1,2,3"
+          },
+          "numberOfChildrenDpsIds" : {
+            "type" : "string",
+            "description" : "Number of children DPS ids created",
+            "example" : "4,5,6"
+          }
+        },
+        "required" : [ "domesticStatusDpsIds", "migrationId", "numberOfChildrenDpsIds", "prisonerNumber" ]
+      },
+      "ContactPersonProfileDetailMigrationMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisPrisonerNumber" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "domesticStatusDpsIds" : {
+            "type" : "string"
+          },
+          "numberOfChildrenDpsIds" : {
+            "type" : "string"
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "new" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "isNew" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "domesticStatusDpsIds", "id", "isNew", "label", "new", "nomisPrisonerNumber", "numberOfChildrenDpsIds" ]
+      },
       "CaseNoteMappingDto" : {
         "type" : "object",
         "description" : "Case note mapping",
@@ -14840,40 +15170,6 @@
         },
         "required" : [ "dpsSentenceId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisSentenceSequence" ]
       },
-      "CourtChargeMapping" : {
-        "type" : "object",
-        "properties" : {
-          "dpsCourtChargeId" : {
-            "type" : "string"
-          },
-          "nomisCourtChargeId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "label" : {
-            "type" : "string"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "new" : {
-            "type" : "boolean"
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          },
-          "id" : {
-            "type" : "string"
-          },
-          "isNew" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "dpsCourtChargeId", "id", "isNew", "mappingType", "new", "nomisCourtChargeId" ]
-      },
       "CourtAppearanceMappingDto" : {
         "type" : "object",
         "description" : "Court appearance mapping",
@@ -14910,6 +15206,131 @@
         },
         "required" : [ "dpsCourtAppearanceId", "nomisCourtAppearanceId" ]
       },
+      "CourtCaseMappingDto" : {
+        "type" : "object",
+        "description" : "Court case mapping",
+        "properties" : {
+          "nomisCourtCaseId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS court case id",
+            "example" : 123456
+          },
+          "dpsCourtCaseId" : {
+            "type" : "string",
+            "description" : "DPS court case id",
+            "example" : 123456
+          },
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "NOMIS offender no/nomisId",
+            "example" : "AA12345"
+          },
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "mappingType" : {
+            "type" : "string",
+            "default" : "DPS_CREATED",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date-time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsCourtCaseId", "nomisCourtCaseId" ]
+      },
+      "CourtCaseMigrationMappingDto" : {
+        "type" : "object",
+        "description" : "Court cases mapping including child entity mapping",
+        "properties" : {
+          "courtCases" : {
+            "type" : "array",
+            "description" : "Mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtCaseMappingDto"
+            }
+          },
+          "courtAppearances" : {
+            "type" : "array",
+            "description" : "Court Appearance mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtAppearanceMappingDto"
+            }
+          },
+          "courtCharges" : {
+            "type" : "array",
+            "description" : "Court Charge mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtChargeMappingDto"
+            }
+          },
+          "sentences" : {
+            "type" : "array",
+            "description" : "Sentence mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/SentenceMappingDto"
+            }
+          },
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "courtAppearances", "courtCases", "courtCharges", "mappingType", "sentences" ]
+      },
+      "CourtChargeMapping" : {
+        "type" : "object",
+        "properties" : {
+          "dpsCourtChargeId" : {
+            "type" : "string"
+          },
+          "nomisCourtChargeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "new" : {
+            "type" : "boolean"
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "isNew" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "dpsCourtChargeId", "id", "isNew", "mappingType", "new", "nomisCourtChargeId" ]
+      },
       "CourtCaseAllMappingDto" : {
         "type" : "object",
         "description" : "Court case mapping including child entity mapping",
@@ -14939,6 +15360,13 @@
               "$ref" : "#/components/schemas/CourtChargeMappingDto"
             }
           },
+          "sentences" : {
+            "type" : "array",
+            "description" : "Sentence mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/SentenceMappingDto"
+            }
+          },
           "label" : {
             "type" : "string",
             "description" : "Label (a timestamp for migrated ids)",
@@ -14958,41 +15386,7 @@
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "courtAppearances", "courtCharges", "dpsCourtCaseId", "nomisCourtCaseId" ]
-      },
-      "CourtCaseMapping" : {
-        "type" : "object",
-        "properties" : {
-          "dpsCourtCaseId" : {
-            "type" : "string"
-          },
-          "nomisCourtCaseId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "label" : {
-            "type" : "string"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "new" : {
-            "type" : "boolean"
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          },
-          "id" : {
-            "type" : "string"
-          },
-          "isNew" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "dpsCourtCaseId", "id", "isNew", "mappingType", "new", "nomisCourtCaseId" ]
+        "required" : [ "courtAppearances", "courtCharges", "dpsCourtCaseId", "nomisCourtCaseId", "sentences" ]
       },
       "CourtAppearanceMapping" : {
         "type" : "object",
@@ -16009,6 +16403,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -16025,12 +16425,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -16058,15 +16452,15 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "unpaged" : {
+            "type" : "boolean"
           }
         }
       },
@@ -16084,43 +16478,33 @@
           }
         }
       },
-      "CourtCaseMappingDto" : {
+      "CourtSentencingMigrationSummary" : {
         "type" : "object",
-        "description" : "Court case mapping",
+        "description" : "Record of Offender Court case migration",
         "properties" : {
-          "nomisCourtCaseId" : {
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "The prisoner number for the set of mappings"
+          },
+          "mappingsCount" : {
             "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS court case id",
-            "example" : 123456
-          },
-          "dpsCourtCaseId" : {
-            "type" : "string",
-            "description" : "DPS court case id",
-            "example" : 123456
-          },
-          "label" : {
-            "type" : "string",
-            "description" : "Label (a timestamp for migrated ids)",
-            "maxLength" : 20,
-            "minLength" : 0
-          },
-          "mappingType" : {
-            "type" : "string",
-            "default" : "DPS_CREATED",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+            "format" : "int32",
+            "description" : "Count of the number of court case mappings migrated"
           },
           "whenCreated" : {
             "type" : "string",
-            "description" : "Date-time the mapping was created",
+            "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "migrationId" : {
+            "type" : "string",
+            "description" : "the migration the offender was migrated in"
           }
         },
-        "required" : [ "dpsCourtCaseId", "nomisCourtCaseId" ]
+        "required" : [ "mappingsCount", "offenderNo" ]
       },
-      "PageCourtCaseMappingDto" : {
+      "PageCourtSentencingMigrationSummary" : {
         "type" : "object",
         "properties" : {
           "totalElements" : {
@@ -16131,6 +16515,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -16138,7 +16528,7 @@
           "content" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/CourtCaseMappingDto"
+              "$ref" : "#/components/schemas/CourtSentencingMigrationSummary"
             }
           },
           "number" : {
@@ -16147,12 +16537,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -16220,6 +16604,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -16236,12 +16626,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -16324,6 +16708,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -16340,12 +16730,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -16413,6 +16797,52 @@
         },
         "required" : [ "cprId", "mappingType", "nomisId" ]
       },
+      "PageContactPersonProfileDetailMigrationMapping" : {
+        "type" : "object",
+        "properties" : {
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ContactPersonProfileDetailMigrationMapping"
+            }
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
+          "empty" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "PagePersonMappingDto" : {
         "type" : "object",
         "properties" : {
@@ -16423,6 +16853,12 @@
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "size" : {
             "type" : "integer",
@@ -16440,12 +16876,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -16498,6 +16928,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -16514,12 +16950,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -16566,6 +16996,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -16582,12 +17018,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
