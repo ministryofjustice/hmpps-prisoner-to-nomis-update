@@ -21,7 +21,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestriction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummaryPage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummaryPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContact
@@ -158,8 +161,8 @@ class ContactPersonDpsApiExtension :
       content = emptyList(),
     )
 
-    fun prisonerContactSummary(id: Long = 1) = PrisonerContactSummary(
-      prisonerContactId = 1,
+    fun prisonerContactSummary(id: Long = 1, prisonerContactId: Long = 10) = PrisonerContactSummary(
+      prisonerContactId = prisonerContactId,
       contactId = id,
       prisonerNumber = "A1234KT",
       lastName = "SMITH",
@@ -173,6 +176,27 @@ class ContactPersonDpsApiExtension :
       isEmergencyContact = false,
       isRelationshipActive = true,
       currentTerm = true,
+    )
+    fun prisonerContactRestrictionsResponse() = PrisonerContactRestrictionsResponse(
+      prisonerContactRestrictions = emptyList(),
+      contactGlobalRestrictions = emptyList(),
+    )
+    fun prisonerContactRestrictionDetails(contactId: Long) = PrisonerContactRestrictionDetails(
+      prisonerContactRestrictionId = 123,
+      prisonerContactId = 456,
+      contactId = contactId,
+      prisonerNumber = "A1234KT",
+      restrictionType = "BAN",
+      restrictionTypeDescription = "Banned",
+      enteredByUsername = "A.SMITH",
+      enteredByDisplayName = "Anne Smith",
+      createdBy = "A.SMITH",
+      createdTime = LocalDateTime.now(),
+      startDate = LocalDate.parse("2020-01-01"),
+      expiryDate = null,
+      comments = null,
+      updatedBy = null,
+      updatedTime = null,
     )
   }
 
@@ -324,6 +348,16 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetPrisonerContacts(prisonerNumber: String, response: PrisonerContactSummaryPage = prisonerContactSummaryPage()) {
     stubFor(
       get(urlPathEqualTo("/prisoner/$prisonerNumber/contact")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+  fun stubGetPrisonerContactRestrictions(prisonerContactId: Long, response: PrisonerContactRestrictionsResponse = prisonerContactRestrictionsResponse()) {
+    stubFor(
+      get(urlPathEqualTo("/prisoner-contact/$prisonerContactId/restriction")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())

@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactForPerson
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactRestriction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactRestrictionEnteredStaff
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateContactPersonRestrictionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonAddressRequest
@@ -200,6 +202,22 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
       audit = NomisAudit(
         createDatetime = LocalDateTime.now(),
         createUsername = "T.SMOTH",
+      ),
+    )
+
+    fun contactRestriction() = ContactRestriction(
+      id = 123,
+      comment = null,
+      type = CodeDescription("BAN", "Banned"),
+      effectiveDate = LocalDate.parse("2020-01-01"),
+      expiryDate = null,
+      audit = NomisAudit(
+        createDatetime = LocalDateTime.now(),
+        createUsername = "T.SMOTH",
+      ),
+      enteredStaff = ContactRestrictionEnteredStaff(
+        staffId = 323,
+        username = "T.SMOTH",
       ),
     )
   }

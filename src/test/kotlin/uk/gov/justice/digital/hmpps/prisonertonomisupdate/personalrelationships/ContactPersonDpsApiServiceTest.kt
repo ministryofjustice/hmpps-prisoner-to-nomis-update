@@ -318,4 +318,30 @@ class ContactPersonDpsApiServiceTest {
       )
     }
   }
+
+  @Nested
+  inner class GetPrisonerContactRestrictions {
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      dpsContactPersonServer.stubGetPrisonerContactRestrictions(prisonerContactId = 1234)
+
+      apiService.getPrisonerContactRestrictions(1234)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get endpoint`() = runTest {
+      dpsContactPersonServer.stubGetPrisonerContactRestrictions(prisonerContactId = 1234)
+
+      apiService.getPrisonerContactRestrictions(1234)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(urlPathEqualTo("/prisoner-contact/1234/restriction")),
+      )
+    }
+  }
 }
