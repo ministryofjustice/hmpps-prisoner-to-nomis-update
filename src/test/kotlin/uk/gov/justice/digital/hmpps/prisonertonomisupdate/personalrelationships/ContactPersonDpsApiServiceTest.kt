@@ -11,9 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.dpsContactPersonServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @SpringAPIServiceTest
-@Import(ContactPersonDpsApiService::class, ContactPersonConfiguration::class)
+@Import(ContactPersonDpsApiService::class, ContactPersonConfiguration::class, RetryApiService::class)
 class ContactPersonDpsApiServiceTest {
   @Autowired
   private lateinit var apiService: ContactPersonDpsApiService

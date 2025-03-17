@@ -858,7 +858,8 @@ class ContactPersonNomisApiServiceTest {
 
       mockServer.verify(
         getRequestedFor(anyUrl())
-          .withQueryParam("active-only", equalTo("true")),
+          .withQueryParam("active-only", equalTo("true"))
+          .withQueryParam("latest-booking-only", equalTo("true")),
       )
     }
   }
