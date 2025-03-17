@@ -161,6 +161,8 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
             "relationshipType" to "BRO",
             "dpsPrisonerContactRestrictionCount" to "1",
             "nomisPrisonerContactRestrictionCount" to "0",
+            "prisonerRestrictionsTypesMissingFromNomis" to "[BAN]",
+            "prisonerRestrictionsTypesMissingFromDps" to "[]",
             "reason" to "different-number-of-contact-restrictions",
           ),
         ),
