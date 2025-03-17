@@ -6,6 +6,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummaryPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddress
@@ -77,6 +78,11 @@ class ContactPersonDpsApiService(@Qualifier("personalRelationshipsApiWebClient")
 
   suspend fun getPrisonerContacts(prisonNumber: String): PrisonerContactSummaryPage = webClient.get()
     .uri("/prisoner/{prisonNumber}/contact?page=0&size=10000&active=true", prisonNumber)
+    .retrieve()
+    .awaitBodyWithRetry(backoffSpec)
+
+  suspend fun getPrisonerContactRestrictions(prisonerContactId: Long): PrisonerContactRestrictionsResponse = webClient.get()
+    .uri("/prisoner-contact/{prisonerContactId}/restriction", prisonerContactId)
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
 }

@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummaryPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerContact
@@ -40,8 +42,8 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
       nomisPrisonerApi.stuGetAllLatestBookings(
         bookingId = 0,
         response = BookingIdsWithLast(
-          lastBookingId = 3,
-          prisonerIds = (1L..3).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
+          lastBookingId = 4,
+          prisonerIds = (1L..4).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
         ),
       )
       nomisApi.stubGetPrisonerContacts("A0001TZ", prisonerWithContacts().copy(contacts = listOf(prisonerContact(1), prisonerContact(2))))
@@ -50,6 +52,20 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
       dpsApi.stubGetPrisonerContacts("A0002TZ", prisonerContactSummaryPage().copy(totalElements = 2, content = listOf(prisonerContactSummary(1), prisonerContactSummary(99))))
       nomisApi.stubGetPrisonerContacts("A0003TZ", prisonerWithContacts())
       dpsApi.stubGetPrisonerContacts("A0003TZ", prisonerContactSummaryPage())
+      nomisApi.stubGetPrisonerContacts("A0004TZ", prisonerWithContacts().copy(contacts = listOf(prisonerContact(3).copy(restrictions = emptyList()))))
+      dpsApi.stubGetPrisonerContacts(
+        "A0004TZ",
+        prisonerContactSummaryPage().copy(
+          totalElements = 1,
+          content = listOf(
+            prisonerContactSummary(
+              id = 3,
+              prisonerContactId = 30,
+            ),
+          ),
+        ),
+      )
+      dpsApi.stubGetPrisonerContactRestrictions(30, prisonerContactRestrictionsResponse().copy(prisonerContactRestrictions = listOf(prisonerContactRestrictionDetails(contactId = 3))))
     }
 
     @Test
@@ -77,7 +93,7 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
       verify(telemetryClient).trackEvent(
         eq("contact-person-prisoner-contact-reconciliation-report"),
         check {
-          assertThat(it).containsEntry("mismatch-count", "2")
+          assertThat(it).containsEntry("mismatch-count", "3")
         },
         isNull(),
       )
@@ -123,6 +139,31 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
             "contactIdsMissingFromNomis" to "[99]",
             "contactIdsMissingFromDps" to "[2]",
             "reason" to "different-contacts",
+          ),
+        ),
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will output a mismatch when there are different restrictions for a contact`() {
+      webTestClient.put().uri("/contact-person/prisoner-contact/reports/reconciliation")
+        .exchange()
+        .expectStatus().isAccepted
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("contact-person-prisoner-contact-reconciliation-mismatch"),
+        eq(
+          mapOf(
+            "offenderNo" to "A0004TZ",
+            "contactId" to "3",
+            "relationshipType" to "BRO",
+            "dpsPrisonerContactRestrictionCount" to "1",
+            "nomisPrisonerContactRestrictionCount" to "0",
+            "prisonerRestrictionsTypesMissingFromNomis" to "[BAN]",
+            "prisonerRestrictionsTypesMissingFromDps" to "[]",
+            "reason" to "different-number-of-contact-restrictions",
           ),
         ),
         isNull(),

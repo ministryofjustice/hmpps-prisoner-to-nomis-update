@@ -21,8 +21,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactForPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummaryPage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.contactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerWithContacts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
@@ -94,7 +97,9 @@ internal class ContactPersonReconciliationServiceTest {
       @BeforeEach
       fun beforeEach() {
         nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1), prisonerContact(2))))
-        dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 2, content = listOf(prisonerContactSummary(1), prisonerContactSummary(2))))
+        dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 2, content = listOf(prisonerContactSummary(1, prisonerContactId = 11), prisonerContactSummary(2, prisonerContactId = 22))))
+        dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 11)
+        dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 22)
       }
 
       @Test
@@ -399,6 +404,151 @@ internal class ContactPersonReconciliationServiceTest {
           },
           isNull(),
         )
+      }
+    }
+
+    @Nested
+    inner class RestrictionsComparison {
+      @Nested
+      inner class WhenPrisonerHasNoRestrictions {
+        @BeforeEach
+        fun beforeEach() {
+          nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = emptyList()))))
+          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 1, content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
+          dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 11, response = prisonerContactRestrictionsResponse().copy(prisonerContactRestrictions = emptyList()))
+        }
+
+        @Test
+        fun `will not report a mismatch`() = runTest {
+          assertThat(
+            service.checkPrisonerContactsMatch(prisonerId),
+          ).isNull()
+        }
+      }
+
+      @Nested
+      inner class WhenPrisonerHasSameRestrictions {
+        @BeforeEach
+        fun beforeEach() {
+          nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf(contactRestriction())))))
+          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 1, content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
+          dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 11, response = prisonerContactRestrictionsResponse().copy(prisonerContactRestrictions = listOf(prisonerContactRestrictionDetails(1))))
+        }
+
+        @Test
+        fun `will not report a mismatch`() = runTest {
+          assertThat(
+            service.checkPrisonerContactsMatch(prisonerId),
+          ).isNull()
+        }
+      }
+
+      @Nested
+      inner class WhenRestrictionIsMissingInDPS {
+        @BeforeEach
+        fun beforeEach() {
+          nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf(contactRestriction())))))
+          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 1, content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
+          dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 11, response = prisonerContactRestrictionsResponse().copy(prisonerContactRestrictions = listOf()))
+        }
+
+        @Test
+        fun `will report a mismatch`() = runTest {
+          assertThat(service.checkPrisonerContactsMatch(prisonerId)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(prisonerId.offenderNo)
+        }
+
+        @Test
+        fun `telemetry will show restriction is missing`() = runTest {
+          service.checkPrisonerContactsMatch(prisonerId)
+          verify(telemetryClient).trackEvent(
+            eq("contact-person-prisoner-contact-reconciliation-mismatch"),
+            eq(
+              mapOf(
+                "offenderNo" to prisonerId.offenderNo,
+                "contactId" to "1",
+                "relationshipType" to "BRO",
+                "dpsPrisonerContactRestrictionCount" to "0",
+                "nomisPrisonerContactRestrictionCount" to "1",
+                "prisonerRestrictionsTypesMissingFromNomis" to "[]",
+                "prisonerRestrictionsTypesMissingFromDps" to "[BAN]",
+                "reason" to "different-number-of-contact-restrictions",
+              ),
+            ),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class WhenRestrictionIsMissingInNOMIS {
+        @BeforeEach
+        fun beforeEach() {
+          nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf()))))
+          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 1, content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
+          dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 11, response = prisonerContactRestrictionsResponse().copy(prisonerContactRestrictions = listOf(prisonerContactRestrictionDetails(1))))
+        }
+
+        @Test
+        fun `will report a mismatch`() = runTest {
+          assertThat(service.checkPrisonerContactsMatch(prisonerId)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(prisonerId.offenderNo)
+        }
+
+        @Test
+        fun `telemetry will show restriction is missing`() = runTest {
+          service.checkPrisonerContactsMatch(prisonerId)
+          verify(telemetryClient).trackEvent(
+            eq("contact-person-prisoner-contact-reconciliation-mismatch"),
+            eq(
+              mapOf(
+                "offenderNo" to prisonerId.offenderNo,
+                "contactId" to "1",
+                "relationshipType" to "BRO",
+                "dpsPrisonerContactRestrictionCount" to "1",
+                "nomisPrisonerContactRestrictionCount" to "0",
+                "prisonerRestrictionsTypesMissingFromNomis" to "[BAN]",
+                "prisonerRestrictionsTypesMissingFromDps" to "[]",
+                "reason" to "different-number-of-contact-restrictions",
+              ),
+            ),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class WhenBothHaveASingleRestrictionButDifferentRestrictionType {
+        @BeforeEach
+        fun beforeEach() {
+          nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf(contactRestriction().copy(type = CodeDescription("CCTV", "CCTV")))))))
+          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 1, content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
+          dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 11, response = prisonerContactRestrictionsResponse().copy(prisonerContactRestrictions = listOf(prisonerContactRestrictionDetails(1).copy(restrictionType = "BAN"))))
+        }
+
+        @Test
+        fun `will report a mismatch`() = runTest {
+          assertThat(service.checkPrisonerContactsMatch(prisonerId)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(prisonerId.offenderNo)
+        }
+
+        @Test
+        fun `telemetry will show restriction is missing`() = runTest {
+          service.checkPrisonerContactsMatch(prisonerId)
+          verify(telemetryClient).trackEvent(
+            eq("contact-person-prisoner-contact-reconciliation-mismatch"),
+            eq(
+              mapOf(
+                "offenderNo" to prisonerId.offenderNo,
+                "contactId" to "1",
+                "relationshipType" to "BRO",
+                "dpsPrisonerContactRestrictionCount" to "1",
+                "nomisPrisonerContactRestrictionCount" to "1",
+                "prisonerRestrictionsTypesMissingFromNomis" to "[BAN]",
+                "prisonerRestrictionsTypesMissingFromDps" to "[CCTV]",
+                "reason" to "different-prisoner-contact-restrictions-types",
+              ),
+            ),
+            isNull(),
+          )
+        }
       }
     }
   }
