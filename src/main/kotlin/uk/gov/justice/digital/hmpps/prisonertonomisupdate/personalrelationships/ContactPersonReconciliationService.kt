@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
+import java.time.LocalDate
 
 @Service
 class ContactPersonReconciliationService(
@@ -93,18 +94,8 @@ class ContactPersonReconciliationService(
         async { dpsApiService.getPrisonerContacts(prisonerId.offenderNo).content!! }
     }.awaitBoth()
 
-    val dpsContactSummaries = dpsContacts.map { it.asSummary() }.sortedWith(
-      compareBy(
-        ContactSummary::contactId,
-        ContactSummary::relationshipCode,
-      ),
-    )
-    val nomisContactSummaries = nomisContacts.map { it.asSummary() }.sortedWith(
-      compareBy(
-        ContactSummary::contactId,
-        ContactSummary::relationshipCode,
-      ),
-    )
+    val dpsContactSummaries = dpsContacts.map { it.asSummary() }
+    val nomisContactSummaries = nomisContacts.map { it.asSummary() }
 
     checkContactsMatch(
       prisonerId = prisonerId,
@@ -157,7 +148,7 @@ class ContactPersonReconciliationService(
         )
       }
     }
-    return nomisContactSummaries.zip(dpsContactSummaries).filter { (nomisSummary, dpsSummary) -> nomisSummary != dpsSummary }.map { (_, dpsSummary) ->
+    return dpsContactSummaries.filter { !nomisContactSummaries.contains(it) }.map { dpsSummary ->
       telemetryClient.trackEvent(
         "$TELEMETRY_PREFIX-mismatch",
         telemetry + mapOf("reason" to "different-contacts-details", "contactId" to dpsSummary.contactId.toString()),
@@ -177,20 +168,8 @@ class ContactPersonReconciliationService(
       "nomisPrisonerContactRestrictionCount" to (nomisPrisonerContactRestrictions.size.toString()),
     )
 
-    val dpsPrisonerContactRestrictionsSummaries = dpsPrisonerContactRestrictions.map { it.asSummary(dpsContact.relationshipToPrisonerCode) }.sortedWith(
-      compareBy(
-        PrisonerContactRestrictionSummary::contactId,
-        PrisonerContactRestrictionSummary::relationshipCode,
-        PrisonerContactRestrictionSummary::restrictionType,
-      ),
-    )
-    val nomisPrisonerContactRestrictionsSummaries = nomisPrisonerContactRestrictions.map { it.asSummary(dpsContact.contactId, dpsContact.relationshipToPrisonerCode) }.sortedWith(
-      compareBy(
-        PrisonerContactRestrictionSummary::contactId,
-        PrisonerContactRestrictionSummary::relationshipCode,
-        PrisonerContactRestrictionSummary::restrictionType,
-      ),
-    )
+    val dpsPrisonerContactRestrictionsSummaries = dpsPrisonerContactRestrictions.map { it.asSummary(dpsContact.relationshipToPrisonerCode) }
+    val nomisPrisonerContactRestrictionsSummaries = nomisPrisonerContactRestrictions.map { it.asSummary(dpsContact.contactId, dpsContact.relationshipToPrisonerCode) }
 
     val (prisonerRestrictionsTypesMissingFromNomis, prisonerRestrictionsTypesMissingFromDps) = findMissingPrisonerContactRestrictions(nomisPrisonerContactRestrictionsSummaries, dpsPrisonerContactRestrictionsSummaries)
 
@@ -222,7 +201,7 @@ class ContactPersonReconciliationService(
       }
     }
 
-    return nomisPrisonerContactRestrictionsSummaries.zip(dpsPrisonerContactRestrictionsSummaries).filter { (nomisSummary, dpsSummary) -> nomisSummary != dpsSummary }.map { (_, dpsSummary) ->
+    return dpsPrisonerContactRestrictionsSummaries.filter { !nomisPrisonerContactRestrictionsSummaries.contains(it) }.map { dpsSummary ->
       telemetryClient.trackEvent(
         "$TELEMETRY_PREFIX-mismatch",
         telemetry + mapOf(
@@ -279,12 +258,16 @@ class ContactPersonReconciliationService(
     contactId = contactId,
     relationshipCode = relationshipCode,
     restrictionType = this.type.code,
+    startDate = this.effectiveDate,
+    expiryDate = this.expiryDate,
   )
 
   private fun PrisonerContactRestrictionDetails.asSummary(relationshipCode: String) = PrisonerContactRestrictionSummary(
     contactId = this.contactId,
     relationshipCode = relationshipCode,
     restrictionType = this.restrictionType,
+    startDate = this.startDate,
+    expiryDate = this.expiryDate,
   )
 
   // Last page will be a non-null page with items less than page size
@@ -312,6 +295,8 @@ data class PrisonerContactRestrictionSummary(
   val contactId: Long,
   val relationshipCode: String,
   val restrictionType: String,
+  val startDate: LocalDate?,
+  val expiryDate: LocalDate?,
 )
 data class MismatchPrisonerContacts(
   val offenderNo: String,

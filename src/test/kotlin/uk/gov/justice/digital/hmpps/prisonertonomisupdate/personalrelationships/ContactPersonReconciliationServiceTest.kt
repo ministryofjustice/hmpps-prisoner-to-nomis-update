@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import java.time.LocalDate
 
 @SpringAPIServiceTest
 @Import(
@@ -98,6 +99,41 @@ internal class ContactPersonReconciliationServiceTest {
       fun beforeEach() {
         nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1), prisonerContact(2))))
         dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 2, content = listOf(prisonerContactSummary(1, prisonerContactId = 11), prisonerContactSummary(2, prisonerContactId = 22))))
+        dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 11)
+        dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 22)
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(
+          service.checkPrisonerContactsMatch(prisonerId),
+        ).isNull()
+      }
+    }
+
+    @Nested
+    inner class WhenPrisonerHasSameDuplicateContactsButInDifferentOrder {
+      @BeforeEach
+      fun beforeEach() {
+        nomisApi.stubGetPrisonerContacts(
+          prisonerId.offenderNo,
+          prisonerWithContacts().copy(
+            contacts = listOf(
+              prisonerContact(personId = 1, contactId = 1).copy(approvedVisitor = true),
+              prisonerContact(personId = 1, contactId = 2).copy(approvedVisitor = false),
+            ),
+          ),
+        )
+        dpsApi.stubGetPrisonerContacts(
+          prisonerId.offenderNo,
+          prisonerContactSummaryPage().copy(
+            totalElements = 2,
+            content = listOf(
+              prisonerContactSummary(contactId = 1, prisonerContactId = 11).copy(isApprovedVisitor = false),
+              prisonerContactSummary(contactId = 1, prisonerContactId = 22).copy(isApprovedVisitor = true),
+            ),
+          ),
+        )
         dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 11)
         dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 22)
       }
@@ -544,6 +580,41 @@ internal class ContactPersonReconciliationServiceTest {
                 "prisonerRestrictionsTypesMissingFromNomis" to "[BAN]",
                 "prisonerRestrictionsTypesMissingFromDps" to "[CCTV]",
                 "reason" to "different-prisoner-contact-restrictions-types",
+              ),
+            ),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class WhenHasSameRestrictionButDifferentDates {
+        @BeforeEach
+        fun beforeEach() {
+          nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf(contactRestriction().copy(expiryDate = LocalDate.parse("2023-01-01")))))))
+          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 1, content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
+          dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 11, response = prisonerContactRestrictionsResponse().copy(prisonerContactRestrictions = listOf(prisonerContactRestrictionDetails(1).copy(expiryDate = LocalDate.parse("2022-01-01")))))
+        }
+
+        @Test
+        fun `will report a mismatch`() = runTest {
+          assertThat(service.checkPrisonerContactsMatch(prisonerId)).isNotNull.extracting { it!!.offenderNo }.isEqualTo(prisonerId.offenderNo)
+        }
+
+        @Test
+        fun `telemetry will show restriction is missing`() = runTest {
+          service.checkPrisonerContactsMatch(prisonerId)
+          verify(telemetryClient).trackEvent(
+            eq("contact-person-prisoner-contact-reconciliation-mismatch"),
+            eq(
+              mapOf(
+                "offenderNo" to prisonerId.offenderNo,
+                "contactId" to "1",
+                "relationshipType" to "BRO",
+                "dpsPrisonerContactRestrictionCount" to "1",
+                "nomisPrisonerContactRestrictionCount" to "1",
+                "restrictionType" to "BAN",
+                "reason" to "different-prisoner-contact-restrictions-details",
               ),
             ),
             isNull(),
