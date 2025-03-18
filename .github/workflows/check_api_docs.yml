@@ -60,3 +60,7 @@ jobs:
             Current production version is ${{ steps.check-api.outputs.production_version }}
           branch: api-docs-${{ matrix.project }}
           base: main
+
+      - name: Delete Pull Request
+        if: steps.check-api.outputs.differences == 'false'
+        run: ./delete-pull-request.bash api-docs-${{ matrix.project }}
