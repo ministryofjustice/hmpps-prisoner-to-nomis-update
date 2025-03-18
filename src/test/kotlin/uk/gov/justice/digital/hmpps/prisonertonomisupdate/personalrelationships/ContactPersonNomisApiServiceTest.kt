@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.contactPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createContactPersonRestrictionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonAddressRequest
@@ -861,6 +862,79 @@ class ContactPersonNomisApiServiceTest {
           .withQueryParam("active-only", equalTo("true"))
           .withQueryParam("latest-booking-only", equalTo("true")),
       )
+    }
+  }
+
+  @Nested
+  inner class GetPersonIds {
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetPersonIds()
+
+      apiService.getPersonIds()
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get endpoint`() = runTest {
+      mockServer.stubGetPersonIds()
+
+      apiService.getPersonIds()
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/persons/ids/all-from-id")),
+      )
+    }
+
+    @Test
+    fun `will request just a page of person ids from specified person`() = runTest {
+      mockServer.stubGetPersonIds()
+
+      apiService.getPersonIds(lastPersonId = 1234, pageSize = 100)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl())
+          .withQueryParam("personId", equalTo("1234"))
+          .withQueryParam("pageSize", equalTo("100")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetPerson {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetPerson(personId = 1234567)
+
+      apiService.getPerson(nomisPersonId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will pass NOMIS id to service`() = runTest {
+      mockServer.stubGetPerson(personId = 1234567)
+
+      apiService.getPerson(nomisPersonId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/persons/1234567")),
+      )
+    }
+
+    @Test
+    fun `will return person`() = runTest {
+      mockServer.stubGetPerson(personId = 1234567, person = contactPerson().copy(lastName = "Smith"))
+
+      val person = apiService.getPerson(nomisPersonId = 1234567)
+
+      assertThat(person.lastName).isEqualTo("Smith")
     }
   }
 }

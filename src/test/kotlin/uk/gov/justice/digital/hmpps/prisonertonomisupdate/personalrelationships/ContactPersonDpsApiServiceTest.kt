@@ -344,4 +344,43 @@ class ContactPersonDpsApiServiceTest {
       )
     }
   }
+
+  @Nested
+  inner class GetContactIds {
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      dpsContactPersonServer.stubGetContactIds()
+
+      apiService.getContactIds()
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get endpoint`() = runTest {
+      dpsContactPersonServer.stubGetContactIds()
+
+      apiService.getContactIds()
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/contact/reconcile")),
+      )
+    }
+
+    @Test
+    fun `will request a page of contact IDs`() = runTest {
+      dpsContactPersonServer.stubGetContactIds()
+
+      apiService.getContactIds(pageSize = 20, pageNumber = 3)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(anyUrl())
+          .withQueryParam("size", equalTo("20"))
+          .withQueryParam("page", equalTo("3")),
+      )
+    }
+  }
 }

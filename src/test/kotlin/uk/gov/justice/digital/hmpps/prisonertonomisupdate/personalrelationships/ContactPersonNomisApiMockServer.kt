@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactForPerson
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactForPrisoner
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactRestrictionEnteredStaff
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateContactPersonRestrictionRequest
@@ -32,6 +34,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonEmailAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonEmployment
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonEmploymentCorporate
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonIdentifier
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonIdsWithLast
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerWithContacts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateContactPersonRestrictionRequest
@@ -42,6 +52,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.nomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -219,6 +230,42 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
         staffId = 323,
         username = "T.SMOTH",
       ),
+    )
+
+    fun contactPerson(personId: Long = 123456): ContactPerson = ContactPerson(
+      personId = personId,
+      firstName = "KWAME",
+      lastName = "KOBE",
+      interpreterRequired = false,
+      audit = nomisAudit(),
+      phoneNumbers = listOf(PersonPhoneNumber(phoneId = 1, number = "0114555555", type = CodeDescription(code = "HOME", description = "Home"), audit = nomisAudit())),
+      addresses = listOf(PersonAddress(addressId = 1, phoneNumbers = listOf(PersonPhoneNumber(phoneId = 2, number = "0114555555", type = CodeDescription(code = "HOME", description = "Home"), audit = nomisAudit())), validatedPAF = false, primaryAddress = true, mailAddress = true, audit = nomisAudit())),
+      emailAddresses = listOf(PersonEmailAddress(emailAddressId = 1, email = "test@justice.gov.uk", audit = nomisAudit())),
+      employments = listOf(PersonEmployment(sequence = 1, active = true, corporate = PersonEmploymentCorporate(id = 1, name = "Police"), audit = nomisAudit())),
+      identifiers = listOf(
+        PersonIdentifier(
+          sequence = 1,
+          type = CodeDescription(code = "DL", description = "Driving Licence"),
+          identifier = "SMITH1717171",
+          issuedAuthority = "DVLA",
+          audit = nomisAudit(),
+        ),
+      ),
+      contacts = listOf(
+        PersonContact(
+          id = 1,
+          relationshipType = CodeDescription(code = "BOF", description = "Boyfriend"),
+          contactType = CodeDescription(code = "S", description = "Social/ Family"),
+          active = true,
+          emergencyContact = true,
+          nextOfKin = false,
+          approvedVisitor = false,
+          prisoner = ContactForPrisoner(bookingId = 1, offenderNo = "A1234KT", lastName = "SMITH", firstName = "JOHN", bookingSequence = 1),
+          restrictions = listOf(ContactRestriction(id = 1, type = CodeDescription(code = "BAN", description = "Banned"), enteredStaff = ContactRestrictionEnteredStaff(staffId = 1, username = "Q1251T"), effectiveDate = LocalDate.parse("2020-01-01"), audit = nomisAudit())),
+          audit = nomisAudit(),
+        ),
+      ),
+      restrictions = listOf(ContactRestriction(id = 2, type = CodeDescription(code = "BAN", description = "Banned"), enteredStaff = ContactRestrictionEnteredStaff(staffId = 1, username = "Q1251T"), effectiveDate = LocalDate.parse("2020-01-01"), audit = nomisAudit())),
     )
   }
 
@@ -584,6 +631,31 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
           .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubGetPersonIds(response: PersonIdsWithLast = PersonIdsWithLast(lastPersonId = 0, personIds = emptyList())) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/persons/ids/all-from-id")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubGetPerson(
+    personId: Long = 123456,
+    person: ContactPerson = contactPerson(),
+  ) {
+    nomisApi.stubFor(
+      get(urlEqualTo("/persons/$personId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(person)),
       ),
     )
   }

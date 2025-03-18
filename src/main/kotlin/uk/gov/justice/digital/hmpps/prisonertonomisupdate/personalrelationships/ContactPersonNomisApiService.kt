@@ -7,6 +7,7 @@ import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateContactPersonRestrictionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonAddressRequest
@@ -23,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerWithContacts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonAddressRequest
@@ -327,6 +329,19 @@ class ContactPersonNomisApiService(
 
   suspend fun getContactsForPrisoner(offenderNo: String): PrisonerWithContacts = webClient.get()
     .uri("/prisoners/{offenderNo}/contacts?active-only={activeOnly}&latest-booking-only={latestBookingOnly}", offenderNo, true, true)
+    .retrieve()
+    .awaitBodyWithRetry(backoffSpec)
+
+  suspend fun getPersonIds(lastPersonId: Long = 0, pageSize: Int = 20): PersonIdsWithLast = webClient.get()
+    .uri("/persons/ids/all-from-id?personId={lastPersonId}&pageSize={pageSize}", lastPersonId, pageSize)
+    .retrieve()
+    .awaitBodyWithRetry(backoffSpec)
+
+  suspend fun getPerson(nomisPersonId: Long): ContactPerson = webClient.get()
+    .uri(
+      "/persons/{personId}",
+      nomisPersonId,
+    )
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
 }

@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-14.11697.ce00be3"
+    "version" : "2025-03-18.11734.7e5f8f1"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -12325,6 +12325,26 @@
             "example" : "A1234KT"
           },
           "example" : "A1234KT"
+        }, {
+          "name" : "active-only",
+          "in" : "query",
+          "description" : "When true only return contacts that are active",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true
+          },
+          "example" : false
+        }, {
+          "name" : "latest-booking-only",
+          "in" : "query",
+          "description" : "When true only return contacts that related to latest booking",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true
+          },
+          "example" : false
         } ],
         "responses" : {
           "200" : {
@@ -13161,6 +13181,71 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons/ids/all-from-id" : {
+      "get" : {
+        "tags" : [ "contact-person-resource" ],
+        "summary" : "Gets the identifier for all persons.",
+        "description" : "Gets the specified number of persons starting after the given id number.\n      Clients can iterate through all persons by calling this endpoint using the id from the last call (omit for first call).\n      Iteration ends when the returned prisonerIds list has size less than the requested page size.\n      Requires role SYNCHRONISATION_REPORTING.",
+        "operationId" : "getPersonIdsFromId",
+        "parameters" : [ {
+          "name" : "personId",
+          "in" : "query",
+          "description" : "If supplied get person starting after this id",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "default" : 0,
+            "description" : "If supplied get person starting after this id",
+            "example" : 1555999
+          },
+          "example" : 1555999
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "Number of persons to get",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 10,
+            "description" : "Number of persons to get"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of person ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonIdsWithLast"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING not present",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -21835,15 +21920,15 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
           }
         }
       },
@@ -25014,6 +25099,23 @@
           }
         },
         "required" : [ "personId" ]
+      },
+      "PersonIdsWithLast" : {
+        "type" : "object",
+        "properties" : {
+          "personIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "lastPersonId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "lastPersonId", "personIds" ]
       },
       "NonAssociationResponse" : {
         "type" : "object",
