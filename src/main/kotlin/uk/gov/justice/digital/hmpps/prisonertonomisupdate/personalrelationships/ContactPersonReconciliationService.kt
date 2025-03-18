@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactRestriction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionDetails
@@ -30,7 +31,8 @@ class ContactPersonReconciliationService(
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
-    const val TELEMETRY_PREFIX = "contact-person-prisoner-contact-reconciliation"
+    const val TELEMETRY_PRISONER_PREFIX = "contact-person-prisoner-contact-reconciliation"
+    const val TELEMETRY_PERSON_PREFIX = "contact-person-reconciliation"
   }
 
   suspend fun generatePrisonerContactReconciliationReport(): List<MismatchPrisonerContacts> {
@@ -42,7 +44,7 @@ class ContactPersonReconciliationService(
       val result = getNextBookingsForPage(lastBookingId)
 
       when (result) {
-        is SuccessPageResult -> {
+        is BookingSuccessPageResult -> {
           if (result.value.prisonerIds.isNotEmpty()) {
             result.value.checkPageOfPrisonerContactsMatches().also {
               mismatches += it.mismatches
@@ -51,7 +53,7 @@ class ContactPersonReconciliationService(
           }
         }
 
-        is ErrorPageResult -> {
+        is BookingErrorPageResult -> {
           // just skip this "page" by moving the bookingId pointer up
           lastBookingId += pageSize.toInt()
           pageErrorCount++
@@ -62,31 +64,81 @@ class ContactPersonReconciliationService(
     return mismatches.toList()
   }
 
-  private suspend fun BookingIdsWithLast.checkPageOfPrisonerContactsMatches(): MismatchPageResult {
+  suspend fun generatePersonContactReconciliationReport(): List<MismatchPersonContacts> {
+    val mismatches: MutableList<MismatchPersonContacts> = mutableListOf()
+    var lastPersonId = 0L
+    var pageErrorCount = 0L
+
+    do {
+      val result = getNextPersonsForPage(lastPersonId)
+
+      when (result) {
+        is PersonSuccessPageResult -> {
+          if (result.value.personIds.isNotEmpty()) {
+            result.value.checkPageOfPersonContactsMatches().also {
+              mismatches += it.mismatches
+              lastPersonId = it.lastPersonId
+            }
+          }
+        }
+
+        is PersonErrorPageResult -> {
+          // just skip this "page" by moving the personId pointer up
+          lastPersonId += pageSize.toInt()
+          pageErrorCount++
+        }
+      }
+    } while (result.notLastPage() && notManyPageErrors(pageErrorCount))
+
+    return mismatches.toList()
+  }
+
+  private suspend fun BookingIdsWithLast.checkPageOfPrisonerContactsMatches(): PrisonerMismatchPageResult {
     val prisonerIds = this.prisonerIds
     val mismatches = withContext(Dispatchers.Unconfined) {
       prisonerIds.map { async { checkPrisonerContactsMatch(it) } }
     }.awaitAll().filterNotNull()
-    return MismatchPageResult(mismatches, prisonerIds.last().bookingId)
+    return PrisonerMismatchPageResult(mismatches, prisonerIds.last().bookingId)
+  }
+
+  private suspend fun PersonIdsWithLast.checkPageOfPersonContactsMatches(): PersonMismatchPageResult {
+    val personIds = this.personIds
+    // TODO match contacts
+    return PersonMismatchPageResult(emptyList(), lastPersonId = personIds.last())
   }
 
   private fun notManyPageErrors(errors: Long): Boolean = errors < 30
 
-  data class MismatchPageResult(val mismatches: List<MismatchPrisonerContacts>, val lastBookingId: Long)
+  data class PrisonerMismatchPageResult(val mismatches: List<MismatchPrisonerContacts>, val lastBookingId: Long)
+  data class PersonMismatchPageResult(val mismatches: List<MismatchPersonContacts>, val lastPersonId: Long)
 
-  private suspend fun getNextBookingsForPage(lastBookingId: Long): PageResult = runCatching { nomisPrisonerApiService.getAllLatestBookings(lastBookingId = lastBookingId, activeOnly = true, pageSize = pageSize.toInt()) }
+  private suspend fun getNextBookingsForPage(lastBookingId: Long): BookingPageResult = runCatching { nomisPrisonerApiService.getAllLatestBookings(lastBookingId = lastBookingId, activeOnly = true, pageSize = pageSize.toInt()) }
     .onFailure {
       telemetryClient.trackEvent(
-        "$TELEMETRY_PREFIX-mismatch-page-error",
+        "$TELEMETRY_PRISONER_PREFIX-mismatch-page-error",
         mapOf(
           "booking" to lastBookingId.toString(),
         ),
       )
       log.error("Unable to match entire page of bookings from booking: $lastBookingId", it)
     }
-    .map { SuccessPageResult(it) }
-    .getOrElse { ErrorPageResult(it) }
+    .map { BookingSuccessPageResult(it) }
+    .getOrElse { BookingErrorPageResult(it) }
     .also { log.info("Page requested from booking: $lastBookingId, with $pageSize bookings") }
+
+  private suspend fun getNextPersonsForPage(lastPersonId: Long): PersonPageResult = runCatching { nomisApiService.getPersonIds(lastPersonId = lastPersonId, pageSize = pageSize.toInt()) }
+    .onFailure {
+      telemetryClient.trackEvent(
+        "$TELEMETRY_PERSON_PREFIX-mismatch-page-error",
+        mapOf(
+          "person" to lastPersonId.toString(),
+        ),
+      )
+      log.error("Unable to match entire page of persons from person: $lastPersonId", it)
+    }
+    .map { PersonSuccessPageResult(it) }
+    .getOrElse { PersonErrorPageResult(it) }
+    .also { log.info("Page requested from person: $lastPersonId, with $pageSize person") }
 
   suspend fun checkPrisonerContactsMatch(prisonerId: PrisonerIds): MismatchPrisonerContacts? = runCatching {
     val (nomisContacts, dpsContacts) = withContext(Dispatchers.Unconfined) {
@@ -112,7 +164,7 @@ class ContactPersonReconciliationService(
   }.onFailure {
     log.error("Unable to match contacts for prisoner with ${prisonerId.offenderNo} booking: ${prisonerId.bookingId}", it)
     telemetryClient.trackEvent(
-      "$TELEMETRY_PREFIX-mismatch-error",
+      "$TELEMETRY_PRISONER_PREFIX-mismatch-error",
       mapOf(
         "offenderNo" to prisonerId.offenderNo,
         "bookingId" to prisonerId.bookingId.toString(),
@@ -134,7 +186,7 @@ class ContactPersonReconciliationService(
     if (nomisContactSummaries.size != dpsContactSummaries.size) {
       return MismatchPrisonerContacts(prisonerId.offenderNo, nomisContactCount = nomisContactSummaries.size, dpsContactCount = dpsContactSummaries.size).also { mismatch ->
         telemetryClient.trackEvent(
-          "$TELEMETRY_PREFIX-mismatch",
+          "$TELEMETRY_PRISONER_PREFIX-mismatch",
           telemetry + ("reason" to "different-number-of-contacts"),
         )
       }
@@ -143,14 +195,14 @@ class ContactPersonReconciliationService(
     if (contactIdsMissingFromNomis.isNotEmpty() || contactIdsMissingFromDps.isNotEmpty()) {
       return MismatchPrisonerContacts(prisonerId.offenderNo, nomisContactCount = nomisContactSummaries.size, dpsContactCount = dpsContactSummaries.size).also { mismatch ->
         telemetryClient.trackEvent(
-          "$TELEMETRY_PREFIX-mismatch",
+          "$TELEMETRY_PRISONER_PREFIX-mismatch",
           telemetry + mapOf("reason" to "different-contacts", "contactIdsMissingFromNomis" to contactIdsMissingFromNomis.toString(), "contactIdsMissingFromDps" to contactIdsMissingFromDps.toString()),
         )
       }
     }
     return dpsContactSummaries.filter { !nomisContactSummaries.contains(it) }.map { dpsSummary ->
       telemetryClient.trackEvent(
-        "$TELEMETRY_PREFIX-mismatch",
+        "$TELEMETRY_PRISONER_PREFIX-mismatch",
         telemetry + mapOf("reason" to "different-contacts-details", "contactId" to dpsSummary.contactId.toString()),
       )
       MismatchPrisonerContacts(prisonerId.offenderNo, nomisContactCount = nomisContactSummaries.size, dpsContactCount = dpsContactSummaries.size)
@@ -177,7 +229,7 @@ class ContactPersonReconciliationService(
       return MismatchPrisonerContacts(prisonerId.offenderNo, nomisContactCount = nomisContacts.size, dpsContactCount = dpsContacts.size).also { mismatch ->
         log.info("Prisoner contact restriction sizes do not match  $mismatch")
         telemetryClient.trackEvent(
-          "$TELEMETRY_PREFIX-mismatch",
+          "$TELEMETRY_PRISONER_PREFIX-mismatch",
           telemetry + mapOf(
             "reason" to "different-number-of-contact-restrictions",
             "prisonerRestrictionsTypesMissingFromNomis" to prisonerRestrictionsTypesMissingFromNomis.toString(),
@@ -191,7 +243,7 @@ class ContactPersonReconciliationService(
       return MismatchPrisonerContacts(prisonerId.offenderNo, nomisContactCount = nomisContacts.size, dpsContactCount = dpsContacts.size).also { mismatch ->
         log.info("Prisoner contact restrictions types do not match  $mismatch")
         telemetryClient.trackEvent(
-          "$TELEMETRY_PREFIX-mismatch",
+          "$TELEMETRY_PRISONER_PREFIX-mismatch",
           telemetry + mapOf(
             "reason" to "different-prisoner-contact-restrictions-types",
             "prisonerRestrictionsTypesMissingFromNomis" to prisonerRestrictionsTypesMissingFromNomis.toString(),
@@ -203,7 +255,7 @@ class ContactPersonReconciliationService(
 
     return dpsPrisonerContactRestrictionsSummaries.filter { !nomisPrisonerContactRestrictionsSummaries.contains(it) }.map { dpsSummary ->
       telemetryClient.trackEvent(
-        "$TELEMETRY_PREFIX-mismatch",
+        "$TELEMETRY_PRISONER_PREFIX-mismatch",
         telemetry + mapOf(
           "reason" to "different-prisoner-contact-restrictions-details",
           "restrictionType" to dpsSummary.restrictionType,
@@ -271,14 +323,24 @@ class ContactPersonReconciliationService(
   )
 
   // Last page will be a non-null page with items less than page size
-  private fun PageResult.notLastPage(): Boolean = when (this) {
-    is SuccessPageResult -> this.value.prisonerIds.size == pageSize.toInt()
-    is ErrorPageResult -> true
+  private fun BookingPageResult.notLastPage(): Boolean = when (this) {
+    is BookingSuccessPageResult -> this.value.prisonerIds.size == pageSize.toInt()
+    is BookingErrorPageResult -> true
   }
 
-  sealed class PageResult
-  class SuccessPageResult(val value: BookingIdsWithLast) : PageResult()
-  class ErrorPageResult(val error: Throwable) : PageResult()
+  // Last page will be a non-null page with items less than page size
+  private fun PersonPageResult.notLastPage(): Boolean = when (this) {
+    is PersonSuccessPageResult -> this.value.personIds.size == pageSize.toInt()
+    is PersonErrorPageResult -> true
+  }
+
+  sealed class BookingPageResult
+  class BookingSuccessPageResult(val value: BookingIdsWithLast) : BookingPageResult()
+  class BookingErrorPageResult(val error: Throwable) : BookingPageResult()
+
+  sealed class PersonPageResult
+  class PersonSuccessPageResult(val value: PersonIdsWithLast) : PersonPageResult()
+  class PersonErrorPageResult(val error: Throwable) : PersonPageResult()
 }
 
 data class ContactSummary(
@@ -302,4 +364,8 @@ data class MismatchPrisonerContacts(
   val offenderNo: String,
   val dpsContactCount: Int,
   val nomisContactCount: Int,
+)
+
+data class MismatchPersonContacts(
+  val personId: Long,
 )

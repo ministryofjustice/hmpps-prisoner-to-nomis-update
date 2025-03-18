@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonReconciliationService.Companion.TELEMETRY_PREFIX
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonReconciliationService.Companion.TELEMETRY_PERSON_PREFIX
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonReconciliationService.Companion.TELEMETRY_PRISONER_PREFIX
 
 @RestController
 class ContactPersonReconciliationResource(
@@ -26,23 +27,46 @@ class ContactPersonReconciliationResource(
   @PutMapping("/contact-person/prisoner-contact/reports/reconciliation")
   @ResponseStatus(HttpStatus.ACCEPTED)
   suspend fun generatePrisonerContactReconciliationReport() {
-    telemetryClient.trackEvent("$TELEMETRY_PREFIX-requested", mapOf())
+    telemetryClient.trackEvent("$TELEMETRY_PRISONER_PREFIX-requested", mapOf())
 
     reportScope.launch {
       runCatching { reconciliationService.generatePrisonerContactReconciliationReport() }
         .onSuccess {
           log.info("Prisoner contacts reconciliation report completed with ${it.size} mismatches")
           telemetryClient.trackEvent(
-            "$TELEMETRY_PREFIX-report",
-            mapOf("mismatch-count" to it.size.toString(), "success" to "true") + it.asMap(),
+            "$TELEMETRY_PRISONER_PREFIX-report",
+            mapOf("mismatch-count" to it.size.toString(), "success" to "true") + it.asPrisonerMap(),
           )
         }
         .onFailure {
-          telemetryClient.trackEvent("$TELEMETRY_PREFIX-report", mapOf("success" to "false"))
+          telemetryClient.trackEvent("$TELEMETRY_PRISONER_PREFIX-report", mapOf("success" to "false"))
+          log.error("Prisoner contacts reconciliation report failed", it)
+        }
+    }
+  }
+
+  @PutMapping("/contact-person/person-contact/reports/reconciliation")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  suspend fun generatePersonContactReconciliationReport() {
+    telemetryClient.trackEvent(
+      "$TELEMETRY_PERSON_PREFIX-requested",
+      mapOf(),
+    )
+
+    reportScope.launch {
+      runCatching { reconciliationService.generatePersonContactReconciliationReport() }
+        .onSuccess {
+          telemetryClient.trackEvent(
+            "$TELEMETRY_PERSON_PREFIX-report",
+            mapOf("mismatch-count" to it.size.toString(), "success" to "true") + it.asPersonMap(),
+          )
+        }
+        .onFailure {
+          telemetryClient.trackEvent("$TELEMETRY_PERSON_PREFIX-report", mapOf("success" to "false"))
           log.error("Prisoner contacts reconciliation report failed", it)
         }
     }
   }
 }
-
-private fun List<MismatchPrisonerContacts>.asMap(): Map<String, String> = this.associate { it.offenderNo to "TODO" }
+private fun List<MismatchPrisonerContacts>.asPrisonerMap(): Map<String, String> = this.associate { it.offenderNo to "dpsCount=${it.dpsContactCount},nomisCount=${it.nomisContactCount}" }
+private fun List<MismatchPersonContacts>.asPersonMap(): Map<String, String> = this.associate { it.personId.toString() to "TODO" }

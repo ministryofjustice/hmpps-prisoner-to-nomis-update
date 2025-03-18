@@ -169,9 +169,50 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
         isNull(),
       )
     }
+    private fun awaitReportFinished() {
+      await untilAsserted { verify(telemetryClient).trackEvent(eq("contact-person-prisoner-contact-reconciliation-report"), any(), isNull()) }
+    }
   }
 
+  @DisplayName("PUT /contact-person/person-contact/reports/reconciliation")
+  @Nested
+  inner class GeneratePersonContactReconciliationReport {
+    @BeforeEach
+    fun setUp() {
+      reset(telemetryClient)
+      nomisApi.stubGetPersonIds()
+    }
+
+    @Test
+    fun `will output report requested telemetry`() {
+      webTestClient.put().uri("/contact-person/person-contact/reports/reconciliation")
+        .exchange()
+        .expectStatus().isAccepted
+
+      verify(telemetryClient).trackEvent(
+        eq("contact-person-reconciliation-requested"),
+        any(),
+        isNull(),
+      )
+
+      awaitReportFinished()
+    }
+
+    @Test
+    fun `will output mismatch report`() {
+      webTestClient.put().uri("/contact-person/person-contact/reports/reconciliation")
+        .exchange()
+        .expectStatus().isAccepted
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("contact-person-reconciliation-report"),
+        any(),
+        isNull(),
+      )
+    }
+  }
   private fun awaitReportFinished() {
-    await untilAsserted { verify(telemetryClient).trackEvent(eq("contact-person-prisoner-contact-reconciliation-report"), any(), isNull()) }
+    await untilAsserted { verify(telemetryClient).trackEvent(eq("contact-person-reconciliation-report"), any(), isNull()) }
   }
 }
