@@ -183,8 +183,8 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
       contacts = emptyList(),
     )
 
-    fun prisonerContact(id: Long = 1) = PrisonerContact(
-      id = 1,
+    fun prisonerContact(personId: Long = 1, contactId: Long = 1) = PrisonerContact(
+      id = contactId,
       bookingId = 1,
       bookingSequence = 1,
       contactType = CodeDescription("S", "Social"),
@@ -194,7 +194,7 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
       nextOfKin = false,
       emergencyContact = false,
       person = ContactForPerson(
-        personId = id,
+        personId = personId,
         lastName = "SMITH",
         firstName = "JANE",
       ),

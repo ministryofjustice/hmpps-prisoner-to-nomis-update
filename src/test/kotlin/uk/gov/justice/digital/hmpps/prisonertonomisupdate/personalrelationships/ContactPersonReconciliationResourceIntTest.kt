@@ -59,7 +59,7 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
           totalElements = 1,
           content = listOf(
             prisonerContactSummary(
-              id = 3,
+              contactId = 3,
               prisonerContactId = 30,
             ),
           ),
