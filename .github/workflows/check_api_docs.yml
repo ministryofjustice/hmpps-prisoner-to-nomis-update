@@ -30,7 +30,7 @@ jobs:
           - sentencing-adjustments
     steps:
       - uses: actions/checkout@v4
-
+      - uses: dev-hanz-ops/install-gh-cli-action@af38ce09b1ec248aeb08eea2b16bbecea9e059f8 # v0.2.1
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin' # See 'Supported distributions' for available options
@@ -60,3 +60,9 @@ jobs:
             Current production version is ${{ steps.check-api.outputs.production_version }}
           branch: api-docs-${{ matrix.project }}
           base: main
+
+      - name: Delete Pull Request
+        if: steps.check-api.outputs.differences == 'false'
+        run: ./delete-pull-request.bash api-docs-${{ matrix.project }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
