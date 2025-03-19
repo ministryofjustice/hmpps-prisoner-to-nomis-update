@@ -5,7 +5,9 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.util.context.Context
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageSyncContactId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummaryPage
@@ -91,4 +93,9 @@ class ContactPersonDpsApiService(@Qualifier("personalRelationshipsApiWebClient")
     .uri("/sync/contact/reconcile?page={pageNumber}&size={pageSize}", pageNumber, pageSize)
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
+
+  suspend fun getContactDetails(contactId: Long): ContactDetails? = webClient.get()
+    .uri("/contact/{contactId}", contactId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound(backoffSpec)
 }

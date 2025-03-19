@@ -16,11 +16,14 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummaryPage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.contactPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerWithContacts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
@@ -180,7 +183,11 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      nomisApi.stubGetPersonIds()
+      nomisApi.stubGetPersonIds(lastPersonId = 0, response = PersonIdsWithLast(lastPersonId = 1, personIds = listOf(1, 2)))
+      nomisApi.stubGetPerson(1, contactPerson(personId = 1).copy(firstName = "KWEKU", lastName = "KOFI"))
+      nomisApi.stubGetPerson(2, contactPerson(personId = 2).copy(firstName = "JANE", lastName = "SMITH"))
+      dpsApi.stubGetContactDetails(1, contactDetails(contactId = 1).copy(firstName = "KWEKU", lastName = "KOFI"))
+      dpsApi.stubGetContactDetails(2, null)
     }
 
     @Test
@@ -207,7 +214,9 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
 
       verify(telemetryClient).trackEvent(
         eq("contact-person-reconciliation-report"),
-        any(),
+        check {
+          assertThat(it).containsEntry("mismatch-count", "1")
+        },
         isNull(),
       )
     }

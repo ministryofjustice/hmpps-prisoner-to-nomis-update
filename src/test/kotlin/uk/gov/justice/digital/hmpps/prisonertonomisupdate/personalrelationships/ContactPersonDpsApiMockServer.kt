@@ -14,6 +14,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddressPhone
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactEmployment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactIdentity
@@ -23,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummaryPage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageSyncContactId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionsResponse
@@ -199,6 +201,21 @@ class ContactPersonDpsApiExtension :
       comments = null,
       updatedBy = null,
       updatedTime = null,
+    )
+
+    fun contactDetails(contactId: Long = 12345) = ContactDetails(
+      id = contactId,
+      lastName = "KOFI",
+      firstName = "KWEKU",
+      isStaff = false,
+      interpreterRequired = false,
+      createdBy = "JANE.SAM",
+      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+      addresses = emptyList(),
+      phoneNumbers = emptyList(),
+      emailAddresses = emptyList(),
+      identities = emptyList(),
+      employments = emptyList(),
     )
   }
 
@@ -377,5 +394,29 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(PageSyncContactId(totalElements = contactIds.size.toLong(), content = contactIds.map { SyncContactId(it) }))),
       ),
     )
+  }
+
+  fun stubGetContactDetails(contactId: Long, response: ContactDetails? = contactDetails()) {
+    if (response == null) {
+      stubFor(
+        get("/contact/$contactId")
+          .willReturn(
+            aResponse()
+              .withStatus(404)
+              .withHeader("Content-Type", "application/json")
+              .withBody("""{}"""),
+          ),
+      )
+    } else {
+      stubFor(
+        get("/contact/$contactId")
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+              .withHeader("Content-Type", "application/json")
+              .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+          ),
+      )
+    }
   }
 }
