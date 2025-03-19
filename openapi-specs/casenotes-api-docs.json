@@ -1,13 +1,13 @@
 {
   "openapi" : "3.1.0",
   "info" : {
-    "title" : "HMPPS Offender Case Notes",
-    "description" : "HMPPS Offender Case Notes API",
+    "title" : "HMPPS Case Notes API",
+    "description" : "API for retrieving and managing case notes relating to a person.\n\n## Person identifier\n\nThe accepted `personIdentifier` is the prison number also known as prisoner number, offender number, offender id or NOMS id.\n\n## Responsibilities of the client\n\nClients should only allow users to read and write case notes where that user is allowed to view the associated person's information.\nFor example a prisoner should be available to the user's caseload. Contact the Connect DPS team for the latest permissions logic.\nIt is no longer the responsibility of this API to verify the permissions of the user in context as per the move away from passing user tokens.\n\n### Sensitive and restricted use case note sub-types\n\nThe case note sub-types used to categorize case notes have two properties that relate to the visibility of case notes and the sub-type\n\n- `sensitive` - the note text may contain sensitive information and therefore should only be displayed to users with one of the `POM`, `VIEW_SENSITIVE_CASE_NOTES` or `ADD_SENSITIVE_CASE_NOTES` DPS roles\n- `restrictedUse` - the sub-type should only be made available to categorize a new case note to users with either the `POM` or `ADD_SENSITIVE_CASE_NOTES` DPS roles\n\n## Case note identifiers and the combined dataset\n\nThe usage of the combined case notes dataset in DPS was released nationally in February 2025.\nThe combined dataset uses UUIDs for case note identifiers replacing the legacy numeric ids.\nThis is a potentially breaking change for typed clients and therefore they cannot be automatically switched.\nInstead API clients can 'opt in' to using the combined dataset by including a non empty `CaseloadId` header value.\nThe presence of this header value declares that the client is:\n\n- Following the responsibilities of the client for prisoner visibility, note sensitivity and restricted use sub-types listed above\n- Compatible with UUID identifiers\n- Authenticating with a client token containing one or more of the required role claims\n- Supplying a username for any write endpoints either in the JWT subject or the `Username` header\n\n## Authentication\n\nThis API uses OAuth2 with JWTs. You will need to pass the JWT in the `Authorization` header using the `Bearer` scheme.\nAll endpoints are designed to work with client tokens and user tokens should not be used with this service.\n\n## Authorisation\n\nThe API uses roles to control access to the endpoints. The roles required for each endpoint are documented in the endpoint descriptions.\nServices integrating with the API should request one of the following roles depending on their needs:\n\n1. `ROLE_PRISONER_CASE_NOTES__RO` - Grants read only access to the API e.g. retrieving case notes for a person\n2. `ROLE_PRISONER_CASE_NOTES__RW` - Grants read/write access to the API e.g. creating case notes and adding amendments\n\n**IMPORTANT** clients should never request the admin role or call admin only endpoints e.g. delete\n\n## Identifying the user\n\nEndpoints that modify case notes require the user to be identified via their username.\nThis is to correctly populate the case note author and for auditing purposes.\nThe username supplied when creating a case note using a sub-type that syncs to NOMIS must exist in NOMIS.\nCase note sub-types that do not sync to NOMIS can be associated with a username from any user known to HMPPS Auth.\nThe username for the request can be supplied in two ways:\n\n1. **Token claim** - Via a `subject` claim in the JWT\n2. **Header** - Via the 'Username' header which will take priority over 1.\n\nWhere possible clients are expected to use the token claim subject to supply the username.",
     "contact" : {
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-10.8763.04b1c41"
+    "version" : "2025-03-18.8978.485d3ed"
   },
   "servers" : [ {
     "url" : "https://offender-case-notes.service.justice.gov.uk",
@@ -18,33 +18,33 @@
   }, {
     "url" : "https://dev.offender-case-notes.service.justice.gov.uk",
     "description" : "Development"
-  }, {
-    "url" : "http://localhost:8080",
-    "description" : "Local"
+  } ],
+  "security" : [ {
+    "bearer-jwt" : [ "read", "write" ]
   } ],
   "tags" : [ {
-    "name" : "case-note-types",
-    "description" : "Case Note Types Controller"
+    "name" : "Retrieve case notes, types and sub-types",
+    "description" : "Endpoints for read operations - accepts both RO and RW roles"
   }, {
-    "name" : "Sync Case Notes",
-    "description" : "Endpoint for sync operations"
+    "name" : "Create and amend case notes",
+    "description" : "Endpoints for write operations - must have RW role and must supply a valid username"
   }, {
-    "name" : "System Generated Case Notes",
-    "description" : "Endpoints system generated case notes"
+    "name" : "No Further Operations",
+    "description" : "Endpoints below this point are for special and explicit usage and should not be used under any circumstances without prior consultation with the team maintaining this API."
   }, {
-    "name" : "search-case-notes",
-    "description" : "Search Case Notes Controller"
+    "name" : "Create system generated case notes",
+    "description" : "Endpoints for creating system generated case notes with custom author information. Contact team maintaining API before using"
   }, {
-    "name" : "case-notes",
-    "description" : "Case Note Controller"
+    "name" : "NOMIS sync only",
+    "description" : "Endpoints for NOMIS sync only - not to be use by any other client"
   }, {
-    "name" : "case-note-usage",
-    "description" : "Case Note Usage"
+    "name" : "Admin only",
+    "description" : "Endpoints for case notes admin only - Not to be used by any service other than those used by central admin"
   } ],
   "paths" : {
     "/sync/case-notes" : {
       "put" : {
-        "tags" : [ "Sync Case Notes" ],
+        "tags" : [ "NOMIS sync only" ],
         "summary" : "Endpoint to sync a case note from nomis to dps.",
         "description" : "Case notes that don't exist in dps will be created, those that already exist and can be identified will be updated. Conceptually, a merge endpoint.\nRequires one of the following roles: \n* ROLE_PRISONER_CASE_NOTES__SYNC__RW",
         "operationId" : "syncCaseNotes",
@@ -112,84 +112,9 @@
         }
       }
     },
-    "/queue-admin/retry-dlq/{dlqName}" : {
-      "put" : {
-        "tags" : [ "hmpps-queue-resource" ],
-        "description" : "\nRequires one of the following roles: \n* ROLE_QUEUE_ADMIN",
-        "operationId" : "retryDlq",
-        "parameters" : [ {
-          "name" : "dlqName",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/RetryDlqResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/queue-admin/retry-all-dlqs" : {
-      "put" : {
-        "tags" : [ "hmpps-queue-resource" ],
-        "operationId" : "retryAllDlqs",
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/RetryDlqResult"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/queue-admin/purge-queue/{queueName}" : {
-      "put" : {
-        "tags" : [ "hmpps-queue-resource" ],
-        "description" : "\nRequires one of the following roles: \n* ROLE_QUEUE_ADMIN",
-        "operationId" : "purgeQueue",
-        "parameters" : [ {
-          "name" : "queueName",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PurgeQueueResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/move/case-notes" : {
       "put" : {
-        "tags" : [ "Sync Case Notes" ],
+        "tags" : [ "NOMIS sync only" ],
         "summary" : "Endpoint to move case notes - only for sync operations",
         "description" : "Case notes that are moved across bookings in nomis can be moved using this endpoint\nRequires one of the following roles: \n* ROLE_PRISONER_CASE_NOTES__SYNC__RW",
         "operationId" : "moveCaseNotes",
@@ -242,7 +167,7 @@
     },
     "/case-notes/{personIdentifier}/{caseNoteIdentifier}" : {
       "get" : {
-        "tags" : [ "case-notes" ],
+        "tags" : [ "Retrieve case notes, types and sub-types" ],
         "summary" : "Retrieves a case note",
         "operationId" : "getCaseNote",
         "parameters" : [ {
@@ -266,9 +191,14 @@
         }, {
           "name" : "CaseloadId",
           "in" : "header",
+          "description" : "\n    Relevant caseload id for the client identity in context e.g. the active caseload id of the logged in user.\n    Used to declare that the client is compatible with the usage of the combined case notes dataset.\n    ",
           "required" : false,
-          "schema" : {
-            "type" : "string"
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
           }
         } ],
         "responses" : {
@@ -295,7 +225,7 @@
         }
       },
       "put" : {
-        "tags" : [ "case-notes" ],
+        "tags" : [ "Create and amend case notes" ],
         "summary" : "Amend Case Note for offender",
         "description" : "Amend a case note information adds and additional entry to the note",
         "operationId" : "amendCaseNote",
@@ -320,9 +250,14 @@
         }, {
           "name" : "CaseloadId",
           "in" : "header",
+          "description" : "\n    Relevant caseload id for the client identity in context e.g. the active caseload id of the logged in user.\n    Used to declare that the client is compatible with the usage of the combined case notes dataset.\n    ",
           "required" : false,
-          "schema" : {
-            "type" : "string"
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
           }
         }, {
           "name" : "Username",
@@ -372,8 +307,8 @@
     },
     "/system-generated/case-notes/{personIdentifier}" : {
       "post" : {
-        "tags" : [ "System Generated Case Notes" ],
-        "summary" : "Endpoint to create system generated case notes.",
+        "tags" : [ "Create system generated case notes" ],
+        "summary" : "Create system generated case notes with custom author information",
         "description" : "\nRequires one of the following roles: \n* ROLE_PRISONER_CASE_NOTES__SYSTEM_GENERATED__RW",
         "operationId" : "createSystemGeneratedNote",
         "parameters" : [ {
@@ -440,7 +375,7 @@
     },
     "/search/case-notes/{personIdentifier}" : {
       "post" : {
-        "tags" : [ "search-case-notes" ],
+        "tags" : [ "Retrieve case notes, types and sub-types" ],
         "summary" : "Finds matching case notes",
         "description" : "Sorting can be applied on occurrenceDateTime (default) or creationDateTime. Any other sort parameter will have the default result (occurrenceDateTime,desc)",
         "operationId" : "findCaseNotes",
@@ -488,85 +423,9 @@
         }
       }
     },
-    "/migrate/case-notes/{personIdentifier}" : {
-      "post" : {
-        "tags" : [ "Sync Case Notes" ],
-        "summary" : "Endpoint repurposed to remove duplicate case notes",
-        "description" : "\nRequires one of the following roles: \n* ROLE_PRISONER_CASE_NOTES__SYNC__RW",
-        "operationId" : "migrateCaseNotes",
-        "parameters" : [ {
-          "name" : "personIdentifier",
-          "in" : "path",
-          "description" : "Person Identifier",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          },
-          "example" : "A1234AA"
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "type" : "array",
-                "items" : {
-                  "$ref" : "#/components/schemas/MigrateCaseNoteRequest"
-                }
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Case Notes successfully migrated",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/MigrationResult"
-                  }
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorised, requires a valid Oauth2 token",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires an appropriate role",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/case-notes/{personIdentifier}" : {
       "get" : {
-        "tags" : [ "case-notes" ],
+        "tags" : [ "Retrieve case notes, types and sub-types" ],
         "summary" : "Please do not use - this has been superseded by search/case-notes/{personIdentifier}",
         "operationId" : "getCaseNotes",
         "parameters" : [ {
@@ -596,9 +455,14 @@
         }, {
           "name" : "CaseloadId",
           "in" : "header",
+          "description" : "\n    Relevant caseload id for the client identity in context e.g. the active caseload id of the logged in user.\n    Used to declare that the client is compatible with the usage of the combined case notes dataset.\n    ",
           "required" : false,
-          "schema" : {
-            "type" : "string"
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
           }
         } ],
         "responses" : {
@@ -616,7 +480,7 @@
         "deprecated" : true
       },
       "post" : {
-        "tags" : [ "case-notes" ],
+        "tags" : [ "Create and amend case notes" ],
         "summary" : "Add a user supplied case note for an offender.",
         "description" : "\n    This endpoint should be used for adding a user supplied case note for an offender.\n    \n    System generated case notes, i.e. those generated as a side effect of another service, are supported but their usage is discouraged. \n    HMPPS intends case notes to only be supplied by users. Case notes used to inform of a change in another service, for example alerts being added or closed, should be considered deprecated and alternative methods of displaying this information to users should be pursued.\n    \n    An example alternative solution: a dedicated widget showing summary information on the prisoner profile provides improved context at a glance about a prisoner.\n    ",
         "operationId" : "createCaseNote",
@@ -632,9 +496,14 @@
         }, {
           "name" : "CaseloadId",
           "in" : "header",
+          "description" : "\n    Relevant caseload id for the client identity in context e.g. the active caseload id of the logged in user.\n    Used to declare that the client is compatible with the usage of the combined case notes dataset.\n    ",
           "required" : false,
-          "schema" : {
-            "type" : "string"
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
           }
         }, {
           "name" : "Username",
@@ -684,7 +553,7 @@
     },
     "/case-notes/usage" : {
       "post" : {
-        "tags" : [ "case-note-usage" ],
+        "tags" : [ "Retrieve case notes, types and sub-types" ],
         "summary" : "Finds counts of case notes for person identifier",
         "operationId" : "noteUsageForPersonIdentifier",
         "requestBody" : {
@@ -743,7 +612,7 @@
     },
     "/case-notes/staff-usage" : {
       "post" : {
-        "tags" : [ "case-note-usage" ],
+        "tags" : [ "Retrieve case notes, types and sub-types" ],
         "summary" : "Finds counts of case notes for an author",
         "operationId" : "noteUsageForAuthorUserId",
         "requestBody" : {
@@ -802,7 +671,7 @@
     },
     "/sync/case-notes/{personIdentifier}" : {
       "get" : {
-        "tags" : [ "Sync Case Notes" ],
+        "tags" : [ "NOMIS sync only" ],
         "description" : "\nRequires one of the following roles: \n* ROLE_PRISONER_CASE_NOTES__SYNC__RW",
         "operationId" : "getNomisCaseNotes",
         "parameters" : [ {
@@ -927,45 +796,9 @@
         }
       }
     },
-    "/queue-admin/get-dlq-messages/{dlqName}" : {
-      "get" : {
-        "tags" : [ "hmpps-queue-resource" ],
-        "description" : "\nRequires one of the following roles: \n* ROLE_QUEUE_ADMIN",
-        "operationId" : "getDlqMessages",
-        "parameters" : [ {
-          "name" : "dlqName",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "maxMessages",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 100
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/GetDlqResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/case-notes/types" : {
       "get" : {
-        "tags" : [ "case-note-types" ],
+        "tags" : [ "Retrieve case notes, types and sub-types" ],
         "summary" : "Retrieves a list of case note types",
         "description" : "\n  Please note, current functionality of using user roles from the token is now deprecated. \n  Going forward user roles will not affect the results returned from this endpoint.\n  This has been replaced with optional request params to replicate the same functionality.\n  Setting a value for 'selectableBy' will allow the choice of filtering those that are selectable by dps users only or to include all types regardless.\n  Additionally, the following properties allow filtering: \n  includeInactive -> if this is true the returned results will include inactive types, otherwise only active types will be returned.\n  includeRestricted -> if this is true the returned results will include restricted use types, otherwise only non-restricted types will be returned.\n  \nRequires one of the following roles: \n* ROLE_PRISONER_CASE_NOTES__RO\n* ROLE_PRISONER_CASE_NOTES__RW",
         "operationId" : "getCaseNoteTypes",
@@ -1021,7 +854,7 @@
     },
     "/sync/case-notes/{id}" : {
       "delete" : {
-        "tags" : [ "Sync Case Notes" ],
+        "tags" : [ "NOMIS sync only" ],
         "summary" : "Endpoint to delete a case note - only for sync operations",
         "description" : "Case notes that exist will be deleted. No exception will be returned if the case note does not exist.\nRequires one of the following roles: \n* ROLE_PRISONER_CASE_NOTES__SYNC__RW",
         "operationId" : "deleteCaseNote",
@@ -1063,7 +896,7 @@
     },
     "/case-notes/{personIdentifier}/{caseNoteId}" : {
       "delete" : {
-        "tags" : [ "case-notes" ],
+        "tags" : [ "Admin only" ],
         "summary" : "Deletes a case note",
         "operationId" : "deleteCaseNote_1",
         "parameters" : [ {
@@ -1267,26 +1100,6 @@
         },
         "required" : [ "action", "id", "legacyId" ]
       },
-      "RetryDlqResult" : {
-        "type" : "object",
-        "properties" : {
-          "messagesFoundCount" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        },
-        "required" : [ "messagesFoundCount" ]
-      },
-      "PurgeQueueResult" : {
-        "type" : "object",
-        "properties" : {
-          "messagesFoundCount" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        },
-        "required" : [ "messagesFoundCount" ]
-      },
       "MoveCaseNotesRequest" : {
         "type" : "object",
         "properties" : {
@@ -1324,33 +1137,33 @@
         "properties" : {
           "caseNoteId" : {
             "type" : "string",
-            "description" : "Case Note Id (unique)",
-            "example" : 12311312
+            "description" : "Case Note Identifier. Will be a UUID for all consumers of the combined dataset but can be numeric for those that have not opted in. See documentation above",
+            "example" : "518b2200-6489-4c77-8514-10cf80ccd488"
           },
           "offenderIdentifier" : {
             "type" : "string",
-            "description" : "Offender Unique Identifier",
+            "description" : "Person identifier. Their assigned prison number also known as prisoner number, offender number, offender id or NOMS id",
             "example" : "A1234AA"
           },
           "type" : {
             "type" : "string",
-            "description" : "Case Note Type",
-            "example" : "KA"
+            "description" : "The type code categorising the case note",
+            "example" : "CAB"
           },
           "typeDescription" : {
             "type" : "string",
-            "description" : "Case Note Type Description",
-            "example" : "Key Worker"
+            "description" : "Description of the case note type",
+            "example" : "Conduct & Behaviour"
           },
           "subType" : {
             "type" : "string",
-            "description" : "Case Note Sub Type",
-            "example" : "KS"
+            "description" : "The sub-type code further categorising the case note",
+            "example" : "EDUCATION"
           },
           "subTypeDescription" : {
             "type" : "string",
-            "description" : "Case Note Sub Type Description",
-            "example" : "Key Worker Session"
+            "description" : "Description of the case note sub-type",
+            "example" : "Education"
           },
           "source" : {
             "type" : "string",
@@ -1361,13 +1174,13 @@
           "creationDateTime" : {
             "type" : "string",
             "format" : "date-time",
-            "description" : "Date and Time of Case Note creation",
+            "description" : "Date and time the case note was added",
             "example" : "2017-10-31T01:30:00"
           },
           "occurrenceDateTime" : {
             "type" : "string",
             "format" : "date-time",
-            "description" : "Date and Time of when case note contact with offender was made",
+            "description" : "Date and time of the event recorded by this case note e.g. when a member of prison staff interacted with the prisoner. Displayed as 'Happened' in DPS",
             "example" : "2017-10-31T01:30:00"
           },
           "authorName" : {
@@ -1377,7 +1190,7 @@
           },
           "authorUserId" : {
             "type" : "string",
-            "description" : "User Id of case note author - staffId for nomis users, username for auth users",
+            "description" : "User identifier of case note author - staffId for NOMIS users, username for auth users",
             "example" : 12345
           },
           "authorUsername" : {
@@ -1387,12 +1200,12 @@
           },
           "text" : {
             "type" : "string",
-            "description" : "Case Note Text",
+            "description" : "The text of the case note only. The text for added amendments is associated with each amendment",
             "example" : "This is some text"
           },
           "locationId" : {
             "type" : "string",
-            "description" : "Location Id representing where Case Note was made.",
+            "description" : "The prison code the prisoner was resident at or a code indicating their transfer or released status at the time of the case note was added",
             "example" : "MDI"
           },
           "eventId" : {
@@ -1404,12 +1217,12 @@
           },
           "sensitive" : {
             "type" : "boolean",
-            "description" : "Sensitive Note",
+            "description" : "Whether the text contains potentially sensitive information. Sensitive notes should only be displayed to users with one of the `POM`, `VIEW_SENSITIVE_CASE_NOTES` or `ADD_SENSITIVE_CASE_NOTES` DPS roles",
             "example" : true
           },
           "amendments" : {
             "type" : "array",
-            "description" : "Ordered list of amendments to the case note (oldest first)",
+            "description" : "Ordered list of amendments added to the case note (oldest first)",
             "items" : {
               "$ref" : "#/components/schemas/CaseNoteAmendment"
             }
@@ -1421,7 +1234,8 @@
           "legacyId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "A temporary field that holds the legacy (nomis) id for services that have a dependency on the legacy id"
+            "deprecated" : true,
+            "description" : "The assigned numeric id for the case note. Can be positive or negative. Should only be used temporarily by clients that want to opt into the combined data set but are not fully compatible with UUID case note identifiers"
           }
         },
         "required" : [ "amendments", "authorName", "authorUserId", "authorUsername", "caseNoteId", "creationDateTime", "eventId", "legacyId", "occurrenceDateTime", "offenderIdentifier", "sensitive", "source", "subType", "subTypeDescription", "systemGenerated", "text", "type", "typeDescription" ]
@@ -1433,7 +1247,7 @@
           "creationDateTime" : {
             "type" : "string",
             "format" : "date-time",
-            "description" : "Date and Time of Case Note creation",
+            "description" : "Date and time the amendment to the case note was added",
             "example" : "2018-12-01T13:45:00"
           },
           "authorUserName" : {
@@ -1448,12 +1262,12 @@
           },
           "authorUserId" : {
             "type" : "string",
-            "description" : "User Id of the user amending the case note - staffId for nomis users, userId for auth users",
+            "description" : "User identifier of the user amending the case note - staffId for NOMIS users, userId for auth users",
             "example" : 12345
           },
           "additionalNoteText" : {
             "type" : "string",
-            "description" : "Additional Case Note Information",
+            "description" : "The text of the case note amendment",
             "example" : "Some Additional Text"
           }
         },
@@ -1586,108 +1400,6 @@
         },
         "required" : [ "content", "hasCaseNotes", "metadata" ]
       },
-      "MigrateAmendmentRequest" : {
-        "type" : "object",
-        "properties" : {
-          "text" : {
-            "type" : "string",
-            "description" : "The text of the note"
-          },
-          "system" : {
-            "type" : "string",
-            "enum" : [ "DPS", "NOMIS" ]
-          },
-          "author" : {
-            "$ref" : "#/components/schemas/Author"
-          },
-          "createdDateTime" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        },
-        "required" : [ "author", "createdDateTime", "system", "text" ]
-      },
-      "MigrateCaseNoteRequest" : {
-        "type" : "object",
-        "properties" : {
-          "legacyId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The nomis id for the case note, reflected back for mapping",
-            "example" : 1645251
-          },
-          "locationId" : {
-            "type" : "string",
-            "description" : "Location where case note was made",
-            "example" : "MDI"
-          },
-          "type" : {
-            "type" : "string",
-            "description" : "Type of case note",
-            "example" : "GEN"
-          },
-          "subType" : {
-            "type" : "string",
-            "description" : "Sub Type of case note",
-            "example" : "OBS"
-          },
-          "occurrenceDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Occurrence time of case note. If not provided it will be defaulted to the time of the request.",
-            "example" : "2024-09-01T10:25:00"
-          },
-          "text" : {
-            "type" : "string",
-            "description" : "The text of the note"
-          },
-          "systemGenerated" : {
-            "type" : "boolean",
-            "description" : "Boolean flag to indicate if case note is system generated"
-          },
-          "system" : {
-            "type" : "string",
-            "enum" : [ "DPS", "NOMIS" ]
-          },
-          "author" : {
-            "$ref" : "#/components/schemas/Author",
-            "description" : "The details of the author of the case note"
-          },
-          "createdDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Created date time from audit field in nomis to allow ordering by creation date",
-            "example" : "2024-09-01T10:25:00"
-          },
-          "createdByUsername" : {
-            "type" : "string",
-            "description" : "Username of the user that created the case note"
-          },
-          "amendments" : {
-            "type" : "array",
-            "description" : "Amendments to the original case note",
-            "items" : {
-              "$ref" : "#/components/schemas/MigrateAmendmentRequest"
-            },
-            "uniqueItems" : true
-          }
-        },
-        "required" : [ "amendments", "author", "createdByUsername", "createdDateTime", "legacyId", "locationId", "occurrenceDateTime", "subType", "system", "systemGenerated", "text", "type" ]
-      },
-      "MigrationResult" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "legacyId" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        },
-        "required" : [ "id", "legacyId" ]
-      },
       "CreateCaseNoteRequest" : {
         "type" : "object",
         "properties" : {
@@ -1733,11 +1445,11 @@
             },
             "uniqueItems" : true
           },
-          "occurredFrom" : {
+          "from" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "occurredTo" : {
+          "to" : {
             "type" : "string",
             "format" : "date-time"
           },
@@ -1754,9 +1466,16 @@
               "type" : "string"
             },
             "uniqueItems" : true
+          },
+          "prisonCode" : {
+            "type" : "string"
+          },
+          "dateType" : {
+            "type" : "string",
+            "enum" : [ "CREATED_AT", "OCCURRED_AT" ]
           }
         },
-        "required" : [ "authorIds", "personIdentifiers", "typeSubTypes" ]
+        "required" : [ "authorIds", "dateType", "personIdentifiers", "typeSubTypes" ]
       },
       "LatestNote" : {
         "type" : "object",
@@ -1815,11 +1534,11 @@
             },
             "uniqueItems" : true
           },
-          "occurredFrom" : {
+          "from" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "occurredTo" : {
+          "to" : {
             "type" : "string",
             "format" : "date-time"
           },
@@ -1829,9 +1548,16 @@
               "type" : "string"
             },
             "uniqueItems" : true
+          },
+          "prisonCode" : {
+            "type" : "string"
+          },
+          "dateType" : {
+            "type" : "string",
+            "enum" : [ "CREATED_AT", "OCCURRED_AT" ]
           }
         },
-        "required" : [ "authorIds", "typeSubTypes" ]
+        "required" : [ "authorIds", "dateType", "typeSubTypes" ]
       },
       "NoteUsageResponseUsageByAuthorIdResponse" : {
         "type" : "object",
@@ -1928,41 +1654,6 @@
           }
         },
         "required" : [ "content", "prn" ]
-      },
-      "DlqMessage" : {
-        "type" : "object",
-        "properties" : {
-          "body" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "type" : "object"
-            }
-          },
-          "messageId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "body", "messageId" ]
-      },
-      "GetDlqResult" : {
-        "type" : "object",
-        "properties" : {
-          "messagesFoundCount" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "messagesReturnedCount" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "messages" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/DlqMessage"
-            }
-          }
-        },
-        "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
       },
       "CaseNoteFilter" : {
         "type" : "object",
@@ -2099,15 +1790,15 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "unpaged" : {
+            "type" : "boolean"
           }
         }
       },
@@ -2181,6 +1872,15 @@
           }
         },
         "required" : [ "code", "description", "subCodes" ]
+      }
+    },
+    "securitySchemes" : {
+      "bearer-jwt" : {
+        "type" : "http",
+        "name" : "Authorization",
+        "in" : "header",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
       }
     }
   }
