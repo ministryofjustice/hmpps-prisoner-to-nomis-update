@@ -892,7 +892,7 @@ class ContactPersonNomisApiServiceTest {
 
     @Test
     fun `will request just a page of person ids from specified person`() = runTest {
-      mockServer.stubGetPersonIds()
+      mockServer.stubGetPersonIds(lastPersonId = 1234)
 
       apiService.getPersonIds(lastPersonId = 1234, pageSize = 100)
 
