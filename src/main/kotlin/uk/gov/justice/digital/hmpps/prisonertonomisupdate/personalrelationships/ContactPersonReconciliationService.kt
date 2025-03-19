@@ -11,15 +11,18 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.time.LocalDate
+import kotlin.collections.plus
 
 @Service
 class ContactPersonReconciliationService(
@@ -103,8 +106,10 @@ class ContactPersonReconciliationService(
 
   private suspend fun PersonIdsWithLast.checkPageOfPersonContactsMatches(): PersonMismatchPageResult {
     val personIds = this.personIds
-    // TODO match contacts
-    return PersonMismatchPageResult(emptyList(), lastPersonId = personIds.last())
+    val mismatches = withContext(Dispatchers.Unconfined) {
+      personIds.map { async { checkPersonContactMatch(it) } }
+    }.awaitAll().filterNotNull()
+    return PersonMismatchPageResult(mismatches, lastPersonId = personIds.last())
   }
 
   private fun notManyPageErrors(errors: Long): Boolean = errors < 30
@@ -171,6 +176,59 @@ class ContactPersonReconciliationService(
       ),
     )
   }.getOrNull()
+
+  suspend fun checkPersonContactMatch(personId: Long): MismatchPersonContacts? = runCatching {
+    val (nomisPerson, dpsContact) = withContext(Dispatchers.Unconfined) {
+      async { nomisApiService.getPerson(personId) } to
+        async { dpsApiService.getContactDetails(personId) }
+    }.awaitBoth()
+
+    val nomisPersonSummary = nomisPerson.asSummary()
+    val dpsPersonSummary = dpsContact?.asSummary()
+    return checkPersonMatch(
+      personId = personId,
+      nomisPersonSummary = nomisPersonSummary,
+      dpsPersonSummary = dpsPersonSummary,
+    )
+  }.onFailure {
+    log.error(
+      "Unable to match contacts for person with $personId",
+      it,
+    )
+    telemetryClient.trackEvent(
+      "$TELEMETRY_PERSON_PREFIX-mismatch-error",
+      mapOf(
+        "personId" to personId.toString(),
+      ),
+    )
+  }.getOrNull()
+
+  private fun checkPersonMatch(
+    personId: Long,
+    nomisPersonSummary: PersonSummary,
+    dpsPersonSummary: PersonSummary?,
+  ): MismatchPersonContacts? {
+    val telemetry = mutableMapOf("personId" to personId.toString())
+    if (dpsPersonSummary == null) {
+      return MismatchPersonContacts(personId).also { mismatch ->
+        telemetryClient.trackEvent(
+          "$TELEMETRY_PERSON_PREFIX-mismatch",
+          telemetry + ("reason" to "dps-person-missing"),
+        )
+      }
+    }
+
+    if (nomisPersonSummary != dpsPersonSummary) {
+      return MismatchPersonContacts(personId).also { mismatch ->
+        telemetryClient.trackEvent(
+          "$TELEMETRY_PERSON_PREFIX-mismatch",
+          telemetry + mapOf("reason" to "different-person-details"),
+        )
+      }
+    }
+
+    return null
+  }
 
   suspend fun checkContactsMatch(prisonerId: PrisonerIds, nomisContactSummaries: List<ContactSummary>, dpsContactSummaries: List<ContactSummary>): MismatchPrisonerContacts? {
     val (contactIdsMissingFromNomis, contactIdsMissingFromDps) = findMissingContacts(nomisContactSummaries, dpsContactSummaries)
@@ -306,6 +364,17 @@ class ContactPersonReconciliationService(
     approvedVisitor = this.approvedVisitor,
   )
 
+  private fun ContactPerson.asSummary() = PersonSummary(
+    personId = this.personId,
+    firstName = this.firstName,
+    lastName = this.lastName,
+  )
+  private fun ContactDetails.asSummary() = PersonSummary(
+    personId = this.id,
+    firstName = this.firstName,
+    lastName = this.lastName,
+  )
+
   private fun ContactRestriction.asSummary(contactId: Long, relationshipCode: String) = PrisonerContactRestrictionSummary(
     contactId = contactId,
     relationshipCode = relationshipCode,
@@ -366,6 +435,12 @@ data class MismatchPrisonerContacts(
   val nomisContactCount: Int,
 )
 
+// TODO - compare more things
+data class PersonSummary(
+  val personId: Long,
+  val firstName: String,
+  val lastName: String,
+)
 data class MismatchPersonContacts(
   val personId: Long,
 )

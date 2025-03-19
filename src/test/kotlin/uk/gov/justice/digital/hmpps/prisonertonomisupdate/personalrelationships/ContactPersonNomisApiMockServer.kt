@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
@@ -635,9 +636,9 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
 
-  fun stubGetPersonIds(response: PersonIdsWithLast = PersonIdsWithLast(lastPersonId = 0, personIds = emptyList())) {
+  fun stubGetPersonIds(lastPersonId: Long = 0, response: PersonIdsWithLast = PersonIdsWithLast(lastPersonId = 0, personIds = emptyList())) {
     nomisApi.stubFor(
-      get(urlPathEqualTo("/persons/ids/all-from-id")).willReturn(
+      get(urlPathEqualTo("/persons/ids/all-from-id")).withQueryParam("personId", equalTo("$lastPersonId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())

@@ -5,11 +5,13 @@ import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.dpsContactPersonServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
@@ -381,6 +383,46 @@ class ContactPersonDpsApiServiceTest {
           .withQueryParam("size", equalTo("20"))
           .withQueryParam("page", equalTo("3")),
       )
+    }
+  }
+
+  @Nested
+  inner class GetContactDetails {
+    @Test
+    internal fun `will pass oath2 token to contact endpoint`() = runTest {
+      dpsContactPersonServer.stubGetContactDetails(contactId = 1234567)
+
+      apiService.getContactDetails(contactId = 1234567)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get endpoint`() = runTest {
+      dpsContactPersonServer.stubGetContactDetails(contactId = 1234567)
+
+      apiService.getContactDetails(contactId = 1234567)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(urlPathEqualTo("/contact/1234567")),
+      )
+    }
+
+    @Test
+    fun `404 returns null`() = runTest {
+      dpsContactPersonServer.stubGetContactDetails(contactId = 1234567, response = null)
+
+      assertThat(apiService.getContactDetails(contactId = 1234567)).isNull()
+    }
+
+    @Test
+    fun `200 returns contact`() = runTest {
+      dpsContactPersonServer.stubGetContactDetails(contactId = 1234567, response = contactDetails())
+
+      assertThat(apiService.getContactDetails(contactId = 1234567)).isNotNull()
     }
   }
 }
