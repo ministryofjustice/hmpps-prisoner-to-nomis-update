@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -57,6 +58,14 @@ class ContactPersonProfileDetailsReconciliationIntTest(
         assertThat(it).isNull()
       }
 
+      nomisApi.verify(
+        getRequestedFor(urlPathMatching("/prisoners/A1234BC/profile-details"))
+          .withQueryParam("latestBookingOnly", equalTo("true"))
+          .withQueryParam("profileTypes", equalTo("MARITAL"))
+          .withQueryParam("profileTypes", equalTo("CHILD")),
+      )
+      dpsApi.verify(getRequestedFor(urlPathEqualTo("/sync/A1234BC/domestic-status")))
+      dpsApi.verify(getRequestedFor(urlPathEqualTo("/sync/A1234BC/number-of-children")))
       verify(telemetryClient, never()).trackEvent(anyString(), anyMap(), isNull())
     }
 
@@ -314,7 +323,13 @@ class ContactPersonProfileDetailsReconciliationIntTest(
       expectSuccess
         .let { if (it) "success" else "failed" }
         .also {
-          await untilAsserted { verify(telemetryClient).trackEvent(eq("$TELEMETRY_PREFIX-report-$it"), any(), isNull()) }
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("$TELEMETRY_PREFIX-report-$it"),
+              any(),
+              isNull(),
+            )
+          }
         }
     }
 
@@ -393,7 +408,12 @@ class ContactPersonProfileDetailsReconciliationIntTest(
         reset(telemetryClient)
         NomisApiExtension.nomisApi.apply {
           stubGetActivePrisonersInitialCount(noActivePrisoners)
-          stubGetActivePrisonersPage(noActivePrisoners, pageNumber = 0, pageSize = pageSize, numberOfElements = pageSize)
+          stubGetActivePrisonersPage(
+            noActivePrisoners,
+            pageNumber = 0,
+            pageSize = pageSize,
+            numberOfElements = pageSize,
+          )
           // fail to retrieve page 1
           stubGetActivePrisonersPageWithError(pageNumber = 1, pageSize = pageSize, responseCode = 500)
           stubGetActivePrisonersPage(noActivePrisoners, pageNumber = 2, pageSize = pageSize, numberOfElements = 1)
