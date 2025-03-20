@@ -24,6 +24,7 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_GATEWAY
+import org.springframework.http.HttpStatus.NOT_FOUND
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ProfileDetailsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileDetailsReconciliationService.Companion.TELEMETRY_PREFIX
@@ -131,7 +132,7 @@ class ContactPersonProfileDetailsReconciliationIntTest(
 
     @Test
     fun `should report null differences when not found`() = runTest {
-      nomisApi.stubGetProfileDetails("A1234BC", HttpStatus.NOT_FOUND)
+      nomisApi.stubGetProfileDetails("A1234BC", NOT_FOUND)
       dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC", domesticStatus(domesticStatusCode = "M"))
       dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC", numberOfChildren(numberOfChildren = "2"))
 
@@ -164,6 +165,25 @@ class ContactPersonProfileDetailsReconciliationIntTest(
       )
       dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC", domesticStatus(domesticStatusCode = null))
       dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC", numberOfChildren(numberOfChildren = null))
+
+      service.checkPrisoner("A1234BC").also {
+        assertThat(it).isNull()
+      }
+
+      verify(telemetryClient, never()).trackEvent(anyString(), anyMap(), isNull())
+    }
+
+    @Test
+    fun `should do nothing if NOMIS has no latest booking`() = runTest {
+      nomisApi.stubGetProfileDetails(
+        "A1234BC",
+        profileDetailsResponse(
+          offenderNo = "A1234BC",
+          bookings = listOf(),
+        ),
+      )
+      dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC", NOT_FOUND)
+      dpsApi.stubGetNumberOfChildren(prisonerNumber = "A1234BC", NOT_FOUND)
 
       service.checkPrisoner("A1234BC").also {
         assertThat(it).isNull()
