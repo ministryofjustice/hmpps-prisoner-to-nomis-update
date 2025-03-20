@@ -56,7 +56,7 @@ class ContactPersonProfileDetailsReconciliationService(
   suspend fun checkPrisoner(prisonerNumber: String): String? = runCatching {
     val apiResponses = withContext(Dispatchers.Unconfined) {
       ApiResponses(
-        async { doApiCallWithRetries { nomisApi.getProfileDetails(prisonerNumber, ContactPersonProfileType.all()) } },
+        async { doApiCallWithRetries { nomisApi.getProfileDetails(prisonerNumber, ContactPersonProfileType.all(), latestBookingOnly = true) } },
         async { doApiCallWithRetries { dpsApi.getDomesticStatus(prisonerNumber) } },
         async { doApiCallWithRetries { dpsApi.getNumberOfChildren(prisonerNumber) } },
       )
