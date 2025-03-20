@@ -6,6 +6,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -31,6 +33,7 @@ class ContactPersonProfileDetailsReconciliationService(
 ) {
   companion object {
     const val TELEMETRY_PREFIX = "contact-person-profile-details-reconciliation"
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
   suspend fun generateReconciliationReport(activePrisonersCount: Long): List<String> = if (reconciliationTurnedOn) {
@@ -49,6 +52,7 @@ class ContactPersonProfileDetailsReconciliationService(
 
   private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) = runCatching { nomisIdsApi.getActivePrisoners(page.first, page.second).content }
     .onFailure {
+      log.error("Failed to retrieve active prisoners for page $page", it)
       telemetryClient.trackEvent("$TELEMETRY_PREFIX-page-error", mapOf("page" to page.first.toString(), "error" to (it.message ?: "unknown error")))
     }
     .getOrElse { emptyList() }
@@ -74,6 +78,7 @@ class ContactPersonProfileDetailsReconciliationService(
           }
       }
   }.onFailure { e ->
+    log.error("Failed to run reconciliation for prisoner $prisonerNumber", e)
     telemetryClient.trackEvent(
       "$TELEMETRY_PREFIX-prisoner-error",
       mapOf("offenderNo" to prisonerNumber, "error" to "${e.message}"),
@@ -119,5 +124,8 @@ class ContactPersonProfileDetailsReconciliationService(
     }
   }
 
-  private fun PrisonerProfileDetailsResponse.findDomesticStatusCode(profileType: String): String? = bookings[0].profileDetails.firstOrNull { it.type == profileType }?.code
+  private fun PrisonerProfileDetailsResponse.findDomesticStatusCode(profileType: String): String? = bookings.firstOrNull { it.latestBooking }
+    ?.profileDetails
+    ?.firstOrNull { it.type == profileType }
+    ?.code
 }
