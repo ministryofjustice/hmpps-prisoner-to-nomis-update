@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-10.5307.ffc0b87"
+    "version" : "2025-03-20.5417.11a0d2c"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -1952,6 +1952,14 @@
               "enum" : [ "ACTIVE", "INACTIVE" ]
             }
           }
+        }, {
+          "name" : "offenceDate",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -2932,7 +2940,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:53:37.430478184"
+            "example" : "13:54:45.103186652"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -3184,7 +3192,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:53:37.430478184"
+            "example" : "13:54:45.103186652"
           },
           "courtCode" : {
             "type" : "string"
@@ -4122,7 +4130,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:53:37.430478184"
+            "example" : "13:54:45.103186652"
           },
           "charges" : {
             "type" : "array",
@@ -4145,7 +4153,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:53:37.430478184"
+            "example" : "13:54:45.103186652"
           },
           "courtId" : {
             "type" : "string"
@@ -4404,7 +4412,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:53:37.430478184"
+            "example" : "13:54:45.103186652"
           },
           "courtCode" : {
             "type" : "string"
@@ -4496,12 +4504,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
