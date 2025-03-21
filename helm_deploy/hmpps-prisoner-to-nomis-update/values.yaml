@@ -215,3 +215,4 @@ cron:
   attendanceReconReportSchedule: "5 1 * * *"
   activitiesTidyMappingsSuspend: true
   activitiesTidyMappingsSchedule: "15 7 * * 1-5"
+  contactPersonProfileDetailsReportSchedule: "30 3 * * *"
