@@ -155,22 +155,23 @@ class SentencingAdjustmentsService(
 
     if (isDpsCreated(createEvent.additionalInformation)) {
       runCatching {
-        val mapping = sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(adjustmentId)
-          .also {
-            telemetryMap["nomisAdjustmentId"] = it.nomisAdjustmentId.toString()
-            telemetryMap["nomisAdjustmentCategory"] = it.nomisAdjustmentCategory
-          }
+        sentencingAdjustmentsMappingService.getMappingGivenAdjustmentIdOrNull(adjustmentId)?.also { mapping ->
+          telemetryMap["nomisAdjustmentId"] = mapping.nomisAdjustmentId.toString()
+          telemetryMap["nomisAdjustmentCategory"] = mapping.nomisAdjustmentCategory
 
-        if (mapping.nomisAdjustmentCategory == "SENTENCE") {
-          nomisApiService.deleteSentenceAdjustment(
-            mapping.nomisAdjustmentId,
-          )
-        } else {
-          nomisApiService.deleteKeyDateAdjustment(
-            mapping.nomisAdjustmentId,
-          )
-        }.also {
-          sentencingAdjustmentsMappingService.deleteMappingGivenAdjustmentId(adjustmentId)
+          if (mapping.nomisAdjustmentCategory == "SENTENCE") {
+            nomisApiService.deleteSentenceAdjustment(
+              mapping.nomisAdjustmentId,
+            )
+          } else {
+            nomisApiService.deleteKeyDateAdjustment(
+              mapping.nomisAdjustmentId,
+            )
+          }.also {
+            sentencingAdjustmentsMappingService.deleteMappingGivenAdjustmentId(adjustmentId)
+          }
+        } ?: run {
+          telemetryClient.trackEvent("sentencing-adjustment-deleted-ignored", telemetryMap + ("reason" to "mapping-already-deleted"), null)
         }
       }.onSuccess {
         telemetryClient.trackEvent("sentencing-adjustment-deleted-success", telemetryMap, null)

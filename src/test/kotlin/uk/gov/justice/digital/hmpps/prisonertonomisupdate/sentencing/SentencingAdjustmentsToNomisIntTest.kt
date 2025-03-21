@@ -1119,10 +1119,17 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will add message to dead letter queue in case it indicates a system error`() {
-        await untilCallTo {
-          awsSqsSentencingDlqClient!!.countAllMessagesOnQueue(sentencingDlqUrl!!).get()
-        } matches { it == 1 }
+      fun `will ignore the event and assume adjustment was deleted by migration service`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("sentencing-adjustment-deleted-ignored"),
+            check {
+              assertThat(it["adjustmentId"]).isEqualTo(ADJUSTMENT_ID)
+              assertThat(it["reason"]).isEqualTo("mapping-already-deleted")
+            },
+            isNull(),
+          )
+        }
       }
     }
   }
