@@ -5,8 +5,7 @@ metadata:
   labels:
     {{- include "app.labels" . | nindent 4 }}
 spec:
-  schedule: "30 3 * * *"
-  suspend: false
+  schedule: "{{ .Values.cron.contactPersonProfileDetailsReportSchedule }}"
   concurrencyPolicy: Forbid
   failedJobsHistoryLimit: 5
   startingDeadlineSeconds: 600
