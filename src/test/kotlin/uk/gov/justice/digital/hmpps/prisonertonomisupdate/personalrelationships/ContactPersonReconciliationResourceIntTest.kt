@@ -184,7 +184,7 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
     fun setUp() {
       reset(telemetryClient)
       nomisApi.stubGetPersonIds(lastPersonId = 0, response = PersonIdsWithLast(lastPersonId = 1, personIds = listOf(1, 2)))
-      nomisApi.stubGetPerson(1, contactPerson(personId = 1).copy(firstName = "KWEKU", lastName = "KOFI"))
+      nomisApi.stubGetPerson(1, contactPerson(personId = 1).copy(firstName = "KWEKU", lastName = "KOFI", phoneNumbers = emptyList(), employments = emptyList(), identifiers = emptyList(), addresses = emptyList(), emailAddresses = emptyList()))
       nomisApi.stubGetPerson(2, contactPerson(personId = 2).copy(firstName = "JANE", lastName = "SMITH"))
       dpsApi.stubGetContactDetails(1, contactDetails(contactId = 1).copy(firstName = "KWEKU", lastName = "KOFI"))
       dpsApi.stubGetContactDetails(2, null)

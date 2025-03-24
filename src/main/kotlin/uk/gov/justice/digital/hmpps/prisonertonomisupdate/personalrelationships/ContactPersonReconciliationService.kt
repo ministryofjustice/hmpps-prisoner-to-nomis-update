@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.time.LocalDate
+import java.util.SortedSet
 import kotlin.collections.plus
 
 @Service
@@ -368,11 +369,25 @@ class ContactPersonReconciliationService(
     personId = this.personId,
     firstName = this.firstName,
     lastName = this.lastName,
+    dateOfBirth = this.dateOfBirth,
+    addressCount = this.addresses.size,
+    phoneNumbers = this.phoneNumbers.map { it.number }.toSortedSet(),
+    emailAddresses = this.emailAddresses.map { it.email }.toSortedSet(),
+    addressPhoneNumbers = this.addresses.map { it.phoneNumbers.map { it.number }.toSortedSet() }.toSortedSet { o1, o2 -> o1.joinToString().compareTo(o2.joinToString()) },
+    employmentOrganisations = this.employments.map { it.corporate.id }.toSortedSet(),
+    identifiers = this.identifiers.map { it.identifier }.toSortedSet(),
   )
   private fun ContactDetails.asSummary() = PersonSummary(
     personId = this.id,
     firstName = this.firstName,
     lastName = this.lastName,
+    dateOfBirth = this.dateOfBirth,
+    addressCount = this.addresses.size,
+    phoneNumbers = this.phoneNumbers.map { it.phoneNumber }.toSortedSet(),
+    emailAddresses = this.emailAddresses.map { it.emailAddress }.toSortedSet(),
+    addressPhoneNumbers = this.addresses.map { it.phoneNumbers.map { it.phoneNumber }.toSortedSet() }.toSortedSet { o1, o2 -> o1.joinToString().compareTo(o2.joinToString()) },
+    employmentOrganisations = this.employments.map { it.employer.organisationId }.toSortedSet(),
+    identifiers = this.identities.map { it.identityValue.toString() }.toSortedSet(),
   )
 
   private fun ContactRestriction.asSummary(contactId: Long, relationshipCode: String) = PrisonerContactRestrictionSummary(
@@ -435,11 +450,17 @@ data class MismatchPrisonerContacts(
   val nomisContactCount: Int,
 )
 
-// TODO - compare more things
 data class PersonSummary(
   val personId: Long,
   val firstName: String,
   val lastName: String,
+  val dateOfBirth: LocalDate?,
+  val addressCount: Int,
+  val phoneNumbers: SortedSet<String>,
+  val emailAddresses: SortedSet<String>,
+  val identifiers: SortedSet<String>,
+  val employmentOrganisations: SortedSet<Long>,
+  val addressPhoneNumbers: SortedSet<SortedSet<String>>,
 )
 data class MismatchPersonContacts(
   val personId: Long,

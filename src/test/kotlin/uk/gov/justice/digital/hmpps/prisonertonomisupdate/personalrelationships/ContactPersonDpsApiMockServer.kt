@@ -24,7 +24,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummaryPage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactAddressDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactEmailDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactIdentityDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactPhoneDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.EmploymentDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.OrganisationSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageSyncContactId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionsResponse
@@ -216,6 +223,69 @@ class ContactPersonDpsApiExtension :
       emailAddresses = emptyList(),
       identities = emptyList(),
       employments = emptyList(),
+    )
+
+    fun contactAddressDetails(contactAddressId: Long = 1234567, phoneNumbers: List<ContactAddressPhoneDetails> = emptyList()) = ContactAddressDetails(
+      contactAddressId = contactAddressId,
+      contactId = 12345,
+      primaryAddress = true,
+      verified = false,
+      mailFlag = false,
+      noFixedAddress = false,
+      phoneNumbers = phoneNumbers,
+      createdBy = "JANE.SAM",
+      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+    )
+
+    fun contactEmailDetails(emailAddress: String = "test@test.com") = ContactEmailDetails(
+      contactEmailId = 1234567,
+      contactId = 12345,
+      emailAddress = emailAddress,
+      createdBy = "JANE.SAM",
+      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+    )
+    fun contactPhoneDetails(phoneNumber: String = "07973 555 5555") = ContactPhoneDetails(
+      contactPhoneId = 1234567,
+      contactId = 12345,
+      phoneNumber = phoneNumber,
+      phoneType = "MOB",
+      phoneTypeDescription = "Mobile",
+      createdBy = "JANE.SAM",
+      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+    )
+    fun contactAddressPhoneDetails(phoneNumber: String = "07973 555 5555") = ContactAddressPhoneDetails(
+      contactPhoneId = 1234567,
+      contactId = 12345,
+      phoneNumber = phoneNumber,
+      phoneType = "MOB",
+      phoneTypeDescription = "Mobile",
+      createdBy = "JANE.SAM",
+      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+      contactAddressPhoneId = 111,
+      contactAddressId = 1222,
+    )
+    fun contactIdentityDetails(identityValue: String = "SMIT5654DL") = ContactIdentityDetails(
+      contactIdentityId = 1234567,
+      contactId = 12345,
+      identityValue = identityValue,
+      identityType = "DL",
+      issuingAuthority = "DVLA",
+      createdBy = "JANE.SAM",
+      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+      identityTypeIsActive = true,
+    )
+
+    fun contactEmploymentDetails(organisationId: Long = 1) = EmploymentDetails(
+      employmentId = 1234567,
+      contactId = 12345,
+      employer = OrganisationSummary(
+        organisationId = organisationId,
+        organisationName = "Police",
+        organisationActive = true,
+      ),
+      isActive = true,
+      createdBy = "JANE.SAM",
+      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
     )
   }
 
