@@ -26,6 +26,7 @@ generic-service:
     API_BASE_URL_CASENOTES: https://dev.offender-case-notes.service.justice.gov.uk
     API_BASE_URL_PERSONAL_RELATIONSHIPS: https://personal-relationships-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_ORGANISATIONS: https://organisations-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk
     FEATURE_EVENT_DELETEALL: true
     FEATURE_EVENT_ORGANISATIONS-API.ORGANISATION.CREATED: false
     FEATURE_EVENT_ORGANISATIONS-API.ORGANISATION.UPDATED: false
