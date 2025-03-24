@@ -8,6 +8,8 @@ import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactRestrictionDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageSyncContactId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummaryPage
@@ -98,4 +100,14 @@ class ContactPersonDpsApiService(@Qualifier("personalRelationshipsApiWebClient")
     .uri("/contact/{contactId}", contactId)
     .retrieve()
     .awaitBodyOrNullForNotFound(backoffSpec)
+
+  suspend fun getContactRestrictions(contactId: Long): List<ContactRestrictionDetails> = webClient.get()
+    .uri("/contact/{contactId}/restriction", contactId)
+    .retrieve()
+    .awaitBodyWithRetry(backoffSpec)
+
+  suspend fun getLinkedPrisonerContacts(contactId: Long): List<LinkedPrisonerDetails> = webClient.get()
+    .uri("/contact/{contactId}/linked-prisoners", contactId)
+    .retrieve()
+    .awaitBodyWithRetry(backoffSpec)
 }

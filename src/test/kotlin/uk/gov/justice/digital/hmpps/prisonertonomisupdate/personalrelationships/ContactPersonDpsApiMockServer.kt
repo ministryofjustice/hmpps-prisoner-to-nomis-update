@@ -20,6 +20,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactRestriction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactRestrictionDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.linkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionsResponse
@@ -30,7 +32,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactEmailDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactIdentityDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactPhoneDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.EmploymentDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerRelationshipDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.OrganisationSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageSyncContactId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionDetails
@@ -287,6 +292,32 @@ class ContactPersonDpsApiExtension :
       createdBy = "JANE.SAM",
       createdTime = LocalDateTime.parse("2024-01-01T12:13"),
     )
+
+    fun contactRestrictionDetails() = ContactRestrictionDetails(
+      contactRestrictionId = 1234567,
+      contactId = 12345,
+      restrictionType = "BAN",
+      restrictionTypeDescription = "Banned",
+      enteredByUsername = "T.SMITH",
+      enteredByDisplayName = "Tim Smith",
+      createdBy = "JANE.SAM",
+      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+    )
+
+    fun linkedPrisonerDetails() = LinkedPrisonerDetails(
+      prisonerNumber = "A1234KT",
+      lastName = "WILLIAMS",
+      firstName = "SARAH",
+      relationships = listOf(linkedPrisonerRelationshipDetails()),
+    )
+
+    fun linkedPrisonerRelationshipDetails() = LinkedPrisonerRelationshipDetails(
+      prisonerContactId = 12434567,
+      relationshipTypeCode = "S",
+      relationshipTypeDescription = "Social",
+      relationshipToPrisonerCode = "FRI",
+      isRelationshipActive = true,
+    )
   }
 
   override fun beforeAll(context: ExtensionContext) {
@@ -488,5 +519,26 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           ),
       )
     }
+  }
+
+  fun stubGetContactRestrictions(contactId: Long, response: List<ContactRestrictionDetails> = listOf(contactRestrictionDetails())) {
+    stubFor(
+      get(urlPathEqualTo("/contact/$contactId/restriction")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+  fun stubGetLinkedPrisonerContacts(contactId: Long, response: List<LinkedPrisonerDetails> = listOf(linkedPrisonerDetails())) {
+    stubFor(
+      get(urlPathEqualTo("/contact/$contactId/linked-prisoners")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+      ),
+    )
   }
 }

@@ -425,4 +425,56 @@ class ContactPersonDpsApiServiceTest {
       assertThat(apiService.getContactDetails(contactId = 1234567)).isNotNull()
     }
   }
+
+  @Nested
+  inner class GetContactRestrictions {
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      dpsContactPersonServer.stubGetContactRestrictions(contactId = 1234)
+
+      apiService.getContactRestrictions(1234)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get endpoint`() = runTest {
+      dpsContactPersonServer.stubGetContactRestrictions(contactId = 1234)
+
+      apiService.getContactRestrictions(1234)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(urlPathEqualTo("/contact/1234/restriction")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetLinkedPrisonerContacts {
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      dpsContactPersonServer.stubGetLinkedPrisonerContacts(contactId = 1234)
+
+      apiService.getLinkedPrisonerContacts(1234)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get endpoint`() = runTest {
+      dpsContactPersonServer.stubGetLinkedPrisonerContacts(contactId = 1234)
+
+      apiService.getLinkedPrisonerContacts(1234)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(urlPathEqualTo("/contact/1234/linked-prisoners")),
+      )
+    }
+  }
 }
