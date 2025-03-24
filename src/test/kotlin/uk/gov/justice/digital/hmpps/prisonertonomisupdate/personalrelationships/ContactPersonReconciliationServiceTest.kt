@@ -44,6 +44,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerWithContacts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactRestrictionDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -643,17 +645,32 @@ internal class ContactPersonReconciliationServiceTest {
   @Nested
   inner class CheckPersonContactsMatch {
     val personId = 1L
-    val nomisPerson = contactPerson(personId = personId).copy(firstName = "KWEKU", lastName = "KOFI", phoneNumbers = emptyList(), employments = emptyList(), identifiers = emptyList(), addresses = emptyList(), emailAddresses = emptyList())
-    val dpsContact = contactDetails(contactId = personId).copy(firstName = "KWEKU", lastName = "KOFI")
+    val nomisPerson = contactPerson(personId = personId).copy(
+      firstName = "KWEKU",
+      lastName = "KOFI",
+      phoneNumbers = emptyList(),
+      employments = emptyList(),
+      identifiers = emptyList(),
+      addresses = emptyList(),
+      emailAddresses = emptyList(),
+      contacts = emptyList(),
+      restrictions = emptyList(),
+    )
+    val dpsContact = contactDetails(contactId = personId).copy(
+      firstName = "KWEKU",
+      lastName = "KOFI",
+    )
 
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
     }
 
-    private fun stubPersonContact(nomisPerson: ContactPerson, dpsContact: ContactDetails) {
+    private fun stubPersonContact(nomisPerson: ContactPerson, dpsContact: ContactDetails, dpsContactRestrictions: List<ContactRestrictionDetails> = emptyList(), dpsPrisonerContacts: List<LinkedPrisonerDetails> = emptyList()) {
       nomisApi.stubGetPerson(personId, nomisPerson)
       dpsApi.stubGetContactDetails(personId, dpsContact)
+      dpsApi.stubGetContactRestrictions(personId, dpsContactRestrictions)
+      dpsApi.stubGetLinkedPrisonerContacts(personId, dpsPrisonerContacts)
     }
 
     @Nested

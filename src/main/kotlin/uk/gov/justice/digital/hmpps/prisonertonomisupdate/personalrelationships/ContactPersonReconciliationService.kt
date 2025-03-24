@@ -184,6 +184,14 @@ class ContactPersonReconciliationService(
         async { dpsApiService.getContactDetails(personId) }
     }.awaitBoth()
 
+    val (dpsPrisonerContacts, dpsContactRestrictions) = dpsContact?.let {
+      withContext(Dispatchers.Unconfined) {
+        async { dpsApiService.getLinkedPrisonerContacts(personId) } to
+          async { dpsApiService.getContactRestrictions(personId) }
+      }.awaitBoth()
+    } ?: Pair(emptyList(), emptyList())
+
+    // TODO - add these to summary
     val nomisPersonSummary = nomisPerson.asSummary()
     val dpsPersonSummary = dpsContact?.asSummary()
     return checkPersonMatch(
