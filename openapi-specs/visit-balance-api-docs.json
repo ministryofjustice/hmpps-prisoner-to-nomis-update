@@ -1,0 +1,546 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "HMPPS Visit Allocation Api",
+    "contact" : {
+      "name" : "HMPPS Digital Studio",
+      "email" : "feedback@digital.justice.gov.uk"
+    },
+    "version" : "2025-03-21.231.51b52e3"
+  },
+  "servers" : [ {
+    "url" : "https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk",
+    "description" : "Development"
+  }, {
+    "url" : "https://hmpps-visit-allocation-api-staging.prison.service.justice.gov.uk",
+    "description" : "Staging"
+  }, {
+    "url" : "https://hmpps-visit-allocation-api-preprod.prison.service.justice.gov.uk",
+    "description" : "Pre-Production"
+  }, {
+    "url" : "https://hmpps-visit-allocation-api.prison.service.justice.gov.uk",
+    "description" : "Production"
+  }, {
+    "url" : "http://localhost:8079",
+    "description" : "Local"
+  } ],
+  "security" : [ {
+    "visit-allocation-api-ui-role" : [ "read" ]
+  } ],
+  "paths" : {
+    "/queue-admin/retry-dlq/{dlqName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "retryDlq",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RetryDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/retry-all-dlqs" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "retryAllDlqs",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RetryDlqResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/purge-queue/{queueName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "purgeQueue",
+        "parameters" : [ {
+          "name" : "queueName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PurgeQueueResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/visits/allocation/prisoner/sync" : {
+      "post" : {
+        "tags" : [ "nomis-controller" ],
+        "summary" : "Endpoint to sync ongoing changes to prisoner VO / PVO balances from NOMIS to DPS.",
+        "description" : "Takes a set of changes to a prisoners and syncs them onto DPS.",
+        "operationId" : "syncPrisonerVisitOrders",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VisitAllocationPrisonerSyncDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Prisoner information has been synced."
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to sync prisoner VO / PVO information.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/visits/allocation/prisoner/migrate" : {
+      "post" : {
+        "tags" : [ "nomis-controller" ],
+        "summary" : "Endpoint to migrate prisoner VO / PVO balances from NOMIS to DPS.",
+        "description" : "Takes a prisoner and 'onboards' them onto DPS, syncing their balance with NOMIS.",
+        "operationId" : "migratePrisonerVisitOrders",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VisitAllocationPrisonerMigrationDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Prisoner information has been migrated."
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to migrate prisoner VO / PVO information.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/visits/allocation/job/start" : {
+      "post" : {
+        "tags" : [ "start-visit-allocation-by-prison-controller" ],
+        "summary" : "Endpoint to trigger adding prisons enabled for VO allocation to allocations queue.",
+        "description" : "Endpoint to trigger adding prisons enabled for VO allocation to allocations queue.",
+        "operationId" : "triggerVisitAllocationForActivePrisons",
+        "responses" : {
+          "200" : {
+            "description" : "Active prisons for VO allocation added to queue.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VisitAllocationEventJobDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to trigger adding active prisons for VO allocation to queue",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/visits/allocation/prisoner/{prisonerId}/balance" : {
+      "get" : {
+        "tags" : [ "balance-controller" ],
+        "summary" : "Endpoint to get a prisoners current balance.",
+        "description" : "Takes a prisoner id and return their current visit order balance.",
+        "operationId" : "getPrisonerBalance",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "description" : "prisonerId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "prisonerId",
+            "example" : "AA123456"
+          },
+          "example" : "AA123456"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Prisoner balance returned.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerBalanceDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to get prisoner balance.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner balance not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/get-dlq-messages/{dlqName}" : {
+      "get" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "getDlqMessages",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "maxMessages",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 100
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GetDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "RetryDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "messagesFoundCount" ]
+      },
+      "PurgeQueueResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "messagesFoundCount" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : "string"
+          },
+          "userMessage" : {
+            "type" : "string"
+          },
+          "developerMessage" : {
+            "type" : "string"
+          },
+          "moreInfo" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "status" ]
+      },
+      "VisitAllocationPrisonerSyncDto" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerId" : {
+            "type" : "string",
+            "description" : "nomsNumber of the prisoner",
+            "example" : "AA123456"
+          },
+          "oldVoBalance" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The previous VO balance (can be negative)",
+            "example" : 5
+          },
+          "changeToVoBalance" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The change of the VO balance (can be negative)",
+            "example" : 5
+          },
+          "oldPvoBalance" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The previous PVO balance (can be negative)",
+            "example" : 2
+          },
+          "changeToPvoBalance" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The change of the PVO balance (can be negative)",
+            "example" : 5
+          },
+          "createdDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date which the change was made",
+            "example" : "2025-02-28"
+          },
+          "adjustmentReasonCode" : {
+            "type" : "string",
+            "description" : "The reason for the adjustment",
+            "enum" : [ "AUTO_EXP", "CANC", "DISC", "GOV", "IEP", "PVO_CANCEL", "PVO_IEP", "PVO_ISSUE", "VO_CANCEL", "VO_ISSUE" ],
+            "example" : "VO_ISSUE"
+          },
+          "changeLogSource" : {
+            "type" : "string",
+            "description" : "The source of the change being made",
+            "enum" : [ "SYSTEM", "STAFF" ],
+            "example" : "SYSTEM or STAFF"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Additional information on the sync reason",
+            "example" : "Manually adjusted for phone credit"
+          }
+        },
+        "required" : [ "adjustmentReasonCode", "changeLogSource", "comment", "createdDate", "oldPvoBalance", "oldVoBalance", "prisonerId" ]
+      },
+      "VisitAllocationPrisonerMigrationDto" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerId" : {
+            "type" : "string",
+            "description" : "nomsNumber of the prisoner",
+            "example" : "AA123456"
+          },
+          "voBalance" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The current VO balance (can be negative)",
+            "example" : 5
+          },
+          "pvoBalance" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The current PVO balance (can be negative)",
+            "example" : 2
+          },
+          "lastVoAllocationDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date which the last iep allocation was given",
+            "example" : "2025-02-28"
+          }
+        },
+        "required" : [ "prisonerId", "pvoBalance", "voBalance" ]
+      },
+      "VisitAllocationEventJobDto" : {
+        "type" : "object",
+        "properties" : {
+          "allocationJobReference" : {
+            "type" : "string",
+            "description" : "Visit Allocation Job Reference",
+            "example" : "aa-bb-cc-dd"
+          },
+          "totalActivePrisons" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of active prisons",
+            "example" : 12
+          }
+        },
+        "required" : [ "allocationJobReference", "totalActivePrisons" ]
+      },
+      "PrisonerBalanceDto" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerId" : {
+            "type" : "string",
+            "description" : "nomsNumber of the prisoner",
+            "example" : "AA123456"
+          },
+          "voBalance" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The current VO balance (can be negative)",
+            "example" : 5
+          },
+          "pvoBalance" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The current PVO balance (can be negative)",
+            "example" : 2
+          }
+        },
+        "required" : [ "prisonerId", "pvoBalance", "voBalance" ]
+      },
+      "DlqMessage" : {
+        "type" : "object",
+        "properties" : {
+          "body" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "object"
+            }
+          },
+          "messageId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "body", "messageId" ]
+      },
+      "GetDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messagesReturnedCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messages" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DlqMessage"
+            }
+          }
+        },
+        "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
+      }
+    },
+    "securitySchemes" : {
+      "visit-allocation-api-ui-role" : {
+        "type" : "http",
+        "description" : "A HMPPS Auth access token with the `ROLE_TEMPLATE_KOTLIN__UI` role.",
+        "name" : "Authorization",
+        "in" : "header",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      }
+    }
+  }
+}

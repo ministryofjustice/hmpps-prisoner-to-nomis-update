@@ -23,6 +23,7 @@ api.base.url:
   csip: http://localhost:8098
   personal.relationships: http://localhost:8099
   organisations: http://localhost:8100
+  visit.balance: http://localhost:8101
 
 hmpps.sqs:
   provider: localstack

@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPDpsApiExtensi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
@@ -48,6 +49,7 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("components.csipApi.status").isEqualTo("UP")
       .jsonPath("components.personalRelationshipsApi.status").isEqualTo("UP")
       .jsonPath("components.organisationsApi.status").isEqualTo("UP")
+      .jsonPath("components.visitBalanceApi.status").isEqualTo("UP")
   }
 
   @Test
@@ -110,5 +112,6 @@ class HealthCheckTest : IntegrationTestBase() {
     CSIPDpsApiExtension.csipDpsApi.stubHealthPing(status)
     ContactPersonDpsApiExtension.dpsContactPersonServer.stubHealthPing(status)
     OrganisationsDpsApiExtension.dpsOrganisationsServer.stubHealthPing(status)
+    VisitBalanceDpsApiExtension.dpsVisitBalanceServer.stubHealthPing(status)
   }
 }

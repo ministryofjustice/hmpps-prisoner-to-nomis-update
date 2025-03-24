@@ -18,3 +18,4 @@ api.base.url:
   csip: http://localhost:8080
   personal.relationships: http://localhost:8080
   organisations: http://localhost:8080
+  visit.balance: http://localhost:8080
