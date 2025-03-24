@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-18.11734.7e5f8f1"
+    "version" : "2025-03-21.11809.d7306f6"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -11027,69 +11027,6 @@
         }
       }
     },
-    "/visit-orders/visit-balance-adjustment/{visitBalanceAdjustmentId}" : {
-      "get" : {
-        "tags" : [ "visit-balance-resource" ],
-        "summary" : "Get specific offender visit balance adjustment",
-        "description" : "Retrieves offender visit balance adjustment. Requires ROLE_NOMIS_VISIT_BALANCE",
-        "operationId" : "getVisitBalanceAdjustment",
-        "parameters" : [ {
-          "name" : "visitBalanceAdjustmentId",
-          "in" : "path",
-          "description" : "Visit balance adjustment id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Visit balance adjustment id",
-            "example" : 5
-          },
-          "example" : 5
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Visit balance adjustment returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/VisitBalanceAdjustmentResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_VISIT_BALANCE",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Adjustment does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/visit-balances/{visitBalanceId}" : {
       "get" : {
         "tags" : [ "visit-balance-resource" ],
@@ -11142,6 +11079,69 @@
           },
           "404" : {
             "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/visit-balances/visit-balance-adjustment/{visitBalanceAdjustmentId}" : {
+      "get" : {
+        "tags" : [ "visit-balance-resource" ],
+        "summary" : "Get specific offender visit balance adjustment",
+        "description" : "Retrieves offender visit balance adjustment. Requires ROLE_NOMIS_VISIT_BALANCE",
+        "operationId" : "getVisitBalanceAdjustment",
+        "parameters" : [ {
+          "name" : "visitBalanceAdjustmentId",
+          "in" : "path",
+          "description" : "Visit balance adjustment id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Visit balance adjustment id",
+            "example" : 5
+          },
+          "example" : 5
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Visit balance adjustment returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VisitBalanceAdjustmentResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_VISIT_BALANCE",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Adjustment does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -11759,7 +11759,7 @@
       "get" : {
         "tags" : [ "prisoners-resource" ],
         "summary" : "Gets the prisoner's details",
-        "description" : "Requires role NOMIS_ALERTS.",
+        "description" : "Requires role NOMIS_ALERTS or NOMIS_CONTACTPERSONS.",
         "operationId" : "getPrisonerDetails",
         "parameters" : [ {
           "name" : "offenderNo",
@@ -11796,7 +11796,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint when role NOMIS_ALERTS not present",
+            "description" : "Forbidden to access this endpoint when role NOMIS_ALERTS or NOMIS_CONTACTPERSONS not present",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -21871,12 +21871,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -21893,6 +21887,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21920,15 +21920,15 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "unpaged" : {
+            "type" : "boolean"
           }
         }
       },
@@ -21958,26 +21958,53 @@
         },
         "required" : [ "visitId" ]
       },
-      "VisitBalanceAdjustmentResponse" : {
+      "PrisonerVisitBalanceResponse" : {
         "type" : "object",
-        "description" : "The visit order balance changes held against a booking for a prisoner",
+        "description" : "The visit balance held against a prisoner's latest booking",
         "properties" : {
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "Prison number aka noms id / offender id display",
+            "example" : "A1234BC"
+          },
           "remainingVisitOrders" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "Number of visit orders affected by the adjustment"
-          },
-          "previousRemainingVisitOrders" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Previous number of visit orders before the adjustment"
+            "description" : "Total number of unallocated (remaining) visit orders"
           },
           "remainingPrivilegedVisitOrders" : {
             "type" : "integer",
             "format" : "int32",
+            "description" : "Total number of unallocated (remaining) privileged visit orders"
+          },
+          "lastIEPAllocationDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date of the last IEP Allocation date via the batch process, if it exists"
+          }
+        },
+        "required" : [ "prisonNumber", "remainingPrivilegedVisitOrders", "remainingVisitOrders" ]
+      },
+      "VisitBalanceAdjustmentResponse" : {
+        "type" : "object",
+        "description" : "The visit order balance changes held against a booking for a prisoner",
+        "properties" : {
+          "visitOrderChange" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of visit orders affected by the adjustment"
+          },
+          "previousVisitOrderCount" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Previous number of visit orders before the adjustment"
+          },
+          "privilegedVisitOrderChange" : {
+            "type" : "integer",
+            "format" : "int32",
             "description" : "Number of privileged visit orders affected by the adjustment"
           },
-          "previousRemainingPrivilegedVisitOrders" : {
+          "previousPrivilegedVisitOrderCount" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Previous number of privileged visit orders before the adjustment"
@@ -22020,34 +22047,7 @@
             "description" : "Who created the adjustment"
           }
         },
-        "required" : [ "adjustmentDate", "createUsername" ]
-      },
-      "PrisonerVisitBalanceResponse" : {
-        "type" : "object",
-        "description" : "The visit balance held against a prisoner's latest booking",
-        "properties" : {
-          "prisonNumber" : {
-            "type" : "string",
-            "description" : "Prison number aka noms id / offender id display",
-            "example" : "A1234BC"
-          },
-          "remainingVisitOrders" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Total number of unallocated (remaining) visit orders"
-          },
-          "remainingPrivilegedVisitOrders" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Total number of unallocated (remaining) privileged visit orders"
-          },
-          "lastIEPAllocationDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The date of the last IEP Allocation date via the batch process, if it exists"
-          }
-        },
-        "required" : [ "prisonNumber", "remainingPrivilegedVisitOrders", "remainingVisitOrders" ]
+        "required" : [ "adjustmentDate", "adjustmentReason", "createUsername" ]
       },
       "PageVisitBalanceIdResponse" : {
         "type" : "object",
@@ -22059,12 +22059,6 @@
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "size" : {
             "type" : "integer",
@@ -22082,6 +22076,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22477,12 +22477,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -22499,6 +22493,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -24343,12 +24343,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -24365,6 +24359,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -24407,12 +24407,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -24429,6 +24423,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25054,12 +25054,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -25076,6 +25070,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25210,12 +25210,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -25232,6 +25226,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25431,12 +25431,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -25453,6 +25447,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25947,12 +25947,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -25969,6 +25963,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26057,12 +26057,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26079,6 +26073,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26176,12 +26176,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26198,6 +26192,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26234,12 +26234,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26256,6 +26250,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26540,12 +26540,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26562,6 +26556,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27301,12 +27301,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27323,6 +27317,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27600,12 +27600,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27622,6 +27616,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27662,12 +27662,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27684,6 +27678,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27729,12 +27729,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27751,6 +27745,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -28022,12 +28022,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -28044,6 +28038,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
