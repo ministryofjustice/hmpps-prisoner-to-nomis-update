@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
@@ -19,15 +20,30 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactForPerson
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddressDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddressPhoneDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactEmailDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactEmploymentDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactIdentityDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactPhoneDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummaryPage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.contactPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.contactRestriction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.personAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.personEmailAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.personEmployment
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.personIdentifier
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.personPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerWithContacts
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -620,6 +636,367 @@ internal class ContactPersonReconciliationServiceTest {
             isNull(),
           )
         }
+      }
+    }
+  }
+
+  @Nested
+  inner class CheckPersonContactsMatch {
+    val personId = 1L
+    val nomisPerson = contactPerson(personId = personId).copy(firstName = "KWEKU", lastName = "KOFI", phoneNumbers = emptyList(), employments = emptyList(), identifiers = emptyList(), addresses = emptyList(), emailAddresses = emptyList())
+    val dpsContact = contactDetails(contactId = personId).copy(firstName = "KWEKU", lastName = "KOFI")
+
+    @BeforeEach
+    fun setUp() {
+      reset(telemetryClient)
+    }
+
+    private fun stubPersonContact(nomisPerson: ContactPerson, dpsContact: ContactDetails) {
+      nomisApi.stubGetPerson(personId, nomisPerson)
+      dpsApi.stubGetContactDetails(personId, dpsContact)
+    }
+
+    @Nested
+    inner class WhenPersonHasMinimalDataThatMatches {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(nomisPerson, dpsContact)
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(
+          service.checkPersonContactMatch(personId),
+        ).isNull()
+      }
+    }
+
+    @Nested
+    inner class WhenPersonHasLotsOfDataThatMatches {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            firstName = "KWEKU",
+            lastName = "KOFI",
+            dateOfBirth = LocalDate.parse("1980-01-01"),
+            phoneNumbers = listOf(personPhoneNumber("0114555555")),
+            addresses = listOf(personAddress(phoneNumbers = listOf(personPhoneNumber("01146666666")))),
+            emailAddresses = listOf(personEmailAddress("test@justice.gov.uk")),
+            employments = listOf(personEmployment(corporateId = 98765)),
+            identifiers = listOf(personIdentifier("SMITH1717171")),
+            contacts = listOf(),
+          ),
+          dpsContact.copy(
+            firstName = "KWEKU",
+            lastName = "KOFI",
+            dateOfBirth = LocalDate.parse("1980-01-01"),
+            phoneNumbers = listOf(contactPhoneDetails("0114555555")),
+            addresses = listOf(contactAddressDetails(phoneNumbers = listOf(contactAddressPhoneDetails("01146666666")))),
+            emailAddresses = listOf(contactEmailDetails("test@justice.gov.uk")),
+            employments = listOf(contactEmploymentDetails(98765)),
+            identities = listOf(contactIdentityDetails("SMITH1717171")),
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(
+          service.checkPersonContactMatch(personId),
+        ).isNull()
+      }
+    }
+
+    @Nested
+    inner class WhenNamesDoNotMatch {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            firstName = "KWEKU",
+            lastName = "KOFI",
+          ),
+          dpsContact.copy(
+            firstName = "ADAM",
+            lastName = "SMITH",
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will person details do not match`() = runTest {
+        service.checkPersonContactMatch(personId)
+        verify(telemetryClient).trackEvent(
+          eq("contact-person-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "personId" to "$personId",
+              "reason" to "different-person-details",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenDateOfBirthDoNotMatch {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            dateOfBirth = LocalDate.parse("1980-01-01"),
+          ),
+          dpsContact.copy(
+            dateOfBirth = LocalDate.parse("1990-02-01"),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will person details do not match`() = runTest {
+        service.checkPersonContactMatch(personId)
+        verify(telemetryClient).trackEvent(
+          eq("contact-person-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "personId" to "$personId",
+              "reason" to "different-person-details",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenADifferentNumberOfAddress {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            addresses = listOf(personAddress(phoneNumbers = emptyList()), personAddress(phoneNumbers = emptyList())),
+          ),
+          dpsContact.copy(
+            addresses = listOf(contactAddressDetails(phoneNumbers = emptyList())),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will person details do not match`() = runTest {
+        service.checkPersonContactMatch(personId)
+        verify(telemetryClient).trackEvent(
+          eq("contact-person-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "personId" to "$personId",
+              "reason" to "different-person-details",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenHasDifferentAddressPhoneNumbers {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            addresses = listOf(personAddress(phoneNumbers = listOf(personPhoneNumber("01145555555")))),
+          ),
+          dpsContact.copy(
+            addresses = listOf(contactAddressDetails(phoneNumbers = listOf(contactAddressPhoneDetails("01146666666")))),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will person details do not match`() = runTest {
+        service.checkPersonContactMatch(personId)
+        verify(telemetryClient).trackEvent(
+          eq("contact-person-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "personId" to "$personId",
+              "reason" to "different-person-details",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenHasDifferentPersonPhoneNumbers {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            phoneNumbers = listOf(personPhoneNumber("01145555555")),
+          ),
+          dpsContact.copy(
+            phoneNumbers = listOf(contactPhoneDetails("01146666666")),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will person details do not match`() = runTest {
+        service.checkPersonContactMatch(personId)
+        verify(telemetryClient).trackEvent(
+          eq("contact-person-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "personId" to "$personId",
+              "reason" to "different-person-details",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenHasDifferentEmailAddress {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            emailAddresses = listOf(personEmailAddress("john@gmail.com")),
+          ),
+          dpsContact.copy(
+            emailAddresses = listOf(contactEmailDetails("bob@justice.gov.uk")),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will person details do not match`() = runTest {
+        service.checkPersonContactMatch(personId)
+        verify(telemetryClient).trackEvent(
+          eq("contact-person-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "personId" to "$personId",
+              "reason" to "different-person-details",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenHasDifferentIdentifiers {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            identifiers = listOf(personIdentifier("DVLASMAITH28282")),
+          ),
+          dpsContact.copy(
+            identities = listOf(contactIdentityDetails("PASS838383")),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will person details do not match`() = runTest {
+        service.checkPersonContactMatch(personId)
+        verify(telemetryClient).trackEvent(
+          eq("contact-person-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "personId" to "$personId",
+              "reason" to "different-person-details",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenWorksADifferentEmployers {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            employments = listOf(personEmployment(corporateId = 1234)),
+          ),
+          dpsContact.copy(
+            employments = listOf(contactEmploymentDetails(organisationId = 8765)),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will person details do not match`() = runTest {
+        service.checkPersonContactMatch(personId)
+        verify(telemetryClient).trackEvent(
+          eq("contact-person-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "personId" to "$personId",
+              "reason" to "different-person-details",
+            ),
+          ),
+          isNull(),
+        )
       }
     }
   }

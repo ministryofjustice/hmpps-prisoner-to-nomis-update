@@ -69,4 +69,6 @@ class ContactPersonReconciliationResource(
   }
 }
 private fun List<MismatchPrisonerContacts>.asPrisonerMap(): Map<String, String> = this.associate { it.offenderNo to "dpsCount=${it.dpsContactCount},nomisCount=${it.nomisContactCount}" }
-private fun List<MismatchPersonContacts>.asPersonMap(): Map<String, String> = this.associate { it.personId.toString() to "TODO" }
+
+// just take the first 10 personIds that fail else telemetry will not be written at all if attribute is too large
+private fun List<MismatchPersonContacts>.asPersonMap(): Pair<String, String> = "personIds" to this.map { it.personId }.take(10).joinToString()

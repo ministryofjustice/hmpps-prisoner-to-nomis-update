@@ -233,39 +233,35 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
       ),
     )
 
+    fun personPhoneNumber(number: String = "0114555555") = PersonPhoneNumber(phoneId = 1, number = number, type = CodeDescription(code = "HOME", description = "Home"), audit = nomisAudit())
+    fun personAddress(phoneNumbers: List<PersonPhoneNumber> = listOf(personPhoneNumber().copy(phoneId = 2))) = PersonAddress(addressId = 1, phoneNumbers = phoneNumbers, validatedPAF = false, primaryAddress = true, mailAddress = true, audit = nomisAudit())
+    fun personEmailAddress(email: String = "test@justice.gov.uk") = PersonEmailAddress(emailAddressId = 1, email = email, audit = nomisAudit())
+    fun personEmployment(corporateId: Long = 1) = PersonEmployment(sequence = 1, active = true, corporate = PersonEmploymentCorporate(id = corporateId, name = "Police"), audit = nomisAudit())
+    fun personIdentifier(identifier: String = "SMITH1717171") = PersonIdentifier(sequence = 1, type = CodeDescription(code = "DL", description = "Driving Licence"), identifier = identifier, issuedAuthority = "DVLA", audit = nomisAudit())
+    fun personContact(offenderNo: String = "A1234KT", restrictions: List<ContactRestriction> = listOf(contactRestriction().copy(id = 1, enteredStaff = ContactRestrictionEnteredStaff(staffId = 1, username = "Q1251T")))) = PersonContact(
+      id = 1,
+      relationshipType = CodeDescription(code = "BOF", description = "Boyfriend"),
+      contactType = CodeDescription(code = "S", description = "Social/ Family"),
+      active = true,
+      emergencyContact = true,
+      nextOfKin = false,
+      approvedVisitor = false,
+      prisoner = ContactForPrisoner(bookingId = 1, offenderNo = offenderNo, lastName = "SMITH", firstName = "JOHN", bookingSequence = 1),
+      restrictions = restrictions,
+      audit = nomisAudit(),
+    )
     fun contactPerson(personId: Long = 123456): ContactPerson = ContactPerson(
       personId = personId,
       firstName = "KWAME",
       lastName = "KOBE",
       interpreterRequired = false,
       audit = nomisAudit(),
-      phoneNumbers = listOf(PersonPhoneNumber(phoneId = 1, number = "0114555555", type = CodeDescription(code = "HOME", description = "Home"), audit = nomisAudit())),
-      addresses = listOf(PersonAddress(addressId = 1, phoneNumbers = listOf(PersonPhoneNumber(phoneId = 2, number = "0114555555", type = CodeDescription(code = "HOME", description = "Home"), audit = nomisAudit())), validatedPAF = false, primaryAddress = true, mailAddress = true, audit = nomisAudit())),
-      emailAddresses = listOf(PersonEmailAddress(emailAddressId = 1, email = "test@justice.gov.uk", audit = nomisAudit())),
-      employments = listOf(PersonEmployment(sequence = 1, active = true, corporate = PersonEmploymentCorporate(id = 1, name = "Police"), audit = nomisAudit())),
-      identifiers = listOf(
-        PersonIdentifier(
-          sequence = 1,
-          type = CodeDescription(code = "DL", description = "Driving Licence"),
-          identifier = "SMITH1717171",
-          issuedAuthority = "DVLA",
-          audit = nomisAudit(),
-        ),
-      ),
-      contacts = listOf(
-        PersonContact(
-          id = 1,
-          relationshipType = CodeDescription(code = "BOF", description = "Boyfriend"),
-          contactType = CodeDescription(code = "S", description = "Social/ Family"),
-          active = true,
-          emergencyContact = true,
-          nextOfKin = false,
-          approvedVisitor = false,
-          prisoner = ContactForPrisoner(bookingId = 1, offenderNo = "A1234KT", lastName = "SMITH", firstName = "JOHN", bookingSequence = 1),
-          restrictions = listOf(ContactRestriction(id = 1, type = CodeDescription(code = "BAN", description = "Banned"), enteredStaff = ContactRestrictionEnteredStaff(staffId = 1, username = "Q1251T"), effectiveDate = LocalDate.parse("2020-01-01"), audit = nomisAudit())),
-          audit = nomisAudit(),
-        ),
-      ),
+      phoneNumbers = listOf(personPhoneNumber()),
+      addresses = listOf(personAddress()),
+      emailAddresses = listOf(personEmailAddress()),
+      employments = listOf(personEmployment()),
+      identifiers = listOf(personIdentifier()),
+      contacts = listOf(personContact()),
       restrictions = listOf(ContactRestriction(id = 2, type = CodeDescription(code = "BAN", description = "Banned"), enteredStaff = ContactRestrictionEnteredStaff(staffId = 1, username = "Q1251T"), effectiveDate = LocalDate.parse("2020-01-01"), audit = nomisAudit())),
     )
   }
