@@ -387,7 +387,7 @@ class ContactPersonReconciliationService(
     addressPhoneNumbers = this.addresses.map { it.phoneNumbers.map { it.number }.toSortedSet() }.toSortedSet { o1, o2 -> o1.joinToString().compareTo(o2.joinToString()) },
     employmentOrganisations = this.employments.map { it.corporate.id }.toSortedSet(),
     identifiers = this.identifiers.map { it.identifier }.toSortedSet(),
-    prisonerContacts = this.contacts.map { it.asSummary() }.toSortedSet(),
+    prisonerContacts = this.contacts.filter { it.prisoner.bookingSequence == 1L }.map { it.asSummary() }.toSortedSet(),
     restrictions = this.restrictions.map { it.asSummary() }.toSortedSet(),
   )
   private fun ContactDetails.asSummary(
