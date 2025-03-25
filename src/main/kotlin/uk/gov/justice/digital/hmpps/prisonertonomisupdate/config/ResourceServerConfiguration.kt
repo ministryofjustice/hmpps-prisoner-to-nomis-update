@@ -26,6 +26,7 @@ class ResourceServerConfiguration {
         "/contact-person/profile-details/reports/reconciliation",
         "/contact-person/prisoner-contact/reports/reconciliation",
         "/contact-person/person-contact/reports/reconciliation",
+        "/visit-balance/reports/reconciliation",
       )
     }
   }

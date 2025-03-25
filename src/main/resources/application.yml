@@ -175,6 +175,10 @@ reports:
   csip:
     reconciliation:
       page-size: 20
+  visit-balance:
+    reconciliation:
+      page-size: 40
+
 hmpps.sqs:
   queues:
     location:

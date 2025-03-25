@@ -52,11 +52,11 @@ class VisitBalanceNomisApiServiceTest {
     fun `will return visit balance`() = runTest {
       mockServer.stubGetVisitBalance()
 
-      val visitBalance = apiService.getVisitBalance(prisonNumber = "A1234BC")
+      val visitBalance = apiService.getVisitBalance(prisonNumber = "A1234BC")!!
 
       assertThat(visitBalance.prisonNumber).isEqualTo("A1234BC")
-      assertThat(visitBalance.remainingVisitOrders).isEqualTo(23)
-      assertThat(visitBalance.remainingPrivilegedVisitOrders).isEqualTo(4)
+      assertThat(visitBalance.remainingVisitOrders).isEqualTo(24)
+      assertThat(visitBalance.remainingPrivilegedVisitOrders).isEqualTo(3)
       assertThat(visitBalance.lastIEPAllocationDate).isEqualTo("2025-01-15")
     }
   }
