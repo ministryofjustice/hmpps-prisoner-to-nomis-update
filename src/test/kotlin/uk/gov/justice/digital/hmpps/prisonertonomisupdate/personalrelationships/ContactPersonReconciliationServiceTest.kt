@@ -30,6 +30,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactEmploymentDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactIdentityDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactPhoneDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactRestrictionDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.linkedPrisonerDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.linkedPrisonerRelationshipDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummary
@@ -37,6 +40,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.contactPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.contactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.personAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.personContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.personEmailAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.personEmployment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.personIdentifier
@@ -704,7 +708,28 @@ internal class ContactPersonReconciliationServiceTest {
             emailAddresses = listOf(personEmailAddress("test@justice.gov.uk")),
             employments = listOf(personEmployment(corporateId = 98765)),
             identifiers = listOf(personIdentifier("SMITH1717171")),
-            contacts = listOf(),
+            contacts = listOf(
+              personContact("A1234KT").copy(relationshipType = CodeDescription("BRO", "Brother"), active = false),
+              personContact("A1234KT").copy(relationshipType = CodeDescription("FRI", "Friend"), active = true),
+              personContact("A1000KT").copy(relationshipType = CodeDescription("GIR", "Girlfriend"), active = true),
+            ),
+            restrictions = listOf(
+              contactRestriction().copy(
+                type = CodeDescription("BAN", "Banned"),
+                effectiveDate = LocalDate.parse("2023-01-01"),
+                expiryDate = LocalDate.parse("2024-01-30"),
+              ),
+              contactRestriction().copy(
+                type = CodeDescription("BAN", "Banned"),
+                effectiveDate = LocalDate.parse("2024-01-31"),
+                expiryDate = null,
+              ),
+              contactRestriction().copy(
+                type = CodeDescription("CCTV", "CCTV"),
+                effectiveDate = LocalDate.parse("2024-01-31"),
+                expiryDate = null,
+              ),
+            ),
           ),
           dpsContact.copy(
             firstName = "KWEKU",
@@ -715,6 +740,47 @@ internal class ContactPersonReconciliationServiceTest {
             emailAddresses = listOf(contactEmailDetails("test@justice.gov.uk")),
             employments = listOf(contactEmploymentDetails(98765)),
             identities = listOf(contactIdentityDetails("SMITH1717171")),
+          ),
+          dpsContactRestrictions = listOf(
+            contactRestrictionDetails().copy(
+              restrictionType = "BAN",
+              startDate = LocalDate.parse("2023-01-01"),
+              expiryDate = LocalDate.parse("2024-01-30"),
+            ),
+            contactRestrictionDetails().copy(
+              restrictionType = "BAN",
+              startDate = LocalDate.parse("2024-01-31"),
+              expiryDate = null,
+            ),
+            contactRestrictionDetails().copy(
+              restrictionType = "CCTV",
+              startDate = LocalDate.parse("2024-01-31"),
+              expiryDate = null,
+            ),
+          ),
+          dpsPrisonerContacts = listOf(
+            linkedPrisonerDetails().copy(
+              prisonerNumber = "A1234KT",
+              relationships = listOf(
+                linkedPrisonerRelationshipDetails().copy(
+                  relationshipToPrisonerCode = "BRO",
+                  isRelationshipActive = false,
+                ),
+                linkedPrisonerRelationshipDetails().copy(
+                  relationshipToPrisonerCode = "FRI",
+                  isRelationshipActive = true,
+                ),
+              ),
+            ),
+            linkedPrisonerDetails().copy(
+              prisonerNumber = "A1000KT",
+              relationships = listOf(
+                linkedPrisonerRelationshipDetails().copy(
+                  relationshipToPrisonerCode = "GIR",
+                  isRelationshipActive = true,
+                ),
+              ),
+            ),
           ),
         )
       }
@@ -992,6 +1058,296 @@ internal class ContactPersonReconciliationServiceTest {
           ),
           dpsContact.copy(
             employments = listOf(contactEmploymentDetails(organisationId = 8765)),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will person details do not match`() = runTest {
+        service.checkPersonContactMatch(personId)
+        verify(telemetryClient).trackEvent(
+          eq("contact-person-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "personId" to "$personId",
+              "reason" to "different-person-details",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenHasDifferentActiveContacts {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            contacts = listOf(
+              personContact("A1234KT").copy(
+                relationshipType = CodeDescription("BRO", "Brother"),
+                active = false,
+              ),
+            ),
+          ),
+          dpsContact,
+          dpsPrisonerContacts = listOf(
+            linkedPrisonerDetails().copy(
+              prisonerNumber = "A1234KT",
+              relationships = listOf(
+                linkedPrisonerRelationshipDetails().copy(
+                  relationshipToPrisonerCode = "BRO",
+                  isRelationshipActive = true,
+                ),
+              ),
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will person details do not match`() = runTest {
+        service.checkPersonContactMatch(personId)
+        verify(telemetryClient).trackEvent(
+          eq("contact-person-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "personId" to "$personId",
+              "reason" to "different-person-details",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenHasDifferentPrisonerRelationships {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            contacts = listOf(
+              personContact("A1234KT").copy(
+                relationshipType = CodeDescription("GIR", "Girlfriend"),
+              ),
+            ),
+          ),
+          dpsContact,
+          dpsPrisonerContacts = listOf(
+            linkedPrisonerDetails().copy(
+              prisonerNumber = "A1234KT",
+              relationships = listOf(
+                linkedPrisonerRelationshipDetails().copy(
+                  relationshipToPrisonerCode = "BRO",
+                ),
+              ),
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will person details do not match`() = runTest {
+        service.checkPersonContactMatch(personId)
+        verify(telemetryClient).trackEvent(
+          eq("contact-person-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "personId" to "$personId",
+              "reason" to "different-person-details",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenHasDifferentNumberOfPrisonerRelationships {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            contacts = listOf(
+              personContact("A1234KT").copy(
+                relationshipType = CodeDescription("BRO", "Brother"),
+              ),
+              personContact("A1000KT").copy(
+                relationshipType = CodeDescription("GIR", "Girlfriend"),
+              ),
+            ),
+          ),
+          dpsContact,
+          dpsPrisonerContacts = listOf(
+            linkedPrisonerDetails().copy(
+              prisonerNumber = "A1234KT",
+              relationships = listOf(
+                linkedPrisonerRelationshipDetails().copy(
+                  relationshipToPrisonerCode = "BRO",
+                ),
+              ),
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will person details do not match`() = runTest {
+        service.checkPersonContactMatch(personId)
+        verify(telemetryClient).trackEvent(
+          eq("contact-person-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "personId" to "$personId",
+              "reason" to "different-person-details",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenHasDifferentActiveRestrictions {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            restrictions = listOf(
+              contactRestriction().copy(
+                type = CodeDescription("BAN", "Banned"),
+                effectiveDate = LocalDate.parse("2023-01-01"),
+                expiryDate = LocalDate.parse("2024-01-30"),
+              ),
+            ),
+          ),
+          dpsContact,
+          dpsContactRestrictions = listOf(
+            contactRestrictionDetails().copy(
+              restrictionType = "BAN",
+              startDate = LocalDate.parse("2023-01-01"),
+              expiryDate = null,
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will person details do not match`() = runTest {
+        service.checkPersonContactMatch(personId)
+        verify(telemetryClient).trackEvent(
+          eq("contact-person-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "personId" to "$personId",
+              "reason" to "different-person-details",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenHasDifferentRestrictionTypes {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            restrictions = listOf(
+              contactRestriction().copy(
+                type = CodeDescription("BAN", "Banned"),
+                effectiveDate = LocalDate.parse("2023-01-01"),
+              ),
+            ),
+          ),
+          dpsContact,
+          dpsContactRestrictions = listOf(
+            contactRestrictionDetails().copy(
+              restrictionType = "CCTV",
+              startDate = LocalDate.parse("2023-01-01"),
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNotNull
+      }
+
+      @Test
+      fun `telemetry will person details do not match`() = runTest {
+        service.checkPersonContactMatch(personId)
+        verify(telemetryClient).trackEvent(
+          eq("contact-person-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "personId" to "$personId",
+              "reason" to "different-person-details",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenHasDifferentNumberOfRestriction {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            restrictions = listOf(
+              contactRestriction().copy(
+                type = CodeDescription("BAN", "Banned"),
+                effectiveDate = LocalDate.parse("2023-01-01"),
+              ),
+            ),
+          ),
+          dpsContact,
+          dpsContactRestrictions = listOf(
+            contactRestrictionDetails().copy(
+              restrictionType = "BAN",
+              startDate = LocalDate.parse("2023-01-01"),
+            ),
+            contactRestrictionDetails().copy(
+              restrictionType = "CCTV",
+              startDate = LocalDate.parse("2023-01-01"),
+            ),
           ),
         )
       }

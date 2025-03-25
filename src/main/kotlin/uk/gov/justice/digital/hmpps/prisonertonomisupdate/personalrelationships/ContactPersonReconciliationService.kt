@@ -13,10 +13,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactRestriction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactRestrictionDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerRelationshipDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -191,9 +195,8 @@ class ContactPersonReconciliationService(
       }.awaitBoth()
     } ?: Pair(emptyList(), emptyList())
 
-    // TODO - add these to summary
     val nomisPersonSummary = nomisPerson.asSummary()
-    val dpsPersonSummary = dpsContact?.asSummary()
+    val dpsPersonSummary = dpsContact?.asSummary(dpsPrisonerContacts, dpsContactRestrictions)
     return checkPersonMatch(
       personId = personId,
       nomisPersonSummary = nomisPersonSummary,
@@ -384,8 +387,13 @@ class ContactPersonReconciliationService(
     addressPhoneNumbers = this.addresses.map { it.phoneNumbers.map { it.number }.toSortedSet() }.toSortedSet { o1, o2 -> o1.joinToString().compareTo(o2.joinToString()) },
     employmentOrganisations = this.employments.map { it.corporate.id }.toSortedSet(),
     identifiers = this.identifiers.map { it.identifier }.toSortedSet(),
+    prisonerContacts = this.contacts.map { it.asSummary() }.toSortedSet(),
+    restrictions = this.restrictions.map { it.asSummary() }.toSortedSet(),
   )
-  private fun ContactDetails.asSummary() = PersonSummary(
+  private fun ContactDetails.asSummary(
+    dpsPrisonerContacts: List<LinkedPrisonerDetails>,
+    dpsContactRestrictions: List<ContactRestrictionDetails>,
+  ) = PersonSummary(
     personId = this.id,
     firstName = this.firstName,
     lastName = this.lastName,
@@ -396,8 +404,33 @@ class ContactPersonReconciliationService(
     addressPhoneNumbers = this.addresses.map { it.phoneNumbers.map { it.phoneNumber }.toSortedSet() }.toSortedSet { o1, o2 -> o1.joinToString().compareTo(o2.joinToString()) },
     employmentOrganisations = this.employments.map { it.employer.organisationId }.toSortedSet(),
     identifiers = this.identities.map { it.identityValue.toString() }.toSortedSet(),
+    prisonerContacts = dpsPrisonerContacts.flatMap { prisoner -> prisoner.relationships.map { it.asSummary(prisoner.prisonerNumber) } }.toSortedSet(),
+    restrictions = dpsContactRestrictions.map { it.asSummary() }.toSortedSet(),
   )
 
+  private fun PersonContact.asSummary() = PrisonerRelationship(
+    offenderNo = this.prisoner.offenderNo,
+    relationshipType = this.relationshipType.code,
+    active = this.active,
+  )
+
+  private fun LinkedPrisonerRelationshipDetails.asSummary(prisonerNumber: String) = PrisonerRelationship(
+    offenderNo = prisonerNumber,
+    relationshipType = this.relationshipToPrisonerCode,
+    active = this.isRelationshipActive,
+  )
+
+  private fun ContactRestriction.asSummary() = PersonContactRestrictionSummary(
+    restrictionType = this.type.code,
+    startDate = this.effectiveDate,
+    expiryDate = this.expiryDate,
+  )
+
+  private fun ContactRestrictionDetails.asSummary() = PersonContactRestrictionSummary(
+    restrictionType = this.restrictionType,
+    startDate = this.startDate,
+    expiryDate = this.expiryDate,
+  )
   private fun ContactRestriction.asSummary(contactId: Long, relationshipCode: String) = PrisonerContactRestrictionSummary(
     contactId = contactId,
     relationshipCode = relationshipCode,
@@ -469,7 +502,20 @@ data class PersonSummary(
   val identifiers: SortedSet<String>,
   val employmentOrganisations: SortedSet<Long>,
   val addressPhoneNumbers: SortedSet<SortedSet<String>>,
+  val prisonerContacts: SortedSet<PrisonerRelationship>,
+  val restrictions: SortedSet<PersonContactRestrictionSummary>,
 )
+
+data class PrisonerRelationship(val offenderNo: String, val relationshipType: String, val active: Boolean) : Comparable<PrisonerRelationship> {
+  override fun compareTo(other: PrisonerRelationship): Int = compareValuesBy(this, other, { it.offenderNo }, { it.relationshipType }, { it.active })
+}
+data class PersonContactRestrictionSummary(
+  val restrictionType: String,
+  val startDate: LocalDate?,
+  val expiryDate: LocalDate?,
+) : Comparable<PersonContactRestrictionSummary> {
+  override fun compareTo(other: PersonContactRestrictionSummary): Int = compareValuesBy(this, other, { it.restrictionType }, { it.startDate }, { it.expiryDate })
+}
 data class MismatchPersonContacts(
   val personId: Long,
 )
