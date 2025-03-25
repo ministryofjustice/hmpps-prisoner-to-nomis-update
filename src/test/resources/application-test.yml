@@ -322,5 +322,7 @@ reports:
   contact-person.profile-details:
     reconciliation:
       page-size: 3
-
+  visit-balance:
+    reconciliation:
+      page-size: 10
 api.locations.timeout: 1s

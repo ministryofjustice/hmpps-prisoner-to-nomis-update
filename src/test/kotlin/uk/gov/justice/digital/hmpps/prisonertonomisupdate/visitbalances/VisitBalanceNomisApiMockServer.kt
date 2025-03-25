@@ -13,16 +13,16 @@ import java.time.LocalDate
 
 @Component
 class VisitBalanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
+
   fun stubGetVisitBalance(
-    prisonNumber: String = "A1234BC",
-    visitBalance: PrisonerVisitBalanceResponse = visitBalance(),
+    response: PrisonerVisitBalanceResponse = visitBalance(),
   ) {
     nomisApi.stubFor(
-      get(urlEqualTo("/prisoners/$prisonNumber/visit-orders/balance")).willReturn(
+      get(urlEqualTo("/prisoners/${response.prisonNumber}/visit-orders/balance")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(objectMapper.writeValueAsString(visitBalance)),
+          .withBody(objectMapper.writeValueAsString(response)),
       ),
     )
   }
@@ -31,9 +31,9 @@ class VisitBalanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }
 
-fun visitBalance(prisonNumber: String = "A1234BC"): PrisonerVisitBalanceResponse = PrisonerVisitBalanceResponse(
-  prisonNumber = prisonNumber,
-  remainingVisitOrders = 23,
-  remainingPrivilegedVisitOrders = 4,
+fun visitBalance(): PrisonerVisitBalanceResponse = PrisonerVisitBalanceResponse(
+  prisonNumber = "A1234BC",
+  remainingVisitOrders = 24,
+  remainingPrivilegedVisitOrders = 3,
   lastIEPAllocationDate = LocalDate.parse("2025-01-15"),
 )

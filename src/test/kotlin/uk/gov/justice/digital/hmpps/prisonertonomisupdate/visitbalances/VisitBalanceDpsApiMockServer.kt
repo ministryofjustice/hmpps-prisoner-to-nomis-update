@@ -2,13 +2,16 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.PrisonerBalanceDto
 
@@ -39,21 +42,25 @@ class VisitBalanceDpsApiExtension :
 class VisitBalanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   companion object {
     private const val WIREMOCK_PORT = 8101
-
-    fun visitBalance() = PrisonerBalanceDto(
-      prisonerId = "A1234BC",
-      voBalance = 24,
-      pvoBalance = 3,
-    )
   }
 
-  fun stubGetVisitBalance(prisonNumber: String = "A1234BC", visitBalance: PrisonerBalanceDto = visitBalance()) {
+  fun stubGetVisitBalance(response: PrisonerBalanceDto = visitBalanceDto()) {
     stubFor(
-      get("/visits/allocation/prisoner/$prisonNumber/balance").willReturn(
+      get("/visits/allocation/prisoner/${response.prisonerId}/balance").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(objectMapper.writeValueAsString(visitBalance))
+          .withBody(objectMapper.writeValueAsString(response))
           .withStatus(200),
+      ),
+    )
+  }
+  fun stubGetVisitBalance(offenderNo: String, status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    stubFor(
+      get("/visits/allocation/prisoner/$offenderNo/balance").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(error),
       ),
     )
   }
@@ -68,4 +75,15 @@ class VisitBalanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+
+  fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
+    this.withBody(VisitBalanceDpsApiExtension.objectMapper.writeValueAsString(body))
+    return this
+  }
 }
+
+fun visitBalanceDto() = PrisonerBalanceDto(
+  prisonerId = "A1234BC",
+  voBalance = 24,
+  pvoBalance = 3,
+)
