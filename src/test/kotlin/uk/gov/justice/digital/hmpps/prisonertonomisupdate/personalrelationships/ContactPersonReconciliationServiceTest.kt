@@ -712,6 +712,8 @@ internal class ContactPersonReconciliationServiceTest {
               personContact("A1234KT").copy(relationshipType = CodeDescription("BRO", "Brother"), active = false),
               personContact("A1234KT").copy(relationshipType = CodeDescription("FRI", "Friend"), active = true),
               personContact("A1000KT").copy(relationshipType = CodeDescription("GIR", "Girlfriend"), active = true),
+              // old booking so will be ignored
+              personContact("A9999KT").copy(relationshipType = CodeDescription("GIR", "Girlfriend"), prisoner = personContact("A9999KT").prisoner.copy(bookingSequence = 2)),
             ),
             restrictions = listOf(
               contactRestriction().copy(
