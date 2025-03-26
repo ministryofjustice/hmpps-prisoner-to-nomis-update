@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-24.11832.15e6027"
+    "version" : "2025-03-25.11839.6726f9c"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -21842,15 +21842,15 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
           }
         }
       },
@@ -21905,7 +21905,7 @@
             "description" : "The date of the last IEP Allocation date via the batch process, if it exists"
           }
         },
-        "required" : [ "prisonNumber", "remainingPrivilegedVisitOrders", "remainingVisitOrders" ]
+        "required" : [ "prisonNumber" ]
       },
       "VisitBalanceAdjustmentResponse" : {
         "type" : "object",
