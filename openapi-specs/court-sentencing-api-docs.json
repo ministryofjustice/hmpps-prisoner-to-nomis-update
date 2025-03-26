@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-10.5307.ffc0b87"
+    "version" : "2025-03-25.5465.692b379"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -1952,6 +1952,14 @@
               "enum" : [ "ACTIVE", "INACTIVE" ]
             }
           }
+        }, {
+          "name" : "offenceDate",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -2932,7 +2940,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:53:37.430478184"
+            "example" : "14:30:00"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -3184,7 +3192,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:53:37.430478184"
+            "example" : "14:30:00"
           },
           "courtCode" : {
             "type" : "string"
@@ -4122,7 +4130,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:53:37.430478184"
+            "example" : "14:30:00"
           },
           "charges" : {
             "type" : "array",
@@ -4145,7 +4153,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:53:37.430478184"
+            "example" : "14:30:00"
           },
           "courtId" : {
             "type" : "string"
@@ -4404,7 +4412,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:53:37.430478184"
+            "example" : "14:30:00"
           },
           "courtCode" : {
             "type" : "string"
@@ -4447,12 +4455,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -4469,6 +4471,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
