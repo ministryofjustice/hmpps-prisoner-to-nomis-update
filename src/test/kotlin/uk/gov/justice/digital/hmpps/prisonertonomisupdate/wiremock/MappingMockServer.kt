@@ -14,7 +14,8 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMapping
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
 
@@ -1501,7 +1502,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
               {
                 "dpsCourtCaseId": "$id",
                 "nomisCourtCaseId": "$nomisCourtCaseId",
-                "mappingType": "${CourtCaseMapping.MappingType.DPS_CREATED}",
+                "mappingType": "${CourtCaseAllMappingDto.MappingType.DPS_CREATED}",
                 "whenCreated": "2021-07-05T10:35:17"
               }
             
@@ -1523,7 +1524,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
               {
                 "dpsCourtCaseId": "$dpsCourtCaseId",
                 "nomisCourtCaseId": "$id",
-                "mappingType": "${CourtCaseMapping.MappingType.DPS_CREATED}",
+                "mappingType": "${CourtCaseAllMappingDto.MappingType.DPS_CREATED}",
                 "whenCreated": "2021-07-05T10:35:17"
               }
             
@@ -1587,7 +1588,7 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
               {
                 "dpsCourtAppearanceId": "$id",
                 "nomisCourtAppearanceId": "$nomisCourtAppearanceId",
-                "mappingType": "${CourtCaseMapping.MappingType.DPS_CREATED}",
+                "mappingType": "${CourtAppearanceMappingDto.MappingType.DPS_CREATED}",
                 "whenCreated": "2021-07-05T10:35:17"
               }
             

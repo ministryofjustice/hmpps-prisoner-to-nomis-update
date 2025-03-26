@@ -19,7 +19,10 @@ import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMapping
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_DATE
@@ -98,7 +101,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
             Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtCaseMapping.MappingType.DPS_CREATED.toString())
+            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtCaseAllMappingDto.MappingType.DPS_CREATED.toString())
           },
           isNull(),
         )
@@ -466,7 +469,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
             Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtCaseMapping.MappingType.DPS_CREATED.toString())
+            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtAppearanceMappingDto.MappingType.DPS_CREATED.toString())
             Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
             Assertions.assertThat(it["courtEventCharges"])
               .isEqualTo("[$NOMIS_COURT_CHARGE_ID, $NOMIS_COURT_CHARGE_2_ID, $NOMIS_COURT_CHARGE_3_ID, $NOMIS_COURT_CHARGE_4_ID]")
@@ -1057,7 +1060,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
             Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtCaseMapping.MappingType.DPS_CREATED.toString())
+            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtChargeMappingDto.MappingType.DPS_CREATED.toString())
             Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
             Assertions.assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
           },
@@ -1429,7 +1432,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             Assertions.assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
             Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtCaseMapping.MappingType.DPS_CREATED.toString())
+            Assertions.assertThat(it["mappingType"]).isEqualTo(SentenceMappingDto.MappingType.DPS_CREATED.toString())
             Assertions.assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
             Assertions.assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
           },
@@ -1601,7 +1604,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             Assertions.assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
             Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtCaseMapping.MappingType.DPS_CREATED.toString())
+            Assertions.assertThat(it["mappingType"]).isEqualTo(SentenceMappingDto.MappingType.DPS_CREATED.toString())
             Assertions.assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
             Assertions.assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
             Assertions.assertThat(it["dpsConsecutiveSentenceId"]).isEqualTo(DPS_SENTENCE_ID_2)

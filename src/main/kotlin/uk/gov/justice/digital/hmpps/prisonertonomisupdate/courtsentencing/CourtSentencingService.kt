@@ -88,6 +88,7 @@ class CourtSentencingService(
             dpsCourtCaseId = courtCaseId,
             courtCharges = emptyList(),
             courtAppearances = emptyList(),
+            sentences = emptyList(),
           )
         }
         saveMapping { courtCaseMappingService.createMapping(it) }
@@ -241,14 +242,14 @@ class CourtSentencingService(
     }
   }
 
-  private suspend fun tryToDeleteMapping(dpsCaseId: String) = kotlin.runCatching {
+  private suspend fun tryToDeleteMapping(dpsCaseId: String) = runCatching {
     courtCaseMappingService.deleteByDpsId(dpsCaseId)
   }.onFailure { e ->
     telemetryClient.trackEvent("court-case-mapping-deleted-failed", mapOf("dpsCourtCaseId" to dpsCaseId))
     log.warn("Unable to delete mapping for Court Case $dpsCaseId. Please delete manually", e)
   }
 
-  private suspend fun tryToDeleteCourtAppearanceMapping(dpsAppearanceId: String) = kotlin.runCatching {
+  private suspend fun tryToDeleteCourtAppearanceMapping(dpsAppearanceId: String) = runCatching {
     courtCaseMappingService.deleteCourtAppearanceMappingByDpsId(dpsAppearanceId)
   }.onFailure { e ->
     telemetryClient.trackEvent(
@@ -258,7 +259,7 @@ class CourtSentencingService(
     log.warn("Unable to delete mapping for Court Appearance $dpsAppearanceId. Please delete manually", e)
   }
 
-  private suspend fun tryToDeleteSentenceMapping(offenderNo: String, dpsSentenceId: String) = kotlin.runCatching {
+  private suspend fun tryToDeleteSentenceMapping(offenderNo: String, dpsSentenceId: String) = runCatching {
     courtCaseMappingService.deleteSentenceMappingByDpsId(dpsSentenceId)
   }.onFailure { e ->
     telemetryClient.trackEvent(
