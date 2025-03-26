@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-24.11832.15e6027"
+    "version" : "2025-03-26.11855.2edf46c"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -11031,7 +11031,7 @@
       "get" : {
         "tags" : [ "visit-balance-resource" ],
         "summary" : "Get visit balance data for a booking",
-        "description" : "Retrieves visit order balance details for the last month for a booking. Requires ROLE_NOMIS_VISIT_BALANCE",
+        "description" : "Retrieves visit order balance for a booking . Requires ROLE_NOMIS_VISIT_BALANCE",
         "operationId" : "getVisitBalanceByIdToMigrate",
         "parameters" : [ {
           "name" : "visitBalanceId",
@@ -11052,7 +11052,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerVisitBalanceResponse"
+                  "$ref" : "#/components/schemas/VisitBalanceDetailResponse"
                 }
               }
             }
@@ -11078,7 +11078,7 @@
             }
           },
           "404" : {
-            "description" : "Prisoner does not exist",
+            "description" : "Visit Balance does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -11697,8 +11697,8 @@
       "get" : {
         "tags" : [ "visit-balance-resource" ],
         "summary" : "Get visit order balance data for a prisoner",
-        "description" : "Retrieves visit order balance details for the last month for a prisoner. Requires ROLE_NOMIS_VISIT_BALANCE",
-        "operationId" : "getVisitBalanceToMigrate",
+        "description" : "Retrieves visit order balance details for a prisoner. Requires ROLE_NOMIS_VISIT_BALANCE",
+        "operationId" : "getVisitBalanceForOffender",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -11713,11 +11713,11 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "Visit balance returned",
+            "description" : "Visit balance returned or null if no visit balance exists",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerVisitBalanceResponse"
+                  "$ref" : "#/components/schemas/VisitBalanceResponse"
                 }
               }
             }
@@ -21880,9 +21880,9 @@
         },
         "required" : [ "visitId" ]
       },
-      "PrisonerVisitBalanceResponse" : {
+      "VisitBalanceDetailResponse" : {
         "type" : "object",
-        "description" : "The visit balance held against a prisoner's latest booking",
+        "description" : "The visit balance held against a prisoner's latest booking including the last IEP Allocation date",
         "properties" : {
           "prisonNumber" : {
             "type" : "string",
@@ -22462,6 +22462,23 @@
           }
         },
         "required" : [ "code", "description" ]
+      },
+      "VisitBalanceResponse" : {
+        "type" : "object",
+        "description" : "The visit balance held against a prisoner's latest booking",
+        "properties" : {
+          "remainingVisitOrders" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total number of unallocated (remaining) visit orders"
+          },
+          "remainingPrivilegedVisitOrders" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total number of unallocated (remaining) privileged visit orders"
+          }
+        },
+        "required" : [ "remainingPrivilegedVisitOrders", "remainingVisitOrders" ]
       },
       "OffenceResponse" : {
         "type" : "object",

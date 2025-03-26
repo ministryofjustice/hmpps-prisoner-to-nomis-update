@@ -48,19 +48,19 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
       nomisApi.stubGetActivePrisonersPage(numberOfActivePrisoners, 3, 4)
 
       // mock non-matching for first, second and last prisoners
-      visitBalanceNomisApi.stubGetVisitBalance(visitBalance().copy(prisonNumber = "A0001TZ", remainingVisitOrders = 7))
+      visitBalanceNomisApi.stubGetVisitBalance("A0001TZ", visitBalance().copy(remainingVisitOrders = 7))
       visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = "A0001TZ", voBalance = 12, pvoBalance = 9))
 
-      visitBalanceNomisApi.stubGetVisitBalance(visitBalance().copy(prisonNumber = "A0002TZ", remainingVisitOrders = 4))
+      visitBalanceNomisApi.stubGetVisitBalance("A0002TZ", visitBalance().copy(remainingVisitOrders = 4))
       visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = "A0002TZ", voBalance = 9, pvoBalance = 7))
 
-      visitBalanceNomisApi.stubGetVisitBalance(visitBalance().copy(prisonNumber = "A0034TZ", remainingVisitOrders = 2))
+      visitBalanceNomisApi.stubGetVisitBalance("A0034TZ", visitBalance().copy(remainingVisitOrders = 2))
       visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = "A0034TZ", voBalance = 17, pvoBalance = 8))
 
       // all others are ok
       (3..<numberOfActivePrisoners).forEach {
         val offenderNo = generateOffenderNo(sequence = it)
-        visitBalanceNomisApi.stubGetVisitBalance(visitBalance().copy(prisonNumber = offenderNo))
+        visitBalanceNomisApi.stubGetVisitBalance(offenderNo)
         visitBalanceDpsApi.stubGetVisitBalance(visitBalanceDto().copy(prisonerId = offenderNo))
       }
     }
@@ -169,6 +169,82 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `will complete a report even if a visit balance from Nomis does not exist`() {
+      visitBalanceNomisApi.stubGetVisitBalance("A0002TZ", HttpStatus.NOT_FOUND)
+
+      webTestClient.put().uri("/visit-balance/reports/reconciliation")
+        .exchange()
+        .expectStatus().isAccepted
+
+      awaitReportFinished()
+
+      verify(telemetryClient, times(0)).trackEvent(
+        eq("visitbalance-reports-reconciliation-mismatch-error"),
+        any(),
+        isNull(),
+      )
+
+      verify(telemetryClient).trackEvent(
+        eq("visitbalance-reports-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("mismatch-count", "3")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will complete a report even if a visit balance from dps does not exist`() {
+      visitBalanceDpsApi.stubGetVisitBalance("A0002TZ", HttpStatus.NOT_FOUND)
+
+      webTestClient.put().uri("/visit-balance/reports/reconciliation")
+        .exchange()
+        .expectStatus().isAccepted
+
+      awaitReportFinished()
+
+      verify(telemetryClient, times(0)).trackEvent(
+        eq("visitbalance-reports-reconciliation-mismatch-error"),
+        any(),
+        isNull(),
+      )
+
+      verify(telemetryClient).trackEvent(
+        eq("visitbalance-reports-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("mismatch-count", "3")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will complete a report even if a visit balance from both nomis and dps do not exist`() {
+      visitBalanceNomisApi.stubGetVisitBalance("A0002TZ", HttpStatus.NOT_FOUND)
+      visitBalanceDpsApi.stubGetVisitBalance("A0002TZ", HttpStatus.NOT_FOUND)
+
+      webTestClient.put().uri("/visit-balance/reports/reconciliation")
+        .exchange()
+        .expectStatus().isAccepted
+
+      awaitReportFinished()
+
+      verify(telemetryClient, times(0)).trackEvent(
+        eq("visitbalance-reports-reconciliation-mismatch-error"),
+        any(),
+        isNull(),
+      )
+
+      verify(telemetryClient).trackEvent(
+        eq("visitbalance-reports-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("mismatch-count", "2")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
     fun `when initial prison count fails the whole report fails`() {
       nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 0, responseCode = 500)
 
@@ -202,6 +278,100 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
       )
     }
   }
+
+  /*
+  @DisplayName("GET /visit-balance/reconciliation/{prisonNumber}")
+  @Nested
+  inner class GenerateReconciliationReportForPrisoner {
+    private val prisonNumber = "A1234BC"
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.get().uri("/visit-balance/reconciliation/$prisonNumber")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.get().uri("/visit-balance/reconciliation/$prisonNumber")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.get().uri("/casenotes/reconciliation/$prisonNumber")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class Validation {
+      @Test
+      fun `return 404 when offender not found`() {
+        webTestClient.get().uri("/visit-balance/reconciliation/AB1234C")
+          .headers(setAuthorisation(roles = listOf("NOMIS_VISIT_BALANCE")))
+          .exchange()
+          .expectStatus().isNotFound
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+      @BeforeEach
+      fun setup() {
+        visitBalanceNomisApi.stubGetVisitBalance()
+        visitBalanceDpsApi.stubGetVisitBalance()
+      }
+
+      @Test
+      fun `will return no differences`() {
+        webTestClient.get().uri("/visit-balance/reconciliation/$prisonNumber")
+          .headers(setAuthorisation(roles = listOf("NOMIS_VISIT_BALANCE")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody().isEmpty
+
+        verifyNoInteractions(telemetryClient)
+      }
+
+      @Test
+      fun `will return mismatch with nomis`() {
+
+        visitBalanceNomisApi.stubGetVisitBalance(visitBalance().copy(prisonNumber = "A1234BC", remainingVisitOrders = 4))
+
+        webTestClient.get().uri("/visit-balance/reconciliation/$prisonNumber")
+          .headers(setAuthorisation(roles = listOf("NOMIS_VISIT_BALANCE")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("prisonNumber").isEqualTo(prisonNumber)
+          .jsonPath("notes.length()").isEqualTo(1)
+          .jsonPath("diffsForNomis").value<List<Int>> {
+            assertThat(it).containsExactlyInAnyOrder(1, 2)
+          }
+          .jsonPath("diffsForDps.length()").isEqualTo(0)
+
+        verify(telemetryClient).trackEvent(
+          eq("visitbalance-reports-reconciliation-mismatch-size-nomis"),
+          any(),
+          isNull(),
+        )
+
+
+      }
+    }
+
+
+  }*/
   private fun awaitReportFinished() {
     await untilAsserted { verify(telemetryClient).trackEvent(eq("visitbalance-reports-reconciliation-report"), any(), isNull()) }
   }

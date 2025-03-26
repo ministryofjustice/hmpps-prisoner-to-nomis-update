@@ -54,10 +54,8 @@ class VisitBalanceNomisApiServiceTest {
 
       val visitBalance = apiService.getVisitBalance(prisonNumber = "A1234BC")!!
 
-      assertThat(visitBalance.prisonNumber).isEqualTo("A1234BC")
       assertThat(visitBalance.remainingVisitOrders).isEqualTo(24)
       assertThat(visitBalance.remainingPrivilegedVisitOrders).isEqualTo(3)
-      assertThat(visitBalance.lastIEPAllocationDate).isEqualTo("2025-01-15")
     }
   }
 }

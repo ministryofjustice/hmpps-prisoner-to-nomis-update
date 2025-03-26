@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerVisitBalanceResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitBalanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
@@ -31,7 +31,7 @@ class VisitBalanceReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<MismatchVisitBalances> = activePrisonersCount.asPages(pageSize).flatMap { page ->
+  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<MismatchVisitBalance> = activePrisonersCount.asPages(pageSize).flatMap { page ->
     val activePrisoners = getActivePrisonersForPage(page)
 
     withContext(Dispatchers.Unconfined) {
@@ -52,22 +52,22 @@ class VisitBalanceReconciliationService(
     .getOrElse { emptyList() }
     .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
-  suspend fun checkVisitBalanceMatch(prisonerId: PrisonerIds): MismatchVisitBalances? = runCatching {
+  suspend fun checkVisitBalanceMatch(prisonerId: PrisonerIds): MismatchVisitBalance? = runCatching {
     val nomisVisitBalance = doApiCallWithRetries { nomisVisitBalanceApiService.getVisitBalance(prisonerId.offenderNo) }?.toBalance()
     val dpsVisitBalance = doApiCallWithRetries { dpsVisitBalanceApiService.getVisitBalance(prisonerId.offenderNo) }?.toBalance()
 
-    return if (nomisVisitBalance == null || dpsVisitBalance == null || nomisVisitBalance != dpsVisitBalance) {
-      MismatchVisitBalances(offenderNo = prisonerId.offenderNo, dpsVisitBalance = dpsVisitBalance, nomisVisitBalance = nomisVisitBalance).also { mismatch ->
+    return if (nomisVisitBalance != dpsVisitBalance) {
+      MismatchVisitBalance(offenderNo = prisonerId.offenderNo, dpsVisitBalance = dpsVisitBalance, nomisVisitBalance = nomisVisitBalance).also { mismatch ->
         log.info("VisitBalance Mismatch found  $mismatch")
         telemetryClient.trackEvent(
           "visitbalance-reports-reconciliation-mismatch",
           mapOf(
             "offenderNo" to mismatch.offenderNo,
             "bookingId" to prisonerId.bookingId.toString(),
-            "nomisVisitBalance" to mismatch.nomisVisitBalance?.voBalance.toString(),
-            "dpsVisitBalance" to mismatch.dpsVisitBalance?.voBalance.toString(),
-            "nomisPrivilegedVisitBalance" to mismatch.nomisVisitBalance?.pvoBalance.toString(),
-            "dpsPrivilegedVisitBalance" to mismatch.dpsVisitBalance?.pvoBalance.toString(),
+            "nomisVisitBalance" to mismatch.nomisVisitBalance?.visitBalance.toString(),
+            "dpsVisitBalance" to mismatch.dpsVisitBalance?.visitBalance.toString(),
+            "nomisPrivilegedVisitBalance" to mismatch.nomisVisitBalance?.privilegedVisitBalance.toString(),
+            "dpsPrivilegedVisitBalance" to mismatch.dpsVisitBalance?.privilegedVisitBalance.toString(),
           ),
         )
       }
@@ -84,18 +84,20 @@ class VisitBalanceReconciliationService(
       ),
     )
   }.getOrNull()
+
+  suspend fun checkVisitBalanceMatch(offenderNo: String): MismatchVisitBalance? = checkVisitBalanceMatch(PrisonerIds(0, offenderNo))
 }
 
-fun PrisonerVisitBalanceResponse.toBalance() = PrisonerBalance(voBalance = remainingVisitOrders, pvoBalance = remainingPrivilegedVisitOrders)
-fun PrisonerBalanceDto.toBalance() = PrisonerBalance(voBalance = voBalance, pvoBalance = pvoBalance)
+fun VisitBalanceResponse.toBalance() = PrisonerBalance(visitBalance = remainingVisitOrders, privilegedVisitBalance = remainingPrivilegedVisitOrders)
+fun PrisonerBalanceDto.toBalance() = PrisonerBalance(visitBalance = voBalance, privilegedVisitBalance = pvoBalance)
 
-data class MismatchVisitBalances(
+data class MismatchVisitBalance(
   val offenderNo: String,
   val dpsVisitBalance: PrisonerBalance?,
   val nomisVisitBalance: PrisonerBalance?,
 )
 
 data class PrisonerBalance(
-  val voBalance: Int,
-  val pvoBalance: Int,
+  val visitBalance: Int,
+  val privilegedVisitBalance: Int,
 )
