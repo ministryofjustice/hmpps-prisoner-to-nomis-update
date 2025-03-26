@@ -18,6 +18,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
@@ -48,19 +49,19 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
       nomisApi.stubGetActivePrisonersPage(numberOfActivePrisoners, 3, 4)
 
       // mock non-matching for first, second and last prisoners
-      visitBalanceNomisApi.stubGetVisitBalance(visitBalance().copy(prisonNumber = "A0001TZ", remainingVisitOrders = 7))
+      visitBalanceNomisApi.stubGetVisitBalance("A0001TZ", visitBalance().copy(remainingVisitOrders = 7))
       visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = "A0001TZ", voBalance = 12, pvoBalance = 9))
 
-      visitBalanceNomisApi.stubGetVisitBalance(visitBalance().copy(prisonNumber = "A0002TZ", remainingVisitOrders = 4))
+      visitBalanceNomisApi.stubGetVisitBalance("A0002TZ", visitBalance().copy(remainingVisitOrders = 4))
       visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = "A0002TZ", voBalance = 9, pvoBalance = 7))
 
-      visitBalanceNomisApi.stubGetVisitBalance(visitBalance().copy(prisonNumber = "A0034TZ", remainingVisitOrders = 2))
+      visitBalanceNomisApi.stubGetVisitBalance("A0034TZ", visitBalance().copy(remainingVisitOrders = 2))
       visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = "A0034TZ", voBalance = 17, pvoBalance = 8))
 
       // all others are ok
       (3..<numberOfActivePrisoners).forEach {
         val offenderNo = generateOffenderNo(sequence = it)
-        visitBalanceNomisApi.stubGetVisitBalance(visitBalance().copy(prisonNumber = offenderNo))
+        visitBalanceNomisApi.stubGetVisitBalance(offenderNo)
         visitBalanceDpsApi.stubGetVisitBalance(visitBalanceDto().copy(prisonerId = offenderNo))
       }
     }
@@ -117,24 +118,24 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
         isNull(),
       )
 
-      val mismatchedRecords = telemetryCaptor.allValues.map { it["offenderNo"] }
+      val mismatchedRecords = telemetryCaptor.allValues.map { it["prisonNumber"] }
 
       assertThat(mismatchedRecords).containsOnly("A0001TZ", "A0002TZ", "A0034TZ")
-      with(telemetryCaptor.allValues.find { it["offenderNo"] == "A0001TZ" }) {
+      with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0001TZ" }) {
         assertThat(this).containsEntry("bookingId", "1")
         assertThat(this).containsEntry("nomisVisitBalance", "7")
         assertThat(this).containsEntry("dpsVisitBalance", "12")
         assertThat(this).containsEntry("nomisPrivilegedVisitBalance", "3")
         assertThat(this).containsEntry("dpsPrivilegedVisitBalance", "9")
       }
-      with(telemetryCaptor.allValues.find { it["offenderNo"] == "A0002TZ" }) {
+      with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0002TZ" }) {
         assertThat(this).containsEntry("bookingId", "2")
         assertThat(this).containsEntry("nomisVisitBalance", "4")
         assertThat(this).containsEntry("dpsVisitBalance", "9")
         assertThat(this).containsEntry("nomisPrivilegedVisitBalance", "3")
         assertThat(this).containsEntry("dpsPrivilegedVisitBalance", "7")
       }
-      with(telemetryCaptor.allValues.find { it["offenderNo"] == "A0034TZ" }) {
+      with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0034TZ" }) {
         assertThat(this).containsEntry("bookingId", "34")
         assertThat(this).containsEntry("nomisVisitBalance", "2")
         assertThat(this).containsEntry("nomisPrivilegedVisitBalance", "3")
@@ -154,6 +155,82 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
       awaitReportFinished()
 
       verify(telemetryClient, times(1)).trackEvent(
+        eq("visitbalance-reports-reconciliation-mismatch-error"),
+        any(),
+        isNull(),
+      )
+
+      verify(telemetryClient).trackEvent(
+        eq("visitbalance-reports-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("mismatch-count", "2")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will complete a report even if a visit balance from Nomis does not exist`() {
+      visitBalanceNomisApi.stubGetVisitBalance("A0002TZ", HttpStatus.NOT_FOUND)
+
+      webTestClient.put().uri("/visit-balance/reports/reconciliation")
+        .exchange()
+        .expectStatus().isAccepted
+
+      awaitReportFinished()
+
+      verify(telemetryClient, times(0)).trackEvent(
+        eq("visitbalance-reports-reconciliation-mismatch-error"),
+        any(),
+        isNull(),
+      )
+
+      verify(telemetryClient).trackEvent(
+        eq("visitbalance-reports-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("mismatch-count", "3")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will complete a report even if a visit balance from dps does not exist`() {
+      visitBalanceDpsApi.stubGetVisitBalance("A0002TZ", HttpStatus.NOT_FOUND)
+
+      webTestClient.put().uri("/visit-balance/reports/reconciliation")
+        .exchange()
+        .expectStatus().isAccepted
+
+      awaitReportFinished()
+
+      verify(telemetryClient, times(0)).trackEvent(
+        eq("visitbalance-reports-reconciliation-mismatch-error"),
+        any(),
+        isNull(),
+      )
+
+      verify(telemetryClient).trackEvent(
+        eq("visitbalance-reports-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("mismatch-count", "3")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will complete a report even if a visit balance from both nomis and dps do not exist`() {
+      visitBalanceNomisApi.stubGetVisitBalance("A0002TZ", HttpStatus.NOT_FOUND)
+      visitBalanceDpsApi.stubGetVisitBalance("A0002TZ", HttpStatus.NOT_FOUND)
+
+      webTestClient.put().uri("/visit-balance/reports/reconciliation")
+        .exchange()
+        .expectStatus().isAccepted
+
+      awaitReportFinished()
+
+      verify(telemetryClient, times(0)).trackEvent(
         eq("visitbalance-reports-reconciliation-mismatch-error"),
         any(),
         isNull(),
@@ -202,6 +279,97 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
       )
     }
   }
+
+  @DisplayName("GET /visit-balance/reconciliation/{prisonNumber}")
+  @Nested
+  inner class GenerateReconciliationReportForPrisoner {
+    private val prisonNumber = "A1234BC"
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.get().uri("/visit-balance/reconciliation/$prisonNumber")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.get().uri("/visit-balance/reconciliation/$prisonNumber")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.get().uri("/visit-balance/reconciliation/$prisonNumber")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class Validation {
+      @Test
+      fun `return null when offender not found`() {
+        visitBalanceNomisApi.stubGetVisitBalance("A9999BC", HttpStatus.NOT_FOUND)
+        webTestClient.get().uri("/visit-balance/reconciliation/A9999BC")
+          .headers(setAuthorisation(roles = listOf("NOMIS_VISIT_BALANCE")))
+          .exchange()
+          .expectStatus().isOk
+          .expectBody().isEmpty
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+
+      @BeforeEach
+      fun setup() {
+        visitBalanceNomisApi.stubGetVisitBalance()
+        visitBalanceDpsApi.stubGetVisitBalance()
+      }
+
+      @Test
+      fun `will return no differences`() {
+        webTestClient.get().uri("/visit-balance/reconciliation/$prisonNumber")
+          .headers(setAuthorisation(roles = listOf("NOMIS_VISIT_BALANCE")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody().isEmpty
+
+        verifyNoInteractions(telemetryClient)
+      }
+
+      @Test
+      fun `will return mismatch with nomis`() {
+        visitBalanceNomisApi.stubGetVisitBalance("A1234BC", visitBalance().copy(remainingVisitOrders = 4))
+
+        webTestClient.get().uri("/visit-balance/reconciliation/$prisonNumber")
+          .headers(setAuthorisation(roles = listOf("NOMIS_VISIT_BALANCE")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("prisonNumber").isEqualTo(prisonNumber)
+          .jsonPath("nomisVisitBalance.visitBalance").isEqualTo(4)
+          .jsonPath("nomisVisitBalance.privilegedVisitBalance").isEqualTo(3)
+          .jsonPath("dpsVisitBalance.visitBalance").isEqualTo(24)
+          .jsonPath("dpsVisitBalance.privilegedVisitBalance").isEqualTo(3)
+
+        verify(telemetryClient).trackEvent(
+          eq("visitbalance-reports-reconciliation-mismatch"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+  }
+
   private fun awaitReportFinished() {
     await untilAsserted { verify(telemetryClient).trackEvent(eq("visitbalance-reports-reconciliation-report"), any(), isNull()) }
   }
