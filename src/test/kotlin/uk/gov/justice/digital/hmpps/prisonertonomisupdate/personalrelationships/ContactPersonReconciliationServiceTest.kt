@@ -32,7 +32,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactPhoneDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.linkedPrisonerDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.linkedPrisonerRelationshipDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummary
@@ -763,25 +762,18 @@ internal class ContactPersonReconciliationServiceTest {
           dpsPrisonerContacts = listOf(
             linkedPrisonerDetails().copy(
               prisonerNumber = "A1234KT",
-              relationships = listOf(
-                linkedPrisonerRelationshipDetails().copy(
-                  relationshipToPrisonerCode = "BRO",
-                  isRelationshipActive = false,
-                ),
-                linkedPrisonerRelationshipDetails().copy(
-                  relationshipToPrisonerCode = "FRI",
-                  isRelationshipActive = true,
-                ),
-              ),
+              relationshipToPrisonerCode = "BRO",
+              isRelationshipActive = false,
+            ),
+            linkedPrisonerDetails().copy(
+              prisonerNumber = "A1234KT",
+              relationshipToPrisonerCode = "FRI",
+              isRelationshipActive = true,
             ),
             linkedPrisonerDetails().copy(
               prisonerNumber = "A1000KT",
-              relationships = listOf(
-                linkedPrisonerRelationshipDetails().copy(
-                  relationshipToPrisonerCode = "GIR",
-                  isRelationshipActive = true,
-                ),
-              ),
+              relationshipToPrisonerCode = "GIR",
+              isRelationshipActive = true,
             ),
           ),
         )
@@ -1103,12 +1095,8 @@ internal class ContactPersonReconciliationServiceTest {
           dpsPrisonerContacts = listOf(
             linkedPrisonerDetails().copy(
               prisonerNumber = "A1234KT",
-              relationships = listOf(
-                linkedPrisonerRelationshipDetails().copy(
-                  relationshipToPrisonerCode = "BRO",
-                  isRelationshipActive = true,
-                ),
-              ),
+              relationshipToPrisonerCode = "BRO",
+              isRelationshipActive = true,
             ),
           ),
         )
@@ -1152,11 +1140,7 @@ internal class ContactPersonReconciliationServiceTest {
           dpsPrisonerContacts = listOf(
             linkedPrisonerDetails().copy(
               prisonerNumber = "A1234KT",
-              relationships = listOf(
-                linkedPrisonerRelationshipDetails().copy(
-                  relationshipToPrisonerCode = "BRO",
-                ),
-              ),
+              relationshipToPrisonerCode = "BRO",
             ),
           ),
         )
@@ -1203,11 +1187,7 @@ internal class ContactPersonReconciliationServiceTest {
           dpsPrisonerContacts = listOf(
             linkedPrisonerDetails().copy(
               prisonerNumber = "A1234KT",
-              relationships = listOf(
-                linkedPrisonerRelationshipDetails().copy(
-                  relationshipToPrisonerCode = "BRO",
-                ),
-              ),
+              relationshipToPrisonerCode = "BRO",
             ),
           ),
         )

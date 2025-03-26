@@ -35,13 +35,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.EmploymentDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerRelationshipDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.OrganisationSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageSyncContactId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummaryPage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.RestrictionsSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddressPhone
@@ -192,6 +192,11 @@ class ContactPersonDpsApiExtension :
       isEmergencyContact = false,
       isRelationshipActive = true,
       currentTerm = true,
+      restrictionSummary = RestrictionsSummary(
+        active = emptySet(),
+        totalActive = 0,
+        totalExpired = 0,
+      ),
     )
     fun prisonerContactRestrictionsResponse() = PrisonerContactRestrictionsResponse(
       prisonerContactRestrictions = emptyList(),
@@ -308,14 +313,11 @@ class ContactPersonDpsApiExtension :
       prisonerNumber = "A1234KT",
       lastName = "WILLIAMS",
       firstName = "SARAH",
-      relationships = listOf(linkedPrisonerRelationshipDetails()),
-    )
-
-    fun linkedPrisonerRelationshipDetails() = LinkedPrisonerRelationshipDetails(
       prisonerContactId = 12434567,
       relationshipTypeCode = "S",
       relationshipTypeDescription = "Social",
       relationshipToPrisonerCode = "FRI",
+      relationshipToPrisonerDescription = "Friend",
       isRelationshipActive = true,
     )
   }

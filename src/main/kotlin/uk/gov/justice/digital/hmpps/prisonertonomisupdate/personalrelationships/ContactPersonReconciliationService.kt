@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerRelationshipDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -404,7 +403,7 @@ class ContactPersonReconciliationService(
     addressPhoneNumbers = this.addresses.map { it.phoneNumbers.map { it.phoneNumber }.toSortedSet() }.toSortedSet { o1, o2 -> o1.joinToString().compareTo(o2.joinToString()) },
     employmentOrganisations = this.employments.map { it.employer.organisationId }.toSortedSet(),
     identifiers = this.identities.map { it.identityValue.toString() }.toSortedSet(),
-    prisonerContacts = dpsPrisonerContacts.flatMap { prisoner -> prisoner.relationships.map { it.asSummary(prisoner.prisonerNumber) } }.toSortedSet(),
+    prisonerContacts = dpsPrisonerContacts.map { it.asSummary() }.toSortedSet(),
     restrictions = dpsContactRestrictions.map { it.asSummary() }.toSortedSet(),
   )
 
@@ -414,8 +413,8 @@ class ContactPersonReconciliationService(
     active = this.active,
   )
 
-  private fun LinkedPrisonerRelationshipDetails.asSummary(prisonerNumber: String) = PrisonerRelationship(
-    offenderNo = prisonerNumber,
+  private fun LinkedPrisonerDetails.asSummary() = PrisonerRelationship(
+    offenderNo = this.prisonerNumber,
     relationshipType = this.relationshipToPrisonerCode,
     active = this.isRelationshipActive,
   )
