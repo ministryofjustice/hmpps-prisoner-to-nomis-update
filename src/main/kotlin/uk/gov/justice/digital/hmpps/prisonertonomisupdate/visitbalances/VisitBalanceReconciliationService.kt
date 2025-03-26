@@ -57,12 +57,12 @@ class VisitBalanceReconciliationService(
     val dpsVisitBalance = doApiCallWithRetries { dpsVisitBalanceApiService.getVisitBalance(prisonerId.offenderNo) }?.toBalance()
 
     return if (nomisVisitBalance != dpsVisitBalance) {
-      MismatchVisitBalance(offenderNo = prisonerId.offenderNo, dpsVisitBalance = dpsVisitBalance, nomisVisitBalance = nomisVisitBalance).also { mismatch ->
+      MismatchVisitBalance(prisonNumber = prisonerId.offenderNo, dpsVisitBalance = dpsVisitBalance, nomisVisitBalance = nomisVisitBalance).also { mismatch ->
         log.info("VisitBalance Mismatch found  $mismatch")
         telemetryClient.trackEvent(
           "visitbalance-reports-reconciliation-mismatch",
           mapOf(
-            "offenderNo" to mismatch.offenderNo,
+            "prisonNumber" to mismatch.prisonNumber,
             "bookingId" to prisonerId.bookingId.toString(),
             "nomisVisitBalance" to mismatch.nomisVisitBalance?.visitBalance.toString(),
             "dpsVisitBalance" to mismatch.dpsVisitBalance?.visitBalance.toString(),
@@ -92,7 +92,7 @@ fun VisitBalanceResponse.toBalance() = PrisonerBalance(visitBalance = remainingV
 fun PrisonerBalanceDto.toBalance() = PrisonerBalance(visitBalance = voBalance, privilegedVisitBalance = pvoBalance)
 
 data class MismatchVisitBalance(
-  val offenderNo: String,
+  val prisonNumber: String,
   val dpsVisitBalance: PrisonerBalance?,
   val nomisVisitBalance: PrisonerBalance?,
 )

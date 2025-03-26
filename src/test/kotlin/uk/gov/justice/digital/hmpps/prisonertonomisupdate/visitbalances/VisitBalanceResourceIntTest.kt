@@ -18,6 +18,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
@@ -117,24 +118,24 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
         isNull(),
       )
 
-      val mismatchedRecords = telemetryCaptor.allValues.map { it["offenderNo"] }
+      val mismatchedRecords = telemetryCaptor.allValues.map { it["prisonNumber"] }
 
       assertThat(mismatchedRecords).containsOnly("A0001TZ", "A0002TZ", "A0034TZ")
-      with(telemetryCaptor.allValues.find { it["offenderNo"] == "A0001TZ" }) {
+      with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0001TZ" }) {
         assertThat(this).containsEntry("bookingId", "1")
         assertThat(this).containsEntry("nomisVisitBalance", "7")
         assertThat(this).containsEntry("dpsVisitBalance", "12")
         assertThat(this).containsEntry("nomisPrivilegedVisitBalance", "3")
         assertThat(this).containsEntry("dpsPrivilegedVisitBalance", "9")
       }
-      with(telemetryCaptor.allValues.find { it["offenderNo"] == "A0002TZ" }) {
+      with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0002TZ" }) {
         assertThat(this).containsEntry("bookingId", "2")
         assertThat(this).containsEntry("nomisVisitBalance", "4")
         assertThat(this).containsEntry("dpsVisitBalance", "9")
         assertThat(this).containsEntry("nomisPrivilegedVisitBalance", "3")
         assertThat(this).containsEntry("dpsPrivilegedVisitBalance", "7")
       }
-      with(telemetryCaptor.allValues.find { it["offenderNo"] == "A0034TZ" }) {
+      with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0034TZ" }) {
         assertThat(this).containsEntry("bookingId", "34")
         assertThat(this).containsEntry("nomisVisitBalance", "2")
         assertThat(this).containsEntry("nomisPrivilegedVisitBalance", "3")
@@ -279,7 +280,6 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
     }
   }
 
-  /*
   @DisplayName("GET /visit-balance/reconciliation/{prisonNumber}")
   @Nested
   inner class GenerateReconciliationReportForPrisoner {
@@ -305,7 +305,7 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
 
       @Test
       fun `access unauthorised with no auth token`() {
-        webTestClient.get().uri("/casenotes/reconciliation/$prisonNumber")
+        webTestClient.get().uri("/visit-balance/reconciliation/$prisonNumber")
           .exchange()
           .expectStatus().isUnauthorized
       }
@@ -314,16 +314,19 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
     @Nested
     inner class Validation {
       @Test
-      fun `return 404 when offender not found`() {
-        webTestClient.get().uri("/visit-balance/reconciliation/AB1234C")
+      fun `return null when offender not found`() {
+        visitBalanceNomisApi.stubGetVisitBalance("A9999BC", HttpStatus.NOT_FOUND)
+        webTestClient.get().uri("/visit-balance/reconciliation/A9999BC")
           .headers(setAuthorisation(roles = listOf("NOMIS_VISIT_BALANCE")))
           .exchange()
-          .expectStatus().isNotFound
+          .expectStatus().isOk
+          .expectBody().isEmpty
       }
     }
 
     @Nested
     inner class HappyPath {
+
       @BeforeEach
       fun setup() {
         visitBalanceNomisApi.stubGetVisitBalance()
@@ -344,8 +347,7 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
 
       @Test
       fun `will return mismatch with nomis`() {
-
-        visitBalanceNomisApi.stubGetVisitBalance(visitBalance().copy(prisonNumber = "A1234BC", remainingVisitOrders = 4))
+        visitBalanceNomisApi.stubGetVisitBalance("A1234BC", visitBalance().copy(remainingVisitOrders = 4))
 
         webTestClient.get().uri("/visit-balance/reconciliation/$prisonNumber")
           .headers(setAuthorisation(roles = listOf("NOMIS_VISIT_BALANCE")))
@@ -354,24 +356,20 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .jsonPath("prisonNumber").isEqualTo(prisonNumber)
-          .jsonPath("notes.length()").isEqualTo(1)
-          .jsonPath("diffsForNomis").value<List<Int>> {
-            assertThat(it).containsExactlyInAnyOrder(1, 2)
-          }
-          .jsonPath("diffsForDps.length()").isEqualTo(0)
+          .jsonPath("nomisVisitBalance.visitBalance").isEqualTo(4)
+          .jsonPath("nomisVisitBalance.privilegedVisitBalance").isEqualTo(3)
+          .jsonPath("dpsVisitBalance.visitBalance").isEqualTo(24)
+          .jsonPath("dpsVisitBalance.privilegedVisitBalance").isEqualTo(3)
 
         verify(telemetryClient).trackEvent(
-          eq("visitbalance-reports-reconciliation-mismatch-size-nomis"),
+          eq("visitbalance-reports-reconciliation-mismatch"),
           any(),
           isNull(),
         )
-
-
       }
     }
+  }
 
-
-  }*/
   private fun awaitReportFinished() {
     await untilAsserted { verify(telemetryClient).trackEvent(eq("visitbalance-reports-reconciliation-report"), any(), isNull()) }
   }
