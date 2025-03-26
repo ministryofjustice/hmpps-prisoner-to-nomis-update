@@ -20,7 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyNextCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.TestCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMapping
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseResponse
@@ -722,7 +722,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
             Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(DPS_COURT_CASE_ID)
             Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID.toString())
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtCaseMapping.MappingType.DPS_CREATED.toString())
+            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtChargeMappingDto.MappingType.DPS_CREATED.toString())
             Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
             Assertions.assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
           },
