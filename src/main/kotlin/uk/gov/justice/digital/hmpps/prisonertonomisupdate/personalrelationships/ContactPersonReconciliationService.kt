@@ -221,7 +221,11 @@ class ContactPersonReconciliationService(
   ): MismatchPersonContacts? {
     val telemetry = mutableMapOf("personId" to personId.toString())
     if (dpsPersonSummary == null) {
-      return MismatchPersonContacts(personId).also { mismatch ->
+      return MismatchPersonContacts(
+        personId = personId,
+        dpsSummary = dpsPersonSummary,
+        nomisSummary = nomisPersonSummary,
+      ).also { mismatch ->
         telemetryClient.trackEvent(
           "$TELEMETRY_PERSON_PREFIX-mismatch",
           telemetry + ("reason" to "dps-person-missing"),
@@ -230,7 +234,11 @@ class ContactPersonReconciliationService(
     }
 
     if (nomisPersonSummary != dpsPersonSummary) {
-      return MismatchPersonContacts(personId).also { mismatch ->
+      return MismatchPersonContacts(
+        personId = personId,
+        dpsSummary = dpsPersonSummary,
+        nomisSummary = nomisPersonSummary,
+      ).also { mismatch ->
         telemetryClient.trackEvent(
           "$TELEMETRY_PERSON_PREFIX-mismatch",
           telemetry + mapOf("reason" to "different-person-details"),
@@ -517,4 +525,6 @@ data class PersonContactRestrictionSummary(
 }
 data class MismatchPersonContacts(
   val personId: Long,
+  val dpsSummary: PersonSummary?,
+  val nomisSummary: PersonSummary?,
 )

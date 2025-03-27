@@ -173,6 +173,7 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
         isNull(),
       )
     }
+
     private fun awaitReportFinished() {
       await untilAsserted { verify(telemetryClient).trackEvent(eq("contact-person-prisoner-contact-reconciliation-report"), any(), isNull()) }
     }
@@ -235,6 +236,73 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
         },
         isNull(),
       )
+    }
+  }
+
+  @DisplayName("GET /contact-person/person-contact/reports/reconciliation/{personId}")
+  @Nested
+  inner class GetPersonContactReconciliationForPerson {
+    @BeforeEach
+    fun setUp() {
+      reset(telemetryClient)
+      nomisApi.stubGetPerson(
+        1,
+        contactPerson(personId = 1).copy(
+          firstName = "KWEKU",
+          lastName = "KOFI",
+          phoneNumbers = emptyList(),
+          employments = emptyList(),
+          identifiers = emptyList(),
+          addresses = emptyList(),
+          emailAddresses = emptyList(),
+          contacts = emptyList(),
+          restrictions = emptyList(),
+        ),
+      )
+      dpsApi.stubGetContactDetails(1, contactDetails(contactId = 1).copy(firstName = "JOHN", lastName = "KOFI"))
+      dpsApi.stubGetContactRestrictions(1, emptyList())
+      dpsApi.stubGetLinkedPrisonerContacts(1, emptyList())
+    }
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.get().uri("/contact-person/person-contact/reports/reconciliation/1")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.get().uri("/contact-person/person-contact/reports/reconciliation/1")
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.get().uri("/contact-person/person-contact/reports/reconciliation/1")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+      @Test
+      fun `will return mismatch`() {
+        webTestClient.get().uri("/contact-person/person-contact/reports/reconciliation/1")
+          .headers(setAuthorisation(roles = listOf("MIGRATE_CONTACTPERSON")))
+          .exchange()
+          .expectStatus().isOk
+          .expectBody()
+          .jsonPath("$.personId").isEqualTo(1)
+          .jsonPath("$.dpsSummary.firstName").isEqualTo("JOHN")
+          .jsonPath("$.nomisSummary.firstName").isEqualTo("KWEKU")
+      }
     }
   }
   private fun awaitReportFinished() {

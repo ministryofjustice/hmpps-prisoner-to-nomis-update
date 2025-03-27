@@ -6,6 +6,9 @@ import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
@@ -66,6 +69,17 @@ class ContactPersonReconciliationResource(
           log.error("Prisoner contacts reconciliation report failed", it)
         }
     }
+  }
+
+  @PreAuthorize("hasAnyRole('MIGRATE_CONTACTPERSON', 'MIGRATE_NOMIS_SYSCON', 'NOMIS_CONTACTPERSONS')")
+  @GetMapping("/contact-person/person-contact/reports/reconciliation/{personId}")
+  suspend fun getPersonContactReconciliationForPerson(@PathVariable personId: Long): MismatchPersonContacts? {
+    telemetryClient.trackEvent(
+      "$TELEMETRY_PERSON_PREFIX-individual-requested",
+      mapOf("personId" to ""),
+    )
+
+    return reconciliationService.checkPersonContactMatch(personId)
   }
 }
 private fun List<MismatchPrisonerContacts>.asPrisonerMap(): Map<String, String> = this.associate { it.offenderNo to "dpsCount=${it.dpsContactCount},nomisCount=${it.nomisContactCount}" }
