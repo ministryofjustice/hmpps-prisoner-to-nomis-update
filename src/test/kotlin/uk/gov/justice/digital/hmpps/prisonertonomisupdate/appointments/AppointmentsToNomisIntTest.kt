@@ -7,6 +7,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -15,6 +16,7 @@ import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyMap
 import org.mockito.Mockito.eq
 import org.mockito.kotlin.any
 import org.mockito.kotlin.atLeast
@@ -589,6 +591,76 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           } matches { it == 1 }
         }
       }
+
+      @Nested
+      inner class WhenNotInMappingTable {
+        @BeforeEach
+        fun setUp() {
+          appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+          mappingServer.stubGetMappingGivenNonAssociationIdWithError(APPOINTMENT_INSTANCE_ID, 404)
+          publishAppointmentEvent("appointments.appointment-instance.updated")
+        }
+
+        @Test
+        fun `will create failure telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              eq("appointment-amend-failed"),
+              anyMap(),
+              isNull(),
+            )
+          }
+          nomisApi.verify(0, putRequestedFor(urlPathMatching("/.+")))
+        }
+      }
+
+      @Nested
+      inner class WhenNotInDPS {
+        @BeforeEach
+        fun setUp() {
+          appointmentsApi.stubGetAppointmentInstanceWithError(id = APPOINTMENT_INSTANCE_ID, 404)
+          mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+          publishAppointmentEvent("appointments.appointment-instance.updated")
+        }
+
+        @Test
+        fun `will create failure telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              eq("appointment-amend-failed"),
+              anyMap(),
+              isNull(),
+            )
+          }
+          nomisApi.verify(0, putRequestedFor(urlPathMatching("/.+")))
+        }
+      }
+
+      @Nested
+      inner class WhenNotInDPSNorInMapping {
+        @BeforeEach
+        fun setUp() {
+          appointmentsApi.stubGetAppointmentInstanceWithError(id = APPOINTMENT_INSTANCE_ID, 404)
+          mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
+          publishAppointmentEvent("appointments.appointment-instance.updated")
+        }
+
+        @Test
+        fun `will create ignored telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("appointment-amend-missing-ignored"),
+              check {
+                assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+                assertThat(it["dps-error"]).isEqualTo("404 Not Found from GET http://localhost:8088/appointment-instances/1234567")
+                assertThat(it["mapping-error"]).isEqualTo("404 Not Found from GET http://localhost:8084/mapping/appointments/appointment-instance-id/1234567")
+              },
+              isNull(),
+            )
+          }
+          nomisApi.verify(0, putRequestedFor(urlPathMatching("/.+")))
+        }
+      }
     }
   }
 
@@ -692,6 +764,75 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           await untilCallTo {
             awsSqsAppointmentDlqClient!!.countAllMessagesOnQueue(appointmentDlqUrl!!).get()
           } matches { it == 1 }
+        }
+      }
+
+      @Nested
+      inner class WhenNotInMappingTable {
+        @BeforeEach
+        fun setUp() {
+          appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+          mappingServer.stubGetMappingGivenNonAssociationIdWithError(APPOINTMENT_INSTANCE_ID, 404)
+          publishAppointmentEvent("appointments.appointment-instance.cancelled")
+        }
+
+        @Test
+        fun `will create failure telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              eq("appointment-cancel-failed"),
+              anyMap(),
+              isNull(),
+            )
+          }
+          nomisApi.verify(0, putRequestedFor(urlPathMatching("/.+")))
+        }
+      }
+
+      @Nested
+      inner class WhenNotInDPS {
+        @BeforeEach
+        fun setUp() {
+          appointmentsApi.stubGetAppointmentInstanceWithError(id = APPOINTMENT_INSTANCE_ID, 404)
+          mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+          publishAppointmentEvent("appointments.appointment-instance.cancelled")
+        }
+
+        @Test
+        fun `will create failure telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient, times(3)).trackEvent(
+              eq("appointment-cancel-failed"),
+              anyMap(),
+              isNull(),
+            )
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenNotInDPSNorInMapping {
+        @BeforeEach
+        fun setUp() {
+          appointmentsApi.stubGetAppointmentInstanceWithError(id = APPOINTMENT_INSTANCE_ID, 404)
+          mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
+          publishAppointmentEvent("appointments.appointment-instance.cancelled")
+        }
+
+        @Test
+        fun `will create ignored telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("appointment-cancel-missing-ignored"),
+              check {
+                assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+                assertThat(it["dps-error"]).isEqualTo("404 Not Found from GET http://localhost:8088/appointment-instances/1234567")
+                assertThat(it["mapping-error"]).isEqualTo("404 Not Found from GET http://localhost:8084/mapping/appointments/appointment-instance-id/1234567")
+              },
+              isNull(),
+            )
+          }
+          nomisApi.verify(0, putRequestedFor(urlPathMatching("/.+")))
         }
       }
     }
@@ -803,7 +944,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will create success and warning telemetry`() {
         await untilAsserted {
           verify(telemetryClient).trackEvent(
-            eq("appointment-delete-missing-ignored"),
+            eq("appointment-delete-missing-nomis-ignored"),
             check {
               assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
               assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
@@ -891,6 +1032,57 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           } matches { it == 1 }
         }
       }
+
+      @Nested
+      inner class WhenNotInMappingTable {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetMappingGivenNonAssociationIdWithError(APPOINTMENT_INSTANCE_ID, 404)
+          nomisApi.stubAppointmentDelete(EVENT_ID)
+          publishAppointmentEvent("appointments.appointment-instance.deleted")
+        }
+
+        @Test
+        fun `will create ignored telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("appointment-delete-missing-mapping-ignored"),
+              check {
+                assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+                assertThat(it["error"]).isEqualTo("404 Not Found from GET http://localhost:8084/mapping/appointments/appointment-instance-id/1234567")
+              },
+              isNull(),
+            )
+          }
+          nomisApi.verify(0, deleteRequestedFor(urlPathMatching("/.+")))
+        }
+      }
+
+      @Nested
+      inner class WhenNotInNomis {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+          nomisApi.stubAppointmentDeleteWithError(EVENT_ID, 404)
+          mappingServer.stubDeleteAppointmentMapping(APPOINTMENT_INSTANCE_ID)
+          publishAppointmentEvent("appointments.appointment-instance.deleted")
+        }
+
+        @Test
+        fun `will create ignored telemetry and delete mapping`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("appointment-delete-missing-nomis-ignored"),
+              check {
+                assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+                assertThat(it["error"]).isEqualTo("404 Not Found from DELETE http://localhost:8082/appointments/111222333")
+              },
+              isNull(),
+            )
+            mappingServer.verify(deleteRequestedFor(urlEqualTo("/mapping/appointments/appointment-instance-id/$APPOINTMENT_INSTANCE_ID")))
+          }
+        }
+      }
     }
   }
 
@@ -907,5 +1099,6 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  fun appointmentMessagePayload(eventType: String, appointmentInstanceId: Long) = """{"eventType":"$eventType", "additionalInformation": { "appointmentInstanceId": $appointmentInstanceId }, "version": "1.0", "description": "description", "occurredAt": "2023-02-05T11:23:56.031Z"}"""
+  fun appointmentMessagePayload(eventType: String, appointmentInstanceId: Long) = """
+    {"eventType":"$eventType", "additionalInformation": { "appointmentInstanceId": $appointmentInstanceId }, "version": "1.0", "description": "description", "occurredAt": "2023-02-05T11:23:56.031Z"}"""
 }

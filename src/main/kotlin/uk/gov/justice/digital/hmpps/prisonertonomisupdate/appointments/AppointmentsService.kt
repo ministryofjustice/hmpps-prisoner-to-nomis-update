@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
@@ -56,17 +55,32 @@ class AppointmentsService(
   }
 
   suspend fun updateAppointment(event: AppointmentDomainEvent) {
+    val (appointmentInstanceId) = event.additionalInformation
     val telemetryMap =
-      mutableMapOf("appointmentInstanceId" to event.additionalInformation.appointmentInstanceId.toString())
+      mutableMapOf("appointmentInstanceId" to appointmentInstanceId.toString())
 
     runCatching {
-      val appointmentInstance = appointmentsApiService.getAppointmentInstance(event.additionalInformation.appointmentInstanceId)
-
-      val nomisEventId =
-        mappingService.getMappingGivenAppointmentInstanceId(event.additionalInformation.appointmentInstanceId).nomisEventId
-          .also { telemetryMap["nomisEventId"] = it.toString() }
-
-      nomisApiService.updateAppointment(nomisEventId, toUpdateAppointmentRequest(appointmentInstance))
+      val appointmentInstance = try {
+        appointmentsApiService.getAppointmentInstance(appointmentInstanceId)
+      } catch (ed: WebClientResponseException.NotFound) {
+        try {
+          mappingService.getMappingGivenAppointmentInstanceId(appointmentInstanceId).nomisEventId
+          // If the appointment doesn't exist in DPS but does in the mapping service, then we should keep retrying
+          throw RuntimeException(ed)
+        } catch (em: WebClientResponseException.NotFound) {
+          telemetryMap["dps-error"] = ed.message.toString()
+          telemetryMap["mapping-error"] = em.message.toString()
+          telemetryClient.trackEvent("appointment-amend-missing-ignored", telemetryMap, null)
+          return
+        }
+      }
+      mappingService.getMappingGivenAppointmentInstanceId(event.additionalInformation.appointmentInstanceId).nomisEventId
+        .also {
+          telemetryMap["nomisEventId"] = it.toString()
+        }
+        .also {
+          nomisApiService.updateAppointment(it, toUpdateAppointmentRequest(appointmentInstance))
+        }
     }.onSuccess {
       telemetryClient.trackEvent("appointment-amend-success", telemetryMap, null)
     }.onFailure { e ->
@@ -80,10 +94,22 @@ class AppointmentsService(
       mutableMapOf("appointmentInstanceId" to event.additionalInformation.appointmentInstanceId.toString())
 
     runCatching {
-      val nomisEventId =
+      val nomisEventId = try {
         mappingService.getMappingGivenAppointmentInstanceId(event.additionalInformation.appointmentInstanceId).nomisEventId
           .also { telemetryMap["nomisEventId"] = it.toString() }
-
+      } catch (em: WebClientResponseException.NotFound) {
+        try {
+          appointmentsApiService.getAppointmentInstance(event.additionalInformation.appointmentInstanceId)
+          // If the appointment exists in DPS but not in the mapping service, then we should keep retrying
+          throw RuntimeException(em)
+        } catch (ed: WebClientResponseException.NotFound) {
+          // Here it means the appointment does not exist in DPS nor in the mapping table, so it was genuinely deleted and we can ignore it
+          telemetryMap["dps-error"] = ed.message.toString()
+          telemetryMap["mapping-error"] = em.message.toString()
+          telemetryClient.trackEvent("appointment-cancel-missing-ignored", telemetryMap, null)
+          return
+        }
+      }
       nomisApiService.cancelAppointment(nomisEventId)
     }.onSuccess {
       telemetryClient.trackEvent("appointment-cancel-success", telemetryMap, null)
@@ -94,15 +120,18 @@ class AppointmentsService(
   }
 
   suspend fun uncancelAppointment(event: AppointmentDomainEvent) {
+    val (appointmentInstanceId) = event.additionalInformation
     val telemetryMap =
-      mutableMapOf("appointmentInstanceId" to event.additionalInformation.appointmentInstanceId.toString())
+      mutableMapOf("appointmentInstanceId" to appointmentInstanceId.toString())
 
     runCatching {
-      val nomisEventId =
-        mappingService.getMappingGivenAppointmentInstanceId(event.additionalInformation.appointmentInstanceId).nomisEventId
-          .also { telemetryMap["nomisEventId"] = it.toString() }
-
-      nomisApiService.uncancelAppointment(nomisEventId)
+      mappingService.getMappingGivenAppointmentInstanceId(appointmentInstanceId).nomisEventId
+        .also {
+          telemetryMap["nomisEventId"] = it.toString()
+        }
+        .also {
+          nomisApiService.uncancelAppointment(it)
+        }
     }.onSuccess {
       telemetryClient.trackEvent("appointment-uncancel-success", telemetryMap, null)
     }.onFailure { e ->
@@ -117,49 +146,28 @@ class AppointmentsService(
       mutableMapOf("appointmentInstanceId" to appointmentInstanceId.toString())
 
     runCatching {
-      val nomisEventId =
+      try {
         mappingService.getMappingGivenAppointmentInstanceId(appointmentInstanceId).nomisEventId
           .also { telemetryMap["nomisEventId"] = it.toString() }
-
-      try {
-        nomisApiService.deleteAppointment(nomisEventId)
       } catch (e: WebClientResponseException.NotFound) {
-        telemetryClient.trackEvent("appointment-delete-missing-ignored", telemetryMap, null)
+        telemetryMap["error"] = e.message.toString()
+        telemetryClient.trackEvent("appointment-delete-missing-mapping-ignored", telemetryMap, null)
+        return
       }
+        .also {
+          try {
+            nomisApiService.deleteAppointment(it)
+          } catch (e: WebClientResponseException.NotFound) {
+            telemetryMap["error"] = e.message.toString()
+            telemetryClient.trackEvent("appointment-delete-missing-nomis-ignored", telemetryMap, null)
+          }
+        }
       mappingService.deleteMapping(appointmentInstanceId)
     }.onSuccess {
       telemetryClient.trackEvent("appointment-delete-success", telemetryMap, null)
     }.onFailure { e ->
       telemetryClient.trackEvent("appointment-delete-failed", telemetryMap, null)
       throw e
-    }
-  }
-
-  suspend fun deleteAllAppointments() {
-    mappingService.getAllMappings().forEach { mapping ->
-      runCatching {
-        nomisApiService.deleteAppointment(mapping.nomisEventId)
-        mappingService.deleteMapping(mapping.appointmentInstanceId)
-      }.onSuccess {
-        telemetryClient.trackEvent(
-          "appointment-DELETE-ALL-success",
-          mapOf(
-            "nomisEventId" to mapping.nomisEventId.toString(),
-            "appointmentInstanceId" to mapping.appointmentInstanceId.toString(),
-          ),
-          null,
-        )
-      }.onFailure { e ->
-        log.error("Failed to delete appointment with appointmentInstanceId ${mapping.appointmentInstanceId}", e)
-        telemetryClient.trackEvent(
-          "appointment-DELETE-ALL-failed",
-          mapOf(
-            "nomisEventId" to mapping.nomisEventId.toString(),
-            "appointmentInstanceId" to mapping.appointmentInstanceId.toString(),
-          ),
-          null,
-        )
-      }
     }
   }
 
@@ -219,10 +227,6 @@ class AppointmentsService(
 
   override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
-
-  companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
-  }
 }
 
 data class AppointmentDomainEvent(
