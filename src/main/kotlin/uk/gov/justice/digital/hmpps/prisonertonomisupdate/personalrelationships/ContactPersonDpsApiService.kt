@@ -10,9 +10,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageSyncContactId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelPrisonerContactSummary
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelSyncContactId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionsResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummaryPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddressPhone
@@ -81,7 +81,7 @@ class ContactPersonDpsApiService(@Qualifier("personalRelationshipsApiWebClient")
     .retrieve()
     .awaitBody()
 
-  suspend fun getPrisonerContacts(prisonNumber: String): PrisonerContactSummaryPage = webClient.get()
+  suspend fun getPrisonerContacts(prisonNumber: String): PagedModelPrisonerContactSummary = webClient.get()
     .uri("/prisoner/{prisonNumber}/contact?page=0&size=10000&active=true", prisonNumber)
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
@@ -91,7 +91,7 @@ class ContactPersonDpsApiService(@Qualifier("personalRelationshipsApiWebClient")
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
 
-  suspend fun getContactIds(pageNumber: Int = 0, pageSize: Int = 1): PageSyncContactId = webClient.get()
+  suspend fun getContactIds(pageNumber: Int = 0, pageSize: Int = 1): PagedModelSyncContactId = webClient.get()
     .uri("/sync/contact/reconcile?page={pageNumber}&size={pageSize}", pageNumber, pageSize)
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)

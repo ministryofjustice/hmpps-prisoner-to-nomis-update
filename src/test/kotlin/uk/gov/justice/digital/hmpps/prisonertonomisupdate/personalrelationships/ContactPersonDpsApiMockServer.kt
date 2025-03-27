@@ -36,11 +36,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.EmploymentDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.OrganisationSummary
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageSyncContactId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageMetadata
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelPrisonerContactSummary
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelSyncContactId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummaryPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.RestrictionsSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddress
@@ -173,7 +174,7 @@ class ContactPersonDpsApiExtension :
       createdTime = LocalDateTime.parse("2024-01-01T12:13"),
     )
 
-    fun prisonerContactSummaryPage() = PrisonerContactSummaryPage(
+    fun prisonerContactSummaryPage() = PagedModelPrisonerContactSummary(
       content = emptyList(),
     )
 
@@ -467,7 +468,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetPrisonerContacts(prisonerNumber: String, response: PrisonerContactSummaryPage = prisonerContactSummaryPage()) {
+  fun stubGetPrisonerContacts(prisonerNumber: String, response: PagedModelPrisonerContactSummary = prisonerContactSummaryPage()) {
     stubFor(
       get(urlPathEqualTo("/prisoner/$prisonerNumber/contact")).willReturn(
         aResponse()
@@ -494,7 +495,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(PageSyncContactId(totalElements = contactIds.size.toLong(), content = contactIds.map { SyncContactId(it) }))),
+          .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(PagedModelSyncContactId(page = PageMetadata(totalElements = contactIds.size.toLong()), content = contactIds.map { SyncContactId(it) }))),
       ),
     )
   }
