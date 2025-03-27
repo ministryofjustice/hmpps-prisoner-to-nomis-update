@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.contactPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerWithContacts
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageMetadata
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 
@@ -50,16 +51,16 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
         ),
       )
       nomisApi.stubGetPrisonerContacts("A0001TZ", prisonerWithContacts().copy(contacts = listOf(prisonerContact(1), prisonerContact(2))))
-      dpsApi.stubGetPrisonerContacts("A0001TZ", prisonerContactSummaryPage().copy(totalElements = 2, content = listOf(prisonerContactSummary(1))))
+      dpsApi.stubGetPrisonerContacts("A0001TZ", prisonerContactSummaryPage().copy(page = PageMetadata(totalElements = 2), content = listOf(prisonerContactSummary(1))))
       nomisApi.stubGetPrisonerContacts("A0002TZ", prisonerWithContacts().copy(contacts = listOf(prisonerContact(1), prisonerContact(2))))
-      dpsApi.stubGetPrisonerContacts("A0002TZ", prisonerContactSummaryPage().copy(totalElements = 2, content = listOf(prisonerContactSummary(1), prisonerContactSummary(99))))
+      dpsApi.stubGetPrisonerContacts("A0002TZ", prisonerContactSummaryPage().copy(page = PageMetadata(totalElements = 2), content = listOf(prisonerContactSummary(1), prisonerContactSummary(99))))
       nomisApi.stubGetPrisonerContacts("A0003TZ", prisonerWithContacts())
       dpsApi.stubGetPrisonerContacts("A0003TZ", prisonerContactSummaryPage())
       nomisApi.stubGetPrisonerContacts("A0004TZ", prisonerWithContacts().copy(contacts = listOf(prisonerContact(3).copy(restrictions = emptyList()))))
       dpsApi.stubGetPrisonerContacts(
         "A0004TZ",
         prisonerContactSummaryPage().copy(
-          totalElements = 1,
+          page = PageMetadata(totalElements = 1),
           content = listOf(
             prisonerContactSummary(
               contactId = 3,

@@ -49,6 +49,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageMetadata
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -92,7 +93,7 @@ internal class ContactPersonReconciliationServiceTest {
       dpsApi.stubGetPrisonerContacts(
         prisonerId.offenderNo,
         prisonerContactSummaryPage().copy(
-          totalElements = 1,
+          page = PageMetadata(totalElements = 1),
           content = listOf(dpsContact),
         ),
       )
@@ -103,7 +104,7 @@ internal class ContactPersonReconciliationServiceTest {
       @BeforeEach
       fun beforeEach() {
         nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = emptyList()))
-        dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 1, content = emptyList()))
+        dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(page = PageMetadata(totalElements = 1), content = emptyList()))
       }
 
       @Test
@@ -119,7 +120,7 @@ internal class ContactPersonReconciliationServiceTest {
       @BeforeEach
       fun beforeEach() {
         nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1), prisonerContact(2))))
-        dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 2, content = listOf(prisonerContactSummary(1, prisonerContactId = 11), prisonerContactSummary(2, prisonerContactId = 22))))
+        dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(page = PageMetadata(totalElements = 2), content = listOf(prisonerContactSummary(1, prisonerContactId = 11), prisonerContactSummary(2, prisonerContactId = 22))))
         dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 11)
         dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 22)
       }
@@ -148,7 +149,7 @@ internal class ContactPersonReconciliationServiceTest {
         dpsApi.stubGetPrisonerContacts(
           prisonerId.offenderNo,
           prisonerContactSummaryPage().copy(
-            totalElements = 2,
+            page = PageMetadata(totalElements = 2),
             content = listOf(
               prisonerContactSummary(contactId = 1, prisonerContactId = 11).copy(isApprovedVisitor = false),
               prisonerContactSummary(contactId = 1, prisonerContactId = 22).copy(isApprovedVisitor = true),
@@ -172,7 +173,7 @@ internal class ContactPersonReconciliationServiceTest {
       @BeforeEach
       fun beforeEach() {
         nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1))))
-        dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 1, content = emptyList()))
+        dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(page = PageMetadata(totalElements = 1), content = emptyList()))
       }
 
       @Test
@@ -205,7 +206,7 @@ internal class ContactPersonReconciliationServiceTest {
       @BeforeEach
       fun beforeEach() {
         nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf()))
-        dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 1, content = listOf(prisonerContactSummary(1))))
+        dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(page = PageMetadata(totalElements = 1), content = listOf(prisonerContactSummary(1))))
       }
 
       @Test
@@ -238,7 +239,7 @@ internal class ContactPersonReconciliationServiceTest {
       @BeforeEach
       fun beforeEach() {
         nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(88))))
-        dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 1, content = listOf(prisonerContactSummary(99))))
+        dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(page = PageMetadata(totalElements = 1), content = listOf(prisonerContactSummary(99))))
       }
 
       @Test
@@ -471,7 +472,7 @@ internal class ContactPersonReconciliationServiceTest {
         @BeforeEach
         fun beforeEach() {
           nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = emptyList()))))
-          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 1, content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
+          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(page = PageMetadata(totalElements = 1), content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
           dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 11, response = prisonerContactRestrictionsResponse().copy(prisonerContactRestrictions = emptyList()))
         }
 
@@ -488,7 +489,7 @@ internal class ContactPersonReconciliationServiceTest {
         @BeforeEach
         fun beforeEach() {
           nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf(contactRestriction())))))
-          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 1, content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
+          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(page = PageMetadata(totalElements = 1), content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
           dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 11, response = prisonerContactRestrictionsResponse().copy(prisonerContactRestrictions = listOf(prisonerContactRestrictionDetails(1))))
         }
 
@@ -505,7 +506,7 @@ internal class ContactPersonReconciliationServiceTest {
         @BeforeEach
         fun beforeEach() {
           nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf(contactRestriction())))))
-          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 1, content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
+          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(page = PageMetadata(totalElements = 1), content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
           dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 11, response = prisonerContactRestrictionsResponse().copy(prisonerContactRestrictions = listOf()))
         }
 
@@ -541,7 +542,7 @@ internal class ContactPersonReconciliationServiceTest {
         @BeforeEach
         fun beforeEach() {
           nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf()))))
-          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 1, content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
+          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(page = PageMetadata(totalElements = 1), content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
           dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 11, response = prisonerContactRestrictionsResponse().copy(prisonerContactRestrictions = listOf(prisonerContactRestrictionDetails(1))))
         }
 
@@ -577,7 +578,7 @@ internal class ContactPersonReconciliationServiceTest {
         @BeforeEach
         fun beforeEach() {
           nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf(contactRestriction().copy(type = CodeDescription("CCTV", "CCTV")))))))
-          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 1, content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
+          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(page = PageMetadata(totalElements = 1), content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
           dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 11, response = prisonerContactRestrictionsResponse().copy(prisonerContactRestrictions = listOf(prisonerContactRestrictionDetails(1).copy(restrictionType = "BAN"))))
         }
 
@@ -613,7 +614,7 @@ internal class ContactPersonReconciliationServiceTest {
         @BeforeEach
         fun beforeEach() {
           nomisApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerWithContacts().copy(contacts = listOf(prisonerContact(1).copy(restrictions = listOf(contactRestriction().copy(expiryDate = LocalDate.parse("2023-01-01")))))))
-          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(totalElements = 1, content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
+          dpsApi.stubGetPrisonerContacts(prisonerId.offenderNo, prisonerContactSummaryPage().copy(page = PageMetadata(totalElements = 1), content = listOf(prisonerContactSummary(1, prisonerContactId = 11))))
           dpsApi.stubGetPrisonerContactRestrictions(prisonerContactId = 11, response = prisonerContactRestrictionsResponse().copy(prisonerContactRestrictions = listOf(prisonerContactRestrictionDetails(1).copy(expiryDate = LocalDate.parse("2022-01-01")))))
         }
 
