@@ -72,7 +72,7 @@ class ContactPersonReconciliationResource(
   }
 
   @PreAuthorize("hasAnyRole('MIGRATE_CONTACTPERSON', 'MIGRATE_NOMIS_SYSCON', 'NOMIS_CONTACTPERSONS')")
-  @GetMapping("/contact-person/person-contact/reports/reconciliation/{personId}")
+  @GetMapping("/persons/{personId}/person-contact/reconciliation")
   suspend fun getPersonContactReconciliationForPerson(@PathVariable personId: Long): MismatchPersonContacts? {
     telemetryClient.trackEvent(
       "$TELEMETRY_PERSON_PREFIX-individual-requested",

@@ -239,7 +239,7 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
     }
   }
 
-  @DisplayName("GET /contact-person/person-contact/reports/reconciliation/{personId}")
+  @DisplayName("GET /persons/{personId}/person-contact/reconciliation")
   @Nested
   inner class GetPersonContactReconciliationForPerson {
     @BeforeEach
@@ -268,7 +268,7 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
     inner class Security {
       @Test
       fun `access forbidden when no role`() {
-        webTestClient.get().uri("/contact-person/person-contact/reports/reconciliation/1")
+        webTestClient.get().uri("/persons/1/person-contact/reconciliation")
           .headers(setAuthorisation(roles = listOf()))
           .exchange()
           .expectStatus().isForbidden
@@ -276,7 +276,7 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
 
       @Test
       fun `access forbidden with wrong role`() {
-        webTestClient.get().uri("/contact-person/person-contact/reports/reconciliation/1")
+        webTestClient.get().uri("/persons/1/person-contact/reconciliation")
           .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
           .exchange()
           .expectStatus().isForbidden
@@ -284,7 +284,7 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
 
       @Test
       fun `access unauthorised with no auth token`() {
-        webTestClient.get().uri("/contact-person/person-contact/reports/reconciliation/1")
+        webTestClient.get().uri("/persons/1/person-contact/reconciliation")
           .exchange()
           .expectStatus().isUnauthorized
       }
@@ -294,7 +294,7 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
     inner class HappyPath {
       @Test
       fun `will return mismatch`() {
-        webTestClient.get().uri("/contact-person/person-contact/reports/reconciliation/1")
+        webTestClient.get().uri("/persons/1/person-contact/reconciliation")
           .headers(setAuthorisation(roles = listOf("MIGRATE_CONTACTPERSON")))
           .exchange()
           .expectStatus().isOk
