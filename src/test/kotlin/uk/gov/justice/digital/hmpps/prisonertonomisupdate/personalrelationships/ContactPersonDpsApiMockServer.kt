@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.OrganisationSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageMetadata
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelLinkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelPrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelSyncContactId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionDetails
@@ -540,7 +541,14 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+          .withBody(
+            ContactPersonDpsApiExtension.objectMapper.writeValueAsString(
+              PagedModelLinkedPrisonerDetails(
+                content = response,
+                page = PageMetadata(totalElements = response.size.toLong()),
+              ),
+            ),
+          ),
       ),
     )
   }
