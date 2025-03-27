@@ -476,5 +476,18 @@ class ContactPersonDpsApiServiceTest {
         getRequestedFor(urlPathEqualTo("/contact/1234/linked-prisoners")),
       )
     }
+
+    @Test
+    fun `will request a larger enough page size for person with most contacts`() = runTest {
+      dpsContactPersonServer.stubGetLinkedPrisonerContacts(contactId = 1234)
+
+      apiService.getLinkedPrisonerContacts(1234)
+
+      dpsContactPersonServer.verify(
+        getRequestedFor(anyUrl())
+          .withQueryParam("size", equalTo("8000"))
+          .withQueryParam("page", equalTo("0")),
+      )
+    }
   }
 }

@@ -189,7 +189,7 @@ class ContactPersonReconciliationService(
 
     val (dpsPrisonerContacts, dpsContactRestrictions) = dpsContact?.let {
       withContext(Dispatchers.Unconfined) {
-        async { dpsApiService.getLinkedPrisonerContacts(personId) } to
+        async { dpsApiService.getLinkedPrisonerContacts(personId).content ?: emptyList() } to
           async { dpsApiService.getContactRestrictions(personId) }
       }.awaitBoth()
     } ?: Pair(emptyList(), emptyList())
