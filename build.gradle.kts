@@ -26,7 +26,7 @@ dependencies {
   implementation("org.springframework.data:spring-data-commons:3.4.4")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.2")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.5")
+  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.6")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
@@ -34,10 +34,10 @@ dependencies {
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.13.1")
   // Leaving at 1.43.0 to match the version used in App Insights https://github.com/microsoft/ApplicationInsights-Java/blob/3.6.2/dependencyManagement/build.gradle.kts#L14
   implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.47.0")
-  implementation("com.google.guava:guava:33.4.5-jre")
+  implementation("com.google.guava:guava:33.4.6-jre")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.2")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.25") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.26") {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.29")

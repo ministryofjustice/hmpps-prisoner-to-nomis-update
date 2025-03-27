@@ -189,5 +189,3 @@ hmpps.sqs:
       errorVisibilityTimeout: 1
     personalrelationships:
       errorVisibilityTimeout: 5
-
-springdoc.swagger-ui.version: 5.20.0
