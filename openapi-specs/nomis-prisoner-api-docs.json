@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-26.11855.2edf46c"
+    "version" : "2025-03-27.11877.0d0902a"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -16705,7 +16705,8 @@
             "type" : "string",
             "description" : "NOMIS Adjustment type code from SENTENCE_ADJUSTMENTS",
             "enum" : [ "RSR", "UR", "S240A", "RST", "RX" ],
-            "example" : "RX"
+            "example" : "RX",
+            "minLength" : 1
           },
           "adjustmentDate" : {
             "type" : "string",
@@ -16752,13 +16753,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The time of the course schedule",
             "example" : "10:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The time the course schedule ends",
             "example" : "11:00"
           },
@@ -16870,7 +16869,8 @@
           "outcome" : {
             "type" : "string",
             "description" : "The cancellation reason",
-            "enum" : [ "VISCANC", "OFFCANC", "ADMIN", "NSHOW" ]
+            "enum" : [ "VISCANC", "OFFCANC", "ADMIN", "NSHOW" ],
+            "minLength" : 1
           }
         },
         "required" : [ "outcome" ]
@@ -17745,7 +17745,8 @@
             "type" : "string",
             "description" : "NOMIS Adjustment type code from SENTENCE_ADJUSTMENTS",
             "enum" : [ "LAL", "UAL", "RADA", "ADA", "SREM" ],
-            "example" : "ADA"
+            "example" : "ADA",
+            "minLength" : 1
           },
           "adjustmentDate" : {
             "type" : "string",
@@ -18343,7 +18344,6 @@
           },
           "incidentTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "Date/Time incident occurred",
             "example" : "10:00"
           },
@@ -18666,11 +18666,13 @@
         "properties" : {
           "text" : {
             "type" : "string",
-            "description" : "Free format text body of amendment"
+            "description" : "Free format text body of amendment",
+            "minLength" : 1
           },
           "authorUsername" : {
             "type" : "string",
-            "description" : "Author login name of person or department that added the amendment"
+            "description" : "Author login name of person or department that added the amendment",
+            "minLength" : 1
           },
           "createdDateTime" : {
             "type" : "string",
@@ -18686,7 +18688,8 @@
         "properties" : {
           "text" : {
             "type" : "string",
-            "description" : "Free format text body of the amendment"
+            "description" : "Free format text body of the amendment",
+            "minLength" : 1
           },
           "amendments" : {
             "type" : "array",
@@ -18710,13 +18713,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "Appointment start time",
             "example" : "09:45"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "Activity end time",
             "example" : "15:20"
           },
@@ -18840,8 +18841,8 @@
           },
           "hearingTime" : {
             "type" : "string",
-            "format" : "partial-time",
-            "description" : "Hearing time"
+            "description" : "Hearing time",
+            "example" : "14:30:00"
           },
           "internalLocationId" : {
             "type" : "integer",
@@ -19081,13 +19082,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The time of the course schedule",
             "example" : "10:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The time the course schedule ends",
             "example" : "11:00"
           },
@@ -19139,13 +19138,11 @@
         "properties" : {
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "Schedule start time in 24 hour clock",
             "example" : "08:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "Schedule end time in 24 hour clock",
             "example" : "11:00"
           },
@@ -19298,13 +19295,13 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
-            "description" : "The instance start time"
+            "description" : "The instance start time",
+            "example" : "14:30:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
-            "description" : "The instance end time"
+            "description" : "The instance end time",
+            "example" : "14:30:00"
           }
         },
         "required" : [ "courseScheduleId", "date", "endTime", "startTime" ]
@@ -19388,7 +19385,8 @@
           "programStatusCode" : {
             "type" : "string",
             "description" : "Offender program status from domain OFF_PRG_STS",
-            "example" : "ALLOC"
+            "example" : "ALLOC",
+            "minLength" : 1
           },
           "exclusions" : {
             "type" : "array",
@@ -19641,11 +19639,13 @@
         "properties" : {
           "caseNoteType" : {
             "type" : "string",
-            "description" : "The case note type"
+            "description" : "The case note type",
+            "minLength" : 1
           },
           "caseNoteSubType" : {
             "type" : "string",
-            "description" : "The case note subtype"
+            "description" : "The case note subtype",
+            "minLength" : 1
           },
           "occurrenceDateTime" : {
             "type" : "string",
@@ -19659,11 +19659,13 @@
           },
           "authorUsername" : {
             "type" : "string",
-            "description" : "Free format text of person or department that created the case note"
+            "description" : "Free format text of person or department that created the case note",
+            "minLength" : 1
           },
           "caseNoteText" : {
             "type" : "string",
-            "description" : "Free format text body of case note"
+            "description" : "Free format text body of case note",
+            "minLength" : 1
           }
         },
         "required" : [ "authorUsername", "caseNoteSubType", "caseNoteText", "caseNoteType", "creationDateTime", "occurrenceDateTime" ]
@@ -19772,8 +19774,8 @@
           },
           "incidentTime" : {
             "type" : "string",
-            "format" : "partial-time",
-            "description" : "Date and time of the associated incident"
+            "description" : "Date and time of the associated incident",
+            "example" : "14:30:00"
           },
           "reportedDate" : {
             "type" : "string",
@@ -19782,8 +19784,8 @@
           },
           "reportedTime" : {
             "type" : "string",
-            "format" : "partial-time",
-            "description" : "Date and time when the associated incident was reported"
+            "description" : "Date and time when the associated incident was reported",
+            "example" : "14:30:00"
           },
           "createdByUsername" : {
             "type" : "string",
@@ -19972,8 +19974,8 @@
           },
           "scheduleTime" : {
             "type" : "string",
-            "format" : "partial-time",
-            "description" : "Hearing scheduled time as set by DPS but not used by NOMIS or set in NOMIS"
+            "description" : "Hearing scheduled time as set by DPS but not used by NOMIS or set in NOMIS",
+            "example" : "14:30:00"
           },
           "hearingDate" : {
             "type" : "string",
@@ -19982,8 +19984,8 @@
           },
           "hearingTime" : {
             "type" : "string",
-            "format" : "partial-time",
-            "description" : "Hearing time"
+            "description" : "Hearing time",
+            "example" : "14:30:00"
           },
           "comment" : {
             "type" : "string"
@@ -20039,8 +20041,8 @@
           },
           "deliveryTime" : {
             "type" : "string",
-            "format" : "partial-time",
-            "description" : "Hearing notification time"
+            "description" : "Hearing notification time",
+            "example" : "14:30:00"
           },
           "comment" : {
             "type" : "string",
@@ -20321,7 +20323,6 @@
           },
           "incidentTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "Date and time of the associated incident",
             "example" : "12:00:00"
           },
@@ -20332,7 +20333,6 @@
           },
           "reportedTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "Date and time when the associated incident was reported",
             "example" : "12:00:00"
           },
@@ -20443,7 +20443,8 @@
             "type" : "string",
             "description" : "NOMIS Adjustment type code from SENTENCE_ADJUSTMENTS",
             "enum" : [ "RSR", "UR", "S240A", "RST", "RX" ],
-            "example" : "RX"
+            "example" : "RX",
+            "minLength" : 1
           },
           "adjustmentDate" : {
             "type" : "string",
@@ -20508,7 +20509,8 @@
             "type" : "string",
             "description" : "NOMIS Adjustment type code from SENTENCE_ADJUSTMENTS",
             "enum" : [ "LAL", "UAL", "RADA", "ADA", "SREM" ],
-            "example" : "ADA"
+            "example" : "ADA",
+            "minLength" : 1
           },
           "adjustmentDate" : {
             "type" : "string",
@@ -21340,13 +21342,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "Appointment start time",
             "example" : "09:45"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "Activity end time",
             "example" : "15:20"
           },
@@ -21455,8 +21455,8 @@
           },
           "hearingTime" : {
             "type" : "string",
-            "format" : "partial-time",
-            "description" : "Hearing time"
+            "description" : "Hearing time",
+            "example" : "14:30:00"
           },
           "agencyId" : {
             "type" : "string",
@@ -21793,12 +21793,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -21815,6 +21809,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21982,12 +21982,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -22004,6 +21998,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22399,12 +22399,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -22421,6 +22415,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -23427,8 +23427,8 @@
           },
           "incidentTime" : {
             "type" : "string",
-            "format" : "partial-time",
-            "description" : "Date/Time incident occurred"
+            "description" : "Date/Time incident occurred",
+            "example" : "14:30:00"
           },
           "type" : {
             "$ref" : "#/components/schemas/CodeDescription",
@@ -24282,12 +24282,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -24304,6 +24298,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -24346,12 +24346,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -24368,6 +24362,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -24993,12 +24993,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -25015,6 +25009,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25149,12 +25149,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -25171,6 +25165,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25370,12 +25370,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -25392,6 +25386,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25886,12 +25886,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -25908,6 +25902,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25996,12 +25996,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26018,6 +26012,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26127,12 +26127,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26149,6 +26143,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26433,12 +26433,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26455,6 +26449,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27194,12 +27194,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27216,6 +27210,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27345,13 +27345,11 @@
         "properties" : {
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "Course start time",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "Course end time",
             "example" : "11:00"
           },
@@ -27493,12 +27491,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27515,6 +27507,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27555,12 +27553,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27577,6 +27569,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27622,12 +27620,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27644,6 +27636,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27915,12 +27913,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27937,6 +27929,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
