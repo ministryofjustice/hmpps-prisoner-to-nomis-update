@@ -75,7 +75,7 @@ jobs:
                 - type: section
                   text:
                     type: mrkdwn
-                    text: ":githubpr: Github Workflow ${{ github.workflow } has detected PRs"
+                    text: ":githubpr: Github Workflow ${{ github.workflow }} has detected PRs"
                 - type: section
                   fields:
                     - type: mrkdwn
