@@ -70,7 +70,7 @@ jobs:
           payload-templated: true
           payload: |
             channel: ${{ vars.SECURITY_ALERTS_SLACK_CHANNEL_ID }}
-            text: "Check APIs has detected PRs",
+            text: "Check APIs has detected PRs"
               blocks
                 - type: section
                   text:
