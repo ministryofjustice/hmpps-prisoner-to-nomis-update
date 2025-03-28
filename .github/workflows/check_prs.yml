@@ -47,7 +47,7 @@ jobs:
                 - type: section
                   text:
                     type: mrkdwn
-                    text: ":warning: Github Workflow ${{ github.workflow } has detected failing PRs"
+                    text: ":warning: Github Workflow ${{ github.workflow }} has detected failing PRs"
                 - type: section
                   fields:
                     - type: mrkdwn
