@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-21.6207.68a92d2"
+    "version" : "2025-03-27.6228.ba72aa4"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -12946,6 +12946,81 @@
         }
       }
     },
+    "/api/sentence/nomis/booking-id/{nomisBookingId}/sentence-sequence/{nomisSentenceSequence}" : {
+      "get" : {
+        "tags" : [ "NOMIS / DPS Mapping lookup" ],
+        "summary" : "Retrieves the DPS Sentence id from the NOMIS booking and sentence sequence",
+        "description" : "Requires role <b>NOMIS_DPS_MAPPING__SENTENCE__R</b>",
+        "operationId" : "getSentenceMappingByNomisId_1",
+        "parameters" : [ {
+          "name" : "nomisBookingId",
+          "in" : "path",
+          "description" : "NOMIS booking id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS booking id",
+            "example" : 123456
+          },
+          "example" : 123456
+        }, {
+          "name" : "nomisSentenceSequence",
+          "in" : "path",
+          "description" : "NOMIS sentence sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "NOMIS sentence sequence",
+            "example" : 4
+          },
+          "example" : 4
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "NOMIS to DPS Mapping Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NomisDpsSentenceMapping"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden to this endpoint. Requires role NOMIS_DPS_MAPPING__SENTENCE__R",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Sentence id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/locations/nomis/{nomisLocationId}" : {
       "get" : {
         "tags" : [ "NOMIS / DPS Mapping lookup" ],
@@ -16332,10 +16407,10 @@
           "empty" : {
             "type" : "boolean"
           },
-          "sorted" : {
+          "unsorted" : {
             "type" : "boolean"
           },
-          "unsorted" : {
+          "sorted" : {
             "type" : "boolean"
           }
         }
@@ -16892,6 +16967,30 @@
             "type" : "boolean"
           }
         }
+      },
+      "NomisDpsSentenceMapping" : {
+        "type" : "object",
+        "description" : "NOMIS DPS Sentence mapping",
+        "properties" : {
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS booking id",
+            "example" : 123456
+          },
+          "nomisSentenceSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "NOMIS sentence sequence",
+            "example" : 4
+          },
+          "dpsSentenceId" : {
+            "type" : "string",
+            "description" : "DPS sentence id",
+            "example" : "f4499772-2e43-4951-861d-04ad86df43fc\""
+          }
+        },
+        "required" : [ "dpsSentenceId", "nomisBookingId", "nomisSentenceSequence" ]
       }
     },
     "securitySchemes" : {
