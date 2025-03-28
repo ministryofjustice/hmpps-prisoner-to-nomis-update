@@ -9,10 +9,26 @@ else
 fi
 
 FAILING_URLS=$(gh pr ls --search 'head:api-docs-' --json 'statusCheckRollup,url' --jq '. | map(select(.statusCheckRollup[].state == "FAILURE")) | .[].url' | sort -u)
-echo "failing_prs=$FAILING_URLS" >>"$GITHUB_OUTPUT"
+if [[ $FAILING_URLS != "" ]]; then
+  {
+    echo "failing_prs<<EOF"
+    echo "$FAILING_URLS"
+    echo "EOF"
+  } >>"$GITHUB_OUTPUT"
+else
+  echo "failing_prs=" >>"$GITHUB_OUTPUT"
+fi
 
 URLS=$(gh pr ls --search 'head:api-docs-' --json 'url' --jq '.[].url' | sort -u)
-echo "all_prs=$URLS" >>"$GITHUB_OUTPUT"
+if [[ $URLS != "" ]]; then
+  {
+    echo "all_prs<<EOF"
+    echo "$URLS"
+    echo "EOF"
+  } >>"$GITHUB_OUTPUT"
+else
+  echo "all_prs=" >>"$GITHUB_OUTPUT"
+fi
 
 if [[ $OUTPUT_COMPARISON = true ]]; then
   cat "$GITHUB_OUTPUT"
