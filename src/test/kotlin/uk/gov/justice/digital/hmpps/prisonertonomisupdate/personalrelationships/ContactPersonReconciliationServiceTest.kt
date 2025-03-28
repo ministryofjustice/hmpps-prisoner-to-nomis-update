@@ -827,6 +827,27 @@ internal class ContactPersonReconciliationServiceTest {
     }
 
     @Nested
+    inner class WhenDateOfBirthsAreClearlyNotValid {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            dateOfBirth = LocalDate.parse("0200-02-20"),
+          ),
+          dpsContact.copy(
+            dateOfBirth = LocalDate.parse("0200-02-21"),
+          ),
+        )
+      }
+
+      @Test
+      fun `will ignore the mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNull()
+      }
+    }
+
+    @Nested
     inner class WhenDateOfBirthDoNotMatch {
 
       @BeforeEach

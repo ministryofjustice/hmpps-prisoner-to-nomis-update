@@ -387,7 +387,7 @@ class ContactPersonReconciliationService(
     personId = this.personId,
     firstName = this.firstName,
     lastName = this.lastName,
-    dateOfBirth = this.dateOfBirth,
+    dateOfBirth = this.dateOfBirth?.takeIf { it.validDateOfBirth() },
     addressCount = this.addresses.size,
     phoneNumbers = this.phoneNumbers.map { it.number }.toSortedSet(),
     emailAddresses = this.emailAddresses.map { it.email }.toSortedSet(),
@@ -404,7 +404,7 @@ class ContactPersonReconciliationService(
     personId = this.id,
     firstName = this.firstName,
     lastName = this.lastName,
-    dateOfBirth = this.dateOfBirth,
+    dateOfBirth = this.dateOfBirth?.takeIf { it.validDateOfBirth() },
     addressCount = this.addresses.size,
     phoneNumbers = this.phoneNumbers.map { it.phoneNumber }.toSortedSet(),
     emailAddresses = this.emailAddresses.map { it.emailAddress }.toSortedSet(),
@@ -414,6 +414,11 @@ class ContactPersonReconciliationService(
     prisonerContacts = dpsPrisonerContacts.map { it.asSummary() }.toSortedSet(),
     restrictions = dpsContactRestrictions.map { it.asSummary() }.toSortedSet(),
   )
+
+  // There is no reason why we have ever registered a visitor born before 1800
+  // this is to ignore invalid dates e.g "0200-01-01" which can causes mismatches
+  // due to LocalDate conversion for ancient dates
+  private fun LocalDate.validDateOfBirth(): Boolean = this.isAfter(LocalDate.parse("1800-01-01"))
 
   private fun PersonContact.asSummary() = PrisonerRelationship(
     offenderNo = this.prisoner.offenderNo,
