@@ -166,6 +166,7 @@ fun dpsCsipRecord(
       date = LocalDate.parse("2024-04-08"),
       recordedBy = "FRED_ADM",
       recordedByDisplayName = "Fred Admin",
+      history = listOf()
     ),
 
     investigation = Investigation(
@@ -200,6 +201,7 @@ fun dpsCsipRecord(
       recordedByDisplayName = "Fred Admin",
       nextSteps = null,
       actionOther = "Some other info here",
+      history = listOf()
     ),
 
     contributoryFactors = listOf(
